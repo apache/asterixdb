@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.optimizer.rules;
 
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 

@@ -34,28 +34,28 @@ public abstract class Literal implements Serializable {
     }
 
     abstract public Object getValue();
-    
+
     abstract public Type getLiteralType();
 
     public String getStringValue() {
         return getValue().toString();
-    }    
-    
+    }
+
     @Override
     public int hashCode() {
         return getValue().hashCode();
-    }    
+    }
 
     public boolean equals(Object obj) {
         if (!(obj instanceof Literal)) {
             return false;
         }
-        Literal literal = (Literal)obj;
+        Literal literal = (Literal) obj;
         return getValue().equals(literal.getValue());
-    } 
-    
+    }
+
     @Override
     public String toString() {
         return getStringValue();
-    }    
+    }
 }

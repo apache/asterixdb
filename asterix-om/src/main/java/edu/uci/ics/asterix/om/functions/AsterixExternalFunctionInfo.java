@@ -29,17 +29,17 @@ public class AsterixExternalFunctionInfo extends AsterixFunctionInfo implements 
     private final FunctionKind kind;
     private final IAType returnType;
 
-    public AsterixExternalFunctionInfo(){
+    public AsterixExternalFunctionInfo() {
         super();
         rtc = null;
-        argumentTypes= null;
+        argumentTypes = null;
         body = null;
-        language=null;
+        language = null;
         kind = null;
         returnType = null;
-                
+
     }
-    
+
     public AsterixExternalFunctionInfo(String namespace, AsterixFunction asterixFunction, FunctionKind kind,
             List<IAType> argumentTypes, IAType returnType, IResultTypeComputer rtc, String body, String language) {
         super(namespace, asterixFunction);

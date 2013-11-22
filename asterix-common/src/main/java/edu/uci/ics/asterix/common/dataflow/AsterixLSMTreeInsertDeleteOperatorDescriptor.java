@@ -56,4 +56,19 @@ public class AsterixLSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexIn
                 recordDescProvider, op, isPrimary);
     }
 
+    public boolean isPrimary() {
+        return isPrimary;
+    }
+
+    public int[] getFieldPermutations() {
+        return fieldPermutation;
+    }
+
+    public IndexOperation getIndexOperation() {
+        return op;
+    }
+
+    public IBinaryComparatorFactory[] getComparatorFactories() {
+        return comparatorFactories;
+    }
 }

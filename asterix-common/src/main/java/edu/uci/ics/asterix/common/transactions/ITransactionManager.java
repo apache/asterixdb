@@ -52,7 +52,8 @@ public interface ITransactionManager {
      * 
      * @param jobId
      *            a unique value for the transaction id.
-     * @param createIfNotExist TODO
+     * @param createIfNotExist
+     *            TODO
      * @return
      * @throws ACIDException
      */

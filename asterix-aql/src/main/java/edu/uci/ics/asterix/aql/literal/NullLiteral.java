@@ -51,5 +51,5 @@ public class NullLiteral extends Literal {
     @Override
     public Object getValue() {
         return null;
-    }    
+    }
 }

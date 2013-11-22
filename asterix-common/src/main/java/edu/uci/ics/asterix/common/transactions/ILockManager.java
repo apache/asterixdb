@@ -65,7 +65,7 @@ public interface ILockManager {
      * @param txnContext
      * @throws ACIDException
      *             TODO
-     * @return 
+     * @return
      */
     public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException;

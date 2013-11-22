@@ -41,7 +41,6 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 @SuppressWarnings("rawtypes")
 public class RSSFeedClient extends PullBasedFeedClient {
 
-    private final String feedURL;
     private long id = 0;
     private String idPrefix;
     private boolean feedModified = false;
@@ -66,25 +65,24 @@ public class RSSFeedClient extends PullBasedFeedClient {
     }
 
     public RSSFeedClient(RSSFeedAdapter adapter, String feedURL, String id_prefix) throws MalformedURLException {
-        this.feedURL = feedURL;
         this.idPrefix = id_prefix;
-        feedUrl = new URL(feedURL);
+        this.feedUrl = new URL(feedURL);
         feedInfoCache = HashMapFeedInfoCache.getInstance();
         fetcher = new HttpURLFeedFetcher(feedInfoCache);
         listener = new FetcherEventListenerImpl(this);
         fetcher.addFetcherEventListener(listener);
         mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
                 new AMutableString(null) };
-        recordType = adapter.getAdapterOutputType();
+        recordType = adapter.getRecordType();
         mutableRecord = new AMutableRecord(recordType, mutableFields);
         tupleFieldValues = new String[recordType.getFieldNames().length];
     }
 
     @Override
-    public boolean setNextRecord() throws Exception {
+    public InflowState setNextRecord() throws Exception {
         SyndEntryImpl feedEntry = getNextRSSFeed();
         if (feedEntry == null) {
-            return false;
+            return InflowState.DATA_NOT_AVAILABLE;
         }
         tupleFieldValues[0] = idPrefix + ":" + id;
         tupleFieldValues[1] = feedEntry.getTitle();
@@ -96,7 +94,7 @@ public class RSSFeedClient extends PullBasedFeedClient {
             mutableRecord.setValueAtPos(i, mutableFields[i]);
         }
         id++;
-        return true;
+        return InflowState.DATA_AVAILABLE;
     }
 
     private SyndEntryImpl getNextRSSFeed() throws Exception {
@@ -113,7 +111,6 @@ public class RSSFeedClient extends PullBasedFeedClient {
     @SuppressWarnings("unchecked")
     private void fetchFeed() {
         try {
-            System.err.println("Retrieving feed " + feedURL);
             // Retrieve the feed.
             // We will get a Feed Polled Event and then a
             // Feed Retrieved event (assuming the feed is valid)
@@ -130,12 +127,6 @@ public class RSSFeedClient extends PullBasedFeedClient {
             System.out.println("ERROR: " + ex.getMessage());
             ex.printStackTrace();
         }
-    }
-
-    @Override
-    public void resetOnFailure(Exception e) {
-        // TODO Auto-generated method stub
-
     }
 
 }

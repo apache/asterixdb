@@ -33,7 +33,7 @@ public interface IRecoveryManager {
         HEALTHY,
         CORRUPTED
     }
-    
+
     public class ResourceType {
         public static final byte LSM_BTREE = 0;
         public static final byte LSM_RTREE = 1;

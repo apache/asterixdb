@@ -17,14 +17,13 @@ package edu.uci.ics.asterix.common.transactions;
 public class MutableLong {
     private long val;
 
-    
     public MutableLong() {
     }
-    
+
     public MutableLong(long val) {
         this.val = val;
     }
-    
+
     public void set(long val) {
         this.val = val;
     }
@@ -32,10 +31,10 @@ public class MutableLong {
     public long get() {
         return val;
     }
-    
+
     @Override
     public int hashCode() {
-        return (int)val;
+        return (int) val;
     }
 
     @Override

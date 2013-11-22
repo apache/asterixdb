@@ -257,7 +257,7 @@ public class EntityInfoManager {
                 break;
             }
         }
-        
+
         //reset allocChild to the first buffer
         allocChild = 0;
 
@@ -279,19 +279,19 @@ public class EntityInfoManager {
         }
         return s.toString();
     }
-    
+
     public void coreDump(OutputStream os) {
         StringBuilder sb = new StringBuilder("\n\t########### EntityLockInfoManager Status #############\n");
         int size = pArray.size();
         ChildEntityInfoArrayManager child;
 
-        sb.append("Number of Child: " + size + "\n"); 
+        sb.append("Number of Child: " + size + "\n");
         for (int i = 0; i < size; i++) {
             try {
                 child = pArray.get(i);
                 sb.append("child[" + i + "]");
                 sb.append(child.prettyPrint());
-                
+
                 os.write(sb.toString().getBytes());
             } catch (IOException e) {
                 //ignore IOException
@@ -299,7 +299,7 @@ public class EntityInfoManager {
             sb = new StringBuilder();
         }
     }
-    
+
     public int getShrinkTimerThreshold() {
         return shrinkTimerThreshold;
     }
@@ -575,7 +575,7 @@ class ChildEntityInfoArrayManager {
     public int getFreeSlotNum() {
         return freeSlotNum;
     }
-    
+
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n\toccupiedSlots:" + getNumOfOccupiedSlots());

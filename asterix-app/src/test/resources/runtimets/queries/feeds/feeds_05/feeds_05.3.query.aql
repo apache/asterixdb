@@ -1,0 +1,21 @@
+/*
+ * Description  : Create a feed dataset that uses the synthetic feed simulator adapter.
+                  The synthetic feed simulator uses the Social-Data generator to generate data and simulate a feed. 
+                  The feed lasts a configured duration with data arriving at a configured rate (tweets per second).
+                  Verify the existence of data after the feed finishes.
+
+ * Expected Res : Success
+ * Date         : 20th Jun 2013
+ */
+
+use dataverse feeds;
+
+let $totalTweets:=count(
+for $x in dataset('SyntheticTweets')
+return $x)
+return 
+(if($totalTweets > 0)
+  then 1
+else
+  0
+)

@@ -83,6 +83,6 @@ public interface IDataFormat {
     public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider();
 
     public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider();
-    
+
     public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider();
 }

@@ -25,12 +25,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
 
+import edu.uci.ics.asterix.event.error.VerificationUtil;
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
+import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
-import edu.uci.ics.asterix.installer.error.VerificationUtil;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 

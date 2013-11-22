@@ -39,6 +39,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 public class AsterixPropertiesAccessor {
     private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());
 
+    private final String instanceName;
     private final String metadataNodeName;
     private final Set<String> nodeNames;
     private final Map<String, String[]> stores;
@@ -69,6 +70,7 @@ public class AsterixPropertiesAccessor {
         } catch (JAXBException e) {
             throw new AsterixException("Failed to read configuration file " + fileName);
         }
+        instanceName = asterixConfiguration.getInstanceName();
         metadataNodeName = asterixConfiguration.getMetadataNode();
         stores = new HashMap<String, String[]>();
         List<Store> configuredStores = asterixConfiguration.getStore();
@@ -113,8 +115,26 @@ public class AsterixPropertiesAccessor {
         return coredumpConfig.get(nodeId);
     }
 
-    public String getTransactionLogDir(String nodeId) {
-        return transactionLogDirs.get(nodeId);
+    public Map<String, String> getTransactionLogDirs() {
+        return transactionLogDirs;
+    }
+
+    public Map<String, String> getCoredumpConfig() {
+        return coredumpConfig;
+    }
+
+    public void putCoredumpPaths(String nodeId, String coredumpPath) {
+        if (coredumpConfig.containsKey(nodeId)) {
+            throw new IllegalStateException("Cannot override value for coredump path");
+        }
+        coredumpConfig.put(nodeId, coredumpPath);
+    }
+
+    public void putTransactionLogDir(String nodeId, String txnLogDir) {
+        if (transactionLogDirs.containsKey(nodeId)) {
+            throw new IllegalStateException("Cannot override value for txnLogDir");
+        }
+        transactionLogDirs.put(nodeId, txnLogDir);
     }
 
     public <T> T getProperty(String property, T defaultValue, IPropertyInterpreter<T> interpreter) {
@@ -137,4 +157,9 @@ public class AsterixPropertiesAccessor {
                     + "'.\n See the description: \n" + p.getDescription() + "\nDefault = " + defaultValue);
         }
     }
+
+    public String getInstanceName() {
+        return instanceName;
+    }
+
 }

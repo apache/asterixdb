@@ -16,13 +16,14 @@ package edu.uci.ics.asterix.installer.command;
 
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.asterix.event.model.AsterixInstance;
+import edu.uci.ics.asterix.event.model.AsterixInstance.State;
 import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import edu.uci.ics.asterix.event.service.AsterixEventService;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import edu.uci.ics.asterix.event.service.ServiceProvider;
+import edu.uci.ics.asterix.event.util.PatternCreator;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
-import edu.uci.ics.asterix.installer.events.PatternCreator;
-import edu.uci.ics.asterix.installer.model.AsterixInstance;
-import edu.uci.ics.asterix.installer.model.AsterixInstance.State;
-import edu.uci.ics.asterix.installer.service.ServiceProvider;
 
 public class DeleteCommand extends AbstractCommand {
 
@@ -30,13 +31,13 @@ public class DeleteCommand extends AbstractCommand {
     protected void execCommand() throws Exception {
         InstallerDriver.initConfig(true);
         String asterixInstanceName = ((DeleteConfig) config).name;
-        AsterixInstance instance = InstallerUtil.validateAsterixInstanceExists(asterixInstanceName, State.INACTIVE);
-        PatternCreator pc = new PatternCreator();
-        Patterns patterns = pc.createDeleteInstancePattern(instance);
-        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        AsterixInstance instance = AsterixEventServiceUtil.validateAsterixInstanceExists(asterixInstanceName,
+                State.INACTIVE);
+        Patterns patterns = PatternCreator.INSTANCE.createDeleteInstancePattern(instance);
+        AsterixEventService.getAsterixEventServiceClient(instance.getCluster()).submit(patterns);
 
-        patterns = pc.createRemoveAsterixWorkingDirPattern(instance);
-        InstallerUtil.getEventrixClient(instance.getCluster()).submit(patterns);
+        patterns = PatternCreator.INSTANCE.createRemoveAsterixWorkingDirPattern(instance);
+        AsterixEventService.getAsterixEventServiceClient(instance.getCluster()).submit(patterns);
         ServiceProvider.INSTANCE.getLookupService().removeAsterixInstance(asterixInstanceName);
         LOGGER.info("Deleted Asterix instance: " + asterixInstanceName);
     }

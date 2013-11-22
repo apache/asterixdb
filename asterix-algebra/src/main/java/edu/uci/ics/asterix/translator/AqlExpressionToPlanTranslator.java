@@ -26,20 +26,22 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.CompactStatement;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
@@ -93,13 +95,15 @@ import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
+import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
+import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.asterix.metadata.declared.ResultSetDataSink;
 import edu.uci.ics.asterix.metadata.declared.ResultSetSinkId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Function;
+import edu.uci.ics.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
@@ -153,7 +157,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperato
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
@@ -231,7 +234,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             project.getVariables().set(0, seqVar);
             resVar = seqVar;
 
-            AqlDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
+            DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                     stmt.getDatasetName());
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
@@ -274,7 +277,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(deleteOp));
                     break;
                 }
-                case BEGIN_FEED: {
+                case CONNECT_FEED: {
                     ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
                             InsertDeleteOperator.Kind.INSERT);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
@@ -290,20 +293,21 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         return plan;
     }
 
-    private AqlDataSource validateDatasetInfo(AqlMetadataProvider metadataProvider, String dataverseName,
+    private DatasetDataSource validateDatasetInfo(AqlMetadataProvider metadataProvider, String dataverseName,
             String datasetName) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AlgebricksException("Cannot find dataset " + datasetName + " in dataverse " + dataverseName);
         }
-
-        AqlSourceId sourceId = new AqlSourceId(dataverseName, datasetName);
-        String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = metadataProvider.findType(dataverseName, itemTypeName);
-        AqlDataSource dataSource = new AqlDataSource(sourceId, dataset, itemType);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("Cannot write output to an external dataset.");
         }
+        AqlSourceId sourceId = new AqlSourceId(dataverseName, datasetName);
+        String itemTypeName = dataset.getItemTypeName();
+        IAType itemType = metadataProvider.findType(dataverseName, itemTypeName);
+        DatasetDataSource dataSource = new DatasetDataSource(sourceId, dataset.getDataverseName(),
+                dataset.getDatasetName(), itemType, AqlDataSourceType.INTERNAL_DATASET);
+
         return dataSource;
     }
 
@@ -509,13 +513,18 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             return null;
         }
         AbstractFunctionCallExpression f = null;
-        if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+        if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_JAVA)) {
+            IFunctionInfo finfo = ExternalFunctionCompilerUtil.getExternalFunctionInfo(
+                    metadataProvider.getMetadataTxnContext(), function);
+            f = new ScalarFunctionCallExpression(finfo, args);
+        } else if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
             IFunctionInfo finfo = new AsterixFunctionInfo(signature);
-            return new ScalarFunctionCallExpression(finfo, args);
+            f = new ScalarFunctionCallExpression(finfo, args);
         } else {
             throw new MetadataException(" User defined functions written in " + function.getLanguage()
                     + " are not supported");
         }
+        return f;
     }
 
     private AbstractFunctionCallExpression lookupBuiltinFunction(String functionName, int arity,
@@ -1270,7 +1279,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitControlFeedStatement(ControlFeedStatement del,
+    public Pair<ILogicalOperator, LogicalVariable> visitDisconnectFeedStatement(DisconnectFeedStatement del,
             Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
@@ -1426,7 +1435,21 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitBeginFeedStatement(BeginFeedStatement bf,
+    public Pair<ILogicalOperator, LogicalVariable> visitCreateFeedStatement(CreateFeedStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitConnectFeedStatement(ConnectFeedStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitDropFeedStatement(FeedDropStatement del,
             Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;

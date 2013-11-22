@@ -220,8 +220,7 @@ public class APIFramework {
 
         }
 
-        edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory
-                .generateJobId();
+        edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
                 outputDatasetName, statement);
@@ -265,7 +264,6 @@ public class APIFramework {
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalSort(sortFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesHybridHash(joinFrameLimit);
-        
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(
                 AqlOptimizationContextFactory.INSTANCE);
@@ -279,7 +277,6 @@ public class APIFramework {
         builder.setPartialAggregationTypeComputer(new AqlPartialAggregationTypeComputer());
         builder.setExpressionTypeComputer(AqlExpressionTypeComputer.INSTANCE);
         builder.setNullableTypeComputer(AqlNullableTypeComputer.INSTANCE);
-
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {

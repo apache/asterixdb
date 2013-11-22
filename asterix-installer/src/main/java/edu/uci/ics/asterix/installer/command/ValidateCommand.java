@@ -29,8 +29,8 @@ import edu.uci.ics.asterix.event.management.EventUtil;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.MasterNode;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 import edu.uci.ics.asterix.installer.schema.conf.Zookeeper;
 
@@ -74,17 +74,10 @@ public class ValidateCommand extends AbstractCommand {
 
     public boolean validateEnvironment() throws Exception {
         boolean valid = true;
-        String managixHome = System.getenv(InstallerDriver.ENV_MANAGIX_HOME);
-        if (managixHome == null) {
+        File home = new File(InstallerDriver.getManagixHome());
+        if (!home.exists()) {
             valid = false;
-            LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + " not set " + ERROR);
-        } else {
-            File home = new File(managixHome);
-            if (!home.exists()) {
-                valid = false;
-                LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + ": " + home.getAbsolutePath() + " does not exist!"
-                        + ERROR);
-            }
+            LOGGER.fatal(InstallerDriver.ENV_MANAGIX_HOME + ": " + home.getAbsolutePath() + " does not exist!" + ERROR);
         }
         return valid;
 
@@ -109,7 +102,7 @@ public class ValidateCommand extends AbstractCommand {
 
             MasterNode masterNode = cluster.getMasterNode();
             Node master = new Node(masterNode.getId(), masterNode.getClusterIp(), masterNode.getJavaHome(),
-                    masterNode.getLogDir(), null, null, null);
+                    masterNode.getLogDir(), null, null, null, null);
             ipAddresses.add(masterNode.getClusterIp());
 
             valid = valid & validateNodeConfiguration(master, cluster);
@@ -143,7 +136,7 @@ public class ValidateCommand extends AbstractCommand {
                 + File.separator + "scripts" + File.separator + "validate_ssh.sh";
         List<String> args = ipAddresses;
         args.add(0, username);
-        String output = InstallerUtil.executeLocalScript(script, args);
+        String output = AsterixEventServiceUtil.executeLocalScript(script, args);
         ipAddresses.remove(0);
         for (String line : output.split("\n")) {
             ipAddresses.remove(line);

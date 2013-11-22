@@ -27,9 +27,14 @@ public interface ICommand {
         ALTER,
         VALIDATE,
         CONFIGURE,
+        INSTALL,
+        UNINSTALL,
         LOG,
         SHUTDOWN,
-        HELP
+        HELP,
+        STOPNODE,
+        STARTNODE,
+        VERSION
     }
 
     public void execute(String args[]) throws Exception;

@@ -29,7 +29,7 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import edu.uci.ics.asterix.event.management.DefaultOutputHandler;
 import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.management.EventrixClient;
+import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
 import edu.uci.ics.asterix.event.management.IOutputHandler;
 import edu.uci.ics.asterix.event.management.Randomizer;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -41,7 +41,7 @@ import edu.uci.ics.asterix.event.schema.pattern.Patterns;
 public class EventDriver {
 
     public static final String CLIENT_NODE_ID = "client_node";
-    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, "127.0.0.1", null, null, null, null, null);
+    public static final Node CLIENT_NODE = new Node(CLIENT_NODE_ID, "127.0.0.1", null, null, null, null, null, null);
 
     private static String eventsDir;
     private static Events events;
@@ -87,15 +87,6 @@ public class EventDriver {
 
     }
 
-    public static EventrixClient getClient(String eventsDir, Cluster cluster, boolean dryRun) throws Exception {
-        return new EventrixClient(eventsDir, cluster, dryRun, new DefaultOutputHandler());
-    }
-
-    public static EventrixClient getClient(String eventsDir, Cluster cluster, boolean dryRun,
-            IOutputHandler outputHandler) throws Exception {
-        return new EventrixClient(eventsDir, cluster, dryRun, outputHandler);
-    }
-
     public static void main(String[] args) throws Exception {
         String eventsHome = System.getenv("EVENT_HOME");
         if (eventsHome == null) {
@@ -119,9 +110,9 @@ public class EventDriver {
             if (!eventConfig.dryRun) {
                 prepare(cluster);
             }
-            EventrixClient client = new EventrixClient(eventsDir, cluster, eventConfig.dryRun,
-                    new DefaultOutputHandler());
-            client.submit(patterns);
+            //AsterixEventServiceClient client = new AsterixEventServiceClient(eventsDir, cluster, eventConfig.dryRun,
+            //      new DefaultOutputHandler());
+            // client.submit(patterns);
             if (!eventConfig.dryRun) {
                 cleanup(cluster);
             }
@@ -156,4 +147,5 @@ public class EventDriver {
         }
         EventUtil.executeLocalScript(clientNode, eventsDir + "/" + "events" + "/" + "cleanup.sh", args);
     }
+
 }

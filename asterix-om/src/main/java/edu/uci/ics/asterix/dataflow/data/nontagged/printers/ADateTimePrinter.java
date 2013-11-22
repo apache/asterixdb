@@ -56,6 +56,6 @@ public class ADateTimePrinter implements IPrinter {
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
-        
+
     }
 }

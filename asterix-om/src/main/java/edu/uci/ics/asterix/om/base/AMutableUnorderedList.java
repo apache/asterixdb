@@ -31,4 +31,8 @@ public final class AMutableUnorderedList extends AUnorderedList {
     public void add(IAObject obj) {
         values.add(obj);
     }
+
+    public void clear() {
+        values.clear();
+    }
 }

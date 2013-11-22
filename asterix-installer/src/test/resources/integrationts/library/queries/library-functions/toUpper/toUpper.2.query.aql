@@ -1,0 +1,5 @@
+use dataverse externallibtest;
+
+let $input:={"id": 1, "text":"university of california, irvine"}
+let $x:=testlib#toUpper($input)
+return $x

@@ -46,21 +46,21 @@ public class AIntervalPrinter implements IPrinter {
         if (typetag == ATypeTag.DATE.serialize()) {
             ps.print("-date(\"");
             timeInstancePrinter = ADatePrinter.INSTANCE;
-            ((ADatePrinter)timeInstancePrinter).printString(b, s + 4, 4, ps);
+            ((ADatePrinter) timeInstancePrinter).printString(b, s + 4, 4, ps);
             ps.print(", ");
-            ((ADatePrinter)timeInstancePrinter).printString(b, s + 12, 4, ps);
+            ((ADatePrinter) timeInstancePrinter).printString(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.TIME.serialize()) {
             ps.print("-time(\"");
             timeInstancePrinter = ATimePrinter.INSTANCE;
-            ((ATimePrinter)timeInstancePrinter).printString(b, s + 4, 4, ps);
+            ((ATimePrinter) timeInstancePrinter).printString(b, s + 4, 4, ps);
             ps.print(", ");
-            ((ATimePrinter)timeInstancePrinter).printString(b, s + 12, 4, ps);
+            ((ATimePrinter) timeInstancePrinter).printString(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.DATETIME.serialize()) {
             ps.print("-datetime(\"");
             timeInstancePrinter = ADateTimePrinter.INSTANCE;
-            ((ADateTimePrinter)timeInstancePrinter).printString(b, s, 8, ps);
+            ((ADateTimePrinter) timeInstancePrinter).printString(b, s, 8, ps);
             ps.print(", ");
-            ((ADateTimePrinter)timeInstancePrinter).printString(b, s + 8, 8, ps);
+            ((ADateTimePrinter) timeInstancePrinter).printString(b, s + 8, 8, ps);
         } else {
             throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
         }

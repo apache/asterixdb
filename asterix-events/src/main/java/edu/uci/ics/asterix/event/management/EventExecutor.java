@@ -23,11 +23,13 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
+import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.event.driver.EventDriver;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.asterix.event.schema.cluster.Property;
 import edu.uci.ics.asterix.event.schema.pattern.Pattern;
+import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
 
 public class EventExecutor {
 
@@ -40,10 +42,11 @@ public class EventExecutor {
     private static final String DAEMON = "DAEMON";
 
     public void executeEvent(Node node, String script, List<String> args, boolean isDaemon, Cluster cluster,
-            Pattern pattern, IOutputHandler outputHandler, EventrixClient client) throws IOException {
+            Pattern pattern, IOutputHandler outputHandler, AsterixEventServiceClient client) throws IOException {
         List<String> pargs = new ArrayList<String>();
         pargs.add("/bin/bash");
-        pargs.add(client.getEventsDir() + File.separator + "scripts" + File.separator + EXECUTE_SCRIPT);
+        pargs.add(client.getEventsHomeDir() + File.separator + AsterixEventServiceUtil.EVENT_DIR + File.separator
+                + EXECUTE_SCRIPT);
         StringBuffer envBuffer = new StringBuffer(IP_LOCATION + "=" + node.getClusterIp() + " ");
         boolean isMasterNode = node.getId().equals(cluster.getMasterNode().getId());
 
@@ -60,6 +63,13 @@ public class EventExecutor {
                         if (javaOpts != null) {
                             builder.append(javaOpts);
                         }
+                        if (node.getDebugPort() != null) {
+                            int debugPort = node.getDebugPort().intValue();
+                            if (!javaOpts.contains("-Xdebug")) {
+                                builder.append((" "
+                                        + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort));
+                            }
+                        }
                         builder.append("\"");
                         envBuffer.append("JAVA_OPTS" + "=" + builder + " ");
                     }
@@ -70,6 +80,13 @@ public class EventExecutor {
                         String javaOpts = p.getValue();
                         if (javaOpts != null) {
                             builder.append(javaOpts);
+                        }
+                        if (node.getDebugPort() != null) {
+                            int debugPort = node.getDebugPort().intValue();
+                            if (!javaOpts.contains("-Xdebug")) {
+                                builder.append((" "
+                                        + "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort));
+                            }
                         }
                         builder.append("\"");
                         envBuffer.append("JAVA_OPTS" + "=" + builder + " ");

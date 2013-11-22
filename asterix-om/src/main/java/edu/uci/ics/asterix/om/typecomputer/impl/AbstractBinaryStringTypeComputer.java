@@ -24,17 +24,16 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvi
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 /**
- *
  * @author Xiaoyu Ma
  */
 abstract public class AbstractBinaryStringTypeComputer implements IResultTypeComputer {
-    
+
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
-        if(fce.getArguments().size() < 2)
-            throw new AlgebricksException("Wrong Argument Number.");        
+        if (fce.getArguments().size() < 2)
+            throw new AlgebricksException("Wrong Argument Number.");
         ILogicalExpression arg0 = fce.getArguments().get(0).getValue();
         ILogicalExpression arg1 = fce.getArguments().get(1).getValue();
         IAType t0, t1;
@@ -44,14 +43,13 @@ abstract public class AbstractBinaryStringTypeComputer implements IResultTypeCom
         } catch (AlgebricksException e) {
             throw new AlgebricksException(e);
         }
-        if ((t0.getTypeTag() != ATypeTag.NULL && t0.getTypeTag() != ATypeTag.STRING) ||
-            (t1.getTypeTag() != ATypeTag.NULL && t1.getTypeTag() != ATypeTag.STRING)) {
+        if ((t0.getTypeTag() != ATypeTag.NULL && t0.getTypeTag() != ATypeTag.STRING)
+                || (t1.getTypeTag() != ATypeTag.NULL && t1.getTypeTag() != ATypeTag.STRING)) {
             throw new AlgebricksException("Expects String Type.");
-        }      
+        }
 
         return getResultType(t0, t1);
-    }    
-    
-    
+    }
+
     public abstract IAType getResultType(IAType t0, IAType t1);
 }

@@ -50,7 +50,7 @@ public final class ConstantHelper {
             }
             case LONG: {
                 LongIntegerLiteral il = (LongIntegerLiteral) valLiteral;
-                return new AInt64(il.getValue());                
+                return new AInt64(il.getValue());
             }
             case NULL: {
                 return ANull.NULL;

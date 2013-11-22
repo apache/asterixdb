@@ -8,6 +8,7 @@ drop dataverse feeds if exists;
 create dataverse feeds;
 use dataverse feeds;
 
+
 create type TweetType as closed {
   id: string,
   username : string,
@@ -16,8 +17,11 @@ create type TweetType as closed {
   timestamp : string
 }      
 
-create feed dataset TweetFeed(TweetType)
-using "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory"
-(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("output-type-name"="TweetType"),("tuple-interval"="10"))
+create dataset Tweets(TweetType)
 primary key id;
+
+create feed TweetFeed
+using file_feed
+(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("type-name"="TweetType"),("tuple-interval"="10"));
+
 
