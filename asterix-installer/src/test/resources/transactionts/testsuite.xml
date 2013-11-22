@@ -20,13 +20,13 @@
         <output-dir compare="Text">primary_index_only</output-dir>
       </compilation-unit>
     </test-case>
-<!-- 
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_default_secondary_index">
         <output-dir compare="Text">primary_plus_default_secondary_index</output-dir>
       </compilation-unit>
     </test-case>
- -->
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_rtree_index">
         <output-dir compare="Text">primary_plus_rtree_index</output-dir>
