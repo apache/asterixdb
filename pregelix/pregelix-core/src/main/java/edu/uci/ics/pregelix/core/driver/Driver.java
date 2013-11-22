@@ -59,8 +59,8 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 @SuppressWarnings("rawtypes")
 public class Driver implements IDriver {
-    public static final String[] COUNTERS = { Counters.SYSTEM_LOAD, Counters.MEMORY_USAGE, Counters.DISK_READ,
-            Counters.DISK_WRITE, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE };
+    public static final String[] COUNTERS = { Counters.NUM_PROCESSOR, Counters.SYSTEM_LOAD, Counters.MEMORY_USAGE,
+            Counters.DISK_READ, Counters.DISK_WRITE, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE };
     private static final Log LOG = LogFactory.getLog(Driver.class);
     private IHyracksClientConnection hcc;
     private Class exampleClass;

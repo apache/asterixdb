@@ -15,18 +15,11 @@
 
 package edu.uci.ics.hyracks.client.stats;
 
-public class Counters {
-    public static final String NUM_PROCESSOR = "num-processors";
+import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
+import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 
-    public static final String SYSTEM_LOAD = "system-load-averages";
+public interface IClusterCounterContext extends ICounterContext {
 
-    public static final String MEMORY_USAGE = "heap-used-sizes";
-
-    public static final String NETWORK_IO_READ = "net-payload-bytes-read";
-
-    public static final String NETWORK_IO_WRITE = "net-payload-bytes-written";
-
-    public static final String DISK_READ = "disk-reads";
-
-    public static final String DISK_WRITE = "disk-writes";
+    public ICounter getCounter(String machineName, String counterName, boolean create);
+    
 }

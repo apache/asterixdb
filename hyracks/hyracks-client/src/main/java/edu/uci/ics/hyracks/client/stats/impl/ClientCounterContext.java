@@ -29,17 +29,17 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.client.stats.AggregateCounter;
 import edu.uci.ics.hyracks.client.stats.Counters;
+import edu.uci.ics.hyracks.client.stats.IClusterCounterContext;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
 
 /**
  * @author yingyib
  */
-public class ClientCounterContext implements ICounterContext {
+public class ClientCounterContext implements IClusterCounterContext {
     private static String[] RESET_COUNTERS = { Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
-            Counters.MEMORY_USAGE, Counters.DISK_READ, Counters.DISK_WRITE };
+            Counters.MEMORY_USAGE, Counters.DISK_READ, Counters.DISK_WRITE, Counters.NUM_PROCESSOR };
     private static String[] AGG_COUNTERS = { Counters.SYSTEM_LOAD };
     private static int UPDATE_INTERVAL = 10000;
 
@@ -58,6 +58,14 @@ public class ClientCounterContext implements ICounterContext {
         for (String aggCounterName : AGG_COUNTERS) {
             counterMap.put(aggCounterName, new AggregateCounter(aggCounterName));
         }
+        for (String slave : slaveMachines) {
+            for (String restCounterName : RESET_COUNTERS) {
+                counterMap.put(slave + "$" + restCounterName, new AggregateCounter(restCounterName));
+            }
+            for (String aggCounterName : AGG_COUNTERS) {
+                counterMap.put(slave + "$" + aggCounterName, new AggregateCounter(aggCounterName));
+            }
+        }
         requestCounters();
         updateThread.start();
     }
@@ -70,6 +78,12 @@ public class ClientCounterContext implements ICounterContext {
             AggregateCounter aggCounter = (AggregateCounter) counterMap.get(aggCounterName);
             aggCounter.reset();
         }
+        for (String slave : slaveMachines) {
+            for (String aggCounterName : RESET_COUNTERS) {
+                AggregateCounter aggCounter = (AggregateCounter) counterMap.get(slave + "$" + aggCounterName);
+                aggCounter.reset();
+            }
+        }
     }
 
     public void resetAll() {
@@ -78,6 +92,12 @@ public class ClientCounterContext implements ICounterContext {
             AggregateCounter aggCounter = (AggregateCounter) counterMap.get(aggCounterName);
             aggCounter.reset();
         }
+        for (String slave : slaveMachines) {
+            for (String aggCounterName : AGG_COUNTERS) {
+                AggregateCounter aggCounter = (AggregateCounter) counterMap.get(slave + "$" + aggCounterName);
+                aggCounter.reset();
+            }
+        }
     }
 
     @Override
@@ -85,6 +105,16 @@ public class ClientCounterContext implements ICounterContext {
         Counter counter = counterMap.get(name);
         if (counter == null) {
             throw new IllegalStateException("request an unknown counter: " + name + "!");
+        }
+        return counter;
+    }
+
+    @Override
+    public ICounter getCounter(String machineName, String counterName, boolean create) {
+        Counter counter = counterMap.get(machineName + "$" + counterName);
+        if (counter == null) {
+            throw new IllegalStateException("request an unknown counter: " + counterName + " on slave machine "
+                    + machineName + "!");
         }
         return counter;
     }
@@ -99,7 +129,10 @@ public class ClientCounterContext implements ICounterContext {
                 String slaveProfile = requestProfile(slave);
                 JSONParser parser = new JSONParser();
                 JSONObject jo = (JSONObject) parser.parse(slaveProfile);
-                updateCounterMap((JSONObject) jo.get("result"));
+                Object counterObject = jo.get("result");
+                if (counterObject instanceof JSONObject) {
+                    updateCounterMapWithJSONArray(slave, (JSONObject) counterObject);
+                }
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -112,11 +145,32 @@ public class ClientCounterContext implements ICounterContext {
      * @param jo
      *            the Profile JSON object
      */
-    private void updateCounterMap(JSONObject jo) {
+    private void updateCounterMapWithJSONArray(String slave, JSONObject jo) {
         for (String counterName : RESET_COUNTERS) {
-            JSONArray jArray = (JSONArray) jo.get(counterName);
+            updateCounter(slave, jo, counterName);
+        }
+        
+        for (String counterName : AGG_COUNTERS) {
+            updateCounter(slave, jo, counterName);
+        }
+    }
+
+    private void updateCounter(String slave, JSONObject jo, String counterName) {
+        Object counterObject = jo.get(counterName);
+        long counterValue = extractCounterValue(counterObject);
+        // global counter
+        ICounter counter = getCounter(counterName, true);
+        counter.set(counterValue);
+        //local counters
+        ICounter localCounter = getCounter(slave, counterName, true);
+        localCounter.set(counterValue);
+    }
+
+    private long extractCounterValue(Object counterObject) {
+        long counterValue = 0;
+        if (counterObject instanceof JSONArray) {
+            JSONArray jArray = (JSONArray) counterObject;
             Object[] values = jArray.toArray();
-            long counterValue = 0;
             for (Object value : values) {
                 if (value instanceof Double) {
                     Double dValue = (Double) value;
@@ -127,9 +181,11 @@ public class ClientCounterContext implements ICounterContext {
                 }
             }
             counterValue /= values.length;
-            ICounter counter = getCounter(counterName, true);
-            counter.set(counterValue);
+        } else {
+            Long val = (Long) counterObject;
+            counterValue = val.longValue();
         }
+        return counterValue;
     }
 
     /**
