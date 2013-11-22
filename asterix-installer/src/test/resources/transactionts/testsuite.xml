@@ -14,7 +14,7 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="recover_after_abort">
-   
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_index_only">
         <output-dir compare="Text">primary_index_only</output-dir>
@@ -50,7 +50,11 @@
         <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
       </compilation-unit>
     </test-case>
-<!--  
+  
+ </test-group>
+
+ <test-group name="recovery_ddl">
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataverse_recovery">
         <output-dir compare="Text">dataverse_recovery</output-dir>
@@ -98,6 +102,6 @@
         <output-dir compare="Text">function_recovery</output-dir>
       </compilation-unit>
     </test-case>
- -->
+ 
   </test-group>
 </test-suite>
