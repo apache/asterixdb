@@ -36,6 +36,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
@@ -148,7 +149,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
                 binaryURLs.add(new URL(url));
             }
         }
-        /**deploy the URLs to the CC and NCs*/
+        /** deploy the URLs to the CC and NCs */
         hci.deployBinary(binaryURLs, deploymentId);
         return deploymentId;
     }
@@ -175,5 +176,10 @@ public final class HyracksConnection implements IHyracksClientConnection {
     public JobId startJob(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf,
             EnumSet<JobFlag> jobFlags) throws Exception {
         return hci.startJob(deploymentId, JavaSerializationUtils.serialize(acggf), jobFlags);
+    }
+
+    @Override
+    public JobInfo getJobInfo(JobId jobId) throws Exception {
+        return hci.getJobInfo(jobId);
     }
 }

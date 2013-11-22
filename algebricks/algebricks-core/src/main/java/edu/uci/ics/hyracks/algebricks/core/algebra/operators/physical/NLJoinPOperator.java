@@ -57,13 +57,8 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 
 /**
- * <<<<<<< .working
- * Left input is broadcast and preserves its local properties. Right input can
- * be partitioned in any way.
- * =======
  * Left input is broadcast and preserves its local properties.
  * Right input can be partitioned in any way.
- * >>>>>>> .merge-right.r3014
  */
 public class NLJoinPOperator extends AbstractJoinPOperator {
 

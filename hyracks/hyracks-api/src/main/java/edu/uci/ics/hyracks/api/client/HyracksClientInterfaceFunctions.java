@@ -31,6 +31,7 @@ public class HyracksClientInterfaceFunctions {
         GET_CLUSTER_TOPOLOGY,
         CREATE_JOB,
         GET_JOB_STATUS,
+        GET_JOB_INFO,
         START_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
         GET_DATASET_RESULT_STATUS,
@@ -69,6 +70,25 @@ public class HyracksClientInterfaceFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.GET_JOB_STATUS;
+        }
+
+        public JobId getJobId() {
+            return jobId;
+        }
+    }
+
+    public static class GetJobInfoFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final JobId jobId;
+
+        public GetJobInfoFunction(JobId jobId) {
+            this.jobId = jobId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.GET_JOB_INFO;
         }
 
         public JobId getJobId() {

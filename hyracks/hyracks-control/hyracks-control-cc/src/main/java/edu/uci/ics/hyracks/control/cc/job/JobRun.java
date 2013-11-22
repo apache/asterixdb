@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.job;
 
+import java.util.ArrayList;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.EnumSet;
@@ -29,6 +30,7 @@ import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -87,6 +89,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private List<Exception> pendingExceptions;
 
+    private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
+
     public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
             IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
         this.deploymentId = deploymentId;
@@ -101,6 +105,7 @@ public class JobRun implements IJobStatusConditionVariable {
         cleanupPendingNodeIds = new HashSet<String>();
         profile = new JobProfile(jobId);
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
+        operatorLocations = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
     }
 
     public DeploymentId getDeploymentId() {
@@ -176,6 +181,15 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public void setEndTime(long endTime) {
         this.endTime = endTime;
+    }
+
+    public void registerOperatorLocation(OperatorDescriptorId op, int partition, String location) {
+        Map<Integer, String> locations = operatorLocations.get(op);
+        if (locations == null) {
+            locations = new HashMap<Integer, String>();
+            operatorLocations.put(op, locations);
+        }
+        locations.put(partition, location);
     }
 
     @Override
@@ -348,8 +362,7 @@ public class JobRun implements IJobStatusConditionVariable {
                                 taskAttempt.put("end-time", ta.getEndTime());
                                 List<Exception> exceptions = ta.getExceptions();
                                 if (exceptions != null && !exceptions.isEmpty()) {
-                                    List<Exception> filteredExceptions = ExceptionUtils
-                                            .getActualExceptions(exceptions);
+                                    List<Exception> filteredExceptions = ExceptionUtils.getActualExceptions(exceptions);
                                     for (Exception exception : filteredExceptions) {
                                         StringWriter exceptionWriter = new StringWriter();
                                         exception.printStackTrace(new PrintWriter(exceptionWriter));
@@ -378,5 +391,9 @@ public class JobRun implements IJobStatusConditionVariable {
         result.put("profile", profile.toJSON());
 
         return result;
+    }
+
+    public Map<OperatorDescriptorId, Map<Integer, String>> getOperatorLocations() {
+        return operatorLocations;
     }
 }

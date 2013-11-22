@@ -239,7 +239,7 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
 
         @Override
         public void close() throws HyracksDataException {
-            if(outputAppender.getTupleCount() > 0){
+            if (outputAppender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(outputFrame, outputWriter);
                 outputAppender.reset(outputFrame, true);
             }
