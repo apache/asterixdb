@@ -84,6 +84,8 @@ public class PregelixJob extends Job {
     public static final String DYNAMIC_OPTIMIZATION = "pregelix.dynamicopt";
     /** comma */
     public static final String COMMA_STR = ",";
+    /** the names of the aggregator classes active for all vertex types */ 
+    public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalCountAggregator.class.getName() };
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -93,7 +95,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf) throws IOException {
         super(conf);
-        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -105,7 +106,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(String jobName) throws IOException {
         super(new Configuration(), jobName);
-        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -119,7 +119,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf, String jobName) throws IOException {
         super(conf, jobName);
-        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -262,13 +261,13 @@ public class PregelixJob extends Job {
     final public void setCheckpointingInterval(int ckpInterval) {
         getConfiguration().setInt(CKP_INTERVAL, ckpInterval);
     }
-    
+
     /**
      * Indicate if dynamic optimization is enabled
      * 
      * @param dynamicOpt
      */
-    final public void setEnableDynamicOptimization(boolean dynamicOpt){
+    final public void setEnableDynamicOptimization(boolean dynamicOpt) {
         getConfiguration().setBoolean(DYNAMIC_OPTIMIZATION, dynamicOpt);
     }
 

@@ -126,6 +126,9 @@ public class BspUtils {
         String[] classnames = aggStrs.split(PregelixJob.COMMA_STR);
         try {
             List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> classes = new ArrayList<Class<? extends GlobalAggregator<I, V, E, M, P, F>>>();
+            for (String defaultClass : PregelixJob.DEFAULT_GLOBAL_AGGREGATOR_CLASSES) {
+                classes.add((Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClassByName(defaultClass));
+            }
             for (int i = 0; i < classnames.length; i++) {
                 classes.add((Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClassByName(classnames[i]));
             }
