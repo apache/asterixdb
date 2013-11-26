@@ -41,7 +41,7 @@ public class FeedPolicyEnforcer {
     public boolean continueIngestionPostSoftwareFailure(Exception e) throws RemoteException, ACIDException {
         boolean continueIngestion = feedPolicyAccessor.continueOnApplicationFailure();
         if (feedPolicyAccessor.logErrorOnFailure()) {
-//            persistExceptionDetails(e);
+            persistExceptionDetails(e);
         }
         return continueIngestion;
     }
