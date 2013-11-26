@@ -87,7 +87,7 @@ public class PullBasedAzureFeedClient implements IPullBasedFeedClient {
         if (moreTweets) {
             String json = null;
             try {
-                json = getJSONString().replaceAll("}}", "}, \"z\":null }");
+                json = getJSONString();
                 byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
                 rbaos.reset();
                 dos.write(jsonBytes, 0, jsonBytes.length);
