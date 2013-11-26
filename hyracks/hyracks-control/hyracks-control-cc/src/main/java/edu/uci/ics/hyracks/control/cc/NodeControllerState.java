@@ -125,6 +125,10 @@ public class NodeControllerState {
 
     private final long[] ipcMessageBytesReceived;
 
+    private final long[] diskReads;
+
+    private final long[] diskWrites;
+
     private int rrdPtr;
 
     private int lastHeartbeatDuration;
@@ -184,6 +188,9 @@ public class NodeControllerState {
         ipcMessagesReceived = new long[RRD_SIZE];
         ipcMessageBytesReceived = new long[RRD_SIZE];
 
+        diskReads = new long[RRD_SIZE];
+        diskWrites = new long[RRD_SIZE];
+
         rrdPtr = 0;
     }
 
@@ -219,6 +226,8 @@ public class NodeControllerState {
             ipcMessageBytesSent[rrdPtr] = hbData.ipcMessageBytesSent;
             ipcMessagesReceived[rrdPtr] = hbData.ipcMessagesReceived;
             ipcMessageBytesReceived[rrdPtr] = hbData.ipcMessageBytesReceived;
+            diskReads[rrdPtr] = hbData.diskReads;
+            diskWrites[rrdPtr] = hbData.diskWrites;
             rrdPtr = (rrdPtr + 1) % RRD_SIZE;
         }
     }
@@ -303,6 +312,8 @@ public class NodeControllerState {
         o.put("ipc-message-bytes-sent", ipcMessageBytesSent);
         o.put("ipc-messages-received", ipcMessagesReceived);
         o.put("ipc-message-bytes-received", ipcMessageBytesReceived);
+        o.put("disk-reads", diskReads);
+        o.put("disk-writes", diskWrites);
 
         return o;
     }

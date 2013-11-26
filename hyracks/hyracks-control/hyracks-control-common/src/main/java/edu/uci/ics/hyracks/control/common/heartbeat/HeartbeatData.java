@@ -45,4 +45,6 @@ public class HeartbeatData implements Serializable {
     public long ipcMessageBytesSent;
     public long ipcMessagesReceived;
     public long ipcMessageBytesReceived;
+    public long diskReads;
+    public long diskWrites;
 }

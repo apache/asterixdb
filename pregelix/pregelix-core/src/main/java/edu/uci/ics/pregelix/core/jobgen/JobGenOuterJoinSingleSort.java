@@ -72,6 +72,10 @@ public class JobGenOuterJoinSingleSort extends JobGen {
     public JobGenOuterJoinSingleSort(PregelixJob job) {
         super(job);
     }
+    
+    public JobGenOuterJoinSingleSort(PregelixJob job, String jobId) {
+        super(job, jobId);
+    }
 
     @Override
     protected JobSpecification generateFirstIteration(int iteration) throws HyracksException {

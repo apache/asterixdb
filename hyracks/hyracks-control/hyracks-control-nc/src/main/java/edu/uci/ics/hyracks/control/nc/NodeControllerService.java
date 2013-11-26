@@ -69,6 +69,8 @@ import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.dataset.DatasetPartitionManager;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.io.profiling.IIOCounter;
+import edu.uci.ics.hyracks.control.nc.io.profiling.IOCounterFactory;
 import edu.uci.ics.hyracks.control.nc.net.DatasetNetworkManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
@@ -79,9 +81,9 @@ import edu.uci.ics.hyracks.control.nc.work.ApplicationMessageWork;
 import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
 import edu.uci.ics.hyracks.control.nc.work.CleanupJobletWork;
 import edu.uci.ics.hyracks.control.nc.work.DeployBinaryWork;
-import edu.uci.ics.hyracks.control.nc.work.StateDumpWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
+import edu.uci.ics.hyracks.control.nc.work.StateDumpWork;
 import edu.uci.ics.hyracks.control.nc.work.UnDeployBinaryWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
 import edu.uci.ics.hyracks.ipc.api.IIPCI;
@@ -152,6 +154,8 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private boolean shuttedDown = false;
 
+    private IIOCounter ioCounter;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -179,7 +183,8 @@ public class NodeControllerService extends AbstractRemoteService {
         osMXBean = ManagementFactory.getOperatingSystemMXBean();
         registrationPending = true;
         getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
-        memoryManager = new MemoryManager(Long.MAX_VALUE);
+        memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
+        ioCounter = new IOCounterFactory().getIOCounter();
     }
 
     public IHyracksRootContext getRootContext() {
@@ -439,6 +444,9 @@ public class NodeControllerService extends AbstractRemoteService {
             hbData.ipcMessageBytesSent = ipcPC.getMessageBytesSent();
             hbData.ipcMessagesReceived = ipcPC.getMessageReceivedCount();
             hbData.ipcMessageBytesReceived = ipcPC.getMessageBytesReceived();
+
+            hbData.diskReads = ioCounter.getReads();
+            hbData.diskWrites = ioCounter.getWrites();
 
             try {
                 cc.nodeHeartbeat(id, hbData);

@@ -80,6 +80,8 @@ public class PregelixJob extends Job {
     public static final String RECOVERY_COUNT = "pregelix.recoveryCount";
     /** the checkpoint interval */
     public static final String CKP_INTERVAL = "pregelix.ckpinterval";
+    /** the dynamic optimization */
+    public static final String DYNAMIC_OPTIMIZATION = "pregelix.dynamicopt";
     /** comma */
     public static final String COMMA_STR = ",";
 
@@ -259,6 +261,15 @@ public class PregelixJob extends Job {
      */
     final public void setCheckpointingInterval(int ckpInterval) {
         getConfiguration().setInt(CKP_INTERVAL, ckpInterval);
+    }
+    
+    /**
+     * Indicate if dynamic optimization is enabled
+     * 
+     * @param dynamicOpt
+     */
+    final public void setEnableDynamicOptimization(boolean dynamicOpt){
+        getConfiguration().setBoolean(DYNAMIC_OPTIMIZATION, dynamicOpt);
     }
 
     @Override
