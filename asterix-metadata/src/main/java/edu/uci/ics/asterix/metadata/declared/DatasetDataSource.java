@@ -13,8 +13,6 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
-//import edu.uci.ics.hyracks.algebricks.core.algebra.properties.AsterixNodeGroupDomain;
-
 public class DatasetDataSource extends AqlDataSource {
 
     private Dataset dataset;
