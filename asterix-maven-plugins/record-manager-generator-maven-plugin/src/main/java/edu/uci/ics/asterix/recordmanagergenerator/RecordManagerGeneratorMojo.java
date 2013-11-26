@@ -67,7 +67,7 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
     
     String recordManagerTemplate = "RecordManager.java"; 
     String arenaManagerTemplate = "ArenaManager.java";
-    String[] supportTemplates = { "Stats.java", "AllocInfo.java", "TypeUtil.java" };
+    String[] supportTemplates = { "RecordManagerStats.java", "AllocInfo.java", "TypeUtil.java" };
     
     private Map<String, RecordType> typeMap;
 
