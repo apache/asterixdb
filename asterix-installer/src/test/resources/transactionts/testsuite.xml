@@ -52,7 +52,7 @@
     </test-case>
   
  </test-group>
-
+<!-- 
  <test-group name="recovery_ddl">
 
     <test-case FilePath="recovery_ddl">
@@ -104,4 +104,6 @@
     </test-case>
  
   </test-group>
+
+-->
 </test-suite>
