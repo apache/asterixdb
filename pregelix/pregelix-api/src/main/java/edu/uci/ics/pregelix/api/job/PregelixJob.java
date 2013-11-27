@@ -82,10 +82,14 @@ public class PregelixJob extends Job {
     public static final String CKP_INTERVAL = "pregelix.ckpinterval";
     /** the dynamic optimization */
     public static final String DYNAMIC_OPTIMIZATION = "pregelix.dynamicopt";
+    /** the iteration complete reporter hook */
+    public static final String ITERATION_COMPLETE_CLASS = "pregelix.iterationCompleteReporter";
     /** comma */
     public static final String COMMA_STR = ",";
     /** the names of the aggregator classes active for all vertex types */ 
     public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalCountAggregator.class.getName() };
+    
+    private IIterationCompleteReporterHook itCompleteHook;
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -95,6 +99,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf) throws IOException {
         super(conf);
+        itCompleteHook = null;
     }
 
     /**
@@ -106,6 +111,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(String jobName) throws IOException {
         super(new Configuration(), jobName);
+        itCompleteHook = null;
     }
 
     /**
@@ -119,6 +125,7 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf, String jobName) throws IOException {
         super(conf, jobName);
+        itCompleteHook = null;
     }
 
     /**
@@ -261,6 +268,16 @@ public class PregelixJob extends Job {
     final public void setCheckpointingInterval(int ckpInterval) {
         getConfiguration().setInt(CKP_INTERVAL, ckpInterval);
     }
+    
+    /**
+     * Users can provide an IIterationCompleteReporterHook implementation to perform actions 
+     * at the end of each iteration  
+     * 
+     * @param reporterClass
+     */
+    final public void setIterationCompleteReporterHook(Class<? extends IIterationCompleteReporterHook> reporterClass) {
+        getConfiguration().setClass(ITERATION_COMPLETE_CLASS, reporterClass, IIterationCompleteReporterHook.class);
+    }
 
     /**
      * Indicate if dynamic optimization is enabled
@@ -269,6 +286,25 @@ public class PregelixJob extends Job {
      */
     final public void setEnableDynamicOptimization(boolean dynamicOpt) {
         getConfiguration().setBoolean(DYNAMIC_OPTIMIZATION, dynamicOpt);
+    }
+
+    /**
+     * Get the IterationCompleteReporterHook for this job.
+     * 
+     * If the job has not yet been run, this value will be null.
+     * 
+     * @return the completion reporter instance or null if the job hasn't been run yet
+     */
+    final public IIterationCompleteReporterHook getIterationCompleteReporterHook() {
+        return itCompleteHook;
+    }
+
+    /**
+     * Pregelix internal use only:
+     *   Set the IterationCompleteReporterHook for this job.
+     */
+    final public void setIterationCompleteReporterHook(IIterationCompleteReporterHook itCompleteHook) {
+        this.itCompleteHook = itCompleteHook;
     }
 
     @Override

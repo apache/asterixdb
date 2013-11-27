@@ -15,6 +15,7 @@
 package edu.uci.ics.pregelix.dataflow.util;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -165,6 +166,27 @@ public class IterationUtils {
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
+    }
+    
+    public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
+            throws HyracksDataException {
+        String pathStr = IterationUtils.TMP_DIR + jobId + "agg";
+        Path path = new Path(pathStr);
+        List<Writable> aggValues = BspUtils.createFinalAggregateValues(conf);
+        HashMap<String, Writable> finalAggs = new HashMap<>();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            for (int i = 0; i < aggValues.size(); i++) {
+                String aggName = input.readUTF();
+                aggValues.get(i).readFields(input);
+                finalAggs.put(aggName, aggValues.get(i));
+            }
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return finalAggs;
     }
 
 }

@@ -12,24 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.api.util;
-
-import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+package edu.uci.ics.pregelix.api.job;
 
 /**
- * A conservative checkpoint hook which does checkpoint every 2 supersteps
+ * Interface for an object whose {@link completeIteration} method is called at the end
+ * of each pregelix job iteration.
  * 
- * @author yingyib
+ * This class can be used to extend/replace the simple reporting in pregelix or to
+ * implement aggregation across iterations of a job (rather than having the values
+ * reset after each iteration).
+ * One object is created for each job.
+ * 
+ * @author jake.biesinger
  */
-public class ConservativeCheckpointHook implements ICheckpointHook {
+public interface IIterationCompleteReporterHook {
 
-    @Override
-    public boolean checkpoint(int superstep) {
-        if (superstep % 2 == 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    public void completeIteration(int superstep, PregelixJob job);
 
 }

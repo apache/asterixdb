@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.client.stats.Counters;
 import edu.uci.ics.hyracks.client.stats.impl.ClientCounterContext;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver;
@@ -123,6 +124,8 @@ public class Driver implements IDriver {
                         /** add hadoop configurations */
                         addHadoopConfiguration(currentJob, ipAddress, port, failed);
                         ICheckpointHook ckpHook = BspUtils.createCheckpointHook(currentJob.getConfiguration());
+                        currentJob.setIterationCompleteReporterHook(BspUtils.createIterationCompleteHook(currentJob
+                                .getConfiguration()));
 
                         /** load the data */
                         if ((i == 0 || compatible(lastJob, currentJob)) && !failed) {
@@ -294,6 +297,7 @@ public class Driver implements IDriver {
                 snapshotJobIndex.set(currentJobIndex);
                 snapshotSuperstep.set(i);
             }
+            job.getIterationCompleteReporterHook().completeIteration(i, job);
             i++;
         } while (!terminate);
     }

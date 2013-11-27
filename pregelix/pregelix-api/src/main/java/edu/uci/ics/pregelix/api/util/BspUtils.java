@@ -33,6 +33,7 @@ import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
@@ -571,6 +572,24 @@ public class BspUtils {
     }
 
     /**
+     * Create a hook that indicates an iteration is complete
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    public static IIterationCompleteReporterHook createIterationCompleteHook(Configuration conf) {
+        Class<? extends IIterationCompleteReporterHook> itCompleteClass = getIterationCompleteReporterHookClass(conf);
+        try {
+            return itCompleteClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Illegally accessed", e);
+        }
+    }
+
+    /**
      * Get the user's subclassed vertex partitioner class.
      * 
      * @param conf
@@ -592,6 +611,20 @@ public class BspUtils {
     @SuppressWarnings("unchecked")
     public static <V extends ICheckpointHook> Class<V> getCheckpointHookClass(Configuration conf) {
         return (Class<V>) conf.getClass(PregelixJob.CKP_CLASS, DefaultCheckpointHook.class, ICheckpointHook.class);
+    }
+
+    /**
+     * Get the user's subclassed iteration complete reporter hook class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return The user defined vertex iteration complete reporter class
+     */
+    @SuppressWarnings("unchecked")
+    public static <V extends IIterationCompleteReporterHook> Class<V> getIterationCompleteReporterHookClass(
+            Configuration conf) {
+        return (Class<V>) conf.getClass(PregelixJob.ITERATION_COMPLETE_CLASS,
+                DefaultIterationCompleteReporterHook.class, IIterationCompleteReporterHook.class);
     }
 
     /**
