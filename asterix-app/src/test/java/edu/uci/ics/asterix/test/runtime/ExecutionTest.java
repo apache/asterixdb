@@ -131,6 +131,6 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null);
+        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 }

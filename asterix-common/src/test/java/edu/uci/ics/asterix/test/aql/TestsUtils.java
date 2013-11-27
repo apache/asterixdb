@@ -357,7 +357,8 @@ public class TestsUtils {
         return s.toString();
     }
 
-    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb) throws Exception {
+    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
+            boolean isDmlRecoveryTest) throws Exception {
 
         File testFile;
         File expectedResultFile;
@@ -383,10 +384,26 @@ public class TestsUtils {
                             TestsUtils.executeDDL(statement);
                             break;
                         case "update":
+
+                            //isDmlRecoveryTest: set IP address
+                            if (isDmlRecoveryTest && statement.contains("nc1://")) {
+                                statement = statement
+                                        .replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
+
+                            }
+
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
                             try {
+                                // isDmlRecoveryTest: insert Crash and Recovery
+                                if (isDmlRecoveryTest) {
+                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
+                                            + "dml_recovery" + File.separator + "kill_cc_and_nc.sh");
+                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
+                                            + "dml_recovery" + File.separator + "stop_and_start.sh");
+                                }
+
                                 InputStream resultStream = executeQuery(statement);
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
