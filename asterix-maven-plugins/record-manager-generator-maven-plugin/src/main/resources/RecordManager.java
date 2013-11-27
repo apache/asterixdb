@@ -206,7 +206,7 @@ public class @E@RecordManager {
         return append(new StringBuilder()).toString();
     }
 
-    public Stats addTo(Stats s) {
+    public RecordManagerStats addTo(RecordManagerStats s) {
         final int size = buffers.size();
         s.buffers += size;
         s.slots += size * NO_SLOTS;
@@ -302,7 +302,7 @@ public class @E@RecordManager {
             return append(new StringBuilder()).toString();
         }
         
-        public void addTo(Stats s) {
+        public void addTo(RecordManagerStats s) {
             if (isInitialized()) {
                 s.items += occupiedSlots;
             }

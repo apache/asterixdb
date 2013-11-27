@@ -36,9 +36,8 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
 
     @Override
     public boolean proceed(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
-            return lockManager.tryLock(datasetId, pkHash, LockMode.S, txnCtx);
+            return lockManager.tryLock(datasetId, -1, LockMode.S, txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -46,9 +45,8 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
 
     @Override
     public void reconcile(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
         try {
-            lockManager.lock(datasetId, pkHash, LockMode.S, txnCtx);
+            lockManager.lock(datasetId, -1, LockMode.S, txnCtx);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
@@ -56,12 +54,7 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
 
     @Override
     public void cancel(ITupleReference tuple) throws HyracksDataException {
-        int pkHash = computePrimaryKeyHashValue(tuple, primaryKeyFields);
-        try {
-            lockManager.unlock(datasetId, pkHash, LockMode.S, txnCtx);
-        } catch (ACIDException e) {
-            throw new HyracksDataException(e);
-        }
+        //no op
     }
 
     @Override
