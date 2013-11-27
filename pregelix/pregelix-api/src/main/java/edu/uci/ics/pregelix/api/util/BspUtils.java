@@ -123,7 +123,12 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> getGlobalAggregatorClasses(
             Configuration conf) {
         String aggStrs = conf.get(PregelixJob.GLOBAL_AGGREGATOR_CLASS);
-        String[] classnames = aggStrs.split(PregelixJob.COMMA_STR);
+        String[] classnames;
+        if (aggStrs == null) {
+            classnames = new String[0];
+        } else {
+            classnames = aggStrs.split(PregelixJob.COMMA_STR);
+        }
         try {
             List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> classes = new ArrayList<Class<? extends GlobalAggregator<I, V, E, M, P, F>>>();
             for (String defaultClass : PregelixJob.DEFAULT_GLOBAL_AGGREGATOR_CLASSES) {
