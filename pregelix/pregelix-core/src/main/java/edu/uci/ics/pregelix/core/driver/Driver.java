@@ -124,8 +124,6 @@ public class Driver implements IDriver {
                         /** add hadoop configurations */
                         addHadoopConfiguration(currentJob, ipAddress, port, failed);
                         ICheckpointHook ckpHook = BspUtils.createCheckpointHook(currentJob.getConfiguration());
-                        currentJob.setIterationCompleteReporterHook(BspUtils.createIterationCompleteHook(currentJob
-                                .getConfiguration()));
 
                         /** load the data */
                         if ((i == 0 || compatible(lastJob, currentJob)) && !failed) {
@@ -280,6 +278,9 @@ public class Driver implements IDriver {
                 loadData(job, jobGen, deploymentId);
             }
         }
+        // TODO how long should the hook persist? One per job?  Or one per recovery attempt?
+        // since the hook shouldn't be stateful, we do one per recovery attempt
+        IIterationCompleteReporterHook itCompleteHook = BspUtils.createIterationCompleteHook(job.getConfiguration());
         int i = doRecovery ? snapshotSuperstep.get() + 1 : 1;
         int ckpInterval = BspUtils.getCheckpointingInterval(job.getConfiguration());
         boolean terminate = false;
@@ -297,7 +298,7 @@ public class Driver implements IDriver {
                 snapshotJobIndex.set(currentJobIndex);
                 snapshotSuperstep.set(i);
             }
-            job.getIterationCompleteReporterHook().completeIteration(i, job);
+            itCompleteHook.completeIteration(i, job);
             i++;
         } while (!terminate);
     }

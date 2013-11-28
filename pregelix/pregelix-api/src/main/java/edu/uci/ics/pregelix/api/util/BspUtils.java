@@ -15,14 +15,23 @@
 
 package edu.uci.ics.pregelix.api.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.MsgList;
@@ -41,6 +50,10 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * them.
  */
 public class BspUtils {
+    
+    public static final String TMP_DIR = "/tmp/";
+    private static final String COUNTERS_VALUE_ON_ITERATION = ".counters.valueOnIter.";
+    private static final String COUNTERS_LAST_ITERATION_COMPLETED = ".counters.lastIterCompleted";
 
     /**
      * Get the user's subclassed {@link VertexInputFormat}.
@@ -732,4 +745,115 @@ public class BspUtils {
     public static int getCheckpointingInterval(Configuration conf) {
         return conf.getInt(PregelixJob.CKP_INTERVAL, -1);
     }
+
+    public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
+            throws HyracksDataException {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            String pathStr = TMP_DIR + jobId + "agg";
+            Path path = new Path(pathStr);
+            FSDataInputStream input = dfs.open(path);
+            int numOfAggs = createFinalAggregateValues(conf).size();
+            for (int i = 0; i < numOfAggs; i++) {
+                String aggName = input.readUTF();
+                Writable agg = createFinalAggregateValue(conf, aggName);
+                if (aggName.equals(aggClassName)) {
+                    agg.readFields(input);
+                    input.close();
+                    return agg;
+                } else {
+                    agg.readFields(input);
+                }
+            }
+            throw new IllegalStateException("Cannot find the aggregate value for " + aggClassName);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
+            throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + "agg";
+        Path path = new Path(pathStr);
+        List<Writable> aggValues = createFinalAggregateValues(conf);
+        HashMap<String, Writable> finalAggs = new HashMap<>();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            for (int i = 0; i < aggValues.size(); i++) {
+                String aggName = input.readUTF();
+                aggValues.get(i).readFields(input);
+                finalAggs.put(aggName, aggValues.get(i));
+            }
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return finalAggs;
+    }
+
+    public static Counters getCounters(PregelixJob job) throws HyracksDataException {
+        Configuration conf = job.getConfiguration();
+        String jobId = getJobId(conf);
+        int lastIter = BspUtils.readCountersLastIteration(conf, jobId);
+        return BspUtils.readCounters(lastIter, conf, jobId);
+    }
+
+    static Counters readCounters(int superstep, Configuration conf, String jobId) throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
+        Path path = new Path(pathStr);
+        Counters savedCounters = new Counters();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            savedCounters.readFields(input);
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return savedCounters;
+    }
+
+    static void writeCounters(Counters toWrite, int superstep, Configuration conf, String jobId)
+            throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
+        Path path = new Path(pathStr);
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataOutputStream output = dfs.create(path, true);
+            toWrite.write(output);
+            output.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    static int readCountersLastIteration(Configuration conf, String jobId) throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
+        Path path = new Path(pathStr);
+        IntWritable lastIter = new IntWritable();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            lastIter.readFields(input);
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return lastIter.get();
+    }
+
+    static void writeCountersLastIteration(int superstep, Configuration conf, String jobId) throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
+        Path path = new Path(pathStr);
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataOutputStream output = dfs.create(path, true);
+            new IntWritable(superstep).write(output);
+            output.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
 }
