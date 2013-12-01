@@ -84,7 +84,7 @@ public class ClusterConfig {
     }
 
     /**
-     * get file split provider
+     * get file split provider, for test only
      * 
      * @param jobId
      * @return
@@ -175,26 +175,6 @@ public class ClusterConfig {
      * @param operator
      * @throws HyracksDataException
      */
-    public static void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator)
-            throws HyracksException {
-        int count = 0;
-        String[] locations = new String[NCs.length * stores.length];
-        for (String nc : NCs) {
-            for (int i = 0; i < stores.length; i++) {
-                locations[count] = nc;
-                count++;
-            }
-        }
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, operator, locations);
-    }
-
-    /**
-     * set location constraint
-     * 
-     * @param spec
-     * @param operator
-     * @throws HyracksDataException
-     */
     public static void setCountConstraint(JobSpecification spec, IOperatorDescriptor operator) throws HyracksException {
         int count = NCs.length * stores.length;
         PartitionConstraintHelper.addPartitionCountConstraint(spec, operator, count);
@@ -255,9 +235,33 @@ public class ClusterConfig {
         }
         return locations;
     }
+    
+    /**
+     * set the default location constraint
+     * 
+     * @param spec
+     * @param operator
+     * @throws HyracksDataException
+     */
+    public static void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator)
+            throws HyracksException {
+        int count = 0;
+        String[] locations = new String[NCs.length * stores.length];
+        for (String nc : NCs) {
+            for (int i = 0; i < stores.length; i++) {
+                locations[count] = nc;
+                count++;
+            }
+        }
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, operator, locations);
+    }
 
     public static String[] getNCNames() {
         return NCs;
+    }
+
+    public static String[] getStores() {
+        return stores;
     }
 
     public static void addToBlackListNodes(Collection<String> nodes) {

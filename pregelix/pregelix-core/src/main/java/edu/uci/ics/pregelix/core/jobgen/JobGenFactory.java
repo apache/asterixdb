@@ -17,26 +17,27 @@ package edu.uci.ics.pregelix.core.jobgen;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
+import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
 
 public class JobGenFactory {
 
-    public static JobGen createJobGen(Plan planChoice, PregelixJob currentJob) {
+    public static JobGen createJobGen(Plan planChoice, PregelixJob currentJob, IOptimizer optimizer) {
         JobGen jobGen = null;
         switch (planChoice) {
             case INNER_JOIN:
-                jobGen = new JobGenInnerJoin(currentJob);
+                jobGen = new JobGenInnerJoin(currentJob, optimizer);
                 break;
             case OUTER_JOIN:
-                jobGen = new JobGenOuterJoin(currentJob);
+                jobGen = new JobGenOuterJoin(currentJob, optimizer);
                 break;
             case OUTER_JOIN_SORT:
-                jobGen = new JobGenOuterJoinSort(currentJob);
+                jobGen = new JobGenOuterJoinSort(currentJob, optimizer);
                 break;
             case OUTER_JOIN_SINGLE_SORT:
-                jobGen = new JobGenOuterJoinSingleSort(currentJob);
+                jobGen = new JobGenOuterJoinSingleSort(currentJob, optimizer);
                 break;
             default:
-                jobGen = new JobGenInnerJoin(currentJob);
+                jobGen = new JobGenInnerJoin(currentJob, optimizer);
         }
         return jobGen;
     }

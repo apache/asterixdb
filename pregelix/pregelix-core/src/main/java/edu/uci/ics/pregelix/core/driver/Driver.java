@@ -55,6 +55,7 @@ import edu.uci.ics.pregelix.core.jobgen.JobGenFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.optimizer.DynamicOptimizer;
 import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
+import edu.uci.ics.pregelix.core.optimizer.NoOpOptimizer;
 import edu.uci.ics.pregelix.core.util.ExceptionUtilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
@@ -111,8 +112,11 @@ public class Driver implements IDriver {
             boolean failed = false;
             int retryCount = 0;
             int maxRetryCount = 3;
-            jobGen = selectJobGen(planChoice, currentJob);
-            IOptimizer dynamicOptimzier = new DynamicOptimizer();
+
+            IOptimizer dynamicOptimizer = BspUtils.getEnableDynamicOptimization(currentJob.getConfiguration()) == false ? new NoOpOptimizer()
+                    : new DynamicOptimizer(counterContext);
+            jobGen = selectJobGen(planChoice, currentJob, dynamicOptimizer);
+            jobGen = dynamicOptimizer.optimize(jobGen, 0);
 
             do {
                 try {
@@ -140,9 +144,7 @@ public class Driver implements IDriver {
                         }
 
                         /** run loop-body jobs with dynamic optimizer if it is enabled */
-                        if (BspUtils.getEnableDynamicOptimization(currentJob.getConfiguration())) {
-                            jobGen = dynamicOptimzier.optimize(counterContext, jobGen, i);
-                        }
+                        jobGen = dynamicOptimizer.optimize(jobGen, i);
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
                                 ckpHook, failed);
                         runClearState(deploymentId, jobGen);
@@ -197,8 +199,8 @@ public class Driver implements IDriver {
                         .equals(currentInputPaths[0])));
     }
 
-    private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob) {
-        return JobGenFactory.createJobGen(planChoice, currentJob);
+    private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob, IOptimizer optimizer) {
+        return JobGenFactory.createJobGen(planChoice, currentJob, optimizer);
     }
 
     private long loadData(PregelixJob currentJob, JobGen jobGen, DeploymentId deploymentId) throws IOException,

@@ -19,13 +19,31 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
+import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 
-public interface IOptimizer {
+public class NoOpOptimizer implements IOptimizer {
 
-    public JobGen optimize(JobGen jobGen, int iteration);
+    @Override
+    public JobGen optimize(JobGen jobGen, int iteration) {
+        return jobGen;
+    }
 
-    public void setOptimizedLocationConstraints(JobSpecification spec, IOperatorDescriptor operator);
+    @Override
+    public void setOptimizedLocationConstraints(JobSpecification spec, IOperatorDescriptor operator) {
+        try {
+            ClusterConfig.setLocationConstraint(spec, operator);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
-    public IFileSplitProvider getOptimizedFileSplitProvider(String jobId, String indexName);
+    @Override
+    public IFileSplitProvider getOptimizedFileSplitProvider(String jobId, String indexName) {
+        try {
+           return ClusterConfig.getFileSplitProvider(jobId, indexName);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
 }

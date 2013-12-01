@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.pregelix.api.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -24,9 +27,11 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  */
 public class DefaultIterationCompleteReporterHook implements IIterationCompleteReporterHook {
 
+    private static final Log LOG = LogFactory.getLog(DefaultIterationCompleteReporterHook.class);
+
     @Override
     public void completeIteration(int superstep, PregelixJob job) {
-        System.out.println("iteration complete reporter for " + superstep + " job " + job);
+        LOG.debug("iteration complete reporter for " + superstep + " job " + job.getJobName());
     }
 
 }
