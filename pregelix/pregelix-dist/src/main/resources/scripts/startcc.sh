@@ -49,7 +49,22 @@ mkdir $CCLOGS_DIR
 
 #Export JAVA_HOME and JAVA_OPTS
 export JAVA_HOME=$JAVA_HOME
-export JAVA_OPTS=$CCJAVA_OPTS
+
+#get the OS
+OS_NAME=`uname -a|awk '{print $1}'`
+LINUX_OS='Linux'
+
+if [ $OS_NAME = $LINUX_OS ];
+then
+        MEM_SIZE=`cat /proc/meminfo |grep MemTotal|awk '{print $2}'`
+else
+        MEM_SIZE=`sysctl -a | grep "hw.memsize ="|awk '{print $3}'`
+fi
+
+MEM_SIZE=$(($MEM_SIZE * 3 / 4))
+
+#Set JAVA_OPTS
+export JAVA_OPTS=$CCJAVA_OPTS" -Xmx"$MEM_SIZE
 
 PREGELIX_HOME=`pwd`
 

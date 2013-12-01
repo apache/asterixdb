@@ -70,6 +70,9 @@ public class Client {
 
         @Option(name = "-ckp-interval", usage = "checkpointing interval -- for fault-tolerance", required = false)
         public int ckpInterval = -1;
+
+        @Option(name = "-dyn-opt", usage = "whether to enable dynamic optimization -- for better performance", required = false)
+        public boolean dynamicOptimization = false;
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -121,6 +124,7 @@ public class Client {
     }
 
     private static void setJobSpecificSettings(PregelixJob job, Options options) {
+        job.setDynamicVertexValueSize(options.dynamicOptimization);
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, options.numVertices);
         job.getConfiguration().setLong(PregelixJob.NUM_EDGES, options.numEdges);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, options.sourceId);

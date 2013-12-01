@@ -111,6 +111,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
+        job.setDynamicVertexValueSize(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -216,6 +217,7 @@ public class JobGenerator {
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
         job.getConfiguration().setLong(ShortestPathsVertex.SOURCE_ID, 0);
+        job.setDynamicVertexValueSize(true);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

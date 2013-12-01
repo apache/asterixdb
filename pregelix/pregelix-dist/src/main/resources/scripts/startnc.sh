@@ -68,13 +68,26 @@ IPADDR=`bin/getip.sh`
 #Get node ID
 NODEID=`hostname | cut -d '.' -f 1`
 
-#Set JAVA_OPTS
-export JAVA_OPTS=$NCJAVA_OPTS
-
 PREGELIX_HOME=`pwd`
 
 #Enter the temp dir
 cd $NCTMP_DIR
+
+#get the OS
+OS_NAME=`uname -a|awk '{print $1}'`
+LINUX_OS='Linux'
+
+if [ $OS_NAME = $LINUX_OS ];
+then
+	MEM_SIZE=`cat /proc/meminfo |grep MemTotal|awk '{print $2}'`
+else
+	MEM_SIZE=`sysctl -a | grep "hw.memsize ="|awk '{print $3}'`
+fi
+
+MEM_SIZE=$(($MEM_SIZE * 3 / 4))
+
+#Set JAVA_OPTS
+export JAVA_OPTS=$NCJAVA_OPTS" -Xmx"$MEM_SIZE
 
 #Launch hyracks nc
 ${PREGELIX_HOME}/bin/pregelixnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR  -node-id $NODEID -iodevices "${IO_DIRS}" &> $NCLOGS_DIR/$NODEID.log &
