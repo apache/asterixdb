@@ -23,6 +23,7 @@ import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeId;
 import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.common.feeds.IFeedManager;
+import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -44,7 +45,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
 
     /** The type associated with the ADM data output from the feed adaptor */
-    private final IAType outptuType;
+    private final IAType outputType;
 
     /** unique identifier for a feed instance. */
     private final FeedConnectionId feedId;
@@ -58,12 +59,39 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     /** The (singleton) instance of IFeedManager **/
     private IFeedManager feedManager;
 
+    /** The library that contains the adapter in use. **/
+    private String adapterLibraryName;
+
+    /**
+     * The adapter factory class that is used to create an instance of the feed adapter.
+     * This value is used only in the case of external adapters.
+     **/
+    private String adapterFactoryClassName;
+
+    /** The configuration parameters associated with the adapter. **/
+    private Map<String, String> adapterConfiguration;
+
+    private ARecordType adapterOutputType;
+
     public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedConnectionId feedId, IAdapterFactory adapterFactory,
             ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicy) {
         super(spec, 0, 1);
         recordDescriptors[0] = rDesc;
         this.adapterFactory = adapterFactory;
-        this.outptuType = atype;
+        this.outputType = atype;
+        this.feedId = feedId;
+        this.feedPolicy = feedPolicy;
+    }
+
+    public FeedIntakeOperatorDescriptor(JobSpecification spec, FeedConnectionId feedId, String adapterLibraryName,
+            String adapterFactoryClassName, Map<String, String> configuration, ARecordType atype,
+            RecordDescriptor rDesc, Map<String, String> feedPolicy) {
+        super(spec, 0, 1);
+        recordDescriptors[0] = rDesc;
+        this.adapterFactoryClassName = adapterFactoryClassName;
+        this.adapterConfiguration = configuration;
+        this.adapterLibraryName = adapterLibraryName;
+        this.outputType = atype;
         this.feedId = feedId;
         this.feedPolicy = feedPolicy;
     }
@@ -80,7 +108,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         try {
             if (ingestionRuntime == null) {
                 // create an instance of a feed adaptor to ingest data.
-                adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx, partition);
+                adapter = createAdapter(ctx, partition);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Beginning new feed:" + feedId);
                 }
@@ -113,10 +141,68 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     }
 
     public IAType getOutputType() {
-        return outptuType;
+        return outputType;
     }
 
     public RecordDescriptor getRecordDescriptor() {
         return recordDescriptors[0];
+    }
+
+    private IFeedAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+        IFeedAdapter feedAdapter = null;
+        if (adapterFactory != null) {
+            feedAdapter = (IFeedAdapter) adapterFactory.createAdapter(ctx, partition);
+        } else {
+            ClassLoader classLoader = ExternalLibraryManager.getLibraryClassLoader(feedId.getDataverse(),
+                    adapterLibraryName);
+            if (classLoader != null) {
+                IAdapterFactory adapterFactory = ((IAdapterFactory) (classLoader.loadClass(adapterFactoryClassName)
+                        .newInstance()));
+
+                switch (adapterFactory.getAdapterType()) {
+                    case TYPED: {
+                        ((ITypedAdapterFactory) adapterFactory).configure(adapterConfiguration);
+                        feedAdapter = (IFeedAdapter) ((ITypedAdapterFactory) adapterFactory).createAdapter(ctx,
+                                partition);
+                    }
+                        break;
+                    case GENERIC: {
+                        String outputTypeName = adapterConfiguration.get(IGenericAdapterFactory.KEY_TYPE_NAME);
+                        if (outputTypeName == null) {
+                            throw new IllegalArgumentException(
+                                    "You must specify the datatype associated with the incoming data. Datatype is specified by the "
+                                            + IGenericAdapterFactory.KEY_TYPE_NAME + " configuration parameter");
+                        }
+                        ((IGenericAdapterFactory) adapterFactory).configure(adapterConfiguration,
+                                (ARecordType) adapterOutputType);
+                        ((IGenericAdapterFactory) adapterFactory).createAdapter(ctx, partition);
+                    }
+                        break;
+                }
+
+                feedAdapter = (IFeedAdapter) adapterFactory.createAdapter(ctx, partition);
+            } else {
+                String message = "Unable to create adapter as class loader not configured for library "
+                        + adapterLibraryName + " in dataverse " + feedId.getDataverse();
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.severe(message);
+                }
+                throw new IllegalArgumentException(message);
+
+            }
+        }
+        return feedAdapter;
+    }
+
+    public String getAdapterLibraryName() {
+        return adapterLibraryName;
+    }
+
+    public String getAdapterFactoryClassName() {
+        return adapterFactoryClassName;
+    }
+
+    public Map<String, String> getAdapterConfiguration() {
+        return adapterConfiguration;
     }
 }

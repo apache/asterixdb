@@ -59,7 +59,9 @@ public class AsterixExternalLibraryIT {
     @Test
     public void test() throws Exception {
         for (TestCaseContext testCaseCtx : testCaseCollection) {
-            TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx, null);
+            if (testCaseCtx.getTestCase().getCompilationUnit().get(0).getName().contains("adapt")) {
+                TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx, null);
+            }
         }
     }
 
