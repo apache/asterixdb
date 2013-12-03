@@ -80,6 +80,7 @@ LINUX_OS='Linux'
 if [ $OS_NAME = $LINUX_OS ];
 then
 	MEM_SIZE=`cat /proc/meminfo |grep MemTotal|awk '{print $2}'`
+	MEM_SIZE=$(($MEM_SIZE * 1000))
 else
 	MEM_SIZE=`sysctl -a | grep "hw.memsize ="|awk '{print $3}'`
 fi
