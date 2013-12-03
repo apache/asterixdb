@@ -91,4 +91,10 @@ MEM_SIZE=$(($MEM_SIZE * 3 / 4))
 export JAVA_OPTS=$NCJAVA_OPTS" -Xmx"$MEM_SIZE
 
 #Launch hyracks nc
-${PREGELIX_HOME}/bin/pregelixnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR  -node-id $NODEID -iodevices "${IO_DIRS}" &> $NCLOGS_DIR/$NODEID.log &
+cmd=( "${PREGELIX_HOME}/bin/pregelixnc" )
+cmd+=( -cc-host $CCHOST -cc-port $CC_CLUSTERPORT 
+	   -cluster-net-ip-address $IPADDR -data-ip-address $IPADDR -result-ip-address $IPADDR
+	   -node-id $NODEID -iodevices "${IO_DIRS}" );
+
+printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "${cmd[*]}" >> "$NCLOGS_DIR/$NODEID.log"
+${cmd[@]} &>> "$NCLOGS_DIR/$NODEID.log" &
