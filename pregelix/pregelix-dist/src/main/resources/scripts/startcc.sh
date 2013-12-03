@@ -95,4 +95,4 @@ fi
 
 printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "${cmd[*]}" >> "$CCLOGS_DIR/cc.log"
 #Start the pregelix CC
-${cmd[@]} &>> "$CCLOGS_DIR/cc.log" &
+${cmd[@]} >> "$CCLOGS_DIR/cc.log" 2>&1 &

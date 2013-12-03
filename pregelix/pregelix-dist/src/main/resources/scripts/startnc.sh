@@ -97,4 +97,4 @@ cmd+=( -cc-host $CCHOST -cc-port $CC_CLUSTERPORT
 	   -node-id $NODEID -iodevices "${IO_DIRS}" );
 
 printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "${cmd[*]}" >> "$NCLOGS_DIR/$NODEID.log"
-${cmd[@]} &>> "$NCLOGS_DIR/$NODEID.log" &
+${cmd[@]} >> "$NCLOGS_DIR/$NODEID.log" 2>&1 &
