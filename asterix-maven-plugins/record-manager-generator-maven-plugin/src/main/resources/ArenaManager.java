@@ -114,7 +114,7 @@ public class @E@ArenaManager {
         return append(new StringBuilder()).toString();
     }
 
-    public Stats addTo(Stats s) {
+    public RecordManagerStats addTo(RecordManagerStats s) {
         s.arenas += noArenas;
         for (int i = 0; i < noArenas; ++i) {
             arenas[i].addTo(s);

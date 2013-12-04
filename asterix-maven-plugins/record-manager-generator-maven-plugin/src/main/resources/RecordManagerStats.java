@@ -1,6 +1,6 @@
 package @PACKAGE@;
 
-public class Stats {
+public class RecordManagerStats {
     int arenas  = 0;
     int buffers = 0;
     int slots   = 0;
