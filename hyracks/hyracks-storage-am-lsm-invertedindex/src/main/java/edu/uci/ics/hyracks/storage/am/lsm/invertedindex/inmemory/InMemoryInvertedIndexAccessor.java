@@ -65,7 +65,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     }
 
     @Override
-    public IIndexCursor createSearchCursor() {
+    public IIndexCursor createSearchCursor(boolean exclusive) {
         return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
     }
 

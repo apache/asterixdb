@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunction;
@@ -56,10 +57,10 @@ public class FunctionProxy {
      * @throws HyracksDataException
      */
     public void functionOpen() throws HyracksDataException {
+        ctxCL = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(ctx.getJobletContext().getClassLoader());
         inputRd = inputRdFactory.createRecordDescriptor(ctx);
         tupleDe = new TupleDeserializer(inputRd);
-        ctxCL = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
         for (IFrameWriter writer : writers) {
             writer.open();
         }
@@ -80,10 +81,10 @@ public class FunctionProxy {
      * @throws HyracksDataException
      */
     public void functionCall(IFrameTupleAccessor leftAccessor, int leftTupleIndex, ITupleReference right,
-            ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
+            ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor) throws HyracksDataException {
         Object[] tuple = tupleDe.deserializeRecord(leftAccessor, leftTupleIndex, right);
         function.process(tuple);
-        function.update(right, cloneUpdateTb);
+        function.update(right, cloneUpdateTb, cursor);
     }
 
     /**
@@ -92,10 +93,11 @@ public class FunctionProxy {
      * @param updateRef
      * @throws HyracksDataException
      */
-    public void functionCall(ITupleReference updateRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
+    public void functionCall(ITupleReference updateRef, ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor)
+            throws HyracksDataException {
         Object[] tuple = tupleDe.deserializeRecord(updateRef);
         function.process(tuple);
-        function.update(updateRef, cloneUpdateTb);
+        function.update(updateRef, cloneUpdateTb, cursor);
     }
 
     /**
@@ -107,11 +109,11 @@ public class FunctionProxy {
      *            update pointer
      * @throws HyracksDataException
      */
-    public void functionCall(ArrayTupleBuilder tb, ITupleReference inPlaceUpdateRef, ArrayTupleBuilder cloneUpdateTb)
-            throws HyracksDataException {
+    public void functionCall(ArrayTupleBuilder tb, ITupleReference inPlaceUpdateRef, ArrayTupleBuilder cloneUpdateTb,
+            IIndexCursor cursor) throws HyracksDataException {
         Object[] tuple = tupleDe.deserializeRecord(tb, inPlaceUpdateRef);
         function.process(tuple);
-        function.update(inPlaceUpdateRef, cloneUpdateTb);
+        function.update(inPlaceUpdateRef, cloneUpdateTb, cursor);
     }
 
     /**

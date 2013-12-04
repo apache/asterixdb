@@ -31,7 +31,9 @@ public abstract class ApplicationContext implements IApplicationContext {
     protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
     protected ThreadFactory threadFactory = new ThreadFactory() {
         public Thread newThread(Runnable r) {
-            return new Thread(r);
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
         }
     };
 

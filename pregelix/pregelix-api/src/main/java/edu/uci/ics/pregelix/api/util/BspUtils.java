@@ -15,6 +15,9 @@
 
 package edu.uci.ics.pregelix.api.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -37,11 +40,6 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * them.
  */
 public class BspUtils {
-    private static Configuration defaultConf = null;
-
-    public static void setDefaultConfiguration(Configuration conf) {
-        defaultConf = conf;
-    }
 
     /**
      * Get the user's subclassed {@link VertexInputFormat}.
@@ -122,10 +120,19 @@ public class BspUtils {
      * @return User's vertex combiner class
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> Class<? extends GlobalAggregator<I, V, E, M, P, F>> getGlobalAggregatorClass(
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> getGlobalAggregatorClasses(
             Configuration conf) {
-        return (Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClass(PregelixJob.GLOBAL_AGGREGATOR_CLASS,
-                GlobalCountAggregator.class, GlobalAggregator.class);
+        String aggStrs = conf.get(PregelixJob.GLOBAL_AGGREGATOR_CLASS);
+        String[] classnames = aggStrs.split(PregelixJob.COMMA_STR);
+        try {
+            List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> classes = new ArrayList<Class<? extends GlobalAggregator<I, V, E, M, P, F>>>();
+            for (int i = 0; i < classnames.length; i++) {
+                classes.add((Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClassByName(classnames[i]));
+            }
+            return classes;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String getJobId(Configuration conf) {
@@ -166,10 +173,52 @@ public class BspUtils {
      * @return Instantiated user vertex combiner class
      */
     @SuppressWarnings("rawtypes")
-    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> GlobalAggregator<I, V, E, M, P, F> createGlobalAggregator(
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> List<GlobalAggregator> createGlobalAggregators(
             Configuration conf) {
-        Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggregatorClass = getGlobalAggregatorClass(conf);
-        return ReflectionUtils.newInstance(globalAggregatorClass, conf);
+        List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> globalAggregatorClasses = getGlobalAggregatorClasses(conf);
+        List<GlobalAggregator> aggs = new ArrayList<GlobalAggregator>();
+        for (Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggClass : globalAggregatorClasses) {
+            aggs.add(ReflectionUtils.newInstance(globalAggClass, conf));
+        }
+        return aggs;
+    }
+
+    /**
+     * Get global aggregator class names
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return An array of Global aggregator names
+     */
+    @SuppressWarnings("rawtypes")
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> String[] getGlobalAggregatorClassNames(
+            Configuration conf) {
+        List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> globalAggregatorClasses = getGlobalAggregatorClasses(conf);
+        String[] aggClassNames = new String[globalAggregatorClasses.size()];
+        int i = 0;
+        for (Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggClass : globalAggregatorClasses) {
+            aggClassNames[i++] = globalAggClass.getName();
+        }
+        return aggClassNames;
+    }
+
+    /**
+     * Get global aggregator class names
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return An array of Global aggregator names
+     */
+    @SuppressWarnings("rawtypes")
+    public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> String[] getPartialAggregateValueClassNames(
+            Configuration conf) {
+        String[] gloablAggClassNames = getGlobalAggregatorClassNames(conf);
+        String[] partialAggValueClassNames = new String[gloablAggClassNames.length];
+        int i = 0;
+        for (String globalAggClassName : gloablAggClassNames) {
+            partialAggValueClassNames[i++] = getPartialAggregateValueClass(conf, globalAggClassName).getName();
+        }
+        return partialAggValueClassNames;
     }
 
     /**
@@ -209,8 +258,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <I extends Writable> Class<I> getVertexIndexClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<I>) conf.getClass(PregelixJob.VERTEX_INDEX_CLASS, WritableComparable.class);
     }
 
@@ -302,8 +349,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <M extends WritableSizable> Class<M> getMessageValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.MESSAGE_VALUE_CLASS, Writable.class);
     }
 
@@ -315,10 +360,8 @@ public class BspUtils {
      * @return User's global aggregate value class
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Writable> Class<M> getPartialAggregateValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
-        return (Class<M>) conf.getClass(PregelixJob.PARTIAL_AGGREGATE_VALUE_CLASS, Writable.class);
+    public static <M extends Writable> Class<M> getPartialAggregateValueClass(Configuration conf, String aggClassName) {
+        return (Class<M>) conf.getClass(PregelixJob.PARTIAL_AGGREGATE_VALUE_CLASS + "$" + aggClassName, Writable.class);
     }
 
     /**
@@ -330,8 +373,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <M extends Writable> Class<M> getPartialCombineValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<M>) conf.getClass(PregelixJob.PARTIAL_COMBINE_VALUE_CLASS, Writable.class);
     }
 
@@ -344,8 +385,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static Class<? extends NormalizedKeyComputer> getNormalizedKeyComputerClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<? extends NormalizedKeyComputer>) conf.getClass(PregelixJob.NMK_COMPUTER_CLASS,
                 NormalizedKeyComputer.class);
     }
@@ -358,10 +397,8 @@ public class BspUtils {
      * @return User's global aggregate value class
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Writable> Class<M> getFinalAggregateValueClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
-        return (Class<M>) conf.getClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS, Writable.class);
+    public static <M extends Writable> Class<M> getFinalAggregateValueClass(Configuration conf, String aggClassName) {
+        return (Class<M>) conf.getClass(PregelixJob.FINAL_AGGREGATE_VALUE_CLASS + "$" + aggClassName, Writable.class);
     }
 
     /**
@@ -389,8 +426,8 @@ public class BspUtils {
      *            Configuration to check
      * @return Instantiated user aggregate value
      */
-    public static <M extends Writable> M createPartialAggregateValue(Configuration conf) {
-        Class<M> aggregateValueClass = getPartialAggregateValueClass(conf);
+    public static <M extends Writable> M createPartialAggregateValue(Configuration conf, String aggClassName) {
+        Class<M> aggregateValueClass = getPartialAggregateValueClass(conf, aggClassName);
         try {
             return aggregateValueClass.newInstance();
         } catch (InstantiationException e) {
@@ -398,6 +435,29 @@ public class BspUtils {
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException("createPartialAggregateValue: Illegally accessed", e);
         }
+    }
+
+    /**
+     * Create the list of user partial aggregate values
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user partial aggregate values
+     */
+    public static <M extends Writable> List<M> createPartialAggregateValues(Configuration conf) {
+        String[] aggClassNames = BspUtils.getGlobalAggregatorClassNames(conf);
+        List<M> aggValueList = new ArrayList<M>();
+        for (String aggClassName : aggClassNames) {
+            Class<M> aggregateValueClass = getPartialAggregateValueClass(conf, aggClassName);
+            try {
+                aggValueList.add(aggregateValueClass.newInstance());
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException("createAggregateValue: Failed to instantiate", e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException("createAggregateValue: Illegally accessed", e);
+            }
+        }
+        return aggValueList;
     }
 
     /**
@@ -431,8 +491,8 @@ public class BspUtils {
      *            Configuration to check
      * @return Instantiated user aggregate value
      */
-    public static <M extends Writable> M createFinalAggregateValue(Configuration conf) {
-        Class<M> aggregateValueClass = getFinalAggregateValueClass(conf);
+    public static <M extends Writable> M createFinalAggregateValue(Configuration conf, String aggClassName) {
+        Class<M> aggregateValueClass = getFinalAggregateValueClass(conf, aggClassName);
         try {
             return aggregateValueClass.newInstance();
         } catch (InstantiationException e) {
@@ -440,6 +500,29 @@ public class BspUtils {
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException("createAggregateValue: Illegally accessed", e);
         }
+    }
+
+    /**
+     * Create the list of user aggregate values
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    public static <M extends Writable> List<M> createFinalAggregateValues(Configuration conf) {
+        String[] aggClassNames = BspUtils.getGlobalAggregatorClassNames(conf);
+        List<M> aggValueList = new ArrayList<M>();
+        for (String aggClassName : aggClassNames) {
+            Class<M> aggregateValueClass = getFinalAggregateValueClass(conf, aggClassName);
+            try {
+                aggValueList.add(aggregateValueClass.newInstance());
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException("createAggregateValue: Failed to instantiate", e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException("createAggregateValue: Illegally accessed", e);
+            }
+        }
+        return aggValueList;
     }
 
     /**
@@ -488,8 +571,6 @@ public class BspUtils {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <V extends VertexPartitioner> Class<V> getVertexPartitionerClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<V>) conf.getClass(PregelixJob.PARTITIONER_CLASS, null, VertexPartitioner.class);
     }
 
@@ -502,8 +583,6 @@ public class BspUtils {
      */
     @SuppressWarnings("unchecked")
     public static <V extends ICheckpointHook> Class<V> getCheckpointHookClass(Configuration conf) {
-        if (conf == null)
-            conf = defaultConf;
         return (Class<V>) conf.getClass(PregelixJob.CKP_CLASS, DefaultCheckpointHook.class, ICheckpointHook.class);
     }
 
@@ -515,7 +594,7 @@ public class BspUtils {
      * @return the boolean setting of the parameter, by default it is false
      */
     public static boolean getDynamicVertexValueSize(Configuration conf) {
-        return conf.getBoolean(PregelixJob.INCREASE_STATE_LENGTH, false);
+        return conf.getBoolean(PregelixJob.INCREASE_STATE_LENGTH, true);
     }
 
     /**
@@ -591,6 +670,16 @@ public class BspUtils {
      */
     public static int getRecoveryCount(Configuration conf) {
         return conf.getInt(PregelixJob.RECOVERY_COUNT, 0);
+    }
+    
+    /***
+     * Get enable dynamic optimization
+     * 
+     * @param conf Configuration
+     * @return true if enabled; otherwise false
+     */
+    public static boolean getEnableDynamicOptimization(Configuration conf){
+        return conf.getBoolean(PregelixJob.DYNAMIC_OPTIMIZATION, true);
     }
 
     /***

@@ -63,8 +63,6 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final IAggregatorDescriptor aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
-                    outRecordDesc, groupFields, groupFields);
             final ByteBuffer copyFrame = ctx.allocateFrame();
             final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
             copyFrameAccessor.reset(copyFrame);
@@ -78,6 +76,8 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
 
                 @Override
                 public void open() throws HyracksDataException {
+                    IAggregatorDescriptor aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc,
+                            outRecordDesc, groupFields, groupFields, writer);
                     pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc,
                             outRecordDesc, writer);
                     pgw.open();

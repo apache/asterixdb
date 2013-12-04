@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.AbstractTreeIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
+import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
@@ -43,6 +44,7 @@ import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.util.CopyUpdateUtil;
 import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
 import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
+import edu.uci.ics.pregelix.dataflow.util.StorageType;
 import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
 
 public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
@@ -68,6 +70,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
     private ArrayTupleBuilder cloneUpdateTb;
     private final UpdateBuffer updateBuffer;
     private final SearchKeyTupleReference tempTupleReference = new SearchKeyTupleReference();
+    private final StorageType storageType;
 
     public IndexNestedLoopJoinFunctionUpdateOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc,
             IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, boolean isForward,
@@ -77,6 +80,11 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             throws HyracksDataException {
         treeIndexOpHelper = (IndexDataflowHelper) opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(
                 opDesc, ctx, partition);
+        if (treeIndexOpHelper instanceof TreeIndexDataflowHelper) {
+            storageType = StorageType.TreeIndex;
+        } else {
+            storageType = StorageType.LSMIndex;
+        }
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         this.recDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
@@ -96,7 +104,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(true);
     }
 
     @Override
@@ -146,7 +154,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             cloneUpdateTb = new ArrayTupleBuilder(index.getFieldCount());
             updateBuffer.setFieldCount(index.getFieldCount());
         } catch (Exception e) {
-            treeIndexOpHelper.close();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -170,13 +178,13 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
             /**
              * call the update function
              */
-            functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb);
+            functionProxy.functionCall(leftAccessor, tIndex, indexEntryTuple, cloneUpdateTb, cursor);
 
             /**
              * doing copy update
              */
             CopyUpdateUtil.copyUpdate(tempTupleReference, indexEntryTuple, updateBuffer, cloneUpdateTb, indexAccessor,
-                    cursor, rangePred);
+                    cursor, rangePred, false, storageType);
         }
     }
 
@@ -204,6 +212,7 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
                 writeSearchResults(accessor, i);
             }
         } catch (Exception e) {
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -230,6 +239,11 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
 
     @Override
     public void fail() throws HyracksDataException {
+        closeResource();
+        populateFailure();
+    }
+
+    private void closeResource() throws HyracksDataException {
         try {
             cursor.close();
         } catch (Exception e) {
@@ -237,6 +251,9 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorNodePushable extends Abstr
         } finally {
             treeIndexOpHelper.close();
         }
+    }
+
+    private void populateFailure() throws HyracksDataException {
         for (IFrameWriter writer : writers) {
             writer.fail();
         }

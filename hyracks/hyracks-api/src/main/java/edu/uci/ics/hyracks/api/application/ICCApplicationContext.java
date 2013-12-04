@@ -58,4 +58,5 @@ public interface ICCApplicationContext extends IApplicationContext {
      * @return The Cluster Controller Context.
      */
     public ICCContext getCCContext();
+
 }

@@ -270,6 +270,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             // Now, transfer annotations from the original sort op. to this one.
             AbstractLogicalOperator transferTo = nextOp;
             if (transferTo.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
+                // 
+                // remove duplicate exchange operator
                 transferTo = (AbstractLogicalOperator) transferTo.getInputs().get(0).getValue();
             }
             transferTo.getAnnotations().putAll(op.getAnnotations());
@@ -344,6 +346,13 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         for (int j = 0; j <= prefix; j++) {
             LocalOrderProperty orderProp = (LocalOrderProperty) dlvd.get(j);
             returnedProperties.add(new OrderColumn(orderProp.getColumn(), orderProp.getOrder()));
+        }
+        // maintain other order columns after the required order columns
+        if(returnedProperties.size() != 0){
+            for(int j = prefix + 1; j < dlvdCols.size(); j++){
+                LocalOrderProperty orderProp = (LocalOrderProperty) dlvd.get(j);
+                returnedProperties.add(new OrderColumn(orderProp.getColumn(), orderProp.getOrder()));
+            }
         }
         return returnedProperties;
     }

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -42,21 +43,24 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.client.stats.Counters;
+import edu.uci.ics.hyracks.client.stats.impl.ClientCounterContext;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver;
 import edu.uci.ics.pregelix.core.jobgen.JobGen;
-import edu.uci.ics.pregelix.core.jobgen.JobGenInnerJoin;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoin;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSingleSort;
-import edu.uci.ics.pregelix.core.jobgen.JobGenOuterJoinSort;
+import edu.uci.ics.pregelix.core.jobgen.JobGenFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+import edu.uci.ics.pregelix.core.optimizer.DynamicOptimizer;
+import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
 import edu.uci.ics.pregelix.core.util.ExceptionUtilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 @SuppressWarnings("rawtypes")
 public class Driver implements IDriver {
+    public static final String[] COUNTERS = { Counters.NUM_PROCESSOR, Counters.SYSTEM_LOAD, Counters.MEMORY_USAGE,
+            Counters.DISK_READ, Counters.DISK_WRITE, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE };
     private static final Log LOG = LogFactory.getLog(Driver.class);
     private IHyracksClientConnection hcc;
     private Class exampleClass;
@@ -93,6 +97,8 @@ public class Driver implements IDriver {
             PregelixJob currentJob = jobs.get(0);
             PregelixJob lastJob = currentJob;
             addHadoopConfiguration(currentJob, ipAddress, port, true);
+            ClientCounterContext counterContext = new ClientCounterContext(ipAddress, 16001,
+                    Arrays.asList(ClusterConfig.getNCNames()));
             JobGen jobGen = null;
 
             /** prepare job -- deploy jars */
@@ -105,6 +111,7 @@ public class Driver implements IDriver {
             int retryCount = 0;
             int maxRetryCount = 3;
             jobGen = selectJobGen(planChoice, currentJob);
+            IOptimizer dynamicOptimzier = new DynamicOptimizer();
 
             do {
                 try {
@@ -131,7 +138,10 @@ public class Driver implements IDriver {
                             jobGen.reset(currentJob);
                         }
 
-                        /** run loop-body jobs */
+                        /** run loop-body jobs with dynamic optimizer if it is enabled */
+                        if (BspUtils.getEnableDynamicOptimization(currentJob.getConfiguration())) {
+                            jobGen = dynamicOptimzier.optimize(counterContext, jobGen, i);
+                        }
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
                                 ckpHook, failed);
                         runClearState(deploymentId, jobGen);
@@ -156,6 +166,13 @@ public class Driver implements IDriver {
                 }
             } while (failed && retryCount < maxRetryCount);
             LOG.info("job finished");
+            StringBuffer counterBuffer = new StringBuffer();
+            counterBuffer.append("performance counters\n");
+            for (String counter : COUNTERS) {
+                counterBuffer.append("\t" + counter + ": " + counterContext.getCounter(counter, false).get() + "\n");
+            }
+            LOG.info(counterBuffer.toString());
+            counterContext.stop();
         } catch (Exception e) {
             throw new HyracksException(e);
         }
@@ -180,24 +197,7 @@ public class Driver implements IDriver {
     }
 
     private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob) {
-        JobGen jobGen;
-        switch (planChoice) {
-            case INNER_JOIN:
-                jobGen = new JobGenInnerJoin(currentJob);
-                break;
-            case OUTER_JOIN:
-                jobGen = new JobGenOuterJoin(currentJob);
-                break;
-            case OUTER_JOIN_SORT:
-                jobGen = new JobGenOuterJoinSort(currentJob);
-                break;
-            case OUTER_JOIN_SINGLE_SORT:
-                jobGen = new JobGenOuterJoinSingleSort(currentJob);
-                break;
-            default:
-                jobGen = new JobGenInnerJoin(currentJob);
-        }
-        return jobGen;
+        return JobGenFactory.createJobGen(planChoice, currentJob);
     }
 
     private long loadData(PregelixJob currentJob, JobGen jobGen, DeploymentId deploymentId) throws IOException,

@@ -48,9 +48,8 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
     
     @Override
-	public void deallocateFrames(int frameCount) {
-		// TODO Auto-generated method stub
-	}
+    public void deallocateFrames(int frameCount) {
+    }
 
     @Override
     public int getFrameSize() {

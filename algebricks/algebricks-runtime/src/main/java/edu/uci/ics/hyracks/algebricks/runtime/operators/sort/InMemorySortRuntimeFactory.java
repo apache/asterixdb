@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.sort.FrameSorter;
+import edu.uci.ics.hyracks.dataflow.std.sort.FrameSorterMergeSort;
 
 public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
@@ -52,13 +52,13 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
         return new AbstractOneInputOneOutputPushRuntime() {
 
-            FrameSorter frameSorter = null;
+            FrameSorterMergeSort frameSorter = null;
 
             @Override
             public void open() throws HyracksDataException {
                 if (frameSorter == null) {
-                    frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory, comparatorFactories,
-                            outputRecordDesc);
+                    frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory,
+                            comparatorFactories, outputRecordDesc);
                 }
                 frameSorter.reset();
                 writer.open();

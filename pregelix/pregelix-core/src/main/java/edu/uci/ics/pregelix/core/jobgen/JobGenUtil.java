@@ -16,15 +16,18 @@
 package edu.uci.ics.pregelix.core.jobgen;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.pregelix.api.graph.NormalizedKeyComputer;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.core.runtime.touchpoint.RawBinaryComparatorFactory;
+import edu.uci.ics.pregelix.core.runtime.touchpoint.RawNormalizedKeyComputerFactory;
 import edu.uci.ics.pregelix.core.runtime.touchpoint.WritableComparingBinaryComparatorFactory;
 import edu.uci.ics.pregelix.runtime.touchpoint.VertexIdNormalizedKeyComputerFactory;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({ "rawtypes" })
 public class JobGenUtil {
 
     /**
@@ -36,11 +39,7 @@ public class JobGenUtil {
      * @return
      */
     public static INormalizedKeyComputerFactory getINormalizedKeyComputerFactory(Configuration conf) {
-        Class<? extends NormalizedKeyComputer> clazz = BspUtils.getNormalizedKeyComputerClass(conf);
-        if (clazz.equals(NormalizedKeyComputer.class)) {
-            return null;
-        }
-        return new VertexIdNormalizedKeyComputerFactory(clazz);
+        return RawNormalizedKeyComputerFactory.INSTANCE;
     }
 
     /**
@@ -52,7 +51,34 @@ public class JobGenUtil {
      * @return
      */
     public static IBinaryComparatorFactory getIBinaryComparatorFactory(int iteration, Class keyClass) {
-        return new WritableComparingBinaryComparatorFactory(keyClass);
+        return RawBinaryComparatorFactory.INSTANCE;
+    }
+
+    /**
+     * get normalized key factory for the final output job
+     * 
+     * @param iteration
+     * @param keyClass
+     * @return
+     */
+    public static INormalizedKeyComputerFactory getFinalNormalizedKeyComputerFactory(Configuration conf) {
+        Class<? extends NormalizedKeyComputer> clazz = BspUtils.getNormalizedKeyComputerClass(conf);
+        if (clazz.equals(NormalizedKeyComputer.class)) {
+            return null;
+        }
+        return new VertexIdNormalizedKeyComputerFactory(clazz);
+    }
+
+    /**
+     * get comparator for the final output job
+     * 
+     * @param iteration
+     * @param keyClass
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static IBinaryComparatorFactory getFinalBinaryComparatorFactory(Class vertexIdClass) {
+        return new WritableComparingBinaryComparatorFactory(WritableComparator.get(vertexIdClass).getClass());
     }
 
     /**

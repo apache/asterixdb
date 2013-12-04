@@ -51,6 +51,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     private final IBTreeLeafFrame frame;
     private final ITreeIndexTupleReference frameTuple;
     private final boolean exclusiveLatchNodes;
+    private boolean isPageDirty;
 
     private RangePredicate pred;
     private MultiComparator lowKeyCmp;
@@ -61,8 +62,8 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     // For storing the count.
     private byte[] countBuf = new byte[4];
     private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(1);
-    private ArrayTupleReference countTuple = new ArrayTupleReference();    
-    
+    private ArrayTupleReference countTuple = new ArrayTupleReference();
+
     public BTreeCountingSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
         this.frame = frame;
         this.frameTuple = frame.createTupleReference();
@@ -74,7 +75,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         // in case open is called multiple times without closing
         if (page != null) {
             if (exclusiveLatchNodes) {
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(isPageDirty);
             } else {
                 page.releaseReadLatch();
             }
@@ -82,6 +83,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         }
 
         page = ((BTreeCursorInitialState) initialState).getPage();
+        isPageDirty = false;
         frame.setPage(page);
 
         pred = (RangePredicate) searchPred;
@@ -107,7 +109,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         }
 
         tupleIndex = getLowKeyIndex();
-        stopTupleIndex = getHighKeyIndex();        
+        stopTupleIndex = getHighKeyIndex();
     }
 
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
@@ -115,13 +117,14 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
             ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
             if (exclusiveLatchNodes) {
                 nextLeaf.acquireWriteLatch();
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(isPageDirty);
             } else {
                 nextLeaf.acquireReadLatch();
                 page.releaseReadLatch();
             }
             bufferCache.unpin(page);
             page = nextLeaf;
+            isPageDirty = false;
             frame.setPage(page);
             nextLeafPage = frame.getNextLeaf();
         } while (frame.getTupleCount() == 0 && nextLeafPage > 0);
@@ -199,7 +202,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     public void close() throws HyracksDataException {
         if (page != null) {
             if (exclusiveLatchNodes) {
-                page.releaseWriteLatch();
+                page.releaseWriteLatch(isPageDirty);
             } else {
                 page.releaseReadLatch();
             }
@@ -208,6 +211,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
         tupleBuilder.reset();
         tupleIndex = 0;
         page = null;
+        isPageDirty = false;
         pred = null;
         count = -1;
     }
@@ -218,7 +222,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
             close();
         } catch (Exception e) {
             e.printStackTrace();
-        }        
+        }
     }
 
     @Override
@@ -244,6 +248,15 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     @Override
     public boolean exclusiveLatchNodes() {
         return exclusiveLatchNodes;
+    }
+
+    @Override
+    public void markCurrentTupleAsUpdated() throws HyracksDataException {
+        if (exclusiveLatchNodes) {
+            isPageDirty = true;
+        } else {
+            throw new HyracksDataException("This cursor has not been created with the intention to allow updates.");
+        }
     }
 
 }

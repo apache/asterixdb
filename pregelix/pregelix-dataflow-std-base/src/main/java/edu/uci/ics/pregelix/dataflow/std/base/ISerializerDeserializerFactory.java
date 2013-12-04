@@ -16,10 +16,12 @@ package edu.uci.ics.pregelix.dataflow.std.base;
 
 import java.io.Serializable;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 
 public interface ISerializerDeserializerFactory<T> extends Serializable {
 
-	public ISerializerDeserializer<T> getSerializerDeserializer();
+    public ISerializerDeserializer<T> getSerializerDeserializer(Configuration conf);
 
 }

@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
  * This is the IJobSerializerDeserializer implementation for jobs with dynamic deployed jars.
  * 
  * @author yingyib
- *
  */
 public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeserializer {
 
@@ -98,5 +97,10 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
     @Override
     public ClassLoader getClassLoader() throws HyracksException {
         return classLoader;
+    }
+
+    @Override
+    public String toString() {
+        return classLoader.toString();
     }
 }

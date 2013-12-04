@@ -145,20 +145,21 @@ public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ITreeIndexCursor
 
     @Override
     public void setBufferCache(IBufferCache bufferCache) {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void setFileId(int fileId) {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public boolean exclusiveLatchNodes() {
-        // TODO Auto-generated method stub
         return false;
     }
 
+    @Override
+    public void markCurrentTupleAsUpdated() throws HyracksDataException {
+        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
+    }
 }

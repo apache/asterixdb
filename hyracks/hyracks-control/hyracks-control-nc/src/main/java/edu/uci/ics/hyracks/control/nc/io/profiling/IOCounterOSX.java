@@ -12,34 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pregelix.dataflow.context;
 
-import edu.uci.ics.hyracks.api.job.JobId;
+package edu.uci.ics.hyracks.control.nc.io.profiling;
 
-public class StateKey {
-    private final JobId jobId;
-    private final int partition;
+public class IOCounterOSX implements IIOCounter {
 
-    public StateKey(JobId jobId, int partition) {
-        this.jobId = jobId;
-        this.partition = partition;
+    @Override
+    public long getReads() {
+        return 0;
     }
 
     @Override
-    public int hashCode() {
-        return jobId.hashCode() * partition;
+    public long getWrites() {
+        return 0;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof StateKey))
-            return false;
-        StateKey key = (StateKey) o;
-        return key.jobId.equals(jobId) && key.partition == partition;
-    }
-
-    @Override
-    public String toString() {
-        return jobId.toString() + ":" + partition;
-    }
 }

@@ -41,11 +41,11 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePusha
 public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     public static int NO_DEFAULT_BRANCH = -1;
-    
+
     private final ICopyEvaluatorFactory[] evalFactories;
     private final IBinaryBooleanInspector boolInspector;
     private final int defaultBranchIndex;
-    
+
     public PartitioningSplitOperatorDescriptor(IOperatorDescriptorRegistry spec, ICopyEvaluatorFactory[] evalFactories,
             IBinaryBooleanInspector boolInspector, int defaultBranchIndex, RecordDescriptor rDesc) {
         super(spec, 1, (defaultBranchIndex == evalFactories.length) ? evalFactories.length + 1 : evalFactories.length);
@@ -66,14 +66,15 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
             private final ByteBuffer[] writeBuffers = new ByteBuffer[outputArity];
             private final ICopyEvaluator[] evals = new ICopyEvaluator[outputArity];
             private final ArrayBackedValueStorage evalBuf = new ArrayBackedValueStorage();
-            private final RecordDescriptor inOutRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            private final RecordDescriptor inOutRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(),
+                    0);
             private final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), inOutRecDesc);
             private final FrameTupleReference frameTuple = new FrameTupleReference();
-            
+
             private final FrameTupleAppender tupleAppender = new FrameTupleAppender(ctx.getFrameSize());
             private final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(inOutRecDesc.getFieldCount());
             private final DataOutput tupleDos = tupleBuilder.getDataOutput();
-            
+
             @Override
             public void close() throws HyracksDataException {
                 // Flush (possibly not full) buffers that have data, and close writers.
@@ -102,28 +103,28 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                     boolean found = false;
                     for (int j = 0; j < evals.length; j++) {
                         try {
-                        	evalBuf.reset();
+                            evalBuf.reset();
                             evals[j].evaluate(frameTuple);
                         } catch (AlgebricksException e) {
                             throw new HyracksDataException(e);
                         }
                         found = boolInspector.getBooleanValue(evalBuf.getByteArray(), 0, 1);
                         if (found) {
-                        	copyAndAppendTuple(j);
-                        	break;
+                            copyAndAppendTuple(j);
+                            break;
                         }
                     }
                     // Optionally write to default output branch.
                     if (!found && defaultBranchIndex != NO_DEFAULT_BRANCH) {
-                    	copyAndAppendTuple(defaultBranchIndex);
+                        copyAndAppendTuple(defaultBranchIndex);
                     }
                 }
             }
 
             private void copyAndAppendTuple(int outputIndex) throws HyracksDataException {
-            	// Copy tuple into tuple builder.
+                // Copy tuple into tuple builder.
                 try {
-                	tupleBuilder.reset();
+                    tupleBuilder.reset();
                     for (int i = 0; i < frameTuple.getFieldCount(); i++) {
                         tupleDos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i),
                                 frameTuple.getFieldLength(i));
@@ -134,15 +135,17 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 }
                 // Append to frame.
                 tupleAppender.reset(writeBuffers[outputIndex], false);
-                if (!tupleAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
+                if (!tupleAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                        tupleBuilder.getSize())) {
                     FrameUtils.flushFrame(writeBuffers[outputIndex], writers[outputIndex]);
                     tupleAppender.reset(writeBuffers[outputIndex], true);
-                    if (!tupleAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0, tupleBuilder.getSize())) {
+                    if (!tupleAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                            tupleBuilder.getSize())) {
                         throw new IllegalStateException();
                     }
                 }
             }
-            
+
             @Override
             public void open() throws HyracksDataException {
                 for (IFrameWriter writer : writers) {
@@ -155,13 +158,13 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                     tupleAppender.reset(writeBuffers[i], true);
                 }
                 // Create evaluators for partitioning.
-				try {
-					for (int i = 0; i < evalFactories.length; i++) {
-						evals[i] = evalFactories[i].createEvaluator(evalBuf);
-					}
-				} catch (AlgebricksException e) {
-					throw new HyracksDataException(e);
-				}
+                try {
+                    for (int i = 0; i < evalFactories.length; i++) {
+                        evals[i] = evalFactories[i].createEvaluator(evalBuf);
+                    }
+                } catch (AlgebricksException e) {
+                    throw new HyracksDataException(e);
+                }
             }
 
             @Override
@@ -171,4 +174,3 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
         };
     }
 }
-

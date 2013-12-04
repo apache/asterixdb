@@ -52,7 +52,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException, IndexException {
         LSMBTreeAccessor accessor = (LSMBTreeAccessor) indexAccessor;
-        IIndexCursor searchCursor = accessor.createSearchCursor();
+        IIndexCursor searchCursor = accessor.createSearchCursor(false);
         MultiComparator cmp = accessor.getMultiComparator();
         RangePredicate rangePred = new RangePredicate(tuple, tuple, true, true, cmp, cmp);
 

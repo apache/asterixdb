@@ -31,6 +31,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MsgList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -58,9 +60,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private final ArrayTupleBuilder tbMsg = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbAlive = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbTerminate = new ArrayTupleBuilder(1);
-            private final ArrayTupleBuilder tbGlobalAggregate = new ArrayTupleBuilder(1);
             private final ArrayTupleBuilder tbInsert = new ArrayTupleBuilder(2);
             private final ArrayTupleBuilder tbDelete = new ArrayTupleBuilder(1);
+            private ArrayTupleBuilder tbGlobalAggregate;
 
             // for writing out to message channel
             private IFrameWriter writerMsg;
@@ -77,7 +79,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             private IFrameWriter writerGlobalAggregate;
             private FrameTupleAppender appenderGlobalAggregate;
             private ByteBuffer bufferGlobalAggregate;
-            private GlobalAggregator aggregator;
+            private List<GlobalAggregator> aggregators;
 
             // for writing out the global aggregate
             private IFrameWriter writerTerminate;
@@ -113,9 +115,14 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
                 this.conf = confFactory.createConfiguration(ctx);
-                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf);
-                this.aggregator = BspUtils.createGlobalAggregator(conf);
-                this.aggregator.init();
+                //LSM index does not have in-place update
+                this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);;
+                this.aggregators = BspUtils.createGlobalAggregators(conf);
+                for (int i = 0; i < aggregators.size(); i++) {
+                    this.aggregators.get(i).init();
+                }
+
+                this.tbGlobalAggregate = new ArrayTupleBuilder(aggregators.size());
 
                 this.writerMsg = writers[0];
                 this.bufferMsg = ctx.allocateFrame();
@@ -201,7 +208,9 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 /**
                  * call the global aggregator
                  */
-                aggregator.step(vertex);
+                for (int i = 0; i < aggregators.size(); i++) {
+                    aggregators.get(i).step(vertex);
+                }
 
             }
 
@@ -223,13 +232,15 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
 
             private void writeOutGlobalAggregate() throws HyracksDataException {
                 try {
-                    /**
-                     * get partial aggregate result and flush to the final
-                     * aggregator
-                     */
-                    Writable agg = aggregator.finishPartial();
-                    agg.write(tbGlobalAggregate.getDataOutput());
-                    tbGlobalAggregate.addFieldEndOffset();
+                    for (int i = 0; i < aggregators.size(); i++) {
+                        /**
+                         * get partial aggregate result and flush to the final
+                         * aggregator
+                         */
+                        Writable agg = aggregators.get(i).finishPartial();
+                        agg.write(tbGlobalAggregate.getDataOutput());
+                        tbGlobalAggregate.addFieldEndOffset();
+                    }
                     if (!appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
                             tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize())) {
                         // aggregate state exceed the page size, write to HDFS
@@ -255,7 +266,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             }
 
             @Override
-            public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb) throws HyracksDataException {
+            public void update(ITupleReference tupleRef, ArrayTupleBuilder cloneUpdateTb, IIndexCursor cursor)
+                    throws HyracksDataException {
                 try {
                     if (vertex != null && vertex.hasUpdate()) {
                         if (!dynamicStateLength) {
@@ -264,6 +276,8 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                             int offset = tupleRef.getFieldStart(1);
                             bbos.setByteArray(data, offset);
                             vertex.write(output);
+                            ITreeIndexCursor tCursor = (ITreeIndexCursor) cursor;
+                            tCursor.markCurrentTupleAsUpdated();
                         } else {
                             // write the vertex id
                             DataOutput tbOutput = cloneUpdateTb.getDataOutput();

@@ -44,17 +44,20 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
+import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 
 public class VertexFileWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private final IConfigurationFactory confFactory;
     private final IRecordDescriptorFactory inputRdFactory;
+    private final IRuntimeHookFactory preHookFactory;
 
     public VertexFileWriteOperatorDescriptor(JobSpecification spec, IConfigurationFactory confFactory,
-            IRecordDescriptorFactory inputRdFactory) {
+            IRecordDescriptorFactory inputRdFactory, IRuntimeHookFactory preHookFactory) {
         super(spec, 1, 0);
         this.confFactory = confFactory;
         this.inputRdFactory = inputRdFactory;
+        this.preHookFactory = preHookFactory;
     }
 
     @SuppressWarnings("rawtypes")
@@ -85,6 +88,8 @@ public class VertexFileWriteOperatorDescriptor extends AbstractSingleActivityOpe
                 context = ctxFactory.createContext(conf, partition);
                 context.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                 try {
+                    if (preHookFactory != null)
+                        preHookFactory.createRuntimeHook().configure(ctx);
                     vertexWriter = outputFormat.createVertexWriter(context);
                 } catch (InterruptedException e) {
                     throw new HyracksDataException(e);

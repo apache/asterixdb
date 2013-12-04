@@ -98,7 +98,7 @@ public abstract class TreeIndexTestUtils {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Testing Scan.");
         }
-        ITreeIndexCursor scanCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor();
+        ITreeIndexCursor scanCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor(false);
         ISearchPredicate nullPred = createNullSearchPredicate();
         ctx.getIndexAccessor().search(scanCursor, nullPred);
         Iterator<CheckTuple> checkIter = ctx.getCheckTuples().iterator();

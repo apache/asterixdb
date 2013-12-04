@@ -77,7 +77,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     }
 
     public static class SortTaskState extends AbstractStateObject {
-        private FrameSorter frameSorter;
+        private FrameSorterMergeSort frameSorter;
 
         public SortTaskState() {
         }
@@ -111,7 +111,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void open() throws HyracksDataException {
                     state = new SortTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
-                    state.frameSorter = new FrameSorter(ctx, sortFields, firstKeyNormalizerFactory,
+                    state.frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory,
                             comparatorFactories, recordDescriptors[0]);
                     state.frameSorter.reset();
                 }

@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
@@ -93,7 +94,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
-        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor();
+        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
         RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp,
                 highKeyCmp);
         ctx.getIndexAccessor().search(searchCursor, rangePred);
@@ -140,7 +141,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             LOGGER.info("Testing Point Searches On All Expected Keys.");
         }
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
-        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor();
+        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
 
         ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
         ArrayTupleReference lowKey = new ArrayTupleReference();
@@ -176,6 +177,79 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             } finally {
                 searchCursor.close();
             }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void insertSortedIntTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+        int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        int[] fieldValues = new int[ctx.getFieldCount()];
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / (double) numKeyFields));
+        Collection<CheckTuple> tmpCheckTuples = createCheckTuplesCollection();
+        for (int i = 0; i < numTuples; i++) {
+            // Set keys.
+            setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd);
+            // Set values.
+            setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
+
+            // Set expected values. (We also use these as the pre-sorted stream
+            // for ordered indexes bulk loading).
+            ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), tmpCheckTuples);
+        }
+        insertCheckTuples(ctx, tmpCheckTuples);
+
+        // Add tmpCheckTuples to ctx check tuples for comparing searches.
+        for (CheckTuple checkTuple : tmpCheckTuples) {
+            ctx.insertCheckTuple(checkTuple, ctx.getCheckTuples());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void insertSortedStringTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+        int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        String[] fieldValues = new String[fieldCount];
+        TreeSet<CheckTuple> tmpCheckTuples = new TreeSet<CheckTuple>();
+        for (int i = 0; i < numTuples; i++) {
+            // Set keys.
+            for (int j = 0; j < numKeyFields; j++) {
+                int length = (Math.abs(rnd.nextInt()) % 10) + 1;
+                fieldValues[j] = getRandomString(length, rnd);
+            }
+            // Set values.
+            for (int j = numKeyFields; j < fieldCount; j++) {
+                fieldValues[j] = getRandomString(5, rnd);
+            }
+            // Set expected values. We also use these as the pre-sorted stream
+            // for bulk loading.
+            ctx.insertCheckTuple(createStringCheckTuple(fieldValues, ctx.getKeyFieldCount()), tmpCheckTuples);
+        }
+        insertCheckTuples(ctx, tmpCheckTuples);
+
+        // Add tmpCheckTuples to ctx check tuples for comparing searches.
+        for (CheckTuple checkTuple : tmpCheckTuples) {
+            ctx.insertCheckTuple(checkTuple, ctx.getCheckTuples());
+        }
+    }
+
+    public static void insertCheckTuples(IIndexTestContext ctx, Collection<CheckTuple> checkTuples)
+            throws HyracksDataException, IndexException {
+        int fieldCount = ctx.getFieldCount();
+        int numTuples = checkTuples.size();
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+
+        int c = 1;
+        for (CheckTuple checkTuple : checkTuples) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                if (c % (numTuples / 10) == 0) {
+                    LOGGER.info("Inserting Tuple " + c + "/" + numTuples);
+                }
+            }
+            createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, ctx.getFieldSerdes());
+            ctx.getIndexAccessor().insert(tuple);
+            c++;
         }
     }
 

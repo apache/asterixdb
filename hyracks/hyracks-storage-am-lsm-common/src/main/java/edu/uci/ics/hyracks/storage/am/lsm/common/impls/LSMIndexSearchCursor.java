@@ -263,4 +263,9 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
     protected int compare(MultiComparator cmp, ITupleReference tupleA, ITupleReference tupleB) {
         return cmp.compare(tupleA, tupleB);
     }
+    
+    @Override
+    public void markCurrentTupleAsUpdated() throws HyracksDataException {
+        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
+    }
 }

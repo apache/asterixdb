@@ -222,4 +222,8 @@ public class TreeTupleSorter implements ITreeIndexCursor {
         return false;
     }
 
+    @Override
+    public void markCurrentTupleAsUpdated() throws HyracksDataException {
+        throw new HyracksDataException("Updating tuples is not supported with this cursor.");
+    }
 }

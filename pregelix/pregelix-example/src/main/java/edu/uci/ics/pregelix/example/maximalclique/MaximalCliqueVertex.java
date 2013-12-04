@@ -277,7 +277,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
     private static CliquesWritable readMaximalCliqueResult(Configuration conf) {
         try {
             CliquesWritable result = (CliquesWritable) IterationUtils.readGlobalAggregateValue(conf,
-                    BspUtils.getJobId(conf));
+                    BspUtils.getJobId(conf), MaximalCliqueAggregator.class.getName());
             return result;
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -287,7 +287,7 @@ public class MaximalCliqueVertex extends Vertex<VLongWritable, CliquesWritable, 
     public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(TriangleCountingVertex.class.getSimpleName());
         job.setVertexClass(MaximalCliqueVertex.class);
-        job.setGlobalAggregatorClass(MaximalCliqueAggregator.class);
+        job.addGlobalAggregatorClass(MaximalCliqueAggregator.class);
         job.setDynamicVertexValueSize(true);
         job.setVertexInputFormatClass(TextMaximalCliqueInputFormat.class);
         job.setVertexOutputFormatClass(MaximalCliqueVertexOutputFormat.class);

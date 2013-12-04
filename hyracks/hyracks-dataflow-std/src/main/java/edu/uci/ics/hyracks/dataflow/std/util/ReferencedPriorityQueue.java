@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Comparator;
 
+import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
@@ -30,21 +31,25 @@ public class ReferencedPriorityQueue {
     private int nItems;
 
     private final Comparator<ReferenceEntry> comparator;
+    private final INormalizedKeyComputer nmkComputer;
+    private final int[] keyFields;
 
     public ReferencedPriorityQueue(int frameSize, RecordDescriptor recordDescriptor, int initSize,
-            Comparator<ReferenceEntry> comparator) {
+            Comparator<ReferenceEntry> comparator, int[] keyFields, INormalizedKeyComputer nmkComputer) {
         this.frameSize = frameSize;
         this.recordDescriptor = recordDescriptor;
         if (initSize < 1)
             throw new IllegalArgumentException();
         this.comparator = comparator;
+        this.nmkComputer = nmkComputer;
+        this.keyFields = keyFields;
         nItems = initSize;
         size = (initSize + 1) & 0xfffffffe;
         entries = new ReferenceEntry[size];
         runAvail = new BitSet(size);
         runAvail.set(0, initSize, true);
         for (int i = 0; i < size; i++) {
-            entries[i] = new ReferenceEntry(i, null, -1);
+            entries[i] = new ReferenceEntry(i, null, -1, keyFields, nmkComputer);
         }
     }
 
@@ -71,7 +76,7 @@ public class ReferencedPriorityQueue {
             entry.setAccessor(new FrameTupleAccessor(frameSize, recordDescriptor));
         }
         entry.getAccessor().reset(fta.getBuffer());
-        entry.setTupleIndex(tIndex);
+        entry.setTupleIndex(tIndex, keyFields, nmkComputer);
 
         add(entry);
         return entry.getRunid();

@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.api.job.JobInfo;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.topology.ClusterTopology;
@@ -42,6 +43,16 @@ public interface IHyracksClientConnection {
      * @throws Exception
      */
     public JobStatus getJobStatus(JobId jobId) throws Exception;
+
+    /**
+     * Gets detailed information about the specified Job.
+     * 
+     * @param jobId
+     *            JobId of the Job
+     * @return {@link JobStatus}
+     * @throws Exception
+     */
+    public JobInfo getJobInfo(JobId jobId) throws Exception;
 
     /**
      * Start the specified Job.

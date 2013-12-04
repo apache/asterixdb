@@ -104,6 +104,10 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
                     foundTarget = false;
                     break;
                 }
+                if(child.getOperatorTag() == LogicalOperatorTag.GROUP){
+                    foundTarget = false;
+                    break;
+                }
                 if (orderSensitiveOps.contains(child.getOperatorTag())) {
                     orderSensitive = true;
                 }

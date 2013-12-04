@@ -62,7 +62,7 @@ public class PregelixHyracksIntegrationUtil {
         ccConfig.jobHistorySize = 1;
         ccConfig.profileDumpPeriod = -1;
         ccConfig.heartbeatPeriod = 50;
-        ccConfig.maxHeartbeatLapsePeriods = 15;
+        ccConfig.maxHeartbeatLapsePeriods = 10;
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);

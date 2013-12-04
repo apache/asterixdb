@@ -31,11 +31,15 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private final boolean removeIterationState;
+    private final String jobId;
+    private final int iteration;
 
     public MaterializingReadOperatorDescriptor(JobSpecification spec, RecordDescriptor recordDescriptor,
-            boolean removeIterationState) {
+            boolean removeIterationState, String jobId, int iteration) {
         super(spec, 1, 1);
         this.removeIterationState = removeIterationState;
+        this.jobId = jobId;
+        this.iteration = iteration - 1;
         recordDescriptors[0] = recordDescriptor;
     }
 
@@ -55,8 +59,8 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 if (!complete) {
-                    MaterializerTaskState state = (MaterializerTaskState) IterationUtils.getIterationState(ctx,
-                            partition);
+                    MaterializerTaskState state = (MaterializerTaskState) IterationUtils.getIterationState(ctx, jobId,
+                            partition, iteration);
                     RunFileReader in = state.getRunFileWriter().createReader();
                     writer.open();
                     try {
@@ -85,7 +89,7 @@ public class MaterializingReadOperatorDescriptor extends AbstractSingleActivityO
                  * remove last iteration's state
                  */
                 if (removeIterationState) {
-                    IterationUtils.removeIterationState(ctx, partition);
+                    IterationUtils.removeIterationState(ctx, jobId, partition, iteration);
                 }
                 writer.close();
                 complete = true;

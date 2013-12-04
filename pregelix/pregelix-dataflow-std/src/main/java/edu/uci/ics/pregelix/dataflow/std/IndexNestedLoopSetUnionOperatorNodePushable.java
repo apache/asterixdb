@@ -82,7 +82,7 @@ public class IndexNestedLoopSetUnionOperatorNodePushable extends AbstractUnaryIn
     }
 
     protected void setCursor() {
-        cursor = indexAccessor.createSearchCursor();
+        cursor = indexAccessor.createSearchCursor(false);
     }
 
     @Override

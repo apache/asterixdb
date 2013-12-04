@@ -66,6 +66,8 @@ import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.dataset.DatasetPartitionManager;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.io.profiling.IIOCounter;
+import edu.uci.ics.hyracks.control.nc.io.profiling.IOCounterFactory;
 import edu.uci.ics.hyracks.control.nc.net.DatasetNetworkManager;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
@@ -144,6 +146,10 @@ public class NodeControllerService extends AbstractRemoteService {
 
     private final MemoryManager memoryManager;
 
+    private boolean shuttedDown = false;
+    
+    private IIOCounter ioCounter;
+
     public NodeControllerService(NCConfig ncConfig) throws Exception {
         this.ncConfig = ncConfig;
         id = ncConfig.nodeId;
@@ -171,6 +177,7 @@ public class NodeControllerService extends AbstractRemoteService {
         registrationPending = true;
         getNodeControllerInfosAcceptor = new MutableObject<FutureValue<Map<String, NodeControllerInfo>>>();
         memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
+        ioCounter = new IOCounterFactory().getIOCounter();
     }
 
     public IHyracksRootContext getRootContext() {
@@ -278,6 +285,9 @@ public class NodeControllerService extends AbstractRemoteService {
         if (ncAppEntryPoint != null) {
             ncAppEntryPoint.notifyStartupComplete();
         }
+
+        //add JVM shutdown hook
+        Runtime.getRuntime().addShutdownHook(new JVMShutdownHook(this));
     }
 
     private void startApplication() throws Exception {
@@ -294,16 +304,21 @@ public class NodeControllerService extends AbstractRemoteService {
     }
 
     @Override
-    public void stop() throws Exception {
-        LOGGER.log(Level.INFO, "Stopping NodeControllerService");
-        executor.shutdownNow();
-        partitionManager.close();
-        datasetPartitionManager.close();
-        heartbeatTask.cancel();
-        netManager.stop();
-        datasetNetworkManager.stop();
-        queue.stop();
-        LOGGER.log(Level.INFO, "Stopped NodeControllerService");
+    public synchronized void stop() throws Exception {
+        if (!shuttedDown) {
+            LOGGER.log(Level.INFO, "Stopping NodeControllerService");
+            executor.shutdownNow();
+            partitionManager.close();
+            datasetPartitionManager.close();
+            heartbeatTask.cancel();
+            netManager.stop();
+            datasetNetworkManager.stop();
+            queue.stop();
+            if (ncAppEntryPoint != null)
+                ncAppEntryPoint.stop();
+            LOGGER.log(Level.INFO, "Stopped NodeControllerService");
+            shuttedDown = true;
+        }
     }
 
     public String getId() {
@@ -419,6 +434,9 @@ public class NodeControllerService extends AbstractRemoteService {
             hbData.ipcMessagesReceived = ipcPC.getMessageReceivedCount();
             hbData.ipcMessageBytesReceived = ipcPC.getMessageBytesReceived();
 
+            hbData.diskReads = ioCounter.getReads();
+            hbData.diskWrites = ioCounter.getWrites();
+            
             try {
                 cc.nodeHeartbeat(id, hbData);
             } catch (Exception e) {
@@ -524,5 +542,30 @@ public class NodeControllerService extends AbstractRemoteService {
 
     public IDatasetPartitionManager getDatasetPartitionManager() {
         return datasetPartitionManager;
+    }
+
+    /**
+     * Shutdown hook that invokes {@link NCApplicationEntryPoint#stop() stop} method.
+     */
+    private static class JVMShutdownHook extends Thread {
+
+        private final NodeControllerService nodeControllerService;
+
+        public JVMShutdownHook(NodeControllerService ncAppEntryPoint) {
+            this.nodeControllerService = ncAppEntryPoint;
+        }
+
+        public void run() {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Shutdown hook in progress");
+            }
+            try {
+                nodeControllerService.stop();
+            } catch (Exception e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Exception in executing shutdown hook" + e);
+                }
+            }
+        }
     }
 }

@@ -19,9 +19,11 @@ import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
 import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
+    private RuntimeContext rCtx = null;
+
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
-        RuntimeContext rCtx = new RuntimeContext(ncAppCtx);
+        rCtx = new RuntimeContext(ncAppCtx);
         ncAppCtx.setApplicationObject(rCtx);
     }
 
@@ -32,6 +34,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void stop() throws Exception {
-
+        rCtx.close();
     }
 }
