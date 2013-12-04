@@ -14,7 +14,7 @@ create type TestTypedAdaptorOutputType as closed {
   message-text: string
 }
 
-create dataset Tweets(TestTypedAdaptorOutputType)
+create dataset TweetsTestAdaptor(TestTypedAdaptorOutputType)
 primary key tweetid;
 
 create feed TestTypedAdaptorFeed

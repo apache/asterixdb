@@ -96,6 +96,7 @@ public class ConnectFeedStatement implements Statement {
             factoryOutput = FeedUtil.getFeedFactoryAndOutput(sourceFeed, mdTxnCtx);
             adapterOutputType = factoryOutput.second.getTypeName();
         } catch (AlgebricksException ae) {
+            ae.printStackTrace();
             throw new MetadataException(ae);
         }
 

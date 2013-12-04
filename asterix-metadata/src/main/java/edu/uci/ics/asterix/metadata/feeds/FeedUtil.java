@@ -236,8 +236,7 @@ public class FeedUtil {
                 }
             } else {
                 adapterFactoryClassname = AqlMetadataProvider.adapterFactoryMapping.get(adapterName);
-                if (adapterFactoryClassname != null) {
-                } else {
+                if (adapterFactoryClassname == null) {
                     adapterFactoryClassname = adapterName;
                 }
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
@@ -265,7 +264,8 @@ public class FeedUtil {
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
             }
 
-            feedProps = new Triple(adapterFactory, adapterOutputType, adapterEntity.getType());
+            feedProps = new Triple<IAdapterFactory, ARecordType, AdapterType>(adapterFactory, adapterOutputType,
+                    adapterEntity.getType());
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to create adapter  " + e);
