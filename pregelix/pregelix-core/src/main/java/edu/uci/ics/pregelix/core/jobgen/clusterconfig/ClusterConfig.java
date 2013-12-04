@@ -57,6 +57,7 @@ public class ClusterConfig {
     private static Scheduler hdfsScheduler;
     private static Set<String> blackListNodes = new HashSet<String>();
     private static IHyracksClientConnection hcc;
+    private static final int DEFAULT_CC_HTTP_PORT = 16001;
 
     /**
      * let tests set config path to be whatever
@@ -124,6 +125,14 @@ public class ClusterConfig {
 
     public static int getFrameSize() {
         return Integer.parseInt(clusterProperties.getProperty("FRAME_SIZE"));
+    }
+
+    public static int getCCHTTPort() {
+        try { // TODO should we really provide a default value?
+            return Integer.parseInt(clusterProperties.getProperty("CC_HTTPPORT"));
+        } catch (NumberFormatException e) {
+            return DEFAULT_CC_HTTP_PORT;
+        }
     }
 
     /**

@@ -99,7 +99,7 @@ public class Driver implements IDriver {
             PregelixJob currentJob = jobs.get(0);
             PregelixJob lastJob = currentJob;
             addHadoopConfiguration(currentJob, ipAddress, port, true);
-            ClientCounterContext counterContext = new ClientCounterContext(ipAddress, 16001,
+            ClientCounterContext counterContext = new ClientCounterContext(ipAddress, ClusterConfig.getCCHTTPort(),
                     Arrays.asList(ClusterConfig.getNCNames()));
             JobGen jobGen = null;
 
