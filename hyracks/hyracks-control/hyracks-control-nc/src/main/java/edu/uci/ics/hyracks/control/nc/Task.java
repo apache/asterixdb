@@ -246,7 +246,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         sem.acquire();
                         final int cIdx = i;
                         executor.execute(new Runnable() {
-                            public void run() {
+                            @Override
+							public void run() {
                                 if (aborted) {
                                     return;
                                 }
