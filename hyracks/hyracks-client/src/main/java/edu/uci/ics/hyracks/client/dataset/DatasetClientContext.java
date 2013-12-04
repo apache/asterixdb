@@ -42,7 +42,7 @@ public class DatasetClientContext implements IHyracksCommonContext {
     }
 
 	@Override
-	public void deallocateFrames(int nFrames) {
+	public void deallocateFrames(int frameCount) {
 		// TODO Auto-generated method stub
 	}
 
