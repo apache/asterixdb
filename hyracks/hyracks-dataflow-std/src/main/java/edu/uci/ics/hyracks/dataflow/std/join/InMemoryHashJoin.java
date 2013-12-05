@@ -33,7 +33,8 @@ import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class InMemoryHashJoin {
-
+	
+	private final IHyracksTaskContext ctx;
     private final List<ByteBuffer> buffers;
     private final FrameTupleAccessor accessorBuild;
     private final ITuplePartitionComputer tpcBuild;
@@ -61,7 +62,8 @@ public class InMemoryHashJoin {
             ITuplePartitionComputer tpc0, FrameTupleAccessor accessor1, ITuplePartitionComputer tpc1,
             FrameTuplePairComparator comparator, boolean isLeftOuter, INullWriter[] nullWriters1,
             ISerializableTable table, IPredicateEvaluator predEval, boolean reverse) throws HyracksDataException {
-        this.tableSize = tableSize;
+        this.ctx = ctx;
+    	this.tableSize = tableSize;
         this.table = table;
         storedTuplePointer = new TuplePointer();
         buffers = new ArrayList<ByteBuffer>();
@@ -146,6 +148,9 @@ public class InMemoryHashJoin {
         if (appender.getTupleCount() > 0) {
             flushFrame(outBuffer, writer);
         }
+        int nFrames = buffers.size();
+        buffers.clear();
+        ctx.deallocateFrames(nFrames);
     }
 
     private void flushFrame(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
