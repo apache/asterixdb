@@ -15,6 +15,9 @@
 
 package edu.uci.ics.asterix.om.types;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * There is a unique tag for each primitive type and for each kind of
  * non-primitive type in the object model.
@@ -72,6 +75,20 @@ public enum ATypeTag implements IEnumSerializer {
         return value;
     }
 
-    public final static int TYPE_COUNT = ATypeTag.values().length;
+    public static final int TYPE_COUNT = ATypeTag.values().length;
+
+    public static final ATypeTag[] VALUE_TYPE_MAPPING;
+
+    static {
+        List<ATypeTag> typeList = new ArrayList<>();
+        for (ATypeTag tt : values()) {
+            int index = tt.value;
+            while (typeList.size() <= index) {
+                typeList.add(null);
+            }
+            typeList.set(index, tt);
+        }
+        VALUE_TYPE_MAPPING = typeList.toArray(new ATypeTag[typeList.size()]);
+    }
 
 }

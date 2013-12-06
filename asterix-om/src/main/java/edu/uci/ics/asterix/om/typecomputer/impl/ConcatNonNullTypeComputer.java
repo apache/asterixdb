@@ -15,12 +15,7 @@
 
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -46,29 +41,18 @@ public class ConcatNonNullTypeComputer implements IResultTypeComputer {
         if (f.getArguments().size() < 1) {
             return BuiltinType.ANULL;
         }
-        List<IAType> possibleTypes = new ArrayList<IAType>();
+
+        TypeCompatibilityChecker tcc = new TypeCompatibilityChecker();
         for (int i = 0; i < f.getArguments().size(); i++) {
             ILogicalExpression arg = f.getArguments().get(i).getValue();
             IAType type = (IAType) env.getType(arg);
-            if (type.getTypeTag() == ATypeTag.UNION) {
-                List<IAType> typeList = ((AUnionType) type).getUnionList();
-                for (IAType t : typeList) {
-                    if (t.getTypeTag() != ATypeTag.NULL) {
-                        //CONCAT_NON_NULL cannot return null because it's only used for if-else construct
-                        if (!possibleTypes.contains(t))
-                            possibleTypes.add(t);
-                    }
-                }
-            } else {
-                if (!possibleTypes.contains(type))
-                    possibleTypes.add(type);
-            }
+            tcc.addPossibleType(type);
         }
-        if (possibleTypes.size() == 1) {
-            return possibleTypes.get(0);
-        } else {
+
+        IAType result = tcc.getCompatibleType();
+        if (result == null) {
             throw new AlgebricksException("The two branches of the if-else clause should return the same type.");
         }
+        return result;
     }
-
 }
