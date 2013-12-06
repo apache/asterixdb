@@ -31,7 +31,7 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
  * 2. a final phase which aggregates all partially aggregated states
  * 
  * @param <I extends Writable> vertex identifier type
- * @param <E extends Writable> vertex value type
+ * @param <V extends Writable> vertex value type
  * @param <E extends Writable> edge type
  * @param <M extends Writable> message type
  * @param <P extends Writable>

@@ -113,7 +113,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public ByteBuffer allocateFrame() throws HyracksDataException {
         return joblet.allocateFrame();
     }
-
+    
     @Override
     public void deallocateFrames(int frameCount) {
         joblet.deallocateFrames(frameCount);
@@ -241,7 +241,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         sem.acquire();
                         final int cIdx = i;
                         executor.execute(new Runnable() {
-                            public void run() {
+                            @Override
+							public void run() {
                                 if (aborted) {
                                     return;
                                 }

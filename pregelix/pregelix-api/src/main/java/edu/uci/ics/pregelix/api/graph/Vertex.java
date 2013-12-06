@@ -234,18 +234,43 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Vote to halt. Once all vertex vote to halt and no more messages, a
      * Pregelix job will terminate.
+     * 
+     * The state of the current vertex value is saved.
      */
     public final void voteToHalt() {
         halt = true;
         updated = true;
     }
+    
+    /**
+     * Vote to halt. Once all vertex vote to halt and no more messages, a
+     * Pregelix job will terminate.
+     * 
+     * @param update whether or not to save the vertex value
+     */
+    public final void voteToHalt(boolean update) {
+        halt = true;
+        updated = update;
+    }
 
     /**
      * Activate a halted vertex such that it is alive again.
+     * 
+     * The state of the current vertex value is saved.
      */
     public final void activate() {
         halt = false;
         updated = true;
+    }
+    
+    /**
+     * Activate a halted vertex such that it is alive again.
+     * 
+     * @param update whether or not to save the vertex value
+     */
+    public final void activate(boolean update) {
+        halt = false;
+        updated = update;
     }
 
     /**

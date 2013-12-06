@@ -16,6 +16,7 @@
 package edu.uci.ics.pregelix.api.job;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
@@ -26,7 +27,9 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
+import edu.uci.ics.pregelix.api.util.HadoopCountersGlobalAggregateHook;
 import edu.uci.ics.pregelix.api.util.GlobalCountAggregator;
+import edu.uci.ics.pregelix.api.util.HadoopCountersAggregator;
 
 /**
  * This class represents a Pregelix job.
@@ -82,8 +85,16 @@ public class PregelixJob extends Job {
     public static final String CKP_INTERVAL = "pregelix.ckpinterval";
     /** the dynamic optimization */
     public static final String DYNAMIC_OPTIMIZATION = "pregelix.dynamicopt";
+    /** the iteration complete reporter hook */
+    public static final String ITERATION_COMPLETE_CLASS = "pregelix.iterationCompleteReporter";
     /** comma */
     public static final String COMMA_STR = ",";
+    /** period */
+    public static final String PERIOD_STR = ".";
+    /** the names of the aggregator classes active for all vertex types */
+    public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalCountAggregator.class.getName() };
+    /** The name of an optional class that aggregates all Vertexes into mapreduce.Counters */
+    public static final String COUNTERS_AGGREGATOR_CLASS = "pregelix.aggregatedCountersClass";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -93,7 +104,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf) throws IOException {
         super(conf);
-        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -105,7 +115,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(String jobName) throws IOException {
         super(new Configuration(), jobName);
-        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -119,7 +128,6 @@ public class PregelixJob extends Job {
      */
     public PregelixJob(Configuration conf, String jobName) throws IOException {
         super(conf, jobName);
-        this.addGlobalAggregatorClass(GlobalCountAggregator.class);
     }
 
     /**
@@ -262,14 +270,33 @@ public class PregelixJob extends Job {
     final public void setCheckpointingInterval(int ckpInterval) {
         getConfiguration().setInt(CKP_INTERVAL, ckpInterval);
     }
-    
+
+    /**
+     * Users can provide an IIterationCompleteReporterHook implementation to perform actions
+     * at the end of each iteration
+     * 
+     * @param reporterClass
+     */
+    final public void setIterationCompleteReporterHook(Class<? extends IIterationCompleteReporterHook> reporterClass) {
+        getConfiguration().setClass(ITERATION_COMPLETE_CLASS, reporterClass, IIterationCompleteReporterHook.class);
+    }
+
     /**
      * Indicate if dynamic optimization is enabled
      * 
      * @param dynamicOpt
      */
-    final public void setEnableDynamicOptimization(boolean dynamicOpt){
+    final public void setEnableDynamicOptimization(boolean dynamicOpt) {
         getConfiguration().setBoolean(DYNAMIC_OPTIMIZATION, dynamicOpt);
+    }
+
+    final public void setCounterAggregatorClass(Class<? extends HadoopCountersAggregator<?, ?, ?, ?, ?>> aggClass) {
+        if (Modifier.isAbstract(aggClass.getModifiers())) {
+            throw new IllegalArgumentException("Aggregate class must be a concrete class, not an abstract one! (was " + aggClass.getName() + ")");
+        }
+        getConfiguration().setClass(COUNTERS_AGGREGATOR_CLASS, aggClass, HadoopCountersAggregator.class);
+        addGlobalAggregatorClass(aggClass);
+        setIterationCompleteReporterHook(HadoopCountersGlobalAggregateHook.class);
     }
 
     @Override

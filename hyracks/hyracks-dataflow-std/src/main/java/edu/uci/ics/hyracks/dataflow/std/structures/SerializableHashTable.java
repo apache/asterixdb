@@ -136,12 +136,14 @@ public class SerializableHashTable implements ISerializableTable {
 
     @Override
     public void close() {
-        for (int i = 0; i < headers.length; i++)
+        int nFrames = contents.size();
+    	for (int i = 0; i < headers.length; i++)
             headers[i] = null;
         contents.clear();
         frameCurrentIndex.clear();
         tupleCount = 0;
         currentLargestFrameIndex = 0;
+        ctx.deallocateFrames(nFrames);
     }
 
     private void insertNewEntry(IntSerDeBuffer header, int headerOffset, int entryCapacity, TuplePointer pointer)

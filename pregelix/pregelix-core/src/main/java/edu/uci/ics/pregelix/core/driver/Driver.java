@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.client.stats.Counters;
 import edu.uci.ics.hyracks.client.stats.impl.ClientCounterContext;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver;
@@ -54,6 +55,7 @@ import edu.uci.ics.pregelix.core.jobgen.JobGenFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.optimizer.DynamicOptimizer;
 import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
+import edu.uci.ics.pregelix.core.optimizer.NoOpOptimizer;
 import edu.uci.ics.pregelix.core.util.ExceptionUtilities;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
@@ -97,7 +99,7 @@ public class Driver implements IDriver {
             PregelixJob currentJob = jobs.get(0);
             PregelixJob lastJob = currentJob;
             addHadoopConfiguration(currentJob, ipAddress, port, true);
-            ClientCounterContext counterContext = new ClientCounterContext(ipAddress, 16001,
+            ClientCounterContext counterContext = new ClientCounterContext(ipAddress, ClusterConfig.getCCHTTPort(),
                     Arrays.asList(ClusterConfig.getNCNames()));
             JobGen jobGen = null;
 
@@ -110,8 +112,11 @@ public class Driver implements IDriver {
             boolean failed = false;
             int retryCount = 0;
             int maxRetryCount = 3;
-            jobGen = selectJobGen(planChoice, currentJob);
-            IOptimizer dynamicOptimzier = new DynamicOptimizer();
+
+            IOptimizer dynamicOptimizer = BspUtils.getEnableDynamicOptimization(currentJob.getConfiguration()) == false ? new NoOpOptimizer()
+                    : new DynamicOptimizer(counterContext);
+            jobGen = selectJobGen(planChoice, currentJob, dynamicOptimizer);
+            jobGen = dynamicOptimizer.optimize(jobGen, 0);
 
             do {
                 try {
@@ -139,9 +144,7 @@ public class Driver implements IDriver {
                         }
 
                         /** run loop-body jobs with dynamic optimizer if it is enabled */
-                        if (BspUtils.getEnableDynamicOptimization(currentJob.getConfiguration())) {
-                            jobGen = dynamicOptimzier.optimize(counterContext, jobGen, i);
-                        }
+                        jobGen = dynamicOptimizer.optimize(jobGen, i);
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
                                 ckpHook, failed);
                         runClearState(deploymentId, jobGen);
@@ -196,8 +199,8 @@ public class Driver implements IDriver {
                         .equals(currentInputPaths[0])));
     }
 
-    private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob) {
-        return JobGenFactory.createJobGen(planChoice, currentJob);
+    private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob, IOptimizer optimizer) {
+        return JobGenFactory.createJobGen(planChoice, currentJob, optimizer);
     }
 
     private long loadData(PregelixJob currentJob, JobGen jobGen, DeploymentId deploymentId) throws IOException,
@@ -277,6 +280,9 @@ public class Driver implements IDriver {
                 loadData(job, jobGen, deploymentId);
             }
         }
+        // TODO how long should the hook persist? One per job?  Or one per recovery attempt?
+        // since the hook shouldn't be stateful, we do one per recovery attempt
+        IIterationCompleteReporterHook itCompleteHook = BspUtils.createIterationCompleteHook(job.getConfiguration());
         int i = doRecovery ? snapshotSuperstep.get() + 1 : 1;
         int ckpInterval = BspUtils.getCheckpointingInterval(job.getConfiguration());
         boolean terminate = false;
@@ -294,6 +300,7 @@ public class Driver implements IDriver {
                 snapshotJobIndex.set(currentJobIndex);
                 snapshotSuperstep.set(i);
             }
+            itCompleteHook.completeIteration(i, job);
             i++;
         } while (!terminate);
     }

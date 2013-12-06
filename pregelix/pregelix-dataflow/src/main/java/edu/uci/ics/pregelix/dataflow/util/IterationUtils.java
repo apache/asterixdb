@@ -15,6 +15,7 @@
 package edu.uci.ics.pregelix.dataflow.util;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,7 @@ import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
 import edu.uci.ics.pregelix.dataflow.context.TaskIterationID;
 
 public class IterationUtils {
-    public static final String TMP_DIR = "/tmp/";
+    public static final String TMP_DIR = BspUtils.TMP_DIR;
 
     public static void setIterationState(IHyracksTaskContext ctx, String pregelixJobId, int partition, int iteration,
             IStateObject state) {
@@ -143,28 +144,13 @@ public class IterationUtils {
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
-            throws HyracksDataException {
-        try {
-            FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + jobId + "agg";
-            Path path = new Path(pathStr);
-            FSDataInputStream input = dfs.open(path);
-            int numOfAggs = BspUtils.createFinalAggregateValues(conf).size();
-            for (int i = 0; i < numOfAggs; i++) {
-                String aggName = input.readUTF();
-                Writable agg = BspUtils.createFinalAggregateValue(conf, aggName);
-                if (aggName.equals(aggClassName)) {
-                    agg.readFields(input);
-                    input.close();
-                    return agg;
-                } else {
-                    agg.readFields(input);
-                }
-            }
-            throw new IllegalStateException("Cannot find the aggregate value for " + aggClassName);
-        } catch (IOException e) {
-            throw new HyracksDataException(e);
-        }
+    throws HyracksDataException {
+        return BspUtils.readGlobalAggregateValue(conf, jobId, aggClassName);
+    }
+    
+    public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
+    throws HyracksDataException {
+        return BspUtils.readAllGlobalAggregateValues(conf, jobId);
     }
 
 }
