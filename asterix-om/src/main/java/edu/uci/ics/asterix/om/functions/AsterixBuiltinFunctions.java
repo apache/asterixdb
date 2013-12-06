@@ -481,7 +481,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier CREATE_LINE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-line", 2);
     public final static FunctionIdentifier CREATE_POLYGON = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-polygon", FunctionIdentifier.VARARGS);
+            "create-polygon", 1);
     public final static FunctionIdentifier CREATE_CIRCLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-circle", 2);
     public final static FunctionIdentifier CREATE_RECTANGLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
