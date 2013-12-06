@@ -9,6 +9,6 @@
  */
 use dataverse externallibtest;
 
-set wait-for-completion-feed "true";
-
-connect feed TweetFeed to dataset TweetsFeedIngest;
+for $x in dataset TweetsTestAdaptor
+order by $x.tweetid
+return $x

@@ -41,6 +41,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
@@ -94,9 +95,15 @@ public class FeedUtil {
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof FeedIntakeOperatorDescriptor) {
                 FeedIntakeOperatorDescriptor orig = (FeedIntakeOperatorDescriptor) opDesc;
-                FeedIntakeOperatorDescriptor fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(),
-                        orig.getAdapterFactory(), (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(),
-                        orig.getFeedPolicy());
+                FeedIntakeOperatorDescriptor fiop;
+                if (orig.getAdapterFactory() != null) {
+                    fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(), orig.getAdapterFactory(),
+                            (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(), orig.getFeedPolicy());
+                } else {
+                    fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(), orig.getAdapterLibraryName(),
+                            orig.getAdapterFactoryClassName(), orig.getAdapterConfiguration(),
+                            (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(), orig.getFeedPolicy());
+                }
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
                 FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
@@ -221,7 +228,7 @@ public class FeedUtil {
 
     }
 
-    public static Pair<IAdapterFactory, ARecordType> getFeedFactoryAndOutput(Feed feed,
+    public static Triple<IAdapterFactory, ARecordType, AdapterType> getFeedFactoryAndOutput(Feed feed,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
 
         String adapterName = null;
@@ -229,7 +236,7 @@ public class FeedUtil {
         String adapterFactoryClassname = null;
         IAdapterFactory adapterFactory = null;
         ARecordType adapterOutputType = null;
-        Pair<IAdapterFactory, ARecordType> feedProps = null;
+        Triple<IAdapterFactory, ARecordType, AdapterType> feedProps = null;
         try {
             adapterName = feed.getAdaptorName();
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
@@ -254,8 +261,7 @@ public class FeedUtil {
                 }
             } else {
                 adapterFactoryClassname = AqlMetadataProvider.adapterFactoryMapping.get(adapterName);
-                if (adapterFactoryClassname != null) {
-                } else {
+                if (adapterFactoryClassname == null) {
                     adapterFactoryClassname = adapterName;
                 }
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
@@ -283,7 +289,8 @@ public class FeedUtil {
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
             }
 
-            feedProps = Pair.of(adapterFactory, adapterOutputType);
+            feedProps = new Triple<IAdapterFactory, ARecordType, AdapterType>(adapterFactory, adapterOutputType,
+                    adapterEntity.getType());
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to create adapter  " + e);

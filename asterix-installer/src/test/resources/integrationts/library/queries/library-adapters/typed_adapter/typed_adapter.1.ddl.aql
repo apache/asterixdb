@@ -9,6 +9,13 @@
  */
 use dataverse externallibtest;
 
-set wait-for-completion-feed "true";
+create type TestTypedAdaptorOutputType as closed {
+  tweetid: int64,
+  message-text: string
+}
 
-connect feed TweetFeed to dataset TweetsFeedIngest;
+create dataset TweetsTestAdaptor(TestTypedAdaptorOutputType)
+primary key tweetid;
+
+create feed TestTypedAdaptorFeed
+using "testlib#test_typed_adaptor" (("num_output_records"="5"),("type-name"="TestTypedAdaptorOutputType"));
