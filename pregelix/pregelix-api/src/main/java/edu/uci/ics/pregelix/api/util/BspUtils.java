@@ -15,14 +15,23 @@
 
 package edu.uci.ics.pregelix.api.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.MessageCombiner;
 import edu.uci.ics.pregelix.api.graph.MsgList;
@@ -33,6 +42,7 @@ import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
@@ -40,6 +50,10 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * them.
  */
 public class BspUtils {
+    
+    public static final String TMP_DIR = "/tmp/";
+    private static final String COUNTERS_VALUE_ON_ITERATION = ".counters.valueOnIter.";
+    private static final String COUNTERS_LAST_ITERATION_COMPLETED = ".counters.lastIterCompleted";
 
     /**
      * Get the user's subclassed {@link VertexInputFormat}.
@@ -123,9 +137,17 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable, P extends Writable, F extends Writable> List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> getGlobalAggregatorClasses(
             Configuration conf) {
         String aggStrs = conf.get(PregelixJob.GLOBAL_AGGREGATOR_CLASS);
-        String[] classnames = aggStrs.split(PregelixJob.COMMA_STR);
+        String[] classnames;
+        if (aggStrs == null) {
+            classnames = new String[0];
+        } else {
+            classnames = aggStrs.split(PregelixJob.COMMA_STR);
+        }
         try {
             List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> classes = new ArrayList<Class<? extends GlobalAggregator<I, V, E, M, P, F>>>();
+            for (String defaultClass : PregelixJob.DEFAULT_GLOBAL_AGGREGATOR_CLASSES) {
+                classes.add((Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClassByName(defaultClass));
+            }
             for (int i = 0; i < classnames.length; i++) {
                 classes.add((Class<? extends GlobalAggregator<I, V, E, M, P, F>>) conf.getClassByName(classnames[i]));
             }
@@ -563,6 +585,24 @@ public class BspUtils {
     }
 
     /**
+     * Create a hook that indicates an iteration is complete
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return Instantiated user aggregate value
+     */
+    public static IIterationCompleteReporterHook createIterationCompleteHook(Configuration conf) {
+        Class<? extends IIterationCompleteReporterHook> itCompleteClass = getIterationCompleteReporterHookClass(conf);
+        try {
+            return itCompleteClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Failed to instantiate", e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("createVertexPartitioner: Illegally accessed", e);
+        }
+    }
+
+    /**
      * Get the user's subclassed vertex partitioner class.
      * 
      * @param conf
@@ -584,6 +624,20 @@ public class BspUtils {
     @SuppressWarnings("unchecked")
     public static <V extends ICheckpointHook> Class<V> getCheckpointHookClass(Configuration conf) {
         return (Class<V>) conf.getClass(PregelixJob.CKP_CLASS, DefaultCheckpointHook.class, ICheckpointHook.class);
+    }
+
+    /**
+     * Get the user's subclassed iteration complete reporter hook class.
+     * 
+     * @param conf
+     *            Configuration to check
+     * @return The user defined vertex iteration complete reporter class
+     */
+    @SuppressWarnings("unchecked")
+    public static <V extends IIterationCompleteReporterHook> Class<V> getIterationCompleteReporterHookClass(
+            Configuration conf) {
+        return (Class<V>) conf.getClass(PregelixJob.ITERATION_COMPLETE_CLASS,
+                DefaultIterationCompleteReporterHook.class, IIterationCompleteReporterHook.class);
     }
 
     /**
@@ -671,15 +725,16 @@ public class BspUtils {
     public static int getRecoveryCount(Configuration conf) {
         return conf.getInt(PregelixJob.RECOVERY_COUNT, 0);
     }
-    
+
     /***
      * Get enable dynamic optimization
      * 
-     * @param conf Configuration
+     * @param conf
+     *            Configuration
      * @return true if enabled; otherwise false
      */
-    public static boolean getEnableDynamicOptimization(Configuration conf){
-        return conf.getBoolean(PregelixJob.DYNAMIC_OPTIMIZATION, true);
+    public static boolean getEnableDynamicOptimization(Configuration conf) {
+        return conf.getBoolean(PregelixJob.DYNAMIC_OPTIMIZATION, false);
     }
 
     /***
@@ -691,4 +746,115 @@ public class BspUtils {
     public static int getCheckpointingInterval(Configuration conf) {
         return conf.getInt(PregelixJob.CKP_INTERVAL, -1);
     }
+
+    public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)
+            throws HyracksDataException {
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            String pathStr = TMP_DIR + jobId + "agg";
+            Path path = new Path(pathStr);
+            FSDataInputStream input = dfs.open(path);
+            int numOfAggs = createFinalAggregateValues(conf).size();
+            for (int i = 0; i < numOfAggs; i++) {
+                String aggName = input.readUTF();
+                Writable agg = createFinalAggregateValue(conf, aggName);
+                if (aggName.equals(aggClassName)) {
+                    agg.readFields(input);
+                    input.close();
+                    return agg;
+                } else {
+                    agg.readFields(input);
+                }
+            }
+            throw new IllegalStateException("Cannot find the aggregate value for " + aggClassName);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
+            throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + "agg";
+        Path path = new Path(pathStr);
+        List<Writable> aggValues = createFinalAggregateValues(conf);
+        HashMap<String, Writable> finalAggs = new HashMap<>();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            for (int i = 0; i < aggValues.size(); i++) {
+                String aggName = input.readUTF();
+                aggValues.get(i).readFields(input);
+                finalAggs.put(aggName, aggValues.get(i));
+            }
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return finalAggs;
+    }
+
+    public static Counters getCounters(PregelixJob job) throws HyracksDataException {
+        Configuration conf = job.getConfiguration();
+        String jobId = getJobId(conf);
+        int lastIter = BspUtils.readCountersLastIteration(conf, jobId);
+        return BspUtils.readCounters(lastIter, conf, jobId);
+    }
+
+    static Counters readCounters(int superstep, Configuration conf, String jobId) throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
+        Path path = new Path(pathStr);
+        Counters savedCounters = new Counters();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            savedCounters.readFields(input);
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return savedCounters;
+    }
+
+    static void writeCounters(Counters toWrite, int superstep, Configuration conf, String jobId)
+            throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
+        Path path = new Path(pathStr);
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataOutputStream output = dfs.create(path, true);
+            toWrite.write(output);
+            output.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    static int readCountersLastIteration(Configuration conf, String jobId) throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
+        Path path = new Path(pathStr);
+        IntWritable lastIter = new IntWritable();
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataInputStream input = dfs.open(path);
+            lastIter.readFields(input);
+            input.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+        return lastIter.get();
+    }
+
+    static void writeCountersLastIteration(int superstep, Configuration conf, String jobId) throws HyracksDataException {
+        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
+        Path path = new Path(pathStr);
+        try {
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataOutputStream output = dfs.create(path, true);
+            new IntWritable(superstep).write(output);
+            output.close();
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
 }

@@ -57,6 +57,7 @@ public class ClusterConfig {
     private static Scheduler hdfsScheduler;
     private static Set<String> blackListNodes = new HashSet<String>();
     private static IHyracksClientConnection hcc;
+    private static final int DEFAULT_CC_HTTP_PORT = 16001;
 
     /**
      * let tests set config path to be whatever
@@ -84,7 +85,7 @@ public class ClusterConfig {
     }
 
     /**
-     * get file split provider
+     * get file split provider, for test only
      * 
      * @param jobId
      * @return
@@ -124,6 +125,14 @@ public class ClusterConfig {
 
     public static int getFrameSize() {
         return Integer.parseInt(clusterProperties.getProperty("FRAME_SIZE"));
+    }
+
+    public static int getCCHTTPort() {
+        try { // TODO should we really provide a default value?
+            return Integer.parseInt(clusterProperties.getProperty("CC_HTTPPORT"));
+        } catch (NumberFormatException e) {
+            return DEFAULT_CC_HTTP_PORT;
+        }
     }
 
     /**
@@ -166,26 +175,6 @@ public class ClusterConfig {
         }
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, operator, locations);
         PartitionConstraintHelper.addPartitionCountConstraint(spec, operator, count);
-    }
-
-    /**
-     * set location constraint
-     * 
-     * @param spec
-     * @param operator
-     * @throws HyracksDataException
-     */
-    public static void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator)
-            throws HyracksException {
-        int count = 0;
-        String[] locations = new String[NCs.length * stores.length];
-        for (String nc : NCs) {
-            for (int i = 0; i < stores.length; i++) {
-                locations[count] = nc;
-                count++;
-            }
-        }
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, operator, locations);
     }
 
     /**
@@ -255,9 +244,33 @@ public class ClusterConfig {
         }
         return locations;
     }
+    
+    /**
+     * set the default location constraint
+     * 
+     * @param spec
+     * @param operator
+     * @throws HyracksDataException
+     */
+    public static void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator)
+            throws HyracksException {
+        int count = 0;
+        String[] locations = new String[NCs.length * stores.length];
+        for (String nc : NCs) {
+            for (int i = 0; i < stores.length; i++) {
+                locations[count] = nc;
+                count++;
+            }
+        }
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, operator, locations);
+    }
 
     public static String[] getNCNames() {
         return NCs;
+    }
+
+    public static String[] getStores() {
+        return stores;
     }
 
     public static void addToBlackListNodes(Collection<String> nodes) {

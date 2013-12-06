@@ -149,7 +149,7 @@ public class ClientCounterContext implements IClusterCounterContext {
         for (String counterName : RESET_COUNTERS) {
             updateCounter(slave, jo, counterName);
         }
-        
+
         for (String counterName : AGG_COUNTERS) {
             updateCounter(slave, jo, counterName);
         }
@@ -168,7 +168,9 @@ public class ClientCounterContext implements IClusterCounterContext {
 
     private long extractCounterValue(Object counterObject) {
         long counterValue = 0;
-        if (counterObject instanceof JSONArray) {
+        if (counterObject == null) {
+            return counterValue;
+        } else if (counterObject instanceof JSONArray) {
             JSONArray jArray = (JSONArray) counterObject;
             Object[] values = jArray.toArray();
             for (Object value : values) {

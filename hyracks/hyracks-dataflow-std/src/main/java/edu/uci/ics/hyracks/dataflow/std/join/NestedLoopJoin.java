@@ -139,16 +139,7 @@ public class NestedLoopJoin {
                 boolean prdEval = evaluatePredicate(i, j);
                 if (c == 0 && prdEval) {
                 	matchFound = true;
-                    if (!appender.appendConcat(accessorOuter, i, accessorInner, j)) {
-                        flushFrame(outBuffer, writer);
-                        appender.reset(outBuffer, true);
-                        if (!appender.appendConcat(accessorOuter, i, accessorInner, j)) {
-                            int tSize = accessorOuter.getTupleEndOffset(i) - accessorOuter.getTupleStartOffset(i)
-                                    + accessorInner.getTupleEndOffset(j) - accessorInner.getTupleStartOffset(j);
-                            throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
-                                    + appender.getBuffer().capacity() + ")");
-                        }
-                    }
+                	appendToResults(i, j, writer);
                 }
             }
 
@@ -177,7 +168,35 @@ public class NestedLoopJoin {
     		return ( (predEvaluator == null) || predEvaluator.evaluate(accessorOuter, tIx1, accessorInner, tIx2) );
     	}
     }
-
+    
+    private void appendToResults(int outerTupleId, int innerTupleId, IFrameWriter writer) throws HyracksDataException{
+    	if(!isReversed){
+    		if (!appender.appendConcat(accessorOuter, outerTupleId, accessorInner, innerTupleId)) {
+                flushFrame(outBuffer, writer);
+                appender.reset(outBuffer, true);
+                if (!appender.appendConcat(accessorOuter, outerTupleId, accessorInner, innerTupleId)) {
+                    int tSize = accessorOuter.getTupleEndOffset(outerTupleId) - accessorOuter.getTupleStartOffset(outerTupleId)
+                            + accessorInner.getTupleEndOffset(innerTupleId) - accessorInner.getTupleStartOffset(innerTupleId);
+                    throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
+                            + appender.getBuffer().capacity() + ")");
+                }
+            }
+    	}
+    	else{ //Role Reversal Optimization is triggered
+    		if (!appender.appendConcat(accessorInner, innerTupleId, accessorOuter, outerTupleId)) {
+                flushFrame(outBuffer, writer);
+                appender.reset(outBuffer, true);
+                if (!appender.appendConcat(accessorInner, innerTupleId, accessorOuter, outerTupleId)) {
+                    int tSize = accessorInner.getTupleEndOffset(innerTupleId) - accessorInner.getTupleStartOffset(innerTupleId)+
+                    		accessorOuter.getTupleEndOffset(outerTupleId) - accessorOuter.getTupleStartOffset(outerTupleId);
+                    throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
+                            + appender.getBuffer().capacity() + ")");
+                }
+            }
+    	}
+    	
+    }
+    
     public void closeCache() throws HyracksDataException {
         if (runFileWriter != null) {
             runFileWriter.close();

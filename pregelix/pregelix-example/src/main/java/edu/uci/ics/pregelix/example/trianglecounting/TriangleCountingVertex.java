@@ -133,7 +133,7 @@ public class TriangleCountingVertex extends Vertex<VLongWritable, VLongWritable,
 
     }
 
-    private static long readTriangleCountingResult(Configuration conf) {
+    protected static long readTriangleCountingResult(Configuration conf) {
         try {
             VLongWritable count = (VLongWritable) IterationUtils.readGlobalAggregateValue(conf,
                     BspUtils.getJobId(conf), TriangleCountingAggregator.class.getName());

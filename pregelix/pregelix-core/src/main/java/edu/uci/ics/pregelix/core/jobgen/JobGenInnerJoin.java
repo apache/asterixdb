@@ -63,6 +63,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.data.TypeTraits;
 import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+import edu.uci.ics.pregelix.core.optimizer.IOptimizer;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.pregelix.dataflow.EmptySinkOperatorDescriptor;
@@ -93,12 +94,12 @@ import edu.uci.ics.pregelix.runtime.touchpoint.RuntimeHookFactory;
 public class JobGenInnerJoin extends JobGen {
     private static final Logger LOGGER = Logger.getLogger(JobGen.class.getName());
 
-    public JobGenInnerJoin(PregelixJob job) {
-        super(job);
+    public JobGenInnerJoin(PregelixJob job, IOptimizer optimizer) {
+        super(job, optimizer);
     }
     
-    public JobGenInnerJoin(PregelixJob job, String jobId) {
-        super(job, jobId);
+    public JobGenInnerJoin(PregelixJob job, String jobId, IOptimizer optimizer) {
+        super(job, jobId, optimizer);
     }
 
     protected JobSpecification generateFirstIteration(int iteration) throws HyracksException {
@@ -113,18 +114,18 @@ public class JobGenInnerJoin extends JobGen {
          * construct empty tuple operator
          */
         EmptyTupleSourceOperatorDescriptor emptyTupleSource = new EmptyTupleSourceOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /** construct runtime hook */
         RuntimeHookOperatorDescriptor preSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new PreSuperStepRuntimeHookFactory(jobId, confFactory));
-        ClusterConfig.setLocationConstraint(spec, preSuperStep);
+        setLocationConstraint(spec, preSuperStep);
 
         /**
          * construct drop index operator
          */
-        IFileSplitProvider secondaryFileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, SECONDARY_INDEX_ODD);
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        IFileSplitProvider secondaryFileSplitProvider = getFileSplitProvider(jobId, SECONDARY_INDEX_ODD);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         /**
          * construct btree search and function call update operator
@@ -159,7 +160,7 @@ public class JobGenInnerJoin extends JobGen {
                 comparatorFactories, JobGenUtil.getForwardScan(iteration), null, null, true, true,
                 getIndexDataflowHelperFactory(), inputRdFactory, 6, new StartComputeUpdateFunctionFactory(confFactory),
                 preHookFactory, null, rdUnnestedMessage, rdDummy, rdPartialAggregate, rdInsert, rdDelete, rdFinal);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /**
          * termination state write operator
@@ -188,7 +189,7 @@ public class JobGenInnerJoin extends JobGen {
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProvider, typeTraits, indexCmpFactories,
                 fieldPermutation, keyFields, DEFAULT_BTREE_FILL_FACTOR, getIndexDataflowHelperFactory());
-        ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
+        setLocationConstraint(spec, btreeBulkLoad);
 
         /**
          * construct local sort operator
@@ -199,7 +200,7 @@ public class JobGenInnerJoin extends JobGen {
                 .getClass());
         ExternalSortOperatorDescriptor localSort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
                 nkmFactory, sortCmpFactories, rdUnnestedMessage, Algorithm.QUICK_SORT);
-        ClusterConfig.setLocationConstraint(spec, localSort);
+        setLocationConstraint(spec, localSort);
 
         /**
          * construct local pre-clustered group-by operator
@@ -208,7 +209,7 @@ public class JobGenInnerJoin extends JobGen {
                 false, false);
         ClusteredGroupOperatorDescriptor localGby = new ClusteredGroupOperatorDescriptor(spec, keyFields,
                 sortCmpFactories, aggregatorFactory, rdUnnestedMessage);
-        ClusterConfig.setLocationConstraint(spec, localGby);
+        setLocationConstraint(spec, localGby);
 
         /**
          * construct global group-by operator
@@ -217,25 +218,25 @@ public class JobGenInnerJoin extends JobGen {
                 conf, true, true);
         ClusteredGroupOperatorDescriptor globalGby = new ClusteredGroupOperatorDescriptor(spec, keyFields,
                 sortCmpFactories, aggregatorFactoryFinal, rdFinal);
-        ClusterConfig.setLocationConstraint(spec, globalGby);
+        setLocationConstraint(spec, globalGby);
 
         /**
          * construct the materializing write operator
          */
         MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec, rdFinal,
                 jobId, iteration);
-        ClusterConfig.setLocationConstraint(spec, materialize);
+        setLocationConstraint(spec, materialize);
 
         /**
          * do pre- & post- super step
          */
         RuntimeHookOperatorDescriptor postSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new PostSuperStepRuntimeHookFactory(jobId));
-        ClusterConfig.setLocationConstraint(spec, postSuperStep);
+        setLocationConstraint(spec, postSuperStep);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink);
+        setLocationConstraint(spec, emptySink);
 
         /**
          * add the insert operator to insert vertexes
@@ -244,7 +245,7 @@ public class JobGenInnerJoin extends JobGen {
                 spec, rdInsert, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, fieldPermutation, IndexOperation.INSERT, getIndexDataflowHelperFactory(),
                 null, NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, insertOp);
+        setLocationConstraint(spec, insertOp);
 
         /**
          * add the delete operator to delete vertexes
@@ -254,15 +255,15 @@ public class JobGenInnerJoin extends JobGen {
                 spec, rdDelete, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, fieldPermutationDelete, IndexOperation.DELETE,
                 getIndexDataflowHelperFactory(), null, NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, deleteOp);
+        setLocationConstraint(spec, deleteOp);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink3 = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink3);
+        setLocationConstraint(spec, emptySink3);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink4 = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink4);
+        setLocationConstraint(spec, emptySink4);
 
         ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
         ITuplePartitionComputerFactory unifyingPartitionComputerFactory = new MergePartitionComputerFactory();
@@ -330,7 +331,7 @@ public class JobGenInnerJoin extends JobGen {
          * construct empty tuple operator
          */
         EmptyTupleSourceOperatorDescriptor emptyTupleSource = new EmptyTupleSourceOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /**
          * construct pre-superstep
@@ -338,20 +339,20 @@ public class JobGenInnerJoin extends JobGen {
         IConfigurationFactory confFactory = new ConfigurationFactory(conf);
         RuntimeHookOperatorDescriptor preSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new PreSuperStepRuntimeHookFactory(jobId, confFactory));
-        ClusterConfig.setLocationConstraint(spec, preSuperStep);
+        setLocationConstraint(spec, preSuperStep);
 
         /**
          * construct the materializing write operator
          */
         MaterializingReadOperatorDescriptor materializeRead = new MaterializingReadOperatorDescriptor(spec, rdFinal,
                 true, jobId, iteration);
-        ClusterConfig.setLocationConstraint(spec, materializeRead);
+        setLocationConstraint(spec, materializeRead);
 
         /**
          * construct the index-set-union operator
          */
         String readFile = iteration % 2 == 0 ? SECONDARY_INDEX_ODD : SECONDARY_INDEX_EVEN;
-        IFileSplitProvider secondaryFileSplitProviderRead = ClusterConfig.getFileSplitProvider(jobId, readFile);
+        IFileSplitProvider secondaryFileSplitProviderRead = getFileSplitProvider(jobId, readFile);
 
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
@@ -359,12 +360,12 @@ public class JobGenInnerJoin extends JobGen {
         IndexNestedLoopJoinOperatorDescriptor setUnion = new IndexNestedLoopJoinOperatorDescriptor(spec, rdFinal,
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderRead, typeTraits,
                 comparatorFactories, true, keyFields, keyFields, true, true, getIndexDataflowHelperFactory(), true);
-        ClusterConfig.setLocationConstraint(spec, setUnion);
+        setLocationConstraint(spec, setUnion);
 
         /**
          * construct index-join-function-update operator
          */
-        IFileSplitProvider fileSplitProvider = ClusterConfig.getFileSplitProvider(jobId, PRIMARY_INDEX);
+        IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
         RecordDescriptor rdDummy = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
                 VLongWritable.class.getName());
         RecordDescriptor rdPartialAggregate = DataflowUtils.getRecordDescriptorFromWritableClasses(conf,
@@ -379,7 +380,7 @@ public class JobGenInnerJoin extends JobGen {
                 JobGenUtil.getForwardScan(iteration), keyFields, keyFields, true, true,
                 getIndexDataflowHelperFactory(), inputRdFactory, 6, new ComputeUpdateFunctionFactory(confFactory),
                 preHookFactory, null, rdUnnestedMessage, rdDummy, rdPartialAggregate, rdInsert, rdDelete, rdFinal);
-        ClusterConfig.setLocationConstraint(spec, join);
+        setLocationConstraint(spec, join);
 
         /**
          * construct bulk-load index operator
@@ -389,12 +390,12 @@ public class JobGenInnerJoin extends JobGen {
         indexCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(iteration + 1,
                 WritableComparator.get(vertexIdClass).getClass());
         String writeFile = iteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
-        IFileSplitProvider secondaryFileSplitProviderWrite = ClusterConfig.getFileSplitProvider(jobId, writeFile);
+        IFileSplitProvider secondaryFileSplitProviderWrite = getFileSplitProvider(jobId, writeFile);
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderWrite, typeTraits,
                 indexCmpFactories, fieldPermutation, keyFields, DEFAULT_BTREE_FILL_FACTOR,
                 getIndexDataflowHelperFactory());
-        ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
+        setLocationConstraint(spec, btreeBulkLoad);
 
         /**
          * construct local sort operator
@@ -405,7 +406,7 @@ public class JobGenInnerJoin extends JobGen {
                 .getClass());
         ExternalSortOperatorDescriptor localSort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
                 nkmFactory, sortCmpFactories, rdUnnestedMessage, Algorithm.QUICK_SORT);
-        ClusterConfig.setLocationConstraint(spec, localSort);
+        setLocationConstraint(spec, localSort);
 
         /**
          * construct local pre-clustered group-by operator
@@ -414,7 +415,7 @@ public class JobGenInnerJoin extends JobGen {
                 false, false);
         ClusteredGroupOperatorDescriptor localGby = new ClusteredGroupOperatorDescriptor(spec, keyFields,
                 sortCmpFactories, aggregatorFactory, rdUnnestedMessage);
-        ClusterConfig.setLocationConstraint(spec, localGby);
+        setLocationConstraint(spec, localGby);
 
         /**
          * construct global group-by operator
@@ -423,23 +424,23 @@ public class JobGenInnerJoin extends JobGen {
                 conf, true, true);
         ClusteredGroupOperatorDescriptor globalGby = new ClusteredGroupOperatorDescriptor(spec, keyFields,
                 sortCmpFactories, aggregatorFactoryFinal, rdFinal);
-        ClusterConfig.setLocationConstraint(spec, globalGby);
+        setLocationConstraint(spec, globalGby);
 
         /**
          * construct the materializing write operator
          */
         MaterializingWriteOperatorDescriptor materialize = new MaterializingWriteOperatorDescriptor(spec, rdFinal,
                 jobId, iteration);
-        ClusterConfig.setLocationConstraint(spec, materialize);
+        setLocationConstraint(spec, materialize);
 
         /** construct runtime hook */
         RuntimeHookOperatorDescriptor postSuperStep = new RuntimeHookOperatorDescriptor(spec,
                 new PostSuperStepRuntimeHookFactory(jobId));
-        ClusterConfig.setLocationConstraint(spec, postSuperStep);
+        setLocationConstraint(spec, postSuperStep);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink);
+        setLocationConstraint(spec, emptySink);
 
         /**
          * termination state write operator
@@ -464,7 +465,7 @@ public class JobGenInnerJoin extends JobGen {
                 spec, rdInsert, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, fieldPermutation, IndexOperation.INSERT, getIndexDataflowHelperFactory(),
                 null, NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, insertOp);
+        setLocationConstraint(spec, insertOp);
 
         /**
          * add the delete operator to delete vertexes
@@ -474,15 +475,15 @@ public class JobGenInnerJoin extends JobGen {
                 spec, rdDelete, storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, fieldPermutationDelete, IndexOperation.DELETE,
                 getIndexDataflowHelperFactory(), null, NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, deleteOp);
+        setLocationConstraint(spec, deleteOp);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink3 = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink3);
+        setLocationConstraint(spec, emptySink3);
 
         /** construct empty sink operator */
         EmptySinkOperatorDescriptor emptySink4 = new EmptySinkOperatorDescriptor(spec);
-        ClusterConfig.setLocationConstraint(spec, emptySink4);
+        setLocationConstraint(spec, emptySink4);
 
         ITuplePartitionComputerFactory unifyingPartitionComputerFactory = new MergePartitionComputerFactory();
         ITuplePartitionComputerFactory partionFactory = getVertexPartitionComputerFactory();
@@ -596,7 +597,7 @@ public class JobGenInnerJoin extends JobGen {
         String[] readSchedule = ClusterConfig.getHdfsScheduler().getLocationConstraints(splits);
         HDFSReadOperatorDescriptor scanner = new HDFSReadOperatorDescriptor(spec, recordDescriptor, tmpJob, splits,
                 readSchedule, new KeyValueParserFactory());
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /** construct the sort operator to sort message states */
         int[] keyFields = new int[] { 0 };
@@ -605,7 +606,7 @@ public class JobGenInnerJoin extends JobGen {
         sortCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(lastSuccessfulIteration, vertexIdClass);
         ExternalSortOperatorDescriptor sort = new ExternalSortOperatorDescriptor(spec, maxFrameNumber, keyFields,
                 nkmFactory, sortCmpFactories, recordDescriptor, Algorithm.QUICK_SORT);
-        ClusterConfig.setLocationConstraint(spec, sort);
+        setLocationConstraint(spec, sort);
 
         /**
          * construct bulk-load index operator
@@ -618,12 +619,12 @@ public class JobGenInnerJoin extends JobGen {
         indexCmpFactories[0] = JobGenUtil.getIBinaryComparatorFactory(lastSuccessfulIteration + 1, WritableComparator
                 .get(vertexIdClass).getClass());
         String writeFile = lastSuccessfulIteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
-        IFileSplitProvider secondaryFileSplitProviderWrite = ClusterConfig.getFileSplitProvider(jobId, writeFile);
+        IFileSplitProvider secondaryFileSplitProviderWrite = getFileSplitProvider(jobId, writeFile);
         TreeIndexBulkReLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkReLoadOperatorDescriptor(spec,
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderWrite, typeTraits,
                 indexCmpFactories, fieldPermutation, new int[] { 0 }, DEFAULT_BTREE_FILL_FACTOR,
                 getIndexDataflowHelperFactory());
-        ClusterConfig.setLocationConstraint(spec, btreeBulkLoad);
+        setLocationConstraint(spec, btreeBulkLoad);
 
         /**
          * connect operator descriptors
@@ -648,7 +649,7 @@ public class JobGenInnerJoin extends JobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(job.getConfiguration());
         Class<? extends Writable> msgListClass = MsgList.class;
         String readFile = lastSuccessfulIteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
-        IFileSplitProvider secondaryFileSplitProviderRead = ClusterConfig.getFileSplitProvider(jobId, readFile);
+        IFileSplitProvider secondaryFileSplitProviderRead = getFileSplitProvider(jobId, readFile);
         JobSpecification spec = new JobSpecification();
         /**
          * construct empty tuple operator
@@ -663,7 +664,7 @@ public class JobGenInnerJoin extends JobGen {
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
         ConstantTupleSourceOperatorDescriptor emptyTupleSource = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        ClusterConfig.setLocationConstraint(spec, emptyTupleSource);
+        setLocationConstraint(spec, emptyTupleSource);
 
         /**
          * construct btree search operator
@@ -681,7 +682,7 @@ public class JobGenInnerJoin extends JobGen {
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderRead, typeTraits,
                 comparatorFactories, null, null, null, true, true, getIndexDataflowHelperFactory(), false,
                 NoOpOperationCallbackFactory.INSTANCE);
-        ClusterConfig.setLocationConstraint(spec, scanner);
+        setLocationConstraint(spec, scanner);
 
         /**
          * construct write file operator
@@ -689,7 +690,7 @@ public class JobGenInnerJoin extends JobGen {
         IRecordDescriptorFactory inputRdFactory = DataflowUtils.getWritableRecordDescriptorFactoryFromWritableClasses(
                 conf, vertexIdClass.getName(), MsgList.class.getName());
         HDFSFileWriteOperatorDescriptor writer = new HDFSFileWriteOperatorDescriptor(spec, job, inputRdFactory);
-        ClusterConfig.setLocationConstraint(spec, writer);
+        setLocationConstraint(spec, writer);
 
         /**
          * connect operator descriptors

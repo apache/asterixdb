@@ -14,22 +14,24 @@
  */
 package edu.uci.ics.pregelix.api.util;
 
-import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
- * A conservative checkpoint hook which does checkpoint every 2 supersteps
+ * The default iteration complete reporter hook does nothing
  * 
- * @author yingyib
+ * @author wbiesing
  */
-public class ConservativeCheckpointHook implements ICheckpointHook {
+public class DefaultIterationCompleteReporterHook implements IIterationCompleteReporterHook {
+
+    private static final Log LOG = LogFactory.getLog(DefaultIterationCompleteReporterHook.class);
 
     @Override
-    public boolean checkpoint(int superstep) {
-        if (superstep % 2 == 0) {
-            return true;
-        } else {
-            return false;
-        }
+    public void completeIteration(int superstep, PregelixJob job) {
+        LOG.debug("iteration complete reporter for " + superstep + " job " + job.getJobName());
     }
 
 }

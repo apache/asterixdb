@@ -16,83 +16,82 @@ package edu.uci.ics.pregelix.example.util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.junit.Assert;
 
 public class TestUtils {
 
+    private static final String PREFIX = "part";
+
     public static void compareWithResultDir(File expectedFileDir, File actualFileDir) throws Exception {
-        String[] fileNames = expectedFileDir.list();
-        for (String fileName : fileNames) {
-            compareWithResult(new File(expectedFileDir, fileName), new File(actualFileDir, fileName));
-        }
+        Collection<Record> expectedRecords = loadRecords(expectedFileDir);
+        Collection<Record> actualRecords = loadRecords(actualFileDir);
+        boolean equal = collectionEqual(expectedRecords, actualRecords);
+        Assert.assertTrue(equal);
     }
 
-    public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
-        BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-        BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
-        String lineExpected, lineActual;
-        int num = 1;
-        try {
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                lineActual = readerActual.readLine();
-                if (lineActual == null) {
-                    throw new Exception("Actual result changed at line " + num + ":\n< " + lineExpected + "\n> ");
+    public static boolean collectionEqual(Collection<Record> c1, Collection<Record> c2) {
+        for (Record r1 : c1) {
+            boolean exists = false;
+            for (Record r2 : c2) {
+                if (r1.equals(r2)) {
+                    exists = true;
+                    break;
                 }
-                if (!equalStrings(lineExpected, lineActual)) {
-                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                            + lineActual);
-                }
-                ++num;
             }
-            lineActual = readerActual.readLine();
-            if (lineActual != null) {
-                throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineActual);
+            if (!exists) {
+                return false;
             }
-        } finally {
-            readerExpected.close();
-            readerActual.close();
         }
-    }
-
-    private static boolean equalStrings(String s1, String s2) {
-        String[] rowsOne = s1.split("\n");
-        String[] rowsTwo = s2.split("\n");
-
-        if (rowsOne.length != rowsTwo.length)
-            return false;
-
-        for (int i = 0; i < rowsOne.length; i++) {
-            String row1 = rowsOne[i];
-            String row2 = rowsTwo[i];
-
-            if (row1.equals(row2))
-                continue;
-
-            boolean spaceOrTab = false;
-            spaceOrTab = row1.contains(" ");
-            String[] fields1 = spaceOrTab ? row1.split(" ") : row1.split("\t");
-            String[] fields2 = spaceOrTab ? row2.split(" ") : row2.split("\t");
-
-            for (int j = 0; j < fields1.length; j++) {
-                if (fields1[j].equals(fields2[j])) {
-                    continue;
-                } else if (fields1[j].indexOf('.') < 0) {
-                    return false;
-                } else {
-                    Double double1 = Double.parseDouble(fields1[j]);
-                    Double double2 = Double.parseDouble(fields2[j]);
-                    float float1 = (float) double1.doubleValue();
-                    float float2 = (float) double2.doubleValue();
-
-                    if (Math.abs(float1 - float2) < 1.0e-7)
-                        continue;
-                    else {
-                        return false;
-                    }
+        for (Record r2 : c2) {
+            boolean exists = false;
+            for (Record r1 : c1) {
+                if (r2.equals(r1)) {
+                    exists = true;
+                    break;
                 }
+            }
+            if (!exists) {
+                return false;
             }
         }
         return true;
+    }
+
+    public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
+        Collection<Record> expectedRecords = new ArrayList<Record>();
+        Collection<Record> actualRecords = new ArrayList<Record>();
+        populateResultFile(expectedRecords, expectedFile);
+        populateResultFile(actualRecords, actualFile);
+        boolean equal = expectedRecords.equals(actualRecords);
+        Assert.assertTrue(equal);
+    }
+
+    private static Collection<Record> loadRecords(File dir) throws Exception {
+        String[] fileNames = dir.list();
+        Collection<Record> records = new ArrayList<Record>();
+        for (String fileName : fileNames) {
+            if (fileName.startsWith(PREFIX)) {
+                File file = new File(dir, fileName);
+                populateResultFile(records, file);
+            }
+        }
+        return records;
+    }
+
+    private static void populateResultFile(Collection<Record> records, File file) throws FileNotFoundException,
+            IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            records.add(new Record(line));
+        }
+        reader.close();
     }
 
 }
