@@ -610,10 +610,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * Terminate the current partition where the current vertex stays in.
      * This will immediately take effect and the upcoming vertice in the
      * same partition cannot be processed.
-     * <<<<<<< HEAD
-     * 
-     =======
-     * >>>>>>> master
      */
     protected final void terminatePartition() {
         voteToHalt();
