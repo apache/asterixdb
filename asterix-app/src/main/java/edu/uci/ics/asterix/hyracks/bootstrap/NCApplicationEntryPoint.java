@@ -152,10 +152,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                     systemState == SystemState.NEW_UNIVERSE);
             MetadataBootstrap.startDDLRecovery();
 
-            IMetadataNode stub = null;
-            stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
-            proxy.setMetadataNode(stub);
-
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Metadata node bound");
             }
@@ -185,6 +181,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         recoveryMgr.checkpoint(true);
+        
+        if (isMetadataNode) {
+            IMetadataNode stub = null;
+            stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
+            proxy.setMetadataNode(stub);
+        }
 
         // TODO
         // reclaim storage for orphaned index artifacts in NCs.
