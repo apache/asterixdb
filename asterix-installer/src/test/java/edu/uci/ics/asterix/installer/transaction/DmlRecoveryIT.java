@@ -84,9 +84,6 @@ public class DmlRecoveryIT {
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
-        File dataCopyDir = new File(managixHomePath + File.separator + ".." + File.separator + ".." + File.separator
-                + "data");
-        FileUtils.deleteDirectory(dataCopyDir);
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "dml_recovery" + File.separator
                 + "stop_and_delete.sh");
         TestsUtils.executeScript(pb, scriptHomePath + File.separator + "dml_recovery" + File.separator + "shutdown.sh");
