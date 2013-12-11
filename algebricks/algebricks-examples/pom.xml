@@ -21,7 +21,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>algebricks</artifactId>
-    <version>0.2.10-SNAPSHOT</version>
+    <version>0.2.10</version>
   </parent>
 
   <modules>

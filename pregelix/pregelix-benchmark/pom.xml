@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
-<project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>pregelix</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.10-SNAPSHOT</version>
+		<version>0.2.10</version>
 	</parent>
 
 	<artifactId>pregelix-benchmark</artifactId>
@@ -70,7 +68,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

@@ -21,20 +21,20 @@
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>hadoop-compat-example</artifactId>
-    <version>0.2.10-SNAPSHOT</version>
+    <version>0.2.10</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.2.10-SNAPSHOT</version>
+  		<version>0.2.10</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   		<artifactId>hadoopcompathelper</artifactId>
-  		<version>0.2.10-SNAPSHOT</version>
+  		<version>0.2.10</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

@@ -8,15 +8,14 @@
 	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ! See the 
 	License for the specific language governing permissions and ! limitations 
 	under the License. ! -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>hyracks-hdfs-core</artifactId>
 	<name>hyracks-hdfs-core</name>
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.10-SNAPSHOT</version>
+		<version>0.2.10</version>
 	</parent>
 
 	<build>
@@ -200,31 +199,31 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

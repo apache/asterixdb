@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>pregelix</artifactId>
-		<version>0.2.10-SNAPSHOT</version>
+		<version>0.2.10</version>
 	</parent>
 	<artifactId>pregelix-dist</artifactId>
 	<name>pregelix-dist</name>
@@ -55,18 +55,18 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-core</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-example</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
+			<version>0.2.10</version>
 		</dependency>
 		<dependency>
                         <groupId>edu.uci.ics.hyracks</groupId>
                         <artifactId>pregelix-benchmark</artifactId>
-                        <version>0.2.10-SNAPSHOT</version>
+                        <version>0.2.10</version>
                 </dependency>
 	</dependencies>
 </project>
