@@ -80,7 +80,6 @@ import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
  * with transaction ids of regular jobs or other metadata transactions.
  */
 public class MetadataManager implements IMetadataManager {
-
     private static final int INITIAL_SLEEP_TIME = 64;
     private static final int RETRY_MULTIPLIER = 4;
     private static final int MAX_RETRY_COUNT = 6;

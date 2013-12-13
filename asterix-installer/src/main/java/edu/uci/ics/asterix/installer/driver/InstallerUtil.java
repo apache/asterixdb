@@ -73,5 +73,4 @@ public class InstallerUtil {
         AsterixConfiguration asterixConfiguration = (AsterixConfiguration) unmarshaller.unmarshal(file);
         return asterixConfiguration;
     }
-
 }

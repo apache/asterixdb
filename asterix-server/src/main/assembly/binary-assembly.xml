@@ -21,17 +21,27 @@
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
     <fileSet>
+      <directory>target/appassembler/repo</directory>
+      <outputDirectory>repo</outputDirectory>
+    </fileSet>
+    <fileSet>
       <directory>target/appassembler/bin</directory>
       <outputDirectory>bin</outputDirectory>
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
-      <directory>target/appassembler/lib</directory>
-      <outputDirectory>lib</outputDirectory>
+      <directory>target/generated-resources/appassembler/booter-windows/etc</directory>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+      	<include>asterixcc.xml</include>
+      	<include>asterixnc.xml</include>
+      </includes>
     </fileSet>
+
     <fileSet>
-      <directory>docs</directory>
-      <outputDirectory>docs</outputDirectory>
+      <directory>target/generated-resources/appassembler/booter-windows/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+      <fileMode>0755</fileMode>
     </fileSet>
   </fileSets>
 </assembly>

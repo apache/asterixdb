@@ -41,6 +41,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APolygonPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARectanglePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AStringPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ATimePrinter;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AYearMonthDurationPrinter;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
 import edu.uci.ics.asterix.om.pointables.AListPointable;
@@ -186,6 +187,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case INTERVAL: {
                     AIntervalPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case UUID: {
+                    AUUIDPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 default: {

@@ -89,18 +89,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         } else {
             return false;
         }
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) access.getInputs().get(0).getValue();
-        // If it's not an indexed field, it is pushed so that scan can be
-        // rewritten into index search.
-        if (op2.getOperatorTag() == LogicalOperatorTag.PROJECT || context.checkAndAddToAlreadyCompared(op, op2)
-                && !(op2.getOperatorTag() == LogicalOperatorTag.SELECT && isAccessToIndexedField(access, context))) {
-            return false;
-        }
-        boolean changed = propagateFieldAccessRec(opRef, context, finalAnnot);
-        // if (changed) {
-        // OptimizationUtil.typeOpRec(opRef, context);
-        // }
-        return changed;
+        return propagateFieldAccessRec(opRef, context, finalAnnot);
     }
 
     @SuppressWarnings("unchecked")
@@ -196,6 +185,12 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         AssignOperator access = (AssignOperator) opRef.getValue();
         Mutable<ILogicalOperator> opRef2 = access.getInputs().get(0);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
+        // If it's not an indexed field, it is pushed so that scan can be
+        // rewritten into index search.
+        if (op2.getOperatorTag() == LogicalOperatorTag.PROJECT || context.checkAndAddToAlreadyCompared(access, op2)
+                && !(op2.getOperatorTag() == LogicalOperatorTag.SELECT && isAccessToIndexedField(access, context))) {
+            return false;
+        }
         if (tryingToPushThroughSelectionWithSameDataSource(access, op2)) {
             return false;
         }

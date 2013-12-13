@@ -82,6 +82,8 @@ public class NonTaggedNumericUnaryFunctionTypeComputer implements IResultTypeCom
                 break;
             case NULL:
                 return BuiltinType.ANULL;
+            case ANY:
+                return BuiltinType.ANY;
             default: {
                 throw new NotImplementedException(errMsg + t.getTypeName());
             }

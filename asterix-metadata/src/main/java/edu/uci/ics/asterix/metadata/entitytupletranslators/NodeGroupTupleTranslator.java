@@ -62,7 +62,7 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
     }
 
     @Override
-    public NodeGroup getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public NodeGroup getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);

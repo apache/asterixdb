@@ -22,6 +22,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 
 public class AsterixExternalFunctionInfo extends AsterixFunctionInfo implements IExternalFunctionInfo {
 
+    private static final long serialVersionUID = 1L;
+
     private final IResultTypeComputer rtc;
     private final List<IAType> argumentTypes;
     private final String body;
@@ -42,7 +44,7 @@ public class AsterixExternalFunctionInfo extends AsterixFunctionInfo implements 
 
     public AsterixExternalFunctionInfo(String namespace, AsterixFunction asterixFunction, FunctionKind kind,
             List<IAType> argumentTypes, IAType returnType, IResultTypeComputer rtc, String body, String language) {
-        super(namespace, asterixFunction);
+        super(namespace, asterixFunction, true);
         this.rtc = rtc;
         this.argumentTypes = argumentTypes;
         this.body = body;

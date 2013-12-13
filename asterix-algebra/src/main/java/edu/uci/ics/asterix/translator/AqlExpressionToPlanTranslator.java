@@ -58,7 +58,7 @@ import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.ListConstructor.Type;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -224,10 +224,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             @SuppressWarnings("unchecked")
             /** This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest it; otherwise do nothing. */
             AssignOperator assignCollectionToSequence = new AssignOperator(seqVar,
-                    new MutableObject<ILogicalExpression>(
-                            new ScalarFunctionCallExpression(AsterixBuiltinFunctions
-                                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
-                                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
+                    new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                            FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.COLLECTION_TO_SEQUENCE),
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)))));
             assignCollectionToSequence.getInputs().add(
                     new MutableObject<ILogicalOperator>(project.getInputs().get(0).getValue()));
             project.getInputs().get(0).setValue(assignCollectionToSequence);
@@ -241,8 +240,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
             List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
             for (String keyFieldName : partitionKeys) {
-                IFunctionInfo finfoAccess = AsterixBuiltinFunctions
-                        .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
+                IFunctionInfo finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
                 @SuppressWarnings("unchecked")
                 ScalarFunctionCallExpression f = new ScalarFunctionCallExpression(finfoAccess,
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
@@ -518,7 +516,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     metadataProvider.getMetadataTxnContext(), function);
             f = new ScalarFunctionCallExpression(finfo, args);
         } else if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
-            IFunctionInfo finfo = new AsterixFunctionInfo(signature);
+            IFunctionInfo finfo = FunctionUtils.getFunctionInfo(signature);
             f = new ScalarFunctionCallExpression(finfo, args);
         } else {
             throw new MetadataException(" User defined functions written in " + function.getLanguage()
@@ -1265,7 +1263,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitLoadFromFileStatement(LoadFromFileStatement stmtLoad,
+    public Pair<ILogicalOperator, LogicalVariable> visitLoadStatement(LoadStatement stmtLoad,
             Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;

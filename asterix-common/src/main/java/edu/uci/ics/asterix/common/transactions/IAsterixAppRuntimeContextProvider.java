@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.common.transactions;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
@@ -28,6 +29,8 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
 public interface IAsterixAppRuntimeContextProvider {
+
+    public AsterixThreadExecutor getThreadExecutor();
 
     public IBufferCache getBufferCache();
 

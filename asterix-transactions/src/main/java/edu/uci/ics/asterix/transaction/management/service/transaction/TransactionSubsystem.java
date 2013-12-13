@@ -43,13 +43,13 @@ public class TransactionSubsystem implements ITransactionSubsystem {
 
     public TransactionSubsystem(String id, IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider,
             AsterixTransactionProperties txnProperties) throws ACIDException {
+        this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         this.id = id;
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(this);
         this.logManager = new LogManager(this);
         this.recoveryManager = new RecoveryManager(this);
-        this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         if (asterixAppRuntimeContextProvider != null) {
             this.checkpointThread = new CheckpointThread(recoveryManager,
                     asterixAppRuntimeContextProvider.getIndexLifecycleManager(),

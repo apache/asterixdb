@@ -14,7 +14,6 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="flwor">
-   <!-- commented due to issue 643
     <test-case FilePath="flwor">
       <compilation-unit name="at00">
         <output-dir compare="Text">at00</output-dir>
@@ -45,13 +44,17 @@
         <output-dir compare="Text">at05</output-dir>
       </compilation-unit>
     </test-case>
-   -->
     <test-case FilePath="flwor">
       <compilation-unit name="at06">
         <output-dir compare="Text">at06</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-case FilePath="flwor">
+      <compilation-unit name="let33">
+        <output-dir compare="Text">let33</output-dir>
+      </compilation-unit>
+    </test-case>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">
       <compilation-unit name="issue531_string_min_max">

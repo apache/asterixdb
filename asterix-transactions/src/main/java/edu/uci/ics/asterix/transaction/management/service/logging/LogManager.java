@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.ILogReader;
@@ -49,6 +48,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     public static final boolean IS_DEBUG_MODE = false;// true
     private static final Logger LOGGER = Logger.getLogger(LogManager.class.getName());
     private final TransactionSubsystem txnSubsystem;
+
     private final LogManagerProperties logManagerProperties;
     private final long logFileSize;
     private final int logPageSize;
@@ -91,7 +91,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendChannel = getFileChannel(appendLSN, false);
         getAndInitNewPage();
         logFlusher = new LogFlusher(this, emptyQ, flushQ);
-        futureLogFlusher = AsterixThreadExecutor.INSTANCE.submit(logFlusher);
+        futureLogFlusher = txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(logFlusher);
     }
 
     @Override
@@ -183,18 +183,17 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     public void stop(boolean dumpState, OutputStream os) {
         terminateLogFlusher();
         if (dumpState) {
-            // #. dump Configurable Variables
-            dumpConfVars(os);
-
-            // #. dump LSNInfo
-            dumpLSNInfo(os);
-
-            try {
-                os.flush();
-            } catch (IOException e) {
-                // ignore
-            }
+            dumpState(os);
         }
+    }
+
+    @Override
+    public void dumpState(OutputStream os) {
+        // #. dump Configurable Variables
+        dumpConfVars(os);
+
+        // #. dump LSNInfo
+        dumpLSNInfo(os);
     }
 
     private void dumpConfVars(OutputStream os) {
@@ -270,7 +269,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return logFileSize * fileId + offset;
     }
 
-    public void renewLogFiles() {
+    public void renewLogFiles() throws IOException {
         terminateLogFlusher();
         long lastMaxLogFileId = deleteAllLogFiles();
         initializeLogManager(lastMaxLogFileId + 1);

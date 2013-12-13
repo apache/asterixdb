@@ -138,6 +138,10 @@ public class AObjectPrinter implements IPrinter {
                 unorderedListPrinter.print(b, s, l, ps);
                 break;
             }
+            case UUID: {
+                AUUIDPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             default: {
                 throw new NotImplementedException("No printer for type " + typeTag);
             }

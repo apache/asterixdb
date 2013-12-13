@@ -165,7 +165,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         public Pair<Boolean, ILogicalExpression> visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr,
                 Void arg) throws AlgebricksException {
             boolean changed = changeRec(expr, arg);
-            if (!checkArgs(expr)) {
+            if (!checkArgs(expr) || !expr.isFunctional()) {
                 return new Pair<Boolean, ILogicalExpression>(changed, expr);
             }
             //Current ARecord SerDe assumes a closed record, so we do not constant fold open record constructors

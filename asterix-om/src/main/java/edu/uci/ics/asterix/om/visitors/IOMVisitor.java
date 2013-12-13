@@ -40,6 +40,7 @@ import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.ATime;
+import edu.uci.ics.asterix.om.base.AUUID;
 import edu.uci.ics.asterix.om.base.AUnorderedList;
 import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -100,4 +101,6 @@ public interface IOMVisitor {
     public void visitACircle(ACircle obj) throws AsterixException;
 
     public void visitARectangle(ARectangle obj) throws AsterixException;
+
+    public void visitAUUID(AUUID obj) throws AsterixException;
 }

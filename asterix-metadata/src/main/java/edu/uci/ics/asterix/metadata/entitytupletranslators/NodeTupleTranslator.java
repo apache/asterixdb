@@ -56,7 +56,7 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     }
 
     @Override
-    public Node getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public Node getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         throw new NotImplementedException();
         // TODO: Implement this.
         // try {

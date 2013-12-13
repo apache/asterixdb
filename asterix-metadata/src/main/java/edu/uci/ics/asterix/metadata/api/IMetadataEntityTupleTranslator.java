@@ -40,7 +40,7 @@ public interface IMetadataEntityTupleTranslator<T> {
      * @throws MetadataException
      * @throws IOException
      */
-    public T getMetadataEntytiFromTuple(ITupleReference tuple) throws MetadataException, IOException;
+    public T getMetadataEntityFromTuple(ITupleReference tuple) throws MetadataException, IOException;
 
     /**
      * Serializes the given metadata entity of type T into an appropriate tuple

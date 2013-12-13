@@ -16,14 +16,18 @@ package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
@@ -51,23 +55,34 @@ abstract class RESTAPIServlet extends HttpServlet {
     private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
 
     @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
+            IOException {
+        StringWriter sw = new StringWriter();
+        IOUtils.copy(request.getInputStream(), sw, StandardCharsets.UTF_8.name());
+        String query = sw.toString();
+        handleRequest(request, response, query);
+    }
+
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String query = getQueryParameter(request);
+        handleRequest(request, response, query);
+    }
+
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
+            throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-
         DisplayFormat format = DisplayFormat.HTML;
-
         String contentType = request.getContentType();
-
         if ((contentType == null) || (contentType.equals("text/plain"))) {
             format = DisplayFormat.TEXT;
         } else if (contentType.equals("application/json")) {
             format = DisplayFormat.JSON;
         }
 
-        String query = getQueryParameter(request);
         boolean asyncResults = isAsync(request);
 
         ServletContext context = getServletContext();
@@ -77,7 +92,6 @@ abstract class RESTAPIServlet extends HttpServlet {
         try {
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-
                 hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
                 if (hds == null) {
                     hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
@@ -88,12 +102,10 @@ abstract class RESTAPIServlet extends HttpServlet {
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.Statement();
             if (!containsForbiddenStatements(aqlStatements)) {
-                SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true, false);
-    
+                SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true,
+                        false);
                 MetadataManager.INSTANCE.init();
-    
                 AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
-    
                 aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
             }
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {

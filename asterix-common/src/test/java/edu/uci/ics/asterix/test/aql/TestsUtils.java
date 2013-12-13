@@ -36,9 +36,12 @@ import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -186,7 +189,7 @@ public class TestsUtils {
         }
     }
 
-    private static String[] handleError(GetMethod method) throws Exception {
+    private static String[] handleError(HttpMethod method) throws Exception {
         String errorBody = method.getResponseBodyAsString();
         JSONObject result = new JSONObject(errorBody);
         String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
@@ -205,7 +208,6 @@ public class TestsUtils {
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
-
         method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
 
         // Provide custom retry handler is necessary
@@ -238,9 +240,8 @@ public class TestsUtils {
         HttpClient client = new HttpClient();
 
         // Create a method instance.
-        GetMethod method = new GetMethod(url);
-
-        method.setQueryString(new NameValuePair[] { new NameValuePair("statements", str) });
+        PostMethod method = new PostMethod(url);
+        method.setRequestEntity(new StringRequestEntity(str));
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -271,10 +272,8 @@ public class TestsUtils {
         HttpClient client = new HttpClient();
 
         // Create a method instance.
-        GetMethod method = new GetMethod(url);
-
-        method.setQueryString(new NameValuePair[] { new NameValuePair("ddl", str) });
-
+        PostMethod method = new PostMethod(url);
+        method.setRequestEntity(new StringRequestEntity(str));
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
@@ -311,7 +310,7 @@ public class TestsUtils {
     public static void executeManagixCommand(String command) throws ClassNotFoundException, NoSuchMethodException,
             SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (managixExecuteMethod == null) {
-            Class clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
+            Class<?> clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
             managixExecuteMethod = clazz.getMethod("executeCommand", String.class);
         }
         managixExecuteMethod.invoke(null, command);

@@ -201,10 +201,14 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         if (inputType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("The input type " + inputType + " is not a valid record type!");
         }
+        ARecordType inputRecType = (ARecordType) inputType;
+        if (reqType.isOpen() != inputRecType.isOpen()) {
+            return false;
+        }
 
         IAType[] reqTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
-        IAType[] inputTypes = ((ARecordType) inputType).getFieldTypes();
+        IAType[] inputTypes = inputRecType.getFieldTypes();
         String[] inputFieldNames = ((ARecordType) inputType).getFieldNames();
 
         if (reqTypes.length != inputTypes.length) {

@@ -106,8 +106,7 @@ public class OptimizerTest {
         if (files == null || files.length == 0) {
             outdir.delete();
         }
-
-        deleteTransactionLogs();
+        AsterixHyracksIntegrationUtil.deinit();
     }
 
     private static void suiteBuild(File dir, Collection<Object[]> testArgs, String path) {

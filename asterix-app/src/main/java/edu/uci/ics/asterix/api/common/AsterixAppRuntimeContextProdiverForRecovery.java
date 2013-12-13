@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.api.common;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
@@ -29,11 +30,11 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 
-public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppRuntimeContextProvider {
+public class AsterixAppRuntimeContextProdiverForRecovery implements IAsterixAppRuntimeContextProvider {
 
     private final AsterixAppRuntimeContext asterixAppRuntimeContext;
 
-    public AsterixAppRuntimeContextProviderForRecovery(AsterixAppRuntimeContext asterixAppRuntimeContext) {
+    public AsterixAppRuntimeContextProdiverForRecovery(AsterixAppRuntimeContext asterixAppRuntimeContext) {
         this.asterixAppRuntimeContext = asterixAppRuntimeContext;
     }
 
@@ -95,5 +96,10 @@ public class AsterixAppRuntimeContextProviderForRecovery implements IAsterixAppR
     @Override
     public IAsterixAppRuntimeContext getAppContext() {
         return asterixAppRuntimeContext;
+    }
+
+    @Override
+    public AsterixThreadExecutor getThreadExecutor() {
+        return asterixAppRuntimeContext.getThreadExecutor();
     }
 }

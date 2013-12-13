@@ -52,7 +52,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -398,7 +398,7 @@ public class CloneAndSubstituteVariablesVisitor implements
     }
 
     @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitLoadFromFileStatement(LoadFromFileStatement stmtLoad,
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitLoadStatement(LoadStatement stmtLoad,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;

@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.Set;
@@ -153,15 +152,14 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         if (dumpState) {
-            //#. dump TxnContext
-            dumpTxnContext(os);
-
-            try {
-                os.flush();
-            } catch (IOException e) {
-                //ignore
-            }
+            dumpState(os);
         }
+    }
+
+    @Override
+    public void dumpState(OutputStream os) {
+        //#. dump TxnContext
+        dumpTxnContext(os);
     }
 
     private void dumpTxnContext(OutputStream os) {
