@@ -13,6 +13,7 @@
  ! limitations under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+ 
   <test-group name="recover_after_abort">
 
     <test-case FilePath="recover_after_abort">
@@ -32,7 +33,7 @@
         <output-dir compare="Text">primary_plus_rtree_index</output-dir>
       </compilation-unit>
     </test-case>
-   
+     
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_keyword_secondary_index">
         <output-dir compare="Text">primary_plus_keyword_secondary_index</output-dir>
@@ -52,9 +53,9 @@
     </test-case>
   
  </test-group>
-<!-- 
- <test-group name="recovery_ddl">
 
+ <test-group name="recovery_ddl">
+    
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataverse_recovery">
         <output-dir compare="Text">dataverse_recovery</output-dir>
@@ -84,7 +85,7 @@
         <output-dir compare="Text">load_after_recovery</output-dir>
       </compilation-unit>
     </test-case>
-
+<!--
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="insert_after_recovery">
         <output-dir compare="Text">insert_after_recovery</output-dir>
@@ -96,7 +97,7 @@
         <output-dir compare="Text">delete_after_recovery</output-dir>
       </compilation-unit>
     </test-case>
-
+-->
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="function_recovery">
         <output-dir compare="Text">function_recovery</output-dir>
@@ -105,5 +106,5 @@
  
   </test-group>
 
--->
+
 </test-suite>
