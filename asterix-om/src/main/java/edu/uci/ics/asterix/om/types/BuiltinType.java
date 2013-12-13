@@ -713,6 +713,31 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
+    public static final BuiltinType AUUID = new LowerCaseConstructorType() {
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.UUID;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "UUID";
+        }
+
+        @Override
+        public String getTypeName() {
+            return "uuid";
+        }
+
+        @Override
+        public JSONObject toJSON() throws JSONException {
+            JSONObject type = new JSONObject();
+            type.put("type", getDisplayName());
+            return type;
+        }
+    };
+
     public static final IAType ANY = new BuiltinType() {
 
         private static final long serialVersionUID = 1L;

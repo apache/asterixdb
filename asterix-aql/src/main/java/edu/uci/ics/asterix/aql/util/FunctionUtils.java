@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -74,6 +75,10 @@ public class FunctionUtils {
 
     public static IFunctionInfo getFunctionInfo(FunctionIdentifier fi) {
         return AsterixBuiltinFunctions.getAsterixFunctionInfo(fi);
+    }
+
+    public static IFunctionInfo getFunctionInfo(FunctionSignature fs) {
+        return getFunctionInfo(new FunctionIdentifier(fs.getNamespace(), fs.getName(), fs.getArity()));
     }
 
 }

@@ -14,30 +14,34 @@
  */
 package edu.uci.ics.asterix.om.functions;
 
-import java.io.Serializable;
-
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
-public class AsterixFunctionInfo implements IFunctionInfo, Serializable {
+public class AsterixFunctionInfo extends AbstractFunctionInfo {
+
+    private static final long serialVersionUID = 1L;
 
     private final FunctionIdentifier functionIdentifier;
 
-    public AsterixFunctionInfo(String namespace, AsterixFunction asterixFunction) {
+    public AsterixFunctionInfo(String namespace, AsterixFunction asterixFunction, boolean isFunctional) {
+        super(isFunctional);
         this.functionIdentifier = new FunctionIdentifier(namespace, asterixFunction.getName(),
                 asterixFunction.getArity());
     }
 
     public AsterixFunctionInfo() {
+        super(true);
         functionIdentifier = null;
     }
 
-    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier) {
+    public AsterixFunctionInfo(FunctionIdentifier functionIdentifier, boolean isFunctional) {
+        super(isFunctional);
         this.functionIdentifier = functionIdentifier;
     }
 
-    public AsterixFunctionInfo(FunctionSignature functionSignature) {
+    public AsterixFunctionInfo(FunctionSignature functionSignature, boolean isFunctional) {
+        super(isFunctional);
         this.functionIdentifier = new FunctionIdentifier(functionSignature.getNamespace(), functionSignature.getName(),
                 functionSignature.getArity());
     }

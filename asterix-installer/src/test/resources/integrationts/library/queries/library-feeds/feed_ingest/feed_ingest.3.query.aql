@@ -9,5 +9,5 @@
  */
 use dataverse externallibtest;
 
-for $x in dataset Tweets
+for $x in dataset TweetsFeedIngest
 return $x

@@ -121,6 +121,7 @@ public final class NonTaggedFormatUtil {
             case DURATION:
                 return 12;
             case POINT:
+            case UUID:
                 return 16;
             case INTERVAL:
                 return 17;

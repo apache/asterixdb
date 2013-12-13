@@ -17,12 +17,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix</artifactId>
-	<version>0.8.1-SNAPSHOT</version>
+	<version>0.8.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
     <properties>
-    	<algebricks.version>0.2.10-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.10-SNAPSHOT</hyracks.version>
+    	<algebricks.version>0.2.11-SNAPSHOT</algebricks.version>
+    	<hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
     </properties>
 
 	<build>

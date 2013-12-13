@@ -53,7 +53,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -399,7 +399,7 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
     }
 
     @Override
-    public Boolean visitLoadFromFileStatement(LoadFromFileStatement stmtLoad, List<FunctionDecl> arg)
+    public Boolean visitLoadStatement(LoadStatement stmtLoad, List<FunctionDecl> arg)
             throws AsterixException {
         // TODO Auto-generated method stub
         return null;

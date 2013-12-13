@@ -61,6 +61,7 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     .createBinaryComparator();
             final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override
@@ -83,6 +84,8 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                             + ") cannot be compared!");
                 }
                 switch (tag1) {
+                    case UUID:
+                        return ascUUIDComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }

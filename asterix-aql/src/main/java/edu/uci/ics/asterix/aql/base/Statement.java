@@ -25,7 +25,7 @@ public interface Statement extends IAqlExpression {
         UPDATE,
         DML_CMD_LIST,
         FUNCTION_DECL,
-        LOAD_FROM_FILE,
+        LOAD,
         NODEGROUP_DECL,
         NODEGROUP_DROP,
         QUERY,

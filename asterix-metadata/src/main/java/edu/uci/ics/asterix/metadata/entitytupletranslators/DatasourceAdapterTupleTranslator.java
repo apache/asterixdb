@@ -54,7 +54,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     }
 
     @Override
-    public DatasourceAdapter getMetadataEntytiFromTuple(ITupleReference tuple) throws MetadataException, IOException {
+    public DatasourceAdapter getMetadataEntityFromTuple(ITupleReference tuple) throws MetadataException, IOException {
         byte[] serRecord = tuple.getFieldData(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = tuple.getFieldStart(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = tuple.getFieldLength(ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);

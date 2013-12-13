@@ -45,5 +45,12 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="library-adapters">
+    <test-case FilePath="library-adapters">
+      <compilation-unit name="typed_adapter">
+        <output-dir compare="Text">typed_adapter</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
 

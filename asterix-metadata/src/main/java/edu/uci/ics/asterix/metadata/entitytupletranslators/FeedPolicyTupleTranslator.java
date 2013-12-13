@@ -73,7 +73,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
     }
 
     @Override
-    public FeedPolicy getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public FeedPolicy getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(FEED_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);

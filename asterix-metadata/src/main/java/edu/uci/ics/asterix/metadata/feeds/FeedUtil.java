@@ -14,7 +14,11 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -38,6 +42,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
@@ -67,10 +72,22 @@ public class FeedUtil {
                 .getActivityType().equals(FeedActivityType.FEED_END)));
     }
 
+    private static class LocationConstraint {
+        int partition;
+        String location;
+    }
+
     public static JobSpecification alterJobSpecificationForFeed(JobSpecification spec,
             FeedConnectionId feedConnectionId, FeedPolicy feedPolicy) {
-        JobSpecification altered = null;
-        altered = new JobSpecification();
+
+        FeedPolicyAccessor fpa = new FeedPolicyAccessor(feedPolicy.getProperties());
+        boolean alterationRequired = (fpa.collectStatistics() || fpa.continueOnApplicationFailure()
+                || fpa.continueOnHardwareFailure() || fpa.isElastic());
+        if (!alterationRequired) {
+            return spec;
+        }
+
+        JobSpecification altered = new JobSpecification();
         Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
 
         // copy operators
@@ -79,9 +96,15 @@ public class FeedUtil {
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof FeedIntakeOperatorDescriptor) {
                 FeedIntakeOperatorDescriptor orig = (FeedIntakeOperatorDescriptor) opDesc;
-                FeedIntakeOperatorDescriptor fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(),
-                        orig.getAdapterFactory(), (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(),
-                        orig.getFeedPolicy());
+                FeedIntakeOperatorDescriptor fiop;
+                if (orig.getAdapterFactory() != null) {
+                    fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(), orig.getAdapterFactory(),
+                            (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(), orig.getFeedPolicy());
+                } else {
+                    fiop = new FeedIntakeOperatorDescriptor(altered, orig.getFeedId(), orig.getAdapterLibraryName(),
+                            orig.getAdapterFactoryClassName(), orig.getAdapterConfiguration(),
+                            (ARecordType) orig.getOutputType(), orig.getRecordDescriptor(), orig.getFeedPolicy());
+                }
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
                 FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
@@ -129,7 +152,7 @@ public class FeedUtil {
         }
 
         // prepare for setting partition constraints
-        Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations = new HashMap<OperatorDescriptorId, Map<Integer, String>>();
+        Map<OperatorDescriptorId, List<LocationConstraint>> operatorLocations = new HashMap<OperatorDescriptorId, List<LocationConstraint>>();
         Map<OperatorDescriptorId, Integer> operatorCounts = new HashMap<OperatorDescriptorId, Integer>();
 
         for (Constraint constraint : spec.getUserConstraints()) {
@@ -143,25 +166,35 @@ public class FeedUtil {
                     break;
                 case PARTITION_LOCATION:
                     opId = ((PartitionLocationExpression) lexpr).getOperatorDescriptorId();
+
                     IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(opId));
-                    Map<Integer, String> locations = operatorLocations.get(opDesc.getOperatorId());
+                    List<LocationConstraint> locations = operatorLocations.get(opDesc.getOperatorId());
                     if (locations == null) {
-                        locations = new HashMap<Integer, String>();
+                        locations = new ArrayList<>();
                         operatorLocations.put(opDesc.getOperatorId(), locations);
                     }
                     String location = (String) ((ConstantExpression) cexpr).getValue();
-                    int partition = ((PartitionLocationExpression) lexpr).getPartition();
-                    locations.put(partition, location);
+                    LocationConstraint lc = new LocationConstraint();
+                    lc.location = location;
+                    lc.partition = ((PartitionLocationExpression) lexpr).getPartition();
+                    locations.add(lc);
                     break;
             }
         }
 
         // set absolute location constraints
-        for (Entry<OperatorDescriptorId, Map<Integer, String>> entry : operatorLocations.entrySet()) {
+        for (Entry<OperatorDescriptorId, List<LocationConstraint>> entry : operatorLocations.entrySet()) {
             IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
+            Collections.sort(entry.getValue(), new Comparator<LocationConstraint>() {
+
+                @Override
+                public int compare(LocationConstraint o1, LocationConstraint o2) {
+                    return o1.partition - o2.partition;
+                }
+            });
             String[] locations = new String[entry.getValue().size()];
-            for (Entry<Integer, String> e : entry.getValue().entrySet()) {
-                locations[e.getKey()] = e.getValue();
+            for (int i = 0; i < locations.length; ++i) {
+                locations[i] = entry.getValue().get(i).location;
             }
             PartitionConstraintHelper.addAbsoluteLocationConstraint(altered, opDesc, locations);
         }
@@ -196,7 +229,7 @@ public class FeedUtil {
 
     }
 
-    public static Pair<IAdapterFactory, ARecordType> getFeedFactoryAndOutput(Feed feed,
+    public static Triple<IAdapterFactory, ARecordType, AdapterType> getFeedFactoryAndOutput(Feed feed,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
 
         String adapterName = null;
@@ -204,7 +237,7 @@ public class FeedUtil {
         String adapterFactoryClassname = null;
         IAdapterFactory adapterFactory = null;
         ARecordType adapterOutputType = null;
-        Pair<IAdapterFactory, ARecordType> feedProps = null;
+        Triple<IAdapterFactory, ARecordType, AdapterType> feedProps = null;
         try {
             adapterName = feed.getAdaptorName();
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
@@ -229,8 +262,7 @@ public class FeedUtil {
                 }
             } else {
                 adapterFactoryClassname = AqlMetadataProvider.adapterFactoryMapping.get(adapterName);
-                if (adapterFactoryClassname != null) {
-                } else {
+                if (adapterFactoryClassname == null) {
                     adapterFactoryClassname = adapterName;
                 }
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
@@ -258,7 +290,8 @@ public class FeedUtil {
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);
             }
 
-            feedProps = Pair.of(adapterFactory, adapterOutputType);
+            feedProps = new Triple<IAdapterFactory, ARecordType, AdapterType>(adapterFactory, adapterOutputType,
+                    adapterEntity.getType());
         } catch (Exception e) {
             e.printStackTrace();
             throw new AlgebricksException("unable to create adapter  " + e);

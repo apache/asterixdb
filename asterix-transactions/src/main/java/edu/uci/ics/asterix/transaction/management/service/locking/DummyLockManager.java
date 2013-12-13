@@ -82,4 +82,8 @@ public class DummyLockManager implements ILockManager, ILifeCycleComponent {
         return "DummyLockManager";
     }
 
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+    }
+
 }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
@@ -52,6 +53,7 @@ import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalit
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
@@ -96,6 +98,7 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsoluteParti
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
@@ -306,7 +309,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         String dataverseName = asid.getDataverseName();
         String datasetName = asid.getDatasetName();
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
-        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, context, false,
+        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, context, true,
                 ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null, true, true,
                 implConfig);
     }
@@ -414,13 +417,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
         FeedDataSource feedDataSource = (FeedDataSource) dataSource;
         FeedIntakeOperatorDescriptor feedIngestor = null;
-        org.apache.commons.lang3.tuple.Pair<IAdapterFactory, ARecordType> factoryOutput = null;
+        Triple<IAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
         AlgebricksPartitionConstraint constraint = null;
 
         try {
             factoryOutput = FeedUtil.getFeedFactoryAndOutput(feedDataSource.getFeed(), mdTxnCtx);
-            IAdapterFactory adapterFactory = factoryOutput.getLeft();
-            ARecordType adapterOutputType = factoryOutput.getRight();
+            IAdapterFactory adapterFactory = factoryOutput.first;
+            ARecordType adapterOutputType = factoryOutput.second;
+            AdapterType adapterType = factoryOutput.third;
 
             ISerializerDeserializer payloadSerde = NonTaggedDataFormat.INSTANCE.getSerdeProvider()
                     .getSerializerDeserializer(adapterOutputType);
@@ -432,12 +436,25 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 throw new AlgebricksException("Feed not configured with a policy");
             }
             feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
-            feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedConnectionId(
-                    feedDataSource.getDatasourceDataverse(), feedDataSource.getDatasourceName(), feedDataSource
-                            .getFeedConnectionId().getDatasetName()), adapterFactory, (ARecordType) adapterOutputType,
-                    feedDesc, feedPolicy.getProperties());
-
-            constraint = factoryOutput.getLeft().getPartitionConstraint();
+            switch (adapterType) {
+                case INTERNAL:
+                    feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, new FeedConnectionId(
+                            feedDataSource.getDatasourceDataverse(), feedDataSource.getDatasourceName(), feedDataSource
+                                    .getFeedConnectionId().getDatasetName()), adapterFactory,
+                            (ARecordType) adapterOutputType, feedDesc, feedPolicy.getProperties());
+                    break;
+                case EXTERNAL:
+                    String libraryName = feedDataSource.getFeed().getAdaptorName().split("#")[0];
+                    feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feedDataSource.getFeedConnectionId(),
+                            libraryName, adapterFactory.getClass().getName(), feedDataSource.getFeed()
+                                    .getAdaptorConfiguration(), (ARecordType) adapterOutputType, feedDesc,
+                            feedPolicy.getProperties());
+                    break;
+            }
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Cofigured feed intake operator with " + adapterType + " adapter");
+            }
+            constraint = factoryOutput.first.getPartitionConstraint();
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
@@ -482,31 +499,26 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
             int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
             RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-            int numKeys = numPrimaryKeys;
-            int keysStartIndex = outputRecDesc.getFieldCount() - numKeys - 1;
             ITypeTraits[] typeTraits = null;
             int[] bloomFilterKeyFields;
             if (isSecondary) {
                 Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                         dataset.getDatasetName(), indexName);
                 int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
-                numKeys += numSecondaryKeys;
-                keysStartIndex = outputVars.size() - numKeys;
-                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys, typeEnv, context);
+                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, 0, outputVars.size(), typeEnv, context);
                 bloomFilterKeyFields = new int[numSecondaryKeys];
                 for (int i = 0; i < numSecondaryKeys; i++) {
                     bloomFilterKeyFields[i] = i;
                 }
             } else {
-                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex, numKeys + 1, typeEnv,
-                        context);
+                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, 0, outputVars.size(), typeEnv, context);
                 bloomFilterKeyFields = new int[numPrimaryKeys];
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     bloomFilterKeyFields[i] = i;
                 }
             }
             IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
-                    outputVars, keysStartIndex, numKeys, typeEnv, context);
+                    outputVars, 0, outputVars.size(), typeEnv, context);
 
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
@@ -1029,7 +1041,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             int datasetId = dataset.getDatasetId();
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
+                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp,
+                    ResourceType.LSM_BTREE);
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
@@ -1155,7 +1168,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             int datasetId = dataset.getDatasetId();
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_INVERTED_INDEX);
+                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp,
+                    ResourceType.LSM_INVERTED_INDEX);
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
@@ -1246,7 +1260,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             int datasetId = dataset.getDatasetId();
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             SecondaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new SecondaryIndexModificationOperationCallbackFactory(
-                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_RTREE);
+                    jobId, datasetId, modificationCallbackPrimaryKeyFields, txnSubsystemProvider, indexOp,
+                    ResourceType.LSM_RTREE);
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
@@ -1290,11 +1305,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     /**
-     * Calculate an estimate size of the bloom filter. Note that this is an estimation which assumes that the data
-     * is going to be uniformly distributed across all partitions.
+     * Calculate an estimate size of the bloom filter. Note that this is an
+     * estimation which assumes that the data is going to be uniformly
+     * distributed across all partitions.
      * 
      * @param dataset
-     * @return Number of elements that will be used to create a bloom filter per dataset per partition
+     * @return Number of elements that will be used to create a bloom filter per
+     *         dataset per partition
      * @throws MetadataException
      * @throws AlgebricksException
      */
@@ -1430,6 +1447,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 "edu.uci.ics.asterix.external.dataset.adapter..RSSFeedAdapterFactory");
         adapterFactoryMapping.put("edu.uci.ics.asterix.external.dataset.adapter.CNNFeedAdapter",
                 "edu.uci.ics.asterix.external.dataset.adapter.CNNFeedAdapterFactory");
+        adapterFactoryMapping.put("edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapter",
+                "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory");
+
         return adapterFactoryMapping;
     }
 
@@ -1520,13 +1540,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * 
      * @param properties
      *            the original dataset properties
-     * @return a new map containing the original dataset properties and the scheduler/locations
+     * @return a new map containing the original dataset properties and the
+     *         scheduler/locations
      */
     private Map<String, Object> wrapProperties(Map<String, String> properties) {
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
-        //wrappedProperties.put(SCHEDULER, hdfsScheduler);
-        //wrappedProperties.put(CLUSTER_LOCATIONS, getClusterLocations());
+        // wrappedProperties.put(SCHEDULER, hdfsScheduler);
+        // wrappedProperties.put(CLUSTER_LOCATIONS, getClusterLocations());
         return wrappedProperties;
     }
 

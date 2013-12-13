@@ -36,6 +36,6 @@ public class MetadataEntityValueExtractor<T> implements IValueExtractor<T> {
 
     @Override
     public T getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException, IOException {
-        return tupleReaderWriter.getMetadataEntytiFromTuple(tuple);
+        return tupleReaderWriter.getMetadataEntityFromTuple(tuple);
     }
 }

@@ -281,7 +281,7 @@ public class CompiledStatements {
 
         @Override
         public Kind getKind() {
-            return Kind.LOAD_FROM_FILE;
+            return Kind.LOAD;
         }
     }
 

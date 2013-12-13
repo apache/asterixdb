@@ -21,7 +21,7 @@ import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
-public class LoadFromFileStatement implements Statement {
+public class LoadStatement implements Statement {
 
     private Identifier datasetName;
     private Identifier dataverseName;
@@ -29,7 +29,7 @@ public class LoadFromFileStatement implements Statement {
     private Map<String, String> properties;
     private boolean dataIsLocallySorted;
 
-    public LoadFromFileStatement(Identifier dataverseName, Identifier datasetName, String adapter,
+    public LoadStatement(Identifier dataverseName, Identifier datasetName, String adapter,
             Map<String, String> propertiees, boolean dataIsLocallySorted) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
@@ -64,7 +64,7 @@ public class LoadFromFileStatement implements Statement {
 
     @Override
     public Kind getKind() {
-        return Kind.LOAD_FROM_FILE;
+        return Kind.LOAD;
     }
 
     public Identifier getDatasetName() {
@@ -77,7 +77,7 @@ public class LoadFromFileStatement implements Statement {
 
     @Override
     public <R, T> R accept(IAqlExpressionVisitor<R, T> visitor, T arg) throws AsterixException {
-        return visitor.visitLoadFromFileStatement(this, arg);
+        return visitor.visitLoadStatement(this, arg);
     }
 
     @Override

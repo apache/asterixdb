@@ -79,7 +79,7 @@ public class FeedActivityTupleTranslator extends AbstractTupleTranslator<FeedAct
     }
 
     @Override
-    public FeedActivity getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public FeedActivity getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(FEED_ACTIVITY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(FEED_ACTIVITY_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(FEED_ACTIVITY_PAYLOAD_TUPLE_FIELD_INDEX);

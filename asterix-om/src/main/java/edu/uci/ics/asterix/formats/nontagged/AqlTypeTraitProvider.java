@@ -56,6 +56,7 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
             case DURATION:
                 return EIGHTBYTETYPETRAIT;
             case POINT:
+            case UUID:
                 return SIXTEENBYTETYPETRAIT;
             case INTERVAL:
                 return SEVENTEENBYTETYPETRAIT;

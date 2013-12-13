@@ -87,7 +87,7 @@ public class MetadataBuiltinFunctions {
                 }
                 return t2;
             }
-        });
+        }, true);
 
         AsterixBuiltinFunctions.addPrivateFunction(AsterixBuiltinFunctions.FEED_INGEST, new IResultTypeComputer() {
 
@@ -125,7 +125,7 @@ public class MetadataBuiltinFunctions {
                 }
                 return t2;
             }
-        });
+        }, true);
 
         AsterixBuiltinFunctions.addFunction(AsterixBuiltinFunctions.FEED_INTERCEPT, new IResultTypeComputer() {
 
@@ -168,7 +168,7 @@ public class MetadataBuiltinFunctions {
                 }
                 return t2;
             }
-        });
+        }, true);
     }
 
     private static Pair<String, String> getDatasetInfo(AqlMetadataProvider metadata, String datasetArg) {

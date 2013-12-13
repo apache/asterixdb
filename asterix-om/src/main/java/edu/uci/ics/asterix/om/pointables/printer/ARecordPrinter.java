@@ -31,8 +31,8 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
  * APrintVisitor.
  */
 class ARecordPrinter {
-    private static String LEFT_PAREN = "{ ";
-    private static String RIGHT_PAREN = " }";
+    private static String LEFT_BRACE = "{ ";
+    private static String RIGHT_BRACE = " }";
     private static String COMMA = ", ";
     private static String COLON = ": ";
 
@@ -53,7 +53,7 @@ class ARecordPrinter {
         itemVisitorArg.first = ps;
 
         // print the beginning part
-        ps.print(LEFT_PAREN);
+        ps.print(LEFT_BRACE);
 
         // print field 0 to n-2
         for (int i = 0; i < fieldNames.size() - 1; i++) {
@@ -68,7 +68,7 @@ class ARecordPrinter {
         }
 
         // print the end part
-        ps.print(RIGHT_PAREN);
+        ps.print(RIGHT_BRACE);
     }
 
     private void printField(PrintStream ps, APrintVisitor visitor, List<IVisitablePointable> fieldNames,

@@ -235,7 +235,7 @@ public class MetadataBootstrap {
         for (int i = 0; i < primaryIndexes.length; i++) {
             IDatasetDetails id = new InternalDatasetDetails(FileStructure.BTREE, PartitioningStrategy.HASH,
                     primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
-                    primaryIndexes[i].getNodeGroupName(), GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
+                    primaryIndexes[i].getNodeGroupName(), false, GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
                     GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
@@ -314,6 +314,7 @@ public class MetadataBootstrap {
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws Exception {
         String[] builtInAdapterClassNames = new String[] {
+                "edu.uci.ics.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory",
                 "edu.uci.ics.asterix.external.adapter.factory.HiveAdapterFactory",
@@ -425,7 +426,6 @@ public class MetadataBootstrap {
 
         index.setResourceID(resourceID);
         index.setFile(file);
-        indexLifecycleManager.open(resourceID);
     }
 
     public static String getOutputDir() {

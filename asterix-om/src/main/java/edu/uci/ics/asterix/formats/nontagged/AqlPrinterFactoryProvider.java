@@ -38,6 +38,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARecordPrinterFactor
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARectanglePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AStringPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ATimePrinterFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUnionPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUnorderedlistPrinterFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -116,6 +117,9 @@ public class AqlPrinterFactoryProvider implements IPrinterFactoryProvider {
                         return new ANullableFieldPrinterFactory((AUnionType) aqlType);
                     else
                         return new AUnionPrinterFactory((AUnionType) aqlType);
+                }
+                case UUID: {
+                    return AUUIDPrinterFactory.INSTANCE;
                 }
             }
         }

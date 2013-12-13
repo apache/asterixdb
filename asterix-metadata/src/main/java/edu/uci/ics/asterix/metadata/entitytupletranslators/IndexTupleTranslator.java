@@ -75,7 +75,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     @Override
-    public Index getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public Index getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
