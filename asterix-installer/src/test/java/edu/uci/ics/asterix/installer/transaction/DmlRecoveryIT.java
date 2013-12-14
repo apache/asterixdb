@@ -27,11 +27,13 @@ import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 @RunWith(Parameterized.class)
 public class DmlRecoveryIT {
 
+    // variable to indicate whether this test will be executed
+    private static final boolean IS_DML_RECOVERY_TEST_ON = false;
+
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
     private static final String PATH_ACTUAL = "rttest/";
-    
+
     private static final String TESTSUITE_PATH_BASE = "../asterix-app/src/test/resources/runtimets/";
-    
 
     private TestCaseContext tcCtx;
     private static File asterixInstallerPath;
@@ -92,11 +94,14 @@ public class DmlRecoveryIT {
 
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
+
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
-        TestCaseContext.Builder b = new TestCaseContext.Builder();
-        for (TestCaseContext ctx : b.build(new File(TESTSUITE_PATH_BASE))) {
-            if (ctx.getTestCase().getFilePath().equals("dml"))
-                testArgs.add(new Object[] { ctx });
+        if (IS_DML_RECOVERY_TEST_ON) {
+            TestCaseContext.Builder b = new TestCaseContext.Builder();
+            for (TestCaseContext ctx : b.build(new File(TESTSUITE_PATH_BASE))) {
+                if (ctx.getTestCase().getFilePath().equals("dml"))
+                    testArgs.add(new Object[] { ctx });
+            }
         }
         return testArgs;
     }
@@ -109,6 +114,6 @@ public class DmlRecoveryIT {
     public void test() throws Exception {
 
         TestsUtils.executeTest(PATH_ACTUAL, tcCtx, pb, true);
-        
+
     }
 }

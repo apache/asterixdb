@@ -38,6 +38,8 @@ import edu.uci.ics.asterix.testframework.context.TestCaseContext;
 
 @RunWith(Parameterized.class)
 public class RecoveryIT {
+    // indicate wheth Recovery_DDL will be executed
+    private static final boolean IS_RECOVERY_DDL_TEST_ON = false;
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
     private static final String PATH_ACTUAL = "rttest/";
@@ -103,6 +105,10 @@ public class RecoveryIT {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         for (TestCaseContext ctx : b.build(new File(PATH_BASE))) {
+            
+            if (!IS_RECOVERY_DDL_TEST_ON && ctx.getTestCase().getFilePath().contains("recovery_ddl"))
+                continue;
+            
             testArgs.add(new Object[] { ctx });
         }
         return testArgs;
