@@ -233,7 +233,11 @@ public abstract class SecondaryIndexOperationsHelper {
     protected void setSecondaryRecDescAndComparators(IndexType indexType, List<String> secondaryKeyFields,
             int gramLength, AqlMetadataProvider metadataProvider) throws AlgebricksException, AsterixException {
         secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
-        secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
+        if (indexType == IndexType.RTREE) {
+            secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys];
+        } else {
+            secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
+        }
         secondaryBloomFilterKeyFields = new int[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
@@ -257,7 +261,9 @@ public abstract class SecondaryIndexOperationsHelper {
         for (int i = 0; i < numPrimaryKeys; i++) {
             secondaryRecFields[numSecondaryKeys + i] = primaryRecDesc.getFields()[i];
             secondaryTypeTraits[numSecondaryKeys + i] = primaryRecDesc.getTypeTraits()[i];
-            secondaryComparatorFactories[numSecondaryKeys + i] = primaryComparatorFactories[i];
+            if (indexType != IndexType.RTREE) {
+                secondaryComparatorFactories[numSecondaryKeys + i] = primaryComparatorFactories[i];
+            }
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
     }
