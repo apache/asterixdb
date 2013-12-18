@@ -17,6 +17,7 @@
 	<artifactId>asterix-installer</artifactId>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<test.excludes>**/DmlRecoveryIT.java</test.excludes>
 	</properties>
 
 	<build>
@@ -106,6 +107,9 @@
 				<configuration>
 					<runOrder>alphabetical</runOrder>
 					<forkMode>pertest</forkMode>
+					<excludes>
+						<exclude>${test.excludes}</exclude>
+					</excludes>
 				</configuration>
 				<executions>
 					<execution>

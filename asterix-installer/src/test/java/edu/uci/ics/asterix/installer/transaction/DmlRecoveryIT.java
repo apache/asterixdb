@@ -28,7 +28,6 @@ import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 public class DmlRecoveryIT {
 
     // variable to indicate whether this test will be executed
-    private static final boolean IS_DML_RECOVERY_TEST_ON = false;
 
     private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
     private static final String PATH_ACTUAL = "rttest/";
@@ -96,12 +95,10 @@ public class DmlRecoveryIT {
     public static Collection<Object[]> tests() throws Exception {
 
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
-        if (IS_DML_RECOVERY_TEST_ON) {
-            TestCaseContext.Builder b = new TestCaseContext.Builder();
-            for (TestCaseContext ctx : b.build(new File(TESTSUITE_PATH_BASE))) {
-                if (ctx.getTestCase().getFilePath().equals("dml"))
-                    testArgs.add(new Object[] { ctx });
-            }
+        TestCaseContext.Builder b = new TestCaseContext.Builder();
+        for (TestCaseContext ctx : b.build(new File(TESTSUITE_PATH_BASE))) {
+            if (ctx.getTestCase().getFilePath().equals("dml"))
+                testArgs.add(new Object[] { ctx });
         }
         return testArgs;
     }
