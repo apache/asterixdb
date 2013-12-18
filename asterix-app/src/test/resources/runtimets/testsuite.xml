@@ -1110,7 +1110,7 @@
     </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="load-with-rtree-index">
-        <output-dir compare="Text">oad-with-rtree-index</output-dir>
+        <output-dir compare="Text">load-with-rtree-index</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
