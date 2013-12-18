@@ -5,6 +5,8 @@
  * Date            : Otc 15 2013
  */
 
+
 use dataverse recovery;
 
-count (for $x in dataset Fragile where edit-distance($x.text2, $x.text2)=0 return $x);
+count (for $x in dataset Fragile 
+where contains($x.text2, "location") return $x);
