@@ -12,7 +12,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.2</version>
+		<version>0.8.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-common</artifactId>
 	<build>
@@ -165,7 +165,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
-			<version>0.8.2</version>
+			<version>0.8.3-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
