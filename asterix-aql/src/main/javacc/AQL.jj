@@ -56,6 +56,7 @@ public class AQLParser extends ScopeChecker {
 
     // optimizer hints
     private static final String HASH_GROUP_BY_HINT = "hash";
+    private static final String SKIP_SECONDARY_INDEX_SEARCH_HINT = "skip-index";
     private static final String BROADCAST_JOIN_HINT = "bcast";
     private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
     private static final String INMEMORY_HINT = "inmem";
@@ -695,17 +696,24 @@ DeleteStatement DeleteStatement() throws ParseException:
   VariableExpr var = null;
   Expression condition = null;
   Pair<Identifier, Identifier> nameComponents;
+  boolean skipSecondaryIndexSearchHint = false;
+  Clause c = null; 
 }
 {
   "delete" var = Variable()
     {
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
     }
-  "from" <DATASET> nameComponents  = QualifiedName() 
-  (<WHERE> condition = Expression())?
-    {
-      return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter());
+  "from" <DATASET> nameComponents = QualifiedName() 
+  (c = WhereClause())?
+  {
+    if (c != null) {
+      WhereClause wc = (WhereClause) c;
+      condition = wc.getWhereExpr();
+      skipSecondaryIndexSearchHint = wc.hasSkipSecondaryIndexSearchHint();
     }
+    return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter(), skipSecondaryIndexSearchHint);
+  }
 }
 
 UpdateStatement UpdateStatement() throws ParseException:
@@ -1925,7 +1933,14 @@ Clause WhereClause()throws ParseException :
   Expression whereExpr;
 }
 {
-    <WHERE> whereExpr = Expression()
+    <WHERE> 
+    {
+      String hint = getHint(token);
+      if (hint != null && hint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+        wc.setSkipSecondaryIndexSearchHint(true);   
+      } 
+    }
+    whereExpr = Expression()
     {
       wc.setWhereExpr(whereExpr);
       return wc;
