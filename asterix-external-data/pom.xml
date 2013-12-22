@@ -12,7 +12,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.3-SNAPSHOT</version>
+		<version>0.8.3</version>
 	</parent>
 	<artifactId>asterix-external-data</artifactId>
 
@@ -100,21 +100,21 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.8.3-SNAPSHOT</version>
+			<version>0.8.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-runtime</artifactId>
-			<version>0.8.3-SNAPSHOT</version>
+			<version>0.8.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
-			<version>0.8.3-SNAPSHOT</version>
+			<version>0.8.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -171,7 +171,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.3-SNAPSHOT</version>
+			<version>0.8.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.microsoft.windowsazure</groupId>
