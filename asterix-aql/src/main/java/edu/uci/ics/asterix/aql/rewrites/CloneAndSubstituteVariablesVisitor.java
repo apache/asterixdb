@@ -214,7 +214,7 @@ public class CloneAndSubstituteVariablesVisitor implements
     public Pair<IAqlExpression, List<VariableSubstitution>> visitWhereClause(WhereClause wc,
             List<VariableSubstitution> arg) throws AsterixException {
         Pair<IAqlExpression, List<VariableSubstitution>> p1 = wc.getWhereExpr().accept(this, arg);
-        WhereClause newW = new WhereClause((Expression) p1.first, wc.hasSkipSecondaryIndexSearchHint());
+        WhereClause newW = new WhereClause((Expression) p1.first);
         return new Pair<IAqlExpression, List<VariableSubstitution>>(newW, p1.second);
     }
 

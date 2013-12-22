@@ -19,6 +19,5 @@ create type TestType as open {
 create dataset testdst(TestType) primary key fname,lname;
 
 for $emp in dataset('testdst') 
-/*+ skip-index */
-where $emp.fname >= "Craig" and $emp.lname >= "Kevin" and $emp.fname <= "Mary" and $emp.lname <= "Tomes"
+where $emp.fname /*+ skip-index */ >= "Craig" and $emp.lname /*+ skip-index */ >= "Kevin" and $emp.fname /*+ skip-index */ <= "Mary" and $emp.lname /*+ skip-index */ <= "Tomes"
 return $emp

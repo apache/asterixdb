@@ -27,16 +27,14 @@ public class DeleteStatement implements Statement {
     private Identifier datasetName;
     private Expression condition;
     private int varCounter;
-    private final boolean skipSecondaryIndexSearchHint;
 
     public DeleteStatement(VariableExpr vars, Identifier dataverseName, Identifier datasetName, Expression condition,
-            int varCounter, boolean skipSecondaryIndexSearchHint) {
+            int varCounter) {
         this.vars = vars;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.condition = condition;
         this.varCounter = varCounter;
-        this.skipSecondaryIndexSearchHint = skipSecondaryIndexSearchHint;
     }
 
     @Override
@@ -62,10 +60,6 @@ public class DeleteStatement implements Statement {
 
     public int getVarCounter() {
         return varCounter;
-    }
-    
-    public boolean hasSkipSecondaryIndexSearchHint() {
-        return skipSecondaryIndexSearchHint;
     }
 
     @Override

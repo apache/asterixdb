@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import edu.uci.ics.asterix.algebra.base.AsterixOperatorAnnotations;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
@@ -927,9 +926,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         SelectOperator s = new SelectOperator(new MutableObject<ILogicalExpression>(p.first));
         s.getInputs().add(p.second);
 
-        if (w.hasSkipSecondaryIndexSearchHint()) {
-            s.getAnnotations().put(AsterixOperatorAnnotations.SKIP_SECONDARY_INDEX_SEARCH_HINT, true);
-        }
         return new Pair<ILogicalOperator, LogicalVariable>(s, null);
     }
 

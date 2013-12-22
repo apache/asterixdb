@@ -24,6 +24,6 @@ create index keyword_index on DBLP(title) type keyword;
 write output to nc1:"rttest/inverted-index-basic_word-jaccard.adm";
 
 for $o in dataset('DBLP')
-/*+ skip-index */
-where similarity-jaccard(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments")) >= 0.5f
+let $jacc := /*+ skip-index */ similarity-jaccard(word-tokens($o.title), word-tokens("Transactions for Cooperative Environments"))
+where $jacc >= 0.5f
 return $o

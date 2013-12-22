@@ -1395,7 +1395,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             String dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
-                    stmtDelete.hasSkipSecondaryIndexSearchHint(), metadataProvider);
+                    metadataProvider);
             JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

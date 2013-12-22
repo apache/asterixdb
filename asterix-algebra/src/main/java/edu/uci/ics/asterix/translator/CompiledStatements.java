@@ -423,17 +423,15 @@ public class CompiledStatements {
         private Expression condition;
         private int varCounter;
         private AqlMetadataProvider metadataProvider;
-        private final boolean skipSecondaryIndexSearchHint;
 
         public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName,
-                Expression condition, int varCounter, boolean skipSecondaryIndexSearchHint, AqlMetadataProvider metadataProvider) {
+                Expression condition, int varCounter, AqlMetadataProvider metadataProvider) {
             this.var = var;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.condition = condition;
             this.varCounter = varCounter;
             this.metadataProvider = metadataProvider;
-            this.skipSecondaryIndexSearchHint = skipSecondaryIndexSearchHint;
         }
 
         @Override
@@ -453,10 +451,6 @@ public class CompiledStatements {
         public Expression getCondition() {
             return condition;
         }
-        
-        public boolean hasSkipSecondaryIndexSearchHint() {
-            return skipSecondaryIndexSearchHint;
-        }
 
         public Query getQuery() throws AlgebricksException {
 
@@ -472,7 +466,7 @@ public class CompiledStatements {
             clauseList.add(forClause);
             Clause whereClause = null;
             if (condition != null) {
-                whereClause = new WhereClause(condition, skipSecondaryIndexSearchHint);
+                whereClause = new WhereClause(condition);
                 clauseList.add(whereClause);
             }
 

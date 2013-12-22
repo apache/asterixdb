@@ -27,5 +27,5 @@ create type CustomerType as closed {
 
 create dataset Customers(CustomerType) primary key cid;
 
-delete $c from dataset Customers /*+ skip-index */ where $c.cid < 10;
+delete $c from dataset Customers where $c.cid /*+ skip-index */ < 10;
 

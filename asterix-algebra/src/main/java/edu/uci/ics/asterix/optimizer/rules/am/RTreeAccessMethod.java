@@ -21,6 +21,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -204,6 +205,10 @@ public class RTreeAccessMethod implements IAccessMethod {
 
     @Override
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        if (optFuncExpr.getFuncExpr().getAnnotations()
+                .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
+            return false;
+        }
         // No additional analysis required.
         return true;
     }

@@ -696,24 +696,17 @@ DeleteStatement DeleteStatement() throws ParseException:
   VariableExpr var = null;
   Expression condition = null;
   Pair<Identifier, Identifier> nameComponents;
-  boolean skipSecondaryIndexSearchHint = false;
-  Clause c = null; 
 }
 {
   "delete" var = Variable()
     {
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
     }
-  "from" <DATASET> nameComponents = QualifiedName() 
-  (c = WhereClause())?
-  {
-    if (c != null) {
-      WhereClause wc = (WhereClause) c;
-      condition = wc.getWhereExpr();
-      skipSecondaryIndexSearchHint = wc.hasSkipSecondaryIndexSearchHint();
+  "from" <DATASET> nameComponents  = QualifiedName() 
+  (<WHERE> condition = Expression())?
+    {
+      return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter());
     }
-    return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter(), skipSecondaryIndexSearchHint);
-  }
 }
 
 UpdateStatement UpdateStatement() throws ParseException:
@@ -1328,8 +1321,12 @@ Expression RelExpr()throws ParseException:
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> |<SIMILAR>)
   	  {
   	    String mhint = getHint(token);
-  	    if (mhint != null && mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
-          annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
+  	    if (mhint != null) {
+  	      if (mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+            annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
+          } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+            annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
+          }
         }
   	    if (op == null) {
   	      op = new OperatorExpr();
@@ -1780,8 +1777,12 @@ Expression FunctionCallExpr() throws ParseException:
         signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
       }
       callExpr = new CallExpr(signature,argList);
-      if (hint != null && hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
-        callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
+      if (hint != null) {
+        if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+          callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
+        } else if (hint.startsWith(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+          callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
+        }
       }
       return callExpr;
     }
@@ -1933,14 +1934,7 @@ Clause WhereClause()throws ParseException :
   Expression whereExpr;
 }
 {
-    <WHERE> 
-    {
-      String hint = getHint(token);
-      if (hint != null && hint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
-        wc.setSkipSecondaryIndexSearchHint(true);   
-      } 
-    }
-    whereExpr = Expression()
+    <WHERE> whereExpr = Expression()
     {
       wc.setWhereExpr(whereExpr);
       return wc;

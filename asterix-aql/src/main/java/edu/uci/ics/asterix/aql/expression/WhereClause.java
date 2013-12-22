@@ -22,7 +22,6 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class WhereClause implements Clause {
     private Expression whereExpr;
-    private boolean skipSecondaryIndexSearchHint;
 
     public Expression getWhereExpr() {
         return whereExpr;
@@ -32,10 +31,9 @@ public class WhereClause implements Clause {
         this.whereExpr = whereExpr;
     }
 
-    public WhereClause(Expression whereExpr, boolean skipSecondaryIndexSearchHint) {
+    public WhereClause(Expression whereExpr) {
         super();
         this.whereExpr = whereExpr;
-        this.skipSecondaryIndexSearchHint = skipSecondaryIndexSearchHint;
     }
 
     public WhereClause() {
@@ -56,11 +54,4 @@ public class WhereClause implements Clause {
         visitor.visit(this, arg);
     }
 
-    public void setSkipSecondaryIndexSearchHint(boolean skipSecondaryIndexSearchHint) {
-        this.skipSecondaryIndexSearchHint = skipSecondaryIndexSearchHint;
-    }
-
-    public boolean hasSkipSecondaryIndexSearchHint() {
-        return skipSecondaryIndexSearchHint;
-    }
 }

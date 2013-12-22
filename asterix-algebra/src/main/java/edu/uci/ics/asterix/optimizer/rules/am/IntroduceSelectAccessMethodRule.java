@@ -20,7 +20,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.algebra.base.AsterixOperatorAnnotations;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -104,12 +103,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         // Choose index to be applied.
         Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
-        if (chosenIndex != null && chosenIndex.second.isPrimaryIndex()) {
-            System.out.println();
-        }
-        if (chosenIndex == null
-                || (select.getAnnotations().containsKey(AsterixOperatorAnnotations.SKIP_SECONDARY_INDEX_SEARCH_HINT) && !chosenIndex.second
-                        .isPrimaryIndex())) {
+        if (chosenIndex == null) {
             context.addToDontApplySet(this, select);
             return false;
         }
@@ -137,7 +131,6 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         // Set and analyze select.
         selectRef = opRef;
         select = (SelectOperator) op1;
-
         // Check that the select's condition is a function call.
         ILogicalExpression condExpr = select.getCondition().getValue();
         if (condExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {

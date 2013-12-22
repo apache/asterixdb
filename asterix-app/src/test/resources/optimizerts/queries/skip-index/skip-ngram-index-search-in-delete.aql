@@ -21,4 +21,4 @@ create dataset DBLP(DBLPType) primary key id;
 
 create index ngram_index on DBLP(title) type ngram(3);
 
-delete $o from dataset DBLP /*+ skip-index */ where contains($o.title, "Multimedia")
+delete $o from dataset DBLP where /*+ skip-index */ contains($o.title, "Multimedia")

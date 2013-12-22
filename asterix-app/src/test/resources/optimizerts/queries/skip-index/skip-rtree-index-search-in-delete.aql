@@ -26,4 +26,4 @@ create dataset MyData(MyRecord)
 
 create index rtree_index_point on MyData(point) type rtree;
 
-delete $m from dataset MyData /*+ skip-index */ where spatial-intersect($m.point, create-polygon([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]));
+delete $m from dataset MyData where /*+ skip-index */ spatial-intersect($m.point, create-polygon([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]));

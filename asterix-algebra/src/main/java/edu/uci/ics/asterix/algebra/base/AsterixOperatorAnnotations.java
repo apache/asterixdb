@@ -19,5 +19,4 @@ public interface AsterixOperatorAnnotations {
     public static final String PUSHED_FIELD_ACCESS = "PUSHED_FIELD_ACCESS";
     public static final String PUSHED_RUNNABLE_FIELD_ACCESS = "PUSHED_RUNNABLE_FIELD_ACCESS";
     public static final String FIELD_TYPE = "FIELD_TYPE";
-    public static final String SKIP_SECONDARY_INDEX_SEARCH_HINT = "SKIP_SECONDARY_INDEX_SEARCH_HINT";
 }
