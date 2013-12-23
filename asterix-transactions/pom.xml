@@ -17,7 +17,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.0</version>
+		<version>0.8.3</version>
 	</parent>
 	<artifactId>asterix-transactions</artifactId>
 
@@ -33,6 +33,47 @@
 					<fork>true</fork>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>edu.uci.ics.asterix</groupId>
+                <artifactId>record-manager-generator-maven-plugin</artifactId>
+                <version>0.8.3</version>
+                <configuration>
+                    <debug>false</debug>
+                    <inputFiles>
+                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Job.json</param>
+                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Resource.json</param>
+                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Request.json</param>
+                    </inputFiles>
+                    <packageName>edu.uci.ics.asterix.transaction.management.service.locking</packageName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-record-manager</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate-record-manager</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/java/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 
 	</build>
@@ -57,7 +98,7 @@
                 <dependency>
                         <groupId>edu.uci.ics.asterix</groupId>
                         <artifactId>asterix-common</artifactId>
-                        <version>0.8.0</version>
+                        <version>0.8.3</version>
                         <type>jar</type>
                         <scope>compile</scope>
                 </dependency>

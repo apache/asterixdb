@@ -14,14 +14,32 @@
  */
 package edu.uci.ics.asterix.tools.external.data;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.external.adapter.factory.IGenericDatasetAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.external.dataset.adapter.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
+import edu.uci.ics.asterix.runtime.operators.file.AbstractTupleParser;
+import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
+import edu.uci.ics.asterix.runtime.operators.file.IDataParser;
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * Factory class for creating @see{RateControllerFileSystemBasedAdapter} The
@@ -29,38 +47,25 @@ import edu.uci.ics.asterix.om.types.IAType;
  * on the local file system or on HDFS. The feed ends when the content of the
  * source file has been ingested.
  */
-public class RateControlledFileSystemBasedAdapterFactory implements IGenericDatasetAdapterFactory {
+public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdapterFactory implements
+        IGenericAdapterFactory {
     private static final long serialVersionUID = 1L;
-    
+
     public static final String KEY_FILE_SYSTEM = "fs";
     public static final String LOCAL_FS = "localfs";
     public static final String HDFS = "hdfs";
     public static final String KEY_PATH = "path";
     public static final String KEY_FORMAT = "format";
 
-    private IGenericDatasetAdapterFactory adapterFactory;
+    private IGenericAdapterFactory adapterFactory;
     private String format;
-    private boolean setup = false;
+    private Map<String, String> configuration;
+    private ARecordType atype;
 
     @Override
-    public IDatasourceAdapter createAdapter(Map<String, Object> configuration, IAType type) throws Exception {
-        if (!setup) {
-            checkRequiredArgs(configuration);
-            String fileSystem = (String) configuration.get(KEY_FILE_SYSTEM);
-            String adapterFactoryClass = null;
-            if (fileSystem.equalsIgnoreCase(LOCAL_FS)) {
-                adapterFactoryClass = "edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory";
-            } else if (fileSystem.equals(HDFS)) {
-                adapterFactoryClass = "edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory";
-            } else {
-                throw new AsterixException("Unsupported file system type " + fileSystem);
-            }
-            format = (String) configuration.get(KEY_FORMAT);
-            adapterFactory = (IGenericDatasetAdapterFactory) Class.forName(adapterFactoryClass).newInstance();
-            setup = true;
-        }
-        return new RateControlledFileSystemBasedAdapter((ARecordType) type, configuration,
-                (FileSystemBasedAdapter) adapterFactory.createAdapter(configuration, type), format);
+    public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
+        FileSystemBasedAdapter coreAdapter = (FileSystemBasedAdapter) adapterFactory.createAdapter(ctx, partition);
+        return new RateControlledFileSystemBasedAdapter(atype, configuration, coreAdapter, format, parserFactory, ctx);
     }
 
     @Override
@@ -68,11 +73,11 @@ public class RateControlledFileSystemBasedAdapterFactory implements IGenericData
         return "file_feed";
     }
 
-    private void checkRequiredArgs(Map<String, Object> configuration) throws Exception {
+    private void checkRequiredArgs(Map<String, String> configuration) throws Exception {
         if (configuration.get(KEY_FILE_SYSTEM) == null) {
             throw new Exception("File system type not specified. (fs=?) File system could be 'localfs' or 'hdfs'");
         }
-        if (configuration.get(IGenericDatasetAdapterFactory.KEY_TYPE_NAME) == null) {
+        if (configuration.get(IGenericAdapterFactory.KEY_TYPE_NAME) == null) {
             throw new Exception("Record type not specified (output-type-name=?)");
         }
         if (configuration.get(KEY_PATH) == null) {
@@ -83,4 +88,186 @@ public class RateControlledFileSystemBasedAdapterFactory implements IGenericData
         }
     }
 
+    @Override
+    public AdapterType getAdapterType() {
+        return AdapterType.GENERIC;
+    }
+
+    @Override
+    public SupportedOperation getSupportedOperations() {
+        return SupportedOperation.READ;
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration, ARecordType recordType) throws Exception {
+        this.configuration = configuration;
+        checkRequiredArgs(configuration);
+        String fileSystem = (String) configuration.get(KEY_FILE_SYSTEM);
+        String adapterFactoryClass = null;
+        if (fileSystem.equalsIgnoreCase(LOCAL_FS)) {
+            adapterFactoryClass = NCFileSystemAdapterFactory.class.getName();
+        } else if (fileSystem.equals(HDFS)) {
+            adapterFactoryClass = HDFSAdapterFactory.class.getName();
+        } else {
+            throw new AsterixException("Unsupported file system type " + fileSystem);
+        }
+        format = configuration.get(KEY_FORMAT);
+        adapterFactory = (IGenericAdapterFactory) Class.forName(adapterFactoryClass).newInstance();
+        adapterFactory.configure(configuration, recordType);
+
+        atype = (ARecordType) recordType;
+        configureFormat();
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
+        return adapterFactory.getPartitionConstraint();
+    }
+
+    private void configureFormat() throws AsterixException {
+        switch (format) {
+            case FORMAT_ADM:
+                parserFactory = new RateControlledTupleParserFactory(atype, configuration);
+                break;
+
+            case FORMAT_DELIMITED_TEXT:
+                String delimiterValue = (String) configuration.get(KEY_DELIMITER);
+                if (delimiterValue != null && delimiterValue.length() > 1) {
+                    throw new AsterixException("improper delimiter");
+                }
+                IValueParserFactory[] valueParserFactories = getValueParserFactories(atype);
+                parserFactory = new RateControlledTupleParserFactory(atype, valueParserFactories,
+                        delimiterValue.charAt(0), configuration);
+                break;
+        }
+    }
+
+    protected IValueParserFactory[] getValueParserFactories(ARecordType recordType) throws AsterixException {
+        int n = recordType.getFieldTypes().length;
+        IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
+        for (int i = 0; i < n; i++) {
+            ATypeTag tag = recordType.getFieldTypes()[i].getTypeTag();
+            IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
+            if (vpf == null) {
+                throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
+            }
+            fieldParserFactories[i] = vpf;
+
+        }
+        return fieldParserFactories;
+    }
+
+}
+
+class RateControlledTupleParserFactory implements ITupleParserFactory {
+
+    private static final long serialVersionUID = 1L;
+
+    private final ARecordType recordType;
+    private final Map<String, String> configuration;
+    private IValueParserFactory[] valueParserFactories;
+    private char delimiter;
+    private final ParserType parserType;
+
+    public enum ParserType {
+        ADM,
+        DELIMITED_DATA
+    }
+
+    public RateControlledTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
+            char fieldDelimiter, Map<String, String> configuration) {
+        this.recordType = recordType;
+        this.valueParserFactories = valueParserFactories;
+        this.delimiter = fieldDelimiter;
+        this.configuration = configuration;
+        this.parserType = ParserType.DELIMITED_DATA;
+    }
+
+    public RateControlledTupleParserFactory(ARecordType recordType, Map<String, String> configuration) {
+        this.recordType = recordType;
+        this.configuration = configuration;
+        this.parserType = ParserType.ADM;
+    }
+
+    @Override
+    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
+        IDataParser dataParser = null;
+        switch (parserType) {
+            case ADM:
+                dataParser = new ADMDataParser();
+                break;
+            case DELIMITED_DATA:
+                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter);
+                break;
+        }
+        return new RateControlledTupleParser(ctx, recordType, dataParser, configuration);
+    }
+
+}
+
+class RateControlledTupleParser extends AbstractTupleParser {
+
+    private final IDataParser dataParser;
+    private long interTupleInterval;
+    private boolean delayConfigured;
+    private boolean continueIngestion = true;
+
+    public static final String INTER_TUPLE_INTERVAL = "tuple-interval";
+
+    public RateControlledTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
+            Map<String, String> configuration) throws HyracksDataException {
+        super(ctx, recType);
+        this.dataParser = dataParser;
+        String propValue = configuration.get(INTER_TUPLE_INTERVAL);
+        if (propValue != null) {
+            interTupleInterval = Long.parseLong(propValue);
+        } else {
+            interTupleInterval = 0;
+        }
+        delayConfigured = interTupleInterval != 0;
+    }
+
+    public void setInterTupleInterval(long val) {
+        this.interTupleInterval = val;
+        this.delayConfigured = val > 0;
+    }
+
+    public void stop() {
+        continueIngestion = false;
+    }
+
+    @Override
+    public IDataParser getDataParser() {
+        return dataParser;
+    }
+
+    @Override
+    public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
+
+        appender.reset(frame, true);
+        IDataParser parser = getDataParser();
+        try {
+            parser.initialize(in, recType, true);
+            while (continueIngestion) {
+                tb.reset();
+                if (!parser.parse(tb.getDataOutput())) {
+                    break;
+                }
+                tb.addFieldEndOffset();
+                if (delayConfigured) {
+                    Thread.sleep(interTupleInterval);
+                }
+                addTupleToFrame(writer);
+            }
+            if (appender.getTupleCount() > 0) {
+                FrameUtils.flushFrame(frame, writer);
+            }
+        } catch (AsterixException ae) {
+            throw new HyracksDataException(ae);
+        } catch (IOException ioe) {
+            throw new HyracksDataException(ioe);
+        } catch (InterruptedException ie) {
+            throw new HyracksDataException(ie);
+        }
+    }
 }

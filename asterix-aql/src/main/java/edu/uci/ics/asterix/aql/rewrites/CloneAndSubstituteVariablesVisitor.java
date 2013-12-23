@@ -21,10 +21,12 @@ import java.util.List;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.IAqlExpression;
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
@@ -34,6 +36,7 @@ import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
@@ -49,7 +52,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -72,7 +75,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -396,7 +398,7 @@ public class CloneAndSubstituteVariablesVisitor implements
     }
 
     @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitLoadFromFileStatement(LoadFromFileStatement stmtLoad,
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitLoadStatement(LoadStatement stmtLoad,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
@@ -410,7 +412,7 @@ public class CloneAndSubstituteVariablesVisitor implements
     }
 
     @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitControlFeedStatement(ControlFeedStatement del,
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitDisconnectFeedStatement(DisconnectFeedStatement del,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
@@ -433,13 +435,6 @@ public class CloneAndSubstituteVariablesVisitor implements
         }
         return veList;
 
-    }
-
-    @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitWriteFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, List<VariableSubstitution> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override
@@ -536,13 +531,6 @@ public class CloneAndSubstituteVariablesVisitor implements
     }
 
     @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitLoadFromQueryResultStatement(
-            WriteFromQueryResultStatement stmtLoad, List<VariableSubstitution> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitCreateDataverseStatement(CreateDataverseStatement del,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
@@ -592,7 +580,28 @@ public class CloneAndSubstituteVariablesVisitor implements
     }
 
     @Override
-    public Pair<IAqlExpression, List<VariableSubstitution>> visitBeginFeedStatement(BeginFeedStatement bf,
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitCreateFeedStatement(CreateFeedStatement del,
+            List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitConnectFeedStatement(ConnectFeedStatement del,
+            List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitDropFeedStatement(FeedDropStatement del,
+            List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitCompactStatement(CompactStatement del,
             List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;

@@ -61,23 +61,13 @@ public interface ILockManager {
     /**
      * @param datasetId
      * @param entityHashValue
+     * @param lockMode
      * @param txnContext
      * @throws ACIDException
      *             TODO
-     * @return true if the lock count is 0, false otherwise.
+     * @return
      */
-    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext)
-            throws ACIDException;
-
-    /**
-     * @param datasetId
-     * @param entityHashValue
-     * @param txnContext
-     * @throws ACIDException
-     *             TODO
-     * @return true if the lock count is 0, false otherwise.
-     */
-    public boolean unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext, boolean commitFlag)
+    public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext)
             throws ACIDException;
 
     /**

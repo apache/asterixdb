@@ -24,9 +24,13 @@ import java.util.Arrays;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ANullSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.AMutableString;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AUnionType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParser;
@@ -46,6 +50,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
     private byte[] fieldTypeTags;
     private int[] fldIds;
     private ArrayBackedValueStorage[] nameBuffers;
+
+    private boolean areAllNullFields;
 
     public DelimitedDataParser(ARecordType recordType, IValueParserFactory[] valueParserFactories, char fieldDelimter) {
         this.recordType = recordType;
@@ -97,29 +103,45 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
 
     @Override
     public boolean parse(DataOutput out) throws AsterixException, IOException {
-
-        if (cursor.nextRecord()) {
+        while (cursor.nextRecord()) {
             recBuilder.reset(recordType);
             recBuilder.init();
+            areAllNullFields = true;
             for (int i = 0; i < valueParsers.length; ++i) {
                 if (!cursor.nextField()) {
                     break;
                 }
                 fieldValueBuffer.reset();
-                fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
-                valueParsers[i]
-                        .parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, fieldValueBufferOutput);
+
+                if (cursor.fStart == cursor.fEnd && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.STRING
+                        && recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.NULL) {
+                    // if the field is empty and the type is optional, insert NULL
+                    // note that string type can also process empty field as an empty string
+                    if (recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.UNION
+                            || !NonTaggedFormatUtil.isOptionalField((AUnionType) recordType.getFieldTypes()[i])) {
+                        throw new AsterixException("Field " + i + " is not an optional type so it cannot accept null value. ");
+                    }
+                    fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
+                    ANullSerializerDeserializer.INSTANCE.serialize(ANull.NULL, out);
+                } else {
+                    fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
+                    valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
+                            fieldValueBufferOutput);
+                    areAllNullFields = false;
+                }
                 if (fldIds[i] < 0) {
                     recBuilder.addField(nameBuffers[i], fieldValueBuffer);
                 } else {
                     recBuilder.addField(fldIds[i], fieldValueBuffer);
                 }
+
             }
-            recBuilder.write(out, true);
-            return true;
-        } else {
-            return false;
+            if (!areAllNullFields) {
+                recBuilder.write(out, true);
+                return true;
+            }
         }
+        return false;
     }
 
     protected void fieldNameToBytes(String fieldName, AMutableString str, ArrayBackedValueStorage buffer)
@@ -252,11 +274,13 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                         if (p >= end) {
                             int s = start;
                             eof = !readMore();
+                            p -= (s - start);
                             if (eof) {
                                 state = State.EOF;
+                                fStart = start;
+                                fEnd = p;
                                 return true;
                             }
-                            p -= (s - start);
                         }
                         char ch = buffer[p];
                         if (ch == fieldDelimiter) {

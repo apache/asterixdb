@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.formats.nontagged;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ACirclePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADatePrinterFactory;
@@ -40,7 +41,6 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AStringPrinterF
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ATimePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AUnionPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AUnorderedlistPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinterFactory;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -120,6 +120,9 @@ public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
                         return new ANullableFieldPrinterFactory((AUnionType) aqlType);
                     else
                         return new AUnionPrinterFactory((AUnionType) aqlType);
+                }
+                case UUID: {
+                    return AUUIDPrinterFactory.INSTANCE;
                 }
             }
         }

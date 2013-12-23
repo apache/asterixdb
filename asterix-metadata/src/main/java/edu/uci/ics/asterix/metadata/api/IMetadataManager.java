@@ -8,7 +8,7 @@
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WIThOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -19,15 +19,22 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 
@@ -104,7 +111,7 @@ public interface IMetadataManager {
      * @throws ACIDException
      * @throws RemoteException
      */
-    public void unlock(MetadataTransactionContext ctx) throws ACIDException, RemoteException;
+    public void unlock(MetadataTransactionContext ctx, byte lockMode) throws ACIDException, RemoteException;
 
     /**
      * Inserts a new dataverse into the metadata.
@@ -127,7 +134,7 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     List<Dataverse> getDataverses(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     /**
      * Retrieves a dataverse with given name.
      * 
@@ -178,7 +185,7 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void addDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-    
+
     /**
      * Retrieves a dataset within a given dataverse.
      * 
@@ -433,6 +440,23 @@ public interface IMetadataManager {
 
     /**
      * @param ctx
+     * @param policy
+     * @throws MetadataException
+     */
+    public void addCompactionPolicy(MetadataTransactionContext ctx, CompactionPolicy policy) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param policyName
+     * @return
+     * @throws MetadataException
+     */
+    public CompactionPolicy getCompactionPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException;
+
+    /**
+     * @param ctx
      * @param dataverseName
      * @return
      * @throws MetadataException
@@ -440,10 +464,83 @@ public interface IMetadataManager {
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException;
 
+    /**
+     * @param ctx
+     * @param feed
+     * @throws MetadataException
+     */
+    public void addFeed(MetadataTransactionContext ctx, Feed feed) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param feedName
+     * @return
+     * @throws MetadataException
+     */
+    public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param feedName
+     * @throws MetadataException
+     */
+    public void dropFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param feedId
+     * @param feedActivity
+     * @throws MetadataException
+     */
+    public void registerFeedActivity(MetadataTransactionContext ctx, FeedConnectionId feedId, FeedActivity feedActivity)
+            throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverseName
+     * @param datasetName
+     * @return
+     * @throws MetadataException
+     */
+    public FeedActivity getRecentActivityOnFeedConnection(MetadataTransactionContext ctx, FeedConnectionId feedId,
+            FeedActivityType... activityTypeFilter) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param policy
+     * @throws MetadataException
+     */
+    public void addFeedPolicy(MetadataTransactionContext ctx, FeedPolicy policy) throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param policyName
+     * @return
+     * @throws MetadataException
+     */
+    public FeedPolicy getFeedPolicy(MetadataTransactionContext ctx, String dataverse, String policyName)
+            throws MetadataException;
+
+    /**
+     * @param ctx
+     * @param dataverse
+     * @param dataset
+     * @return
+     * @throws MetadataException
+     */
+    public List<FeedActivity> getActiveFeeds(MetadataTransactionContext ctx, String dataverse, String dataset)
+            throws MetadataException;
+
+    public List<FeedActivity> getConnectFeedActivitiesForFeed(MetadataTransactionContext ctx, String dataverse,
+            String dataset) throws MetadataException;
+
     public void initializeDatasetIdFactory(MetadataTransactionContext ctx) throws MetadataException;
-    
+
     public int getMostRecentDatasetId() throws MetadataException;
-    
+
     public void acquireWriteLatch();
 
     public void releaseWriteLatch();
@@ -452,5 +549,62 @@ public interface IMetadataManager {
 
     public void releaseReadLatch();
 
+    /**
+     * Removes a library , acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the adapter that is to be deleted.
+     * @param libraryName
+     *            Name of library to be deleted. MetadataException for example,
+     *            if the library does not exists.
+     * @throws RemoteException
+     */
+    public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException;
+
+    /**
+     * Adds a library, acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param library
+     *            Library to be added
+     * @throws MetadataException
+     *             for example, if the library is already added.
+     * @throws RemoteException
+     */
+    public void addLibrary(MetadataTransactionContext ctx, Library library) throws MetadataException;
+
+    /**
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @param libraryName
+     *            name of the library that is to be retrieved
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Library getLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
+            throws MetadataException, RemoteException;
+
+    /**
+     * Retireve libraries installed in a given dataverse.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the library that is to be retrieved.
+     * @return Library
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
+            throws MetadataException;
 
 }

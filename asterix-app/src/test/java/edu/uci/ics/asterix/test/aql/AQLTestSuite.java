@@ -20,10 +20,14 @@ import java.io.UnsupportedEncodingException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.apache.commons.lang3.StringUtils;
+
 import edu.uci.ics.asterix.aql.parser.ParseException;
 
 public class AQLTestSuite extends TestSuite {
-    private static String AQLTS_PATH = "src/test/resources/AQLTS/queries/";
+    private static String AQLTS_PATH = StringUtils.join(new String[] {"src", "test", 
+            "resources", "AQLTS", "queries" + File.separator}, File.separator);
 
     public static Test suite() throws ParseException, UnsupportedEncodingException, FileNotFoundException {
         File testData = new File(AQLTS_PATH);

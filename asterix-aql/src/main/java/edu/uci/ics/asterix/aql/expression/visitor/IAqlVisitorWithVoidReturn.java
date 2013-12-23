@@ -14,17 +14,20 @@
  */
 package edu.uci.ics.asterix.aql.expression.visitor;
 
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDecl;
 import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
 import edu.uci.ics.asterix.aql.expression.DeleteStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
@@ -40,7 +43,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -61,7 +64,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateClause;
 import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
@@ -77,7 +79,7 @@ public interface IAqlVisitorWithVoidReturn<T> {
 
     void visit(DropStatement stmtDel, T arg) throws AsterixException;
 
-    void visit(LoadFromFileStatement stmtLoad, T arg) throws AsterixException;
+    void visit(LoadStatement stmtLoad, T arg) throws AsterixException;
 
     void visit(InsertStatement stmtInsert, T arg) throws AsterixException;
 
@@ -86,8 +88,6 @@ public interface IAqlVisitorWithVoidReturn<T> {
     void visit(UpdateStatement stmtUpdate, T arg) throws AsterixException;
 
     void visit(UpdateClause updateClause, T arg) throws AsterixException;
-
-    void visit(WriteFromQueryResultStatement stmtLoad, T arg) throws AsterixException;
 
     void visit(DatasetDecl dd, T arg) throws AsterixException;
 
@@ -157,11 +157,17 @@ public interface IAqlVisitorWithVoidReturn<T> {
 
     void visit(TypeDropStatement stmtDel, T arg) throws AsterixException;
 
-    void visit(BeginFeedStatement stmtDel, T arg) throws AsterixException;
+    void visit(DisconnectFeedStatement stmtDel, T arg) throws AsterixException;
 
-    void visit(ControlFeedStatement stmtDel, T arg) throws AsterixException;
+    void visit(ConnectFeedStatement stmtDel, T arg) throws AsterixException;
+
+    void visit(CreateFeedStatement stmt, T arg) throws AsterixException;
+
+    void visit(FeedDropStatement stmt, T arg) throws AsterixException;
 
     void visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 
     void visit(FunctionDropStatement fds, T arg) throws AsterixException;
+
+    void visit(CompactStatement fds, T arg) throws AsterixException;
 }

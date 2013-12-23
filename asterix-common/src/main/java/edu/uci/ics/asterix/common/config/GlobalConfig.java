@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.common.config;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class GlobalConfig {
@@ -38,6 +40,15 @@ public class GlobalConfig {
     public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
 
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
+
+    public static final String DEFAULT_COMPACTION_POLICY_NAME = "prefix";
+
+    public static final Map<String, String> DEFAULT_COMPACTION_POLICY_PROPERTIES;
+    static {
+        DEFAULT_COMPACTION_POLICY_PROPERTIES = new LinkedHashMap<String, String>();
+        DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-mergable-component-size", "1073741824"); // 1GB
+        DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-tolernace-component-count", "5"); // 5 components
+    }
 
     public static int getFrameSize() {
         int frameSize = GlobalConfig.DEFAULT_FRAME_SIZE;

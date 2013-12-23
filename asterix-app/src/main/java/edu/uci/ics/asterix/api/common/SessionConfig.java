@@ -21,18 +21,20 @@ public class SessionConfig {
     private final boolean printLogicalPlanParam;
     private final boolean printOptimizedLogicalPlanParam;
     private final boolean printPhysicalOpsOnly;
+    private final boolean executeQuery;
     private final boolean generateJobSpec;
     private final boolean printJob;
 
     public SessionConfig(boolean optimize, boolean printExprParam, boolean printRewrittenExprParam,
             boolean printLogicalPlanParam, boolean printOptimizedLogicalPlanParam, boolean printPhysicalOpsOnly,
-            boolean generateJobSpec, boolean printJob) {
+            boolean executeQuery, boolean generateJobSpec, boolean printJob) {
         this.optimize = optimize;
         this.printExprParam = printExprParam;
         this.printRewrittenExprParam = printRewrittenExprParam;
         this.printLogicalPlanParam = printLogicalPlanParam;
         this.printOptimizedLogicalPlanParam = printOptimizedLogicalPlanParam;
         this.printPhysicalOpsOnly = printPhysicalOpsOnly;
+        this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
         this.printJob = printJob;
     }
@@ -59,6 +61,10 @@ public class SessionConfig {
 
     public boolean isPrintPhysicalOpsOnly() {
         return printPhysicalOpsOnly;
+    }
+
+    public boolean isExecuteQuery() {
+        return executeQuery;
     }
 
     public boolean isOptimize() {

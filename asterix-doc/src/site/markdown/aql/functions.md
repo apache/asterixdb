@@ -640,14 +640,14 @@ Asterix provides various classes of functions to support operations on numeric, 
 ### create-point ###
  * Syntax:
 
-        create-point(latitude, longitude)
+        create-point(x, y)
 
- * Creates the primitive type `point` using `latitude` and `longitude`.
+ * Creates the primitive type `point` using an `x` and `y` value.
  * Arguments:
-    * `latitude` : A `double` that represents the latitude.
-    * `longitude` : A `double` that represents the longitude.
+   * `x` : A `double` that represents the x-coordinate.
+   * `y` : A `double` that represents the y-coordinate.
  * Return Value:
-    * A spatial `point` created using the latitude and longitude provided in `latitude` and `longitude`.
+   * A `point` representing the ordered pair (`x`, `y`).
 
  * Example:
 
@@ -740,19 +740,19 @@ Asterix provides various classes of functions to support operations on numeric, 
 ### create-polygon ###
  * Syntax:
 
-        create-polygon(point_expression1, point_expression2, point_expression3, […, point_expressionn])
+        create-polygon(list_expression)
 
- * Creates the primitive type `polygon` using an unlimited number of arguments `point_expression1`, `point_expression2`, ..., `point_expressionn`. Note that at least three points should be specified.
+ * Creates the primitive type `polygon` using the double values provided in the argument `list_expression`. Each two consecutive double values represent a point starting from the first double value in the list. Note that at least six double values should be specified, meaning a total of three points.
  * Arguments:
-    * `point_expression1`/.../`point_expressionn` : A `point` that represents a vertex of the polygon.
+   * `list_expression` : An OrderedList of doubles representing the points of the polygon. 
  * Return Value:
-    * A spatial `polygon` created using the points provided in `point_expression1`, `point_expression2`, ..., `point_expressionn`.
+   * A `polygon`, represents a spatial simple polygon created using the points provided in `list_expression`.
 
  * Example:
 
         use dataverse TinySocial;
         
-        let $c :=  create-polygon(create-point(1.0,1.0), create-point(2.0,2.0), create-point(3.0,3.0), create-point(4.0,4.0))
+        let $c :=  create-polygon([1.0,1.0,2.0,2.0,3.0,3.0,4.0,4.0])
         return {"polygon": $c}
 
 
@@ -922,7 +922,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         
         let $line := create-line(create-point(100.6,99.4), create-point(-72.0,-76.9))
         let $rectangle := create-rectangle(create-point(9.2,49.0), create-point(77.8,111.1))
-        let $polygon := create-polygon(create-point(1.0,1.0), create-point(2.0,2.0), create-point(3.0,3.0), create-point(4.0,4.0))
+        let $polygon := create-polygon([1.0,1.0,2.0,2.0,3.0,3.0,4.0,4.0])
         let $line_list := get-points($line)
         let $rectangle_list := get-points($rectangle)
         let $polygon_list := get-points($polygon)

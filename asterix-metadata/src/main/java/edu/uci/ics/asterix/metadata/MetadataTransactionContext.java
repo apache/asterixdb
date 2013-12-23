@@ -19,15 +19,19 @@ import java.util.ArrayList;
 
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.external.dataset.adapter.AdapterIdentifier;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.
@@ -104,6 +108,12 @@ public class MetadataTransactionContext extends MetadataCache {
         logAndApply(new MetadataLogicalOperation(adapter, true));
     }
 
+    public void addCompactionPolicy(CompactionPolicy compactionPolicy) {
+        droppedCache.dropCompactionPolicy(compactionPolicy);
+        logAndApply(new MetadataLogicalOperation(compactionPolicy, true));
+
+    }
+
     public void dropDataset(String dataverseName, String datasetName) {
         Dataset dataset = new Dataset(dataverseName, datasetName, null, null, null, null, -1,
                 IMetadataEntity.PENDING_NO_OP);
@@ -121,6 +131,11 @@ public class MetadataTransactionContext extends MetadataCache {
         Dataverse dataverse = new Dataverse(dataverseName, null, IMetadataEntity.PENDING_NO_OP);
         droppedCache.addDataverseIfNotExists(dataverse);
         logAndApply(new MetadataLogicalOperation(dataverse, false));
+    }
+
+    public void addLibrary(Library library) {
+        droppedCache.dropLibrary(library);
+        logAndApply(new MetadataLogicalOperation(library, true));
     }
 
     public void dropDataDatatype(String dataverseName, String datatypeName) {
@@ -147,6 +162,12 @@ public class MetadataTransactionContext extends MetadataCache {
         DatasourceAdapter adapter = new DatasourceAdapter(adapterIdentifier, null, null);
         droppedCache.addAdapterIfNotExists(adapter);
         logAndApply(new MetadataLogicalOperation(adapter, false));
+    }
+
+    public void dropLibrary(String dataverseName, String libraryName) {
+        Library library = new Library(dataverseName, libraryName);
+        droppedCache.addLibraryIfNotExists(library);
+        logAndApply(new MetadataLogicalOperation(library, false));
     }
 
     public void logAndApply(MetadataLogicalOperation op) {
@@ -194,10 +215,29 @@ public class MetadataTransactionContext extends MetadataCache {
         return opLog;
     }
 
+    public void addFeedPolicy(FeedPolicy feedPolicy) {
+        droppedCache.dropFeedPolicy(feedPolicy);
+        logAndApply(new MetadataLogicalOperation(feedPolicy, true));
+
+    }
+
+    public void addFeed(Feed feed) {
+        droppedCache.dropFeed(feed);
+        logAndApply(new MetadataLogicalOperation(feed, true));
+
+    }
+
+    public void dropFeed(String dataverse, String feedName) {
+        Feed feed = new Feed(dataverse, feedName, null, null, null);
+        droppedCache.addFeedIfNotExists(feed);
+        logAndApply(new MetadataLogicalOperation(feed, false));
+    }
+
     @Override
     public void clear() {
         super.clear();
         droppedCache.clear();
         opLog.clear();
     }
+
 }

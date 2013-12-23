@@ -1,0 +1,149 @@
+drop dataverse q08_group_by if exists;
+
+create dataverse q08_group_by;
+
+use dataverse q08_group_by;
+
+create type LineItemType as closed {
+  l_orderkey: int32, 
+  l_partkey: int32, 
+  l_suppkey: int32, 
+  l_linenumber: int32, 
+  l_quantity: double, 
+  l_extendedprice: double,
+  l_discount: double, 
+  l_tax: double,
+  l_returnflag: string, 
+  l_linestatus: string, 
+  l_shipdate: string,
+  l_commitdate: string, 
+  l_receiptdate: string, 
+  l_shipinstruct: string, 
+  l_shipmode: string, 
+  l_comment: string
+}
+
+create type OrderType as closed {
+  o_orderkey: int32, 
+  o_custkey: int32, 
+  o_orderstatus: string, 
+  o_totalprice: double, 
+  o_orderdate: string, 
+  o_orderpriority: string,
+  o_clerk: string, 
+  o_shippriority: int32, 
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32, 
+  c_name: string, 
+  c_address: string, 
+  c_nationkey: int32, 
+  c_phone: string, 
+  c_acctbal: double, 
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create type SupplierType as closed {
+  s_suppkey: int32, 
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+create type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+create type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+create type PartType as closed {
+  p_partkey: int32, 
+  p_name: string, 
+  p_mfgr: string,
+  p_brand: string,
+  p_type: string,
+  p_size: int32,
+  p_container: string,
+  p_retailprice: double,
+  p_comment: string
+}
+
+create dataset LineItem(LineItemType)
+  primary key l_orderkey, l_linenumber;
+create dataset Orders(OrderType)
+  primary key o_orderkey;
+create dataset Customer(CustomerType) 
+  primary key c_custkey;
+create dataset Supplier(SupplierType)
+  primary key s_suppkey;
+create dataset Nation(NationType) 
+  primary key n_nationkey;
+create dataset Region(RegionType)
+  primary key r_regionkey;
+create dataset Part(PartType)
+  primary key p_partkey;
+
+for $s in dataset("Supplier")
+    for $lnrcop in (
+      for $lnrco in (
+        for $l in dataset('LineItem')
+        for $nrco in (
+          for $o in dataset('Orders')
+          for $nrc in (
+            for $c in dataset('Customer')
+            for $nr in (
+              for $n1 in dataset('Nation')
+              for $r1 in dataset('Region')
+              where $n1.n_regionkey = $r1.r_regionkey and $r1.r_name = 'AMERICA'
+              return { "n_nationkey": $n1.n_nationkey }
+            )
+            where $c.c_nationkey = $nr.n_nationkey
+            return { "c_custkey": $c.c_custkey }
+          )
+          where $nrc.c_custkey = $o.o_custkey
+          return {
+            "o_orderdate" : $o.o_orderdate, 
+            "o_orderkey": $o.o_orderkey 
+          }
+        )
+        where $l.l_orderkey = $nrco.o_orderkey
+          and $nrco.o_orderdate >= '1995-01-01' 
+          and $nrco.o_orderdate <= '1996-12-31'
+        return {
+          "o_orderdate": $nrco.o_orderdate, 
+          "l_partkey": $l.l_partkey, 
+          "l_discount": $l.l_discount, 
+          "l_extendedprice": $l.l_extendedprice, 
+          "l_suppkey": $l.l_suppkey
+        }
+      )
+      for $p in dataset("Part")
+      where $p.p_partkey = $lnrco.l_partkey and $p.p_type = 'ECONOMY ANODIZED STEEL'
+      return {
+        "o_orderdate": $lnrco.o_orderdate, 
+        "l_discount": $lnrco.l_discount, 
+        "l_extendedprice": $lnrco.l_extendedprice, 
+        "l_suppkey": $lnrco.l_suppkey 
+      }
+    )
+    where $s.s_suppkey = $lnrcop.l_suppkey
+    return {
+      "o_orderdate": $lnrcop.o_orderdate, 
+      "l_discount": $lnrcop.l_discount, 
+      "l_extendedprice": $lnrcop.l_extendedprice, 
+      "l_suppkey": $lnrcop.l_suppkey, 
+      "s_nationkey": $s.s_nationkey
+    }

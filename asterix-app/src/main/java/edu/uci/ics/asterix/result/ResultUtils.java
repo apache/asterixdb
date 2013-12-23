@@ -35,8 +35,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
-    public static JSONArray getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta) throws HyracksDataException {
-        JSONArray resultRecords = new JSONArray();
+    public static void getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta, JSONArray resultRecords)
+            throws HyracksDataException {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
         try {
@@ -56,7 +56,6 @@ public class ResultUtils {
                 throw new HyracksDataException(e);
             }
         }
-        return resultRecords;
     }
 
     public static JSONObject getErrorResponse(int errorCode, String errorMessage, String errorSummary,
@@ -206,7 +205,7 @@ public class ResultUtils {
     /**
      * Read the template file which is stored as a resource and return its content. If the file does not exist or is
      * not readable return the default template string.
-     *
+     * 
      * @param path
      *            The path to the resource template file
      * @param defaultTemplate

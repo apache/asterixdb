@@ -1,0 +1,31 @@
+use dataverse tpch;
+
+for $x in (
+  for $n in dataset Nation
+  where $n.n_name = 'SAUDI ARABIA'
+  for $s in dataset Supplier
+  where $s.s_nationkey = $n.n_nationkey
+  for $l1 in dataset LineItem
+  where $s.s_suppkey = $l1.l_suppkey
+    and $l1.l_receiptdate > $l1.l_commitdate
+  for $o in dataset Orders
+  where $o.o_orderstatus = 'F'
+    and $o.o_orderkey = $l1.l_orderkey
+    and (some $l2 in dataset LineItem
+         satisfies $l1.l_orderkey = $l2.l_orderkey
+               and $l1.l_suppkey != $l2.l_suppkey)
+    and (every $l3 in dataset LineItem
+         satisfies $l1.l_orderkey != $l3.l_orderkey
+                or $l1.l_suppkey = $l3.l_suppkey
+                or $l3.l_receiptdate <= $l3.l_commitdate)
+  return {
+    "s_name" : $s.s_name
+  }
+)
+group by $s_name := $x.s_name with $x
+let $numwait := count($x)
+order by $numwait desc
+return {
+  "s_name": $s_name,
+  "numwait": $numwait
+}

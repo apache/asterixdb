@@ -47,7 +47,6 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 if (tupleFilter != null) {
                     frameTuple.reset(accessor, i);
                     if (!tupleFilter.accept(frameTuple)) {
-                        lsmAccessor.noOp();
                         continue;
                     }
                 }
@@ -76,6 +75,7 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new HyracksDataException(e);
         }
         System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());

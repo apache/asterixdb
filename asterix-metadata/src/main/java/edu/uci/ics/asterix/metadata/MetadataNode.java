@@ -17,19 +17,24 @@ package edu.uci.ics.asterix.metadata;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
-import edu.uci.ics.asterix.common.transactions.IResourceManager.ResourceType;
+import edu.uci.ics.asterix.common.transactions.IRecoveryManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext.TransactionType;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -38,23 +43,35 @@ import edu.uci.ics.asterix.metadata.api.IMetadataNode;
 import edu.uci.ics.asterix.metadata.api.IValueExtractor;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataSecondaryIndexes;
+import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.Feed;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.Node;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DatasourceAdapterTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DatatypeTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DataverseTupleTranslator;
+import edu.uci.ics.asterix.metadata.entitytupletranslators.FeedActivityTupleTranslator;
+import edu.uci.ics.asterix.metadata.entitytupletranslators.FeedPolicyTupleTranslator;
+import edu.uci.ics.asterix.metadata.entitytupletranslators.FeedTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.FunctionTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.IndexTupleTranslator;
+import edu.uci.ics.asterix.metadata.entitytupletranslators.LibraryTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.NodeGroupTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.NodeTupleTranslator;
+import edu.uci.ics.asterix.metadata.feeds.FeedActivityIdFactory;
 import edu.uci.ics.asterix.metadata.valueextractors.DatasetNameValueExtractor;
 import edu.uci.ics.asterix.metadata.valueextractors.DatatypeNameValueExtractor;
 import edu.uci.ics.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
@@ -74,7 +91,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -83,10 +99,12 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -109,19 +127,21 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void beginTransaction(JobId transactionId) throws ACIDException, RemoteException {
-        transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().beginTransaction(transactionId);
+        txnCtx.setMetadataTransaction(true);
     }
 
     @Override
     public void commitTransaction(JobId jobId) throws RemoteException, ACIDException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
         transactionSubsystem.getTransactionManager().commitTransaction(txnCtx, new DatasetId(-1), -1);
     }
 
     @Override
     public void abortTransaction(JobId jobId) throws RemoteException, ACIDException {
         try {
-            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId,
+                    false);
             transactionSubsystem.getTransactionManager().abortTransaction(txnCtx, new DatasetId(-1), -1);
         } catch (ACIDException e) {
             e.printStackTrace();
@@ -131,14 +151,14 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void lock(JobId jobId, byte lockMode) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
         transactionSubsystem.getLockManager().lock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override
-    public void unlock(JobId jobId) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, txnCtx);
+    public void unlock(JobId jobId, byte lockMode) throws ACIDException, RemoteException {
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     @Override
@@ -147,7 +167,7 @@ public class MetadataNode implements IMetadataNode {
             DataverseTupleTranslator tupleReaderWriter = new DataverseTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(dataverse);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A dataverse with this name " + dataverse.getDataverseName()
                     + " already exists.", e);
         } catch (Exception e) {
@@ -162,7 +182,7 @@ public class MetadataNode implements IMetadataNode {
             DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(true);
             ITupleReference datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
-            if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
+            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
@@ -177,7 +197,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference dataTypeTuple = createTuple(dataset.getDataverseName(), dataset.getItemTypeName(),
                     dataset.getDatasetName());
             insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A dataset with this name " + dataset.getDatasetName()
                     + " already exists in dataverse '" + dataset.getDataverseName() + "'.", e);
         } catch (Exception e) {
@@ -191,7 +211,7 @@ public class MetadataNode implements IMetadataNode {
             IndexTupleTranslator tupleWriter = new IndexTupleTranslator(true);
             ITupleReference tuple = tupleWriter.getTupleFromMetadataEntity(index);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("An index with name '" + index.getIndexName() + "' already exists.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -204,7 +224,7 @@ public class MetadataNode implements IMetadataNode {
             NodeTupleTranslator tupleReaderWriter = new NodeTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(node);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.NODE_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A node with name '" + node.getNodeName() + "' already exists.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -217,7 +237,7 @@ public class MetadataNode implements IMetadataNode {
             NodeGroupTupleTranslator tupleReaderWriter = new NodeGroupTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(nodeGroup);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A nodegroup with name '" + nodeGroup.getNodeGroupName() + "' already exists.",
                     e);
         } catch (Exception e) {
@@ -231,7 +251,7 @@ public class MetadataNode implements IMetadataNode {
             DatatypeTupleTranslator tupleReaderWriter = new DatatypeTupleTranslator(jobId, this, true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(datatype);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A datatype with name '" + datatype.getDatatypeName() + "' already exists.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -246,7 +266,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference functionTuple = tupleReaderWriter.getTupleFromMetadataEntity(function);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A function with this name " + function.getName() + " and arity "
                     + function.getArity() + " already exists in dataverse '" + function.getDataverseName() + "'.", e);
         } catch (Exception e) {
@@ -270,21 +290,22 @@ public class MetadataNode implements IMetadataNode {
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.INSERT);
 
-        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.setTransactionType(TransactionType.READ_WRITE);
-        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+        txnCtx.setWriteTxn(true);
+        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                metadataIndex.isPrimaryIndex());
 
         // TODO: fix exceptions once new BTree exception model is in hyracks.
-        indexAccessor.insert(tuple);
+        indexAccessor.forceInsert(tuple);
 
         indexLifecycleManager.close(resourceID);
     }
 
     private IModificationOperationCallback createIndexModificationCallback(JobId jobId, long resourceId,
             IMetadataIndex metadataIndex, ILSMIndex lsmIndex, IndexOperation indexOp) throws Exception {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
 
         if (metadataIndex.isPrimaryIndex()) {
             return new PrimaryIndexModificationOperationCallback(metadataIndex.getDatasetId().getId(),
@@ -300,13 +321,15 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void dropDataverse(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
         try {
-            List<Dataset> dataverseDatasets;
 
+            List<Dataset> dataverseDatasets;
+            Dataset ds;
             dataverseDatasets = getDataverseDatasets(jobId, dataverseName);
             if (dataverseDatasets != null && dataverseDatasets.size() > 0) {
                 // Drop all datasets in this dataverse.
                 for (int i = 0; i < dataverseDatasets.size(); i++) {
-                    dropDataset(jobId, dataverseName, dataverseDatasets.get(i).getDatasetName());
+                    ds = dataverseDatasets.get(i);
+                    dropDataset(jobId, dataverseName, ds.getDatasetName());
                 }
             }
             List<Datatype> dataverseDatatypes;
@@ -337,6 +360,17 @@ public class MetadataNode implements IMetadataNode {
                 // Drop all functions in this dataverse.
                 for (DatasourceAdapter adapter : dataverseAdapters) {
                     dropAdapter(jobId, dataverseName, adapter.getAdapterIdentifier().getAdapterName());
+                }
+            }
+
+            List<Feed> dataverseFeeds;
+            Feed feed;
+            dataverseFeeds = getDataverseFeeds(jobId, dataverseName);
+            if (dataverseFeeds != null && dataverseFeeds.size() > 0) {
+                // Drop all datasets in this dataverse.
+                for (int i = 0; i < dataverseFeeds.size(); i++) {
+                    feed = dataverseFeeds.get(i);
+                    dropFeed(jobId, dataverseName, feed.getFeedName());
                 }
             }
 
@@ -383,7 +417,7 @@ public class MetadataNode implements IMetadataNode {
             }
 
             // Delete entry from secondary index 'group'.
-            if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
+            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 ITupleReference groupNameSearchKey = createTuple(id.getNodeGroupName(), dataverseName, datasetName);
                 // Searches the index for the tuple to be deleted. Acquires an S
@@ -411,7 +445,7 @@ public class MetadataNode implements IMetadataNode {
             }
 
             // Delete entry(s) from the 'indexes' dataset.
-            if (dataset.getDatasetType() == DatasetType.INTERNAL || dataset.getDatasetType() == DatasetType.FEED) {
+            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 List<Index> datasetIndexes = getDatasetIndexes(jobId, dataverseName, datasetName);
                 if (datasetIndexes != null) {
                     for (Index index : datasetIndexes) {
@@ -419,6 +453,7 @@ public class MetadataNode implements IMetadataNode {
                     }
                 }
             }
+
         } catch (Exception e) {
             throw new MetadataException(e);
         }
@@ -577,13 +612,14 @@ public class MetadataNode implements IMetadataNode {
         // prepare a Callback for logging
         IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
                 lsmIndex, IndexOperation.DELETE);
-        IIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId);
-        txnCtx.setTransactionType(TransactionType.READ_WRITE);
-        txnCtx.registerIndexAndCallback(lsmIndex, (AbstractOperationCallback) modCallback);
+        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
+        txnCtx.setWriteTxn(true);
+        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                metadataIndex.isPrimaryIndex());
 
-        indexAccessor.delete(tuple);
+        indexAccessor.forceDelete(tuple);
         indexLifecycleManager.close(resourceID);
     }
 
@@ -632,6 +668,34 @@ public class MetadataNode implements IMetadataNode {
             IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);
             List<Dataset> results = new ArrayList<Dataset>();
             searchIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<Feed> getDataverseFeeds(JobId jobId, String dataverseName) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName);
+            FeedTupleTranslator tupleReaderWriter = new FeedTupleTranslator(false);
+            IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<Feed>(tupleReaderWriter);
+            List<Feed> results = new ArrayList<Feed>();
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    public List<Library> getDataverseLibraries(JobId jobId, String dataverseName) throws MetadataException,
+            RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName);
+            LibraryTupleTranslator tupleReaderWriter = new LibraryTupleTranslator(false);
+            IValueExtractor<Library> valueExtractor = new MetadataEntityValueExtractor<Library>(tupleReaderWriter);
+            List<Library> results = new ArrayList<Library>();
+            searchIndex(jobId, MetadataPrimaryIndexes.LIBRARY_DATASET, searchKey, valueExtractor, results);
             return results;
         } catch (Exception e) {
             throw new MetadataException(e);
@@ -772,6 +836,7 @@ public class MetadataNode implements IMetadataNode {
             }
             return results.get(0);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new MetadataException(e);
         }
     }
@@ -833,9 +898,9 @@ public class MetadataNode implements IMetadataNode {
                     + functionSignature.getArity());
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'function' dataset.
-            ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET,
+            ITupleReference functionTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET,
                     searchKey);
-            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, datasetTuple);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
 
             // TODO: Change this to be a BTree specific exception, e.g.,
             // BTreeKeyDoesNotExistException.
@@ -872,7 +937,7 @@ public class MetadataNode implements IMetadataNode {
             indexLifecycleManager.open(resourceID);
             IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+            ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
             RangePredicate rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -895,7 +960,7 @@ public class MetadataNode implements IMetadataNode {
             indexLifecycleManager.open(resourceID);
             indexAccessor = indexInstance
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
             rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -918,7 +983,7 @@ public class MetadataNode implements IMetadataNode {
             indexLifecycleManager.open(resourceID);
             indexAccessor = indexInstance
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
             rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -949,7 +1014,7 @@ public class MetadataNode implements IMetadataNode {
         indexLifecycleManager.open(resourceID);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor();
+        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
 
         IBinaryComparator[] searchCmps = null;
         MultiComparator searchCmp = null;
@@ -985,29 +1050,33 @@ public class MetadataNode implements IMetadataNode {
         try {
             IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
             indexLifecycleManager.open(resourceID);
-            IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
-                    NoOpOperationCallback.INSTANCE);
-            IIndexCursor rangeCursor = indexAccessor.createSearchCursor();
-
-            DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
-            IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);
-            RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-
-            indexAccessor.search(rangeCursor, rangePred);
-            int datasetId;
-
             try {
-                while (rangeCursor.hasNext()) {
-                    rangeCursor.next();
-                    ITupleReference ref = rangeCursor.getTuple();
-                    Dataset ds = valueExtractor.getValue(jobId, rangeCursor.getTuple());
-                    datasetId = ((Dataset) valueExtractor.getValue(jobId, rangeCursor.getTuple())).getDatasetId();
-                    if (mostRecentDatasetId < datasetId) {
-                        mostRecentDatasetId = datasetId;
+                IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
+                IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
+
+                DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(false);
+                IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<Dataset>(tupleReaderWriter);
+                RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
+
+                indexAccessor.search(rangeCursor, rangePred);
+                int datasetId;
+
+                try {
+                    while (rangeCursor.hasNext()) {
+                        rangeCursor.next();
+                        final ITupleReference ref = rangeCursor.getTuple();
+                        final Dataset ds = valueExtractor.getValue(jobId, ref);
+                        datasetId = ds.getDatasetId();
+                        if (mostRecentDatasetId < datasetId) {
+                            mostRecentDatasetId = datasetId;
+                        }
                     }
+                } finally {
+                    rangeCursor.close();
                 }
             } finally {
-                rangeCursor.close();
+                indexLifecycleManager.close(resourceID);
             }
 
         } catch (Exception e) {
@@ -1057,7 +1126,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference adapterTuple = tupleReaderWriter.getTupleFromMetadataEntity(adapter);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, adapterTuple);
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             throw new MetadataException("A adapter with this name " + adapter.getAdapterIdentifier().getAdapterName()
                     + " already exists in dataverse '" + adapter.getAdapterIdentifier().getNamespace() + "'.", e);
         } catch (Exception e) {
@@ -1117,6 +1186,44 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public void addCompactionPolicy(JobId jobId, CompactionPolicy compactionPolicy) throws MetadataException,
+            RemoteException {
+        try {
+            // Insert into the 'CompactionPolicy' dataset.
+            CompactionPolicyTupleTranslator tupleReaderWriter = new CompactionPolicyTupleTranslator(true);
+            ITupleReference compactionPolicyTuple = tupleReaderWriter.getTupleFromMetadataEntity(compactionPolicy);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, compactionPolicyTuple);
+
+        } catch (TreeIndexDuplicateKeyException e) {
+            throw new MetadataException("A compcation policy with this name " + compactionPolicy.getPolicyName()
+                    + " already exists in dataverse '" + compactionPolicy.getPolicyName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public CompactionPolicy getCompactionPolicy(JobId jobId, String dataverse, String policyName)
+            throws MetadataException, RemoteException {
+
+        try {
+            ITupleReference searchKey = createTuple(dataverse, policyName);
+            CompactionPolicyTupleTranslator tupleReaderWriter = new CompactionPolicyTupleTranslator(false);
+            List<CompactionPolicy> results = new ArrayList<CompactionPolicy>();
+            IValueExtractor<CompactionPolicy> valueExtractor = new MetadataEntityValueExtractor<CompactionPolicy>(
+                    tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
     public List<DatasourceAdapter> getDataverseAdapters(JobId jobId, String dataverseName) throws MetadataException,
             RemoteException {
         try {
@@ -1133,7 +1240,321 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public void addLibrary(JobId jobId, Library library) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'Library' dataset.
+            LibraryTupleTranslator tupleReaderWriter = new LibraryTupleTranslator(true);
+            ITupleReference libraryTuple = tupleReaderWriter.getTupleFromMetadataEntity(library);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.LIBRARY_DATASET, libraryTuple);
+
+        } catch (TreeIndexException e) {
+            throw new MetadataException("A library with this name " + library.getDataverseName()
+                    + " already exists in dataverse '" + library.getDataverseName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public void dropLibrary(JobId jobId, String dataverseName, String libraryName) throws MetadataException,
+            RemoteException {
+        Library library;
+        try {
+            library = getLibrary(jobId, dataverseName, libraryName);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+        if (library == null) {
+            throw new MetadataException("Cannot drop library '" + library + "' because it doesn't exist.");
+        }
+        try {
+            // Delete entry from the 'Library' dataset.
+            ITupleReference searchKey = createTuple(dataverseName, libraryName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'Adapter' dataset.
+            ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.LIBRARY_DATASET, searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.LIBRARY_DATASET, datasetTuple);
+
+            // TODO: Change this to be a BTree specific exception, e.g.,
+            // BTreeKeyDoesNotExistException.
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Cannot drop library '" + libraryName, e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public Library getLibrary(JobId jobId, String dataverseName, String libraryName) throws MetadataException,
+            RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverseName, libraryName);
+            LibraryTupleTranslator tupleReaderWriter = new LibraryTupleTranslator(false);
+            List<Library> results = new ArrayList<Library>();
+            IValueExtractor<Library> valueExtractor = new MetadataEntityValueExtractor<Library>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.LIBRARY_DATASET, searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
     public int getMostRecentDatasetId() throws MetadataException, RemoteException {
         return DatasetIdFactory.getMostRecentDatasetId();
     }
+
+    @Override
+    public void registerFeedActivity(JobId jobId, FeedConnectionId feedId, FeedActivity feedActivity)
+            throws MetadataException, RemoteException {
+        try {
+            if (!FeedActivityIdFactory.isInitialized()) {
+                initializeFeedActivityIdFactory(jobId);
+            }
+            feedActivity.setActivityId(FeedActivityIdFactory.generateFeedActivityId());
+            FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
+            ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(feedActivity);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, tuple);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public FeedActivity getRecentFeedActivity(JobId jobId, FeedConnectionId feedId, FeedActivityType... activityType)
+            throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(feedId.getDataverse(), feedId.getFeedName(),
+                    feedId.getDatasetName());
+            FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(false);
+            List<FeedActivity> results = new ArrayList<FeedActivity>();
+            IValueExtractor<FeedActivity> valueExtractor = new MetadataEntityValueExtractor<FeedActivity>(
+                    tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                Collections.sort(results);
+                if (activityType == null) {
+                    return results.get(0);
+                } else {
+                    for (FeedActivity result : results) {
+                        for (FeedActivityType ft : activityType) {
+                            if (result.getActivityType().equals(ft)) {
+                                return result;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void initializeFeedActivityIdFactory(JobId jobId) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple();
+            FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
+            List<FeedActivity> results = new ArrayList<FeedActivity>();
+            IValueExtractor<FeedActivity> valueExtractor = new MetadataEntityValueExtractor<FeedActivity>(
+                    tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, searchKey, valueExtractor, results);
+            int maxActivityId = 0;
+            for (FeedActivity fa : results) {
+                if (maxActivityId < fa.getActivityId()) {
+                    maxActivityId = fa.getActivityId();
+                }
+            }
+            FeedActivityIdFactory.initialize(maxActivityId);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public void addFeedPolicy(JobId jobId, FeedPolicy feedPolicy) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'FeedPolicy' dataset.
+            FeedPolicyTupleTranslator tupleReaderWriter = new FeedPolicyTupleTranslator(true);
+            ITupleReference feedPolicyTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedPolicy);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, feedPolicyTuple);
+
+        } catch (TreeIndexException e) {
+            throw new MetadataException("A feed policy with this name " + feedPolicy.getPolicyName()
+                    + " already exists in dataverse '" + feedPolicy.getPolicyName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    @Override
+    public FeedPolicy getFeedPolicy(JobId jobId, String dataverse, String policyName) throws MetadataException,
+            RemoteException {
+
+        try {
+            ITupleReference searchKey = createTuple(dataverse, policyName);
+            FeedPolicyTupleTranslator tupleReaderWriter = new FeedPolicyTupleTranslator(false);
+            List<FeedPolicy> results = new ArrayList<FeedPolicy>();
+            IValueExtractor<FeedPolicy> valueExtractor = new MetadataEntityValueExtractor<FeedPolicy>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<FeedActivity> getActiveFeeds(JobId jobId, String dataverse, String dataset) throws MetadataException,
+            RemoteException {
+        List<FeedActivity> activeFeeds = new ArrayList<FeedActivity>();
+        Map<FeedConnectionId, FeedActivity> aFeeds = new HashMap<FeedConnectionId, FeedActivity>();
+        boolean invalidArgs = (dataverse == null && dataset != null);
+        if (invalidArgs) {
+            throw new MetadataException("Invalid arguments " + dataverse + " " + dataset);
+        }
+        try {
+            ITupleReference searchKey = createTuple();
+            FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(true);
+            List<FeedActivity> results = new ArrayList<FeedActivity>();
+            IValueExtractor<FeedActivity> valueExtractor = new MetadataEntityValueExtractor<FeedActivity>(
+                    tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, searchKey, valueExtractor, results);
+            Collections.sort(results); // recent activity first
+            FeedConnectionId fid = null;
+            Set<FeedConnectionId> terminatedFeeds = new HashSet<FeedConnectionId>();
+            for (FeedActivity fa : results) {
+                if (dataverse != null) {
+                    if (dataset != null
+                            && (!fa.getDataverseName().equals(dataverse) || !dataset.equals(fa.getDatasetName()))) {
+                        continue;
+                    }
+                }
+
+                fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
+                switch (fa.getActivityType()) {
+                    case FEED_BEGIN:
+                        if (!terminatedFeeds.contains(fid)) {
+                            if (aFeeds.get(fid) == null || fa.getActivityId() > aFeeds.get(fid).getActivityId()) {
+                                aFeeds.put(fid, fa);
+                            }
+                        }
+                        break;
+                    case FEED_END:
+                        terminatedFeeds.add(fid);
+                        break;
+                    default: //ignore    
+                }
+            }
+            for (FeedActivity f : aFeeds.values()) {
+                System.out.println("ACTIVE FEEDS " + f.getFeedName());
+                activeFeeds.add(f);
+            }
+            return activeFeeds;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void addFeed(JobId jobId, Feed feed) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'Feed' dataset.
+            FeedTupleTranslator tupleReaderWriter = new FeedTupleTranslator(true);
+            ITupleReference feedTuple = tupleReaderWriter.getTupleFromMetadataEntity(feed);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, feedTuple);
+
+        } catch (TreeIndexException e) {
+            throw new MetadataException("A feed with this name " + feed.getFeedName()
+                    + " already exists in dataverse '" + feed.getDataverseName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public Feed getFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataverse, feedName);
+            FeedTupleTranslator tupleReaderWriter = new FeedTupleTranslator(false);
+            List<Feed> results = new ArrayList<Feed>();
+            IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<Feed>(tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, searchKey, valueExtractor, results);
+            if (!results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException {
+
+        try {
+            ITupleReference searchKey = createTuple(dataverse, feedName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'nodegroup' dataset.
+            ITupleReference tuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.FEED_DATASET, searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.FEED_DATASET, tuple);
+            // TODO: Change this to be a BTree specific exception, e.g.,
+            // BTreeKeyDoesNotExistException.
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Cannot drop feed '" + feedName + "' because it doesn't exist", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+
+    }
+
+    public List<FeedActivity> getDatasetsServedByFeed(JobId jobId, String dataverse, String feedName)
+            throws MetadataException, RemoteException {
+        List<FeedActivity> feedActivities = new ArrayList<FeedActivity>();
+        try {
+            ITupleReference searchKey = createTuple(dataverse, feedName);
+            FeedActivityTupleTranslator tupleReaderWriter = new FeedActivityTupleTranslator(false);
+            List<FeedActivity> results = new ArrayList<FeedActivity>();
+            IValueExtractor<FeedActivity> valueExtractor = new MetadataEntityValueExtractor<FeedActivity>(
+                    tupleReaderWriter);
+            searchIndex(jobId, MetadataPrimaryIndexes.FEED_ACTIVITY_DATASET, searchKey, valueExtractor, results);
+
+            if (!results.isEmpty()) {
+                Collections.sort(results); // most recent feed activity
+                Set<String> terminatedDatasets = new HashSet<String>();
+                Set<String> activeDatasets = new HashSet<String>();
+
+                for (FeedActivity result : results) {
+                    switch (result.getFeedActivityType()) {
+                        case FEED_BEGIN:
+                            if (!terminatedDatasets.contains(result.getDatasetName())) {
+                                feedActivities.add(result);
+                                activeDatasets.add(result.getDatasetName());
+                            }
+                            break;
+                        case FEED_END:
+                            if (!activeDatasets.contains(result.getDatasetName())) {
+                                terminatedDatasets.add(result.getDatasetName());
+                            }
+                            break;
+                    }
+
+                }
+            }
+            return feedActivities;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
 }

@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.test.aql;
 
 import static org.junit.Assert.fail;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -34,10 +36,14 @@ import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -183,7 +189,7 @@ public class TestsUtils {
         }
     }
 
-    private static String[] handleError(GetMethod method) throws Exception {
+    private static String[] handleError(HttpMethod method) throws Exception {
         String errorBody = method.getResponseBodyAsString();
         JSONObject result = new JSONObject(errorBody);
         String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
@@ -202,7 +208,6 @@ public class TestsUtils {
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
-
         method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
 
         // Provide custom retry handler is necessary
@@ -235,9 +240,8 @@ public class TestsUtils {
         HttpClient client = new HttpClient();
 
         // Create a method instance.
-        GetMethod method = new GetMethod(url);
-
-        method.setQueryString(new NameValuePair[] { new NameValuePair("statements", str) });
+        PostMethod method = new PostMethod(url);
+        method.setRequestEntity(new StringRequestEntity(str));
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -250,7 +254,8 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DML operation failed: " + errors[0]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
+                    + errors[2]);
         }
     }
 
@@ -267,10 +272,8 @@ public class TestsUtils {
         HttpClient client = new HttpClient();
 
         // Create a method instance.
-        GetMethod method = new GetMethod(url);
-
-        method.setQueryString(new NameValuePair[] { new NameValuePair("ddl", str) });
-
+        PostMethod method = new PostMethod(url);
+        method.setRequestEntity(new StringRequestEntity(str));
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
@@ -282,7 +285,8 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
+                    + errors[2]);
         }
     }
 
@@ -306,25 +310,67 @@ public class TestsUtils {
     public static void executeManagixCommand(String command) throws ClassNotFoundException, NoSuchMethodException,
             SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (managixExecuteMethod == null) {
-            Class clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
+            Class<?> clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
             managixExecuteMethod = clazz.getMethod("executeCommand", String.class);
         }
         managixExecuteMethod.invoke(null, command);
     }
 
-    public static void executeTest(String actualPath, TestCaseContext testCaseCtx) throws Exception {
+    public static String executeScript(ProcessBuilder pb, String scriptPath) throws Exception {
+        pb.command(scriptPath);
+        Process p = pb.start();
+        p.waitFor();
+        return getProcessOutput(p);
+    }
+
+    private static String getScriptPath(String queryPath, String scriptBasePath, String scriptFileName) {
+        String targetWord = "queries" + File.separator;
+        int targetWordSize = targetWord.lastIndexOf(File.separator);
+        int beginIndex = queryPath.lastIndexOf(targetWord) + targetWordSize;
+        int endIndex = queryPath.lastIndexOf(File.separator);
+        String prefix = queryPath.substring(beginIndex, endIndex);
+        String scriptPath = scriptBasePath + prefix + File.separator + scriptFileName;
+        return scriptPath;
+    }
+
+    private static String getProcessOutput(Process p) throws Exception {
+        StringBuilder s = new StringBuilder();
+        BufferedInputStream bisIn = new BufferedInputStream(p.getInputStream());
+        StringWriter writerIn = new StringWriter();
+        IOUtils.copy(bisIn, writerIn, "UTF-8");
+        s.append(writerIn.toString());
+
+        BufferedInputStream bisErr = new BufferedInputStream(p.getErrorStream());
+        StringWriter writerErr = new StringWriter();
+        IOUtils.copy(bisErr, writerErr, "UTF-8");
+        s.append(writerErr.toString());
+        if (writerErr.toString().length() > 0) {
+            StringBuilder sbErr = new StringBuilder();
+            sbErr.append("script execution failed - error message:\n");
+            sbErr.append("-------------------------------------------\n");
+            sbErr.append(s.toString());
+            sbErr.append("-------------------------------------------\n");
+            LOGGER.info(sbErr.toString().trim());
+            throw new Exception(s.toString().trim());
+        }
+        return s.toString();
+    }
+
+    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
+            boolean isDmlRecoveryTest) throws Exception {
 
         File testFile;
         File expectedResultFile;
         String statement;
         List<TestFileContext> expectedResultFileCtxs;
         List<TestFileContext> testFileCtxs;
-
+        File qbcFile = null;
+        File qarFile = null;
         int queryCount = 0;
-        JSONObject result;
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
+            LOGGER.info("Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
 
@@ -337,10 +383,26 @@ public class TestsUtils {
                             TestsUtils.executeDDL(statement);
                             break;
                         case "update":
+
+                            //isDmlRecoveryTest: set IP address
+                            if (isDmlRecoveryTest && statement.contains("nc1://")) {
+                                statement = statement
+                                        .replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
+
+                            }
+
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
                             try {
+                                // isDmlRecoveryTest: insert Crash and Recovery
+                                if (isDmlRecoveryTest) {
+                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
+                                            + "dml_recovery" + File.separator + "kill_cc_and_nc.sh");
+                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
+                                            + "dml_recovery" + File.separator + "stop_and_start.sh");
+                                }
+
                                 InputStream resultStream = executeQuery(statement);
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
@@ -364,11 +426,75 @@ public class TestsUtils {
                         case "mgx":
                             executeManagixCommand(statement);
                             break;
+                        case "txnqbc": //qbc represents query before crash
+                            try {
+                                InputStream resultStream = executeQuery(statement);
+                                qbcFile = new File(actualPath + File.separator
+                                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                        + cUnit.getName() + "_qbc.adm");
+                                qbcFile.getParentFile().mkdirs();
+                                TestsUtils.writeResultsToFile(qbcFile, resultStream);
+                            } catch (JsonMappingException e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
+                            }
+                            break;
+                        case "txnqar": //qar represents query after recovery
+                            try {
+
+                                InputStream resultStream = executeQuery(statement);
+
+                                qarFile = new File(actualPath + File.separator
+                                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                        + cUnit.getName() + "_qar.adm");
+                                qarFile.getParentFile().mkdirs();
+                                TestsUtils.writeResultsToFile(qarFile, resultStream);
+
+                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                        qbcFile, qarFile);
+
+                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
+                                        + cUnit.getName() + " PASSED ");
+                            } catch (JsonMappingException e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
+                            }
+                            break;
+                        case "txneu": //eu represents erroneous update
+                            try {
+                                TestsUtils.executeUpdate(statement);
+                            } catch (Exception e) {
+                                //An exception is expected.
+                            }
+                            break;
+                        case "script":
+                            try {
+                                String output = executeScript(
+                                        pb,
+                                        getScriptPath(testFile.getAbsolutePath(), pb.environment().get("SCRIPT_HOME"),
+                                                statement.trim()));
+                                if (output.contains("ERROR")) {
+                                    throw new Exception(output);
+                                }
+                            } catch (Exception e) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                            }
+                            break;
+                        case "sleep":
+                            Thread.sleep(Long.parseLong(statement.trim()));
+                            break;
+                        case "errddl": // a ddlquery that expects error
+                            try {
+                                TestsUtils.executeDDL(statement);
+
+                            } catch (Exception e) {
+                                // expected error happens
+                            }
+                            break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }
@@ -376,4 +502,5 @@ public class TestsUtils {
             }
         }
     }
+
 }

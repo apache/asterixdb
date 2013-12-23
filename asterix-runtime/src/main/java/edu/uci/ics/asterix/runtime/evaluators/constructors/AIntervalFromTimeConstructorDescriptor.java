@@ -116,7 +116,7 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                             if (intervalStart < 0) {
                                 intervalStart += GregorianCalendarSystem.CHRONON_OF_DAY;
                             }
-                            
+
                             if (argOut1.getByteArray()[0] == SER_TIME_TYPE_TAG) {
                                 intervalEnd = ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
@@ -135,12 +135,12 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                             if (intervalEnd < 0) {
                                 intervalEnd += GregorianCalendarSystem.CHRONON_OF_DAY;
                             }
-                            
+
                             if (intervalEnd < intervalStart) {
                                 throw new AlgebricksException(FID.getName()
                                         + ": interval end must not be less than the interval start.");
                             }
-                            
+
                             aInterval.setValue(intervalStart, intervalEnd, ATypeTag.TIME.serialize());
                             intervalSerde.serialize(aInterval, out);
 

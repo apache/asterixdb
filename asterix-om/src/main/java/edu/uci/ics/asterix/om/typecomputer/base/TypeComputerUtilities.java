@@ -15,8 +15,19 @@
 
 package edu.uci.ics.asterix.om.typecomputer.base;
 
+import java.util.List;
+
+import org.apache.commons.lang3.mutable.Mutable;
+
+import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 
 public class TypeComputerUtilities {
 
@@ -54,5 +65,56 @@ public class TypeComputerUtilities {
             return returnType;
         } else
             return null;
+    }
+
+    public static boolean nullableType(ILogicalExpression expression, IVariableTypeEnvironment env)
+            throws AlgebricksException {
+        AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) expression;
+        if (!(func instanceof ScalarFunctionCallExpression)) {
+            return true;
+        }
+        List<Mutable<ILogicalExpression>> args = func.getArguments();
+        for (Mutable<ILogicalExpression> arg : args) {
+            IAType type = (IAType) env.getType(arg.getValue());
+            if (type.getTypeTag() == ATypeTag.UNION || type.getTypeTag() == ATypeTag.NULL
+                    || type.getTypeTag() == ATypeTag.ANY) {
+                return true;
+            }
+            if (type.getTypeTag() == ATypeTag.RECORD || type.getTypeTag() == ATypeTag.UNORDEREDLIST
+                    || type.getTypeTag() == ATypeTag.ORDEREDLIST) {
+                if (nullableCompositeType(type)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean nullableCompositeType(IAType type) {
+        if (type.getTypeTag() == ATypeTag.UNION || type.getTypeTag() == ATypeTag.NULL
+                || type.getTypeTag() == ATypeTag.ANY) {
+            return true;
+        } else if (type.getTypeTag() == ATypeTag.RECORD) {
+            ARecordType recordType = (ARecordType) type;
+            IAType[] fieldTypes = recordType.getFieldTypes();
+            for (IAType fieldType : fieldTypes) {
+                boolean nullable = nullableCompositeType(fieldType);
+                if (nullable) {
+                    return true;
+                }
+            }
+            return false;
+        } else if (type.getTypeTag() == ATypeTag.UNORDEREDLIST || type.getTypeTag() == ATypeTag.ORDEREDLIST) {
+            AbstractCollectionType collectionType = (AbstractCollectionType) type;
+            IAType itemType = collectionType.getItemType();
+            boolean nullable = nullableCompositeType(itemType);
+            if (nullable) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }

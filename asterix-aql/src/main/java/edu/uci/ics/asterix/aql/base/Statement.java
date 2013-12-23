@@ -25,8 +25,7 @@ public interface Statement extends IAqlExpression {
         UPDATE,
         DML_CMD_LIST,
         FUNCTION_DECL,
-        LOAD_FROM_FILE,
-        WRITE_FROM_QUERY_RESULT,
+        LOAD,
         NODEGROUP_DECL,
         NODEGROUP_DROP,
         QUERY,
@@ -38,10 +37,13 @@ public interface Statement extends IAqlExpression {
         INDEX_DECL,
         CREATE_DATAVERSE,
         INDEX_DROP,
-        BEGIN_FEED,
-        CONTROL_FEED,
+        CREATE_FEED,
+        DROP_FEED,
+        CONNECT_FEED,
+        DISCONNECT_FEED,
         CREATE_FUNCTION,
-        FUNCTION_DROP
+        FUNCTION_DROP,
+        COMPACT
     }
 
     public abstract Kind getKind();

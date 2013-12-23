@@ -2,13 +2,13 @@ use dataverse test;
 
 load dataset Customers2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;
+(("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
 
 load dataset Orders2 
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm")) pre-sorted;
+(("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
 
-write into dataset CustomerOrders2 (
+insert into dataset CustomerOrders2 (
 
 for $c in dataset('Customers2')
 let $orders := 

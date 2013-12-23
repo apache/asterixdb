@@ -1,0 +1,7 @@
+/**
+ * day-of-week test case: test the day-of-week function
+ * Expected result: success
+ **/
+
+drop dataverse test if exists;
+create dataverse test;

@@ -28,8 +28,8 @@ public abstract class AbstractOperationCallback {
     protected final int[] primaryKeyFields;
     protected final ITransactionContext txnCtx;
     protected final ILockManager lockManager;
-    protected final AtomicInteger transactorLocalNumActiveOperations;
     protected final long[] longHashes;
+    protected final AtomicInteger transactorLocalNumActiveOperations;
 
     public AbstractOperationCallback(int datasetId, int[] primaryKeyFields, ITransactionContext txnCtx,
             ILockManager lockManager) {
@@ -46,6 +46,10 @@ public abstract class AbstractOperationCallback {
         return Math.abs((int) longHashes[0]);
     }
 
+    public void resetLocalNumActiveOperations() {
+        transactorLocalNumActiveOperations.set(0);
+    }
+
     public int getLocalNumActiveOperations() {
         return transactorLocalNumActiveOperations.get();
     }
@@ -57,4 +61,5 @@ public abstract class AbstractOperationCallback {
     public void decrementLocalNumActiveOperations() {
         transactorLocalNumActiveOperations.decrementAndGet();
     }
+
 }

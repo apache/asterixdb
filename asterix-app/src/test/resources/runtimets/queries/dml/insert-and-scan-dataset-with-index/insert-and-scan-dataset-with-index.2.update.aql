@@ -1,0 +1,25 @@
+/* 
+ * Test case Name  : insert-and-scan-dataset-with-index.aql
+ * Description     : This test is intended to test inserting into a dataset that has a secondary index and scan
+ * the data at the same time where we insert a materializing to prevent the possibility of deadlatch.
+ * Expected Result : Success
+ * Date            : July 11 2013
+ */
+ 
+use dataverse test;
+
+load dataset test.employee
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/names.adm"),("format"="delimited-text"),("delimiter"="|"));
+
+
+insert into dataset test.employee (
+for $x in dataset test.employee
+return {
+	"id": $x.id + 10000,
+	"fname": $x.fname,
+	"lname": $x.lname,
+	"age": $x.age,
+	"dept": $x.dept
+}
+);

@@ -22,8 +22,6 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Queue;
 
-import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexer;
-import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexerException;
 import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.IAsterixListBuilder;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
@@ -42,7 +40,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -51,7 +49,10 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexer;
+import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexerException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -375,7 +376,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     private void parseYearMonthDuration(String duration, DataOutput out) throws AsterixException {
         try {
-            AYearMonthDurationerializerDeserializer.parse(duration, out);
+            AYearMonthDurationSerializerDeserializer.INSTANCE.parse(duration, out);
         } catch (HyracksDataException e) {
             throw new AsterixException(e);
         }
@@ -383,7 +384,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     private void parseDayTimeDuration(String duration, DataOutput out) throws AsterixException {
         try {
-            ADayTimeDurationSerializerDeserializer.parse(duration, out);
+            ADayTimeDurationSerializerDeserializer.INSTANCE.parse(duration, out);
         } catch (HyracksDataException e) {
             throw new AsterixException(e);
         }
@@ -416,13 +417,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             return true;
 
         if (aObjectType.getTypeTag() != ATypeTag.UNION) {
-            if (expectedTypeTag == aObjectType.getTypeTag())
-                return true;
+            return ATypeHierarchy.canPromote(expectedTypeTag, aObjectType.getTypeTag());
         } else { // union
             unionList = ((AUnionType) aObjectType).getUnionList();
-            for (int i = 0; i < unionList.size(); i++)
-                if (unionList.get(i).getTypeTag() == expectedTypeTag)
+            for (IAType t : unionList) {
+                if (ATypeHierarchy.canPromote(t.getTypeTag(), expectedTypeTag)) {
                     return true;
+                }
+            }
         }
         return false;
     }
@@ -635,11 +637,16 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         boolean first = true;
         do {
             token = nextToken();
-            if (token == AdmLexer.TOKEN_END_UNORDERED_LIST) {
-                if (expectingListItem) {
-                    throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+            if (token == AdmLexer.TOKEN_END_RECORD) {
+                if (nextToken() == AdmLexer.TOKEN_END_RECORD) {
+                    if (expectingListItem) {
+                        throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+                    } else {
+                        inList = false;
+                    }
+                } else {
+                    throw new AsterixException("Found END_RECORD while expecting a list item.");
                 }
-                inList = false;
             } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
                     throw new AsterixException("Found COMMA before any list item.");
@@ -842,7 +849,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         } catch (Exception e) {
             throw new AsterixException(e);
         }
-        throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+        throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
     }
 
     private void parseBoolean(String bool, DataOutput out) throws AsterixException {

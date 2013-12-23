@@ -16,14 +16,18 @@ package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
@@ -35,6 +39,7 @@ import edu.uci.ics.asterix.aql.parser.ParseException;
 import edu.uci.ics.asterix.aql.parser.TokenMgrError;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
@@ -50,23 +55,34 @@ abstract class RESTAPIServlet extends HttpServlet {
     private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
 
     @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
+            IOException {
+        StringWriter sw = new StringWriter();
+        IOUtils.copy(request.getInputStream(), sw, StandardCharsets.UTF_8.name());
+        String query = sw.toString();
+        handleRequest(request, response, query);
+    }
+
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String query = getQueryParameter(request);
+        handleRequest(request, response, query);
+    }
+
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
+            throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-
         DisplayFormat format = DisplayFormat.HTML;
-
         String contentType = request.getContentType();
-
         if ((contentType == null) || (contentType.equals("text/plain"))) {
             format = DisplayFormat.TEXT;
         } else if (contentType.equals("application/json")) {
             format = DisplayFormat.JSON;
         }
 
-        String query = getQueryParameter(request);
         boolean asyncResults = isAsync(request);
 
         ServletContext context = getServletContext();
@@ -76,7 +92,6 @@ abstract class RESTAPIServlet extends HttpServlet {
         try {
             synchronized (context) {
                 hcc = (IHyracksClientConnection) context.getAttribute(HYRACKS_CONNECTION_ATTR);
-
                 hds = (IHyracksDataset) context.getAttribute(HYRACKS_DATASET_ATTR);
                 if (hds == null) {
                     hds = new HyracksDataset(hcc, ResultReader.FRAME_SIZE, ResultReader.NUM_READERS);
@@ -86,16 +101,13 @@ abstract class RESTAPIServlet extends HttpServlet {
 
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.Statement();
-            if (checkForbiddenStatements(aqlStatements, out)) {
-                return;
+            if (!containsForbiddenStatements(aqlStatements)) {
+                SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true,
+                        false);
+                MetadataManager.INSTANCE.init();
+                AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
+                aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
             }
-            SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, false);
-
-            MetadataManager.INSTANCE.init();
-
-            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
-
-            aqlTranslator.compileAndExecute(hcc, hds, asyncResults);
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
@@ -109,13 +121,10 @@ abstract class RESTAPIServlet extends HttpServlet {
         }
     }
 
-    private boolean checkForbiddenStatements(List<Statement> aqlStatements, PrintWriter out) {
+    private boolean containsForbiddenStatements(List<Statement> aqlStatements) throws AsterixException {
         for (Statement st : aqlStatements) {
             if (!getAllowedStatements().contains(st.getKind())) {
-                JSONObject errorResp = ResultUtils.getErrorResponse(1, String.format(getErrorMessage(), st.getKind()),
-                        "", "");
-                out.write(errorResp.toString());
-                return true;
+                throw new AsterixException(String.format(getErrorMessage(), st.getKind()));
             }
         }
         return false;

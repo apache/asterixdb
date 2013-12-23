@@ -25,8 +25,9 @@ public class FeedDetailsDecl extends InternalDetailsDecl {
     private final FunctionSignature functionSignature;
 
     public FeedDetailsDecl(String adapterFactoryClassname, Map<String, String> configuration,
-            FunctionSignature signature, Identifier nodeGroupName, List<String> partitioningExpr) {
-        super(nodeGroupName, partitioningExpr);
+            FunctionSignature signature, Identifier nodeGroupName, List<String> partitioningExpr,
+            String compactionPolicy, Map<String, String> compactionPolicyProperties) {
+        super(nodeGroupName, partitioningExpr, false, compactionPolicy, compactionPolicyProperties);
         this.adapterFactoryClassname = adapterFactoryClassname;
         this.configuration = configuration;
         this.functionSignature = signature;

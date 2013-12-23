@@ -1,0 +1,5 @@
+
+use dataverse recovery;
+
+count (for $x in dataset Fragile 
+where contains($x.text2, "location") return $x);

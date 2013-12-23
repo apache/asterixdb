@@ -70,6 +70,7 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                     .createBinaryComparator();
             final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override
@@ -104,6 +105,9 @@ public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory
                 }
 
                 switch (tag1) {
+                    case UUID: {
+                        return ascUUIDComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
+                    }
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + skip1, l1 - skip1, b2, s2 + skip2, l2 - skip2);
                     }

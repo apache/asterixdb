@@ -1,5 +1,5 @@
 /*
- * Description  : create a fuzzy ngram index on unallowed key type.
+ * Description  : create a ngram index on unallowed key type.
  * Expected Res : Failure
  * Date         : 23 April 2013
  * Issue        : 384
@@ -16,5 +16,5 @@ loc:point
 }
 
 create dataset testds(opentype) primary key id;
-create index loc_index on testds(loc) type fuzzy ngram(2);
+create index loc_index on testds(loc) type ngram(2);
 

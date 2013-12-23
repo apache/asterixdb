@@ -14,61 +14,38 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.ITransactionManager.TransactionState;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public interface ITransactionContext {
 
-    public void registerIndexAndCallback(ILSMIndex index, AbstractOperationCallback callback);
-
-    public void updateLastLSNForIndexes(long lastLSN);
-
-    public void decreaseActiveTransactionCountOnIndexes() throws HyracksDataException;
-
-    public int getActiveOperationCountOnIndexes() throws HyracksDataException;
-
-    public LogicalLogLocator getFirstLogLocator();
-
-    public LogicalLogLocator getLastLogLocator();
-
-    public void addCloseableResource(ICloseable resource);
+    public void registerIndexAndCallback(long resourceId, ILSMIndex index, AbstractOperationCallback callback,
+            boolean isPrimaryIndex);
 
     public JobId getJobId();
 
-    public void setStartWaitTime(long time);
+    public void setTimeout(boolean isTimeout);
 
-    public long getStartWaitTime();
+    public boolean isTimeout();
 
-    public void setStatus(int status);
+    public void setTxnState(int txnState);
 
-    public int getStatus();
+    public int getTxnState();
 
-    public void setTxnState(TransactionState txnState);
+    public long getFirstLSN();
 
-    public TransactionState getTxnState();
+    public long getLastLSN();
 
-    public void releaseResources() throws ACIDException;
+    public void setLastLSN(long resourceId, long LSN);
 
-    public void setLastLSN(long lsn);
+    public boolean isWriteTxn();
 
-    public TransactionType getTransactionType();
-
-    public void setTransactionType(TransactionType transactionType);
+    public void setWriteTxn(boolean isWriterTxn);
 
     public String prettyPrint();
 
-    public static final long INVALID_TIME = -1l; // used for showing a
-    // transaction is not waiting.
-    public static final int ACTIVE_STATUS = 0;
-    public static final int TIMED_OUT_STATUS = 1;
+    public void setMetadataTransaction(boolean isMetadataTxn);
 
-    public enum TransactionType {
-        READ,
-        READ_WRITE
-    }
+    public boolean isMetadataTransaction();
 
-    public void setExclusiveJobLevelCommit();
-
+    public void notifyOptracker(boolean isJobLevelCommit);
 }

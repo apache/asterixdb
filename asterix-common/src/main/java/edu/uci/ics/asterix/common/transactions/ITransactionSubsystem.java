@@ -25,10 +25,6 @@ public interface ITransactionSubsystem {
 
     public IRecoveryManager getRecoveryManager();
 
-    public TransactionalResourceManagerRepository getTransactionalResourceRepository();
-
-    public ILoggerRepository getTreeLoggerRepository();
-
     public IAsterixAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
 
     public String getId();

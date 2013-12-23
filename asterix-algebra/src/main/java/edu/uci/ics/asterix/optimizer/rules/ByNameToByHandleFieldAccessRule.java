@@ -75,7 +75,7 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
             AssignOperator assignVar = new AssignOperator(varArray, exprArray);
             x = new VariableReferenceExpression(var1);
             assignVar.getInputs().add(opUnder);
-            opUnder = new  MutableObject<ILogicalOperator>(assignVar);
+            opUnder = new MutableObject<ILogicalOperator>(assignVar);
         }
 
         // let $t := type-of(x)

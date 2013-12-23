@@ -24,10 +24,12 @@ import java.util.Set;
 import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Expression.Kind;
-import edu.uci.ics.asterix.aql.expression.BeginFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
 import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
 import edu.uci.ics.asterix.aql.expression.DatasetDecl;
@@ -37,6 +39,7 @@ import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DistinctClause;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
 import edu.uci.ics.asterix.aql.expression.ForClause;
@@ -52,7 +55,7 @@ import edu.uci.ics.asterix.aql.expression.LetClause;
 import edu.uci.ics.asterix.aql.expression.LimitClause;
 import edu.uci.ics.asterix.aql.expression.ListConstructor;
 import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.LoadFromFileStatement;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
 import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
 import edu.uci.ics.asterix.aql.expression.OperatorExpr;
@@ -75,7 +78,6 @@ import edu.uci.ics.asterix.aql.expression.UpdateStatement;
 import edu.uci.ics.asterix.aql.expression.VarIdentifier;
 import edu.uci.ics.asterix.aql.expression.VariableExpr;
 import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.expression.WriteFromQueryResultStatement;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
@@ -178,34 +180,42 @@ public final class AqlRewriter {
                 continue;
             }
 
-            FunctionDecl functionDecl = lookupUserDefinedFunctionDecl(signature);
-            if (functionDecl != null) {
-                if (functionDecls.contains(functionDecl)) {
-                    throw new AsterixException(" Detected recursvity!");
+            Function function = lookupUserDefinedFunctionDecl(signature);
+            if (function == null) {
+                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
+                    continue;
+                }
+                StringBuilder messageBuilder = new StringBuilder();
+                if (functionDecls.size() > 0) {
+                    messageBuilder.append(" function " + functionDecls.get(functionDecls.size() - 1).getSignature()
+                            + " depends upon function " + signature + " which is undefined");
                 } else {
+                    messageBuilder.append(" function " + signature + " is undefined ");
+                }
+                throw new AsterixException(messageBuilder.toString());
+            }
+
+            if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)) {
+                FunctionDecl functionDecl = FunctionUtils.getFunctionDecl(function);
+                if (functionDecl != null) {
+                    if (functionDecls.contains(functionDecl)) {
+                        throw new AsterixException("ERROR:Recursive invocation "
+                                + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
+                                + functionDecl.getSignature());
+                    }
                     functionDecls.add(functionDecl);
                     buildOtherUdfs(functionDecl.getFuncBody(), functionDecls, declaredFunctions);
                 }
-            } else {
-                if (AsterixBuiltinFunctions.isBuiltinCompilerFunction(signature, includePrivateFunctions)) {
-                    continue;
-                } else {
-                    throw new AsterixException(" unknown function " + signature);
-                }
             }
         }
+
     }
 
-    private FunctionDecl lookupUserDefinedFunctionDecl(FunctionSignature signature) throws AsterixException {
+    private Function lookupUserDefinedFunctionDecl(FunctionSignature signature) throws AsterixException {
         if (signature.getNamespace() == null) {
             return null;
         }
-        Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
-        if (function == null) {
-            return null;
-        }
-        return FunctionUtils.getFunctionDecl(function);
-
+        return MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
     }
 
     private Set<FunctionSignature> getFunctionCalls(Expression expression) throws AsterixException {
@@ -359,7 +369,7 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitLoadFromFileStatement(LoadFromFileStatement stmtLoad, Void arg) throws AsterixException {
+        public Void visitLoadStatement(LoadStatement stmtLoad, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }
@@ -485,13 +495,6 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitWriteFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, Void arg)
-                throws AsterixException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
         public Void visitWriteStatement(WriteStatement ws, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
@@ -499,13 +502,6 @@ public final class AqlRewriter {
 
         public Set<FunctionSignature> getCalls() {
             return calls;
-        }
-
-        @Override
-        public Void visitLoadFromQueryResultStatement(WriteFromQueryResultStatement stmtLoad, Void arg)
-                throws AsterixException {
-            // TODO Auto-generated method stub
-            return null;
         }
 
         @Override
@@ -539,7 +535,7 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitControlFeedStatement(ControlFeedStatement del, Void arg) throws AsterixException {
+        public Void visitDisconnectFeedStatement(DisconnectFeedStatement del, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }
@@ -557,7 +553,25 @@ public final class AqlRewriter {
         }
 
         @Override
-        public Void visitBeginFeedStatement(BeginFeedStatement bf, Void arg) throws AsterixException {
+        public Void visitCreateFeedStatement(CreateFeedStatement del, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitConnectFeedStatement(ConnectFeedStatement del, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitDropFeedStatement(FeedDropStatement del, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitCompactStatement(CompactStatement del, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }

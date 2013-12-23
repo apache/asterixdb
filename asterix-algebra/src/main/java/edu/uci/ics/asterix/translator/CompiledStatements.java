@@ -22,7 +22,6 @@ import edu.uci.ics.asterix.aql.base.Clause;
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.ControlFeedStatement.OperationType;
 import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
 import edu.uci.ics.asterix.aql.expression.FieldAccessor;
 import edu.uci.ics.asterix.aql.expression.FieldBinding;
@@ -39,7 +38,6 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -53,44 +51,6 @@ public class CompiledStatements {
     public static interface ICompiledStatement {
 
         public Kind getKind();
-    }
-
-    public static class CompiledWriteFromQueryResultStatement implements ICompiledDmlStatement {
-
-        private String dataverseName;
-        private String datasetName;
-        private Query query;
-        private int varCounter;
-
-        public CompiledWriteFromQueryResultStatement(String dataverseName, String datasetName, Query query,
-                int varCounter) {
-            this.dataverseName = dataverseName;
-            this.datasetName = datasetName;
-            this.query = query;
-            this.varCounter = varCounter;
-        }
-
-        public String getDataverseName() {
-            return dataverseName;
-        }
-
-        public String getDatasetName() {
-            return datasetName;
-        }
-
-        public int getVarCounter() {
-            return varCounter;
-        }
-
-        public Query getQuery() {
-            return query;
-        }
-
-        @Override
-        public Kind getKind() {
-            return Kind.WRITE_FROM_QUERY_RESULT;
-        }
-
     }
 
     public static class CompiledDatasetDropStatement implements ICompiledStatement {
@@ -321,7 +281,7 @@ public class CompiledStatements {
 
         @Override
         public Kind getKind() {
-            return Kind.LOAD_FROM_FILE;
+            return Kind.LOAD;
         }
     }
 
@@ -360,15 +320,20 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledBeginFeedStatement implements ICompiledDmlStatement {
+    public static class CompiledConnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
+        private String feedName;
         private String datasetName;
+        private String policyName;
         private Query query;
         private int varCounter;
 
-        public CompiledBeginFeedStatement(String dataverseName, String datasetName, Query query, int varCounter) {
+        public CompiledConnectFeedStatement(String dataverseName, String feedName, String datasetName,
+                String policyName, Query query, int varCounter) {
             this.dataverseName = dataverseName;
+            this.feedName = feedName;
             this.datasetName = datasetName;
+            this.policyName = policyName;
             this.query = query;
             this.varCounter = varCounter;
         }
@@ -376,6 +341,10 @@ public class CompiledStatements {
         @Override
         public String getDataverseName() {
             return dataverseName;
+        }
+
+        public String getFeedName() {
+            return feedName;
         }
 
         @Override
@@ -397,24 +366,25 @@ public class CompiledStatements {
 
         @Override
         public Kind getKind() {
-            return Kind.BEGIN_FEED;
+            return Kind.CONNECT_FEED;
+        }
+
+        public String getPolicyName() {
+            return policyName;
         }
     }
 
-    public static class CompiledControlFeedStatement implements ICompiledDmlStatement {
+    public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
         private String datasetName;
-        private OperationType operationType;
+        private String feedName;
         private Query query;
         private int varCounter;
-        private Map<String, String> alteredParams;
 
-        public CompiledControlFeedStatement(OperationType operationType, String dataverseName, String datasetName,
-                Map<String, String> alteredParams) {
+        public CompiledDisconnectFeedStatement(String dataverseName, String feedName, String datasetName) {
             this.dataverseName = dataverseName;
+            this.feedName = feedName;
             this.datasetName = datasetName;
-            this.operationType = operationType;
-            this.alteredParams = alteredParams;
         }
 
         @Override
@@ -427,8 +397,8 @@ public class CompiledStatements {
             return datasetName;
         }
 
-        public OperationType getOperationType() {
-            return operationType;
+        public String getFeedName() {
+            return feedName;
         }
 
         public int getVarCounter() {
@@ -441,16 +411,9 @@ public class CompiledStatements {
 
         @Override
         public Kind getKind() {
-            return Kind.CONTROL_FEED;
+            return Kind.DISCONNECT_FEED;
         }
 
-        public Map<String, String> getProperties() {
-            return alteredParams;
-        }
-
-        public void setProperties(Map<String, String> properties) {
-            this.alteredParams = properties;
-        }
     }
 
     public static class CompiledDeleteStatement implements ICompiledDmlStatement {
@@ -496,8 +459,8 @@ public class CompiledStatements {
             LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
             arguments.add(argumentLiteral);
 
-            CallExpr callExpression = new CallExpr(new FunctionSignature(
-                    FunctionConstants.ASTERIX_NS, "dataset", 1), arguments);
+            CallExpr callExpression = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, "dataset", 1),
+                    arguments);
             List<Clause> clauseList = new ArrayList<Clause>();
             Clause forClause = new ForClause(var, callExpression);
             clauseList.add(forClause);
@@ -534,6 +497,63 @@ public class CompiledStatements {
             return Kind.DELETE;
         }
 
+    }
+
+    public static class CompiledCompactStatement implements ICompiledStatement {
+        private final String dataverseName;
+        private final String datasetName;
+
+        public CompiledCompactStatement(String dataverseName, String datasetName) {
+            this.dataverseName = dataverseName;
+            this.datasetName = datasetName;
+        }
+
+        public String getDataverseName() {
+            return dataverseName;
+        }
+
+        public String getDatasetName() {
+            return datasetName;
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.COMPACT;
+        }
+    }
+
+    public static class CompiledIndexCompactStatement extends CompiledCompactStatement {
+        private final String indexName;
+        private final List<String> keyFields;
+        private final IndexType indexType;
+
+        // Specific to NGram index.
+        private final int gramLength;
+
+        public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
+                List<String> keyFields, int gramLength, IndexType indexType) {
+            super(dataverseName, datasetName);
+            this.indexName = indexName;
+            this.keyFields = keyFields;
+            this.gramLength = gramLength;
+            this.indexType = indexType;
+        }
+
+        public String getIndexName() {
+            return indexName;
+        }
+
+        public List<String> getKeyFields() {
+            return keyFields;
+        }
+
+        public IndexType getIndexType() {
+            return indexType;
+        }
+
+        public int getGramLength() {
+            return gramLength;
+        }
     }
 
 }

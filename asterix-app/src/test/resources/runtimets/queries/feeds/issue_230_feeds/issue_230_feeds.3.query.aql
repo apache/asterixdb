@@ -6,6 +6,6 @@
  */
 use dataverse feeds;
 
-for $x in dataset('TweetFeed')
+for $x in dataset('Tweets')
 order by $x.id
 return $x

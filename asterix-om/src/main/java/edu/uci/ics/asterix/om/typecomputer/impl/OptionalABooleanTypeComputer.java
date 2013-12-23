@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -36,10 +37,14 @@ public class OptionalABooleanTypeComputer implements IResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
-        unionList.add(BuiltinType.ABOOLEAN);
-        return new AUnionType(unionList, "OptionalBoolean");
+        if (TypeComputerUtilities.nullableType(expression, env)) {
+            List<IAType> unionList = new ArrayList<IAType>();
+            unionList.add(BuiltinType.ANULL);
+            unionList.add(BuiltinType.ABOOLEAN);
+            return new AUnionType(unionList, "OptionalBoolean");
+        } else {
+            return BuiltinType.ABOOLEAN;
+        }
     }
 
 }

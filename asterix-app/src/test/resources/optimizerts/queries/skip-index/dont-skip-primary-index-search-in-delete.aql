@@ -1,0 +1,31 @@
+/*
+ *  Description     : The hint to skip secondary indexes don't apply to the primary index
+ *                  : This test is intended to verify that the primary index is still used instead of a scan
+ *  Expected Result : Success
+ *  Date            : 21th December 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as closed {
+  number: int32, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int32, 
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int32? } ]
+}
+
+create dataset Customers(CustomerType) primary key cid;
+
+delete $c from dataset Customers where $c.cid /*+ skip-index */ < 10;
+

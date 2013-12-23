@@ -18,9 +18,9 @@ import java.util.List;
 
 public class ClusterInfo {
 
-	List<NodeInfo> nodes;
+    List<NodeInfo> nodes;
 
-	public ClusterInfo(List<NodeInfo> nodes) {
-		this.nodes = nodes;
-	}
+    public ClusterInfo(List<NodeInfo> nodes) {
+        this.nodes = nodes;
+    }
 }

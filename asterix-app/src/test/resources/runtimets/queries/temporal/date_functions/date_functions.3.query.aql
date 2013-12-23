@@ -4,21 +4,21 @@ set import-private-functions 'true';
 let $d1 := date-from-unix-time-in-days(15600)
 let $null1 := date-from-unix-time-in-days(null)
 let $dt1 := datetime("1327-12-02T23:35:49.938Z")
-let $d2 := date-from-datetime($dt1)
-let $null2 := date-from-datetime(null)
+let $d2 := get-date-from-datetime($dt1)
+let $null2 := get-date-from-datetime(null)
 let $dt2 := datetime("2012-10-11T02:30:23+03:00")
-let $d3 := date-from-datetime($dt2)
+let $d3 := get-date-from-datetime($dt2)
 let $dr1 := duration("-P2Y1M90DT30H")
-let $d4 := add-date-duration($d1, $dr1)
-let $null3 := add-date-duration(null, $dr1)
-let $null4 := add-date-duration($d1, null)
-let $c1 := $d1 = add-date-duration($d4, subtract-date($d1, $d4))
+let $d4 := $d1 + $dr1
+let $null3 := null + $dr1
+let $null4 := $d1 + null
+let $c1 := ($d1 = ($d4 + ($d1 - $d4)))
 let $dr2 := duration("P300Y900MT360000M")
-let $d5 := add-date-duration($d2, $dr2)
-let $c2 := $d2 = add-date-duration($d5, subtract-date($d2, $d5))
-let $dr3 := subtract-date($d5, $d2)
-let $dr4 := subtract-date($d4, $d1)
-let $null5 := subtract-date(null, $d2)
-let $null6 := subtract-date($d5, null)
+let $d5 := $d2 + $dr2
+let $c2 := ($d2 = ($d5 + ($d2 - $d5)))
+let $dr3 := $d5 - $d2
+let $dr4 := $d4 - $d1
+let $null5 := null - $d2
+let $null6 := $d5 - null
 
 return { "date1": $d1, "date2": $d2, "date3": $d3, "date4": $d4, "date5": $d5, "duration1": $dr3, "duration2": $dr4, "c1": $c1, "c2": $c2, "null1": $null1, "null2": $null2, "null3": $null3, "null4": $null4, "null5": $null5, "null6": $null6 }

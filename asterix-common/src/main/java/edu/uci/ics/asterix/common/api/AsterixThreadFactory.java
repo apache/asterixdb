@@ -16,14 +16,14 @@ package edu.uci.ics.asterix.common.api;
 
 import java.util.concurrent.ThreadFactory;
 
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 
 public class AsterixThreadFactory implements ThreadFactory {
 
-    public final static AsterixThreadFactory INSTANCE = new AsterixThreadFactory();
+    private final ILifeCycleComponentManager lccm;
 
-    private AsterixThreadFactory() {
-
+    public AsterixThreadFactory(ILifeCycleComponentManager lifeCycleComponentManager) {
+        this.lccm = lifeCycleComponentManager;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class AsterixThreadFactory implements ThreadFactory {
         } else {
             t = new Thread(r);
         }
-        t.setUncaughtExceptionHandler(LifeCycleComponentManager.INSTANCE);
+        t.setUncaughtExceptionHandler(lccm);
         return t;
     }
 

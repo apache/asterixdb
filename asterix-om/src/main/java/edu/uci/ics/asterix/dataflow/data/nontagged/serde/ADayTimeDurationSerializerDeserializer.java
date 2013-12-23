@@ -31,7 +31,7 @@ public class ADayTimeDurationSerializerDeserializer implements ISerializerDeseri
 
     private static final long serialVersionUID = 1L;
 
-    public static final ADayTimeDurationSerializerDeserializer INSTNACE = new ADayTimeDurationSerializerDeserializer();
+    public static final ADayTimeDurationSerializerDeserializer INSTANCE = new ADayTimeDurationSerializerDeserializer();
 
     @SuppressWarnings("unchecked")
     private static final ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -56,7 +56,7 @@ public class ADayTimeDurationSerializerDeserializer implements ISerializerDeseri
         }
     }
 
-    public static void parse(String durationString, DataOutput out) throws HyracksDataException {
+    public void parse(String durationString, DataOutput out) throws HyracksDataException {
         try {
             ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aDayTimeDuration,
                     ADurationParseOption.All);

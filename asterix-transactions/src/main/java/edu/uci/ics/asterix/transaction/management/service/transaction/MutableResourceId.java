@@ -14,7 +14,7 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.transaction;
 
-public class MutableResourceId{
+public class MutableResourceId {
     long id;
 
     public MutableResourceId(long id) {
@@ -31,7 +31,7 @@ public class MutableResourceId{
 
     @Override
     public int hashCode() {
-        return (int)id;
+        return (int) id;
     }
 
     @Override

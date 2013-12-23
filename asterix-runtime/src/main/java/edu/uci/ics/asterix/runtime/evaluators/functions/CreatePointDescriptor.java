@@ -20,6 +20,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AMutablePoint;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
@@ -43,6 +44,7 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
 
     // allowed input type
     private static final byte SER_DOUBLE_TYPE_TAG = ATypeTag.DOUBLE.serialize();
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -78,8 +80,8 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
                         eval1.evaluate(tuple);
 
                         // type-check: (double, double)
-                        if (outInput0.getByteArray()[0] != SER_DOUBLE_TYPE_TAG
-                                || outInput1.getByteArray()[0] != SER_DOUBLE_TYPE_TAG) {
+                        if ((outInput0.getByteArray()[0] != SER_DOUBLE_TYPE_TAG && outInput0.getByteArray()[0] != SER_NULL_TYPE_TAG)
+                                || (outInput1.getByteArray()[0] != SER_DOUBLE_TYPE_TAG && outInput1.getByteArray()[0] != SER_NULL_TYPE_TAG)) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.CREATE_POINT.getName()
                                     + ": expects input type: (DOUBLE, DOUBLE) but got ("
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(outInput0.getByteArray()[0])
@@ -89,10 +91,15 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
                         }
 
                         try {
-                            aPoint.setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(), 1),
-                                    ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(), 1));
-                            pointSerde.serialize(aPoint, out);
-
+                            if (outInput0.getByteArray()[0] == SER_NULL_TYPE_TAG
+                                    || outInput1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL)
+                                        .serialize(ANull.NULL, out);
+                            } else {
+                                aPoint.setValue(ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(), 1),
+                                        ADoubleSerializerDeserializer.getDouble(outInput1.getByteArray(), 1));
+                                pointSerde.serialize(aPoint, out);
+                            }
                         } catch (IOException e1) {
                             throw new AlgebricksException(e1);
                         }

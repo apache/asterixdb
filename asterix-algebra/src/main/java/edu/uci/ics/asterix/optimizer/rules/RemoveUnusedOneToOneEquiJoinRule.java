@@ -22,7 +22,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
+import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -45,14 +46,13 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * Removes join operators for which all of the following conditions are true:
  * 1. The live variables of one input branch of the join are not used in the upstream plan
  * 2. The join is an inner equi join
- * 3. The join condition only uses variables that correspond to primary keys of the same dataset    
+ * 3. The join condition only uses variables that correspond to primary keys of the same dataset
  * Notice that the last condition implies a 1:1 join, i.e., the join does not change the result cardinality.
- * 
- * Joins that satisfy the above conditions may be introduced by other rules 
+ * Joins that satisfy the above conditions may be introduced by other rules
  * which use surrogate optimizations. Such an optimization aims to reduce data copies and communication costs by
  * using the primary keys as surrogates for the desired data items. Typically,
  * such a surrogate-based plan introduces a top-level join to finally resolve
- * the surrogates to the desired data items. 
+ * the surrogates to the desired data items.
  * In case the upstream plan does not require the original data items at all, such a top-level join is unnecessary.
  * The purpose of this rule is to remove such unnecessary joins.
  */
@@ -152,8 +152,8 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
         // only used primary key variables of those datascans.
         for (int i = 0; i < dataScans.size(); i++) {
             if (i > 0) {
-                AqlDataSource prevAqlDataSource = (AqlDataSource) dataScans.get(i - 1).getDataSource();
-                AqlDataSource currAqlDataSource = (AqlDataSource) dataScans.get(i).getDataSource();
+                DatasetDataSource prevAqlDataSource = (DatasetDataSource) dataScans.get(i - 1).getDataSource();
+                DatasetDataSource currAqlDataSource = (DatasetDataSource) dataScans.get(i).getDataSource();
                 if (!prevAqlDataSource.getDataset().equals(currAqlDataSource.getDataset())) {
                     return -1;
                 }
@@ -189,11 +189,13 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
 
     private void fillPKVars(DataSourceScanOperator dataScan, List<LogicalVariable> pkVars) {
         pkVars.clear();
-        AqlDataSource aqlDataSource = (AqlDataSource) dataScan.getDataSource();
-        int numPKs = DatasetUtils.getPartitioningKeys(aqlDataSource.getDataset()).size();
+        DatasetDataSource datasetDataSource = (DatasetDataSource) dataScan.getDataSource();
         pkVars.clear();
-        for (int i = 0; i < numPKs; i++) {
-            pkVars.add(dataScan.getVariables().get(i));
+        if (datasetDataSource.getDataset().getDatasetDetails() instanceof InternalDatasetDetails) {
+            int numPKs = DatasetUtils.getPartitioningKeys(datasetDataSource.getDataset()).size();
+            for (int i = 0; i < numPKs; i++) {
+                pkVars.add(dataScan.getVariables().get(i));
+            }
         }
     }
 

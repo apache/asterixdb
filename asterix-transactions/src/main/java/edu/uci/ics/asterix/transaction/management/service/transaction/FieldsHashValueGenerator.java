@@ -28,7 +28,7 @@ public class FieldsHashValueGenerator {
                     tuple.getFieldStart(primaryKeyFieldIdx), tuple.getFieldLength(primaryKeyFieldIdx));
             h = h * 31 + fh;
             if (h < 0) {
-                h = h*(-1);
+                h = h * (-1);
             }
         }
         return h;

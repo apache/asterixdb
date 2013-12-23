@@ -1,0 +1,17 @@
+/*
+ * Description     : Issue625
+ * Expected Result : Success
+ * Date            : 21 October 2013
+ * Notes           : This test was written to verify the fix for issue625.
+ */
+
+drop dataverse fooverse if exists;
+create dataverse fooverse;
+use dataverse fooverse;
+
+create type FooType as open {
+    id: int32,
+    numbers: [int32]
+}
+
+create dataset Foo(FooType) primary key id;

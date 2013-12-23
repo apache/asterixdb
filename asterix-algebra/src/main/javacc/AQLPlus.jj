@@ -168,21 +168,13 @@ Statement WriteStatement() throws ParseException:
   Query query;
 }
 {
-  (( "output" "to" 
+  ( "output" "to" 
     <IDENTIFIER> { nodeName = new Identifier(token.image); } 
     ":" <STRING_LITERAL> { 
              fileName = removeQuotesAndEscapes(token.image);
              stmt = new WriteStatement(nodeName, fileName, null);         
-         } )
-    |
-   ( "into" 
-     <DATASET> <IDENTIFIER> { datasetName = new Identifier(token.image); }
-     <LEFTPAREN> query = Query() <RIGHTPAREN>
-     {
-        stmt = new WriteFromQueryResultStatement(null, datasetName, query, getVarCounter());
-     } ))  
-        
-    ";"
+         }
+  ) ";"
     {
       return stmt;
     }
@@ -200,7 +192,7 @@ DataverseDecl DataverseDeclaration() throws ParseException:
   }
 }
 
-LoadFromFileStatement LoadStatement() throws ParseException:
+LoadStatement LoadStatement() throws ParseException:
 {
   Identifier datasetName = null;
   boolean alreadySorted = false;
@@ -264,7 +256,7 @@ LoadFromFileStatement LoadStatement() throws ParseException:
         
   ";"
   {
-     return new LoadFromFileStatement(null, datasetName, adapter, properties, alreadySorted);
+     return new LoadStatement(null, datasetName, adapter, properties, alreadySorted);
   }   
 }
 

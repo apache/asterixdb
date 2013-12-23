@@ -5,5 +5,5 @@
  */
 
 for $l in dataset('Metadata.DatasourceAdapter')
+order by $l.AdapterName
 return $l
-

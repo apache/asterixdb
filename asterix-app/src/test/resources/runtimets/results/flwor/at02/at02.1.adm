@@ -1,0 +1,8 @@
+{ "group": 1, "item": [ { "num": 1, "mid": 2 }, { "num": 2, "mid": 4 }, { "num": 3, "mid": 8 }, { "num": 4, "mid": 10 }, { "num": 5, "mid": 11 } ] }
+{ "group": 2, "item": [ { "num": 1, "mid": 3 }, { "num": 2, "mid": 6 } ] }
+{ "group": 3, "item": [ { "num": 1, "mid": 1 }, { "num": 2, "mid": 9 } ] }
+{ "group": 5, "item": [ { "num": 1, "mid": 7 } ] }
+{ "group": 6, "item": [ { "num": 1, "mid": 5 } ] }
+{ "group": 7, "item": [ { "num": 1, "mid": 15 } ] }
+{ "group": 9, "item": [ { "num": 1, "mid": 14 } ] }
+{ "group": 10, "item": [ { "num": 1, "mid": 12 }, { "num": 2, "mid": 13 } ] }

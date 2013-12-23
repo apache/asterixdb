@@ -43,8 +43,9 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeseri
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUUIDSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -129,10 +130,10 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
                 return ADurationSerializerDeserializer.INSTANCE;
             }
             case YEARMONTHDURATION: {
-                return AYearMonthDurationerializerDeserializer.INSTANCE;
+                return AYearMonthDurationSerializerDeserializer.INSTANCE;
             }
             case DAYTIMEDURATION: {
-                return ADayTimeDurationSerializerDeserializer.INSTNACE;
+                return ADayTimeDurationSerializerDeserializer.INSTANCE;
             }
             case INTERVAL: {
                 return AIntervalSerializerDeserializer.INSTANCE;
@@ -157,6 +158,9 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             }
             case UNORDEREDLIST: {
                 return new AUnorderedListSerializerDeserializer((AUnorderedListType) aqlType);
+            }
+            case UUID: {
+                return AUUIDSerializerDeserializer.INSTANCE;
             }
             default: {
                 throw new NotImplementedException("No serializer/deserializer implemented for type "

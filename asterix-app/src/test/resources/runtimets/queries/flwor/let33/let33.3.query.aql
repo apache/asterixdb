@@ -1,0 +1,13 @@
+/*
+ * Description     : Test hoisting a variable that does not get inlined
+ * Expected Result : Success
+ * Date            : 8th November 2013
+ */
+
+use dataverse foo;
+
+let $recs := {{ {"id":1, "name": "Tom"}, {"id":2, "name": "Till"} }}
+for $f in dataset fb
+for $r in $recs
+where $r.name = $f.name
+return {"name": $r.name}

@@ -85,6 +85,17 @@ public class MinMaxAggregateFunction implements ICopyAggregateFunction {
             throw new AlgebricksException("Unexpected type " + typeTag + " in aggregation input stream. Expected type "
                     + aggType + ".");
         } else {
+
+            // If a system_null is encountered locally, it would be an error; otherwise if it is seen
+            // by a global aggregator, it is simple ignored.
+            if (typeTag == ATypeTag.SYSTEM_NULL) {
+                if (isLocalAgg) {
+                    throw new AlgebricksException("Type SYSTEM_NULL encountered in local aggregate.");
+                } else {
+                    return;
+                }
+            }
+
             if (ATypeHierarchy.canPromote(aggType, typeTag)) {
                 tpc = ATypeHierarchy.getTypePromoteComputer(aggType, typeTag);
                 aggType = typeTag;
@@ -93,8 +104,8 @@ public class MinMaxAggregateFunction implements ICopyAggregateFunction {
                 if (tpc != null) {
                     tempValForCasting.reset();
                     try {
-                        tpc.promote(outputVal.getByteArray(), outputVal.getStartOffset() + 1, outputVal.getLength() - 1,
-                                tempValForCasting);
+                        tpc.promote(outputVal.getByteArray(), outputVal.getStartOffset() + 1,
+                                outputVal.getLength() - 1, tempValForCasting);
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     }

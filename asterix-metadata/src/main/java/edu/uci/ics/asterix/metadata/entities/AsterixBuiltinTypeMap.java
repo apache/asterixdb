@@ -50,6 +50,7 @@ public class AsterixBuiltinTypeMap {
         _builtinTypeMap.put("circle", BuiltinType.ACIRCLE);
         _builtinTypeMap.put("rectangle", BuiltinType.ARECTANGLE);
         _builtinTypeMap.put("null", BuiltinType.ANULL);
+        _builtinTypeMap.put("uuid", BuiltinType.AUUID);
     }
 
     public static Map<String, BuiltinType> getBuiltinTypes() {

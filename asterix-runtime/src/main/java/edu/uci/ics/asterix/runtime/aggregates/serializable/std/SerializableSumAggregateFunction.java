@@ -85,8 +85,8 @@ public class SerializableSumAggregateFunction implements ICopySerializableAggreg
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
-            throw new AlgebricksException("Unexpected type " + typeTag
-                    + " in aggregation input stream. Expected type " + aggType + ".");
+            throw new AlgebricksException("Unexpected type " + typeTag + " in aggregation input stream. Expected type "
+                    + aggType + ".");
         }
         switch (typeTag) {
             case INT8: {

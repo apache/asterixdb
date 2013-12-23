@@ -55,7 +55,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 
 /**
  * Translates a Datatype metadata entity to an ITupleReference and vice versa.
@@ -90,7 +90,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     }
 
     @Override
-    public Datatype getMetadataEntytiFromTuple(ITupleReference frameTuple) throws MetadataException, IOException {
+    public Datatype getMetadataEntityFromTuple(ITupleReference frameTuple) throws MetadataException, IOException {
         byte[] serRecord = frameTuple.getFieldData(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
@@ -437,7 +437,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             mn.insertIntoDatatypeSecondaryIndex(jobId, topLevelType.getDataverseName(), typeName,
                     topLevelType.getDatatypeName());
 
-        } catch (BTreeDuplicateKeyException e) {
+        } catch (TreeIndexDuplicateKeyException e) {
             // The key may have been inserted by a previous DDL statement or by
             // a previous nested type.
         }

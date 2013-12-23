@@ -49,8 +49,8 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
 
-    public FieldAccessByIndexEvalFactory(ICopyEvaluatorFactory recordEvalFactory, ICopyEvaluatorFactory fieldIndexEvalFactory,
-            ARecordType recordType) {
+    public FieldAccessByIndexEvalFactory(ICopyEvaluatorFactory recordEvalFactory,
+            ICopyEvaluatorFactory fieldIndexEvalFactory, ARecordType recordType) {
         this.recordEvalFactory = recordEvalFactory;
         this.fieldIndexEvalFactory = fieldIndexEvalFactory;
         this.recordType = recordType;

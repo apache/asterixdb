@@ -26,12 +26,13 @@ import java.util.Set;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
-import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
@@ -42,18 +43,20 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
 public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCycleComponent {
     private final AsterixStorageProperties storageProperties;
-    private final Map<Integer, MultitenantVirtualBufferCache> datasetVirtualBufferCaches;
+    private final Map<Integer, List<IVirtualBufferCache>> datasetVirtualBufferCaches;
     private final Map<Integer, ILSMOperationTracker> datasetOpTrackers;
     private final Map<Integer, DatasetInfo> datasetInfos;
     private final ILocalResourceRepository resourceRepository;
+    private final int firstAvilableUserDatasetID;
     private final long capacity;
     private long used;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
-            ILocalResourceRepository resourceRepository) {
+            ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID) {
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
-        datasetVirtualBufferCaches = new HashMap<Integer, MultitenantVirtualBufferCache>();
+        this.firstAvilableUserDatasetID = firstAvilableUserDatasetID;
+        datasetVirtualBufferCaches = new HashMap<Integer, List<IVirtualBufferCache>>();
         datasetOpTrackers = new HashMap<Integer, ILSMOperationTracker>();
         datasetInfos = new HashMap<Integer, DatasetInfo>();
         capacity = storageProperties.getMemoryComponentGlobalBudget();
@@ -98,27 +101,65 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     public synchronized void unregister(long resourceID) throws HyracksDataException {
         int did = getDIDfromRID(resourceID);
         DatasetInfo dsInfo = datasetInfos.get(did);
-        IndexInfo iInfo = dsInfo.indexes.remove(resourceID);
+        IndexInfo iInfo = dsInfo.indexes.get(resourceID);
+
         if (dsInfo == null || iInfo == null) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " does not exist.");
         }
 
-        if (iInfo.referenceCount != 0) {
-            dsInfo.indexes.put(resourceID, iInfo);
+        PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) datasetOpTrackers.get(dsInfo.datasetID);
+        if (iInfo.referenceCount != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
             throw new HyracksDataException("Cannot remove index while it is open.");
         }
 
+        // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
+
+        // First wait for any ongoing IO operations
+        while (dsInfo.numActiveIOOps > 0) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+
+        // Flush and wait for it to finish, it is separated from the above wait so they don't deadlock each other.
+        // TODO: Find a better way to do this.
+        flushAndWaitForIO(dsInfo, iInfo);
+
         if (iInfo.isOpen) {
-            iInfo.index.deactivate(true);
+            iInfo.index.deactivate(false);
         }
 
+        dsInfo.indexes.remove(resourceID);
         if (dsInfo.referenceCount == 0 && dsInfo.isOpen && dsInfo.indexes.isEmpty()) {
-            IVirtualBufferCache vbc = getVirtualBufferCache(did);
-            assert vbc != null;
-            used -= (vbc.getNumPages() * vbc.getPageSize());
+            List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
+            assert vbcs != null;
+            for (IVirtualBufferCache vbc : vbcs) {
+                used -= (vbc.getNumPages() * vbc.getPageSize());
+            }
             datasetInfos.remove(did);
+            datasetVirtualBufferCaches.remove(did);
+            datasetOpTrackers.remove(did);
         }
 
+    }
+
+    public synchronized void declareActiveIOOperation(int datasetID) throws HyracksDataException {
+        DatasetInfo dsInfo = datasetInfos.get(datasetID);
+        if (dsInfo == null) {
+            throw new HyracksDataException("Failed to find a dataset with ID " + datasetID);
+        }
+        dsInfo.incrementActiveIOOps();
+    }
+
+    public synchronized void undeclareActiveIOOperation(int datasetID) throws HyracksDataException {
+        DatasetInfo dsInfo = datasetInfos.get(datasetID);
+        if (dsInfo == null) {
+            throw new HyracksDataException("Failed to find a dataset with ID " + datasetID);
+        }
+        dsInfo.decrementActiveIOOps();
+        notifyAll();
     }
 
     @Override
@@ -137,9 +178,12 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
 
         if (!dsInfo.isOpen) {
-            IVirtualBufferCache vbc = getVirtualBufferCache(did);
-            assert vbc != null;
-            long additionalSize = vbc.getNumPages() * vbc.getPageSize();
+            List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
+            assert vbcs != null;
+            long additionalSize = 0;
+            for (IVirtualBufferCache vbc : vbcs) {
+                additionalSize += vbc.getNumPages() * vbc.getPageSize();
+            }
             while (used + additionalSize > capacity) {
                 if (!evictCandidateDataset()) {
                     throw new HyracksDataException("Cannot activate index since memory budget would be exceeded.");
@@ -165,23 +209,61 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         List<DatasetInfo> datasetInfosList = new ArrayList<DatasetInfo>(datasetInfos.values());
         Collections.sort(datasetInfosList);
         for (DatasetInfo dsInfo : datasetInfosList) {
-            if (((PrimaryIndexOperationTracker) datasetOpTrackers.get(dsInfo.datasetID)).getNumActiveOperations() == 0
-                    && dsInfo.referenceCount == 0 && dsInfo.isOpen) {
+            PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) datasetOpTrackers
+                    .get(dsInfo.datasetID);
+            if (opTracker != null && opTracker.getNumActiveOperations() == 0 && dsInfo.referenceCount == 0
+                    && dsInfo.isOpen) {
+
+                // First wait for any ongoing IO operations
+                while (dsInfo.numActiveIOOps > 0) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+
+                for (IndexInfo iInfo : dsInfo.indexes.values()) {
+                    // TODO: This is not efficient since we flush the indexes sequentially. 
+                    // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
+                    // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
+                    flushAndWaitForIO(dsInfo, iInfo);
+                }
+
                 for (IndexInfo iInfo : dsInfo.indexes.values()) {
                     if (iInfo.isOpen) {
-                        iInfo.index.deactivate(true);
+                        iInfo.index.deactivate(false);
                         iInfo.isOpen = false;
                     }
                     assert iInfo.referenceCount == 0;
                 }
-
-                IVirtualBufferCache vbc = getVirtualBufferCache(dsInfo.datasetID);
-                used -= vbc.getNumPages() * vbc.getPageSize();
                 dsInfo.isOpen = false;
+
+                List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(dsInfo.datasetID);
+                for (IVirtualBufferCache vbc : vbcs) {
+                    used -= vbc.getNumPages() * vbc.getPageSize();
+                }
                 return true;
+
             }
         }
         return false;
+    }
+
+    private void flushAndWaitForIO(DatasetInfo dsInfo, IndexInfo iInfo) throws HyracksDataException {
+        if (iInfo.isOpen) {
+            ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
+                    NoOpOperationCallback.INSTANCE);
+            accessor.scheduleFlush(iInfo.index.getIOOperationCallback());
+        }
+        // Wait for the above flush op.
+        while (dsInfo.numActiveIOOps > 0) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
     }
 
     @Override
@@ -212,15 +294,22 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         return openIndexes;
     }
 
-    public IVirtualBufferCache getVirtualBufferCache(int datasetID) {
+    public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
         synchronized (datasetVirtualBufferCaches) {
-            MultitenantVirtualBufferCache vbc = datasetVirtualBufferCaches.get(datasetID);
-            if (vbc == null) {
-                vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(new HeapBufferAllocator(),
-                        storageProperties.getMemoryComponentPageSize(), storageProperties.getMemoryComponentNumPages()));
-                datasetVirtualBufferCaches.put(datasetID, vbc);
+            List<IVirtualBufferCache> vbcs = datasetVirtualBufferCaches.get(datasetID);
+            if (vbcs == null) {
+                vbcs = new ArrayList<IVirtualBufferCache>();
+                int numPages = datasetID < firstAvilableUserDatasetID ? storageProperties
+                        .getMetadataMemoryComponentNumPages() : storageProperties.getMemoryComponentNumPages();
+                for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
+                    MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(
+                            new HeapBufferAllocator(), storageProperties.getMemoryComponentPageSize(), numPages
+                                    / storageProperties.getMemoryComponentsNum()));
+                    vbcs.add(vbc);
+                }
+                datasetVirtualBufferCaches.put(datasetID, vbcs);
             }
-            return vbc;
+            return vbcs;
         }
     }
 
@@ -228,8 +317,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         synchronized (datasetOpTrackers) {
             ILSMOperationTracker opTracker = datasetOpTrackers.get(datasetID);
             if (opTracker == null) {
-                opTracker = new PrimaryIndexOperationTracker(this, datasetID,
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE);
+                opTracker = new PrimaryIndexOperationTracker(this, datasetID);
                 datasetOpTrackers.put(datasetID, opTracker);
             }
 
@@ -244,7 +332,9 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
         Set<ILSMIndex> datasetIndexes = new HashSet<ILSMIndex>();
         for (IndexInfo iInfo : dsInfo.indexes.values()) {
-            datasetIndexes.add(iInfo.index);
+            if (iInfo.isOpen) {
+                datasetIndexes.add(iInfo.index);
+            }
         }
         return datasetIndexes;
     }
@@ -279,6 +369,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         private final Map<Long, IndexInfo> indexes;
         private final int datasetID;
         private long lastAccess;
+        private int numActiveIOOps;
 
         public DatasetInfo(int datasetID) {
             this.indexes = new HashMap<Long, IndexInfo>();
@@ -294,6 +385,14 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         public void untouch() {
             super.untouch();
             lastAccess = System.currentTimeMillis();
+        }
+
+        public void incrementActiveIOOps() {
+            numActiveIOOps++;
+        }
+
+        public void decrementActiveIOOps() {
+            numActiveIOOps--;
         }
 
         @Override
@@ -337,28 +436,54 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
     }
 
     @Override
-    public void stop(boolean dumpState, OutputStream outputStream) throws IOException {
+    public synchronized void stop(boolean dumpState, OutputStream outputStream) throws IOException {
+        if (dumpState) {
+            dumpState(outputStream);
+        }
+
+        List<IIndex> openIndexes = getOpenIndexes();
+        for (IIndex index : openIndexes) {
+            index.deactivate();
+        }
+        datasetVirtualBufferCaches.clear();
+        datasetOpTrackers.clear();
+        datasetInfos.clear();
+    }
+
+    public void dumpState(OutputStream outputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("Memory budget = %d\n", capacity));
         sb.append(String.format("Memory used = %d\n", used));
+        sb.append("\n");
 
-        String headerFormat = "%-20s %-10s %-20s %-20s\n";
-        String dsFormat = "%-20d %-10b %-20d %-20s %-20s\n";
-        String idxFormat = "\t%-20d %-10b %-20d %-20s\n";
-        sb.append(String.format(headerFormat, "DatasetID", "Open", "Reference Count", "Last Access"));
+        String dsHeaderFormat = "%-10s %-6s %-16s %-12s\n";
+        String dsFormat = "%-10d %-6b %-16d %-12d\n";
+        String idxHeaderFormat = "%-10s %-11s %-6s %-16s %-6s\n";
+        String idxFormat = "%-10d %-11d %-6b %-16d %-6s\n";
+
+        sb.append("[Datasets]\n");
+        sb.append(String.format(dsHeaderFormat, "DatasetID", "Open", "Reference Count", "Last Access"));
         for (DatasetInfo dsInfo : datasetInfos.values()) {
             sb.append(String
                     .format(dsFormat, dsInfo.datasetID, dsInfo.isOpen, dsInfo.referenceCount, dsInfo.lastAccess));
+        }
+        sb.append("\n");
+
+        sb.append("[Indexes]\n");
+        sb.append(String.format(idxHeaderFormat, "DatasetID", "ResourceID", "Open", "Reference Count", "Index"));
+        for (DatasetInfo dsInfo : datasetInfos.values()) {
             for (Map.Entry<Long, IndexInfo> entry : dsInfo.indexes.entrySet()) {
                 IndexInfo iInfo = entry.getValue();
-                sb.append(String.format(idxFormat, entry.getKey(), iInfo.isOpen, iInfo.referenceCount, iInfo.index));
+                sb.append(String.format(idxFormat, dsInfo.datasetID, entry.getKey(), iInfo.isOpen,
+                        iInfo.referenceCount, iInfo.index));
             }
         }
+
         outputStream.write(sb.toString().getBytes());
     }
 }

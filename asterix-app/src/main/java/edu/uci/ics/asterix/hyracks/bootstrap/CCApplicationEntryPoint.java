@@ -23,6 +23,9 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.FeedDashboardServlet;
+import edu.uci.ics.asterix.api.http.servlet.FeedDataProviderServlet;
+import edu.uci.ics.asterix.api.http.servlet.FeedServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
@@ -38,6 +41,7 @@ import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
@@ -46,6 +50,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
     private Server webServer;
     private Server jsonAPIServer;
+    private Server feedServer;
+
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
 
@@ -56,19 +62,30 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting Asterix cluster controller");
         }
-        appCtx.setThreadFactory(AsterixThreadFactory.INSTANCE);
-        AsterixAppContextInfo.initialize(appCtx);
+
+        appCtx.setThreadFactory(new AsterixThreadFactory(new LifeCycleComponentManager()));
+        AsterixAppContextInfo.initialize(appCtx, getNewHyracksClientConnection());
+
         proxy = AsterixStateProxy.registerRemoteObject();
         appCtx.setDistributedState(proxy);
 
         AsterixMetadataProperties metadataProperties = AsterixAppContextInfo.getInstance().getMetadataProperties();
         MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
 
+        AsterixAppContextInfo.getInstance().getCCApplicationContext()
+                .addJobLifecycleListener(FeedLifecycleListener.INSTANCE);
+
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);
         webServer.start();
+
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
+        ExternalLibraryBootstrap.setUpExternaLibraries(false);
+
+        setupFeedServer(externalProperties);
+        feedServer.start();
+
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
     }
 
@@ -118,5 +135,22 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new QueryResultAPIServlet()), "/query/result");
         context.addServlet(new ServletHolder(new UpdateAPIServlet()), "/update");
         context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
+    }
+
+    private void setupFeedServer(AsterixExternalProperties externalProperties) throws Exception {
+        feedServer = new Server(externalProperties.getFeedServerPort());
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+
+        IHyracksClientConnection hcc = getNewHyracksClientConnection();
+        context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+
+        feedServer.setHandler(context);
+        context.addServlet(new ServletHolder(new FeedServlet()), "/");
+        context.addServlet(new ServletHolder(new FeedDashboardServlet()), "/feed/dashboard");
+        context.addServlet(new ServletHolder(new FeedDataProviderServlet()), "/feed/data");
+
+        // add paths here
     }
 }

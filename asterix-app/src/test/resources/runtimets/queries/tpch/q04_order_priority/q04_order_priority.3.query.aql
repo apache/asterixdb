@@ -1,0 +1,21 @@
+use dataverse tpch;
+
+declare function tmp()
+{
+  for $l in dataset('LineItem')
+  where $l.l_commitdate < $l.l_receiptdate
+  distinct by $l.l_orderkey
+  return { "o_orderkey": $l.l_orderkey }
+}
+
+for $o in dataset('Orders')
+for $t in tmp()
+where $o.o_orderkey = $t.o_orderkey and 
+  $o.o_orderdate >= '1993-07-01' and $o.o_orderdate < '1993-10-01' 
+group by $o_orderpriority := $o.o_orderpriority with $o
+order by $o_orderpriority
+return {
+  "order_priority": $o_orderpriority,
+  "count": count($o)
+}
+

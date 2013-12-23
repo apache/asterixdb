@@ -162,7 +162,7 @@ public class RecordBuilder implements IARecordBuilder {
             openFieldNameLengths = Arrays.copyOf(openFieldNameLengths, openFieldNameLengths.length
                     + DEFAULT_NUM_OPEN_FIELDS);
         }
-        int fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1, name.getLength());
+        int fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
         if (recType != null) {
             int cFieldPos = recType.findFieldPosition(name.getByteArray(), name.getStartOffset() + 1,
                     name.getLength() - 1);

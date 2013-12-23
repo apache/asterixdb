@@ -36,6 +36,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -205,6 +206,17 @@ class ARecordCaster {
                         optionalFields[reqFnPos] && fieldTypeTag.equals(nullTypeTag))) {
                     fieldPermutation[reqFnPos] = fnPos;
                     openFields[fnPos] = false;
+                } else {
+                    // if mismatch, check whether input type can be promoted to the required type
+                    ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(fieldTypeTag
+                            .getByteArray()[fieldTypeTag.getStartOffset()]);
+                    ATypeTag requiredTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(reqFieldTypeTag
+                            .getByteArray()[reqFieldTypeTag.getStartOffset()]);
+
+                    if (ATypeHierarchy.canPromote(inputTypeTag, requiredTypeTag)) {
+                        fieldPermutation[reqFnPos] = fnPos;
+                        openFields[fnPos] = false;
+                    }
                 }
                 fnStart++;
                 reqFnStart++;
@@ -278,8 +290,7 @@ class ARecordCaster {
             // recursively casting, the result of casting can always be thought
             // as flat
             if (optionalFields[i]) {
-                if (fieldTypeTags.size() <= i || fieldTypeTags.get(i) == null
-                        || fieldTypeTags.get(i).equals(nullTypeTag)) {
+                if (pos == -1 || fieldTypeTags.get(pos) == null || fieldTypeTags.get(pos).equals(nullTypeTag)) {
                     //the field is optional in the input record
                     nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(0);
                 } else {

@@ -15,17 +15,20 @@
 package edu.uci.ics.asterix.transaction.management.resource;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.context.BaseOperationTracker;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetadata {
@@ -36,42 +39,34 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     private final IBinaryComparatorFactory[] cmpFactories;
     private final int[] bloomFilterKeyFields;
     private final boolean isPrimary;
-    private FileSplit[] fileSplits;
-    private int ioDeviceID;
+    private final ILSMMergePolicyFactory mergePolicyFactory;
+    private final Map<String, String> mergePolicyProperties;
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields, boolean isPrimary, FileSplit[] fileSplits, int datasetID) {
+            int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
+            Map<String, String> mergePolicyProperties) {
         super(datasetID);
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.isPrimary = isPrimary;
-        this.fileSplits = fileSplits;
-    }
-
-    public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields, boolean isPrimary, int ioDeviceID, int datasetID) {
-        super(datasetID);
-        this.typeTraits = typeTraits;
-        this.cmpFactories = cmpFactories;
-        this.bloomFilterKeyFields = bloomFilterKeyFields;
-        this.isPrimary = isPrimary;
-        this.ioDeviceID = ioDeviceID;
+        this.mergePolicyFactory = mergePolicyFactory;
+        this.mergePolicyProperties = mergePolicyProperties;
     }
 
     @Override
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) {
         FileReference file = new FileReference(new File(filePath));
-        IVirtualBufferCache virtualBufferCache = runtimeContextProvider.getVirtualBufferCache(datasetID);
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCache, runtimeContextProvider.getIOManager(),
-                file, runtimeContextProvider.getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits,
-                cmpFactories, bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                runtimeContextProvider.getLSMMergePolicy(),
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
+        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider
+                .getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories,
+                bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(), mergePolicyFactory
+                        .createMergePolicy(mergePolicyProperties),
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
-                        LSMBTreeIOOperationCallbackFactory.INSTANCE), runtimeContextProvider.getLSMIOScheduler(),
-                runtimeContextProvider.getLSMBTreeIOOperationCallbackProvider(), fileSplits == null ? ioDeviceID
-                        : fileSplits[partition].getIODeviceId());
+                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
+                runtimeContextProvider.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
+                        .createIOOperationCallback());
         return lsmBTree;
     }
 

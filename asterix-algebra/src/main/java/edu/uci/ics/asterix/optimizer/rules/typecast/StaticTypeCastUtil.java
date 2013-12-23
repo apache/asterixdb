@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
 import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -223,7 +222,8 @@ public class StaticTypeCastUtil {
         boolean changed = false;
         for (int j = 0; j < args.size(); j++) {
             ILogicalExpression arg = args.get(j).getValue();
-            IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY) ? (IAType) env.getType(arg) : inputItemType;
+            IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY) ? (IAType) env
+                    .getType(arg) : inputItemType;
             switch (arg.getExpressionTag()) {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
@@ -252,6 +252,10 @@ public class StaticTypeCastUtil {
      */
     private static boolean staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
             ARecordType inputType, IVariableTypeEnvironment env) throws AlgebricksException {
+        if (!(func.getFunctionIdentifier() == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR || func
+                .getFunctionIdentifier() == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
+            return false;
+        }
         IAType[] reqFieldTypes = reqType.getFieldTypes();
         String[] reqFieldNames = reqType.getFieldNames();
         IAType[] inputFieldTypes = inputType.getFieldTypes();
@@ -271,8 +275,10 @@ public class StaticTypeCastUtil {
             String fieldName = inputFieldNames[i];
             IAType fieldType = inputFieldTypes[i];
 
-            if (2 * i + 1 > func.getArguments().size())
-                throw new AlgebricksException("expression index out of bound");
+            if (2 * i + 1 > func.getArguments().size()) {
+                // it is not a record constructor function
+                return false;
+            }
 
             // 2*i+1 is the index of field value expression
             ILogicalExpression arg = func.getArguments().get(2 * i + 1).getValue();
@@ -326,7 +332,7 @@ public class StaticTypeCastUtil {
                             matched = true;
 
                             ScalarFunctionCallExpression notNullFunc = new ScalarFunctionCallExpression(
-                                    new AsterixFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
+                                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
                             notNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(arg));
                             //wrap the not null function to the original function
                             func.getArguments().get(2 * i + 1).setValue(notNullFunc);
@@ -463,12 +469,9 @@ public class StaticTypeCastUtil {
                     reqFieldType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                     fi = AsterixBuiltinFunctions.CAST_LIST;
             }
-            if (fi != null
-                    && ! inputFieldType.equals(reqFieldType)
-                    && parameterVars.size() > 0) {
+            if (fi != null && !inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
                 //inject dynamic type casting
-                injectCastFunction(FunctionUtils.getFunctionInfo(fi),
-                        reqFieldType, inputFieldType, expRef, argExpr);
+                injectCastFunction(FunctionUtils.getFunctionInfo(fi), reqFieldType, inputFieldType, expRef, argExpr);
                 castInjected = true;
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {

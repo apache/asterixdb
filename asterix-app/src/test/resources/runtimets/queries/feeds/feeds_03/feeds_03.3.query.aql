@@ -4,6 +4,6 @@
  * Date         : 24th Dec 2012
  */
 
-for $x in dataset('Metadata.Dataset')
-where $x.DataverseName='feeds' and $x.DatasetName='TweetFeed'
+for $x in dataset('Metadata.Feed')
+where $x.DataverseName='feeds' and $x.FeedName='TweetFeed'
 return $x

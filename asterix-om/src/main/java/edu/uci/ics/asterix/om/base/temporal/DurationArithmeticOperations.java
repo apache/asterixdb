@@ -26,17 +26,27 @@ public class DurationArithmeticOperations {
      * <a
      * href="http://www.w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes">"XML: adding durations to dateTimes"</a>.
      * <p/>
-     * The basic algorithm is like this: duration is applied to the time point as two separated fields: year-month field
-     * and day-time field. Year-month field is applied firstly by reserving the correct day within the month's range
-     * (for example add 1M to 03-31 will return 04-30). Then day-time field is applied.
+     * The basic algorithm is like this: duration is applied to the time point as two separated fields: year-month field and day-time field. Year-month field is applied firstly by reserving the correct day within the month's range (for example add 1M to 03-31 will return 04-30). Then day-time field is applied.
      * <p/>
      * 
      * @param pointChronon
+     *            The time instance where the duration will be added, represented as the milliseconds since the anchored time (00:00:00 for time type, 1970-01-01T00:00:00Z for datetime and date types).
      * @param yearMonthDuration
+     *            The year-month-duration to be added
      * @param dayTimeDuration
+     *            The day-time-duration to be added
      * @return
      */
-    public static long addDuration(long pointChronon, int yearMonthDuration, long dayTimeDuration) {
+    public static long addDuration(long pointChronon, int yearMonthDuration, long dayTimeDuration, boolean isTimeOnly) {
+
+        if (isTimeOnly) {
+            int rtnChronon = (int) ((pointChronon + dayTimeDuration) % GregorianCalendarSystem.CHRONON_OF_DAY);
+            if (rtnChronon < 0) {
+                rtnChronon += GregorianCalendarSystem.CHRONON_OF_DAY;
+            }
+
+            return rtnChronon;
+        }
 
         int year = calSystem.getYear(pointChronon);
         int month = calSystem.getMonthOfYear(pointChronon, year);
@@ -73,15 +83,6 @@ public class DurationArithmeticOperations {
         }
 
         return calSystem.getChronon(year, month, day, hour, min, sec, ms, 0) + dayTimeDuration;
-    }
-
-    public static int addDuration(int pointChronon, long dayTimeDuration) {
-        int rtnChronon = (int) ((pointChronon + dayTimeDuration) % GregorianCalendarSystem.CHRONON_OF_DAY);
-        if (rtnChronon < 0) {
-            rtnChronon += GregorianCalendarSystem.CHRONON_OF_DAY;
-        }
-
-        return rtnChronon;
     }
 
 }

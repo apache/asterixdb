@@ -14,63 +14,32 @@
  */
 package edu.uci.ics.asterix.external.dataset.adapter;
 
-import java.util.Map;
-
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
+import java.io.IOException;
+import java.io.InputStream;
 
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * Provides the functionality of fetching data in form of ADM records from a Hive dataset.
  */
-@SuppressWarnings("deprecation")
-public class HiveAdapter extends AbstractDatasourceAdapter {
+public class HiveAdapter extends FileSystemBasedAdapter {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String HIVE_DATABASE = "database";
-    public static final String HIVE_TABLE = "table";
-    public static final String HIVE_HOME = "hive-home";
-    public static final String HIVE_METASTORE_URI = "metastore-uri";
-    public static final String HIVE_WAREHOUSE_DIR = "warehouse-dir";
-    public static final String HIVE_METASTORE_RAWSTORE_IMPL = "rawstore-impl";
-
     private HDFSAdapter hdfsAdapter;
 
-    public HiveAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
-            AlgebricksPartitionConstraint clusterLocations) {
-        this.hdfsAdapter = new HDFSAdapter(atype, readSchedule, executed, inputSplits, conf, clusterLocations);
-        this.atype = atype;
+    public HiveAdapter(IAType atype, HDFSAdapter hdfsAdapter, ITupleParserFactory parserFactory, IHyracksTaskContext ctx)
+            throws HyracksDataException {
+        super(parserFactory, atype, ctx);
+        this.hdfsAdapter = hdfsAdapter;
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.READ;
-    }
-
-    @Override
-    public void configure(Map<String, Object> arguments) throws Exception {
-        this.configuration = arguments;
-        this.hdfsAdapter.configure(arguments);
-    }
-
-    @Override
-    public void initialize(IHyracksTaskContext ctx) throws Exception {
-        hdfsAdapter.initialize(ctx);
-    }
-
-    @Override
-    public void start(int partition, IFrameWriter writer) throws Exception {
-        hdfsAdapter.start(partition, writer);
-    }
-
-    @Override
-    public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
-        return hdfsAdapter.getPartitionConstraint();
+    public InputStream getInputStream(int partition) throws IOException {
+        return hdfsAdapter.getInputStream(partition);
     }
 
 }
