@@ -22,7 +22,7 @@ public interface ILogRecord {
 
     public static final int JOB_TERMINATE_LOG_SIZE = 13; //JOB_COMMIT or ABORT log type
     public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 25;
-    public static final int UPDATE_LOG_BASE_SIZE = 60;
+    public static final int UPDATE_LOG_BASE_SIZE = 54;
 
     public boolean readLogRecord(ByteBuffer buffer);
 
@@ -65,10 +65,6 @@ public interface ILogRecord {
 
     public void setResourceId(long resourceId);
 
-    public byte getResourceType();
-
-    public void setResourceType(byte resourceType);
-
     public int getLogSize();
 
     public void setLogSize(int logSize);
@@ -84,18 +80,6 @@ public interface ILogRecord {
     public ITupleReference getNewValue();
 
     public void setNewValue(ITupleReference newValue);
-
-    public byte getOldOp();
-
-    public void setOldOp(byte oldOp);
-
-    public int getOldValueSize();
-
-    public void setOldValueSize(int oldValueSize);
-
-    public ITupleReference getOldValue();
-
-    public void setOldValue(ITupleReference oldValue);
 
     public long getChecksum();
 

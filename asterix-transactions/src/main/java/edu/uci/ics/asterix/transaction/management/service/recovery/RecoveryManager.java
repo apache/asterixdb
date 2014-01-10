@@ -697,22 +697,13 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     .getIndex(logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
-            if (logRecord.getResourceType() == ResourceType.LSM_BTREE) {
-                if (logRecord.getOldOp() != IndexOperation.NOOP.ordinal()) {
-                    if (logRecord.getOldOp() == IndexOperation.DELETE.ordinal()) {
-                        indexAccessor.forceDelete(logRecord.getOldValue());
-                    } else {
-                        indexAccessor.forceInsert(logRecord.getOldValue());
-                    }
-                } else {
-                    indexAccessor.forcePhysicalDelete(logRecord.getNewValue());
-                }
+            
+            if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
+                indexAccessor.forceDelete(logRecord.getNewValue());
+            } else if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
+                indexAccessor.forceInsert(logRecord.getNewValue());
             } else {
-                if (logRecord.getNewOp() == IndexOperation.DELETE.ordinal()) {
-                    indexAccessor.forceInsert(logRecord.getNewValue());
-                } else {
-                    indexAccessor.forceDelete(logRecord.getNewValue());
-                }
+                throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }
         } catch (Exception e) {
             throw new IllegalStateException("Failed to undo", e);
