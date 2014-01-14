@@ -18,10 +18,14 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
-public class SumAggregateFunction extends AbstractSumAggregateFunction {
+public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
 
-    public SumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isLocalAgg)
-            throws AlgebricksException {
-        super(args, provider, isLocalAgg);
+    public SqlMinMaxAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isMin,
+            boolean isLocalAgg) throws AlgebricksException {
+        super(args, provider, isMin, isLocalAgg);
+    }
+
+    @Override
+    protected void processNull() {
     }
 }

@@ -25,32 +25,35 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
-public class LocalSumAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
+/**
+ * NULLs are also counted.
+ */
+public class SqlCountAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = AsterixBuiltinFunctions.LOCAL_SUM;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new LocalSumAggregateDescriptor();
+            return new SqlCountAggregateDescriptor();
         }
     };
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SQL_COUNT;
     }
 
     @Override
     public ICopyAggregateFunctionFactory createAggregateFunctionFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new ICopyAggregateFunctionFactory() {
+
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
+            public ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider)
                     throws AlgebricksException {
-                return new SumAggregateFunction(args, provider, true);
-            };
+                return new SqlCountAggregateFunction(args, provider);
+            }
         };
     }
 }

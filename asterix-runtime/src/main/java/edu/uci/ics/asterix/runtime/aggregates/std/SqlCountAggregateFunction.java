@@ -18,10 +18,17 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
-public class SumAggregateFunction extends AbstractSumAggregateFunction {
+/**
+ * COUNT returns the number of non-null items in the given list. Note that COUNT(NULL) is not allowed.
+ */
+public class SqlCountAggregateFunction extends AbstractCountAggregateFunction {
 
-    public SumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isLocalAgg)
+    public SqlCountAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
             throws AlgebricksException {
-        super(args, provider, isLocalAgg);
+        super(args, output);
+    }
+
+    @Override
+    protected void processNull() {
     }
 }
