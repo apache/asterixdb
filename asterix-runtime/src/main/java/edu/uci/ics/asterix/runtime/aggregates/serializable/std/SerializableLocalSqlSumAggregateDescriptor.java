@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFun
 public class SerializableLocalSqlSumAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = AsterixBuiltinFunctions.SERIAL_LOCAL_SQL_SUM;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableLocalSqlSumAggregateDescriptor();
@@ -36,7 +35,7 @@ public class SerializableLocalSqlSumAggregateDescriptor extends AbstractSerializ
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SERIAL_LOCAL_SQL_SUM;
     }
 
     @Override
@@ -47,7 +46,7 @@ public class SerializableLocalSqlSumAggregateDescriptor extends AbstractSerializ
 
             @Override
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableSumAggregateFunction(args, true);
+                return new SerializableSqlSumAggregateFunction(args, true);
             }
         };
     }

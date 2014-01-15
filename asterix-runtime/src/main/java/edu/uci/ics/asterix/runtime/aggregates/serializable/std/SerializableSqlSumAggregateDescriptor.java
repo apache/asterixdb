@@ -46,7 +46,7 @@ public class SerializableSqlSumAggregateDescriptor extends AbstractSerializableA
 
             @Override
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableSumAggregateFunction(args, false);
+                return new SerializableSqlSumAggregateFunction(args, false);
             }
         };
     }
