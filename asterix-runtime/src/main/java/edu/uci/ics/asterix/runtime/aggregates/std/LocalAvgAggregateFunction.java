@@ -19,10 +19,10 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
-public class LocalAvgAggregateFunction extends AbstractLocalAvgAggregateFunction {
+public class LocalAvgAggregateFunction extends AbstractAvgAggregateFunction {
 
     public LocalAvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
             throws AlgebricksException {
-        super(args, output);
+        super(args, output, true);
     }
 }

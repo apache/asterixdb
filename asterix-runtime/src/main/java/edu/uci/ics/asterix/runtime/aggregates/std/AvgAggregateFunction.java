@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 public class AvgAggregateFunction extends AbstractAvgAggregateFunction {
 
     public AvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
-        super(args, output);
+        super(args, output, false);
     }
 
 }
