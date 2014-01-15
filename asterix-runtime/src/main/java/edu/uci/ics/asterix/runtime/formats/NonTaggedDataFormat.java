@@ -79,21 +79,25 @@ import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocal
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSumAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableSqlCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableSqlSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.CountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.GlobalSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalMaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalMinAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.LocalSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalSqlMaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalSqlMinAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalSqlSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalSumAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.MinAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.SqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SqlCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SqlMaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.SqlMinAggregateDescriptor;
@@ -445,9 +449,9 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         // SQL aggregates
         temp.add(SqlCountAggregateDescriptor.FACTORY);
-//        temp.add(SqlAvgAggregateDescriptor.FACTORY);
-//        temp.add(LocalSqlAvgAggregateDescriptor.FACTORY);
-//        temp.add(GlobalSqlAvgAggregateDescriptor.FACTORY);
+        temp.add(SqlAvgAggregateDescriptor.FACTORY);
+        temp.add(LocalSqlAvgAggregateDescriptor.FACTORY);
+        temp.add(GlobalSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SqlSumAggregateDescriptor.FACTORY);
         temp.add(LocalSqlSumAggregateDescriptor.FACTORY);
         temp.add(SqlMaxAggregateDescriptor.FACTORY);
@@ -457,7 +461,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         // SQL serializable aggregates
         temp.add(SerializableSqlCountAggregateDescriptor.FACTORY);
-//        temp.add(SerializableSqlAvgAggregateDescriptor.FACTORY);
+        temp.add(SerializableSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableLocalSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableGlobalSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableSqlSumAggregateDescriptor.FACTORY);

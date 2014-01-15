@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
@@ -27,6 +28,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AInt64;
@@ -62,6 +64,9 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
     private ATypeTag aggType;
     private double sum;
     private long count;
+    private AMutableDouble aDouble = new AMutableDouble(0);
+    private AMutableInt64 aInt64 = new AMutableInt64(0);
+    private final boolean isLocalAgg;
 
     private ArrayBackedValueStorage avgBytes = new ArrayBackedValueStorage();
     private ByteArrayAccessibleOutputStream sumBytes = new ByteArrayAccessibleOutputStream();
@@ -71,30 +76,36 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
     private ICopyEvaluator evalSum = new AccessibleByteArrayEval(avgBytes.getDataOutput(), sumBytes);
     private ICopyEvaluator evalCount = new AccessibleByteArrayEval(avgBytes.getDataOutput(), countBytes);
     private ClosedRecordConstructorEval recordEval;
+
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt64> longSerde = AqlSerializerDeserializerProvider.INSTANCE
+    private ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
-    private AMutableDouble aDouble = new AMutableDouble(0);
-    private AMutableInt64 aInt64 = new AMutableInt64(0);
+    private boolean metNull;
 
-    public AbstractLocalAvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
-            throws AlgebricksException {
+    public AbstractLocalAvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output,
+            boolean isLocalAgg) throws AlgebricksException {
         eval = args[0].createEvaluator(inputVal);
         out = output.getDataOutput();
+        this.isLocalAgg = isLocalAgg;
 
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
         unionList.add(BuiltinType.ADOUBLE);
         ARecordType tmpRecType;
         try {
-            tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, false);
+            if (isLocalAgg) {
+                tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
+                        new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, false);
+            } else {
+                tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
+                        new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, true);
+            }
         } catch (AsterixException e) {
             throw new AlgebricksException(e);
         }
@@ -109,89 +120,137 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
         aggType = ATypeTag.SYSTEM_NULL;
         sum = 0.0;
         count = 0;
+        metNull = false;
     }
 
     @Override
     public void step(IFrameTupleReference tuple) throws AlgebricksException {
         inputVal.reset();
         eval.evaluate(tuple);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
-        if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
-            aggType = ATypeTag.NULL;
-            return;
-        } else if (aggType == ATypeTag.SYSTEM_NULL) {
-            aggType = typeTag;
-        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new AlgebricksException("Unexpected type " + typeTag + " in aggregation input stream. Expected type "
-                    + aggType + ".");
-        } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
-            aggType = typeTag;
-        }
+        byte[] serBytes = inputVal.getByteArray();
+        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);
+        if (isLocalAgg) {
+            if (typeTag == ATypeTag.NULL || aggType == ATypeTag.NULL) {
+                aggType = ATypeTag.NULL;
+                return;
+            } else if (aggType == ATypeTag.SYSTEM_NULL) {
+                aggType = typeTag;
+            } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
+                throw new AlgebricksException("Unexpected type " + typeTag
+                        + " in aggregation input stream. Expected type " + aggType + ".");
+            } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
+                aggType = typeTag;
+            }
 
-        if (typeTag != ATypeTag.SYSTEM_NULL) {
-            ++count;
-        }
+            if (typeTag != ATypeTag.SYSTEM_NULL) {
+                ++count;
+            }
 
-        switch (typeTag) {
-            case INT8: {
-                byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
-                sum += val;
-                break;
+            switch (typeTag) {
+                case INT8: {
+                    byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
+                    sum += val;
+                    break;
+                }
+                case INT16: {
+                    short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
+                    sum += val;
+                    break;
+                }
+                case INT32: {
+                    int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                    sum += val;
+                    break;
+                }
+                case INT64: {
+                    long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
+                    sum += val;
+                    break;
+                }
+                case FLOAT: {
+                    float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
+                    sum += val;
+                    break;
+                }
+                case DOUBLE: {
+                    double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
+                    sum += val;
+                    break;
+                }
+                case NULL: {
+                    break;
+                }
+                default: {
+                    throw new NotImplementedException("Cannot compute LOCAL-AVG for values of type " + typeTag);
+                }
             }
-            case INT16: {
-                short val = AInt16SerializerDeserializer.getShort(inputVal.getByteArray(), 1);
-                sum += val;
-                break;
+            inputVal.reset();
+
+        } else {
+            switch (typeTag) {
+                case NULL: {
+                    metNull = true;
+                    break;
+                }
+                case SYSTEM_NULL: {
+                    // Ignore and return.
+                    return;
+                }
+                case RECORD: {
+                    // Expected.
+                    break;
+                }
+                default: {
+                    throw new AlgebricksException("Global-Avg is not defined for values of type "
+                            + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]));
+                }
             }
-            case INT32: {
-                int val = AInt32SerializerDeserializer.getInt(inputVal.getByteArray(), 1);
-                sum += val;
-                break;
+
+            // The record length helps us determine whether the input record fields are nullable.
+            int recordLength = ARecordSerializerDeserializer.getRecordLength(serBytes, 1);
+            int nullBitmapSize = 1;
+            if (recordLength == 29) {
+                nullBitmapSize = 0;
             }
-            case INT64: {
-                long val = AInt64SerializerDeserializer.getLong(inputVal.getByteArray(), 1);
-                sum += val;
-                break;
-            }
-            case FLOAT: {
-                float val = AFloatSerializerDeserializer.getFloat(inputVal.getByteArray(), 1);
-                sum += val;
-                break;
-            }
-            case DOUBLE: {
-                double val = ADoubleSerializerDeserializer.getDouble(inputVal.getByteArray(), 1);
-                sum += val;
-                break;
-            }
-            case NULL: {
-                break;
-            }
-            default: {
-                throw new NotImplementedException("Cannot compute LOCAL-AVG for values of type " + typeTag);
-            }
+            int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 0, nullBitmapSize, false);
+            if (offset1 == 0) // the sum is null
+                metNull = true;
+            else
+                sum += ADoubleSerializerDeserializer.getDouble(serBytes, offset1);
+            int offset2 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, 1, nullBitmapSize, false);
+            if (offset2 != 0) // the count is not null
+                count += AInt64SerializerDeserializer.getLong(serBytes, offset2);
         }
-        inputVal.reset();
     }
 
     @Override
     public void finish() throws AlgebricksException {
         try {
-            if (count == 0 && aggType != ATypeTag.NULL) {
-                out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
-                return;
-            }
-            if (aggType == ATypeTag.NULL) {
-                sumBytes.reset();
-                nullSerde.serialize(ANull.NULL, sumBytesOutput);
+            if (isLocalAgg) {
+                if (count == 0 && aggType != ATypeTag.NULL) {
+                    out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+                    return;
+                }
+                if (aggType == ATypeTag.NULL) {
+                    sumBytes.reset();
+                    nullSerde.serialize(ANull.NULL, sumBytesOutput);
+                } else {
+                    sumBytes.reset();
+                    aDouble.setValue(sum);
+                    doubleSerde.serialize(aDouble, sumBytesOutput);
+                }
+                countBytes.reset();
+                aInt64.setValue(count);
+                intSerde.serialize(aInt64, countBytesOutput);
+                recordEval.evaluate(null);
             } else {
-                sumBytes.reset();
-                aDouble.setValue(sum);
-                doubleSerde.serialize(aDouble, sumBytesOutput);
+                if (count == 0 || metNull) {
+                    nullSerde.serialize(ANull.NULL, out);
+                } else {
+                    aDouble.setValue(sum / count);
+                    doubleSerde.serialize(aDouble, out);
+                }
             }
-            countBytes.reset();
-            aInt64.setValue(count);
-            longSerde.serialize(aInt64, countBytesOutput);
-            recordEval.evaluate(null);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -199,6 +258,31 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
 
     @Override
     public void finishPartial() throws AlgebricksException {
-        finish();
+        if (isLocalAgg) {
+            finish();
+        } else {
+            if (count == 0) {
+                if (GlobalConfig.DEBUG) {
+                    GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
+                }
+            } else {
+                try {
+                    if (metNull || count == 0) {
+                        sumBytes.reset();
+                        nullSerde.serialize(ANull.NULL, sumBytesOutput);
+                    } else {
+                        sumBytes.reset();
+                        aDouble.setValue(sum);
+                        doubleSerde.serialize(aDouble, sumBytesOutput);
+                    }
+                    countBytes.reset();
+                    aInt64.setValue(count);
+                    intSerde.serialize(aInt64, countBytesOutput);
+                    recordEval.evaluate(null);
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
+                }
+            }
+        }
     }
 }

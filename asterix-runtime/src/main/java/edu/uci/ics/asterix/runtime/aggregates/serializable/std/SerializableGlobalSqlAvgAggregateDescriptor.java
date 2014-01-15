@@ -65,7 +65,7 @@ public class SerializableGlobalSqlAvgAggregateDescriptor extends AbstractSeriali
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SERIAL_GLOBAL_AVG;
+        return AsterixBuiltinFunctions.SERIAL_GLOBAL_SQL_AVG;
     }
 
     @Override

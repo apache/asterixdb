@@ -69,7 +69,7 @@ public class SerializableLocalSqlAvgAggregateDescriptor extends AbstractSerializ
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return AsterixBuiltinFunctions.SERIAL_LOCAL_AVG;
+        return AsterixBuiltinFunctions.SERIAL_LOCAL_SQL_AVG;
     }
 
     @Override

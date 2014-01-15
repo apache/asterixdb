@@ -128,7 +128,7 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
         byte[] serBytes = inputVal.getByteArray();
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serBytes[0]);
         if (typeTag == ATypeTag.NULL) {
-            aggType = ATypeTag.NULL;
+            processNull();
             return;
         } else if (aggType == ATypeTag.NULL) {
             return;
@@ -279,5 +279,9 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
                 }
             }
         }
+    }
+    
+    protected void processNull() {
+        aggType = ATypeTag.NULL;
     }
 }
