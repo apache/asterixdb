@@ -59,9 +59,9 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
     private DataOutput out;
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ICopyEvaluator eval;
+    private ATypeTag aggType;
     private double sum;
     private long count;
-    private ATypeTag aggType;
 
     private ArrayBackedValueStorage avgBytes = new ArrayBackedValueStorage();
     private ByteArrayAccessibleOutputStream sumBytes = new ByteArrayAccessibleOutputStream();
@@ -71,7 +71,6 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
     private ICopyEvaluator evalSum = new AccessibleByteArrayEval(avgBytes.getDataOutput(), sumBytes);
     private ICopyEvaluator evalCount = new AccessibleByteArrayEval(avgBytes.getDataOutput(), countBytes);
     private ClosedRecordConstructorEval recordEval;
-
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ADOUBLE);
@@ -95,7 +94,7 @@ public abstract class AbstractLocalAvgAggregateFunction implements ICopyAggregat
         ARecordType tmpRecType;
         try {
             tmpRecType = new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, true);
+                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT64 }, false);
         } catch (AsterixException e) {
             throw new AlgebricksException(e);
         }
