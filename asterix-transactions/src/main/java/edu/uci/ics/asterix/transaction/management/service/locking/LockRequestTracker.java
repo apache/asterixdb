@@ -45,7 +45,7 @@ public class LockRequestTracker {
         //handle global request queue
         historyForAllJobs.append(request.prettyPrint()).append("--> ").append(msg).append("\n");
     }
-    
+
     public void addRequest(LockRequest request) {
         requestHistoryForAllJobs.append(request.prettyPrint());
     }
@@ -64,7 +64,7 @@ public class LockRequestTracker {
         }
         return history.toString();
     }
-    
+
     public String getRequestHistoryForAllJobs() {
         return requestHistoryForAllJobs.toString();
     }

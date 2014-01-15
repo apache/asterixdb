@@ -46,7 +46,7 @@ public class YearMonthDurationComparatorDecriptor extends AbstractScalarFunction
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
-    
+
     private final boolean isGreaterThan;
 
     private YearMonthDurationComparatorDecriptor(boolean isGreaterThan) {

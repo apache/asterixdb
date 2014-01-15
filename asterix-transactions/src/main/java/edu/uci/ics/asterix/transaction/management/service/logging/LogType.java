@@ -26,7 +26,6 @@ public class LogType {
     private static final String STRING_ABORT = "ABORT";
     private static final String STRING_INVALID_LOG_TYPE = "INVALID_LOG_TYPE";
 
-
     public static String toString(byte logType) {
         switch (logType) {
             case LogType.UPDATE:

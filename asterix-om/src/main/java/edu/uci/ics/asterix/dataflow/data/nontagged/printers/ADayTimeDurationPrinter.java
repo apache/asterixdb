@@ -27,7 +27,7 @@ public class ADayTimeDurationPrinter implements IPrinter {
 
     public static final ADayTimeDurationPrinter INSTANCE = new ADayTimeDurationPrinter();
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
-    
+
     @Override
     public void init() throws AlgebricksException {
         // TODO Auto-generated method stub

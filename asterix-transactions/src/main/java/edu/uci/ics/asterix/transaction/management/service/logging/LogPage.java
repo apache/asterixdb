@@ -22,16 +22,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILogPage;
 import edu.uci.ics.asterix.common.transactions.ILogRecord;
+import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
+import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 
 public class LogPage implements ILogPage {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private static final Logger LOGGER = Logger.getLogger(LogPage.class.getName());
-    private final LockManager lockMgr;
+    private final TransactionSubsystem txnSubsystem;
     private final LogPageReader logPageReader;
     private final int logPageSize;
     private final MutableLong flushLSN;
@@ -45,9 +50,11 @@ public class LogPage implements ILogPage {
     private final LinkedBlockingQueue<ILogRecord> syncCommitQ;
     private FileChannel fileChannel;
     private boolean stop;
+    private DatasetId reusableDsId;
+    private JobId reusableJobId;
 
-    public LogPage(LockManager lockMgr, int logPageSize, MutableLong flushLSN) {
-        this.lockMgr = lockMgr;
+    public LogPage(TransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
+        this.txnSubsystem = txnSubsystem;
         this.logPageSize = logPageSize;
         this.flushLSN = flushLSN;
         appendBuffer = ByteBuffer.allocate(logPageSize);
@@ -59,6 +66,8 @@ public class LogPage implements ILogPage {
         flushOffset = 0;
         isLastPage = false;
         syncCommitQ = new LinkedBlockingQueue<ILogRecord>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
+        reusableDsId = new DatasetId(-1);
+        reusableJobId = new JobId(-1);
     }
 
     ////////////////////////////////////
@@ -187,7 +196,25 @@ public class LogPage implements ILogPage {
     private void batchUnlock(int beginOffset, int endOffset) throws ACIDException {
         if (endOffset > beginOffset) {
             logPageReader.initializeScan(beginOffset, endOffset);
-            lockMgr.batchUnlock(this, logPageReader);
+
+            ITransactionContext txnCtx = null;
+
+            LogRecord logRecord = logPageReader.next();
+            while (logRecord != null) {
+                if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
+                    reusableJobId.setId(logRecord.getJobId());
+                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
+                    reusableDsId.setId(logRecord.getDatasetId());
+                    txnSubsystem.getLockManager().unlock(reusableDsId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
+                    txnCtx.notifyOptracker(false);
+                } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
+                    reusableJobId.setId(logRecord.getJobId());
+                    txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
+                    txnCtx.notifyOptracker(true);
+                    notifyJobTerminator();
+                }
+                logRecord = logPageReader.next();
+            }
         }
     }
 

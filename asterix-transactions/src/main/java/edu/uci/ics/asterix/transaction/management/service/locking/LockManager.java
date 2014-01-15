@@ -15,7 +15,6 @@
 
 package edu.uci.ics.asterix.transaction.management.service.locking;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -98,7 +97,8 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         this.entityLockInfoManager = new EntityLockInfoManager(entityInfoManager, lockWaiterManager);
         this.deadlockDetector = new DeadlockDetector(jobHT, datasetResourceHT, entityLockInfoManager,
                 entityInfoManager, lockWaiterManager);
-        this.toutDetector = new TimeOutDetector(this);
+        this.toutDetector = new TimeOutDetector(this, txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getThreadExecutor());
         this.tempDatasetIdObj = new DatasetId(0);
         this.tempJobIdObj = new JobId(0);
         this.consecutiveWakeupContext = new ConsecutiveWakeupContext();
@@ -278,7 +278,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
             did = entityInfoManager.getDatasetId(entityInfo);
             entityHashValue = entityInfoManager.getPKHashVal(entityInfo);
             if (did == datasetId.getId() && entityHashValue != -1) {
-                this.unlock(datasetId, entityHashValue, txnContext);
+                this.unlock(datasetId, entityHashValue, LockMode.ANY, txnContext);
             }
 
             entityInfo = prevEntityInfo;
@@ -638,7 +638,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     }
 
     @Override
-    public void unlock(DatasetId datasetId, int entityHashValue, ITransactionContext txnContext) throws ACIDException {
+    public void unlock(DatasetId datasetId, int entityHashValue, byte lockMode, ITransactionContext txnContext) throws ACIDException {
         internalUnlock(datasetId, entityHashValue, txnContext, false);
     }
 
@@ -2032,31 +2032,29 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         if (dumpState) {
-
-            //#. dump Configurable Variables
-            dumpConfVars(os);
-
-            //#. dump jobHT
-            dumpJobInfo(os);
-
-            //#. dump datasetResourceHT
-            dumpDatasetLockInfo(os);
-
-            //#. dump entityLockInfoManager
-            dumpEntityLockInfo(os);
-
-            //#. dump entityInfoManager
-            dumpEntityInfo(os);
-
-            //#. dump lockWaiterManager
-
-            dumpLockWaiterInfo(os);
-            try {
-                os.flush();
-            } catch (IOException e) {
-                //ignore
-            }
+            dumpState(os);
         }
+    }
+
+    @Override
+    public void dumpState(OutputStream os) {
+        //#. dump Configurable Variables
+        dumpConfVars(os);
+
+        //#. dump jobHT
+        dumpJobInfo(os);
+
+        //#. dump datasetResourceHT
+        dumpDatasetLockInfo(os);
+
+        //#. dump entityLockInfoManager
+        dumpEntityLockInfo(os);
+
+        //#. dump entityInfoManager
+        dumpEntityInfo(os);
+
+        //#. dump lockWaiterManager
+        dumpLockWaiterInfo(os);
     }
 
     private void dumpConfVars(OutputStream os) {
@@ -2211,7 +2209,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     tempDatasetIdObj.setId(logRecord.getDatasetId());
                     tempJobIdObj.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(tempJobIdObj, false);
-                    unlock(tempDatasetIdObj, logRecord.getPKHashValue(), txnCtx);
+                    unlock(tempDatasetIdObj, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                     tempJobIdObj.setId(logRecord.getJobId());

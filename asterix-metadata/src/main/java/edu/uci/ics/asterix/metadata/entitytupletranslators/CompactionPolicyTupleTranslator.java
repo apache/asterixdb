@@ -53,10 +53,10 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     }
 
     @Override
-    public CompactionPolicy getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
-        byte[] serRecord = frameTuple.getFieldData(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
+    public CompactionPolicy getMetadataEntityFromTuple(ITupleReference tuple) throws IOException {
+        byte[] serRecord = tuple.getFieldData(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
+        int recordStartOffset = tuple.getFieldStart(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
+        int recordLength = tuple.getFieldLength(COMPACTION_POLICY_PAYLOAD_TUPLE_FIELD_INDEX);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
         ARecord compactionPolicyRecord = (ARecord) recordSerDes.deserialize(in);

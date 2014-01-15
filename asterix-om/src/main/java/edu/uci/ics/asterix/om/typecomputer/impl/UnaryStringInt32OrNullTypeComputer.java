@@ -61,7 +61,7 @@ public class UnaryStringInt32OrNullTypeComputer implements IResultTypeComputer {
 
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
-        if (t0.getTypeTag() == ATypeTag.NULL) { 
+        if (t0.getTypeTag() == ATypeTag.NULL) {
             return BuiltinType.ANULL;
         }
 

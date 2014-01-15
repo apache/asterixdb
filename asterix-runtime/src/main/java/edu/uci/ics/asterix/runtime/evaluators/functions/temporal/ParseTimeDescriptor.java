@@ -110,7 +110,7 @@ public class ParseTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             int length1 = (argOut1.getByteArray()[1] & 0xff << 8)
                                     + (argOut1.getByteArray()[2] & 0xff << 0);
                             long chronon = 0;
-                            
+
                             int formatStart = 3;
                             int formatLength = 0;
                             boolean processSuccessfully = false;

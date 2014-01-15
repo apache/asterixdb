@@ -26,7 +26,7 @@ public class AListElementToken implements IToken {
     protected int length;
     protected int tokenLength;
     protected int typeTag;
-    
+
     @Override
     public byte[] getData() {
         return data;

@@ -1,0 +1,23 @@
+/*
+ *  Description     : The hint to skip secondary indexes don't apply to the primary index
+ *                  : This test is intended to verify that the primary index is still used instead of a scan 
+ *  Expected Result : Success
+ *  Date            : 21th December 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/btree-index_btree-primary-16.adm";
+
+create type TestType as open {
+    fname : string,
+    lname : string
+}
+
+create dataset testdst(TestType) primary key fname,lname;
+
+for $emp in dataset('testdst') 
+where $emp.fname /*+ skip-index */ >= "Craig" and $emp.lname /*+ skip-index */ >= "Kevin" and $emp.fname /*+ skip-index */ <= "Mary" and $emp.lname /*+ skip-index */ <= "Tomes"
+return $emp

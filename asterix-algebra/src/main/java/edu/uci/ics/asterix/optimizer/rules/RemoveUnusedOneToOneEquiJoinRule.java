@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
+import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -152,8 +152,8 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
         // only used primary key variables of those datascans.
         for (int i = 0; i < dataScans.size(); i++) {
             if (i > 0) {
-                AqlDataSource prevAqlDataSource = (AqlDataSource) dataScans.get(i - 1).getDataSource();
-                AqlDataSource currAqlDataSource = (AqlDataSource) dataScans.get(i).getDataSource();
+                DatasetDataSource prevAqlDataSource = (DatasetDataSource) dataScans.get(i - 1).getDataSource();
+                DatasetDataSource currAqlDataSource = (DatasetDataSource) dataScans.get(i).getDataSource();
                 if (!prevAqlDataSource.getDataset().equals(currAqlDataSource.getDataset())) {
                     return -1;
                 }
@@ -189,10 +189,10 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
 
     private void fillPKVars(DataSourceScanOperator dataScan, List<LogicalVariable> pkVars) {
         pkVars.clear();
-        AqlDataSource aqlDataSource = (AqlDataSource) dataScan.getDataSource();
+        DatasetDataSource datasetDataSource = (DatasetDataSource) dataScan.getDataSource();
         pkVars.clear();
-        if (aqlDataSource.getDataset().getDatasetDetails() instanceof InternalDatasetDetails) {
-            int numPKs = DatasetUtils.getPartitioningKeys(aqlDataSource.getDataset()).size();
+        if (datasetDataSource.getDataset().getDatasetDetails() instanceof InternalDatasetDetails) {
+            int numPKs = DatasetUtils.getPartitioningKeys(datasetDataSource.getDataset()).size();
             for (int i = 0; i < numPKs; i++) {
                 pkVars.add(dataScan.getVariables().get(i));
             }

@@ -1,0 +1,15 @@
+/*
+ * Description     : Test hoisting a variable that does not get inlined
+ * Expected Result : Success
+ * Date            : 8th November 2013
+ */
+
+use dataverse foo;
+
+insert into dataset fb(
+{"id": 1, "name": "Tom"}
+);
+
+insert into dataset fb(
+{"id": 2, "name": "Mike"}
+);

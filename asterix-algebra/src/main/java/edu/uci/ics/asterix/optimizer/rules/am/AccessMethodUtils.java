@@ -149,7 +149,7 @@ public class AccessMethodUtils {
         switch (index.getIndexType()) {
             case BTREE:
             case SINGLE_PARTITION_WORD_INVIX:
-            case SINGLE_PARTITION_NGRAM_INVIX: 
+            case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 return index.getKeyFieldNames().size();

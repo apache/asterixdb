@@ -1,5 +1,12 @@
 # The Asterix Query Language, Version 1.0
-## 1. Introduction
+
+## <a id="toc">Table of Contents</a> ##
+
+* [1. Introduction](#Introduction)
+* [2. Expressions](#Expressions)
+* [3. Statements](#Statements)
+
+## <a id="Introduction">1. Introduction</a><font size="4"> <a href="#toc">[Back to TOC]</a></font> 
 
 This document is intended as a reference guide to the full syntax
 and semantics of the Asterix Query Language (AQL), the language for talking to AsterixDB.
@@ -14,7 +21,7 @@ In what follows, we detail the features of the AQL language in a grammar-guided 
 We list and briefly explain each of the productions in the AQL grammar, offering 
 examples for clarity in cases where doing so seems needed or helpful.
 
-## 2. Expressions
+## <a id="Expressions">2. Expressions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> 
 
     Query ::= Expression
 
@@ -53,14 +60,25 @@ or a newly constructed ADM record.
 
 #### Literals
 
-    Literal ::= StringLiteral
-              | <INTEGER_LITERAL>
-              | <FLOAT_LITERAL>
-              | <DOUBLE_LITERAL>
-              | "null"
-              | "true"
-              | "false"
-    StringLiteral ::= <STRING_LITERAL>
+    Literal        ::= StringLiteral
+                     | IntegerLiteral
+                     | FloatLiteral
+                     | DoubleLiteral
+                     | "null"
+                     | "true"
+                     | "false"
+    StringLiteral  ::= ("\"" (<ESCAPE_QUOT> | ~["\""])* "\"")
+                     | ("\'" (<ESCAPE_APOS> | ~["\'"])* "\'")
+    <ESCAPE_QUOT>  ::= "\\\""
+    <ESCAPE_APOS>  ::= "\\\'"
+    IntegerLiteral ::= <DIGITS>
+    <DIGITS>       ::= ["0" - "9"]+
+    FloatLiteral   ::= <DIGITS> ( "f" | "F" )
+                     | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+                     | "." <DIGITS> ( "f" | "F" )
+    DoubleLiteral  ::= <DIGITS>
+                     | <DIGITS> ( "." <DIGITS> )?
+                     | "." <DIGITS>                      
 
 Literals (constants) in AQL can be strings, integers, floating point values,
 double values, boolean constants, or the constant value null.
@@ -78,6 +96,8 @@ Since AQL is an expression language, each example is also a complete, legal AQL 
 #### Variable References
 
     VariableRef ::= <VARIABLE>
+    <VARIABLE>  ::= "$" <LETTER> (<LETTER> | <DIGIT> | "_")*
+    <LETTER>    ::= ["A" - "Z", "a" - "z"]
 
 A variable in AQL can be bound to any legal ADM value.
 A variable reference refers to the value to which an in-scope variable is bound.
@@ -125,6 +145,8 @@ The following example is a (built-in) function call expression whose value is 8.
     DatasetAccessExpression ::= "dataset" ( ( Identifier ( "." Identifier )? )
                               | ( "(" Expression ")" ) )
     Identifier              ::= <IDENTIFIER> | StringLiteral
+    <IDENTIFIER>            ::= <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*
+    <SPECIALCHARS>          ::= ["$", "_", "-"]
 
 Querying Big Data is the main point of AsterixDB and AQL.
 Data in AsterixDB reside in datasets (collections of ADM records),
@@ -133,6 +155,8 @@ Data access in a query expression is accomplished via a DatasetAccessExpression.
 Dataset access expressions are most commonly used in FLWOR expressions, where variables
 are bound to their contents.
 
+Note that the Identifier that identifies a dataset (or any other Identifier in AQL) can also be a StringLiteral. 
+This is especially useful to avoid conficts with AQL keywords (e.g. "dataset", "null", or "type").
 
 The following are three examples of legal dataset access expressions.
 The first one accesses a dataset called Customers in the dataverse called SalesDV.
@@ -178,6 +202,11 @@ or they can come from query variable references or even arbitrarily complex AQL 
       "project name": "AsterixDB"
       "project members": {{ "vinayakb", "dtabass", "chenli" }}
     }
+
+##### Note
+
+When constructing nested records there needs to be a space between the closing braces to avoid confusion with the `}}` token that ends an unordered list constructor: 
+`{ "a" : { "b" : "c" }}` will fail to parse while `{ "a" : { "b" : "c" } }` will work.
 
 ### Path Expressions
 
@@ -235,7 +264,7 @@ An example comparison expression (which yields the boolean value true) is shown 
 ### Arithmetic Expressions
 
     AddExpr  ::= MultExpr ( ( "+" | "-" ) MultExpr )*
-    MultExpr ::= UnaryExpr ( ( "*" | "/" | "%" | <CARET> | "idiv" ) UnaryExpr )*
+    MultExpr ::= UnaryExpr ( ( "*" | "/" | "%" | "^"| "idiv" ) UnaryExpr )*
     UnaryExpr ::= ( ( "+" | "-" ) )? ValueExpr
 
 AQL also supports the usual cast of characters for arithmetic expressions.
@@ -406,7 +435,7 @@ It is useful to note that if the set were instead the empty set, the first expre
     every $x in [ 1, 2, 3 ] satisfies $x < 3
     some $x in [ 1, 2, 3 ] satisfies $x < 3
 
-## 3. Statements
+## <a id="Statements">3. Statements</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> 
 
     Statement ::= ( SingleStatement ( ";" )? )* <EOF>
     SingleStatement ::= DataverseDeclaration
@@ -523,12 +552,12 @@ The employment field is an ordered list of instances of another named record typ
 ##### Example
 
     create type FacebookUserType as closed {
-      id:         int32,
-      alias:      string,
-      name:       string,
-      user-since: datetime,
-      friend-ids: {{ int32 }},
-      employment: [ EmploymentType ]
+      "id" :         int32,
+      "alias" :      string,
+      "name" :       string,
+      "user-since" : datetime,
+      "friend-ids" : {{ int32 }},
+      "employment" : [ EmploymentType ]
     }
 
 #### Datasets
@@ -541,8 +570,8 @@ The employment field is an ordered list of instances of another named record typ
     Configuration        ::= "(" ( KeyValuePair ( "," KeyValuePair )* )? ")"
     KeyValuePair         ::= "(" StringLiteral "=" StringLiteral ")"
     Properties           ::= ( "(" Property ( "," Property )* ")" )?
-    Property             ::= Identifier "=" ( StringLiteral | <INTEGER_LITERAL> )
-    FunctionSignature    ::= FunctionOrTypeName "@" <INTEGER_LITERAL>
+    Property             ::= Identifier "=" ( StringLiteral | IntegerLiteral )
+    FunctionSignature    ::= FunctionOrTypeName "@" IntegerLiteral
     PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
 
 The create dataset statement is used to create a new dataset.
@@ -552,7 +581,7 @@ Datasets are typed, and AsterixDB will ensure that their contents conform to the
 An Internal dataset (the default) is a dataset that is stored in and managed by AsterixDB.
 It must have a specified unique primary key that can be used to partition data across nodes of an AsterixDB cluster.
 The primary key is also used in secondary indexes to uniquely identify the indexed primary data records.
-An External dataset is stored outside of AsterixDB, e.g., in HDFS or in the local filesystem(s) of the cluster's nodes.
+An External dataset is stored outside of AsterixDB (currently datasets in HDFS or on the local filesystem(s) of the cluster's nodes are supported).
 External dataset support allows AQL queries to treat external data as though it were stored in AsterixDB,
 making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it into AsterixDB.
 For an external dataset, an appropriate adaptor must be selected to handle the nature of the desired external data.
@@ -565,14 +594,15 @@ It specifies that their id field is their primary key.
     create internal dataset FacebookUsers(FacebookUserType) primary key id;
 
 The next example creates an external dataset for storing LineitemType records.
-The choice of the `localfs` adaptor means that its data will reside in the local filesystem of the cluster nodes.
-The create statement provides several parameters used by the localfs adaptor;
-e.g., the file format is delimited text with vertical bar being the field delimiter.
+The choice of the `hdfs` adaptor means that its data will reside in HDFS.
+The create statement provides parameters used by the hdfs adaptor:
+the URL and path needed to locate the data in HDFS and a description of the data format.
 
 ##### Example
-
-    create external dataset Lineitem(LineitemType) using localfs (
-      ("path"="127.0.0.1://SOURCE_PATH"),
+    create external dataset Lineitem('LineitemType) using hdfs (
+      ("hdfs"="hdfs://HOST:PORT"),
+      ("path"="HDFS_PATH"),
+      ("input-format"="text-input-format"),
       ("format"="delimited-text"),
       ("delimiter"="|"));
       
@@ -583,7 +613,7 @@ e.g., the file format is delimited text with vertical bar being the field delimi
     IndexType          ::= "btree"
                          | "rtree"
                          | "keyword"
-                         | "ngram" "(" <INTEGER_LITERAL> ")"
+                         | "ngram" "(" IntegerLiteral ")"
 
 The create index statement creates a secondary index on one or more fields of a specified dataset.
 Supported index types include `btree` for totally ordered datatypes,
@@ -672,6 +702,7 @@ The following examples illustrate uses of the drop statement.
     
 The load statement is used to initially populate a dataset via bulk loading of data from an external file.
 An appropriate adaptor must be selected to handle the nature of the desired external data.
+The load statement accepts the same adaptors and the same parameters as external datasets.
 (See the [guide to external data](externaldata.html) for more information on the available adaptors.)
 
 The following example shows how to bulk load the FacebookUsers dataset from an external file containing
@@ -730,5 +761,6 @@ We close this guide to AQL with one final example of a query expression.
     
     for $praise in {{ "great", "brilliant", "awesome" }}
     return
-       string-concat(["AsterixDB is ", $praise]
+       string-concat(["AsterixDB is ", $praise])
+
 

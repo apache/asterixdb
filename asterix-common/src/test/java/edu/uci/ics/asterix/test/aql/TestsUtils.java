@@ -36,9 +36,12 @@ import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -186,7 +189,7 @@ public class TestsUtils {
         }
     }
 
-    private static String[] handleError(GetMethod method) throws Exception {
+    private static String[] handleError(HttpMethod method) throws Exception {
         String errorBody = method.getResponseBodyAsString();
         JSONObject result = new JSONObject(errorBody);
         String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
@@ -205,7 +208,6 @@ public class TestsUtils {
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
-
         method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
 
         // Provide custom retry handler is necessary
@@ -238,9 +240,8 @@ public class TestsUtils {
         HttpClient client = new HttpClient();
 
         // Create a method instance.
-        GetMethod method = new GetMethod(url);
-
-        method.setQueryString(new NameValuePair[] { new NameValuePair("statements", str) });
+        PostMethod method = new PostMethod(url);
+        method.setRequestEntity(new StringRequestEntity(str));
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -253,7 +254,8 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
+                    + errors[2]);
         }
     }
 
@@ -270,10 +272,8 @@ public class TestsUtils {
         HttpClient client = new HttpClient();
 
         // Create a method instance.
-        GetMethod method = new GetMethod(url);
-
-        method.setQueryString(new NameValuePair[] { new NameValuePair("ddl", str) });
-
+        PostMethod method = new PostMethod(url);
+        method.setRequestEntity(new StringRequestEntity(str));
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
@@ -285,7 +285,8 @@ public class TestsUtils {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
             String[] errors = handleError(method);
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
+            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
+                    + errors[2]);
         }
     }
 
@@ -309,7 +310,7 @@ public class TestsUtils {
     public static void executeManagixCommand(String command) throws ClassNotFoundException, NoSuchMethodException,
             SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (managixExecuteMethod == null) {
-            Class clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
+            Class<?> clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
             managixExecuteMethod = clazz.getMethod("executeCommand", String.class);
         }
         managixExecuteMethod.invoke(null, command);
@@ -355,7 +356,8 @@ public class TestsUtils {
         return s.toString();
     }
 
-    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb) throws Exception {
+    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
+            boolean isDmlRecoveryTest) throws Exception {
 
         File testFile;
         File expectedResultFile;
@@ -381,10 +383,26 @@ public class TestsUtils {
                             TestsUtils.executeDDL(statement);
                             break;
                         case "update":
+
+                            //isDmlRecoveryTest: set IP address
+                            if (isDmlRecoveryTest && statement.contains("nc1://")) {
+                                statement = statement
+                                        .replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
+
+                            }
+
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
                             try {
+                                // isDmlRecoveryTest: insert Crash and Recovery
+                                if (isDmlRecoveryTest) {
+                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
+                                            + "dml_recovery" + File.separator + "kill_cc_and_nc.sh");
+                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
+                                            + "dml_recovery" + File.separator + "stop_and_start.sh");
+                                }
+
                                 InputStream resultStream = executeQuery(statement);
                                 expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
@@ -422,34 +440,18 @@ public class TestsUtils {
                             break;
                         case "txnqar": //qar represents query after recovery
                             try {
-                                ////////////// <begin of temporary fix> ////////////////////////////
-                                //TODO
-                                //Temporary fix in order not to block the build test(mvn verify)
-                                //A proper fix should not have the while loop here.
-                                int maxRetryCount = 12;
-                                int tryCount = 0;
-                                InputStream resultStream = null;
-                                long sleepTime = 5;
-                                
-                                do {
-                                    //wait until NC starts
-                                    sleepTime *= 2;
-                                    Thread.sleep(sleepTime);
-                                    if (++tryCount > maxRetryCount) {
-                                        LOGGER.info("Metadata node is not running - this test will fail.");
-                                        break;
-                                    }
-                                    resultStream = executeQuery(statement);
-                                } while (resultStream.toString().contains("Connection refused to host"));
-                                ////////////// <end of temporary fix> //////////////////////////////
+
+                                InputStream resultStream = executeQuery(statement);
 
                                 qarFile = new File(actualPath + File.separator
                                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                         + cUnit.getName() + "_qar.adm");
                                 qarFile.getParentFile().mkdirs();
                                 TestsUtils.writeResultsToFile(qarFile, resultStream);
+
                                 TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                         qbcFile, qarFile);
+
                                 LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
                                         + cUnit.getName() + " PASSED ");
                             } catch (JsonMappingException e) {
@@ -476,11 +478,23 @@ public class TestsUtils {
                                 throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
                             }
                             break;
+                        case "sleep":
+                            Thread.sleep(Long.parseLong(statement.trim()));
+                            break;
+                        case "errddl": // a ddlquery that expects error
+                            try {
+                                TestsUtils.executeDDL(statement);
+
+                            } catch (Exception e) {
+                                // expected error happens
+                            }
+                            break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     }
@@ -488,4 +502,5 @@ public class TestsUtils {
             }
         }
     }
+
 }

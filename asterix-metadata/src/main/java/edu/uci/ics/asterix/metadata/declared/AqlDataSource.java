@@ -15,16 +15,13 @@
 
 package edu.uci.ics.asterix.metadata.declared;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
-import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
-import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
@@ -32,7 +29,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -44,144 +40,57 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioning
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 
-public class AqlDataSource implements IDataSource<AqlSourceId> {
+public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
     private AqlSourceId id;
-    private Dataset dataset;
-    private IAType[] schemaTypes;
-    private INodeDomain domain;
+    private String datasourceDataverse;
+    private String datasourceName;
     private AqlDataSourceType datasourceType;
+    protected IAType[] schemaTypes;
+    protected INodeDomain domain;
+    private Map<String, Serializable> properties = new HashMap<String, Serializable>();
 
     public enum AqlDataSourceType {
-        INTERNAL,
-        FEED,
-        EXTERNAL,
-        EXTERNAL_FEED
+        INTERNAL_DATASET,
+        EXTERNAL_DATASET,
+        FEED
     }
 
-    public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType, AqlDataSourceType datasourceType)
-            throws AlgebricksException {
+    public AqlDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName, IAType itemType,
+            AqlDataSourceType datasourceType) throws AlgebricksException {
         this.id = id;
-        this.dataset = dataset;
+        this.datasourceDataverse = datasourceDataverse;
+        this.datasourceName = datasourceName;
         this.datasourceType = datasourceType;
-        try {
-            switch (datasourceType) {
-                case FEED:
-                    initFeedDataset(itemType, dataset);
-                case INTERNAL: {
-                    initInternalDataset(itemType);
-                    break;
-                }
-                case EXTERNAL_FEED:
-                case EXTERNAL: {
-                    initExternalDataset(itemType);
-                    break;
-                }
-                default: {
-                    throw new IllegalArgumentException();
-                }
-            }
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
     }
 
-    public AqlDataSource(AqlSourceId id, Dataset dataset, IAType itemType) throws AlgebricksException {
-        this.id = id;
-        this.dataset = dataset;
-        try {
-            switch (dataset.getDatasetType()) {
-                case FEED:
-                    initFeedDataset(itemType, dataset);
-                    break;
-                case INTERNAL:
-                    initInternalDataset(itemType);
-                    break;
-                case EXTERNAL: {
-                    initExternalDataset(itemType);
-                    break;
-                }
-                default: {
-                    throw new IllegalArgumentException();
-                }
-            }
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
+    public String getDatasourceDataverse() {
+        return datasourceDataverse;
     }
 
-    // TODO: Seems like initFeedDataset() could simply call this method.
-    private void initInternalDataset(IAType itemType) throws IOException {
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-        ARecordType recordType = (ARecordType) itemType;
-        int n = partitioningKeys.size();
-        schemaTypes = new IAType[n + 1];
-        for (int i = 0; i < n; i++) {
-            schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
-        }
-        schemaTypes[n] = itemType;
-        domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+    public String getDatasourceName() {
+        return datasourceName;
     }
 
-    private void initFeedDataset(IAType itemType, Dataset dataset) throws IOException {
-        if (dataset.getDatasetDetails() instanceof ExternalDatasetDetails) {
-            initExternalDataset(itemType);
-        } else {
-            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-            int n = partitioningKeys.size();
-            schemaTypes = new IAType[n + 1];
-            ARecordType recordType = (ARecordType) itemType;
-            for (int i = 0; i < n; i++) {
-                schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
-            }
-            schemaTypes[n] = itemType;
-            domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
-        }
-    }
+    public abstract IAType[] getSchemaTypes();
 
-    private void initExternalDataset(IAType itemType) {
-        schemaTypes = new IAType[1];
-        schemaTypes[0] = itemType;
-        INodeDomain domainForExternalData = new INodeDomain() {
-            @Override
-            public Integer cardinality() {
-                return null;
-            }
-
-            @Override
-            public boolean sameAs(INodeDomain domain) {
-                return domain == this;
-            }
-        };
-        domain = domainForExternalData;
-    }
+    public abstract INodeDomain getDomain();
 
     @Override
     public AqlSourceId getId() {
         return id;
     }
 
-    public Dataset getDataset() {
-        return dataset;
-    }
-
-    @Override
-    public IAType[] getSchemaTypes() {
-        return schemaTypes;
-    }
-
     @Override
     public String toString() {
         return id.toString();
-        // return "AqlDataSource(\"" + id.getDataverseName() + "/" +
-        // id.getDatasetName() + "\")";
     }
 
     @Override
     public IDataSourcePropertiesProvider getPropertiesProvider() {
-        return new AqlDataSourcePartitioningProvider(dataset.getDatasetType(), domain);
+        return new AqlDataSourcePartitioningProvider(datasourceType, domain);
     }
-
+    
     @Override
     public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList) {
         int n = scanVariables.size();
@@ -193,26 +102,30 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
             fdList.add(fd);
         }
     }
-
+    
+ 
     private static class AqlDataSourcePartitioningProvider implements IDataSourcePropertiesProvider {
 
         private INodeDomain domain;
 
-        private DatasetType datasetType;
+        private AqlDataSourceType aqlDataSourceType;
 
-        public AqlDataSourcePartitioningProvider(DatasetType datasetType, INodeDomain domain) {
-            this.datasetType = datasetType;
+        public AqlDataSourcePartitioningProvider(AqlDataSourceType datasetSourceType, INodeDomain domain) {
+            this.aqlDataSourceType = datasetSourceType;
             this.domain = domain;
         }
 
         @Override
         public IPhysicalPropertiesVector computePropertiesVector(List<LogicalVariable> scanVariables) {
-            switch (datasetType) {
-                case EXTERNAL: {
+            IPhysicalPropertiesVector propsVector = null;
+
+            switch (aqlDataSourceType) {
+                case EXTERNAL_DATASET: {
                     IPartitioningProperty pp = new RandomPartitioningProperty(domain);
                     List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
-                    return new StructuralPropertiesVector(pp, propsLocal);
+                    propsVector = new StructuralPropertiesVector(pp, propsLocal);
                 }
+
                 case FEED: {
                     int n = scanVariables.size();
                     IPartitioningProperty pp;
@@ -231,9 +144,11 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
                         pp = new UnorderedPartitionedProperty(pvars, domain);
                     }
                     List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
-                    return new StructuralPropertiesVector(pp, propsLocal);
+                    propsVector = new StructuralPropertiesVector(pp, propsLocal);
+                    break;
                 }
-                case INTERNAL: {
+
+                case INTERNAL_DATASET: {
                     int n = scanVariables.size();
                     IPartitioningProperty pp;
                     if (n < 2) {
@@ -254,18 +169,29 @@ public class AqlDataSource implements IDataSource<AqlSourceId> {
                     for (int i = 0; i < n - 1; i++) {
                         propsLocal.add(new LocalOrderProperty(new OrderColumn(scanVariables.get(i), OrderKind.ASC)));
                     }
-                    return new StructuralPropertiesVector(pp, propsLocal);
+                    propsVector = new StructuralPropertiesVector(pp, propsLocal);
                 }
+                    break;
+
                 default: {
                     throw new IllegalArgumentException();
                 }
             }
+            return propsVector;
         }
 
     }
 
     public AqlDataSourceType getDatasourceType() {
         return datasourceType;
+    }
+
+    public Map<String, Serializable> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, Serializable> properties) {
+        this.properties = properties;
     }
 
 }

@@ -61,11 +61,12 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     .createBinaryComparator();
             final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            	
+
                 if (b1[s1] == ATypeTag.NULL.serialize()) {
                     if (b2[s2] == ATypeTag.NULL.serialize())
                         return 0;
@@ -83,6 +84,8 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                             + ") cannot be compared!");
                 }
                 switch (tag1) {
+                    case UUID:
+                        return ascUUIDComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }

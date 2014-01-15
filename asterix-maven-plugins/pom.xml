@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.1-SNAPSHOT</version>
+		<version>0.8.4-SNAPSHOT</version>
 	</parent>
 
   <dependencies>
@@ -35,5 +35,6 @@
 
   <modules>
     <module>lexer-generator-maven-plugin</module>
+    <module>record-manager-generator-maven-plugin</module>
   </modules>
 </project>

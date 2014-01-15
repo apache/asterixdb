@@ -120,6 +120,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
+      <compilation-unit name="metadata_compaction_policy">
+        <output-dir compare="Text">metadata_compaction_policy</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
       <compilation-unit name="metadata_dataset">
         <output-dir compare="Text">metadata_dataset</output-dir>
       </compilation-unit>

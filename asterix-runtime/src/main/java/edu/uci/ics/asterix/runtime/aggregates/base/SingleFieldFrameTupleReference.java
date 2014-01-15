@@ -22,13 +22,13 @@ public class SingleFieldFrameTupleReference implements IFrameTupleReference {
     private byte[] fieldData;
     private int start;
     private int length;
-    
+
     public void reset(byte[] fieldData, int start, int length) {
         this.fieldData = fieldData;
         this.start = start;
         this.length = length;
     }
-    
+
     @Override
     public int getFieldCount() {
         return 1;
@@ -41,12 +41,12 @@ public class SingleFieldFrameTupleReference implements IFrameTupleReference {
 
     @Override
     public int getFieldStart(int fIdx) {
-       return start;
+        return start;
     }
 
     @Override
     public int getFieldLength(int fIdx) {
-       return length;
+        return length;
     }
 
     @Override

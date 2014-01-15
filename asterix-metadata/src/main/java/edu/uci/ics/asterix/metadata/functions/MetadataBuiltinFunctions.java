@@ -40,6 +40,8 @@ public class MetadataBuiltinFunctions {
         AsterixBuiltinFunctions.addDatasetFunction(AsterixBuiltinFunctions.DATASET);
         AsterixBuiltinFunctions.addUnnestFun(AsterixBuiltinFunctions.FEED_INGEST, false);
         AsterixBuiltinFunctions.addDatasetFunction(AsterixBuiltinFunctions.FEED_INGEST);
+        AsterixBuiltinFunctions.addUnnestFun(AsterixBuiltinFunctions.FEED_INTERCEPT, false);
+        AsterixBuiltinFunctions.addDatasetFunction(AsterixBuiltinFunctions.FEED_INTERCEPT);
     }
 
     public static void addMetadataBuiltinFunctions() {
@@ -85,9 +87,47 @@ public class MetadataBuiltinFunctions {
                 }
                 return t2;
             }
-        });
+        }, true);
 
         AsterixBuiltinFunctions.addPrivateFunction(AsterixBuiltinFunctions.FEED_INGEST, new IResultTypeComputer() {
+
+            @Override
+            public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
+                    IMetadataProvider<?, ?> mp) throws AlgebricksException {
+                AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
+                if (f.getArguments().size() != 3) {
+                    throw new AlgebricksException("Incorrect number of arguments -> arity is 3, not "
+                            + f.getArguments().size());
+                }
+                ILogicalExpression a1 = f.getArguments().get(1).getValue();
+                IAType t1 = (IAType) env.getType(a1);
+                if (t1.getTypeTag() == ATypeTag.ANY) {
+                    return BuiltinType.ANY;
+                }
+                if (t1.getTypeTag() != ATypeTag.STRING) {
+                    throw new AlgebricksException("Illegal type " + t1 + " for feed-ingest argument.");
+                }
+                if (a1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                    return BuiltinType.ANY;
+                }
+                AsterixConstantValue acv = (AsterixConstantValue) ((ConstantExpression) a1).getValue();
+                String typeArg = ((AString) acv.getObject()).getStringValue();
+                AqlMetadataProvider metadata = ((AqlMetadataProvider) mp);
+                Pair<String, String> argInfo = getDatasetInfo(metadata, typeArg);
+                String dataverseName = argInfo.first;
+                String typeName = argInfo.second;
+                if (dataverseName == null) {
+                    throw new AlgebricksException("Unspecified dataverse!");
+                }
+                IAType t2 = metadata.findType(dataverseName, typeName);
+                if (t2 == null) {
+                    throw new AlgebricksException("Unknown type  " + typeName);
+                }
+                return t2;
+            }
+        }, true);
+
+        AsterixBuiltinFunctions.addFunction(AsterixBuiltinFunctions.FEED_INTERCEPT, new IResultTypeComputer() {
 
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
@@ -128,21 +168,20 @@ public class MetadataBuiltinFunctions {
                 }
                 return t2;
             }
-        });
+        }, true);
     }
 
     private static Pair<String, String> getDatasetInfo(AqlMetadataProvider metadata, String datasetArg) {
-        String[] datasetNameComponents = datasetArg.split("\\.");
-        String dataverseName;
-        String datasetName;
-        if (datasetNameComponents.length == 1) {
-            dataverseName = metadata.getDefaultDataverse() == null ? null : metadata.getDefaultDataverse()
-                    .getDataverseName();
-            datasetName = datasetNameComponents[0];
+        String[] nameComponents = datasetArg.split("\\.");
+        String first;
+        String second;
+        if (nameComponents.length == 1) {
+            first = metadata.getDefaultDataverse() == null ? null : metadata.getDefaultDataverse().getDataverseName();
+            second = nameComponents[0];
         } else {
-            dataverseName = datasetNameComponents[0];
-            datasetName = datasetNameComponents[1];
+            first = nameComponents[0];
+            second = nameComponents[1];
         }
-        return new Pair(dataverseName, datasetName);
+        return new Pair(first, second);
     }
 }

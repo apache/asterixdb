@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.common.config;
 
+import java.util.Map;
+
 public class AsterixTransactionProperties extends AbstractAsterixProperties {
 
     private static final String TXN_LOG_BUFFER_NUMPAGES_KEY = "txn.log.buffer.numpages";
@@ -23,7 +25,7 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     private static final int TXN_LOG_BUFFER_PAGESIZE_DEFAULT = (128 << 10); // 128KB
 
     private static final String TXN_LOG_PARTITIONSIZE_KEY = "txn.log.partitionsize";
-    private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = ((long)2 << 30); // 2GB
+    private static final long TXN_LOG_PARTITIONSIZE_DEFAULT = ((long) 2 << 30); // 2GB
 
     private static final String TXN_LOG_CHECKPOINT_LSNTHRESHOLD_KEY = "txn.log.checkpoint.lsnthreshold";
     private static final int TXN_LOG_CHECKPOINT_LSNTHRESHOLD_DEFAULT = (64 << 20); // 64M
@@ -51,7 +53,11 @@ public class AsterixTransactionProperties extends AbstractAsterixProperties {
     }
 
     public String getLogDirectory(String nodeId) {
-        return accessor.getTransactionLogDir(nodeId);
+        return accessor.getTransactionLogDirs().get(nodeId);
+    }
+
+    public Map<String, String> getLogDirectories() {
+        return accessor.getTransactionLogDirs();
     }
 
     public int getLogBufferNumPages() {

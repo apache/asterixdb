@@ -218,7 +218,6 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
     }
 
     /**
-     * 
      * Pushes one field-access assignment above toPushThroughChildRef
      * 
      * @param toPush
@@ -234,17 +233,11 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
     }
 
     /**
-     * 
      * Rewrite
-     * 
      * assign $x := field-access($y, "field")
-     * 
      * assign $y := record-constructor { "field": Expr, ... }
-     * 
      * into
-     * 
      * assign $x := Expr
-     * 
      * assign $y := record-constructor { "field": Expr, ... }
      * 
      * @param toPush

@@ -18,10 +18,13 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionDescriptorTag;
+import edu.uci.ics.asterix.external.library.ExternalFunctionDescriptorProvider;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.functions.IExternalFunctionInfo;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.comparisons.ComparisonEvalFactory;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
@@ -138,9 +141,18 @@ public class AqlLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         }
 
         IFunctionDescriptor fd = null;
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        IDataFormat format = FormatUtils.getDefaultFormat();
-        fd = format.resolveFunction(expr, env);
+        if (!(expr.getFunctionInfo() instanceof IExternalFunctionInfo)) {
+            AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+            IDataFormat format = FormatUtils.getDefaultFormat();
+            fd = format.resolveFunction(expr, env);
+        } else {
+            try {
+                fd = ExternalFunctionDescriptorProvider.getExternalFunctionDescriptor((IExternalFunctionInfo) expr
+                        .getFunctionInfo());
+            } catch (AsterixException ae) {
+                throw new AlgebricksException(ae);
+            }
+        }
         return fd.createEvaluatorFactory(args);
     }
 

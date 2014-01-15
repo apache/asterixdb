@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
  * This class interprets the binary data representation of a record. One can
  * call getFieldNames, getFieldTypeTags and getFieldValues to get pointable
  * objects for field names, field type tags, and field values.
- * 
  */
 public class ARecordPointable extends AbstractVisitablePointable {
 

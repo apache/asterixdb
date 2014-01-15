@@ -48,8 +48,8 @@ public class AUnionPrinterFactory implements IPrinterFactory {
                 unionList = unionType.getUnionList();
                 printers = new IPrinter[unionType.getUnionList().size()];
                 for (int i = 0; i < printers.length; i++) {
-                    printers[i] = (AqlJSONPrinterFactoryProvider.INSTANCE
-                            .getPrinterFactory(unionType.getUnionList().get(i))).createPrinter();
+                    printers[i] = (AqlJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList()
+                            .get(i))).createPrinter();
                     printers[i].init();
                 }
             }

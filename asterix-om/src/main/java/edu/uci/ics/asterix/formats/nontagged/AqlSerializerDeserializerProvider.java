@@ -43,6 +43,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeseri
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUUIDSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
@@ -157,6 +158,9 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             }
             case UNORDEREDLIST: {
                 return new AUnorderedListSerializerDeserializer((AUnorderedListType) aqlType);
+            }
+            case UUID: {
+                return AUUIDSerializerDeserializer.INSTANCE;
             }
             default: {
                 throw new NotImplementedException("No serializer/deserializer implemented for type "

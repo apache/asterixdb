@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * The runtime function for casting a list(unordered list or ordered list)
  * 
  * @author yingyib
- *
  */
 public class CastListDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 

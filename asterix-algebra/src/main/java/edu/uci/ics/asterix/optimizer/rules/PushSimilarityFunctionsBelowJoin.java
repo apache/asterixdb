@@ -30,25 +30,22 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushFunctionsBelowJoin;
  * a join (which may blow up the cardinality).
  * Also, this rule may help to enable other rules such as common subexpression elimination, again to reduce
  * the number of calls to expensive similarity functions.
- * 
  * Example:
- * 
  * Before plan:
  * assign [$$10] <- [funcA(funcB(simFuncX($$3, $$4)))]
- *   join (some condition) 
- *     join_branch_0 where $$3 and $$4 are not live
- *       ...
- *     join_branch_1 where $$3 and $$4 are live
- *       ...
- * 
+ * join (some condition)
+ * join_branch_0 where $$3 and $$4 are not live
+ * ...
+ * join_branch_1 where $$3 and $$4 are live
+ * ...
  * After plan:
  * assign [$$10] <- [funcA(funcB($$11))]
- *   join (some condition) 
- *     join_branch_0 where $$3 and $$4 are not live
- *       ...
- *     join_branch_1 where $$3 and $$4 are live
- *       assign[$$11] <- [simFuncX($$3, $$4)]
- *         ...
+ * join (some condition)
+ * join_branch_0 where $$3 and $$4 are not live
+ * ...
+ * join_branch_1 where $$3 and $$4 are live
+ * assign[$$11] <- [simFuncX($$3, $$4)]
+ * ...
  */
 public class PushSimilarityFunctionsBelowJoin extends PushFunctionsBelowJoin {
 

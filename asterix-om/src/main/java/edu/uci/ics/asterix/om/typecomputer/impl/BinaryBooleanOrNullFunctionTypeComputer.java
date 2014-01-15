@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;

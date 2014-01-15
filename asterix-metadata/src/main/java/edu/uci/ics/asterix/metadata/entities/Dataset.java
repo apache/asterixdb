@@ -117,4 +117,9 @@ public class Dataset implements IMetadataEntity {
         }
         return true;
     }
+
+    @Override
+    public String toString() {
+        return dataverseName + "." + datasetName;
+    }
 }

@@ -135,7 +135,7 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
 
                             if (!processSuccessfully) {
                                 throw new HyracksDataException(
-                                        "parse-date: Failed to match with any given format string!");
+                                        "parse-datetime: Failed to match with any given format string!");
                             }
 
                             aDateTime.setValue(chronon);

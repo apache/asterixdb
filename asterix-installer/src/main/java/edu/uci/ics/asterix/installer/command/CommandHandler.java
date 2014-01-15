@@ -52,6 +52,12 @@ public class CommandHandler {
             case CONFIGURE:
                 cmd = new ConfigureCommand();
                 break;
+            case INSTALL:
+                cmd = new InstallCommand();
+                break;
+            case UNINSTALL:
+                cmd = new UninstallCommand();
+                break;
             case LOG:
                 cmd = new LogCommand();
                 break;
@@ -60,6 +66,17 @@ public class CommandHandler {
                 break;
             case HELP:
                 cmd = new HelpCommand();
+                break;
+            case STOPNODE:
+                cmd = new StopNodeCommand();
+                break;
+            case STARTNODE:
+                cmd = new StartNodeCommand();
+                break;
+            case VERSION:
+                cmd = new VersionCommand();
+                break;
+            default:
                 break;
         }
         cmd.execute(args);

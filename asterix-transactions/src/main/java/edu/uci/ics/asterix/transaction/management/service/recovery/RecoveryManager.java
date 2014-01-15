@@ -340,8 +340,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("[RecoveryMgr] recovery is completed.");
-            LOGGER.info("[RecoveryMgr's recovery log count] update/entityCommit/jobCommit/abort/redo = " + updateLogCount + "/"
-                    + entityCommitLogCount + "/" + jobCommitLogCount + "/" + abortLogCount + "/" + redoCount);
+            LOGGER.info("[RecoveryMgr's recovery log count] update/entityCommit/jobCommit/abort/redo = "
+                    + updateLogCount + "/" + entityCommitLogCount + "/" + jobCommitLogCount + "/" + abortLogCount + "/"
+                    + redoCount);
         }
     }
 
@@ -446,7 +447,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
 
         if (isSharpCheckpoint) {
-            logMgr.renewLogFiles();
+            try {
+                logMgr.renewLogFiles();
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
         }
 
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
@@ -666,8 +671,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         logReader.close();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" undone loser transaction's effect");
-            LOGGER.info("[RecoveryManager's rollback log count] update/entityCommit/undo:" + updateLogCount + "/" + entityCommitLogCount + "/"
-                    + undoCount);
+            LOGGER.info("[RecoveryManager's rollback log count] update/entityCommit/undo:" + updateLogCount + "/"
+                    + entityCommitLogCount + "/" + undoCount);
         }
     }
 
@@ -679,6 +684,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         //no op
+    }
+
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+        // do nothing
     }
 
     private void undo(ILogRecord logRecord) {

@@ -192,7 +192,7 @@ DataverseDecl DataverseDeclaration() throws ParseException:
   }
 }
 
-LoadFromFileStatement LoadStatement() throws ParseException:
+LoadStatement LoadStatement() throws ParseException:
 {
   Identifier datasetName = null;
   boolean alreadySorted = false;
@@ -256,7 +256,7 @@ LoadFromFileStatement LoadStatement() throws ParseException:
         
   ";"
   {
-     return new LoadFromFileStatement(null, datasetName, adapter, properties, alreadySorted);
+     return new LoadStatement(null, datasetName, adapter, properties, alreadySorted);
   }   
 }
 

@@ -1,12 +1,19 @@
 # Accessing External Data in AsterixDB #
 
-## Introduction ##
+## <a id="toc">Table of Contents</a> ##
+
+* [Introduction](#Introduction)
+  * [Adapter for an External Dataset](#IntroductionAdapterForAnExternalDataset)
+  * [Creating an External Dataset](#IntroductionCreatingAnExternalDataset)
+* [Writing Queries against an External Dataset](#WritingQueriesAgainstAnExternalDataset)
+
+## <a id="Introduction">Introduction</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 Data that needs to be processed by ASTERIX could be residing outside ASTERIX storage. Examples include data files on a distributed file system such as HDFS or on the local file system of a machine that is part of an ASTERIX cluster.  For ASTERIX to process such data, end-user may create a regular dataset in ASTERIX (a.k.a. internal dataset) and load the dataset with the data. ASTERIX supports ''external datasets'' so that it is not necessary to “load” all data prior to using it. This also avoids creating multiple copies of data and the need to keep the copies in sync.
 
-### Adapter for an External Dataset ###
+### <a id="IntroductionAdapterForAnExternalDataset">Adapter for an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 External data is accessed using wrappers (adapters in ASTERIX) that abstract away the mechanism of connecting with an external service, receiving data and transforming the data into ADM records that are understood by ASTERIX. ASTERIX comes with built-in adapters for common storage systems such as HDFS or the local file system.
 
-### Creating an External Dataset ###
+### <a id="IntroductionCreatingAnExternalDataset">Creating an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
 
 As an example we consider the Lineitem dataset from [TPCH schema](http://www.openlinksw.com/dataspace/doc/dav/wiki/Main/VOSTPCHLinkedData/tpch.sql).
 
@@ -168,7 +175,7 @@ Once you have copied the source data file to your HDFS instance, substitute the 
 
 You may now run the sample query in next section.
 
-## Writing Queries against an External Dataset ##
+## <a id="WritingQueriesAgainstAnExternalDataset">Writing Queries against an External Dataset</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 You may  write AQL queries against an external dataset. Following is an example AQL query that applies a filter and returns an ordered result.
 
 

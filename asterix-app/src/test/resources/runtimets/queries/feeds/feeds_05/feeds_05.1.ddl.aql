@@ -1,0 +1,38 @@
+/*
+ * Description  : Create a feed dataset that uses the synthetic feed simulator adapter. 
+                  The synthetic feed simulator uses the Social-Data generator to generate data and simulate a feed. 
+                  The feed lasts a configured duration with data arriving at a configured rate (tweets per second). 
+                  Verify the existence of data after the feed finishes.
+                  
+ * Expected Res : Success
+ * Date         : 20th Jun 2013
+ */
+
+drop dataverse feeds if exists;
+create dataverse feeds;
+use dataverse feeds;
+
+create type TwitterUserType as closed {
+	screen-name: string,
+	lang: string,
+	friends_count: int32,
+	statuses_count: int32,
+	name: string,
+	followers_count: int32
+} 
+
+create type TweetMessageType as closed {
+	tweetid: int64,
+    user: TwitterUserType,
+    sender-location: point,
+	send-time: datetime,
+    referred-topics: {{ string }},
+	message-text: string
+}
+
+create dataset SyntheticTweets(TweetMessageType)
+primary key tweetid;
+
+create feed  SyntheticTweetFeed
+using twitter_firehose
+(("duration"="5"),("tps"="50"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));

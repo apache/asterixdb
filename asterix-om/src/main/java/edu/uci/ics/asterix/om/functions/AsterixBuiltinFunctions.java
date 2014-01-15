@@ -26,20 +26,18 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ABooleanTypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.ACircleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADateTimeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADateTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AFloatTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt32TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt64TypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.ALineTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ANullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.APointTypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.APolygonTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ARectangleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ATimeTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryBooleanOrNullFunctionTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringBoolOrNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.BinaryStringStringOrNullTypeComputer;
@@ -56,9 +54,9 @@ import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedGetItemResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedLocalAvgTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedMinMaxAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAddSubMulDivTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericRoundHalfToEven2TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericUnaryFunctionTypeComputer;
-import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedNumericAggTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedSwitchCaseComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedUnaryMinusTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NotNullTypeComputer;
@@ -91,6 +89,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.QuadStringStringOrNullTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.Substring2TypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.SubstringTypeComputer;
@@ -169,6 +168,8 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "unordered-list-constructor", FunctionIdentifier.VARARGS);
 
     // records
+    public final static FunctionIdentifier RECORD_MERGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "record-merge", 3);
     public final static FunctionIdentifier CLOSED_RECORD_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "closed-record-constructor", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier OPEN_RECORD_CONSTRUCTOR = new FunctionIdentifier(
@@ -240,7 +241,9 @@ public class AsterixBuiltinFunctions {
 
     public final static FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
     public final static FunctionIdentifier FEED_INGEST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "feed-ingest", 1);
+            "feed-ingest", 3);
+    public final static FunctionIdentifier FEED_INTERCEPT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "feed-intercept", 1);
 
     public final static FunctionIdentifier INDEX_SEARCH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "index-search", FunctionIdentifier.VARARGS);
@@ -393,6 +396,8 @@ public class AsterixBuiltinFunctions {
             "datetime", 1);
     public final static FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "duration", 1);
+    public final static FunctionIdentifier UUID_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "uuid", 1);
 
     public final static FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
@@ -473,7 +478,7 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier CREATE_LINE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-line", 2);
     public final static FunctionIdentifier CREATE_POLYGON = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-polygon", FunctionIdentifier.VARARGS);
+            "create-polygon", 1);
     public final static FunctionIdentifier CREATE_CIRCLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "create-circle", 2);
     public final static FunctionIdentifier CREATE_RECTANGLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -496,8 +501,13 @@ public class AsterixBuiltinFunctions {
             "inject-failure", 2);
     public final static FunctionIdentifier CAST_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-record", 1);
+    public final static FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "flow-record", 1);
     public final static FunctionIdentifier CAST_LIST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "cast-list", 1);
+
+    public final static FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "create-uuid", 0);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(
@@ -586,11 +596,7 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "" + "collection-to-sequence", 1);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
-        IFunctionInfo finfo = registeredFunctions.get(fid);
-        if (finfo == null) {
-            finfo = new AsterixFunctionInfo(fid);
-        }
-        return finfo;
+        return registeredFunctions.get(fid);
     }
 
     public static AsterixFunctionInfo lookupFunction(FunctionIdentifier fid) {
@@ -600,72 +606,74 @@ public class AsterixBuiltinFunctions {
     static {
 
         // first, take care of Algebricks builtin functions
-        addFunction(IS_NULL, ABooleanTypeComputer.INSTANCE);
-        addFunction(NOT, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
+        addFunction(IS_NULL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(NOT, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
 
-        addPrivateFunction(EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(LE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(GE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(LT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(GT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(AND, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(NEQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(OR, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_ADD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
+        addPrivateFunction(EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(LE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(GE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(LT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(GT, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(AND, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(NEQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(OR, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_ADD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE, true);
 
         // and then, Asterix builtin functions
-        addPrivateFunction(NOT_NULL, NotNullTypeComputer.INSTANCE);
-        addPrivateFunction(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE);
-        addFunction(AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE);
-        addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE);
-        addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE);
+        addPrivateFunction(NOT_NULL, NotNullTypeComputer.INSTANCE, true);
+        addPrivateFunction(ANY_COLLECTION_MEMBER, NonTaggedCollectionMemberResultType.INSTANCE, true);
+        addFunction(AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addFunction(BOOLEAN_CONSTRUCTOR, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(CARET, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE, true);
+        addPrivateFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);
+        addPrivateFunction(CLOSED_RECORD_CONSTRUCTOR, ClosedRecordConstructorResultType.INSTANCE, true);
+        addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
 
-        addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE);
-        addFunction(COUNT, AInt64TypeComputer.INSTANCE);
-        addPrivateFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        addFunction(CREATE_CIRCLE, ACircleTypeComputer.INSTANCE);
-        addFunction(CREATE_LINE, ALineTypeComputer.INSTANCE);
-        addPrivateFunction(CREATE_MBR, ADoubleTypeComputer.INSTANCE);
-        addFunction(CREATE_POINT, APointTypeComputer.INSTANCE);
-        addFunction(CREATE_POLYGON, APolygonTypeComputer.INSTANCE);
-        addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE);
+        addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
+        addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
+        addFunction(CREATE_CIRCLE, OptionalACircleTypeComputer.INSTANCE, true);
+        addFunction(CREATE_LINE, OptionalALineTypeComputer.INSTANCE, true);
+        addPrivateFunction(CREATE_MBR, OptionalADoubleTypeComputer.INSTANCE, true);
+        addFunction(CREATE_POINT, OptionalAPointTypeComputer.INSTANCE, true);
+        addFunction(CREATE_POLYGON, OptionalAPolygonTypeComputer.INSTANCE, true);
+        addFunction(CREATE_RECTANGLE, OptionalARectangleTypeComputer.INSTANCE, true);
+        addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
 
-        addFunction(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE);
-        addFunction(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE);
-        addFunction(DOUBLE_CONSTRUCTOR, OptionalADoubleTypeComputer.INSTANCE);
-        addFunction(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(YEAR_MONTH_DURATION_CONSTRUCTOR, OptionalAYearMonthDurationTypeComputer.INSTANCE);
-        addFunction(DAY_TIME_DURATION_CONSTRUCTOR, OptionalADayTimeDurationTypeComputer.INSTANCE);
-        addFunction(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE);
-        addFunction(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        addPrivateFunction(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE);
+        addFunction(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE, true);
+        addFunction(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE, true);
+        addFunction(DOUBLE_CONSTRUCTOR, OptionalADoubleTypeComputer.INSTANCE, true);
+        addFunction(DURATION_CONSTRUCTOR, OptionalADurationTypeComputer.INSTANCE, true);
+        addFunction(YEAR_MONTH_DURATION_CONSTRUCTOR, OptionalAYearMonthDurationTypeComputer.INSTANCE, true);
+        addFunction(DAY_TIME_DURATION_CONSTRUCTOR, OptionalADayTimeDurationTypeComputer.INSTANCE, true);
+        addFunction(EDIT_DISTANCE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
+        addPrivateFunction(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(EMBED_TYPE, new IResultTypeComputer() {
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
                 return (IAType) BuiltinType.ANY;
             }
-        });
-        addPrivateFunction(EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
-        addFunction(ENDS_WITH, ABooleanTypeComputer.INSTANCE);
+        }, true);
+        addPrivateFunction(EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(ENDS_WITH, ABooleanTypeComputer.INSTANCE, true);
         // add(FIELD_ACCESS, NonTaggedFieldAccessByNameResultType.INSTANCE);
-        addPrivateFunction(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE);
-        addPrivateFunction(FIELD_ACCESS_BY_NAME, NonTaggedFieldAccessByNameResultType.INSTANCE);
-        addFunction(FLOAT_CONSTRUCTOR, OptionalAFloatTypeComputer.INSTANCE);
-        addPrivateFunction(FUZZY_EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addPrivateFunction(GET_HANDLE, null); // TODO
-        addPrivateFunction(GET_ITEM, NonTaggedGetItemResultType.INSTANCE);
-        addPrivateFunction(GET_DATA, null); // TODO
-        addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE);
-        addFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
-        addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE);
+        addPrivateFunction(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE, true);
+        addPrivateFunction(FIELD_ACCESS_BY_NAME, NonTaggedFieldAccessByNameResultType.INSTANCE, true);
+        addFunction(FLOAT_CONSTRUCTOR, OptionalAFloatTypeComputer.INSTANCE, true);
+        addPrivateFunction(FUZZY_EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addPrivateFunction(GET_HANDLE, null, true); // TODO
+        addPrivateFunction(GET_ITEM, NonTaggedGetItemResultType.INSTANCE, true);
+        addPrivateFunction(GET_DATA, null, true); // TODO
+        addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
+        addFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
+        addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(INDEX_SEARCH, new IResultTypeComputer() {
 
             @Override
@@ -673,95 +681,95 @@ public class AsterixBuiltinFunctions {
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
                 return BuiltinType.ANY; // TODO
             }
-        });
-        addFunction(INT8_CONSTRUCTOR, OptionalAInt8TypeComputer.INSTANCE);
-        addFunction(INT16_CONSTRUCTOR, OptionalAInt16TypeComputer.INSTANCE);
-        addFunction(INT32_CONSTRUCTOR, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(INT64_CONSTRUCTOR, OptionalAInt64TypeComputer.INSTANCE);
-        addFunction(LEN, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE);
-        addFunction(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE);
-        addPrivateFunction(LISTIFY, OrderedListConstructorResultType.INSTANCE);
-        addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
-        addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null); // TODO
-        addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null); // TODO
-        addFunction(MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE);
-        addFunction(MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE);
-        addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE);
-        addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE);
-        addPrivateFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE);
+        }, true);
+        addFunction(INT8_CONSTRUCTOR, OptionalAInt8TypeComputer.INSTANCE, true);
+        addFunction(INT16_CONSTRUCTOR, OptionalAInt16TypeComputer.INSTANCE, true);
+        addFunction(INT32_CONSTRUCTOR, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(INT64_CONSTRUCTOR, OptionalAInt64TypeComputer.INSTANCE, true);
+        addFunction(LEN, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addFunction(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE, true);
+        addPrivateFunction(LISTIFY, OrderedListConstructorResultType.INSTANCE, true);
+        addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE, true);
+        addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, null, true); // TODO
+        addPrivateFunction(MAKE_FIELD_NAME_HANDLE, null, true); // TODO
+        addFunction(MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addFunction(MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(NULL_CONSTRUCTOR, ANullTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_UNARY_MINUS, NonTaggedUnaryMinusTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_SUBTRACT, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_MULTIPLY, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_DIVIDE, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_MOD, NonTaggedNumericAddSubMulDivTypeComputer.INSTANCE, true);
+        addPrivateFunction(NUMERIC_IDIV, AInt32TypeComputer.INSTANCE, true);
 
-        addFunction(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        addFunction(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        addFunction(NUMERIC_FLOOR, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        addFunction(NUMERIC_ROUND, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE);
-        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NonTaggedNumericRoundHalfToEven2TypeComputer.INSTANCE);
+        addFunction(NUMERIC_ABS, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_CEILING, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_FLOOR, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NonTaggedNumericUnaryFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NonTaggedNumericRoundHalfToEven2TypeComputer.INSTANCE, true);
 
-        addFunction(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE);
-        addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE);
-        addFunction(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE);
-        addFunction(SUBSTRING2, Substring2TypeComputer.INSTANCE);
-        addFunction(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE);
-        addFunction(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_START_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_END_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_MATCHES, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_MATCHES_WITH_FLAG, TripleStringBoolOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_REPLACE, TripleStringStringOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_REPLACE_WITH_FLAG, QuadStringStringOrNullTypeComputer.INSTANCE);
-        addFunction(SUBSTRING_BEFORE, BinaryStringStringOrNullTypeComputer.INSTANCE);
-        addFunction(SUBSTRING_AFTER, BinaryStringStringOrNullTypeComputer.INSTANCE);
-        addPrivateFunction(STRING_EQUAL, BinaryStringBoolOrNullTypeComputer.INSTANCE);
-        addFunction(STRING_JOIN, AStringTypeComputer.INSTANCE);
+        addFunction(STRING_TO_CODEPOINT, OrderedListOfAInt32TypeComputer.INSTANCE, true);
+        addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE, true);
+        addFunction(SUBSTRING2, Substring2TypeComputer.INSTANCE, true);
+        addFunction(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_START_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_END_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_MATCHES, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_MATCHES_WITH_FLAG, TripleStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_REPLACE, TripleStringStringOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_REPLACE_WITH_FLAG, QuadStringStringOrNullTypeComputer.INSTANCE, true);
+        addFunction(SUBSTRING_BEFORE, BinaryStringStringOrNullTypeComputer.INSTANCE, true);
+        addFunction(SUBSTRING_AFTER, BinaryStringStringOrNullTypeComputer.INSTANCE, true);
+        addPrivateFunction(STRING_EQUAL, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_JOIN, AStringTypeComputer.INSTANCE, true);
 
-        addPrivateFunction(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE);
-        addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorResultType.INSTANCE);
-        addFunction(POINT_CONSTRUCTOR, OptionalAPointTypeComputer.INSTANCE);
-        addFunction(POINT3D_CONSTRUCTOR, OptionalAPoint3DTypeComputer.INSTANCE);
-        addFunction(POLYGON_CONSTRUCTOR, OptionalAPolygonTypeComputer.INSTANCE);
-        addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE);
-        addFunction(RANGE, AInt32TypeComputer.INSTANCE);
-        addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE);
+        addPrivateFunction(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE, true);
+        addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorResultType.INSTANCE, true);
+        addFunction(POINT_CONSTRUCTOR, OptionalAPointTypeComputer.INSTANCE, true);
+        addFunction(POINT3D_CONSTRUCTOR, OptionalAPoint3DTypeComputer.INSTANCE, true);
+        addFunction(POLYGON_CONSTRUCTOR, OptionalAPolygonTypeComputer.INSTANCE, true);
+        addPrivateFunction(PREFIX_LEN_JACCARD, AInt32TypeComputer.INSTANCE, true);
+        addFunction(RANGE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE, true);
 
-        addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE);
-        addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        addPrivateFunction(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE);
-        addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE);
-        addFunction(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE);
-        addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE);
-        addPrivateFunction(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE);
-        addPrivateFunction(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
-        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
-        addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE);
-        addFunction(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        addPrivateFunction(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE);
-        addPrivateFunction(SIMILARITY_JACCARD_SORTED_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        addPrivateFunction(SIMILARITY_JACCARD_PREFIX, AFloatTypeComputer.INSTANCE);
-        addPrivateFunction(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE);
-        addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE);
-        addFunction(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE);
-        addFunction(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE);
-        addFunction(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE);
-        addFunction(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
-        addFunction(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE);
-        addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE);
-        addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE);
-        addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE);
-        addFunction(STARTS_WITH, ABooleanTypeComputer.INSTANCE);
-        addFunction(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addPrivateFunction(SCALAR_LOCAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addPrivateFunction(SCAN_COLLECTION, NonTaggedCollectionMemberResultType.INSTANCE, true);
+        addPrivateFunction(SERIAL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE, true);
+        addFunction(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
+        addPrivateFunction(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE, true);
+        addPrivateFunction(SIMILARITY_JACCARD_SORTED_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
+        addPrivateFunction(SIMILARITY_JACCARD_PREFIX, AFloatTypeComputer.INSTANCE, true);
+        addPrivateFunction(SIMILARITY_JACCARD_PREFIX_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
+        addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
+        addFunction(STARTS_WITH, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE, true);
         addPrivateFunction(SUBSET_COLLECTION, new IResultTypeComputer() {
 
             @Override
@@ -798,96 +806,95 @@ public class AsterixBuiltinFunctions {
                     }
                 }
             }
-        });
-        addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE);
-        addFunction(SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
-        addPrivateFunction(LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE);
-        addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE);
-        addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE);
-        addFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE);
-        addPrivateFunction(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE);
-        addFunction(CAST_LIST, CastListResultTypeComputer.INSTANCE);
+        }, true);
+        addFunction(SUBSTRING, SubstringTypeComputer.INSTANCE, true);
+        addFunction(SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE, true);
+        addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);
+        addPrivateFunction(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE, true);
+        addFunction(CAST_LIST, CastListResultTypeComputer.INSTANCE, true);
 
-        addFunction(TID, AInt32TypeComputer.INSTANCE);
-        addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE);
-        addPrivateFunction(TYPE_OF, null);
-        addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE);
+        addFunction(TID, AInt32TypeComputer.INSTANCE, true);
+        addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE, true);
+        addPrivateFunction(TYPE_OF, null, true);
+        addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorResultType.INSTANCE, true);
         addFunction(WORD_TOKENS, new IResultTypeComputer() {
-
             @Override
             public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                     IMetadataProvider<?, ?> mp) throws AlgebricksException {
                 return new AOrderedListType(BuiltinType.ASTRING, "string");
             }
-        });
+        }, true);
 
         // temporal type accessors
-        addFunction(ACCESSOR_TEMPORAL_YEAR, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_MONTH, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_DAY, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_HOUR, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_MIN, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_INTERVAL_START, OptionalATemporalInstanceTypeComputer.INSTANCE);
-        addFunction(ACCESSOR_TEMPORAL_INTERVAL_END, OptionalATemporalInstanceTypeComputer.INSTANCE);
+        addFunction(ACCESSOR_TEMPORAL_YEAR, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_MONTH, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_DAY, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_HOUR, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_MIN, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_SEC, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_MILLISEC, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_INTERVAL_START, OptionalATemporalInstanceTypeComputer.INSTANCE, true);
+        addFunction(ACCESSOR_TEMPORAL_INTERVAL_END, OptionalATemporalInstanceTypeComputer.INSTANCE, true);
 
         // temporal functions
-        addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE);
-        addFunction(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE);
-        addFunction(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE);
-        addFunction(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE);
-        addFunction(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
-        addFunction(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE);
-        addFunction(INTERVAL_BEFORE, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_AFTER, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_MEETS, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_MET_BY, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_OVERLAPS, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_OVERLAPPED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(OVERLAP, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_STARTS, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_STARTED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_COVERS, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE);
-        addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE);
-        addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE);
-        addFunction(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(YEAR_MONTH_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE);
-        addPrivateFunction(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE);
-        addFunction(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE);
-        addFunction(MONTHS_FROM_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE);
-        addFunction(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE);
-        addFunction(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE);
-        addFunction(INTERVAL_BIN, OptionalAIntervalTypeComputer.INSTANCE);
-        addFunction(DAY_OF_WEEK, OptionalAInt32TypeComputer.INSTANCE);
-        addFunction(PARSE_DATE, OptionalADateTypeComputer.INSTANCE);
-        addFunction(PARSE_TIME, OptionalATimeTypeComputer.INSTANCE);
-        addFunction(PARSE_DATETIME, OptionalADateTimeTypeComputer.INSTANCE);
-        addFunction(PRINT_DATE, OptionalAStringTypeComputer.INSTANCE);
-        addFunction(PRINT_TIME, OptionalAStringTypeComputer.INSTANCE);
-        addFunction(PRINT_DATETIME, OptionalAStringTypeComputer.INSTANCE);
+        addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, OptionalADateTypeComputer.INSTANCE, true);
+        addFunction(DATE_FROM_DATETIME, OptionalADateTypeComputer.INSTANCE, true);
+        addFunction(TIME_FROM_UNIX_TIME_IN_MS, OptionalATimeTypeComputer.INSTANCE, true);
+        addFunction(TIME_FROM_DATETIME, OptionalATimeTypeComputer.INSTANCE, true);
+        addFunction(DATETIME_FROM_DATE_TIME, OptionalADateTimeTypeComputer.INSTANCE, true);
+        addFunction(DATETIME_FROM_UNIX_TIME_IN_MS, OptionalADateTimeTypeComputer.INSTANCE, true);
+        addFunction(CALENDAR_DURATION_FROM_DATETIME, OptionalADurationTypeComputer.INSTANCE, true);
+        addFunction(CALENDAR_DURATION_FROM_DATE, OptionalADurationTypeComputer.INSTANCE, true);
+        addFunction(ADJUST_DATETIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE, true);
+        addFunction(ADJUST_TIME_FOR_TIMEZONE, OptionalAStringTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_BEFORE, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_AFTER, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_MEETS, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_MET_BY, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_OVERLAPS, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_OVERLAPPED_BY, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(OVERLAP, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_STARTS, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_STARTED_BY, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_COVERS, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE, true);
+        addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE, true);
+        addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, true);
+        addFunction(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(YEAR_MONTH_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(DURATION_EQUAL, OptionalABooleanTypeComputer.INSTANCE, true);
+        addFunction(DURATION_FROM_MONTHS, OptionalADurationTypeComputer.INSTANCE, true);
+        addFunction(DURATION_FROM_MILLISECONDS, OptionalADurationTypeComputer.INSTANCE, true);
+        addFunction(MONTHS_FROM_YEAR_MONTH_DURATION, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(MILLISECONDS_FROM_DAY_TIME_DURATION, OptionalAInt64TypeComputer.INSTANCE, true);
+        addFunction(GET_DAY_TIME_DURATION, OptionalADayTimeDurationTypeComputer.INSTANCE, true);
+        addFunction(GET_YEAR_MONTH_DURATION, OptionalAYearMonthDurationTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_BIN, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(DAY_OF_WEEK, OptionalAInt32TypeComputer.INSTANCE, true);
+        addFunction(PARSE_DATE, OptionalADateTypeComputer.INSTANCE, true);
+        addFunction(PARSE_TIME, OptionalATimeTypeComputer.INSTANCE, true);
+        addFunction(PARSE_DATETIME, OptionalADateTimeTypeComputer.INSTANCE, true);
+        addFunction(PRINT_DATE, OptionalAStringTypeComputer.INSTANCE, true);
+        addFunction(PRINT_TIME, OptionalAStringTypeComputer.INSTANCE, true);
+        addFunction(PRINT_DATETIME, OptionalAStringTypeComputer.INSTANCE, true);
 
         // interval constructors
-        addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE);
-        addFunction(INTERVAL_CONSTRUCTOR_TIME, OptionalAIntervalTypeComputer.INSTANCE);
-        addFunction(INTERVAL_CONSTRUCTOR_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
-        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE);
-        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE);
-        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE);
+        addFunction(INTERVAL_CONSTRUCTOR_DATE, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_CONSTRUCTOR_TIME, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_CONSTRUCTOR_DATETIME, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATE, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_DATETIME, OptionalAIntervalTypeComputer.INSTANCE, true);
+        addFunction(INTERVAL_CONSTRUCTOR_START_FROM_TIME, OptionalAIntervalTypeComputer.INSTANCE, true);
 
-        addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE);
+        addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
 
         String metadataFunctionLoaderClassName = "edu.uci.ics.asterix.metadata.functions.MetadataBuiltinFunctions";
         try {
@@ -962,12 +969,14 @@ public class AsterixBuiltinFunctions {
     static {
         datasetFunctions.add(getAsterixFunctionInfo(DATASET));
         datasetFunctions.add(getAsterixFunctionInfo(FEED_INGEST));
+        datasetFunctions.add(getAsterixFunctionInfo(FEED_INTERCEPT));
         datasetFunctions.add(getAsterixFunctionInfo(INDEX_SEARCH));
     }
 
     static {
         addUnnestFun(DATASET, false);
         addUnnestFun(FEED_INGEST, false);
+        addUnnestFun(FEED_INTERCEPT, false);
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
@@ -981,9 +990,10 @@ public class AsterixBuiltinFunctions {
         return datasetFunctions.contains(getAsterixFunctionInfo(fi));
     }
 
+    /*
     public static boolean isBuiltinCompilerFunction(FunctionIdentifier fi, boolean includePrivateFunctions) {
         return builtinPublicFunctionsSet.keySet().contains(getAsterixFunctionInfo(fi));
-    }
+    }*/
 
     public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
 
@@ -1086,18 +1096,18 @@ public class AsterixBuiltinFunctions {
         return finfo == null ? null : finfo.getFunctionIdentifier();
     }
 
-    public static void addFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
-        IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
+    public static void addFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer, boolean isFunctional) {
+        IFunctionInfo functionInfo = new AsterixFunctionInfo(fi, isFunctional);
         builtinPublicFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
-        registeredFunctions.put(fi);
+        registeredFunctions.put(fi, functionInfo);
     }
 
-    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer) {
-        IFunctionInfo functionInfo = getAsterixFunctionInfo(fi);
+    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer, boolean isFunctional) {
+        IFunctionInfo functionInfo = new AsterixFunctionInfo(fi, isFunctional);
         builtinPrivateFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
-        registeredFunctions.put(fi);
+        registeredFunctions.put(fi, functionInfo);
     }
 
     private static void addAgg(FunctionIdentifier fi) {
@@ -1128,7 +1138,7 @@ public class AsterixBuiltinFunctions {
     public static boolean isSpatialFilterFunction(FunctionIdentifier fi) {
         return spatialFilterFunctions.get(getAsterixFunctionInfo(fi)) != null;
     }
-    
+
     static {
         similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD));
         similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD_CHECK));

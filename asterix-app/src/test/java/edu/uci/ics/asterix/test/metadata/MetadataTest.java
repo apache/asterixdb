@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,8 +42,9 @@ public class MetadataTest {
 
     private TestCaseContext tcCtx;
 
-    private static final String PATH_ACTUAL = "mdtest/";
-    private static final String PATH_BASE = "src/test/resources/metadata/";
+    private static final String PATH_ACTUAL = "mdtest" + File.separator;
+    private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources",
+            "metadata" + File.separator }, File.separator);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
     private static final String WEB_SERVER_PORT = "19002";
 
@@ -76,8 +78,6 @@ public class MetadataTest {
         for (String d : AsterixHyracksIntegrationUtil.ASTERIX_DATA_DIRS) {
             TestsUtils.deleteRec(new File(d));
         }
-
-        deleteTransactionLogs();
     }
 
     private static void deleteTransactionLogs() throws Exception {
@@ -105,7 +105,7 @@ public class MetadataTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null);
+        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 
 }

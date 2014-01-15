@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
@@ -30,9 +31,11 @@ import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.IFeedManager;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import edu.uci.ics.asterix.metadata.feeds.FeedManager;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -40,7 +43,7 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -64,6 +67,9 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
+
+    public static final AsterixPropertiesAccessor ASTERIX_PROPERTIES_ACCESSOR = createAsterixPropertiesAccessor();
+
     private static final int METADATA_IO_DEVICE_ID = 0;
 
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
@@ -75,6 +81,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
 
+    private AsterixThreadExecutor threadExecutor;
     private DatasetLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
@@ -86,20 +93,31 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IIOManager ioManager;
     private boolean isShuttingdown;
 
-    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
+    private IFeedManager feedManager;
+
+    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) throws AsterixException {
         this.ncApplicationContext = ncApplicationContext;
+        compilerProperties = new AsterixCompilerProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        externalProperties = new AsterixExternalProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        metadataProperties = new AsterixMetadataProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        storageProperties = new AsterixStorageProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        txnProperties = new AsterixTransactionProperties(ASTERIX_PROPERTIES_ACCESSOR);
+    }
+
+    private static AsterixPropertiesAccessor createAsterixPropertiesAccessor() {
+        AsterixPropertiesAccessor propertiesAccessor = null;
+        try {
+            propertiesAccessor = new AsterixPropertiesAccessor();
+        } catch (AsterixException e) {
+            throw new IllegalStateException("Unable to create properties accessor");
+        }
+        return propertiesAccessor;
     }
 
     public void initialize() throws IOException, ACIDException, AsterixException {
-        AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
-        compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
-        externalProperties = new AsterixExternalProperties(propertiesAccessor);
-        metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
-        storageProperties = new AsterixStorageProperties(propertiesAccessor);
-        txnProperties = new AsterixTransactionProperties(propertiesAccessor);
-
         Logger.getLogger("edu.uci.ics").setLevel(externalProperties.getLogLevel());
 
+        threadExecutor = new AsterixThreadExecutor(ncApplicationContext.getThreadFactory());
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
@@ -121,19 +139,22 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
         indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
                 MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID);
-        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProviderForRecovery(
+        IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
                 txnProperties);
         isShuttingdown = false;
 
+        feedManager = new FeedManager(ncApplicationContext.getNodeId());
+
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) bufferCache);
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) indexLifecycleManager);
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLogManager());
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getLockManager());
-        LifeCycleComponentManager.INSTANCE.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
+        ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
+        lccm.register((ILifeCycleComponent) bufferCache);
+        lccm.register((ILifeCycleComponent) indexLifecycleManager);
+        lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getLogManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
     }
 
     public boolean isShuttingdown() {
@@ -223,8 +244,16 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
+    public AsterixThreadExecutor getThreadExecutor() {
+        return threadExecutor;
+    }
+
     public ILSMMergePolicyFactory getMetadataMergePolicyFactory() {
         return metadataMergePolicyFactory;
     }
 
+    @Override
+    public IFeedManager getFeedManager() {
+        return feedManager;
+    }
 }

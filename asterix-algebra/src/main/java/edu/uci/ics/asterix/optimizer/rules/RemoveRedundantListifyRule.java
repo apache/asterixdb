@@ -68,7 +68,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre( Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         // apply it only at the top of the plan
         ILogicalOperator op = opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
@@ -86,7 +86,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans aonp = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : aonp.getNestedPlans()) {
-                for ( Mutable<ILogicalOperator> r : p.getRoots()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     if (applyRuleDown(r, varSet, context)) {
                         changed = true;
                     }
@@ -94,7 +94,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
                 }
             }
         }
-        for ( Mutable<ILogicalOperator> i : op.getInputs()) {
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
             if (applyRuleDown(i, varSet, context)) {
                 changed = true;
             }

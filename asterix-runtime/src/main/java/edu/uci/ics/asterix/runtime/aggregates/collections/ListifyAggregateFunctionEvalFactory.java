@@ -40,7 +40,8 @@ public class ListifyAggregateFunctionEvalFactory implements ICopyAggregateFuncti
     }
 
     @Override
-    public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider) throws AlgebricksException {
+    public ICopyAggregateFunction createAggregateFunction(final IDataOutputProvider provider)
+            throws AlgebricksException {
 
         return new ICopyAggregateFunction() {
 

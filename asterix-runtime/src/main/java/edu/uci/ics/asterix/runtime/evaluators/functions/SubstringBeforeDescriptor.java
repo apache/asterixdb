@@ -86,7 +86,7 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                         int posPattern = 3;
 
                         int offset = 0;
-                        while (posSrc - 3 < srcLen - patternLen) {                       
+                        while (posSrc - 3 < srcLen - patternLen) {
                             while (posPattern + offset - 3 < patternLen && posSrc + offset - 3 < srcLen) {
                                 char c1 = UTF8StringPointable.charAt(src, posSrc + offset);
                                 char c2 = UTF8StringPointable.charAt(pattern, posPattern + offset);

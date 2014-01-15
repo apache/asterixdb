@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
@@ -38,7 +39,6 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IAsterixPropertiesProvider {
 
     private static AsterixAppContextInfo INSTANCE;
-
     private final ICCApplicationContext appCtx;
 
     private AsterixCompilerProperties compilerProperties;
@@ -47,9 +47,11 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
 
-    public static void initialize(ICCApplicationContext ccAppCtx) throws AsterixException {
+    private IHyracksClientConnection hcc;
+
+    public static void initialize(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc) throws AsterixException {
         if (INSTANCE == null) {
-            INSTANCE = new AsterixAppContextInfo(ccAppCtx);
+            INSTANCE = new AsterixAppContextInfo(ccAppCtx, hcc);
         }
         AsterixPropertiesAccessor propertiesAccessor = new AsterixPropertiesAccessor();
         INSTANCE.compilerProperties = new AsterixCompilerProperties(propertiesAccessor);
@@ -57,11 +59,13 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.metadataProperties = new AsterixMetadataProperties(propertiesAccessor);
         INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
+        INSTANCE.hcc = hcc;
         Logger.getLogger("edu.uci.ics").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
-    private AsterixAppContextInfo(ICCApplicationContext ccAppCtx) {
+    private AsterixAppContextInfo(ICCApplicationContext ccAppCtx, IHyracksClientConnection hcc) {
         this.appCtx = ccAppCtx;
+        this.hcc = hcc;
     }
 
     public static AsterixAppContextInfo getInstance() {
@@ -96,6 +100,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public AsterixExternalProperties getExternalProperties() {
         return externalProperties;
+    }
+
+    public IHyracksClientConnection getHcc() {
+        return hcc;
     }
 
     @Override

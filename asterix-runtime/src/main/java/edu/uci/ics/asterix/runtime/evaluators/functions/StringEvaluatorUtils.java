@@ -45,5 +45,5 @@ public class StringEvaluatorUtils {
 
     public final static char[] reservedRegexChars = new char[] { '$', '(', ')', '*', '.', '[', '\\', ']', '^', '{',
             '|', '}' };
-    
+
 }

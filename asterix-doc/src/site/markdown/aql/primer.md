@@ -346,11 +346,9 @@ Note that AQL is not SQL and not based on SQL: In other words, AsterixDB is full
 In this section we introduce AQL via a set of example queries, along with their expected results,
 based on the data above, to help you get started.
 Many of the most important features of AQL are presented in this set of representative queries.
-You can find a BNF description of the current AQL grammar at [wiki:AsterixDBGrammar], and someday
-in the not-too-distant future we will also provide a complete reference manual for the language.
-In the meantime, this will get you started down the path of using AsterixDB.
-A more complete list of the supported AsterixDB primitive types and built-in functions can be
-found at [Asterix Data Model (ADM)](datamodel.html) and [Asterix Functions](functions.html).
+You can find more details in the document on the [Asterix Data Model (ADM)](datamodel.html),
+in the [AQL Reference Manual](manual.html), and a complete list of built-in functions is available
+in the [Asterix Functions](functions.html) document.
 
 AQL is an expression language.
 Even the expression 1+1 is a valid AQL query that evaluates to 2.

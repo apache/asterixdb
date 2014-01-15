@@ -244,52 +244,56 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             AsterixConstantValue constVal, AbstractFunctionCallExpression funcExpr) {
         // Remember args from original similarity function to add them to the similarity-check function later.
         ArrayList<Mutable<ILogicalExpression>> similarityArgs = null;
-        ScalarFunctionCallExpression simCheckFuncExpr = null; 
+        ScalarFunctionCallExpression simCheckFuncExpr = null;
         // Look for jaccard function call, and GE or GT.
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD) {
             IAObject jaccThresh;
-            if (normFuncIdent == AlgebricksBuiltinFunctions.GE) {                
+            if (normFuncIdent == AlgebricksBuiltinFunctions.GE) {
                 if (constVal.getObject() instanceof AFloat) {
-                    jaccThresh = constVal.getObject();                    
+                    jaccThresh = constVal.getObject();
                 } else {
-                    jaccThresh = new AFloat((float)((ADouble) constVal.getObject()).getDoubleValue());
+                    jaccThresh = new AFloat((float) ((ADouble) constVal.getObject()).getDoubleValue());
                 }
             } else if (normFuncIdent == AlgebricksBuiltinFunctions.GT) {
-                float threshVal = 0.0f;            
+                float threshVal = 0.0f;
                 if (constVal.getObject() instanceof AFloat) {
                     threshVal = ((AFloat) constVal.getObject()).getFloatValue();
                 } else {
-                    threshVal = (float)((ADouble) constVal.getObject()).getDoubleValue();                    
+                    threshVal = (float) ((ADouble) constVal.getObject()).getDoubleValue();
                 }
                 float f = threshVal + Float.MIN_VALUE;
-                if (f > 1.0f) f = 1.0f;
+                if (f > 1.0f)
+                    f = 1.0f;
                 jaccThresh = new AFloat(f);
             } else {
                 return null;
             }
             similarityArgs = new ArrayList<Mutable<ILogicalExpression>>();
             similarityArgs.addAll(funcExpr.getArguments());
-            similarityArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(jaccThresh))));
+            similarityArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                    jaccThresh))));
             simCheckFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK), similarityArgs);
         }
 
         // Look for edit-distance function call, and LE or LT.
-        if(funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE) {
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE) {
             AInt32 aInt = (AInt32) constVal.getObject();
             AInt32 edThresh;
             if (normFuncIdent == AlgebricksBuiltinFunctions.LE) {
                 edThresh = aInt;
             } else if (normFuncIdent == AlgebricksBuiltinFunctions.LT) {
                 int ed = aInt.getIntegerValue() - 1;
-                if (ed < 0) ed = 0;
+                if (ed < 0)
+                    ed = 0;
                 edThresh = new AInt32(ed);
             } else {
                 return null;
             }
             similarityArgs = new ArrayList<Mutable<ILogicalExpression>>();
             similarityArgs.addAll(funcExpr.getArguments());
-            similarityArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(edThresh))));
+            similarityArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                    edThresh))));
             simCheckFuncExpr = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK), similarityArgs);
         }

@@ -24,6 +24,7 @@ import java.util.Scanner;
 
 import org.apache.commons.io.FileUtils;
 
+import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -32,6 +33,7 @@ import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionContext;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -42,7 +44,8 @@ public class LockManagerDeterministicUnitTest {
         //prepare configuration file
         File cwd = new File(System.getProperty("user.dir"));
         File asterixdbDir = cwd.getParentFile();
-        File srcFile = new File(asterixdbDir.getAbsoluteFile(), "asterix-app/src/main/resources/asterix-build-configuration.xml");
+        File srcFile = new File(asterixdbDir.getAbsoluteFile(),
+                "asterix-app/src/main/resources/asterix-build-configuration.xml");
         File destFile = new File(cwd, "target/classes/asterix-configuration.xml");
         FileUtils.copyFile(srcFile, destFile);
 
@@ -62,7 +65,7 @@ class LockRequestController implements Runnable {
     ArrayList<LockRequest> requestList;
     ArrayList<ArrayList<Integer>> expectedResultList;
     int resultListIndex;
-    LockManager lockMgr;
+    ILockManager lockMgr;
     String requestFileName;
     long defaultWaitTime;
 
@@ -72,7 +75,7 @@ class LockRequestController implements Runnable {
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
         this.expectedResultList = new ArrayList<ArrayList<Integer>>();
-        this.lockMgr = (LockManager) txnProvider.getLockManager();
+        this.lockMgr = txnProvider.getLockManager();
         this.requestFileName = new String(requestFileName);
         this.resultListIndex = 0;
         this.defaultWaitTime = 10;
@@ -151,6 +154,7 @@ class LockRequestController implements Runnable {
         if (isSuccess) {
             log("\n*** Test Passed ***");
         }
+        ((LogManager) txnProvider.getLogManager()).stop(false, null);
     }
 
     public boolean handleRequest(LockRequest request) throws ACIDException {
@@ -482,7 +486,7 @@ class LockRequestWorker implements Runnable {
                         request.txnContext);
                 break;
             case RequestType.UNLOCK:
-                lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.txnContext);
+                lockMgr.unlock(request.datasetIdObj, request.entityHashValue, request.lockMode, request.txnContext);
                 break;
             case RequestType.RELEASE_LOCKS:
                 lockMgr.releaseLocks(request.txnContext);
@@ -510,6 +514,18 @@ class LockRequestWorker implements Runnable {
 
     public void log(String s) {
         System.out.println(s);
+    }
+    
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{ t : \"").append(threadName).append("\", r : ");
+        if (lockRequest == null) {
+            sb.append("null");
+        } else {
+            sb.append("\"").append(lockRequest.toString()).append("\""); 
+        }
+        sb.append(" }");
+        return sb.toString();
     }
 }
 
@@ -618,7 +634,7 @@ class WorkerReadyQueue {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            log(Thread.currentThread().getName() + "Waiting for worker to finish its task...");
+            log(Thread.currentThread().getName() + " Waiting for worker to finish its task...");
             queueSize = workerReadyQueue.size();
         }
 

@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.common.transactions;
 
+
 public interface ITransactionSubsystem {
 
     public ILogManager getLogManager();

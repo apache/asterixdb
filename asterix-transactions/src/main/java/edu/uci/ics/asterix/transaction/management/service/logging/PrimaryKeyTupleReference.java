@@ -12,7 +12,7 @@ public class PrimaryKeyTupleReference implements ITupleReference {
         this.start = start;
         this.length = length;
     }
-    
+
     @Override
     public int getFieldCount() {
         return 1;

@@ -60,7 +60,7 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
     }
 
     @Override
-    public Dataverse getMetadataEntytiFromTuple(ITupleReference frameTuple) throws IOException {
+    public Dataverse getMetadataEntityFromTuple(ITupleReference frameTuple) throws IOException {
         byte[] serRecord = frameTuple.getFieldData(DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordStartOffset = frameTuple.getFieldStart(DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX);
         int recordLength = frameTuple.getFieldLength(DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX);

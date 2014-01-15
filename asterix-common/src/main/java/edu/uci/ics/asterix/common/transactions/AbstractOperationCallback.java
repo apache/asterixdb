@@ -45,7 +45,7 @@ public abstract class AbstractOperationCallback {
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
         return Math.abs((int) longHashes[0]);
     }
-    
+
     public void resetLocalNumActiveOperations() {
         transactorLocalNumActiveOperations.set(0);
     }
