@@ -15,13 +15,43 @@
 
 package edu.uci.ics.asterix.runtime.aggregates.serializable.std;
 
+import java.io.DataOutput;
+
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class SerializableGlobalAvgAggregateFunction extends AbstractSerializableGlobalAvgAggregateFunction {
+public class SerializableGlobalAvgAggregateFunction extends AbstractSerializableAvgAggregateFunction {
 
-    public SerializableGlobalAvgAggregateFunction(ICopyEvaluatorFactory[] args, boolean isLocalAgg) throws AlgebricksException {
-        super(args, isLocalAgg);
+    public SerializableGlobalAvgAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        super(args);
+    }
+
+    @Override
+    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
+        processPartialResults(tuple, state, start, len);
+    }
+
+    @Override
+    public void finish(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+        finishFinalResults(state, start, len, result);
+    }
+
+    @Override
+    public void finishPartial(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+        finishPartialResults(state, start, len, result);
+    }
+
+    protected void processNull(byte[] state, int start) {
+        state[start + AGG_TYPE_OFFSET] = ATypeTag.NULL.serialize();
+    }
+
+    @Override
+    protected boolean skipStep(byte[] state, int start) {
+        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
+        return (aggType == ATypeTag.NULL);
     }
 
 }

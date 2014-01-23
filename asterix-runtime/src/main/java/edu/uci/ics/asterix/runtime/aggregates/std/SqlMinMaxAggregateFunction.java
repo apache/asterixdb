@@ -14,18 +14,40 @@
  */
 package edu.uci.ics.asterix.runtime.aggregates.std;
 
+import java.io.IOException;
+
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
 public class SqlMinMaxAggregateFunction extends AbstractMinMaxAggregateFunction {
+    private final boolean isLocalAgg;
 
     public SqlMinMaxAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isMin,
             boolean isLocalAgg) throws AlgebricksException {
-        super(args, provider, isMin, isLocalAgg);
+        super(args, provider, isMin);
+        this.isLocalAgg = isLocalAgg;
     }
 
     @Override
     protected void processNull() {
+    }
+
+    @Override
+    protected void processSystemNull() throws AlgebricksException {
+        if (isLocalAgg) {
+            throw new AlgebricksException("Type SYSTEM_NULL encountered in local aggregate.");
+        }
+    }
+
+    @Override
+    protected void finishSystemNull() throws IOException {
+        // Empty stream. For local agg return system null. For global agg return null.
+        if (isLocalAgg) {
+            out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
+        } else {
+            out.writeByte(ATypeTag.NULL.serialize());
+        }
     }
 }

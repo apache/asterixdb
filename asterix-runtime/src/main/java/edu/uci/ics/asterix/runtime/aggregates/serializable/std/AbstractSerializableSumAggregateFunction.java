@@ -34,6 +34,7 @@ import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
@@ -43,7 +44,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class AbstractSerializableSumAggregateFunction implements ICopySerializableAggregateFunction {
+public abstract class AbstractSerializableSumAggregateFunction implements ICopySerializableAggregateFunction {
+    protected static final int AGG_TYPE_OFFSET = 0;
+    private static final int SUM_OFFSET = 1;
+
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ICopyEvaluator eval;
     private AMutableDouble aDouble = new AMutableDouble(0);
@@ -53,13 +57,11 @@ public class AbstractSerializableSumAggregateFunction implements ICopySerializab
     private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
     private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer serde;
-    private final boolean isLocalAgg;
+    public ISerializerDeserializer serde;
 
-    public AbstractSerializableSumAggregateFunction(ICopyEvaluatorFactory[] args, boolean isLocalAgg)
+    public AbstractSerializableSumAggregateFunction(ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         eval = args[0].createEvaluator(inputVal);
-        this.isLocalAgg = isLocalAgg;
     }
 
     @Override
@@ -74,22 +76,28 @@ public class AbstractSerializableSumAggregateFunction implements ICopySerializab
 
     @Override
     public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
-        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start]);
-        double sum = BufferSerDeUtil.getDouble(state, start + 1);
+        if (skipStep(state, start)) {
+            return;
+        }
+        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
+        double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         inputVal.reset();
         eval.evaluate(tuple);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
         if (typeTag == ATypeTag.NULL) {
             processNull(state, start);
             return;
-        } else if (aggType == ATypeTag.NULL) {
-            return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
-        } else if (typeTag != ATypeTag.SYSTEM_NULL && typeTag != aggType) {
-            throw new AlgebricksException("Unexpected type " + typeTag + " in aggregation input stream. Expected type "
-                    + aggType + ".");
+        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
+            throw new AlgebricksException("Unexpected type " + typeTag
+                    + " in aggregation input stream. Expected type (or a promotable type to)" + aggType + ".");
         }
+
+        if (ATypeHierarchy.canPromote(aggType, typeTag)) {
+            aggType = typeTag;
+        }
+
         switch (typeTag) {
             case INT8: {
                 byte val = AInt8SerializerDeserializer.getByte(inputVal.getByteArray(), 1);
@@ -126,27 +134,22 @@ public class AbstractSerializableSumAggregateFunction implements ICopySerializab
                 break;
             }
             case SYSTEM_NULL: {
-                // For global aggregates simply ignore system null here,
-                // but if all input value are system null, then we should return
-                // null in finish().
-                if (isLocalAgg) {
-                    throw new AlgebricksException("Type SYSTEM_NULL encountered in local aggregate.");
-                }
+                processSystemNull();
                 break;
             }
             default: {
                 throw new NotImplementedException("Cannot compute SUM for values of type " + typeTag + ".");
             }
         }
-        state[start] = aggType.serialize();
-        BufferSerDeUtil.writeDouble(sum, state, start + 1);
+        state[start + AGG_TYPE_OFFSET] = aggType.serialize();
+        BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void finish(byte[] state, int start, int len, DataOutput out) throws AlgebricksException {
-        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start]);
-        double sum = BufferSerDeUtil.getDouble(state, start + 1);
+        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
+        double sum = BufferSerDeUtil.getDouble(state, start + SUM_OFFSET);
         try {
             switch (aggType) {
                 case INT8: {
@@ -191,20 +194,16 @@ public class AbstractSerializableSumAggregateFunction implements ICopySerializab
                     break;
                 }
                 case SYSTEM_NULL: {
-                    // Empty stream. For local agg return system null. For global agg return null.
-                    if (isLocalAgg) {
-                        out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
-                    } else {
-                        serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-                        serde.serialize(ANull.NULL, out);
-                    }
+                    finishSystemNull(out);
                     break;
                 }
+                default:
+                    throw new AlgebricksException("SumAggregationFunction: incompatible type for the result ("
+                            + aggType + "). ");
             }
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
-
     }
 
     @Override
@@ -212,9 +211,11 @@ public class AbstractSerializableSumAggregateFunction implements ICopySerializab
         finish(state, start, len, out);
     }
 
-    protected void processNull(byte[] state, int start) {
-        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start]);
-        aggType = ATypeTag.NULL;
-        state[start] = aggType.serialize();
+    protected boolean skipStep(byte[] state, int start) {
+        return false;
     }
+    protected abstract void processNull(byte[] state, int start);
+    protected abstract void processSystemNull() throws AlgebricksException;
+    protected abstract void finishSystemNull(DataOutput out) throws IOException;
+
 }

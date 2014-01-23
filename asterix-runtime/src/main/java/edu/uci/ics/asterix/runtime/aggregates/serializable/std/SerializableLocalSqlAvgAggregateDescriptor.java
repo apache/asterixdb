@@ -46,7 +46,7 @@ public class SerializableLocalSqlAvgAggregateDescriptor extends AbstractSerializ
             private static final long serialVersionUID = 1L;
 
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableLocalSqlAvgAggregateFunction(args, true);
+                return new SerializableLocalSqlAvgAggregateFunction(args);
             }
         };
     }

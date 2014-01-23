@@ -46,11 +46,11 @@ import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunction {
-    private DataOutput out;
+    protected DataOutput out;
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ICopyEvaluator eval;
     private double sum;
-    private ATypeTag aggType;
+    protected ATypeTag aggType;
     private AMutableDouble aDouble = new AMutableDouble(0);
     private AMutableFloat aFloat = new AMutableFloat(0);
     private AMutableInt64 aInt64 = new AMutableInt64(0);
@@ -58,15 +58,12 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
     private AMutableInt16 aInt16 = new AMutableInt16((short) 0);
     private AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer serde;
+    protected ISerializerDeserializer serde;
 
-    private final boolean isLocalAgg;
-
-    public AbstractSumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isLocalAgg)
+    public AbstractSumAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider)
             throws AlgebricksException {
         out = provider.getDataOutput();
         eval = args[0].createEvaluator(inputVal);
-        this.isLocalAgg = isLocalAgg;
     }
 
     @Override
@@ -77,13 +74,14 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
 
     @Override
     public void step(IFrameTupleReference tuple) throws AlgebricksException {
+        if (skipStep()) {
+            return;
+        }
         inputVal.reset();
         eval.evaluate(tuple);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]);
         if (typeTag == ATypeTag.NULL) {
             processNull();
-            return;
-        } else if (aggType == ATypeTag.NULL) {
             return;
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
@@ -131,12 +129,7 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
                 break;
             }
             case SYSTEM_NULL: {
-                // For global aggregates simply ignore system null here,
-                // but if all input value are system null, then we should return
-                // null in finish().
-                if (isLocalAgg) {
-                    throw new AlgebricksException("Type SYSTEM_NULL encountered in local aggregate.");
-                }
+                processSystemNull();
                 break;
             }
             default: {
@@ -192,13 +185,7 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
                     break;
                 }
                 case SYSTEM_NULL: {
-                    // Empty stream. For local agg return system null. For global agg return null.
-                    if (isLocalAgg) {
-                        out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
-                    } else {
-                        serde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-                        serde.serialize(ANull.NULL, out);
-                    }
+                    finishSystemNull();
                     break;
                 }
                 default:
@@ -215,7 +202,10 @@ public abstract class AbstractSumAggregateFunction implements ICopyAggregateFunc
         finish();
     }
 
-    protected void processNull() {
-        aggType = ATypeTag.NULL;
+    protected boolean skipStep() {
+        return false;
     }
+    protected abstract void processNull();
+    protected abstract void processSystemNull() throws AlgebricksException;
+    protected abstract void finishSystemNull() throws IOException;
 }

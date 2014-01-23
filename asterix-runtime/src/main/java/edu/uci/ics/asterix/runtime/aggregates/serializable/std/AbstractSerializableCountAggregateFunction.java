@@ -36,6 +36,9 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * count(NULL) returns NULL.
  */
 public abstract class AbstractSerializableCountAggregateFunction implements ICopySerializableAggregateFunction {
+    private static final int MET_NULL_OFFSET = 0;
+    private static final int COUNT_OFFSET = 1;
+
     private AMutableInt64 result = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
@@ -72,8 +75,8 @@ public abstract class AbstractSerializableCountAggregateFunction implements ICop
         } else {
             cnt++;
         }
-        BufferSerDeUtil.writeBoolean(metNull, state, start);
-        BufferSerDeUtil.writeLong(cnt, state, start + 1);
+        BufferSerDeUtil.writeBoolean(metNull, state, start + MET_NULL_OFFSET);
+        BufferSerDeUtil.writeLong(cnt, state, start + COUNT_OFFSET);
     }
 
     @Override
@@ -98,8 +101,6 @@ public abstract class AbstractSerializableCountAggregateFunction implements ICop
     }
 
     protected void processNull(byte[] state, int start) {
-        boolean metNull = BufferSerDeUtil.getBoolean(state, start);
-        metNull = true;
-        BufferSerDeUtil.writeBoolean(metNull, state, start);
+        BufferSerDeUtil.writeBoolean(true, state, start + MET_NULL_OFFSET);
     }
 }

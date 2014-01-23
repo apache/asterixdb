@@ -15,14 +15,42 @@
 
 package edu.uci.ics.asterix.runtime.aggregates.std;
 
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class LocalAvgAggregateFunction extends AbstractAvgAggregateFunction {
 
     public LocalAvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
             throws AlgebricksException {
-        super(args, output, true);
+        super(args, output);
     }
+
+    @Override
+    public void step(IFrameTupleReference tuple) throws AlgebricksException {
+        processDataValues(tuple);
+    }
+
+    @Override
+    public void finish() throws AlgebricksException {
+        finishPartialResults();
+    }
+
+    @Override
+    public void finishPartial() throws AlgebricksException {
+        finish();
+    }
+
+    @Override
+    protected void processNull() {
+        aggType = ATypeTag.NULL;
+    }
+
+    @Override
+    protected boolean skipStep() {
+        return (aggType == ATypeTag.NULL);
+    }
+
 }

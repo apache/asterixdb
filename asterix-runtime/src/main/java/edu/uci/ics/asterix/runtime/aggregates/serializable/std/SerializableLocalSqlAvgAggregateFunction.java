@@ -15,17 +15,35 @@
 
 package edu.uci.ics.asterix.runtime.aggregates.serializable.std;
 
+import java.io.DataOutput;
+
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class SerializableLocalSqlAvgAggregateFunction extends AbstractSerializableGlobalAvgAggregateFunction {
+public class SerializableLocalSqlAvgAggregateFunction extends AbstractSerializableAvgAggregateFunction {
 
-    public SerializableLocalSqlAvgAggregateFunction(ICopyEvaluatorFactory[] args, boolean isLocalAgg) throws AlgebricksException {
-        super(args, isLocalAgg);
+    public SerializableLocalSqlAvgAggregateFunction(ICopyEvaluatorFactory[] args) throws AlgebricksException {
+        super(args);
+    }
+
+    @Override
+    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
+        processPartialResults(tuple, state, start, len);
+    }
+
+    @Override
+    public void finish(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+        finishPartialResults(state, start, len, result);
+    }
+
+    @Override
+    public void finishPartial(byte[] state, int start, int len, DataOutput result) throws AlgebricksException {
+        finish(state, start, len, result);
     }
 
     @Override
     protected void processNull(byte[] state, int start) {
     }
-    
+
 }

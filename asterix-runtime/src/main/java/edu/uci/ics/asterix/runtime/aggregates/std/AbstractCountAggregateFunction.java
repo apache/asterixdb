@@ -42,7 +42,7 @@ public abstract class AbstractCountAggregateFunction implements ICopyAggregateFu
             .getSerializerDeserializer(BuiltinType.AINT64);
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ICopyEvaluator eval;
-    private long cnt;
+    protected long cnt;
     private DataOutput out;
 
     public AbstractCountAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
@@ -84,7 +84,5 @@ public abstract class AbstractCountAggregateFunction implements ICopyAggregateFu
         finish();
     }
 
-    protected void processNull() {
-        cnt++;
-    }
+    protected abstract void processNull();
 }

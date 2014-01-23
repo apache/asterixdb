@@ -18,12 +18,28 @@ package edu.uci.ics.asterix.runtime.aggregates.std;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class GlobalSqlAvgAggregateFunction extends AbstractAvgAggregateFunction {
 
     public GlobalSqlAvgAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
             throws AlgebricksException {
-        super(args, output, false);
+        super(args, output);
+    }
+
+    @Override
+    public void step(IFrameTupleReference tuple) throws AlgebricksException {
+        processPartialResults(tuple);
+    }
+
+    @Override
+    public void finish() throws AlgebricksException {
+        finishFinalResults();
+    }
+
+    @Override
+    public void finishPartial() throws AlgebricksException {
+        finishPartialResults();
     }
 
     @Override

@@ -26,4 +26,9 @@ public class CountAggregateFunction extends AbstractCountAggregateFunction {
     public CountAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider output) throws AlgebricksException {
         super(args, output);
     }
+
+    protected void processNull() {
+        cnt++;
+    }
+
 }

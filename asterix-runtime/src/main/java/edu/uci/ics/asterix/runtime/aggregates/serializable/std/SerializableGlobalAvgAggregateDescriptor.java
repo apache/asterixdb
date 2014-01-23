@@ -47,7 +47,7 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
 
             @Override
             public ICopySerializableAggregateFunction createAggregateFunction() throws AlgebricksException {
-                return new SerializableGlobalAvgAggregateFunction(args, false);
+                return new SerializableGlobalAvgAggregateFunction(args);
             }
         };
     }

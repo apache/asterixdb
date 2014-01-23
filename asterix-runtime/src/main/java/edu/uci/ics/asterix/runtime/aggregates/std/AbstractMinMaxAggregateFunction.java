@@ -36,20 +36,18 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage tempValForCasting = new ArrayBackedValueStorage();
-    private DataOutput out;
+    protected DataOutput out;
     private ICopyEvaluator eval;
-    private ATypeTag aggType;
+    protected ATypeTag aggType;
     private IBinaryComparator cmp;
     private ITypePromoteComputer tpc;
     private final boolean isMin;
-    private final boolean isLocalAgg;
 
-    public AbstractMinMaxAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isMin,
-            boolean isLocalAgg) throws AlgebricksException {
+    public AbstractMinMaxAggregateFunction(ICopyEvaluatorFactory[] args, IDataOutputProvider provider, boolean isMin)
+            throws AlgebricksException {
         out = provider.getDataOutput();
         eval = args[0].createEvaluator(inputVal);
         this.isMin = isMin;
-        this.isLocalAgg = isLocalAgg;
     }
 
     @Override
@@ -90,11 +88,8 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
             // If a system_null is encountered locally, it would be an error; otherwise if it is seen
             // by a global aggregator, it is simple ignored.
             if (typeTag == ATypeTag.SYSTEM_NULL) {
-                if (isLocalAgg) {
-                    throw new AlgebricksException("Type SYSTEM_NULL encountered in local aggregate.");
-                } else {
-                    return;
-                }
+                processSystemNull();
+                return;
             }
 
             if (ATypeHierarchy.canPromote(aggType, typeTag)) {
@@ -153,12 +148,7 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
                     break;
                 }
                 case SYSTEM_NULL: {
-                    // Empty stream. For local agg return system null. For global agg return null.
-                    if (isLocalAgg) {
-                        out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
-                    } else {
-                        out.writeByte(ATypeTag.NULL.serialize());
-                    }
+                    finishSystemNull();
                     break;
                 }
                 default: {
@@ -176,7 +166,13 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
         finish();
     }
 
-    protected void processNull() {
-        aggType = ATypeTag.NULL;
+    protected boolean skipStep() {
+        return false;
     }
+
+    protected abstract void processNull();
+
+    protected abstract void processSystemNull() throws AlgebricksException;
+
+    protected abstract void finishSystemNull() throws IOException;
 }
