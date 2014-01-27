@@ -23,7 +23,7 @@ public class @E@RecordManager {
     public static final boolean CHECK_SLOTS = @DEBUG@;
     public static final boolean TRACK_ALLOC_LOC = @DEBUG@;
     
-    static final int NO_SLOTS = 1000;
+    static final int NO_SLOTS = 20;
 
     @CONSTS@
 

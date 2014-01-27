@@ -38,7 +38,7 @@
                 <artifactId>record-manager-generator-maven-plugin</artifactId>
                 <version>0.8.4-SNAPSHOT</version>
                 <configuration>
-                    <debug>false</debug>
+                    <debug>true</debug>
                     <inputFiles>
                         <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Job.json</param>
                         <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Resource.json</param>
