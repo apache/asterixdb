@@ -25,7 +25,7 @@ public class TypeUtil {
         public static long build(int arenaId, int allocId, int localId) {
             long result = arenaId;
             result = result << 48;
-            result |= (allocId << 32);
+            result |= (((long)allocId) << 32);
             result |= localId;
             return result;
         }
