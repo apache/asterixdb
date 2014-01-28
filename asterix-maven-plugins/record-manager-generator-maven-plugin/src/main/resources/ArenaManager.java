@@ -85,7 +85,7 @@ public class @E@ArenaManager {
         final int refAllocId = TypeUtil.Global.allocId(slotNum);
         final short curAllocId = getAllocId(slotNum);
         if (refAllocId != curAllocId) {
-            String msg = "reference to slot " + slotNum
+            String msg = "reference to slot " + TypeUtil.Global.toString(slotNum)
                 + " of arena " + TypeUtil.Global.arenaId(slotNum)
                 + " refers to version " + Integer.toHexString(refAllocId)
                 + " current version is " + Integer.toHexString(curAllocId);

@@ -223,7 +223,7 @@ public class RecordType {
             sb = indent(sb, indent, level + 1);
             sb.append("String msg = \"invalid value in field ")
               .append(offsetName())
-              .append(" of slot \" + slotNum;\n");
+              .append(" of slot \" + TypeUtil.Global.toString(slotNum);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("throw new IllegalStateException(msg);\n");
             sb = indent(sb, indent, level);
