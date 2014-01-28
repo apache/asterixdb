@@ -48,6 +48,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     private static final Level LVL = Level.FINER;
     
     public static final boolean DEBUG_MODE = false;//true
+    public static final boolean CHECK_CONSISTENCY = false;
 
     private TransactionSubsystem txnSubsystem;
     private ResourceGroupTable table;
@@ -160,7 +161,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
             group.releaseLatch();
         }
         
-        assertLocksCanBefoundInJobQueue();
+        if (CHECK_CONSISTENCY) assertLocksCanBefoundInJobQueue();
     }
 
     private void enqueueWaiter(final ResourceGroup group, final long reqSlot, final long resSlot, final long jobSlot,
@@ -492,7 +493,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 throw new IllegalStateException("resource (" + dsId + ",  " + entityHashValue + ") not found");
             }
             
-            assertLocksCanBefoundInJobQueue();
+            if (CHECK_CONSISTENCY) assertLocksCanBefoundInJobQueue();
             
             long holder = removeLastHolder(resource, jobSlot, lockMode);
 
@@ -699,8 +700,6 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         if (holder < 0) {
             throw new IllegalStateException("no holder for resource " + resource);
         }
-        assertLocksCanBefoundInJobQueue();
-        //LOGGER.log(LVL, resQueueToString(resource));
         // remove from the list of holders for a resource
         if (requestMatches(holder, jobSlot, lockMode)) {
             // if the head of the queue matches, we need to update the resource
@@ -709,14 +708,11 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         } else {
             holder = removeRequestFromQueueForJob(holder, jobSlot, lockMode);
         }
-        //LOGGER.log(LVL, resQueueToString(resource));
         synchronized (jobArenaMgr) {
             // remove from the list of requests for a job
             long newHead = removeRequestFromJob(holder, jobArenaMgr.getLastHolder(jobSlot));
             jobArenaMgr.setLastHolder(jobSlot, newHead);
         }
-        //LOGGER.log(LVL, resQueueToString(resource));
-        assertLocksCanBefoundInJobQueue();
         return holder;
     }
 
@@ -1010,6 +1006,24 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 && resArenaMgr.getFirstWaiter(resource) == -1;
     }
 
+    private void validateJob(ITransactionContext txnContext) throws ACIDException {
+        if (txnContext.getTxnState() == ITransactionManager.ABORTED) {
+            throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
+        } else if (txnContext.isTimeout()) {
+            requestAbort(txnContext, "timeout");
+        }
+    }
+
+    private void requestAbort(ITransactionContext txnContext, String msg) throws ACIDException {
+        txnContext.setTimeout(true);
+        throw new ACIDException("Transaction " + txnContext.getJobId()
+                + " should abort (requested by the Lock Manager)" + ":\n" + msg);
+    }
+
+    /*
+     * Debugging support
+     */
+    
     private void log(String string, int id, int entityHashValue, byte lockMode, ITransactionContext txnContext) {
         if (! LOGGER.isLoggable(LVL)) {
             return;
@@ -1031,20 +1045,6 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         sb.append(" , thread : ").append(Thread.currentThread().getName());
         sb.append(" }");
         LOGGER.log(LVL, sb.toString());
-    }
-
-    private void validateJob(ITransactionContext txnContext) throws ACIDException {
-        if (txnContext.getTxnState() == ITransactionManager.ABORTED) {
-            throw new ACIDException("" + txnContext.getJobId() + " is in ABORTED state.");
-        } else if (txnContext.isTimeout()) {
-            requestAbort(txnContext, "timeout");
-        }
-    }
-
-    private void requestAbort(ITransactionContext txnContext, String msg) throws ACIDException {
-        txnContext.setTimeout(true);
-        throw new ACIDException("Transaction " + txnContext.getJobId()
-                + " should abort (requested by the Lock Manager)" + ":\n" + msg);
     }
 
     private void assertLocksCanBefoundInJobQueue() throws ACIDException {
