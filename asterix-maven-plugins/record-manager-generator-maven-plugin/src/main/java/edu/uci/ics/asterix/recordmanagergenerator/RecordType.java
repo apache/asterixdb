@@ -29,18 +29,19 @@ import org.json.JSONTokener;
 public class RecordType {
     
     enum Type {
-        BYTE  (1, "byte",  "get",      "put",      "(byte)0xde",          "TypeUtil.Byte.append"),
-        SHORT (2, "short", "getShort", "putShort", "(short)0xdead",       "TypeUtil.Short.append"),
-        INT   (4, "int",   "getInt",   "putInt",   "0xdeadbeef",          "TypeUtil.Int.append"),
-        GLOBAL(8, "long",  "getLong",  "putLong",  "0xdeadbeefdeadbeefl", "TypeUtil.Global.append");
+        BYTE  (1, "byte",  "get",      "put",      "(byte)0xde",          "TypeUtil.Byte.append",   "TypeUtil.Byte.appendFixed"),
+        SHORT (2, "short", "getShort", "putShort", "(short)0xdead",       "TypeUtil.Short.append",  "TypeUtil.Short.appendFixed"),
+        INT   (4, "int",   "getInt",   "putInt",   "0xdeadbeef",          "TypeUtil.Int.append",    "TypeUtil.Int.appendFixed"),
+        GLOBAL(8, "long",  "getLong",  "putLong",  "0xdeadbeefdeadbeefl", "TypeUtil.Global.append", "TypeUtil.Global.appendFixed");
         
-        Type(int size, String javaType, String bbGetter, String bbSetter, String deadMemInitializer, String appender) {
+        Type(int size, String javaType, String bbGetter, String bbSetter, String deadMemInitializer, String appender, String tabAppender) {
             this.size = size;
             this.javaType = javaType;
             this.bbGetter = bbGetter;
             this.bbSetter = bbSetter;
             this.deadMemInitializer = deadMemInitializer;
             this.appender = appender;
+            this.tabAppender = tabAppender;
         }
         
         int size;
@@ -49,6 +50,7 @@ public class RecordType {
         String bbSetter;
         String deadMemInitializer;
         String appender;
+        String tabAppender;
     }
     
     static class Field {
@@ -374,7 +376,7 @@ public class RecordType {
               .append(");\n");
             sb = indent(sb, indent, level + 1);
             sb.append("sb = ")
-              .append(field.type.appender)
+              .append(field.type.tabAppender)
               .append("(sb, value);\n");
             sb = indent(sb, indent, level + 1);
             sb.append("sb.append(\" | \");\n");
@@ -383,6 +385,39 @@ public class RecordType {
             sb = indent(sb, indent, level);
             sb.append("sb.append(\"\\n\");\n");
         }
+        return sb;
+    }
+    
+    StringBuilder appendRecordPrinter(StringBuilder sb, String indent, int level) {
+        sb = indent(sb, indent, level);
+        sb.append("public StringBuilder appendRecord(StringBuilder sb, long slotNum) {\n");
+        
+        sb = indent(sb, indent, level + 1);
+        sb.append("sb.append(\"{ \");\n\n");
+        
+        for (int i = 0; i < fields.size(); ++i) {
+            Field field = fields.get(i);
+            if (field.accessible) {
+                if (i > 0) {
+                    sb = indent(sb, indent, level + 1);
+                    sb.append("sb.append(\", \");\n\n");                
+                }
+                sb = indent(sb, indent, level + 1);
+                sb.append("sb.append(\"\\\"").append(field.name).append("\\\" : \\\"\");\n");
+                sb = indent(sb, indent, level + 1);
+                sb.append("sb = ").append(field.type.appender).append("(sb, ");
+                sb.append(field.methodName("get")).append("(slotNum)");
+                sb.append(");\n");
+                sb = indent(sb, indent, level + 1);
+                sb.append("sb.append(\"\\\"\");\n\n");
+            }
+        }
+        sb = indent(sb, indent, level + 1);
+        sb.append("return sb.append(\" }\");\n");
+
+        sb = indent(sb, indent, level);
+        sb.append("}");
+        
         return sb;
     }
 }

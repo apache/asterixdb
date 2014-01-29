@@ -102,6 +102,8 @@ public class @E@ArenaManager {
         return get(arenaId).getAllocInfo(TypeUtil.Global.localId(slotNum));
     }
     
+    @PRINT_RECORD@
+    
     public StringBuilder append(StringBuilder sb) {
         for (int i = 0; i < noArenas; ++i) {
             sb.append("++++ arena ").append(i).append(" ++++\n");

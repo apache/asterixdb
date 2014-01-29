@@ -4,18 +4,30 @@ public class TypeUtil {
     
     public static class Byte {
         public static StringBuilder append(StringBuilder sb, byte b) {
+            return sb.append(String.format("%1$x", b));
+        }
+
+        public static StringBuilder appendFixed(StringBuilder sb, byte b) {
             return sb.append(String.format("%1$18x", b));
         }
     }
 
     public static class Short {
         public static StringBuilder append(StringBuilder sb, short s) {
+            return sb.append(String.format("%1$x", s));
+        }
+
+        public static StringBuilder appendFixed(StringBuilder sb, short s) {
             return sb.append(String.format("%1$18x", s));
         }
     }
 
     public static class Int {
         public static StringBuilder append(StringBuilder sb, int i) {
+            return sb.append(String.format("%1$x", i));
+        }
+
+        public static StringBuilder appendFixed(StringBuilder sb, int i) {
             return sb.append(String.format("%1$18x", i));
         }
     }
@@ -43,6 +55,15 @@ public class TypeUtil {
         }
         
         public static StringBuilder append(StringBuilder sb, long l) {
+            sb.append(String.format("%1$x", TypeUtil.Global.arenaId(l)));
+            sb.append(':');
+            sb.append(String.format("%1$x", TypeUtil.Global.allocId(l)));
+            sb.append(':');
+            sb.append(String.format("%1$x", TypeUtil.Global.localId(l)));
+            return sb;
+        }
+        
+        public static StringBuilder appendFixed(StringBuilder sb, long l) {
             sb.append(String.format("%1$4x", TypeUtil.Global.arenaId(l)));
             sb.append(':');
             sb.append(String.format("%1$4x", TypeUtil.Global.allocId(l)));

@@ -681,7 +681,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         if (holder < 0) {
             throw new IllegalStateException("no holder for resource " + resource);
         }
-
+        LOGGER.warning(resQueueToString(resource));
         // remove from the list of holders for a resource
         if (requestMatches(holder, jobSlot, lockMode)) {
             // if the head of the queue matches, we need to update the resource
@@ -854,12 +854,12 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         return holder;
     }
 
-    private String resQueueToString(long head) {
-        return appendResQueue(new StringBuilder(), head).toString();
+    private String resQueueToString(long resSlot) {
+        return appendResQueue(new StringBuilder(), resSlot).toString();
     }
     
     private StringBuilder appendResQueue(StringBuilder sb, long resSlot) {
-        appendResource(sb, resSlot);
+        resArenaMgr.appendRecord(sb, resSlot);
         sb.append("\n");
         appendReqQueue(sb, resArenaMgr.getLastHolder(resSlot));
         return sb;
@@ -867,93 +867,13 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     
     private StringBuilder appendReqQueue(StringBuilder sb, long head) {
         while (head != -1) {
-            appendRequest(sb, head);
+            reqArenaMgr.appendRecord(sb, head);
             sb.append("\n");
             head = reqArenaMgr.getNextRequest(head);
         }
         return sb;
     }
     
-    private void appendResource(StringBuilder sb, long resSlot) {
-        sb.append("{ ");
-
-        sb.append(" \"dataset id\"");
-        sb.append(" : \"");
-        sb.append(resArenaMgr.getDatasetId(resSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"pk hash val\"");
-        sb.append(" : \"");
-        sb.append(resArenaMgr.getPkHashVal(resSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"max mode\"");
-        sb.append(" : \"");
-        sb.append(LockMode.toString((byte)resArenaMgr.getMaxMode(resSlot)));
-
-        sb.append("\", ");
-
-        sb.append(" \"last holder\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, resArenaMgr.getLastHolder(resSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"first waiter\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, resArenaMgr.getFirstWaiter(resSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"first upgrader\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, resArenaMgr.getFirstUpgrader(resSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"next\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, resArenaMgr.getNext(resSlot));
-
-        sb.append("\" }");
-    }
-
-    private void appendRequest(StringBuilder sb, long reqSlot) {
-        sb.append("{ ");
-        
-        sb.append(" \"resource id\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, reqArenaMgr.getResourceId(reqSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"lock mode\"");
-        sb.append(" : \"");
-        sb.append(LockMode.toString((byte)reqArenaMgr.getLockMode(reqSlot)));
-
-        sb.append("\", ");
-
-        sb.append(" \"job slot\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, reqArenaMgr.getJobSlot(reqSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"prev job request\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, reqArenaMgr.getPrevJobRequest(reqSlot));
-
-        sb.append("\", ");
-
-        sb.append(" \"next job request\"");
-        sb.append(" : \"");
-        TypeUtil.Global.append(sb, reqArenaMgr.getNextJobRequest(reqSlot));
-        
-        sb.append("\" }");
-    }
-
     private int determineNewMaxMode(long resource, int oldMaxMode) {
         int newMaxMode = LockMode.NL;
         long holder = resArenaMgr.getLastHolder(resource);
