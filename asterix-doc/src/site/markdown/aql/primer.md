@@ -883,6 +883,10 @@ To achieve the effect of an update, two statements are currently needed---one to
 dataset where it resides, and another to insert the new replacement record (with the same primary key but with
 different field values for some of the associated data content).
 
+### Transaction Support
+
+AsterixDB supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, or searched while a given AQL statement is being executed. This is quite similar to the level of transaction support found in today's NoSQL stores. AsterixDB does not support multi-statement transactions, and in fact an AQL statement that involves multiple records can itself involve multiple independent record-level transactions. An example consequence of this is that, when an AQL statement attempts to insert 1000 records, it is possible that the first 800 records could end up being committed while the remaining 200 records fail to be inserted. This situation could happen, for example, if a duplicate key exception occurs as the 801st insertion is attempted. If this happens, AsterixDB will report the error (e.g., a duplicate key exception) as the result of the offending AQL insert statement, and the application logic above will need to take the appropriate action(s) needed to assess the resulting state and to clean up and/or continue as appropriate.
+
 ## Further Help ##
 That's it  You are now armed and dangerous with respect to semistructured data management using AsterixDB.
 
