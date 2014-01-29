@@ -44,7 +44,7 @@ public class DatasetHints {
                 return h.validateValue(value);
             }
         }
-        return new Pair<Boolean, String>(false, "Unknwon hint :" + hintName);
+        return new Pair<Boolean, String>(false, "Unknown hint :" + hintName);
     }
 
     private static Set<IHint> hints = initHints();
