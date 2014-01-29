@@ -676,7 +676,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         }
     }
 
-    private long removeLastHolder(long resource, long jobSlot, byte lockMode) throws ACIDException {
+    private long removeLastHolder(long resource, long jobSlot, byte lockMode) {
         long holder = resArenaMgr.getLastHolder(resource);
         if (holder < 0) {
             throw new IllegalStateException("no holder for resource " + resource);
