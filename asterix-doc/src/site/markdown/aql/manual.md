@@ -446,12 +446,13 @@ It is useful to note that if the set were instead the empty set, the first expre
                       | SetStatement
                       | InsertStatement
                       | DeleteStatement
-                      | Query
+                      | Query                      
 
 In addition to expresssions for queries, AQL supports a variety of statements for data
 definition and manipulation purposes as well as controlling the context to be used in
-evaluating AQL expressions. 
-This section details the statement side of the AQL language.
+evaluating AQL expressions. AQL supports record-level ACID transactions that begin and terminate implicitly for each record inserted, deleted, or searched while a given AQL statement is being executed.
+
+This section details the statements supported in the AQL language.
 
 ### Declarations
  
