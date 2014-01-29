@@ -3,11 +3,11 @@
   <parent>
           <artifactId>asterix</artifactId>
           <groupId>edu.uci.ics.asterix</groupId>
-          <version>0.8.1-SNAPSHOT</version>
+          <version>0.8.4-SNAPSHOT</version>
   </parent>
   <groupId>edu.uci.ics.asterix</groupId>
   <artifactId>asterix-fuzzyjoin</artifactId>
-  <version>0.8.1-SNAPSHOT</version>
+  <version>0.8.4-SNAPSHOT</version>
 
   <build>
     <plugins>

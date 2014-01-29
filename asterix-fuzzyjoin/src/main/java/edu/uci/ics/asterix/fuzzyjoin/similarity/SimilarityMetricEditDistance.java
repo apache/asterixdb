@@ -155,11 +155,11 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
     public int UTF8StringEditDistance(byte[] bytes, int fsStart, int ssStart, int edThresh) {
 
-        int fsUtfLen = StringUtils.getUTFLen(bytes, fsStart);
-        int ssUtfLen = StringUtils.getUTFLen(bytes, ssStart);
+        int fsStrLen = StringUtils.getStrLen(bytes, fsStart);
+        int ssStrLen = StringUtils.getStrLen(bytes, ssStart);
 
         // length filter
-        if (Math.abs(fsUtfLen - ssUtfLen) > edThresh) {
+        if (Math.abs(fsStrLen - ssStrLen) > edThresh) {
             return -1;
         }
 
@@ -169,7 +169,7 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
         // compute letter counts for first string
         int fsPos = fsStart + utf8SizeIndicatorSize;
-        int fsEnd = fsPos + fsUtfLen;
+        int fsEnd = fsPos + StringUtils.getUTFLen(bytes, fsStart);;
         while (fsPos < fsEnd) {
             char c = StringUtils.toLowerCase(StringUtils.charAt(bytes, fsPos));
             if (c < 128) {
@@ -180,7 +180,7 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
         // compute letter counts for second string
         int ssPos = ssStart + utf8SizeIndicatorSize;
-        int ssEnd = ssPos + ssUtfLen;
+        int ssEnd = ssPos + StringUtils.getUTFLen(bytes, ssStart);
         while (ssPos < ssEnd) {
             char c = StringUtils.toLowerCase(StringUtils.charAt(bytes, ssPos));
             if (c < 128) {
