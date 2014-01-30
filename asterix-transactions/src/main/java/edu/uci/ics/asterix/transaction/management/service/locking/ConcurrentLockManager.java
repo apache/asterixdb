@@ -854,26 +854,6 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         return holder;
     }
 
-    private String resQueueToString(long resSlot) {
-        return appendResQueue(new StringBuilder(), resSlot).toString();
-    }
-    
-    private StringBuilder appendResQueue(StringBuilder sb, long resSlot) {
-        resArenaMgr.appendRecord(sb, resSlot);
-        sb.append("\n");
-        appendReqQueue(sb, resArenaMgr.getLastHolder(resSlot));
-        return sb;
-    }
-    
-    private StringBuilder appendReqQueue(StringBuilder sb, long head) {
-        while (head != -1) {
-            reqArenaMgr.appendRecord(sb, head);
-            sb.append("\n");
-            head = reqArenaMgr.getNextRequest(head);
-        }
-        return sb;
-    }
-    
     private int determineNewMaxMode(long resource, int oldMaxMode) {
         int newMaxMode = LockMode.NL;
         long holder = resArenaMgr.getLastHolder(resource);
@@ -1016,6 +996,26 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         return -1;
     }
 
+    private String resQueueToString(long resSlot) {
+        return appendResQueue(new StringBuilder(), resSlot).toString();
+    }
+    
+    private StringBuilder appendResQueue(StringBuilder sb, long resSlot) {
+        resArenaMgr.appendRecord(sb, resSlot);
+        sb.append("\n");
+        appendReqQueue(sb, resArenaMgr.getLastHolder(resSlot));
+        return sb;
+    }
+    
+    private StringBuilder appendReqQueue(StringBuilder sb, long head) {
+        while (head != -1) {
+            reqArenaMgr.appendRecord(sb, head);
+            sb.append("\n");
+            head = reqArenaMgr.getNextRequest(head);
+        }
+        return sb;
+    }
+    
     public StringBuilder append(StringBuilder sb) {
         table.getAllLatches();
         try {
