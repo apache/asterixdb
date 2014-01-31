@@ -17,14 +17,12 @@ package edu.uci.ics.asterix.transaction.management.opcallbacks;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ILockManager;
-import edu.uci.ics.asterix.common.transactions.IRecoveryManager.ResourceType;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 /**
  * Secondary-index modifications do not require any locking.
@@ -52,20 +50,7 @@ public class SecondaryIndexModificationOperationCallback extends AbstractIndexMo
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            IndexOperation effectiveOldOp;
-            if (resourceType == ResourceType.LSM_BTREE) {
-                LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
-                if (before == null) {
-                    effectiveOldOp = IndexOperation.NOOP;
-                } else if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
-                    effectiveOldOp = IndexOperation.DELETE;
-                } else {
-                    effectiveOldOp = IndexOperation.INSERT;
-                }
-            } else {
-                effectiveOldOp = oldOp;
-            }
-            this.log(pkHash, after, effectiveOldOp, before);
+            this.log(pkHash, after);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }
