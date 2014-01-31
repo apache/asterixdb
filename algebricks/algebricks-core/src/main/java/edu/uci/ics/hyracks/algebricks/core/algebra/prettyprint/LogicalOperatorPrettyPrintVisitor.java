@@ -55,26 +55,34 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisitor<String, Integer> {
 
+    ILogicalExpressionVisitor<String, Integer> exprVisitor;
+
     public LogicalOperatorPrettyPrintVisitor() {
+        exprVisitor = new LogicalExpressionPrettyPrintVisitor();
+    }
+
+    public LogicalOperatorPrettyPrintVisitor(ILogicalExpressionVisitor<String, Integer> exprVisitor) {
+        this.exprVisitor = exprVisitor;
     }
 
     @Override
-    public String visitAggregateOperator(AggregateOperator op, Integer indent) {
+    public String visitAggregateOperator(AggregateOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("aggregate ").append(op.getVariables()).append(" <- ");
-        pprintExprList(op.getExpressions(), buffer);
+        pprintExprList(op.getExpressions(), buffer, indent);
         return buffer.toString();
     }
 
     @Override
-    public String visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent) {
+    public String visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("running-aggregate ").append(op.getVariables()).append(" <- ");
-        pprintExprList(op.getExpressions(), buffer);
+        pprintExprList(op.getExpressions(), buffer, indent);
         return buffer.toString();
     }
 
@@ -95,10 +103,10 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitDistinctOperator(DistinctOperator op, Integer indent) {
+    public String visitDistinctOperator(DistinctOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("distinct " + "(");
-        pprintExprList(op.getExpressions(), buffer);
+        pprintExprList(op.getExpressions(), buffer, indent);
         buffer.append(")");
         return buffer.toString();
     }
@@ -149,10 +157,10 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitAssignOperator(AssignOperator op, Integer indent) {
+    public String visitAssignOperator(AssignOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("assign ").append(op.getVariables()).append(" <- ");
-        pprintExprList(op.getExpressions(), buffer);
+        pprintExprList(op.getExpressions(), buffer, indent);
         return buffer.toString();
     }
 
@@ -297,7 +305,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         return buffer.toString();
     }
 
-    private void pprintExprList(List<Mutable<ILogicalExpression>> expressions, StringBuilder buffer) {
+    private void pprintExprList(List<Mutable<ILogicalExpression>> expressions, StringBuilder buffer, Integer indent) throws AlgebricksException {
         buffer.append("[");
         boolean first = true;
         for (Mutable<ILogicalExpression> exprRef : expressions) {
@@ -306,7 +314,7 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
             } else {
                 buffer.append(", ");
             }
-            buffer.append(exprRef.getValue());
+            buffer.append(exprRef.getValue().accept(exprVisitor, indent));
         }
         buffer.append("]");
     }
