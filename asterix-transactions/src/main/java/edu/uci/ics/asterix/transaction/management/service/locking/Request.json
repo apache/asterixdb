@@ -3,23 +3,28 @@
     "fields" : [
         {
             "name" : "resource id",
-            "type" : "GLOBAL"
+            "type" : "GLOBAL",
+            "initial" : "-1"
         },
         {
             "name" : "job slot",
-            "type" : "GLOBAL"
+            "type" : "GLOBAL",
+            "initial" : "-1"
         },
         {
             "name" : "prev job request",
-            "type" : "GLOBAL"
+            "type" : "GLOBAL",
+            "initial" : "-1"
         },
         {
             "name" : "next job request",
-            "type" : "GLOBAL"
+            "type" : "GLOBAL",
+            "initial" : "-1"
         },
         {
             "name" : "next request",
-            "type" : "GLOBAL"
+            "type" : "GLOBAL",
+            "initial" : "-1"
         },
         {
             "name" : "lock mode",

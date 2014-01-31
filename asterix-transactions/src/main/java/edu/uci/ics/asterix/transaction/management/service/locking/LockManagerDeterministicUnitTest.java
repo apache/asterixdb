@@ -24,7 +24,6 @@ import java.util.Scanner;
 
 import org.apache.commons.io.FileUtils;
 
-import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
 import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
@@ -70,7 +69,7 @@ class LockRequestController implements Runnable {
     long defaultWaitTime;
 
     public LockRequestController(String requestFileName) throws ACIDException, AsterixException {
-        this.txnProvider = new TransactionSubsystem("nc1", null, new AsterixTransactionProperties(
+        this.txnProvider = new TransactionSubsystem("nc1", new TestRuntimeContextProvider(), new AsterixTransactionProperties(
                 new AsterixPropertiesAccessor()));
         this.workerReadyQueue = new WorkerReadyQueue();
         this.requestList = new ArrayList<LockRequest>();
