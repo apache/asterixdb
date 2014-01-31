@@ -157,9 +157,10 @@ public class TestCaseContext {
         }
 
         private void addContexts(File tsRoot, TestSuite ts, List<TestGroup> tgPath, List<TestCaseContext> tccs) {
+	    boolean skipSlow = System.getProperty("skipSlowTests") != null;
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
-		if (tc.getCategory() != CategoryEnum.SLOW) {
+		if (skipSlow && tc.getCategory() != CategoryEnum.SLOW) {
 		    tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
 		}
             }

@@ -14,7 +14,7 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="flwor">
-    <test-case FilePath="flwor">
+    <test-case FilePath="flwor" category="slow">
       <compilation-unit name="at00">
         <output-dir compare="Text">at00</output-dir>
       </compilation-unit>
