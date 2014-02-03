@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComp
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 
@@ -72,17 +73,19 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     protected final Map<ILogicalOperator, ILogicalPropertiesVector> logicalProps = new HashMap<ILogicalOperator, ILogicalPropertiesVector>();
     private final IExpressionTypeComputer expressionTypeComputer;
     private final INullableTypeComputer nullableTypeComputer;
+    private final LogicalOperatorPrettyPrintVisitor prettyPrintVisitor;
 
     public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
-            PhysicalOptimizationConfig physicalOptimizationConfig) {
+            PhysicalOptimizationConfig physicalOptimizationConfig, LogicalOperatorPrettyPrintVisitor prettyPrintVisitor) {
         this.varCounter = varCounter;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
         this.mergeAggregationExpressionFactory = mergeAggregationExpressionFactory;
         this.expressionTypeComputer = expressionTypeComputer;
         this.nullableTypeComputer = nullableTypeComputer;
         this.physicalOptimizationConfig = physicalOptimizationConfig;
+        this.prettyPrintVisitor = prettyPrintVisitor;
     }
 
     public int getVarCounter() {
@@ -279,5 +282,10 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
             }
             me.setValue(new FunctionalDependency(hd, tl));
         }
+    }
+    
+    @Override
+    public LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor() {
+        return prettyPrintVisitor;
     }
 }

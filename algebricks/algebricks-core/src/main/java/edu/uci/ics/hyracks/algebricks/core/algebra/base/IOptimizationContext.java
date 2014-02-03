@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSi
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableEvalSizeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -84,4 +85,6 @@ public interface IOptimizationContext extends ITypingContext {
     public abstract void computeAndSetTypeEnvironmentForOperator(ILogicalOperator op) throws AlgebricksException;
 
     public abstract void updatePrimaryKeys(Map<LogicalVariable, LogicalVariable> mappedVars);
+    
+    public abstract LogicalOperatorPrettyPrintVisitor getPrettyPrintVisitor();
 }

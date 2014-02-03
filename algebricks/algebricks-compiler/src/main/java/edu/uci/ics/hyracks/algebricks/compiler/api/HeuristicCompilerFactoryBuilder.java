@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeCo
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.PlanCompiler;
@@ -47,9 +48,10 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                 IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
                 IExpressionTypeComputer expressionTypeComputer, INullableTypeComputer nullableTypeComputer,
                 PhysicalOptimizationConfig physicalOptimizationConfig) {
+            LogicalOperatorPrettyPrintVisitor prettyPrintVisitor = new LogicalOperatorPrettyPrintVisitor();
             return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, nullableTypeComputer,
-                    physicalOptimizationConfig);
+                    physicalOptimizationConfig, prettyPrintVisitor);
         }
     }
 

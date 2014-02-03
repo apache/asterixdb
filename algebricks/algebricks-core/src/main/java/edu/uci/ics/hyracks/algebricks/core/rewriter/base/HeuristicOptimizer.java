@@ -54,7 +54,6 @@ public class HeuristicOptimizer {
     private List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites;
     private List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites;
     private ILogicalPlan plan;
-    private LogicalOperatorPrettyPrintVisitor ppvisitor = new LogicalOperatorPrettyPrintVisitor();
 
     public HeuristicOptimizer(ILogicalPlan plan,
             List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites,
@@ -75,13 +74,13 @@ public class HeuristicOptimizer {
         }
 
         StringBuilder sb = new StringBuilder();
-        PlanPrettyPrinter.printPlan(plan, sb, ppvisitor, 0);
+        PlanPrettyPrinter.printPlan(plan, sb, context.getPrettyPrintVisitor(), 0);
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Logical Plan:\n" + sb.toString());
         runOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizations(plan, physicalRewrites);
         StringBuilder sb2 = new StringBuilder();
-        PlanPrettyPrinter.printPlan(plan, sb2, ppvisitor, 0);
+        PlanPrettyPrinter.printPlan(plan, sb2, context.getPrettyPrintVisitor(), 0);
         AlgebricksConfig.ALGEBRICKS_LOGGER.info("Optimized Plan:\n" + sb2.toString());
     }
 
