@@ -46,7 +46,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
@@ -322,14 +321,28 @@ public class LSMRTree extends AbstractLSMRTree {
 
             BTree btree = mergedComponent.getBTree();
             IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
+            
+            long numElements = 0L;
+            for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
+                numElements += ((LSMRTreeDiskComponent) mergeOp.getMergingComponents().get(i)).getBloomFilter().getNumElements();
+            }
+
+            int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
+            BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
+                    bloomFilterFalsePositiveRate);
+            IIndexBulkLoader builder = mergedComponent.getBloomFilter().createBuilder(numElements,
+                    bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
+            
             try {
                 while (btreeCursor.hasNext()) {
                     btreeCursor.next();
                     ITupleReference tuple = btreeCursor.getTuple();
                     btreeBulkLoader.add(tuple);
+                    builder.add(tuple);
                 }
             } finally {
                 btreeCursor.close();
+                builder.end();
             }
             btreeBulkLoader.end();
         }
