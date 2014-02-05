@@ -576,14 +576,27 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
             BTree btree = component.getDeletedKeysBTree();
             IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
+            
+            long numElements = 0L;
+            for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
+                numElements += ((LSMInvertedIndexDiskComponent) mergeOp.getMergingComponents().get(i)).getBloomFilter().getNumElements();
+            }
+
+            int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
+            BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
+                    bloomFilterFalsePositiveRate);
+            IIndexBulkLoader builder = component.getBloomFilter().createBuilder(numElements,
+                    bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
             try {
                 while (btreeCursor.hasNext()) {
                     btreeCursor.next();
                     ITupleReference tuple = btreeCursor.getTuple();
                     btreeBulkLoader.add(tuple);
+                    builder.add(tuple);
                 }
             } finally {
                 btreeCursor.close();
+                builder.end();
             }
             btreeBulkLoader.end();
         }
