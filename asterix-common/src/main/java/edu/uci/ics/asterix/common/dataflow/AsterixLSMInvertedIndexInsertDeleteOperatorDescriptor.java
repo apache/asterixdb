@@ -35,16 +35,19 @@ public class AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor extends LSMIn
 
     private static final long serialVersionUID = 1L;
 
+    private final String indexName;
+    
     public AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenComparatorFactories, ITypeTraits[] invListsTypeTraits,
             IBinaryComparatorFactory[] invListComparatorFactories, IBinaryTokenizerFactory tokenizerFactory,
             int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
-            ITupleFilterFactory tupleFilterFactory, IModificationOperationCallbackFactory modificationOpCallbackFactory) {
+            ITupleFilterFactory tupleFilterFactory, IModificationOperationCallbackFactory modificationOpCallbackFactory, String indexName) {
         super(spec, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
                 fieldPermutation, op, dataflowHelperFactory, tupleFilterFactory, modificationOpCallbackFactory);
+        this.indexName = indexName;
     }
 
     @Override
@@ -52,5 +55,9 @@ public class AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor extends LSMIn
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new AsterixLSMInsertDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation,
                 recordDescProvider, op, false);
+    }
+
+    public String getIndexName() {
+        return indexName;
     }
 }

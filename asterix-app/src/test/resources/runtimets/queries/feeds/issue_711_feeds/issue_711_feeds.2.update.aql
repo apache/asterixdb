@@ -1,0 +1,15 @@
+/*
+ * Description  : Create a dataset with a secondary btree index.
+                  Create a feed that uses the file_feed adaptor.
+                  The file_feed adaptor simulates a feed from a file in the HDFS.
+                  Connect the feed to the dataset and verify contents of the dataset post completion.
+ * Issue        : 711
+ * Expected Res : Success
+ * Date         : 6th Feb 2014
+ */
+  
+use dataverse feeds;
+
+set wait-for-completion-feed "true";
+
+connect feed TweetFeed to dataset Tweets;

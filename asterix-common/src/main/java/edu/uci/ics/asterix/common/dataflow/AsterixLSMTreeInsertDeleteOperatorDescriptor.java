@@ -34,18 +34,22 @@ public class AsterixLSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexIn
 
     private static final long serialVersionUID = 1L;
 
+    /** the name of the index that is being operated upon **/
+    private final String indexName;
+
     private final boolean isPrimary;
 
-    public AsterixLSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
-            IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
-            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] fieldPermutation,
-            IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
+    public AsterixLSMTreeInsertDeleteOperatorDescriptor(String indexName, IOperatorDescriptorRegistry spec,
+            RecordDescriptor recDesc, IStorageManagerInterface storageManager,
+            IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
+            ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
+            int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory dataflowHelperFactory,
             ITupleFilterFactory tupleFilterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackProvider, boolean isPrimary) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, fieldPermutation, op, dataflowHelperFactory,
                 tupleFilterFactory, modificationOpCallbackProvider);
+        this.indexName = indexName;
         this.isPrimary = isPrimary;
     }
 
@@ -54,6 +58,10 @@ public class AsterixLSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexIn
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new AsterixLSMInsertDeleteOperatorNodePushable(this, ctx, partition, fieldPermutation,
                 recordDescProvider, op, isPrimary);
+    }
+
+    public String getIndexName() {
+        return indexName;
     }
 
     public boolean isPrimary() {
