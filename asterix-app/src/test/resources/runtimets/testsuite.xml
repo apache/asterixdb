@@ -3160,6 +3160,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="similarity">
+      <compilation-unit name="edit-distance-check_unicode">
+        <output-dir compare="Text">edit-distance-check_unicode</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="similarity">
       <compilation-unit name="edit-distance-list-is-filterable">
         <output-dir compare="Text">edit-distance-list-is-filterable</output-dir>
       </compilation-unit>

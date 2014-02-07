@@ -35,7 +35,7 @@ import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.common.DoubleArray;
 import edu.uci.ics.asterix.runtime.evaluators.common.SpatialUtils;
-import edu.uci.ics.fuzzyjoin.IntArray;
+import edu.uci.ics.asterix.fuzzyjoin.IntArray;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
