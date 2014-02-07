@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 public class PrefixMergePolicy implements ILSMMergePolicy {
 
     private long maxMergableComponentSize;
-    private int maxTolernaceComponentCount;
+    private int maxToleranceComponentCount;
 
     @Override
     public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
@@ -40,7 +41,10 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
         // all such components for which the sum of their sizes exceeds MaxMrgCompSz.  Schedule a merge of those components into a new component.
         // 2.  If a merge from 1 doesn't happen, see if the set of candidate components for merging exceeds MaxTolCompCnt.  If so, schedule
         // a merge all of the current candidates into a new single component.
-        List<ILSMComponent> immutableComponents = index.getImmutableComponents();
+        List<ILSMComponent> immutableComponents = new ArrayList<ILSMComponent>(index.getImmutableComponents());
+        // Reverse the components order so that we look at components from oldest to newest.
+        Collections.reverse(immutableComponents);
+       
         for (ILSMComponent c : immutableComponents) {
             if (c.getState() != ComponentState.READABLE_UNWRITABLE) {
                 return;
@@ -65,14 +69,16 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
             totalSize += componentSize;
             boolean isLastComponent = i + 1 == immutableComponents.size() ? true : false;
             if (totalSize > maxMergableComponentSize
-                    || (isLastComponent && i - startIndex >= maxTolernaceComponentCount)) {
-                List<ILSMComponent> mergableCopments = new ArrayList<ILSMComponent>();
+                    || (isLastComponent && i - startIndex >= maxToleranceComponentCount)) {
+                List<ILSMComponent> mergableComponents = new ArrayList<ILSMComponent>();
                 for (int j = startIndex + 1; j <= i; j++) {
-                    mergableCopments.add(immutableComponents.get(j));
+                    mergableComponents.add(immutableComponents.get(j));
                 }
+                // Reverse the components order back to its original order
+                Collections.reverse(mergableComponents);
                 ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
-                accessor.scheduleMerge(index.getIOOperationCallback(), mergableCopments);
+                accessor.scheduleMerge(index.getIOOperationCallback(), mergableComponents);
                 break;
             }
         }
@@ -81,6 +87,6 @@ public class PrefixMergePolicy implements ILSMMergePolicy {
     @Override
     public void configure(Map<String, String> properties) {
         maxMergableComponentSize = Long.parseLong(properties.get("max-mergable-component-size"));
-        maxTolernaceComponentCount = Integer.parseInt(properties.get("max-tolernace-component-count"));
+        maxToleranceComponentCount = Integer.parseInt(properties.get("max-tolerance-component-count"));
     }
 }
