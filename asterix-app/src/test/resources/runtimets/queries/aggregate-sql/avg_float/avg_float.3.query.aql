@@ -1,0 +1,6 @@
+use dataverse test;
+
+sql-avg( 
+ for $x in [float("1"), float("2"), float("3")] 
+ return $x
+)

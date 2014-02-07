@@ -1,0 +1,11 @@
+/*
+ * Description    : Tests that sql-count aggregation correctly returns 0 for an empty stream,
+ *                  with an aggregate combiner.
+ * Success        : Yes
+ */
+use dataverse test;
+
+sql-count(
+ for $x in dataset('Test')
+ return $x.val
+)

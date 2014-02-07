@@ -491,6 +491,361 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="aggregate-sql">
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue531_string_min_max">
+        <output-dir compare="Text">issue531_string_min_max</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="agg_null">
+        <output-dir compare="Text">agg_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="agg_null_rec">
+        <output-dir compare="Text">agg_null_rec</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="agg_null_rec_1">
+        <output-dir compare="Text">agg_null_rec_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="agg_number_rec">
+        <output-dir compare="Text">agg_number_rec</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_mixed">
+        <output-dir compare="Text">avg_mixed</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_mixed">
+        <output-dir compare="Text">sum_mixed</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="min_mixed">
+        <output-dir compare="Text">min_mixed</output-dir>
+        <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="agg_number">
+        <output-dir compare="Text">agg_number</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue425_min_hetero_list_1">
+        <output-dir compare="Text">issue425_min_hetero_list_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue425_min_hetero_list">
+        <output-dir compare="Text">issue425_min_hetero_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue425_sum_hetero_list_1">
+        <output-dir compare="Text">issue425_sum_hetero_list_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue425_sum_hetero_list">
+        <output-dir compare="Text">issue425_sum_hetero_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="query-issue400">
+        <output-dir compare="Text">query-issue400</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue395">
+        <output-dir compare="Text">issue395</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue412_0">
+        <output-dir compare="Text">issue412_0</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue412_1">
+        <output-dir compare="Text">issue412_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_double">
+        <output-dir compare="Text">avg_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_double_null">
+        <output-dir compare="Text">avg_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_empty_01">
+        <output-dir compare="Text">avg_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_empty_02">
+        <output-dir compare="Text">avg_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_float">
+        <output-dir compare="Text">avg_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_float_null">
+        <output-dir compare="Text">avg_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int16">
+        <output-dir compare="Text">avg_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int16_null">
+        <output-dir compare="Text">avg_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int32">
+        <output-dir compare="Text">avg_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int32_null">
+        <output-dir compare="Text">avg_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int64">
+        <output-dir compare="Text">avg_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int64_null">
+        <output-dir compare="Text">avg_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int8">
+        <output-dir compare="Text">avg_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="avg_int8_null">
+        <output-dir compare="Text">avg_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="count_01">
+        <output-dir compare="Text">count_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="count_empty_01">
+        <output-dir compare="Text">count_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="count_empty_02">
+        <output-dir compare="Text">count_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="count_null">
+        <output-dir compare="Text">count_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="max_empty_01">
+        <output-dir compare="Text">max_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="max_empty_02">
+        <output-dir compare="Text">max_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="min_empty_01">
+        <output-dir compare="Text">min_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="min_empty_02">
+        <output-dir compare="Text">min_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_avg">
+        <output-dir compare="Text">scalar_avg</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_avg_empty">
+        <output-dir compare="Text">scalar_avg_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_avg_null">
+        <output-dir compare="Text">scalar_avg_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_count">
+        <output-dir compare="Text">scalar_count</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_count_empty">
+        <output-dir compare="Text">scalar_count_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_count_null">
+        <output-dir compare="Text">scalar_count_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_max">
+        <output-dir compare="Text">scalar_max</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_max_empty">
+        <output-dir compare="Text">scalar_max_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_max_null">
+        <output-dir compare="Text">scalar_max_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_min">
+        <output-dir compare="Text">scalar_min</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_min_empty">
+        <output-dir compare="Text">scalar_min_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_min_null">
+        <output-dir compare="Text">scalar_min_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_sum">
+        <output-dir compare="Text">scalar_sum</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_sum_empty">
+        <output-dir compare="Text">scalar_sum_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_sum_null">
+        <output-dir compare="Text">scalar_sum_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_double">
+        <output-dir compare="Text">sum_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_double_null">
+        <output-dir compare="Text">sum_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_empty_01">
+        <output-dir compare="Text">sum_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_empty_02">
+        <output-dir compare="Text">sum_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_float">
+        <output-dir compare="Text">sum_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_float_null">
+        <output-dir compare="Text">sum_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int16">
+        <output-dir compare="Text">sum_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int16_null">
+        <output-dir compare="Text">sum_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int32">
+        <output-dir compare="Text">sum_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int32_null">
+        <output-dir compare="Text">sum_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int64">
+        <output-dir compare="Text">sum_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int64_null">
+        <output-dir compare="Text">sum_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int8">
+        <output-dir compare="Text">sum_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_int8_null">
+        <output-dir compare="Text">sum_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_null-with-pred">
+        <output-dir compare="Text">sum_null-with-pred</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum_numeric_null">
+        <output-dir compare="Text">sum_numeric_null</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="boolean">
     <test-case FilePath="boolean">
       <compilation-unit name="and_01">
