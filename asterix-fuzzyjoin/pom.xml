@@ -45,14 +45,6 @@
           <outputDirectory>${basedir}/target</outputDirectory>
         </configuration>
       </plugin>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-surefire-plugin</artifactId>
-	<configuration>
-	  <forkMode>pertest</forkMode>
-	  <argLine>-enableassertions -Xmx1g</argLine>
-	</configuration>
-      </plugin>
     </plugins>
   </build>
 
