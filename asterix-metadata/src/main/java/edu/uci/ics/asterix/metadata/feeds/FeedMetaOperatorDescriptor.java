@@ -62,11 +62,11 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
      */
     private final FeedRuntimeType runtimeType;
 
-    private final String operationId;
+    private final String operandId;
 
     public FeedMetaOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId,
             IOperatorDescriptor coreOperatorDescriptor, FeedPolicy feedPolicy, FeedRuntimeType runtimeType,
-            String operationId) {
+            String operandId) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicy = feedPolicy;
@@ -75,14 +75,14 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         }
         this.coreOperator = coreOperatorDescriptor;
         this.runtimeType = runtimeType;
-        this.operationId = operationId;
+        this.operandId = operandId;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new FeedMetaNodePushable(ctx, recordDescProvider, partition, nPartitions, coreOperator,
-                feedConnectionId, feedPolicy, runtimeType, operationId);
+                feedConnectionId, feedPolicy, runtimeType, operandId);
     }
 
     @Override
