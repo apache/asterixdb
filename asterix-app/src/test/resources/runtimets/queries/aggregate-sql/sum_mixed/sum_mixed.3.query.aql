@@ -1,7 +1,7 @@
 /*
 * Description  : Run sql-sum over an ordered list with mixed types
 * Expected Res : Failure
-* Date         : Jun 2nd 2013
+* Date         : Feb 7th 2014
 */
 
 sql-sum(

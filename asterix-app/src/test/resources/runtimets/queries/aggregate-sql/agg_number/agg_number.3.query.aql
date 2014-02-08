@@ -1,7 +1,7 @@
 /*
 * Description  : Run aggregates over an ordered list with numbers of different types
 * Expected Res : Success
-* Date         : Jun 2nd 2013
+* Date         : Feb 7th 2014
 */
 
 let $l1 := [float("2.0"), double("3.0"), 93847382783847382, 1]
