@@ -20,6 +20,12 @@
   <packaging>pom</packaging>
   <name>algebricks</name>
 
+  <parent>
+    <groupId>edu.uci.ics.hyracks</groupId>
+    <artifactId>fullstack</artifactId>
+    <version>0.2.11-SNAPSHOT</version>
+  </parent>
+
   <distributionManagement>
     <repository>
       <id>hyracks-releases</id>
