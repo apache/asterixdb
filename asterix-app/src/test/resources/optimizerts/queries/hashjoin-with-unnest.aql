@@ -1,0 +1,26 @@
+/*
+ * Description    : Tests that non-datascan unnests are pushed through join and 
+ *                : the query plan is rewritten as hybrid hash join.
+ * Success        : Yes
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+id:int32,
+name:string
+}
+
+create dataset t1(TestType) primary key id;
+create dataset t2(TestType) primary key id;
+
+write output to nc1:"rttest/hahsjoin-with-unnest.adm";
+
+for $m in dataset('t1')
+for $n in dataset('t2')
+for $a in $m.hobbies
+for $b in $n.hobbies
+where $a = $b
+return {"t1":$m, "t2":$n}
