@@ -37,5 +37,10 @@
     </plugins>
   </build>
   <dependencies>
+    <dependency>
+      <!-- Dependency management inherited from top-level hyracks -->
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
   </dependencies>
 </project>
