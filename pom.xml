@@ -40,16 +40,14 @@
 	    <plugin>
 	      <groupId>org.apache.maven.plugins</groupId>
 	      <artifactId>maven-surefire-plugin</artifactId>
-	      <version>2.8</version>
+	      <version>2.16</version>
 	      <configuration>
 		<failIfNoTests>false</failIfNoTests>
 		<systemPropertyVariables>
                   <skipFredSlowTests>true</skipFredSlowTests>
 		</systemPropertyVariables>
-		<!-- doesn't work from m2eclipse, currently <additionalClasspathElements> 
-		     <additionalClasspathElement>${basedir}/src/main/resources</additionalClasspathElement> 
-		     </additionalClasspathElements> -->
-		<forkMode>pertest</forkMode>
+		<forkCount>1</forkCount>
+                <reuseForks>false</reuseForks>
 		<argLine>-enableassertions -Xmx${test.heap.size}m
 		-Dfile.encoding=UTF-8
 		-Djava.util.logging.config.file=${user.home}/logging.properties
@@ -186,6 +184,11 @@
 	</repositories>
         <dependencyManagement>
     	<dependencies>
+          <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.1</version>
+          </dependency>
     		<dependency>
     			<groupId>edu.uci.ics.hyracks</groupId>
     			<artifactId>algebricks-compiler</artifactId>
