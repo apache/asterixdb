@@ -73,8 +73,7 @@
         </dependencies>
         <configuration>
           <forkMode>pertest</forkMode>
-          <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n ${jvm.extraargs} -Xmx2048m</argLine>
-          <groups>java.lang.String</groups>
+          <argLine>-enableassertions -Djava.util.logging.config.file=${user.home}/logging.properties -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n -Xmx2048m</argLine>
           <failIfNoTests>false</failIfNoTests>
           <includes>
             <include>**/*Test.java</include>

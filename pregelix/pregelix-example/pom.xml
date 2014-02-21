@@ -111,11 +111,6 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-		  <groupId>edu.uci.ics.hyracks</groupId>
-		  <artifactId>hyracks-test-infrastructure</artifactId>
-		  <version>0.2.11-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>com.google.collections</groupId>
 			<artifactId>google-collections</artifactId>
 			<version>1.0</version>
