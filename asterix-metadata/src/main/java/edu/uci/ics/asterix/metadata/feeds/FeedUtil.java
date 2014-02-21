@@ -26,8 +26,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.uci.ics.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.FeedRuntime;
 import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
@@ -91,8 +93,10 @@ public class FeedUtil {
         Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
 
         // copy operators
+        String operationId = null;
         Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
         for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
+            operationId = FeedRuntime.FeedRuntimeId.DEFAULT_OPERATION_ID;
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof FeedIntakeOperatorDescriptor) {
                 FeedIntakeOperatorDescriptor orig = (FeedIntakeOperatorDescriptor) opDesc;
@@ -107,8 +111,14 @@ public class FeedUtil {
                 }
                 oldNewOID.put(opDesc.getOperatorId(), fiop.getOperatorId());
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
+                operationId = ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
                 FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
-                        feedPolicy, FeedRuntimeType.STORAGE);
+                        feedPolicy, FeedRuntimeType.STORAGE, operationId);
+                oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
+            } else if (opDesc instanceof AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor) {
+                operationId = ((AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor) opDesc).getIndexName();
+                FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
+                        feedPolicy, FeedRuntimeType.STORAGE, operationId);
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             } else {
                 FeedRuntimeType runtimeType = null;
@@ -122,7 +132,7 @@ public class FeedUtil {
                     }
                 }
                 FeedMetaOperatorDescriptor metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc,
-                        feedPolicy, runtimeType);
+                        feedPolicy, runtimeType, operationId);
 
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             }

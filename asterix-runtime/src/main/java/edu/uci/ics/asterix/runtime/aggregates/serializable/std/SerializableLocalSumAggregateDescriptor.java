@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopySerializableAggregateFun
 public class SerializableLocalSumAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = AsterixBuiltinFunctions.SERIAL_LOCAL_SUM;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new SerializableLocalSumAggregateDescriptor();
@@ -36,7 +35,7 @@ public class SerializableLocalSumAggregateDescriptor extends AbstractSerializabl
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return AsterixBuiltinFunctions.SERIAL_LOCAL_SUM;
     }
 
     @Override

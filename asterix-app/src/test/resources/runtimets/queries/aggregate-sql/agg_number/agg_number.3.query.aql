@@ -1,0 +1,15 @@
+/*
+* Description  : Run aggregates over an ordered list with numbers of different types
+* Expected Res : Success
+* Date         : Feb 7th 2014
+*/
+
+let $l1 := [float("2.0"), double("3.0"), 93847382783847382, 1]
+let $l2 := {{float("2.0"), double("3.0"), 93847382783847382, 1}}
+let $a1 := sql-count($l2)
+let $a2 := sql-avg($l2)
+let $a3 := sql-sum($l2)
+let $a4 := sql-min($l2)
+let $a5 := sql-max($l2)
+return { "sql-count1": sql-count($l1), "average1": sql-avg($l1), "sql-sum1": sql-sum($l1), "sql-min1": sql-min($l1), "sql-max1": sql-max($l1), "sql-count2": $a1, "average2": $a2, "sql-sum2": $a3, "sql-min2": $a4, "sql-max2": $a5 }
+

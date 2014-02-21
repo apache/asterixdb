@@ -1,0 +1,15 @@
+/*
+ * Description    : Tests the scalar version of sql-sum without nulls.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+let $i8 := sql-sum([int8("1"), int8("2"), int8("3")])
+let $i16 := sql-sum([int16("1"), int16("2"), int16("3")])
+let $i32 := sql-sum([int32("1"), int32("2"), int32("3")])
+let $i64 := sql-sum([int64("1"), int64("2"), int64("3")])
+let $f := sql-sum([float("1"), float("2"), float("3")])
+let $d := sql-sum([double("1"), double("2"), double("3")])
+for $i in [$i8, $i16, $i32, $i64, $f, $d]
+return $i

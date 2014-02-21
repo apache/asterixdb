@@ -1,0 +1,9 @@
+/*
+* Description  : Run aggregates over both ordered list and unordered list with only null items.
+* Expected Res : Success
+* Date         : Feb 7th 2014
+*/
+
+let $l1 := [null]
+let $l2 := {{null, null}}
+return { "sql-count1": sql-count($l1), "average1": sql-avg($l1), "sql-sum1": sql-sum($l1), "sql-min1": sql-min($l1), "sql-max1": sql-max($l1), "sql-count2": sql-count($l2), "average2": sql-avg($l2), "sql-sum2": sql-sum($l2), "sql-min2": sql-min($l2), "sql-max2": sql-max($l2) } 

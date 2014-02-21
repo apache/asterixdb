@@ -1,0 +1,10 @@
+/*
+* Description  : Run aggregates over records, with different numeric typed items for the aggregating fields.
+* Expected Res : Success
+* Date         : Feb 7th 2014
+*/
+
+use dataverse test;
+
+let $l := for $t in dataset Test return $t.valplus
+return { "sql-count": sql-count($l), "average": sql-avg($l), "sql-sum": sql-sum($l), "sql-min": sql-min($l), "sql-max": sql-max($l) }  
