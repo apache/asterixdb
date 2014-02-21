@@ -28,7 +28,7 @@ public class PrefixMergePolicyFactory implements ILSMMergePolicyFactory {
     private static final long serialVersionUID = 1L;
 
     private static final String[] SET_VALUES = new String[] { "max-mergable-component-size",
-            "max-tolernace-component-count" };
+            "max-tolerance-component-count" };
     private static final Set<String> PROPERTIES_NAMES = new HashSet<String>(Arrays.asList(SET_VALUES));
 
     @Override
