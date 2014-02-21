@@ -25,6 +25,13 @@
     <hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
     <jvm.extraargs />
     <skipSlowTests>true</skipSlowTests>
+
+    <!-- Definition of tests in various categories which may be excluded -->
+    <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
+    <metadata.tests>**/metadata/*Test.java</metadata.tests>
+    <execution.tests>**/ExecutionTest.java</execution.tests>
+    <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
+    <test.excludes>${optimizer.tests},${metadata.tests},${execution.tests}</test.excludes>
   </properties>
 
 	<build>
@@ -54,9 +61,11 @@
 		-Xdebug
 		-Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
 		<includes>
-		  <include>**/*TestSuite.java</include>
-		  <include>**/*Test.java</include>
+		  <include>${test.includes}</include>
 		</includes>
+                <excludes>
+                  <exclude>${test.excludes}</exclude>
+                </excludes>
 	      </configuration>
 	    </plugin>
 	  </plugins>
@@ -79,6 +88,24 @@
 	</distributionManagement>
 
     <profiles>
+      <profile>
+        <id>optimizer-tests</id>
+        <properties>
+          <optimizer.tests />
+        </properties>
+      </profile>
+      <profile>
+        <id>metadata-tests</id>
+        <properties>
+          <metadata.tests />
+        </properties>
+      </profile>
+      <profile>
+        <id>execution-tests</id>
+        <properties>
+          <execution.tests />
+        </properties>
+      </profile>
         <profile>
           <id>32bitvm</id>
           <activation>
