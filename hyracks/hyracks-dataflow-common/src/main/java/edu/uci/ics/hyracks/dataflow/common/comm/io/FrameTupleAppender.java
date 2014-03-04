@@ -28,8 +28,17 @@ public class FrameTupleAppender {
 
     private int tupleDataEndOffset;
 
+    private int numberOfFields = -1;
+    private int currentField = 0;
+    private int lastFieldEndOffset = 0;
+
     public FrameTupleAppender(int frameSize) {
         this.frameSize = frameSize;
+    }
+
+    public FrameTupleAppender(int frameSize, int numberOfFields) {
+        this.frameSize = frameSize;
+        this.numberOfFields = numberOfFields;
     }
 
     public void reset(ByteBuffer buffer, boolean clear) {
@@ -89,6 +98,44 @@ public class FrameTupleAppender {
             return true;
         }
         return false;
+    }
+
+    public boolean appendField(byte[] bytes, int offset, int length) {
+        if (numberOfFields < 0) {
+            throw new IllegalStateException("unintialized number of fields " + numberOfFields);
+        }
+        int currentTupleDataStart = tupleDataEndOffset + numberOfFields * 4 + lastFieldEndOffset;
+        if (currentTupleDataStart + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+            System.arraycopy(bytes, offset, buffer.array(), currentTupleDataStart, length);
+            lastFieldEndOffset = lastFieldEndOffset + length;
+            buffer.putInt(tupleDataEndOffset + currentField * 4, lastFieldEndOffset);
+            if (++currentField == numberOfFields) {
+                tupleDataEndOffset += numberOfFields * 4 + lastFieldEndOffset;
+                buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+                ++tupleCount;
+                buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+
+                //reset for the next tuple
+                currentField = 0;
+                lastFieldEndOffset = 0;
+            }
+            return true;
+        } else {
+            //reset for the next tuple
+            currentField = 0;
+            lastFieldEndOffset = 0;
+            return false;
+        }
+    }
+
+    public boolean appendField(IFrameTupleAccessor fta, int tIndex, int fIndex) {
+        if (numberOfFields < 0) {
+            throw new IllegalStateException("unintialized number of fields " + numberOfFields);
+        }
+        int startOffset = fta.getTupleStartOffset(tIndex);
+        int fStartOffset = fta.getFieldStartOffset(tIndex, fIndex);
+        int fLen = fta.getFieldEndOffset(tIndex, fIndex) - fStartOffset;
+        return appendField(fta.getBuffer().array(), startOffset + fta.getFieldSlotsLength() + fStartOffset, fLen);
     }
 
     public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
