@@ -5,40 +5,39 @@ function AsterixDBConnection(configuration) {
 
     // This is a demo setup related fix. Enabled by proxy to Asterix REST API.
     this._properties["endpoint_root"] = "/";
-    
+
     var configuration = arguments || {};
-    
+
     for (var key in configuration) {
         this._properties[key] = configuration[key];
     }
-    
+
     return this;
 }
 
 
 AsterixDBConnection.prototype.dataverse = function(dataverseName) {
     this._properties["dataverse"] = dataverseName;
-    
+
     return this;
 };
 
 
 AsterixDBConnection.prototype.query = function(statements, successFn, mode) {
- 
     if ( typeof statements === 'string') {
         statements = [ statements ];
     }
-    
+
     var m = typeof mode ? mode : "synchronous";
-    
+
     var query = "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n");
-    
+
     this._api(
         {
             "query" : query,
             "mode"  : m
         },
-        successFn, 
+        successFn,
         "query"
     );
 
@@ -63,7 +62,7 @@ AsterixDBConnection.prototype.query_result = function(data, successFn) {
         data,
         successFn,
         "query/result"
-    ); 
+    );
 
     return this;
 };
@@ -73,7 +72,7 @@ AsterixDBConnection.prototype.ddl = function(statements, successFn) {
     if ( typeof statements === 'string') {
         statements = [ statements ];
     }
-    
+
     this._api(
         {
             "ddl" :  "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n")
@@ -88,7 +87,7 @@ AsterixDBConnection.prototype.update = function(statements, successFn) {
     if ( typeof statements === 'string') {
         statements = [ statements ];
     }
-    
+
     this._api(
         {
             "statements" : "use dataverse " + this._properties["dataverse"] + ";\n" + statements.join("\n")
@@ -101,7 +100,7 @@ AsterixDBConnection.prototype.update = function(statements, successFn) {
 
 AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
     var success_fn = onSuccess;
-    var endpoint_url = this._properties["endpoint_root"] + endpoint;    
+    var endpoint_url = this._properties["endpoint_root"] + endpoint;
 
     $.ajax({
         type: 'GET',
@@ -114,7 +113,7 @@ AsterixDBConnection.prototype._api = function(json, onSuccess, endpoint) {
         error: function(xhr, status, error) {
         }
     });
-    
+
     return this;
 };
 
@@ -126,7 +125,7 @@ function AExpression () {
     this._success = function() {};
 
     if (arguments.length == 1) {
-        this._properties["value"] = arguments[0];    
+        this._properties["value"] = arguments[0];
     }
 
     return this;
@@ -151,7 +150,7 @@ AExpression.prototype.run = function(successFn) {
 };
 
 
-AExpression.prototype.val = function() { 
+AExpression.prototype.val = function() {
 
     var value = "";
 
@@ -170,7 +169,7 @@ AExpression.prototype.val = function() {
 
 // @param expressionValue [String]
 AExpression.prototype.set = function(expressionValue) {
-    this._properties["value"] = expressionValue; 
+    this._properties["value"] = expressionValue;
     return this;
 };
 
@@ -187,12 +186,12 @@ AExpression.prototype.set = function(expressionValue) {
 //                  | Query
 function InsertStatement(quantifiedName, query) {
     AExpression.call(this);
-    
+
     var innerQuery = "";
     if (query instanceof AExpression) {
         innerQuery = query.val();
     } else if (typeof query == "object" && Object.getPrototypeOf( query ) === Object.prototype ) {
-        
+
         var insertStatements = [];
         for (querykey in query) {
             if (query[querykey] instanceof AExpression) {
@@ -203,12 +202,12 @@ function InsertStatement(quantifiedName, query) {
                 insertStatements.push('"' + querykey + '" : ' + query[querykey].toString());
             }
         }
-        
+
         innerQuery = "{" + insertStatements.join(', ') + "}";
     }
-    
+
     var statement = "insert into dataset " + quantifiedName + "(" + innerQuery + ");";
-    
+
     AExpression.prototype.set.call(this, statement);
 
     return this;
@@ -222,15 +221,15 @@ InsertStatement.prototype.constructor = InsertStatement;
 // DeleteStatement ::= "delete" Variable "from" "dataset" QualifiedName ( "where" Expression )?
 function DeleteStatement (variable, quantifiedName, whereExpression) {
     AExpression.call(this);
-    
+
     var statement = "delete " + variable + " from dataset " + quantifiedName;
-    
+
     if (whereExpression instanceof AExpression) {
         statement += " where " + whereExpression.val();
     }
-    
+
     AExpression.prototype.set.call(this, statement);
-    
+
     return this;
 }
 
@@ -259,21 +258,21 @@ SetStatement.prototype.constructor = SetStatement;
 
 // FunctionExpression
 // Parent: AsterixExpression
-// 
-// @param   options [Various], 
+//
+// @param   options [Various],
 // @key     function [String], a function to be applid to the expression
 // @key     expression [AsterixExpression or AQLClause] an AsterixExpression/Clause to which the fn will be applied
 function FunctionExpression() {
-    
+
     // Initialize superclass
     AExpression.call(this);
-    
+
     this._properties["function"] = "";
     this._properties["expressions"] = [];
 
     // Check for fn/expression input
     if (arguments.length >= 2 && typeof arguments[0] == "string") {
-        
+
         this._properties["function"] = arguments[0];
 
         for (i = 1; i < arguments.length; i++) {
@@ -283,7 +282,7 @@ function FunctionExpression() {
                 this._properties["expressions"].push(new AExpression(arguments[i]));
             }
         }
-    } 
+    }
 
     // Return FunctionCallExpression object
     return this;
@@ -292,7 +291,7 @@ function FunctionExpression() {
 
 FunctionExpression.prototype = Object.create(AExpression.prototype);
 FunctionExpression.prototype.constructor = FunctionExpression;
-   
+
 
 FunctionExpression.prototype.val = function () {
     var fn_args = [];
@@ -427,7 +426,7 @@ function AQLClause() {
 
 AQLClause.prototype.val = function() {
     var value = this._properties["clause"];
- 
+
     return value;
 };
 
@@ -451,28 +450,28 @@ AQLClause.prototype.set = function(value) {
 // Grammar:
 // "for" Variable ( "at" Variable )? "in" ( Expression )
 //
-// @param for_variable [String], REQUIRED, first variable in clause 
+// @param for_variable [String], REQUIRED, first variable in clause
 // @param at_variable [String], NOT REQUIRED, first variable in clause
 // @param expression [AsterixExpression], REQUIRED, expression to evaluate
 function ForClause(for_variable, at_variable, expression) {
     AQLClause.call(this);
-  
+
     var parameters = [];
     if (arguments[0] instanceof Array) {
         parameters = arguments[0];
     } else {
         parameters = arguments;
     }
-  
+
     this._properties["clause"] = "for " + parameters[0];
-    
+
     if (parameters.length == 3) {
         this._properties["clause"] += " at " + parameters[1];
         this._properties["clause"] += " in " + parameters[2].val();
     } else if (parameters.length == 2) {
         this._properties["clause"] += " in " + parameters[1].val();
     }
-    
+
     return this;
 }
 
@@ -491,18 +490,18 @@ ForClause.prototype.constructor = ForClause;
 // TODO Vigorous error checking
 function LetClause(let_variable, expression) {
     AQLClause.call(this);
-    
+
     var parameters = [];
     if (arguments[0] instanceof Array) {
         parameters = arguments[0];
     } else {
         parameters = arguments;
     }
-    
+
     this._properties["clause"] = "let " + parameters[0] + " := ";
     this._properties["clause"] += parameters[1].val();
-    
-    return this; 
+
+    return this;
 }
 
 LetClause.prototype = Object.create(AQLClause.prototype);
@@ -517,25 +516,25 @@ function ReturnClause(expression) {
     AQLClause.call(this);
 
     this._properties["clause"] = "return ";
-    
+
     if (expression instanceof AExpression || expression instanceof AQLClause) {
         this._properties["clause"] += expression.val();
-    
+
     } else if ( typeof expression == "object" && Object.getPrototypeOf( expression ) === Object.prototype ) {
-        
+
         this._properties["clause"] += "\n{\n";
         var returnStatements = [];
         for (returnValue in expression) {
-           
-            if (expression[returnValue] instanceof AExpression) { 
-                returnStatements.push('"' + returnValue + '" ' + " : " + expression[returnValue].val());            
-            } else if (typeof expression[returnValue] == "string") {          
-                returnStatements.push('"' + returnValue + '" ' + " : " + expression[returnValue]);   
+
+            if (expression[returnValue] instanceof AExpression) {
+                returnStatements.push('"' + returnValue + '" ' + " : " + expression[returnValue].val());
+            } else if (typeof expression[returnValue] == "string") {
+                returnStatements.push('"' + returnValue + '" ' + " : " + expression[returnValue]);
             }
         }
         this._properties["clause"] += returnStatements.join(",\n");
-        this._properties["clause"] += "\n}";  
-    
+        this._properties["clause"] += "\n}";
+
     } else {
         this._properties["clause"] += new AQLClause().set(expression).val();
     }
@@ -550,13 +549,13 @@ ReturnClause.prototype.constructor = ReturnClause;
 
 // WhereClause
 //
-// Grammar: 
+// Grammar:
 // ::= "where" Expression
-// 
+//
 // @param expression [BooleanExpression], pushes this expression onto the stack
 function WhereClause(expression) {
     AQLClause.call(this);
-    
+
     this._properties["stack"] = [];
 
     if (expression instanceof Array) {
@@ -564,7 +563,7 @@ function WhereClause(expression) {
     } else {
         this.bind(expression);
     }
-    
+
     return this;
 }
 
@@ -582,8 +581,8 @@ WhereClause.prototype.bind = function(expression) {
 
 
 WhereClause.prototype.val = function() {
-    var value = "";  
-    
+    var value = "";
+
     if (this._properties["stack"].length == 0) {
         return value;
     }
@@ -593,32 +592,32 @@ WhereClause.prototype.val = function() {
         value += this._properties["stack"][count].val() + " ";
         count -= 1;
     }
-    
+
     return "where " + value;
 };
 
 
 WhereClause.prototype.and = function() {
-    
+
     var parameters = [];
     if (arguments[0] instanceof Array) {
         parameters = arguments[0];
     } else {
         parameters = arguments;
     }
-    
-    var andClauses = [];  
+
+    var andClauses = [];
     for (var expression in parameters) {
-        
+
         if (parameters[expression] instanceof AExpression) {
             andClauses.push(parameters[expression].val());
         }
     }
-    
+
     if (andClauses.length > 0) {
         this._properties["stack"].push(new AExpression().set(andClauses.join(" and ")));
     }
-    
+
     return this;
 };
 
@@ -632,38 +631,38 @@ WhereClause.prototype.or = function() {
         parameters = arguments;
     }
 
-    var orClauses = [];  
+    var orClauses = [];
     for (var expression in parameters) {
-        
+
         if (parameters[expression] instanceof AExpression) {
             orClauses.push(parameters[expression].val());
         }
     }
-    
+
     if (andClauses.length > 0) {
         this._properties["stack"].push(new AExpression().set(orClauses.join(" and ")));
     }
-    
+
     return this;
 };
 
 // LimitClause
 // Grammar:
 // LimitClause    ::= "limit" Expression ( "offset" Expression )?
-// 
+//
 // @param   limitExpression [REQUIRED, AQLExpression]
 // @param   offsetExpression [OPTIONAL, AQLExpression]
 function LimitClause(limitExpression, offsetExpression) {
 
     AQLClause.call(this);
-    
+
     var parameters = [];
     if (arguments[0] instanceof Array) {
         parameters = arguments[0];
     } else {
         parameters = arguments;
     }
-  
+
     // limitExpression required
     this._properties["clause"] = "limit " + parameters[0].val();
 
@@ -684,17 +683,17 @@ LimitClause.prototype.constructor = LimitClause;
 // Grammar:
 // OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
 //
-// @params AQLExpressions and asc/desc strings, in any quantity. At least one required. 
+// @params AQLExpressions and asc/desc strings, in any quantity. At least one required.
 function OrderbyClause() {
-    
+
     AQLClause.call(this);
 
     // At least one argument expression is required, and first should be expression
     if (arguments.length == 0) {
         this._properties["clause"] = null;
-        return this;    
+        return this;
     }
-    
+
     var parameters = [];
     if (arguments[0] instanceof Array) {
         parameters = arguments[0];
@@ -703,10 +702,10 @@ function OrderbyClause() {
     }
 
     var expc = 0;
-    var expressions = [];    
+    var expressions = [];
 
     while (expc < parameters.length) {
-      
+
         var expression = "";
 
         if (parameters[expc] instanceof AExpression) {
@@ -718,9 +717,9 @@ function OrderbyClause() {
             expc++;
             expression += " " + parameters[expc];
         }
-        
+
         expressions.push(expression);
-      
+
         expc++;
     }
 
@@ -741,9 +740,9 @@ function GroupClause() {
 
     if (arguments.length == 0) {
         this._properties["clause"] = null;
-        return this;    
-    } 
-    
+        return this;
+    }
+
     var parameters = [];
     if (arguments[0] instanceof Array) {
         parameters = arguments[0];
@@ -755,7 +754,7 @@ function GroupClause() {
     var expressions = [];
     var variableRefs = [];
     var isDecor = false;
-    
+
     while (expc < parameters.length) {
 
         if (parameters[expc] instanceof AExpression) {
@@ -763,8 +762,8 @@ function GroupClause() {
             isDecor = false;
             expressions.push(parameters[expc].val());
 
-        } else if (typeof parameters[expc] == "string") {       
-            
+        } else if (typeof parameters[expc] == "string") {
+
             // Special keywords, decor & with
             if (parameters[expc] == "decor") {
                 isDecor = true;
@@ -775,15 +774,15 @@ function GroupClause() {
                     variableRefs.push(parameters[expc]);
                     expc++;
                 }
-            
+
             // Variables and variable refs
             } else {
-                
+
                 var nextc = expc + 1;
                 var expression = "";
-            
+
                 if (isDecor) {
-                    expression += "decor "; 
+                    expression += "decor ";
                     isDecor = false;
                 }
 
@@ -805,10 +804,10 @@ GroupClause.prototype.constructor = GroupClause;
 
 
 // Quantified Expression
-// 
+//
 // Grammar
 // QuantifiedExpression ::= ( ( "some" ) | ( "every" ) ) Variable "in" Expression ( "," Variable "in" Expression )* "satisfies" Expression
-// 
+//
 // @param String some/every
 // @param [AExpression]
 // @param [Aexpression] satisfiesExpression
@@ -819,10 +818,10 @@ function QuantifiedExpression (keyword, expressions, satisfiesExpression) {
     var varsInExpressions = [];
 
     for (var varInExpression in expressions) {
-        varsInExpressions.push(varInExpression + " in " + expressions[varInExpression].val()); 
-    } 
+        varsInExpressions.push(varInExpression + " in " + expressions[varInExpression].val());
+    }
     expression += varsInExpressions.join(", ") + " satisfies " + satisfiesExpression.val();
-    
+
     AExpression.prototype.set.call(this, expression);
 
     return this;
@@ -833,5 +832,5 @@ QuantifiedExpression.prototype.constructor = QuantifiedExpression;
 
 QuantifiedExpression.prototype.val = function() {
     var value = AExpression.prototype.val.call(this);
-    return "(" + value + ")";    
+    return "(" + value + ")";
 };
