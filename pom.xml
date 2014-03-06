@@ -27,7 +27,7 @@
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/FailureRecoveryInnerJoinTest.java,**/RunJobTestCase.java,**/FailureVertexTest.java</hanging.pregelix.tests>
     <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
-    <test.excludes>${hanging.pregelix.tests}</test.excludes>
+    <test.excludes>**/Abstract*.java,${hanging.pregelix.tests}</test.excludes>
   </properties>
   <dependencyManagement>
     <dependencies>
