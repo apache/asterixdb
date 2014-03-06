@@ -14,11 +14,8 @@
  */
 package edu.uci.ics.asterix.installer.transaction;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -26,7 +23,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,8 +40,6 @@ public class RecoveryIT {
     private static final String PATH_BASE = "src/test/resources/transactionts/";
     private TestCaseContext tcCtx;
     private static File asterixInstallerPath;
-    private static File asterixAppPath;
-    private static File asterixDBPath;
     private static File installerTargetPath;
     private static String managixHomeDirName;
     private static String managixHomePath;
@@ -59,8 +53,6 @@ public class RecoveryIT {
         outdir.mkdirs();
 
         asterixInstallerPath = new File(System.getProperty("user.dir"));
-        asterixDBPath = new File(asterixInstallerPath.getParent());
-        asterixAppPath = new File(asterixDBPath.getAbsolutePath() + File.separator + "asterix-app");
         installerTargetPath = new File(asterixInstallerPath, "target");
         managixHomeDirName = installerTargetPath.list(new FilenameFilter() {
             @Override

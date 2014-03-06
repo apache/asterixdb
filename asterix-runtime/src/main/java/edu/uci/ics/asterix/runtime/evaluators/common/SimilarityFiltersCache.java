@@ -18,8 +18,8 @@ import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import edu.uci.ics.fuzzyjoin.similarity.SimilarityFilters;
-import edu.uci.ics.fuzzyjoin.similarity.SimilarityFiltersFactory;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityFilters;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityFiltersFactory;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;

@@ -24,7 +24,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 /**
  * Assumes LSM-BTrees as primary indexes.
@@ -53,15 +52,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
     public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
         try {
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
-            LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) before;
-            IndexOperation oldOp = IndexOperation.INSERT;
-            if (before == null) {
-                oldOp = IndexOperation.NOOP;
-            }
-            if (lsmBTreeTuple != null && lsmBTreeTuple.isAntimatter()) {
-                oldOp = IndexOperation.DELETE;
-            }
-            log(pkHash, after, oldOp, before);
+            log(pkHash, after);
         } catch (ACIDException e) {
             throw new HyracksDataException(e);
         }

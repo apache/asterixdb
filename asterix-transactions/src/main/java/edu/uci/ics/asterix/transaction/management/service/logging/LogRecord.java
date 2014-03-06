@@ -40,10 +40,9 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * PKValueSize(4)
  * PKValue(PKValueSize)
  * ---------------------------
- * [Header3] (21 bytes) : only for update log type
+ * [Header3] (20 bytes) : only for update log type
  * PrevLSN(8)
  * ResourceId(8) //stored in .metadata of the corresponding index in NC node
- * ResourceType(1)
  * LogRecordSize(4)
  * ---------------------------
  * [Body] (Variable size) : only for update log type
@@ -51,9 +50,6 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * NewOp(1)
  * NewValueSize(4)
  * NewValue(NewValueSize)
- * OldOp(1)
- * OldValueSize(4)
- * OldValue(OldValueSize)
  * ---------------------------
  * [Tail] (8 bytes) : for all log types
  * Checksum(8)
@@ -62,8 +58,8 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * 1) JOB_COMMIT_LOG_SIZE: 13 bytes (5 + 8)
  * 2) ENTITY_COMMIT: 25 + PKSize (5 + 12 + PKSize + 8)
  *    --> ENTITY_COMMIT_LOG_BASE_SIZE = 25
- * 3) UPDATE: 64 + PKSize + New/OldValueSize (5 + 12 + PKSize + 21 + 14 + New/OldValueSize + 8)
- *    --> UPDATE_LOG_BASE_SIZE = 60
+ * 3) UPDATE: 54 + PKValueSize + NewValueSize (5 + 12 + PKValueSize + 20 + 9 + NewValueSize + 8)
+ *    --> UPDATE_LOG_BASE_SIZE = 54
  */
 public class LogRecord implements ILogRecord {
 
@@ -76,15 +72,11 @@ public class LogRecord implements ILogRecord {
     private ITupleReference PKValue;
     private long prevLSN;
     private long resourceId;
-    private byte resourceType;
     private int logSize;
     private int fieldCnt;
     private byte newOp;
     private int newValueSize;
     private ITupleReference newValue;
-    private byte oldOp;
-    private int oldValueSize;
-    private ITupleReference oldValue;
     private long checksum;
     //------------- fields in a log record (end) --------------//
 
@@ -96,7 +88,6 @@ public class LogRecord implements ILogRecord {
     private final SimpleTupleWriter tupleWriter;
     private final PrimaryKeyTupleReference readPKValue;
     private final SimpleTupleReference readNewValue;
-    private final SimpleTupleReference readOldValue;
     private final CRC32 checksumGen;
     private int[] PKFields;
 
@@ -105,7 +96,6 @@ public class LogRecord implements ILogRecord {
         tupleWriter = new SimpleTupleWriter();
         readPKValue = new PrimaryKeyTupleReference();
         readNewValue = (SimpleTupleReference) tupleWriter.createTupleReference();
-        readOldValue = (SimpleTupleReference) tupleWriter.createTupleReference();
         checksumGen = new CRC32();
     }
 
@@ -126,21 +116,11 @@ public class LogRecord implements ILogRecord {
         if (logType == LogType.UPDATE) {
             buffer.putLong(prevLSN);
             buffer.putLong(resourceId);
-            buffer.put(resourceType);
             buffer.putInt(logSize);
             buffer.putInt(fieldCnt);
             buffer.put(newOp);
             buffer.putInt(newValueSize);
             writeTuple(buffer, newValue, newValueSize);
-            if (resourceType == ResourceType.LSM_BTREE) {
-                buffer.put(oldOp);
-                if (oldOp != (byte) (IndexOperation.NOOP.ordinal())) {
-                    buffer.putInt(oldValueSize);
-                    if (oldValueSize > 0) {
-                        writeTuple(buffer, oldValue, oldValueSize);
-                    }
-                }
-            }
         }
         checksum = generateChecksum(buffer, beginOffset, logSize - CHECKSUM_SIZE);
         buffer.putLong(checksum);
@@ -186,21 +166,11 @@ public class LogRecord implements ILogRecord {
             if (logType == LogType.UPDATE) {
                 prevLSN = buffer.getLong();
                 resourceId = buffer.getLong();
-                resourceType = buffer.get();
                 logSize = buffer.getInt();
                 fieldCnt = buffer.getInt();
                 newOp = buffer.get();
                 newValueSize = buffer.getInt();
                 newValue = readTuple(buffer, readNewValue, fieldCnt, newValueSize);
-                if (resourceType == ResourceType.LSM_BTREE) {
-                    oldOp = buffer.get();
-                    if (oldOp != (byte) (IndexOperation.NOOP.ordinal())) {
-                        oldValueSize = buffer.getInt();
-                        if (oldValueSize > 0) {
-                            oldValue = readTuple(buffer, readOldValue, fieldCnt, oldValueSize);
-                        }
-                    }
-                }
             } else {
                 computeAndSetLogSize();
             }
@@ -269,14 +239,7 @@ public class LogRecord implements ILogRecord {
     }
 
     private void setUpdateLogSize() {
-        logSize = UPDATE_LOG_BASE_SIZE + PKValueSize + newValueSize + oldValueSize;
-        if (resourceType != ResourceType.LSM_BTREE) {
-            logSize -= 5; //oldOp(byte: 1) + oldValueLength(int: 4)
-        } else {
-            if (oldOp == (byte) (IndexOperation.NOOP.ordinal())) {
-                logSize -= 4; //oldValueLength(int: 4)
-            }
-        }
+        logSize = UPDATE_LOG_BASE_SIZE + PKValueSize + newValueSize;
     }
 
     @Override
@@ -313,7 +276,6 @@ public class LogRecord implements ILogRecord {
         if (logType == LogType.UPDATE) {
             builder.append(" PrevLSN : ").append(prevLSN);
             builder.append(" ResourceId : ").append(resourceId);
-            builder.append(" ResourceType : ").append(resourceType);
         }
         return builder.toString();
     }
@@ -403,16 +365,6 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public byte getResourceType() {
-        return resourceType;
-    }
-
-    @Override
-    public void setResourceType(byte resourceType) {
-        this.resourceType = resourceType;
-    }
-
-    @Override
     public int getLogSize() {
         return logSize;
     }
@@ -451,36 +403,6 @@ public class LogRecord implements ILogRecord {
     public void setNewValue(ITupleReference newValue) {
         this.newValue = newValue;
         this.fieldCnt = newValue.getFieldCount();
-    }
-
-    @Override
-    public byte getOldOp() {
-        return oldOp;
-    }
-
-    @Override
-    public void setOldOp(byte oldOp) {
-        this.oldOp = oldOp;
-    }
-
-    @Override
-    public int getOldValueSize() {
-        return oldValueSize;
-    }
-
-    @Override
-    public void setOldValueSize(int oldValueSize) {
-        this.oldValueSize = oldValueSize;
-    }
-
-    @Override
-    public ITupleReference getOldValue() {
-        return oldValue;
-    }
-
-    @Override
-    public void setOldValue(ITupleReference oldValue) {
-        this.oldValue = oldValue;
     }
 
     @Override

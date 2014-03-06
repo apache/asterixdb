@@ -1,0 +1,7 @@
+/*
+ * Description    : Tests the scalar version of sql-sum with nulls.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;

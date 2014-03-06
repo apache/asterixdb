@@ -139,6 +139,9 @@ public class Generator {
                         sb.append('\n');
                     }
                 }
+            } else if (line.contains("@PRINT_RECORD@")) {
+                resource.appendRecordPrinter(sb, indent, 1);
+                sb.append('\n');
             } else {
                 sb.append(line).append('\n');
             }

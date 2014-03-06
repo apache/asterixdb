@@ -19,7 +19,7 @@ import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.fuzzyjoin.similarity.IListIterator;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.IListIterator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 
 public abstract class AbstractAsterixListIterator implements IListIterator {

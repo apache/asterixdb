@@ -1,0 +1,2 @@
+let $l := [1, 60, null]
+return { "sql-count": sql-count($l), "average": sql-avg($l), "sql-sum": sql-sum($l), "sql-min": sql-min($l), "sql-max": sql-max($l) } 

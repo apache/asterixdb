@@ -47,7 +47,7 @@ public class GlobalConfig {
     static {
         DEFAULT_COMPACTION_POLICY_PROPERTIES = new LinkedHashMap<String, String>();
         DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-mergable-component-size", "1073741824"); // 1GB
-        DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-tolernace-component-count", "5"); // 5 components
+        DEFAULT_COMPACTION_POLICY_PROPERTIES.put("max-tolerance-component-count", "5"); // 5 components
     }
 
     public static int getFrameSize() {

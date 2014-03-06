@@ -34,12 +34,16 @@ public class FeedRuntime {
     protected FeedRuntimeState runtimeState;
 
     public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType) {
-        this.feedRuntimeId = new FeedRuntimeId(feedRuntimeType, feedId, partition);
+        this.feedRuntimeId = new FeedRuntimeId(feedId, feedRuntimeType, partition);
     }
 
-    public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType,
+    public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType, String operandId) {
+        this.feedRuntimeId = new FeedRuntimeId(feedId, feedRuntimeType, operandId, partition);
+    }
+
+    public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType, String operandId,
             FeedRuntimeState runtimeState) {
-        this.feedRuntimeId = new FeedRuntimeId(feedRuntimeType, feedId, partition);
+        this.feedRuntimeId = new FeedRuntimeId(feedId, feedRuntimeType, operandId, partition);
         this.runtimeState = runtimeState;
     }
 
@@ -88,13 +92,24 @@ public class FeedRuntime {
 
     public static class FeedRuntimeId {
 
+        public static final String DEFAULT_OPERATION_ID = "N/A";
         private final FeedRuntimeType feedRuntimeType;
+        private final String operandId;
         private final FeedConnectionId feedId;
         private final int partition;
         private final int hashCode;
 
-        public FeedRuntimeId(FeedRuntimeType runtimeType, FeedConnectionId feedId, int partition) {
+        public FeedRuntimeId(FeedConnectionId feedId, FeedRuntimeType runtimeType, String operandId, int partition) {
             this.feedRuntimeType = runtimeType;
+            this.operandId = operandId;
+            this.feedId = feedId;
+            this.partition = partition;
+            this.hashCode = (feedId + "[" + partition + "]" + feedRuntimeType).hashCode();
+        }
+
+        public FeedRuntimeId(FeedConnectionId feedId, FeedRuntimeType runtimeType, int partition) {
+            this.feedRuntimeType = runtimeType;
+            this.operandId = DEFAULT_OPERATION_ID;
             this.feedId = feedId;
             this.partition = partition;
             this.hashCode = (feedId + "[" + partition + "]" + feedRuntimeType).hashCode();
@@ -102,7 +117,7 @@ public class FeedRuntime {
 
         @Override
         public String toString() {
-            return feedId + "[" + partition + "]" + " " + feedRuntimeType;
+            return feedId + "[" + partition + "]" + " " + feedRuntimeType + "(" + operandId + ")";
         }
 
         @Override
@@ -115,7 +130,7 @@ public class FeedRuntime {
             if (o instanceof FeedRuntimeId) {
                 FeedRuntimeId oid = ((FeedRuntimeId) o);
                 return oid.getFeedId().equals(feedId) && oid.getFeedRuntimeType().equals(feedRuntimeType)
-                        && oid.getPartition() == partition;
+                        && oid.getOperandId().equals(operandId) && oid.getPartition() == partition;
             }
             return false;
         }
@@ -126,6 +141,10 @@ public class FeedRuntime {
 
         public FeedConnectionId getFeedId() {
             return feedId;
+        }
+
+        public String getOperandId() {
+            return operandId;
         }
 
         public int getPartition() {

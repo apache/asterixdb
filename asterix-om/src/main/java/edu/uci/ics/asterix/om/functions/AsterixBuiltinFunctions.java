@@ -304,6 +304,57 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "local-avg-serial", 1);
 
+    // sql aggregate functions
+    public final static FunctionIdentifier SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-sql-avg", 1);
+    public final static FunctionIdentifier SQL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-sql-count", 1);
+    public final static FunctionIdentifier SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-sql-sum", 1);
+    public final static FunctionIdentifier LOCAL_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-local-sql-sum", 1);
+    public final static FunctionIdentifier SQL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-sql-max", 1);
+    public final static FunctionIdentifier LOCAL_SQL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-local-sql-max", 1);
+    public final static FunctionIdentifier SQL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-sql-min", 1);
+    public final static FunctionIdentifier LOCAL_SQL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-local-sql-min", 1);
+    public final static FunctionIdentifier GLOBAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-global-sql-avg", 1);
+    public final static FunctionIdentifier LOCAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "agg-local-sql-avg", 1);
+
+    public final static FunctionIdentifier SCALAR_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-avg", 1);
+    public final static FunctionIdentifier SCALAR_SQL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-count", 1);
+    public final static FunctionIdentifier SCALAR_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-sum", 1);
+    public final static FunctionIdentifier SCALAR_SQL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-max", 1);
+    public final static FunctionIdentifier SCALAR_SQL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-min", 1);
+    public final static FunctionIdentifier SCALAR_GLOBAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "global-sql-avg", 1);
+    public final static FunctionIdentifier SCALAR_LOCAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sql-avg", 1);
+
+    // serializable sql aggregate functions
+    public final static FunctionIdentifier SERIAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-avg-serial", 1);
+    public final static FunctionIdentifier SERIAL_SQL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-count-serial", 1);
+    public final static FunctionIdentifier SERIAL_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "sql-sum-serial", 1);
+    public final static FunctionIdentifier SERIAL_LOCAL_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sql-sum-serial", 1);
+    public final static FunctionIdentifier SERIAL_GLOBAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "global-sql-avg-serial", 1);
+    public final static FunctionIdentifier SERIAL_LOCAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "local-sql-avg-serial", 1);
+
     public final static FunctionIdentifier SCAN_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "scan-collection", 1);
     public final static FunctionIdentifier SUBSET_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -739,6 +790,29 @@ public class AsterixBuiltinFunctions {
         addFunction(RANGE, AInt32TypeComputer.INSTANCE, true);
         addFunction(RECTANGLE_CONSTRUCTOR, OptionalARectangleTypeComputer.INSTANCE, true);
 
+        // SQL Aggregate Functions
+        addFunction(SQL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addFunction(SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(SQL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_MAX, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addFunction(SQL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_MIN, NonTaggedMinMaxAggTypeComputer.INSTANCE, true);
+        addFunction(SQL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_GLOBAL_SQL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addPrivateFunction(SCALAR_LOCAL_SQL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_SUM, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addPrivateFunction(SERIAL_SQL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_GLOBAL_SQL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_LOCAL_SQL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_SQL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_LOCAL_SQL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+
         addFunction(SCALAR_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE, true);
         addPrivateFunction(SCALAR_GLOBAL_AVG, ScalarVersionOfAggregateResultType.INSTANCE, true);
@@ -913,6 +987,16 @@ public class AsterixBuiltinFunctions {
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_MAX), getAsterixFunctionInfo(MAX));
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_MIN), getAsterixFunctionInfo(MIN));
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SUM), getAsterixFunctionInfo(SUM));
+        // SQL Aggregate Functions
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_AVG), getAsterixFunctionInfo(SQL_AVG));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_COUNT), getAsterixFunctionInfo(SQL_COUNT));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_GLOBAL_SQL_AVG),
+                getAsterixFunctionInfo(GLOBAL_SQL_AVG));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_LOCAL_SQL_AVG),
+                getAsterixFunctionInfo(LOCAL_SQL_AVG));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_MAX), getAsterixFunctionInfo(SQL_MAX));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_MIN), getAsterixFunctionInfo(SQL_MIN));
+        scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(SCALAR_SQL_SUM), getAsterixFunctionInfo(SQL_SUM));
     }
 
     static {
@@ -964,6 +1048,55 @@ public class AsterixBuiltinFunctions {
         addAgg(SERIAL_LOCAL_SUM);
         addLocalAgg(SERIAL_SUM, SERIAL_LOCAL_SUM);
         addGlobalAgg(SERIAL_SUM, SERIAL_SUM);
+
+        // SQL Aggregate Functions
+        addAgg(SQL_AVG);
+        addAgg(LOCAL_SQL_AVG);
+        addAgg(GLOBAL_SQL_AVG);
+        addLocalAgg(SQL_AVG, LOCAL_SQL_AVG);
+        addGlobalAgg(SQL_AVG, GLOBAL_SQL_AVG);
+
+        addAgg(SQL_COUNT);
+        addLocalAgg(SQL_COUNT, SQL_COUNT);
+        addGlobalAgg(SQL_COUNT, SQL_SUM);
+
+        addAgg(SQL_MAX);
+        addAgg(LOCAL_SQL_MAX);
+        addLocalAgg(SQL_MAX, LOCAL_SQL_MAX);
+        addGlobalAgg(SQL_MAX, SQL_MAX);
+
+        addAgg(SQL_MIN);
+        addLocalAgg(SQL_MIN, LOCAL_SQL_MIN);
+        addGlobalAgg(SQL_MIN, SQL_MIN);
+
+        addAgg(SQL_SUM);
+        addAgg(LOCAL_SQL_SUM);
+        addLocalAgg(SQL_SUM, LOCAL_SQL_SUM);
+        addGlobalAgg(SQL_SUM, SQL_SUM);
+
+        // SQL serializable aggregate functions
+        addSerialAgg(SQL_AVG, SERIAL_SQL_AVG);
+        addSerialAgg(SQL_COUNT, SERIAL_SQL_COUNT);
+        addSerialAgg(SQL_SUM, SERIAL_SQL_SUM);
+        addSerialAgg(LOCAL_SQL_SUM, SERIAL_LOCAL_SQL_SUM);
+        addSerialAgg(LOCAL_SQL_AVG, SERIAL_LOCAL_SQL_AVG);
+        addSerialAgg(GLOBAL_SQL_AVG, SERIAL_GLOBAL_SQL_AVG);
+
+        addAgg(SERIAL_SQL_COUNT);
+        addLocalAgg(SERIAL_SQL_COUNT, SERIAL_SQL_COUNT);
+        addGlobalAgg(SERIAL_SQL_COUNT, SERIAL_SQL_SUM);
+
+        addAgg(SERIAL_SQL_AVG);
+        addAgg(SERIAL_LOCAL_SQL_AVG);
+        addAgg(SERIAL_GLOBAL_SQL_AVG);
+        addLocalAgg(SERIAL_SQL_AVG, SERIAL_LOCAL_SQL_AVG);
+        addGlobalAgg(SERIAL_SQL_AVG, SERIAL_GLOBAL_SQL_AVG);
+
+        addAgg(SERIAL_SQL_SUM);
+        addAgg(SERIAL_LOCAL_SQL_SUM);
+        addLocalAgg(SERIAL_SQL_SUM, SERIAL_LOCAL_SQL_SUM);
+        addGlobalAgg(SERIAL_SQL_SUM, SERIAL_SQL_SUM);
+
     }
 
     static {

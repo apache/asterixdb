@@ -1,0 +1,6 @@
+/*
+ * Description    : Tests the scalar version of sql-avg with an empty list.
+ * Success        : Yes
+ */
+
+sql-avg([ ])
