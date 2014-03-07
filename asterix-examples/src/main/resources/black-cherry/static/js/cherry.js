@@ -1,20 +1,20 @@
-$(function() {	
-	
+$(function() {
+
 	// Initialize connection to AsterixDB. Just one connection is needed and contains
 	// logic for connecting to each API endpoint. This object A is reused throughout the
-	// code but does not store information about any individual API call.  
+	// code but does not store information about any individual API call.
 	A = new AsterixDBConnection({
-	
+
 	    // We will be using the twitter dataverse, which we can configure either like this
 	    // or by following our AsterixDBConnection with a dataverse call, like so:
 	    // A = new AsterixDBConnection().dataverse("twitter");
 	    "dataverse" : "twitter",
-	    
+
 	    // Due to the setup of this demo using the Bottle server, it is necessary to change the
 	    // default endpoint of API calls. The proxy server handles the call to http://localhost:19002
 	    // for us, and we reconfigure this connection to connect to the proxy server.
 	    "endpoint_root" : "/",
-	  
+
 	    // Finally, we want to make our error function nicer so that we show errors with a call to the
 	    // reportUserMessage function. Update the "error" property to do that.
 	    "error" : function(data) {
@@ -26,33 +26,33 @@ $(function() {
 	                // }
 	                // We will report this as an Asterix REST API Error, an error code, and a reason message.
 	                // Note the method signature: reportUserMessage(message, isPositiveMessage, target). We will provide
-	                // an error message to display, a positivity value (false in this case, errors are bad), and a 
+	                // an error message to display, a positivity value (false in this case, errors are bad), and a
 	                // target html element in which to report the message.
 	                var showErrorMessage = "Asterix Error #" + data["error-code"][0] + ": " + data["error-code"][1];
 	                var isPositive = false;
 	                var showReportAt = "report-message";
-	        
+
 	                reportUserMessage(showErrorMessage, isPositive, showReportAt);
 	              }
 	});
-	
+
     // This little bit of code manages period checks of the asynchronous query manager,
     // which holds onto handles asynchornously received. We can set the handle update
     // frequency using seconds, and it will let us know when it is ready.
-    var intervalID = setInterval( 
+    var intervalID = setInterval(
         function() {
             asynchronousQueryIntervalUpdate();
-        }, 
+        },
         asynchronousQueryGetInterval()
     );
-    
+
     // Legend Container
-    // Create a rainbow from a pretty color scheme. 
+    // Create a rainbow from a pretty color scheme.
     // http://www.colourlovers.com/palette/292482/Terra
     rainbow = new Rainbow();
     rainbow.setSpectrum("#E8DDCB", "#CDB380", "#036564", "#033649", "#031634");
     buildLegend();
-    
+
     // Initialization of UI Tabas
     initDemoPrepareTabs();
 
@@ -70,7 +70,7 @@ $(function() {
     var input = document.getElementById('location-text-box');
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo('bounds', map);
-    
+
     google.maps.event.addListener(autocomplete, 'place_changed', function() {
         var place = autocomplete.getPlace();
         if (place.geometry.viewport) {
@@ -86,7 +86,7 @@ $(function() {
               (place.address_components[2] && place.address_components[2].short_name || '') ].join(' ');
         }
     });
-    
+
     // Drawing Manager for selecting map regions. See documentation here:
     // https://developers.google.com/maps/documentation/javascript/reference#DrawingManager
     rectangleManager = new google.maps.drawing.DrawingManager({
@@ -103,7 +103,7 @@ $(function() {
     });
     rectangleManager.setMap(map);
     selectionRectangle = null;
-    
+
     // Drawing Manager: Just one editable rectangle!
     google.maps.event.addListener(rectangleManager, 'rectanglecomplete', function(rectangle) {
         selectionRectangle = rectangle;
@@ -120,12 +120,12 @@ $(function() {
 
     getAllDataverseTweetbooks();
     initDemoUIButtonControls();
-    
+
     google.maps.event.addListenerOnce(map, 'idle', function(){
         // Show tutorial tab only the first time the map is loaded
         $('#mode-tabs a:first').tab('show');
     });
-    
+
 });
 
 function initDemoUIButtonControls() {
@@ -164,7 +164,7 @@ function initDemoUIButtonControls() {
     dateOptions['defaultDate'] = "2012-12-31";
     var end_dp= $("#end-date").datepicker(dateOptions);
     end_dp.val(dateOptions.defaultDate);
-    
+
     // Explore Mode: Toggle Selection/Location Search
     $('#selection-button').on('change', function (e) {
         $("#location-text-box").attr("disabled", "disabled");
@@ -187,13 +187,13 @@ function initDemoUIButtonControls() {
     // Review Mode: New Tweetbook
     $('#new-tweetbook-button').on('click', function (e) {
         onCreateNewTweetBook($('#new-tweetbook-entry').val());
-        
+
         $('#new-tweetbook-entry').val("");
         $('#new-tweetbook-entry').attr("placeholder", "Name a new tweetbook");
     });
 
     // Explore Mode - Clear Button
-    $("#clear-button").click(mapWidgetResetMap); 
+    $("#clear-button").click(mapWidgetResetMap);
 
     // Explore Mode: Query Submission
     $("#submit-button").on("click", function () {
@@ -201,7 +201,7 @@ function initDemoUIButtonControls() {
         $("#report-message").html('');
         $("#submit-button").attr("disabled", true);
         rectangleManager.setDrawingMode(null);
-        
+
         var kwterm = $("#keyword-textbox").val();
         var startdp = $("#start-date").datepicker("getDate");
         var enddp = $("#end-date").datepicker("getDate");
@@ -223,12 +223,12 @@ function initDemoUIButtonControls() {
         } else {
             bounds = map.getBounds();
         }
-        
+
         var swLat = Math.abs(bounds.getSouthWest().lat());
         var swLng = Math.abs(bounds.getSouthWest().lng());
         var neLat = Math.abs(bounds.getNorthEast().lat());
         var neLng = Math.abs(bounds.getNorthEast().lng());
-        
+
         formData["swLat"] = Math.min(swLat, neLat);
         formData["swLng"] = Math.max(swLng, neLng);
         formData["neLat"] = Math.max(swLat, neLat);
@@ -238,20 +238,20 @@ function initDemoUIButtonControls() {
         if ($('#asbox').is(":checked")) {
             build_cherry_mode = "asynchronous";
         }
-    
+
         var f = buildAQLQueryFromForm(formData);
-        
+
         APIqueryTracker = {
             "query" : "use dataverse twitter;\n" + f.val(),
             "data" : formData
         };
-        
+
         if (build_cherry_mode == "synchronous") {
             A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
         } else {
             A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
         }
-    
+
         // Clears selection rectangle on query execution, rather than waiting for another clear call.
         if (selectionRectangle) {
             selectionRectangle.setMap(null);
@@ -266,15 +266,15 @@ function initDemoUIButtonControls() {
 function buildAQLQueryFromForm(parameters) {
 
     var bounds = {
-        "ne" : { "lat" : parameters["neLat"], "lng" : -1*parameters["neLng"]}, 
+        "ne" : { "lat" : parameters["neLat"], "lng" : -1*parameters["neLng"]},
 		"sw" : { "lat" : parameters["swLat"], "lng" : -1*parameters["swLng"]}
     };
-    
-    var rectangle = 
+
+    var rectangle =
         new FunctionExpression("create-rectangle",
             new FunctionExpression("create-point", bounds["sw"]["lat"], bounds["sw"]["lng"]),
             new FunctionExpression("create-point", bounds["ne"]["lat"], bounds["ne"]["lng"]));
-        
+
     // You can chain these all together, but let's take them one at a time.
     // Let's start with a ForClause. Here we go through each tweet $t in the
     // dataset TweetMessageShifted.
@@ -293,7 +293,7 @@ function buildAQLQueryFromForm(parameters) {
                     new FunctionExpression("spatial-intersect", "$t.sender-location", "$region"),
                     new AExpression('$t.send-time > datetime("' + parameters["startdt"] + '")'),
                     new AExpression('$t.send-time < datetime("' + parameters["enddt"] + '")'),
-                    new FunctionExpression("contains", "$t.message-text", "$keyword")  
+                    new FunctionExpression("contains", "$t.message-text", "$keyword")
                 );
     } else {
         aql = aql
@@ -307,10 +307,10 @@ function buildAQLQueryFromForm(parameters) {
     // Finally, we'll group our results into spatial cells.
     aql = aql.GroupClause(
                 "$c",
-                new FunctionExpression("spatial-cell", "$t.sender-location", 
-                new FunctionExpression("create-point", "24.5", "-125.5"), 
+                new FunctionExpression("spatial-cell", "$t.sender-location",
+                new FunctionExpression("create-point", "24.5", "-125.5"),
                 parameters["gridlat"].toFixed(1), parameters["gridlng"].toFixed(1)),
-                "with", 
+                "with",
                 "$t"
             );
 
@@ -322,7 +322,7 @@ function buildAQLQueryFromForm(parameters) {
 
 /**
 * getAllDataverseTweetbooks
-*  
+*
 * Returns all datasets of type TweetbookEntry, populates review_mode_tweetbooks
 */
 function getAllDataverseTweetbooks(fn_tweetbooks) {
@@ -337,7 +337,7 @@ function getAllDataverseTweetbooks(fn_tweetbooks) {
             "DataTypeName" : "$ds.DataTypeName",
             "DatasetName" : "$ds.DatasetName"
         });
-    
+
     // Now create a function that will be called when tweetbooks succeed.
     // In this case, we want to parse out the results object from the Asterix
     // REST API response.
@@ -348,15 +348,15 @@ function getAllDataverseTweetbooks(fn_tweetbooks) {
                 review_mode_tweetbooks.push($.parseJSON(data)["DatasetName"]);
             }
         });
-        
+
         // Now, if any tweetbooks already exist, opulate review screen.
         $('#review-tweetbook-titles').html('');
         $.each(review_mode_tweetbooks, function(i, tweetbook) {
             addTweetBookDropdownItem(tweetbook);
         });
     };
-    
-    // Now, we are ready to run a query. 
+
+    // Now, we are ready to run a query.
     A.meta(getTweetbooksQuery.val(), tweetbooksSuccess);
 }
 
@@ -365,8 +365,8 @@ function getAllDataverseTweetbooks(fn_tweetbooks) {
 */
 function asynchronousQueryIntervalUpdate() {
     for (var handle_key in asyncQueryManager) {
-        if (!asyncQueryManager[handle_key].hasOwnProperty("ready")) { 
-            asynchronousQueryGetAPIQueryStatus( asyncQueryManager[handle_key]["handle"], handle_key ); 
+        if (!asyncQueryManager[handle_key].hasOwnProperty("ready")) {
+            asynchronousQueryGetAPIQueryStatus( asyncQueryManager[handle_key]["handle"], handle_key );
         }
     }
 }
@@ -387,7 +387,7 @@ function asynchronousQueryGetInterval() {
 */
 function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 
-    A.query_status( 
+    A.query_status(
         {
             "handle" : JSON.stringify(handle)
         },
@@ -396,11 +396,11 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
                 // We don't need to check if this one is ready again, it's not going anywhere...
                 // Unless the life cycle of handles has changed drastically
                 asyncQueryManager[handle_id]["ready"] = true;
-            
-                // Indicate success. 
+
+                // Indicate success.
                 $('#handle_' + handle_id).removeClass("btn-disabled").prop('disabled', false).addClass("btn-success");
             }
-        }    
+        }
      );
 }
 
@@ -409,20 +409,20 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 * @param    {object}    res, a result object containing an opaque result handle to Asterix
 */
 function cherryQueryAsyncCallback(res) {
-    
+
     // Parse handle, handle id and query from async call result
     var handle_query = APIqueryTracker["query"];
     var handle = res;
-    var handle_id = res["handle"].toString().split(',')[0]; 
-    
+    var handle_id = res["handle"].toString().split(',')[0];
+
     // Add to stored map of existing handles
     asyncQueryManager[handle_id] = {
         "handle" : handle,
         "query" : handle_query, // This will show up when query control button is clicked.
         "data" : APIqueryTracker["data"]
     };
-    
-    // Create a container for this async query handle    
+
+    // Create a container for this async query handle
     $('<div/>')
         .css("margin-left", "1em")
         .css("margin-bottom", "1em")
@@ -432,7 +432,7 @@ function cherryQueryAsyncCallback(res) {
             "id" : "async_container_" + handle_id
         })
         .appendTo("#async-handle-controls");
-    
+
     // Adds the main button for this async handle
     var handle_action_button = '<button class="btn btn-disabled" id="handle_' + handle_id + '">Handle ' + handle_id + '</button>';
     $('#async_container_' + handle_id).append(handle_action_button);
@@ -441,37 +441,37 @@ function cherryQueryAsyncCallback(res) {
 
         // make sure query is ready to be run
         if (asyncQueryManager[handle_id]["ready"]) {
-        
+
             APIqueryTracker = {
                 "query" : asyncQueryManager[handle_id]["query"],
                 "data"  : asyncQueryManager[handle_id]["data"]
             };
-        
+
             if (!asyncQueryManager[handle_id].hasOwnProperty("result")) {
                 // Generate new Asterix Core API Query
                 A.query_result(
                     { "handle" : JSON.stringify(asyncQueryManager[handle_id]["handle"]) },
                     function(res) {
                         asyncQueryManager[handle_id]["result"] = res;
-                        
+
                         var resultTransform = {
                             "results" : res.results[0]
                         };
-                
+
                         cherryQuerySyncCallback(resultTransform);
                     }
                 );
             } else {
-                
+
                 var resultTransform = {
                     "results" : asyncQueryManager[handle_id]["result"].results[0]
                 };
-                
+
                 cherryQuerySyncCallback(resultTransform);
             }
         }
     });
-    
+
     // Adds a removal button for this async handle
     var asyncDeleteButton = addDeleteButton(
         "trashhandle_" + handle_id,
@@ -481,9 +481,9 @@ function cherryQueryAsyncCallback(res) {
             delete asyncQueryManager[handle_id];
         }
     );
-    
+
     $('#async_container_' + handle_id).append('<br/>');
-    
+
     $("#submit-button").attr("disabled", false);
 }
 
@@ -492,14 +492,14 @@ function cherryQueryAsyncCallback(res) {
 * @param    {Object}    res, a result object from a cherry geospatial query
 */
 function cherryQuerySyncCallback(res) {
-    
+
     // First, we check if any results came back in.
     // If they didn't, return.
     if (!res.hasOwnProperty("results")) {
         reportUserMessage("Oops, no results found for those parameters.", false, "report-message");
         return;
     }
-    
+
     // Initialize coordinates and weights, to store
     // coordinates of map cells and their weights
     var coordinates = [];
@@ -522,7 +522,7 @@ function cherryQuerySyncCallback(res) {
                             .split(',')
                             .map( parseFloat );
 
-        // Now, using the record count and coordinates, we can create a 
+        // Now, using the record count and coordinates, we can create a
         // coordinate system for this spatial cell.
         var coordinate = {
             "latSW"     : rectangle[0],
@@ -531,7 +531,7 @@ function cherryQuerySyncCallback(res) {
             "lngNE"     : rectangle[3],
             "weight"    : recordCount
         };
-        
+
         // We track the minimum and maximum weight to support our legend.
         maxWeight = Math.max(coordinate["weight"], maxWeight);
         minWeight = Math.min(coordinate["weight"], minWeight);
@@ -551,14 +551,14 @@ function cherryQuerySyncCallback(res) {
 function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
     /** Clear anything currently on the map **/
     mapWidgetClearMap();
-    
+
     // Initialize info windows.
     map_info_windows = {};
-    
+
     $.each(mapPlotData, function (m) {
-   
+
         var point_center = new google.maps.LatLng(
-            (mapPlotData[m].latSW + mapPlotData[m].latNE)/2.0, 
+            (mapPlotData[m].latSW + mapPlotData[m].latNE)/2.0,
             (mapPlotData[m].lngSW + mapPlotData[m].lngNE)/2.0);
 
         var map_circle_options = {
@@ -572,7 +572,7 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
         };
         var map_circle = new google.maps.Circle(map_circle_options);
         map_circle.val = mapPlotData[m];
-            
+
         map_info_windows[m] = new google.maps.InfoWindow({
             content: mapPlotData[m].weight + " tweets",
             position: point_center
@@ -586,21 +586,24 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
             });
             onMapPointDrillDown(map_circle.val);
         });
-            
+
         google.maps.event.addListener(map_circle, 'mouseover', function(event) {
             if (!map_info_windows[m].getMap()) {
                 map_info_windows[m].setPosition(map_circle.center);
                 map_info_windows[m].open(map);
             }
         });
-            
+        google.maps.event.addListener(map, 'mousemove', function(event) {
+            map_info_windows[m].close();
+        });
+
         // Add this marker to global marker cells
         map_cells.push(map_circle);
-        
+
         // Show legend
         $("#legend-min").html(minWeight);
         $("#legend-max").html(maxWeight);
-        $("#rainbow-legend-container").show();   
+        $("#rainbow-legend-container").show();
     });
 }
 
@@ -612,10 +615,10 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
 function onMapPointDrillDown(marker_borders) {
 
     var zoneData = APIqueryTracker["data"];
-    
+
     var zswBounds = new google.maps.LatLng(marker_borders.latSW, marker_borders.lngSW);
     var zneBounds = new google.maps.LatLng(marker_borders.latNE, marker_borders.lngNE);
-    
+
     var zoneBounds = new google.maps.LatLngBounds(zswBounds, zneBounds);
     zoneData["swLat"] = zoneBounds.getSouthWest().lat();
     zoneData["swLng"] = zoneBounds.getSouthWest().lng();
@@ -631,23 +634,23 @@ function onMapPointDrillDown(marker_borders) {
             "lng" : zoneBounds.getNorthEast().lng()
         }
     };
-    
+
     mapWidgetClearMap();
-    
+
     var customBounds = new google.maps.LatLngBounds();
     var zoomSWBounds = new google.maps.LatLng(zoneData["swLat"], zoneData["swLng"]);
-    var zoomNEBounds = new google.maps.LatLng(zoneData["neLat"], zoneData["neLng"]); 
+    var zoomNEBounds = new google.maps.LatLng(zoneData["neLat"], zoneData["neLng"]);
     customBounds.extend(zoomSWBounds);
     customBounds.extend(zoomNEBounds);
     map.fitBounds(customBounds);
-  
+
     var df = getDrillDownQuery(zoneData, zB);
 
     APIqueryTracker = {
         "query_string" : "use dataverse twitter;\n" + df.val(),
         "marker_path" : "static/img/mobile2.png"
     };
-        
+
     A.query(df.val(), onTweetbookQuerySuccessPlot);
 }
 
@@ -661,7 +664,7 @@ function getDrillDownQuery(parameters, bounds) {
     var zoomRectangle = new FunctionExpression("create-rectangle",
         new FunctionExpression("create-point", bounds["sw"]["lat"], bounds["sw"]["lng"]),
         new FunctionExpression("create-point", bounds["ne"]["lat"], bounds["ne"]["lng"]));
-        
+
     var drillDown = new FLWOGRExpression()
         .ForClause("$t", new AExpression("dataset TweetMessagesShifted"))
         .LetClause("$region", zoomRectangle);
@@ -681,12 +684,12 @@ function getDrillDownQuery(parameters, bounds) {
                             new AExpression().set('$t.send-time > datetime("' + parameters["startdt"] + '")'),
                             new AExpression().set('$t.send-time < datetime("' + parameters["enddt"] + '")'),
                             new FunctionExpression('contains', '$t.message-text', '$keyword')
-                        );  
+                        );
     }
 
     drillDown = drillDown
                     .ReturnClause({
-                        "tweetId" : "$t.tweetid", 
+                        "tweetId" : "$t.tweetid",
                         "tweetText" : "$t.message-text",
                         "tweetLoc" : "$t.sender-location"
                     });
@@ -702,31 +705,31 @@ function onDrillDownAtLocation(tO) {
 
     var tweetId = tO["tweetEntryId"];
     var tweetText = tO["tweetText"];
-    
+
     // First, set tweet in drilldown modal to be this tweet's text
     $('#modal-body-tweet').html('Tweet #' + tweetId + ": " + tweetText);
-    
+
     // Next, empty any leftover tweetbook comments or error/success messages
     $("#modal-body-add-to").val('');
     $("#modal-body-add-note").val('');
     $("#modal-body-message-holder").html("");
-    
+
     // Next, if there is an existing tweetcomment reported, show it.
     if (tO.hasOwnProperty("tweetComment")) {
-        
+
         // Show correct panel
         $("#modal-existing-note").show();
         $("#modal-save-tweet-panel").hide();
-        
+
         // Fill in existing tweet comment
         $("#modal-body-tweet-note").val(tO["tweetComment"]);
-        
+
         // Change Tweetbook Badge
         $("#modal-current-tweetbook").val(APIqueryTracker["active_tweetbook"]);
-        
+
         // Add deletion functionality
         $("#modal-body-trash-icon").on('click', function () {
-            // Send comment deletion to asterix 
+            // Send comment deletion to asterix
             var deleteTweetCommentOnId = '"' + tweetId + '"';
             var toDelete = new DeleteStatement(
                 "$mt",
@@ -736,65 +739,65 @@ function onDrillDownAtLocation(tO) {
             A.update(
                 toDelete.val()
             );
-                
+
             // Hide comment from map
             $('#drilldown_modal').modal('hide');
-                
+
             // Replot tweetbook
             onPlotTweetbook(APIqueryTracker["active_tweetbook"]);
         });
-        
+
     } else {
         // Show correct panel
         $("#modal-existing-note").hide();
         $("#modal-save-tweet-panel").show();
-        
+
         // Now, when adding a comment on an available tweet to a tweetbook
         $('#save-comment-tweetbook-modal').unbind('click');
         $("#save-comment-tweetbook-modal").on('click', function(e) {
-        
+
             // Stuff to save about new comment
             var save_metacomment_target_tweetbook = $("#modal-body-add-to").val();
             var save_metacomment_target_comment = '"' + $("#modal-body-add-note").val() + '"';
             var save_metacomment_target_tweet = '"' + tweetId + '"';
-        
+
             // Make sure content is entered, and then save this comment.
             if ($("#modal-body-add-note").val() == "") {
 
                 reportUserMessage("Please enter a comment about the tweet", false, "report-message");
-            
+
             } else if ($("#modal-body-add-to").val() == "") {
-            
+
                 reportUserMessage("Please enter a tweetbook.", false, "report-message");
-            
+
             } else {
-        
+
                 // Check if tweetbook exists. If not, create it.
                 if (!(existsTweetbook(save_metacomment_target_tweetbook))) {
                     onCreateNewTweetBook(save_metacomment_target_tweetbook);
                 }
-            
+
                 var toInsert = new InsertStatement(
                     save_metacomment_target_tweetbook,
-                    { 
-                        "tweetid" : save_metacomment_target_tweet.toString(), 
-                        "comment-text" : save_metacomment_target_comment 
+                    {
+                        "tweetid" : save_metacomment_target_tweet.toString(),
+                        "comment-text" : save_metacomment_target_comment
                     }
                 );
-                
+
                 A.update(toInsert.val(), function () {
-                    var successMessage = "Saved comment on <b>Tweet #" + tweetId + 
+                    var successMessage = "Saved comment on <b>Tweet #" + tweetId +
                         "</b> in dataset <b>" + save_metacomment_target_tweetbook + "</b>.";
                     reportUserMessage(successMessage, true, "report-message");
-            
+
                     $("#modal-body-add-to").val('');
                     $("#modal-body-add-note").val('');
                     $('#save-comment-tweetbook-modal').unbind('click');
-                    
+
                     // Close modal
                     $('#drilldown_modal').modal('hide');
                 });
-            }   
+            }
         });
     }
 }
@@ -803,14 +806,14 @@ function onDrillDownAtLocation(tO) {
 * Adds a new tweetbook entry to the menu and creates a dataset of type TweetbookEntry.
 */
 function onCreateNewTweetBook(tweetbook_title) {
-    
+
     var tweetbook_title = tweetbook_title.split(' ').join('_');
 
     A.ddl(
         "create dataset " + tweetbook_title + "(TweetbookEntry) primary key tweetid;",
         function () {}
     );
-    
+
     if (!(existsTweetbook(tweetbook_title))) {
         review_mode_tweetbooks.push(tweetbook_title);
         addTweetBookDropdownItem(tweetbook_title);
@@ -828,11 +831,11 @@ function onDropTweetBook(tweetbook_title) {
         "drop dataset " + tweetbook_title + " if exists;",
         function () {}
     );
-    
+
     // Removes tweetbook from review_mode_tweetbooks
     var remove_position = $.inArray(tweetbook_title, review_mode_tweetbooks);
     if (remove_position >= 0) review_mode_tweetbooks.splice(remove_position, 1);
-    
+
     // Clear UI with review tweetbook titles
     $('#review-tweetbook-titles').html('');
     for (r in review_mode_tweetbooks) {
@@ -851,7 +854,7 @@ function addTweetBookDropdownItem(tweetbook) {
             "class" : "btn-group",
             "id" : "rm_holder_" + tweetbook
         }).appendTo("#review-tweetbook-titles");
-    
+
     // Add plotting button for this tweetbook
     var plot_button = '<button class="btn btn-default" id="rm_plotbook_' + tweetbook + '">' + tweetbook + '</button>';
     $("#rm_holder_" + tweetbook).append(plot_button);
@@ -859,7 +862,7 @@ function addTweetBookDropdownItem(tweetbook) {
     $("#rm_plotbook_" + tweetbook).on('click', function(e) {
         onPlotTweetbook(tweetbook);
     });
-    
+
     // Add trash button for this tweetbook
     var onTrashTweetbookButton = addDeleteButton(
         "rm_trashbook_" + tweetbook,
@@ -875,7 +878,7 @@ function addTweetBookDropdownItem(tweetbook) {
 * @param tweetbook, a string representing a tweetbook
 */
 function onPlotTweetbook(tweetbook) {
-    
+
     // Clear map for this one
     mapWidgetClearMap();
 
@@ -889,18 +892,18 @@ function onPlotTweetbook(tweetbook) {
             "tweetCom" : "$m.comment-text",
             "tweetLoc" : "$t.sender-location"
         });
-          
+
     APIqueryTracker = {
         "query_string" : "use dataverse twitter;\n" + plotTweetQuery.val(),
         "marker_path" : "static/img/mobile_green2.png",
         "active_tweetbook" : tweetbook
     };
-        
-    A.query(plotTweetQuery.val(), onTweetbookQuerySuccessPlot);     
+
+    A.query(plotTweetQuery.val(), onTweetbookQuerySuccessPlot);
 }
 
 /**
-* Given an output response set of tweet data, 
+* Given an output response set of tweet data,
 * prepares markers on map to represent individual tweets.
 * @param res, a JSON Object
 */
@@ -960,7 +963,7 @@ function onTweetbookQuerySuccessPlot (res) {
         });
 
         // Add marker to index of tweets
-        map_tweet_markers.push(map_tweet_m); 
+        map_tweet_markers.push(map_tweet_m);
     });
 }
 
@@ -990,12 +993,12 @@ function onClickTweetbookMapMarker(t) {
 */
 function onOpenExploreMap () {
     var explore_column_height = $('#explore-well').height();
-    var right_column_width = $('#right-col').width();  
+    var right_column_width = $('#right-col').width();
     $('#map_canvas').height(explore_column_height + "px");
     $('#map_canvas').width(right_column_width + "px");
-    
+
     $('#review-well').height(explore_column_height + "px");
-    $('#review-well').css('max-height', explore_column_height + "px"); 
+    $('#review-well').css('max-height', explore_column_height + "px");
     $('#right-col').height(explore_column_height + "px");
 }
 
@@ -1020,7 +1023,7 @@ function initDemoPrepareTabs() {
         rectangleManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
         mapWidgetResetMap();
     });
-        
+
     // Review mode should show review well and hide explore well
     $('#review-mode').click(function(e) {
         $('#explore-well').hide();
@@ -1034,17 +1037,17 @@ function initDemoPrepareTabs() {
     onOpenExploreMap();
 }
 
-/** 
+/**
 * Creates a delete icon button using default trash icon
 * @param    {String}    id, id for this element
 * @param    {String}    attachTo, id string of an element to which I can attach this button.
 * @param    {Function}  onClick, a function to fire when this icon is clicked
 */
 function addDeleteButton(iconId, attachTo, onClick) {
-    
+
     var trashIcon = '<button class="btn btn-default" id="' + iconId + '"><span class="glyphicon glyphicon-trash"></span></button>';
     $('#' + attachTo).append(trashIcon);
-    
+
     // When this trash button is clicked, the function is called.
     $('#' + iconId).on('click', onClick);
 }
@@ -1058,13 +1061,13 @@ function addDeleteButton(iconId, attachTo, onClick) {
 function reportUserMessage(message, isPositiveMessage, target) {
     // Clear out any existing messages
     $('#' + target).html('');
-    
+
     // Select appropriate alert-type
     var alertType = "alert-success";
     if (!isPositiveMessage) {
         alertType = "alert-danger";
     }
-    
+
     // Append the appropriate message
     $('<div/>')
         .attr("class", "alert " + alertType)
@@ -1080,13 +1083,13 @@ function reportUserMessage(message, isPositiveMessage, target) {
 * Clears ALL map elements - plotted items, overlays, then resets position
 */
 function mapWidgetResetMap() {
-    
+
     mapWidgetClearMap();
-    
+
     // Reset map center and zoom
     map.setCenter(new google.maps.LatLng(38.89, -77.03));
     map.setZoom(4);
-    
+
     // Selection button
     $("#selection-button").trigger("click");
     rectangleManager.setMap(map);
@@ -1104,23 +1107,23 @@ function mapWidgetClearMap() {
         map_cells[c].setMap(null);
     }
     map_cells = [];
-    
+
     $.each(map_info_windows, function(i) {
         map_info_windows[i].close();
     });
     map_info_windows = {};
-    
+
     for (m in map_tweet_markers) {
         map_tweet_markers[m].setMap(null);
     }
     map_tweet_markers = [];
-    
+
     // Hide legend
     $("#rainbow-legend-container").hide();
-  
+
     // Reenable submit button
     $("#submit-button").attr("disabled", false);
-    
+
     // Hide selection rectangle
     if (selectionRectangle) {
         selectionRectangle.setMap(null);
@@ -1134,22 +1137,22 @@ function mapWidgetClearMap() {
 * Generates gradient, button action for legend bar
 */
 function buildLegend() {
-    
+
     // Fill in legend area with colors
     var gradientColor;
-    
+
     for (i = 0; i<100; i++) {
         //$("#rainbow-legend-container").append("" + rainbow.colourAt(i));
         $("#legend-gradient").append('<div style="display:inline-block; max-width:2px; background-color:#' + rainbow.colourAt(i) +';">&nbsp;</div>');
     }
-    
+
     // Window clear button closes all info count windows
     $("#windows-off-btn").on("click", function(e) {
         $.each(map_info_windows, function(i) {
             map_info_windows[i].close();
         });
     });
-}   
+}
 
 /**
 * Computes radius for a given data point from a spatial cell
@@ -1162,10 +1165,10 @@ function mapWidgetComputeCircleRadius(spatialCell, wLimit) {
     var point_center = new google.maps.LatLng((spatialCell.latSW + spatialCell.latNE)/2.0, (spatialCell.lngSW + spatialCell.lngNE)/2.0);
     var point_left = new google.maps.LatLng((spatialCell.latSW + spatialCell.latNE)/2.0, spatialCell.lngSW);
     var point_top = new google.maps.LatLng(spatialCell.latNE, (spatialCell.lngSW + spatialCell.lngNE)/2.0);
-    
-    // Circle scale modifier = 
+
+    // Circle scale modifier =
     var scale = 500 + 500*(spatialCell.weight / wLimit);
-    
+
     // Return proportionate value so that circles mostly line up.
     return scale * Math.min(distanceBetweenPoints(point_center, point_left), distanceBetweenPoints(point_center, point_top));
 }
