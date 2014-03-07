@@ -30,8 +30,9 @@
     <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
     <metadata.tests>**/metadata/*Test.java</metadata.tests>
     <execution.tests>**/ExecutionTest.java</execution.tests>
+    <invalid.tests>**/DmlTest.java</invalid.tests>
     <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
-    <test.excludes>${optimizer.tests},${metadata.tests},${execution.tests}</test.excludes>
+    <test.excludes>${optimizer.tests},${metadata.tests},${execution.tests},${invalid.tests}</test.excludes>
   </properties>
 
 	<build>
@@ -104,6 +105,12 @@
         <id>execution-tests</id>
         <properties>
           <execution.tests />
+        </properties>
+      </profile>
+      <profile>
+        <id>invalid-tests</id>
+        <properties>
+          <invalid.tests />
         </properties>
       </profile>
         <profile>
