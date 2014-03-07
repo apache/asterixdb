@@ -26,8 +26,9 @@
 
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/*.java</hanging.pregelix.tests>
+    <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
     <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
-    <test.excludes>**/Abstract*.java,${hanging.pregelix.tests}</test.excludes>
+    <test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</test.excludes>
   </properties>
   <dependencyManagement>
     <dependencies>
