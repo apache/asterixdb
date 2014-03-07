@@ -86,11 +86,6 @@ public abstract class OrderedIndexMultiThreadTest {
 
         // 4 batches per thread.
         int batchSize = (NUM_OPERATIONS / numThreads) / 4;
-        if (batchSize < 1) {
-            // Can happen on a machine with large number of CPU cores, like
-            // the Jenkins server
-            batchSize = 1;
-        }
         IndexMultiThreadTestDriver driver = new IndexMultiThreadTestDriver(index, workerFactory, fieldSerdes, conf.ops,
                 conf.opProbs);
         driver.init();
