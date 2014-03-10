@@ -96,8 +96,8 @@ $(function() {
             strokeWeight: 1,
             clickable: false,
             editable: true,
-            strokeColor: "2b3f8c",
-            fillColor: "2b3f8c",
+            strokeColor: "#2b3f8c",
+            fillColor: "#2b3f8c",
             zIndex: 1
         }
     });
