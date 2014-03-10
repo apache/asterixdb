@@ -229,11 +229,6 @@
               <div id="legend-min" class="col-md-2" style="text-align:right;"></div>
               <div id="legend-gradient" class="col-md-5" style="text-align: center;"></div>
               <div id="legend-max" class="col-md-2"></div>
-              <div class="col-md-3">
-                <button id="windows-off-btn" class="btn btn-default">
-                  Close Counts
-                </button>
-              </div>
             </div>
           </div><!-- End Legend Container -->
           </div><!-- End Right Column -->
