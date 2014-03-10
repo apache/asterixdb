@@ -82,6 +82,7 @@ public class QueryResultAPIServlet extends HttpServlet {
             JSONArray results = new JSONArray();
             while (resultReader.read(buffer) > 0) {
                 ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(), results);
+                buffer.clear();
             }
             jsonResponse.put("results", results);
             out.write(jsonResponse.toString());

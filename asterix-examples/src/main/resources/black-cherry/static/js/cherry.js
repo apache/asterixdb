@@ -455,7 +455,7 @@ function cherryQueryAsyncCallback(res) {
                         asyncQueryManager[handle_id]["result"] = res;
 
                         var resultTransform = {
-                            "results" : res.results[0]
+                            "results" : res.results
                         };
 
                         cherryQuerySyncCallback(resultTransform);
@@ -464,7 +464,7 @@ function cherryQueryAsyncCallback(res) {
             } else {
 
                 var resultTransform = {
-                    "results" : asyncQueryManager[handle_id]["result"].results[0]
+                    "results" : asyncQueryManager[handle_id]["result"].results
                 };
 
                 cherryQuerySyncCallback(resultTransform);
@@ -492,7 +492,6 @@ function cherryQueryAsyncCallback(res) {
 * @param    {Object}    res, a result object from a cherry geospatial query
 */
 function cherryQuerySyncCallback(res) {
-
     // First, we check if any results came back in.
     // If they didn't, return.
     if (!res.hasOwnProperty("results")) {
