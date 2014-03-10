@@ -178,8 +178,8 @@ function initDemoUIButtonControls() {
     });
     $('#location-button').on('change', function (e) {
         $("#location-text-box").removeAttr("disabled");
+        selectionRectangle.setMap(null);
         rectangleManager.setMap(null);
-        selectionRectangle = null;
         rectangleManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
     });
     $("#selection-button").trigger("click");
