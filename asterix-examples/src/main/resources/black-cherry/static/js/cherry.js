@@ -567,7 +567,7 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
             radius: mapWidgetComputeCircleRadius(mapPlotData[m], maxWeight),
             map: map,
             fillOpacity: 0.85,
-            fillColor: rainbow.colourAt(Math.ceil(100 * (mapPlotData[m].weight / maxWeight))),
+            fillColor: "#" + rainbow.colourAt(Math.ceil(100 * (mapPlotData[m].weight / maxWeight))),
             clickable: true
         };
         var map_circle = new google.maps.Circle(map_circle_options);
@@ -595,6 +595,7 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
         });
         google.maps.event.addListener(map, 'mousemove', function(event) {
             map_info_windows[m].close();
+
         });
 
         // Add this marker to global marker cells
@@ -1145,13 +1146,6 @@ function buildLegend() {
         //$("#rainbow-legend-container").append("" + rainbow.colourAt(i));
         $("#legend-gradient").append('<div style="display:inline-block; max-width:2px; background-color:#' + rainbow.colourAt(i) +';">&nbsp;</div>');
     }
-
-    // Window clear button closes all info count windows
-    $("#windows-off-btn").on("click", function(e) {
-        $.each(map_info_windows, function(i) {
-            map_info_windows[i].close();
-        });
-    });
 }
 
 /**
