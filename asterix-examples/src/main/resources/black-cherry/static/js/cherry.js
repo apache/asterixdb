@@ -593,7 +593,7 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
                 map_info_windows[m].open(map);
             }
         });
-        google.maps.event.addListener(map, 'mousemove', function(event) {
+        google.maps.event.addListenerOnce(map, 'mousemove', function(event) {
             map_info_windows[m].close();
 
         });
