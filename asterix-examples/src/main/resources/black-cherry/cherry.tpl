@@ -222,11 +222,11 @@
           <!-- Legend Container -->
           <div id="rainbow-legend-container" class="container well" style="display:none;">
             <div class="row">
-              <div class="col-md-5 col-md-offset-2" style="text-align: center;"># Tweets</div>
+              <div class="col-md-4 col-md-offset-4" style="text-align: center;"># Tweets</div>
             </div>
 
             <div class="row">
-              <div id="legend-min" class="col-md-2" style="text-align:right;"></div>
+              <div id="legend-min" class="col-md-2 col-md-offset-1" style="text-align:right;"></div>
               <div id="legend-gradient" class="col-md-5" style="text-align: center;"></div>
               <div id="legend-max" class="col-md-2"></div>
             </div>
