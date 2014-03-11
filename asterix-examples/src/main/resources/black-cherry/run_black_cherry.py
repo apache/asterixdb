@@ -30,11 +30,8 @@ def build_response(endpoint, data):
             chunk = urlresponse.read(CHUNK)
             if not chunk: break
             urlresult += chunk
-        
-        # QUERY ISSUE 2: UNCOMMENT THIS TO SEE WEIRD BUG    
-        urlresult = ','.join(urlresult.split(']}{"results":['))
 
-        # Create JSON dump of resulting response 
+        # Create JSON dump of resulting response
         return loads(urlresult)
 
     except ValueError, e:
