@@ -592,7 +592,7 @@ function triggerUIUpdate(mapPlotData, maxWeight, minWeight) {
                 map_info_windows[m].open(map);
             }
         });
-        google.maps.event.addListenerOnce(map, 'mousemove', function(event) {
+        google.maps.event.addListener(map, 'mousemove', function(event) {
             map_info_windows[m].close();
 
         });
@@ -1160,7 +1160,7 @@ function mapWidgetComputeCircleRadius(spatialCell, wLimit) {
     var point_top = new google.maps.LatLng(spatialCell.latNE, (spatialCell.lngSW + spatialCell.lngNE)/2.0);
 
     // Circle scale modifier =
-    var scale = 500 + 500*(spatialCell.weight / wLimit);
+    var scale = 425 + 425*(spatialCell.weight / wLimit);
 
     // Return proportionate value so that circles mostly line up.
     return scale * Math.min(distanceBetweenPoints(point_center, point_left), distanceBetweenPoints(point_center, point_top));
