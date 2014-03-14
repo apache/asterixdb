@@ -800,7 +800,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate(), false), NoOpOperationCallbackFactory.INSTANCE);
+                            storageProperties.getBloomFilterFalsePositiveRate(), true), NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
