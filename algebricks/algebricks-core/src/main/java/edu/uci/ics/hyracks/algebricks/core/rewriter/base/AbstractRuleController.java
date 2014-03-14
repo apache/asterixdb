@@ -32,7 +32,6 @@ import edu.uci.ics.hyracks.algebricks.core.config.AlgebricksConfig;
 public abstract class AbstractRuleController {
 
     protected IOptimizationContext context;
-    private LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
 
     public AbstractRuleController() {
     }
@@ -65,6 +64,7 @@ public abstract class AbstractRuleController {
     private String getPlanString(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE)) {
             StringBuilder sb = new StringBuilder();
+            LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), sb, pvisitor, 0);
             return sb.toString();
         }
