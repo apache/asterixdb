@@ -47,14 +47,11 @@ public class IndexMultiThreadTestDriver {
 
     public long[] run(int numThreads, int numRepeats, int numOps, int batchSize) throws InterruptedException,
             TreeIndexException, HyracksDataException {
-        if (batchSize < 1) {
-            batchSize = 1;
-        }
-        int numBatches = numOps / batchSize;
-        int threadNumBatches = numBatches / numThreads;
-        if (threadNumBatches <= 0) {
-            throw new TreeIndexException("Inconsistent parameters given. Need at least one batch per thread.");
-        }
+    	int numBatches = (batchSize < 1 ? numOps : numOps / batchSize);
+    	if (numBatches < numThreads) {
+    		numThreads = numBatches;
+    	}
+    	int threadNumBatches = numBatches / numThreads;
         long[] times = new long[numRepeats];
         for (int i = 0; i < numRepeats; i++) {
             DataGenThread dataGen = createDatagenThread(numThreads, numBatches, batchSize);
