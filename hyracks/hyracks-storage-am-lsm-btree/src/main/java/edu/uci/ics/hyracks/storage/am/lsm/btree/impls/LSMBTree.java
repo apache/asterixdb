@@ -85,13 +85,15 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     private final ITreeIndexFrameFactory deleteLeafFrameFactory;
     private final IBinaryComparatorFactory[] cmpFactories;
 
+    private final boolean needKeyDupCheck;
+
     public LSMBTree(List<IVirtualBufferCache> virtualBufferCaches, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
             ILSMIndexFileManager fileManager, TreeIndexFactory<BTree> diskBTreeFactory,
             TreeIndexFactory<BTree> bulkLoadBTreeFactory, BloomFilterFactory bloomFilterFactory,
             double bloomFilterFalsePositiveRate, IFileMapProvider diskFileMapProvider, int fieldCount,
             IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback) {
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck) {
         super(virtualBufferCaches, diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback);
         int i = 0;
@@ -110,6 +112,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         this.cmpFactories = cmpFactories;
         componentFactory = new LSMBTreeDiskComponentFactory(diskBTreeFactory, bloomFilterFactory);
         bulkLoadComponentFactory = new LSMBTreeDiskComponentFactory(bulkLoadBTreeFactory, bloomFilterFactory);
+        this.needKeyDupCheck = needKeyDupCheck;
     }
 
     @Override
@@ -303,43 +306,45 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.currentMutableBTreeOpCtx.leafFrame, false);
         RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);
 
-        // first check the inmemory component
-        ctx.currentMutableBTreeAccessor.search(memCursor, predicate);
-        try {
-            if (memCursor.hasNext()) {
-                memCursor.next();
-                LSMBTreeTupleReference lsmbtreeTuple = (LSMBTreeTupleReference) memCursor.getTuple();
-                if (!lsmbtreeTuple.isAntimatter()) {
-                    throw new TreeIndexDuplicateKeyException("Failed to insert key since key already exists.");
-                } else {
-                    memCursor.close();
-                    ctx.currentMutableBTreeAccessor.upsertIfConditionElseInsert(tuple,
-                            AntimatterAwareTupleAcceptor.INSTANCE);
-                    return true;
+        if (needKeyDupCheck) {
+            // first check the inmemory component
+            ctx.currentMutableBTreeAccessor.search(memCursor, predicate);
+            try {
+                if (memCursor.hasNext()) {
+                    memCursor.next();
+                    LSMBTreeTupleReference lsmbtreeTuple = (LSMBTreeTupleReference) memCursor.getTuple();
+                    if (!lsmbtreeTuple.isAntimatter()) {
+                        throw new TreeIndexDuplicateKeyException("Failed to insert key since key already exists.");
+                    } else {
+                        memCursor.close();
+                        ctx.currentMutableBTreeAccessor.upsertIfConditionElseInsert(tuple,
+                                AntimatterAwareTupleAcceptor.INSTANCE);
+                        return true;
+                    }
                 }
+            } finally {
+                memCursor.close();
             }
-        } finally {
-            memCursor.close();
-        }
 
-        // TODO: Can we just remove the above code that search the mutable
-        // component and do it together with the search call below? i.e. instead
-        // of passing false to the lsmHarness.search(), we pass true to include
-        // the mutable component?
-        // the key was not in the inmemory component, so check the disk
-        // components
+            // TODO: Can we just remove the above code that search the mutable
+            // component and do it together with the search call below? i.e. instead
+            // of passing false to the lsmHarness.search(), we pass true to include
+            // the mutable component?
+            // the key was not in the inmemory component, so check the disk
+            // components
 
-        // This is a hack to avoid searching the current active mutable component twice. It is critical to add it back once the search is over.
-        ILSMComponent firstComponent = ctx.getComponentHolder().remove(0);
-        search(ctx, searchCursor, predicate);
-        try {
-            if (searchCursor.hasNext()) {
-                throw new TreeIndexDuplicateKeyException("Failed to insert key since key already exists.");
+            // This is a hack to avoid searching the current active mutable component twice. It is critical to add it back once the search is over.
+            ILSMComponent firstComponent = ctx.getComponentHolder().remove(0);
+            search(ctx, searchCursor, predicate);
+            try {
+                if (searchCursor.hasNext()) {
+                    throw new TreeIndexDuplicateKeyException("Failed to insert key since key already exists.");
+                }
+            } finally {
+                searchCursor.close();
+                // Add the current active mutable component back
+                ctx.getComponentHolder().add(0, firstComponent);
             }
-        } finally {
-            searchCursor.close();
-            // Add the current active mutable component back
-            ctx.getComponentHolder().add(0, firstComponent);
         }
 
         ctx.currentMutableBTreeAccessor.upsertIfConditionElseInsert(tuple, AntimatterAwareTupleAcceptor.INSTANCE);
