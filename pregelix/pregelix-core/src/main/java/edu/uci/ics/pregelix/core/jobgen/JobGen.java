@@ -507,7 +507,8 @@ public abstract class JobGen implements IJobGen {
         if (BspUtils.useLSM(conf)) {
             return new LSMBTreeDataflowHelperFactory(new VirtualBufferCacheProvider(),
                     new ConstantMergePolicyFactory(), MERGE_POLICY_PROPERTIES, NoOpOperationTrackerProvider.INSTANCE,
-                    SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, 0.01);
+                    /* TODO verify whether key dup check is required or not in preglix: to be safe, just check it as it has been done*/
+                    SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, 0.01, true);
         } else {
             return new BTreeDataflowHelperFactory();
         }
@@ -889,7 +890,7 @@ public abstract class JobGen implements IJobGen {
     public void setLocationConstraint(JobSpecification spec, IOperatorDescriptor operator) {
         optimizer.setOptimizedLocationConstraints(spec, operator);
     }
-    
+
     /**
      * get the file split provider
      * 
@@ -897,7 +898,7 @@ public abstract class JobGen implements IJobGen {
      * @param indexName
      * @return the IFileSplitProvider instance
      */
-    public IFileSplitProvider getFileSplitProvider(String jobId, String indexName){
+    public IFileSplitProvider getFileSplitProvider(String jobId, String indexName) {
         return optimizer.getOptimizedFileSplitProvider(jobId, indexName);
     }
 

@@ -30,13 +30,17 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDatafl
 public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
+    private final boolean needKeyDupCheck;
 
     public LSMBTreeDataflowHelperFactory(IVirtualBufferCacheProvider virtualBufferCacheProvider,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate) {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate,
+            boolean needKeyDupCheck) {
         super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory,
                 ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate);
+        this.needKeyDupCheck = needKeyDupCheck;
+
     }
 
     @Override
@@ -45,6 +49,6 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
         return new LSMBTreeDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, needKeyDupCheck);
     }
 }
