@@ -69,7 +69,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                         dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
+                        storageProperties.getBloomFilterFalsePositiveRate(), false), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -109,7 +109,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                         mergePolicyFactory, mergePolicyFactoryProperties, new SecondaryIndexOperationTrackerProvider(
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                .getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
+                                .getBloomFilterFalsePositiveRate(), false), BTree.DEFAULT_FILL_FACTOR);
 
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
@@ -138,7 +138,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryIndexOperationsHelp
                         dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+                        storageProperties.getBloomFilterFalsePositiveRate(), false), NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);
         spec.addRoot(compactOp);

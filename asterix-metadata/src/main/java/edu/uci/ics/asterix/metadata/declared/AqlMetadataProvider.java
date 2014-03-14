@@ -570,7 +570,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.second, isSecondary ? new SecondaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()) : new PrimaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), rtcProvider, LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate()), retainInput, searchCallbackFactory);
+                            storageProperties.getBloomFilterFalsePositiveRate(), !isSecondary), retainInput, searchCallbackFactory);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
@@ -800,7 +800,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+                            storageProperties.getBloomFilterFalsePositiveRate(), false), NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -869,7 +869,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate()), null, modificationCallbackFactory, true,
+                                    .getBloomFilterFalsePositiveRate(), true), null, modificationCallbackFactory, true,
                     indexName);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
@@ -1065,7 +1065,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.first, compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate()), filterFactory, modificationCallbackFactory,
+                                    .getBloomFilterFalsePositiveRate(), false), filterFactory, modificationCallbackFactory,
                     false, indexName);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);

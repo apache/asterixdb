@@ -134,7 +134,7 @@ public class DatasetOperations {
                         dataset.getDatasetId()), compactionInfo.first, compactionInfo.second,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate()));
+                        storageProperties.getBloomFilterFalsePositiveRate(), false));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -189,7 +189,7 @@ public class DatasetOperations {
                         compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(dataset
                                 .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                .getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
+                                .getBloomFilterFalsePositiveRate(), true), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
@@ -277,7 +277,8 @@ public class DatasetOperations {
                             compactionInfo.second, new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+                            /* TODO verify whether key dup check is required or not during bulkload: I guess not*/ 
+                            storageProperties.getBloomFilterFalsePositiveRate(), false), NoOpOperationCallbackFactory.INSTANCE);
             AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                     splitsAndConstraint.second);
 
@@ -302,7 +303,8 @@ public class DatasetOperations {
                             compactionInfo.second, new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+                            /* TODO verify whether key dup check is required or not during bulkload: I guess not*/ 
+                            storageProperties.getBloomFilterFalsePositiveRate(), false), NoOpOperationCallbackFactory.INSTANCE);
             AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                     splitsAndConstraint.second);
 
@@ -402,7 +404,7 @@ public class DatasetOperations {
                         compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+                        storageProperties.getBloomFilterFalsePositiveRate(), false), NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper
                 .setPartitionConstraintInJobSpec(spec, compactOp, splitsAndConstraint.second);
 
