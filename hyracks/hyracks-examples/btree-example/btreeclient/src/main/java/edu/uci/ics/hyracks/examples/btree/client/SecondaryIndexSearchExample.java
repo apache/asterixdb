@@ -66,6 +66,9 @@ public class SecondaryIndexSearchExample {
 
         @Option(name = "-secondary-btreename", usage = "Secondary B-Tree file name to search", required = true)
         public String secondaryBTreeName;
+        
+        @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
     }
 
     public static void main(String[] args) throws Exception {
@@ -86,7 +89,7 @@ public class SecondaryIndexSearchExample {
 
     private static JobSpecification createJob(Options options) throws HyracksDataException {
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(options.frameSize);
 
         String[] splitNCs = options.ncs.split(",");
 

@@ -101,6 +101,7 @@ public class PushRuntimeTest {
     private static final String PATH_ACTUAL = "rttest";
     private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources";
     private static final String PATH_EXPECTED = PATH_BASE + SEPARATOR + "results";
+    private static final int FRAME_SIZE = 32768;
 
     private static final String[] DEFAULT_NODES = new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID };
 
@@ -123,7 +124,7 @@ public class PushRuntimeTest {
 
     @Test
     public void etsAssignPrint() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
         IntegerConstantEvalFactory const1 = new IntegerConstantEvalFactory(400);
         IntegerConstantEvalFactory const2 = new IntegerConstantEvalFactory(3);
 
@@ -147,7 +148,7 @@ public class PushRuntimeTest {
 
     @Test
     public void etsAssignWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
         IntegerConstantEvalFactory const1 = new IntegerConstantEvalFactory(400);
         IntegerConstantEvalFactory const2 = new IntegerConstantEvalFactory(3);
 
@@ -178,7 +179,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanSelectWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] intFileSplits = new FileSplit[1];
@@ -224,7 +225,7 @@ public class PushRuntimeTest {
     @Test
     public void etsAssignProjectWrite() throws Exception {
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
         IntegerConstantEvalFactory const1 = new IntegerConstantEvalFactory(400);
         IntegerConstantEvalFactory const2 = new IntegerConstantEvalFactory(3);
 
@@ -261,7 +262,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanLimitWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
@@ -312,7 +313,7 @@ public class PushRuntimeTest {
 
     @Test
     public void etsUnnestWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
@@ -342,7 +343,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanAggregateWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
@@ -394,7 +395,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanSortGbySelectWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
@@ -479,7 +480,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanHashGbySelectWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
@@ -548,7 +549,7 @@ public class PushRuntimeTest {
 
     @Test
     public void etsUnnestRunningaggregateWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         EmptyTupleSourceRuntimeFactory ets = new EmptyTupleSourceRuntimeFactory();
         RecordDescriptor etsDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
@@ -587,7 +588,7 @@ public class PushRuntimeTest {
 
     @Test
     public void etsAssignScriptWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
         IntegerConstantEvalFactory const1 = new IntegerConstantEvalFactory(400);
         IntegerConstantEvalFactory const2 = new IntegerConstantEvalFactory(3);
 
@@ -643,7 +644,7 @@ public class PushRuntimeTest {
     public void scanSplitWrite() throws Exception {
         final int outputArity = 2;
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         String inputFileName = "data/tpch0.001/customer.tbl";
         File inputFile = new File(inputFileName);
@@ -696,7 +697,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanMicroSortWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];
@@ -744,7 +745,7 @@ public class PushRuntimeTest {
 
     @Test
     public void etsAssignSubplanProjectWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
         IntegerConstantEvalFactory const1 = new IntegerConstantEvalFactory(400);
         IntegerConstantEvalFactory const2 = new IntegerConstantEvalFactory(3);
 
@@ -804,7 +805,7 @@ public class PushRuntimeTest {
 
     @Test
     public void scanMicroSortGbySelectWrite() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
 
         // the scanner
         FileSplit[] fileSplits = new FileSplit[1];

@@ -108,7 +108,7 @@ public class JobGenInnerJoin extends JobGen {
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
         String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
         IConfigurationFactory confFactory = new ConfigurationFactory(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator
@@ -311,7 +311,7 @@ public class JobGenInnerJoin extends JobGen {
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         Class<? extends Writable> messageValueClass = BspUtils.getMessageValueClass(conf);
         String[] partialAggregateValueClassNames = BspUtils.getPartialAggregateValueClassNames(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * source aggregate
@@ -567,7 +567,7 @@ public class JobGenInnerJoin extends JobGen {
     private JobSpecification generateSecondaryBTreeCheckpointLoad(int lastSuccessfulIteration, PregelixJob job)
             throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(job.getConfiguration());
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         String checkpointPath = BspUtils.getSecondaryIndexCheckpointPath(conf, lastSuccessfulIteration);
         PregelixJob tmpJob = createCloneJob("State checkpoint loading for job " + jobId, job);
@@ -650,7 +650,7 @@ public class JobGenInnerJoin extends JobGen {
         Class<? extends Writable> msgListClass = MsgList.class;
         String readFile = lastSuccessfulIteration % 2 == 0 ? SECONDARY_INDEX_EVEN : SECONDARY_INDEX_ODD;
         IFileSplitProvider secondaryFileSplitProviderRead = getFileSplitProvider(jobId, readFile);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         /**
          * construct empty tuple operator
          */

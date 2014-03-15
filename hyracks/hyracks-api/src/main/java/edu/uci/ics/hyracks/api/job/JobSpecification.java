@@ -59,7 +59,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
-    private int frameSize;
+    private int frameSize = 32768;
 
     private int maxReattempts;
 
@@ -73,6 +73,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private transient int connectorIdCounter;
 
+    // This constructor uses the default frame size. It is for test purposes only.
+    // For other use cases, use the one which sets the frame size.
     public JobSpecification() {
         roots = new ArrayList<OperatorDescriptorId>();
         resultSetIds = new ArrayList<ResultSetId>();
@@ -85,9 +87,13 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         userConstraints = new HashSet<Constraint>();
         operatorIdCounter = 0;
         connectorIdCounter = 0;
-        frameSize = 32768;
         maxReattempts = 2;
         useConnectorPolicyForScheduling = true;
+    }
+    
+    public JobSpecification(int frameSize) {
+        this();
+        setFrameSize(frameSize);
     }
 
     @Override

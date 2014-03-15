@@ -83,8 +83,8 @@ public class ExternalGroupClient {
         @Option(name = "-hashtable-size", usage = "Hash table size (default: 8191)", required = false)
         public int htSize = 8191;
 
-        @Option(name = "-frames-limit", usage = "Frame size (default: 32768)", required = false)
-        public int framesLimit = 32768;
+        @Option(name = "-frame-size", usage = "Frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
 
         @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 512)", required = false)
         public int sbSize = 512;
@@ -114,7 +114,7 @@ public class ExternalGroupClient {
         for (int i = 0; i < 6; i++) {
             long start = System.currentTimeMillis();
             job = createJob(parseFileSplits(options.inFileSplits), parseFileSplits(options.outFileSplits, i),
-                    options.htSize, options.sbSize, options.framesLimit, options.sortOutput, options.algo,
+                    options.htSize, options.sbSize, options.frameSize, options.sortOutput, options.algo,
                     options.outPlain);
 
             System.out.print(i + "\t" + (System.currentTimeMillis() - start));
@@ -155,8 +155,8 @@ public class ExternalGroupClient {
     }
 
     private static JobSpecification createJob(FileSplit[] inSplits, FileSplit[] outSplits, int htSize, int sbSize,
-            int framesLimit, boolean sortOutput, int alg, boolean outPlain) {
-        JobSpecification spec = new JobSpecification();
+            int frameSize, boolean sortOutput, int alg, boolean outPlain) {
+        JobSpecification spec = new JobSpecification(frameSize);
         IFileSplitProvider splitsProvider = new ConstantFileSplitProvider(inSplits);
 
         RecordDescriptor inDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -198,7 +198,7 @@ public class ExternalGroupClient {
         switch (alg) {
             case 0: // new external hash graph
                 grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec,
-                        keys, framesLimit, new IBinaryComparatorFactory[] {
+                        keys, frameSize, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
@@ -221,7 +221,7 @@ public class ExternalGroupClient {
 
                 break;
             case 1: // External-sort + new-precluster
-                ExternalSortOperatorDescriptor sorter2 = new ExternalSortOperatorDescriptor(spec, framesLimit, keys,
+                ExternalSortOperatorDescriptor sorter2 = new ExternalSortOperatorDescriptor(spec, frameSize, keys,
                         new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, inDesc);
@@ -271,7 +271,7 @@ public class ExternalGroupClient {
                 break;
             default:
                 grouper = new edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor(spec,
-                        keys, framesLimit, new IBinaryComparatorFactory[] {
+                        keys, frameSize, new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(

@@ -85,6 +85,9 @@ public class WordCountMain {
 
         @Option(name = "-runtime-profiling", usage = "Indicates if runtime profiling should be enabled. (default: false)")
         public boolean runtimeProfiling = false;
+        
+        @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
     }
 
     public static void main(String[] args) throws Exception {
@@ -95,7 +98,7 @@ public class WordCountMain {
         IHyracksClientConnection hcc = new HyracksConnection(options.host, options.port);
 
         JobSpecification job = createJob(parseFileSplits(options.inFileSplits), parseFileSplits(options.outFileSplits),
-                options.algo, options.htSize, options.sbSize, options.format);
+                options.algo, options.htSize, options.sbSize, options.format, options.frameSize);
 
         long start = System.currentTimeMillis();
         JobId jobId = hcc.startJob(job,
@@ -120,8 +123,8 @@ public class WordCountMain {
     }
 
     private static JobSpecification createJob(FileSplit[] inSplits, FileSplit[] outSplits, String algo, int htSize,
-            int sbSize, String format) {
-        JobSpecification spec = new JobSpecification();
+            int sbSize, String format, int frameSize) {
+        JobSpecification spec = new JobSpecification(frameSize);
 
         IFileSplitProvider splitsProvider = new ConstantFileSplitProvider(inSplits);
         RecordDescriptor wordDesc = new RecordDescriptor(

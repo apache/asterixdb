@@ -65,6 +65,9 @@ public class SecondaryIndexBulkLoadExample {
 
         @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 32768)", required = false)
         public int sbSize = 32768;
+        
+        @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
     }
 
     public static void main(String[] args) throws Exception {
@@ -85,7 +88,7 @@ public class SecondaryIndexBulkLoadExample {
 
     private static JobSpecification createJob(Options options) {
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(options.frameSize);
 
         String[] splitNCs = options.ncs.split(",");
 

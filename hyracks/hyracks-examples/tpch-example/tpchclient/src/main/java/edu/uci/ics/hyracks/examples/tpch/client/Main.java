@@ -109,6 +109,9 @@ public class Main {
         // Whether group-by is processed after the join
         @Option(name = "-has-groupby", usage = "Whether to have group-by operation after join (default: disabled)", required = false)
         public boolean hasGroupBy = false;
+        
+        @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
     }
 
     public static void main(String[] args) throws Exception {
@@ -121,7 +124,7 @@ public class Main {
         JobSpecification job = createJob(parseFileSplits(options.inFileCustomerSplits),
                 parseFileSplits(options.inFileOrderSplits), parseFileSplits(options.outFileSplits),
                 options.numJoinPartitions, options.algo, options.graceInputSize, options.graceRecordsPerFrame,
-                options.graceFactor, options.memSize, options.tableSize, options.hasGroupBy);
+                options.graceFactor, options.memSize, options.tableSize, options.hasGroupBy, options.frameSize);
 
         long start = System.currentTimeMillis();
         JobId jobId = hcc.startJob(job,
@@ -147,8 +150,8 @@ public class Main {
 
     private static JobSpecification createJob(FileSplit[] customerSplits, FileSplit[] orderSplits,
             FileSplit[] resultSplits, int numJoinPartitions, String algo, int graceInputSize, int graceRecordsPerFrame,
-            double graceFactor, int memSize, int tableSize, boolean hasGroupBy) throws HyracksDataException {
-        JobSpecification spec = new JobSpecification();
+            double graceFactor, int memSize, int tableSize, boolean hasGroupBy, int frameSize) throws HyracksDataException {
+        JobSpecification spec = new JobSpecification(frameSize);
 
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(customerSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {

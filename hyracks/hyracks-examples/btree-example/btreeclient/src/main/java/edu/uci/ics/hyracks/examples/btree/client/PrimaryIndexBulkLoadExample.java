@@ -51,7 +51,7 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will load a primary index from randomly generated data
 
-public class PrimaryIndexBulkLoadExample {
+public class PrimaryIndexBulkLoadExample {   
     private static class Options {
         @Option(name = "-host", usage = "Hyracks Cluster Controller Host name", required = true)
         public String host;
@@ -70,6 +70,9 @@ public class PrimaryIndexBulkLoadExample {
 
         @Option(name = "-sortbuffer-size", usage = "Sort buffer size in frames (default: 32768)", required = false)
         public int sbSize = 32768;
+        
+        @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
     }
 
     public static void main(String[] args) throws Exception {
@@ -90,7 +93,7 @@ public class PrimaryIndexBulkLoadExample {
 
     private static JobSpecification createJob(Options options) {
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(options.frameSize);
 
         String[] splitNCs = options.ncs.split(",");
 

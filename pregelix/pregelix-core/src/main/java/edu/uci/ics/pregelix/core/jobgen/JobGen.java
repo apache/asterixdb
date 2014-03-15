@@ -227,7 +227,7 @@ public abstract class JobGen implements IJobGen {
     @Override
     public JobSpecification generateCreatingJob() throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         ITypeTraits[] typeTraits = new ITypeTraits[2];
         typeTraits[0] = new TypeTraits(false);
         typeTraits[1] = new TypeTraits(false);
@@ -261,7 +261,7 @@ public abstract class JobGen implements IJobGen {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
         int maxFrameLimit = (int) (((long) 512 * MB) / frameSize);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         /**
@@ -325,7 +325,7 @@ public abstract class JobGen implements IJobGen {
     public JobSpecification scanIndexPrintGraph(String nodeName, String path) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator
@@ -465,7 +465,7 @@ public abstract class JobGen implements IJobGen {
      * generate a "clear state" job
      */
     public JobSpecification generateClearState() throws HyracksException {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         ClearStateOperatorDescriptor clearState = new ClearStateOperatorDescriptor(spec, jobId);
         setLocationConstraint(spec, clearState);
         spec.addRoot(clearState);
@@ -479,7 +479,7 @@ public abstract class JobGen implements IJobGen {
      * @throws HyracksException
      */
     protected JobSpecification dropIndex(String indexName) throws HyracksException {
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, indexName);
         IndexDropOperatorDescriptor drop = new IndexDropOperatorDescriptor(spec, storageManagerInterface,
@@ -519,7 +519,7 @@ public abstract class JobGen implements IJobGen {
         Configuration conf = job.getConfiguration();
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
         IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
         /**
@@ -586,7 +586,7 @@ public abstract class JobGen implements IJobGen {
             HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator
@@ -674,7 +674,7 @@ public abstract class JobGen implements IJobGen {
     /** generate plan specific state checkpointing */
     protected JobSpecification[] generateStateCheckpointing(int lastSuccessfulIteration) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * source aggregate
@@ -727,7 +727,7 @@ public abstract class JobGen implements IJobGen {
         }
         Configuration conf = tmpJob.getConfiguration();
         Class vertexIdClass = BspUtils.getVertexIndexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /***
          * HDFS read operator
@@ -826,7 +826,7 @@ public abstract class JobGen implements IJobGen {
     private JobSpecification bulkLoadLiveVertexBTree(int iteration) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(frameSize);
 
         /**
          * construct empty tuple operator

@@ -53,7 +53,7 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 
 // This example will insert tuples into the primary and secondary index using an insert pipeline
 
-public class InsertPipelineExample {
+public class InsertPipelineExample { 
     private static class Options {
         @Option(name = "-host", usage = "Hyracks Cluster Controller Host name", required = true)
         public String host;
@@ -72,6 +72,9 @@ public class InsertPipelineExample {
 
         @Option(name = "-secondary-btreename", usage = "B-Tree file name of secondary index", required = true)
         public String secondaryBTreeName;
+        
+        @Option(name = "-frame-size", usage = "Hyracks frame size (default: 32768)", required = false)
+        public int frameSize = 32768;
     }
 
     public static void main(String[] args) throws Exception {
@@ -92,7 +95,7 @@ public class InsertPipelineExample {
 
     private static JobSpecification createJob(Options options) {
 
-        JobSpecification spec = new JobSpecification();
+        JobSpecification spec = new JobSpecification(options.frameSize);
 
         String[] splitNCs = options.ncs.split(",");
 
