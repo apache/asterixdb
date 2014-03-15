@@ -75,12 +75,19 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] rtreeCmpFactories = SerdeUtils
                 .serdesToComparatorFactories(fieldSerdes, numKeyFields);
-        IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
-                fieldSerdes.length);
+        int numBtreeFields = fieldSerdes.length - numKeyFields;
+        ISerializerDeserializer[] btreeFieldSerdes = new ISerializerDeserializer[numBtreeFields];
+        int[] btreeFields = new int[numBtreeFields];
+        for (int i = 0; i < numBtreeFields; i++) {
+            btreeFields[i] = numKeyFields + i;
+            btreeFieldSerdes[i] = fieldSerdes[numKeyFields + i];
+        }
+        IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(btreeFieldSerdes,
+                numBtreeFields);
         LSMRTree lsmTree = LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, diskBufferCache, diskFileMapProvider,
                 typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback,
-                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), btreeFields);
         LSMRTreeTestContext testCtx = new LSMRTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

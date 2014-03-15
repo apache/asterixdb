@@ -38,6 +38,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeExamplesTest.RTreeType;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
@@ -45,9 +46,11 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 public abstract class AbstractRTreeMultiThreadTest {
 
     protected final boolean testRstarPolicy;
+    protected final RTreeType rTreeType;
 
-    public AbstractRTreeMultiThreadTest(boolean testRstarPolicy) {
+    public AbstractRTreeMultiThreadTest(boolean testRstarPolicy, RTreeType rTreeType) {
         this.testRstarPolicy = testRstarPolicy;
+        this.rTreeType = rTreeType;
     }
 
     protected final Logger LOGGER = Logger.getLogger(AbstractRTreeMultiThreadTest.class.getName());
@@ -66,7 +69,7 @@ public abstract class AbstractRTreeMultiThreadTest {
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, int[] btreeFields)
             throws TreeIndexException;
 
     protected abstract IIndexTestWorkerFactory getWorkerFactory();
@@ -89,11 +92,23 @@ public abstract class AbstractRTreeMultiThreadTest {
 
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] rtreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeys);
-        IBinaryComparatorFactory[] btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
-                fieldSerdes.length);
+        int[] btreeFields = null;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            int numBtreeFields = fieldSerdes.length - numKeys;
+            ISerializerDeserializer[] btreeFieldSerdes = new ISerializerDeserializer[numBtreeFields];
+            btreeFields = new int[numBtreeFields];
+            for (int i = 0; i < numBtreeFields; i++) {
+                btreeFields[i] = numKeys + i;
+                btreeFieldSerdes[i] = fieldSerdes[numKeys + i];
+            }
+            btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(btreeFieldSerdes, numBtreeFields);
+        } else {
+            btreeCmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
+        }
 
         ITreeIndex index = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
-                rtreePolicyType);
+                rtreePolicyType, btreeFields);
         IIndexTestWorkerFactory workerFactory = getWorkerFactory();
 
         // 4 batches per thread.

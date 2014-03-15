@@ -26,6 +26,11 @@ import edu.uci.ics.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import edu.uci.ics.hyracks.tests.am.rtree.RTreeSecondaryIndexInsertOperatorTest;
 
 public class LSMRTreeSecondaryIndexInsertOperatorTest extends RTreeSecondaryIndexInsertOperatorTest {
+
+    public LSMRTreeSecondaryIndexInsertOperatorTest() {
+        this.rTreeType = RTreeType.LSMRTREE;
+    }
+
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
         return new LSMRTreeOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }
@@ -33,8 +38,9 @@ public class LSMRTreeSecondaryIndexInsertOperatorTest extends RTreeSecondaryInde
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields) {
         return ((LSMRTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
-                rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory);
+                rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory, btreeFields);
     }
 }

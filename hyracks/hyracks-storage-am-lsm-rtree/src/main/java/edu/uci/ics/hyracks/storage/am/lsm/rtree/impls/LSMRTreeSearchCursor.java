@@ -20,15 +20,18 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
     private int currentCursor;
+    private PermutingTupleReference btreeTuple;
 
-    public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx) {
+    public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
         super(opCtx);
         currentCursor = 0;
+        this.btreeTuple = new PermutingTupleReference(buddyBTreeFields);
     }
 
     @Override
@@ -77,12 +80,12 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
             while (rtreeCursors[currentCursor].hasNext()) {
                 rtreeCursors[currentCursor].next();
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
-
+                btreeTuple.reset(rtreeCursors[currentCursor].getTuple());
                 boolean killerTupleFound = false;
                 for (int i = 0; i < currentCursor; i++) {
                     btreeCursors[i].reset();
-                    btreeRangePredicate.setHighKey(currentTuple, true);
-                    btreeRangePredicate.setLowKey(currentTuple, true);
+                    btreeRangePredicate.setHighKey(btreeTuple, true);
+                    btreeRangePredicate.setLowKey(btreeTuple, true);
                     btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                     try {
                         if (btreeCursors[i].hasNext()) {

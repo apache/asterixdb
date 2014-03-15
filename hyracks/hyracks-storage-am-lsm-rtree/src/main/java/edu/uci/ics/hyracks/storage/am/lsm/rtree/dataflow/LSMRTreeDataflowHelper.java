@@ -39,15 +39,17 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
+    private int[] btreeFields;
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             List<IVirtualBufferCache> virtualBufferCaches, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields) {
         super(opDesc, ctx, partition, virtualBufferCaches, btreeComparatorFactories, valueProviderFactories,
                 rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory);
+        this.btreeFields = btreeFields;
     }
 
     public LSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
@@ -56,10 +58,11 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields) {
         super(opDesc, ctx, partition, virtualBufferCaches, bloomFilterFalsePositiveRate, btreeComparatorFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
                 ioOpCallbackFactory, linearizeCmpFactory);
+        this.btreeFields = btreeFields;
     }
 
     @Override
@@ -73,7 +76,7 @@ public class LSMRTreeDataflowHelper extends AbstractLSMRTreeDataflowHelper {
             return LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, diskBufferCache, diskFileMapProvider,
                     typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory);
+                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, btreeFields);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

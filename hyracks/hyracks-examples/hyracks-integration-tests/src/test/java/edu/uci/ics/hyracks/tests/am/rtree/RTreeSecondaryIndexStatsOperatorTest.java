@@ -35,6 +35,9 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorTest {
+    public RTreeSecondaryIndexStatsOperatorTest() {
+        this.rTreeType = RTreeType.RTREE;
+    }
 
     @Before
     public void setup() throws Exception {
@@ -66,7 +69,8 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields) {
         return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
                 rtreePolicyType, null);
     }

@@ -33,16 +33,21 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public class LSMRTreeExamplesTest extends AbstractRTreeExamplesTest {
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
+    public LSMRTreeExamplesTest() {
+        super();
+        this.rTreeType = RTreeType.LSMRTREE;
+    }
+
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType) throws TreeIndexException {
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories,
                 btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallback(),
-                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), btreeFields);
     }
 
     @Before
