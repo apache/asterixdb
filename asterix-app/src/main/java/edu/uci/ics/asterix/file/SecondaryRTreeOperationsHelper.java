@@ -67,6 +67,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
     protected IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected int numNestedSecondaryKeyFields;
     protected ATypeTag keyType;
+    protected int[] primaryKeyFields;
 
     protected SecondaryRTreeOperationsHelper(PhysicalOptimizationConfig physOptConf,
             IAsterixPropertiesProvider propertiesProvider) {
@@ -83,7 +84,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 secondaryRecDesc.getTypeTraits(), secondaryComparatorFactories, primaryComparatorFactories,
                 valueProviderFactories, RTreePolicyType.RTREE, AqlMetadataProvider.proposeLinearizer(keyType,
                         secondaryComparatorFactories.length), dataset.getDatasetId(), mergePolicyFactory,
-                mergePolicyFactoryProperties);
+                mergePolicyFactoryProperties, primaryKeyFields);
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMRTreeResource);
 
@@ -96,8 +97,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMRTreeIOOperationCallbackFactory.INSTANCE, AqlMetadataProvider.proposeLinearizer(keyType,
                                 secondaryComparatorFactories.length), storageProperties
-                                .getBloomFilterFalsePositiveRate()), localResourceFactoryProvider,
-                NoOpOperationCallbackFactory.INSTANCE);
+                                .getBloomFilterFalsePositiveRate(), primaryKeyFields),
+                localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);
@@ -147,6 +148,10 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             secondaryTypeTraits[numNestedSecondaryKeyFields + i] = primaryRecDesc.getTypeTraits()[i];
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
+        primaryKeyFields = new int[numPrimaryKeys];
+        for (int i = 0; i < primaryKeyFields.length; i++) {
+            primaryKeyFields[i] = i + numNestedSecondaryKeyFields;
+        }
     }
 
     @Override
@@ -178,7 +183,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
                         AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
-                        storageProperties.getBloomFilterFalsePositiveRate()), BTree.DEFAULT_FILL_FACTOR);
+                        storageProperties.getBloomFilterFalsePositiveRate(), primaryKeyFields),
+                BTree.DEFAULT_FILL_FACTOR);
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
@@ -207,7 +213,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
                         AqlMetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length),
-                        storageProperties.getBloomFilterFalsePositiveRate()), NoOpOperationCallbackFactory.INSTANCE);
+                        storageProperties.getBloomFilterFalsePositiveRate(), primaryKeyFields),
+                NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);
         spec.addRoot(compactOp);
