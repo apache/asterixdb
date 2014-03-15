@@ -391,6 +391,13 @@ public class LSMRTree extends AbstractLSMRTree {
             ctx.setOperation(IndexOperation.DELETE);
             lsmHarness.modify(ctx, false, dualTuple);
         }
+        
+        @Override
+        public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+            dualTuple.reset(tuple);
+            ctx.setOperation(IndexOperation.DELETE);
+            lsmHarness.forceModify(ctx, dualTuple);
+        }
 
         public MultiComparator getMultiComparator() {
             LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;
