@@ -38,6 +38,8 @@ import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 
 public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
     private static final long serialVersionUID = 1L;
+    
+    private static final int DEFAULT_FRAME_SIZE = 32768;
 
     private final List<OperatorDescriptorId> roots;
 
@@ -59,7 +61,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy;
 
-    private int frameSize = 32768;
+    private int frameSize;
 
     private int maxReattempts;
 
@@ -76,6 +78,10 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     // This constructor uses the default frame size. It is for test purposes only.
     // For other use cases, use the one which sets the frame size.
     public JobSpecification() {
+        this(DEFAULT_FRAME_SIZE);
+    }
+    
+    public JobSpecification(int frameSize) {
         roots = new ArrayList<OperatorDescriptorId>();
         resultSetIds = new ArrayList<ResultSetId>();
         opMap = new HashMap<OperatorDescriptorId, IOperatorDescriptor>();
@@ -89,10 +95,6 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         connectorIdCounter = 0;
         maxReattempts = 2;
         useConnectorPolicyForScheduling = true;
-    }
-    
-    public JobSpecification(int frameSize) {
-        this();
         setFrameSize(frameSize);
     }
 
