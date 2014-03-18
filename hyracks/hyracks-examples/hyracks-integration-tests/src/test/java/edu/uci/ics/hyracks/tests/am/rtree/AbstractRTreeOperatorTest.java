@@ -76,6 +76,14 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         TestStorageManagerComponentHolder.init(8192, 20, 20);
     }
 
+    protected enum RTreeType {
+        LSMRTREE,
+        LSMRTREE_WITH_ANTIMATTER,
+        RTREE
+    };
+
+    protected RTreeType rTreeType;
+
     protected final IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     protected final IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
     protected IIndexDataflowHelperFactory rtreeDataflowHelperFactory;
@@ -111,8 +119,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
     // This is only used for the LSMRTree. We need a comparator Factories for
     // the BTree component of the LSMRTree.
-    protected final int btreeKeyFieldCount = 5;
-    protected final IBinaryComparatorFactory[] btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+    protected int btreeKeyFieldCount = 5;
+    protected IBinaryComparatorFactory[] btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
 
     protected String secondaryFileName;
     protected IFileSplitProvider secondarySplitProvider;
@@ -159,24 +167,35 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         secondaryComparatorFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
 
         // This only used for LSMRTree
-        btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeComparatorFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeComparatorFactories[2] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeComparatorFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeComparatorFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            btreeKeyFieldCount = 1;
+            btreeComparatorFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeFields = new int[1];
+            btreeFields[0] = 4;
+
+        } else {
+            btreeComparatorFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeComparatorFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeComparatorFactories[2] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeComparatorFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeComparatorFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        }
 
         IPrimitiveValueProviderFactory[] secondaryValueProviderFactories = RTreeUtils
                 .createPrimitiveValueProviderFactories(secondaryComparatorFactories.length, DoublePointable.FACTORY);
 
         rtreeDataflowHelperFactory = createDataFlowHelperFactory(secondaryValueProviderFactories,
                 RTreePolicyType.RSTARTREE, btreeComparatorFactories,
-                LSMRTreeUtils.proposeBestLinearizer(secondaryTypeTraits, secondaryComparatorFactories.length));
+                LSMRTreeUtils.proposeBestLinearizer(secondaryTypeTraits, secondaryComparatorFactories.length), btreeFields);
 
     }
 
     protected abstract IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory)
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields)
             throws TreeIndexException;
 
     protected void createPrimaryIndex() throws Exception {

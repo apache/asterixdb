@@ -43,6 +43,10 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTest {
 
+    public RTreeSecondaryIndexScanOperatorTest() {
+        this.rTreeType = RTreeType.RTREE;
+    }
+
     @Before
     public void setup() throws Exception {
         super.setup();
@@ -102,11 +106,12 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields) {
         return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
                 rtreePolicyType, null);
     }
-    
+
     @Override
     public void cleanup() throws Exception {
         destroyPrimaryIndex();

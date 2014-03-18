@@ -26,6 +26,10 @@ import edu.uci.ics.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import edu.uci.ics.hyracks.tests.am.rtree.RTreeSecondaryIndexInsertOperatorTest;
 
 public class LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest extends RTreeSecondaryIndexInsertOperatorTest {
+    public LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest() {
+        this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
+    }
+
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {
         return new LSMRTreeWithAntiMatterTuplesOperatorTestHelper(TestStorageManagerComponentHolder.getIOManager());
     }
@@ -33,7 +37,8 @@ public class LSMRTreeWithAntiMatterTuplesSecondaryIndexInsertOperatorTest extend
     @Override
     protected IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
+            int[] btreeFields) {
         return ((LSMRTreeWithAntiMatterTuplesOperatorTestHelper) testHelper).createDataFlowHelperFactory(
                 secondaryValueProviderFactories, rtreePolicyType, btreeComparatorFactories, linearizerCmpFactory);
     }

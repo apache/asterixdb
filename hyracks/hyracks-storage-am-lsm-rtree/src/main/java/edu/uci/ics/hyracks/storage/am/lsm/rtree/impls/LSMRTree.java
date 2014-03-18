@@ -31,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexBulkLoader;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
@@ -39,9 +40,11 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.DualTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -63,6 +66,7 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTree extends AbstractLSMRTree {
+    private int[] buddyBTreeFields;
 
     public LSMRTree(List<IVirtualBufferCache> virtualBufferCaches, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
@@ -72,13 +76,14 @@ public class LSMRTree extends AbstractLSMRTree {
             IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback) {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            int[] buddyBTreeFields) {
         super(virtualBufferCaches, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
                 btreeLeafFrameFactory, fileNameManager, new LSMRTreeDiskComponentFactory(diskRTreeFactory,
                         diskBTreeFactory, bloomFilterFactory), diskFileMapProvider, fieldCount, rtreeCmpFactories,
                 btreeCmpFactories, linearizer, comparatorFields, linearizerArray, bloomFilterFalsePositiveRate,
                 mergePolicy, opTracker, ioScheduler, ioOpCallback);
+        this.buddyBTreeFields = buddyBTreeFields;
     }
 
     /**
@@ -321,10 +326,11 @@ public class LSMRTree extends AbstractLSMRTree {
 
             BTree btree = mergedComponent.getBTree();
             IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
-            
+
             long numElements = 0L;
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
-                numElements += ((LSMRTreeDiskComponent) mergeOp.getMergingComponents().get(i)).getBloomFilter().getNumElements();
+                numElements += ((LSMRTreeDiskComponent) mergeOp.getMergingComponents().get(i)).getBloomFilter()
+                        .getNumElements();
             }
 
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElements);
@@ -332,7 +338,7 @@ public class LSMRTree extends AbstractLSMRTree {
                     bloomFilterFalsePositiveRate);
             IIndexBulkLoader builder = mergedComponent.getBloomFilter().createBuilder(numElements,
                     bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
-            
+
             try {
                 while (btreeCursor.hasNext()) {
                     btreeCursor.next();
@@ -368,13 +374,29 @@ public class LSMRTree extends AbstractLSMRTree {
     }
 
     public class LSMRTreeAccessor extends LSMTreeIndexAccessor {
+        private DualTupleReference dualTuple = new DualTupleReference(buddyBTreeFields);
+
         public LSMRTreeAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) {
             super(lsmHarness, ctx);
         }
 
         @Override
         public ITreeIndexCursor createSearchCursor(boolean exclusive) {
-            return new LSMRTreeSearchCursor(ctx);
+            return new LSMRTreeSearchCursor(ctx, buddyBTreeFields);
+        }
+
+        @Override
+        public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {
+            dualTuple.reset(tuple);
+            ctx.setOperation(IndexOperation.DELETE);
+            lsmHarness.modify(ctx, false, dualTuple);
+        }
+        
+        @Override
+        public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
+            dualTuple.reset(tuple);
+            ctx.setOperation(IndexOperation.DELETE);
+            lsmHarness.forceModify(ctx, dualTuple);
         }
 
         public MultiComparator getMultiComparator() {
@@ -396,6 +418,30 @@ public class LSMRTree extends AbstractLSMRTree {
             return new LSMRTreeBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
+        }
+    }
+
+    // This function is modified for R-Trees without antimatter tuples to allow buddy B-Tree to have only primary keys
+    @Override
+    public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException {
+        LSMRTreeOpContext ctx = (LSMRTreeOpContext) ictx;
+        if (ctx.getOperation() == IndexOperation.PHYSICALDELETE) {
+            throw new UnsupportedOperationException("Physical delete not supported in the LSM-RTree");
+        }
+
+        ctx.modificationCallback.before(tuple);
+        ctx.modificationCallback.found(null, tuple);
+        if (ctx.getOperation() == IndexOperation.INSERT) {
+            ctx.currentMutableRTreeAccessor.insert(tuple);
+        } else {
+            // First remove all entries in the in-memory rtree (if any).
+            ctx.currentMutableRTreeAccessor.delete(tuple);
+            try {
+                ctx.currentMutableBTreeAccessor.insert(((DualTupleReference) tuple).getPermutingTuple());
+            } catch (TreeIndexDuplicateKeyException e) {
+                // Do nothing, because one delete tuple is enough to indicate
+                // that all the corresponding insert tuples are deleted
+            }
         }
     }
 
