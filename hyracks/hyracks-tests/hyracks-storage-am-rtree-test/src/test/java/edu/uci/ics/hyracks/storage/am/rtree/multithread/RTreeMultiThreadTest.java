@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeExamplesTest.RTreeType;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
@@ -35,7 +36,7 @@ import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
     public RTreeMultiThreadTest() {
-        super(true);
+        super(true, RTreeType.RTREE);
     }
 
     private RTreeTestHarness harness = new RTreeTestHarness();
@@ -55,7 +56,7 @@ public class RTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType) throws TreeIndexException {
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
         return RTreeUtils.createRTree(harness.getBufferCache(), harness.getFileMapProvider(), typeTraits,
                 valueProviderFactories, rtreeCmpFactories, rtreePolicyType, harness.getFileReference());
 

@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
+import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeExamplesTest.RTreeType;
 import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeMultiThreadTest;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
@@ -40,7 +41,7 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     private LSMRTreeTestWorkerFactory workerFactory = new LSMRTreeTestWorkerFactory();
 
     public LSMRTreeMultiThreadTest() {
-        super(false);
+        super(false, RTreeType.LSMRTREE);
     }
 
     @Override
@@ -56,13 +57,13 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType) throws TreeIndexException {
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, rtreeCmpFactories,
                 btreeCmpFactories, valueProviderFactories, rtreePolicyType, harness.getBoomFilterFalsePositiveRate(),
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallback(),
-                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), btreeFields);
     }
 
     @Override

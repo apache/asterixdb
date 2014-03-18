@@ -52,12 +52,20 @@ import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractRTreeExamplesTest {
+
+    public static enum RTreeType {
+        LSMRTREE,
+        LSMRTREE_WITH_ANTIMATTER,
+        RTREE
+    };
+
     protected static final Logger LOGGER = Logger.getLogger(AbstractRTreeExamplesTest.class.getName());
     protected final Random rnd = new Random(50);
+    protected RTreeType rTreeType;
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType)
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, int[] btreeFields)
             throws TreeIndexException;
 
     /**
@@ -96,21 +104,37 @@ public abstract class AbstractRTreeExamplesTest {
         rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // Declare BTree keys, this will only be used for LSMRTree
-        int btreeKeyFieldCount = 6;
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        int btreeKeyFieldCount;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
+            btreeKeyFieldCount = 2;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeFields = new int[btreeKeyFieldCount];
+            for (int i = 0; i < btreeKeyFieldCount; i++) {
+                btreeFields[i] = rtreeKeyFieldCount + i;
+            }
+
+        } else {
+            btreeKeyFieldCount = 6;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        }
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -192,20 +216,36 @@ public abstract class AbstractRTreeExamplesTest {
         rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // Declare BTree keys, this will only be used for LSMRTree
-        int btreeKeyFieldCount = 5;
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        int btreeKeyFieldCount;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
+            btreeKeyFieldCount = 1;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeFields = new int[btreeKeyFieldCount];
+            for (int i = 0; i < btreeKeyFieldCount; i++) {
+                btreeFields[i] = rtreeKeyFieldCount + i;
+            }
+
+        } else {
+            btreeKeyFieldCount = 5;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        }
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
+        //2
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
 
         treeIndex.create();
         treeIndex.activate();
@@ -316,20 +356,35 @@ public abstract class AbstractRTreeExamplesTest {
         rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
         // Declare BTree keys, this will only be used for LSMRTree
-        int btreeKeyFieldCount = 5;
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        int btreeKeyFieldCount;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
+            btreeKeyFieldCount = 1;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+            btreeFields = new int[btreeKeyFieldCount];
+            for (int i = 0; i < btreeKeyFieldCount; i++) {
+                btreeFields[i] = rtreeKeyFieldCount + i;
+            }
+
+        } else {
+            btreeKeyFieldCount = 5;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY);
+        }
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RSTARTREE);
+                valueProviderFactories, RTreePolicyType.RSTARTREE, btreeFields);
 
         treeIndex.create();
         treeIndex.activate();
@@ -447,23 +502,39 @@ public abstract class AbstractRTreeExamplesTest {
         rtreeCmpFactories[4] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
         rtreeCmpFactories[5] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
 
-        // Declare RTree keys.
-        int btreeKeyFieldCount = 7;
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
-        btreeCmpFactories[6] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        // Declare BTree keys, this will only be used for LSMRTree
+        int btreeKeyFieldCount;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
+            btreeKeyFieldCount = 1;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeFields = new int[btreeKeyFieldCount];
+            for (int i = 0; i < btreeKeyFieldCount; i++) {
+                btreeFields[i] = rtreeKeyFieldCount + i;
+            }
+
+        } else {
+            btreeKeyFieldCount = 7;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeCmpFactories[5] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+            btreeCmpFactories[6] = PointableBinaryComparatorFactory.of(DoublePointable.FACTORY);
+        }
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, DoublePointable.FACTORY);
 
+        //4
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -541,21 +612,36 @@ public abstract class AbstractRTreeExamplesTest {
         rtreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        // Declare BTree keys.
-        int btreeKeyFieldCount = 5;
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        // Declare BTree keys, this will only be used for LSMRTree
+        int btreeKeyFieldCount;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
+            btreeKeyFieldCount = 1;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeFields = new int[btreeKeyFieldCount];
+            for (int i = 0; i < btreeKeyFieldCount; i++) {
+                btreeFields[i] = rtreeKeyFieldCount + i;
+            }
+
+        } else {
+            btreeKeyFieldCount = 5;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        }
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
         treeIndex.create();
         treeIndex.activate();
 
@@ -662,21 +748,37 @@ public abstract class AbstractRTreeExamplesTest {
         rtreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
         rtreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
 
-        // Declare BTree keys.
-        int btreeKeyFieldCount = 5;
-        IBinaryComparatorFactory[] btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
-        btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        // Declare BTree keys, this will only be used for LSMRTree
+        int btreeKeyFieldCount;
+        IBinaryComparatorFactory[] btreeCmpFactories;
+        int[] btreeFields = null;
+        if (rTreeType == RTreeType.LSMRTREE) {
+            //Parameters look different for LSM RTREE from LSM RTREE WITH ANTI MATTER TUPLES
+            btreeKeyFieldCount = 1;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeFields = new int[btreeKeyFieldCount];
+            for (int i = 0; i < btreeKeyFieldCount; i++) {
+                btreeFields[i] = rtreeKeyFieldCount + i;
+            }
+
+        } else {
+            btreeKeyFieldCount = 5;
+            btreeCmpFactories = new IBinaryComparatorFactory[btreeKeyFieldCount];
+            btreeCmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+            btreeCmpFactories[4] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
+        }
 
         // create value providers
         IPrimitiveValueProviderFactory[] valueProviderFactories = RTreeUtils.createPrimitiveValueProviderFactories(
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
+        //6
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE);
+                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
         treeIndex.create();
         treeIndex.activate();
 

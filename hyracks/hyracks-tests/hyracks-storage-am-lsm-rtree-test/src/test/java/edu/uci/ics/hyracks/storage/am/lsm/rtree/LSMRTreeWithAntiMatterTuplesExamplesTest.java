@@ -33,10 +33,15 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractRTreeExamplesTest {
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
+    public LSMRTreeWithAntiMatterTuplesExamplesTest() {
+        super();
+        this.rTreeType = RTreeType.LSMRTREE_WITH_ANTIMATTER;
+    }
+
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType) throws TreeIndexException {
+            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,

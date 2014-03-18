@@ -97,8 +97,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             BTree memBTree = new BTree(virtualBufferCache,
                     ((IVirtualBufferCache) virtualBufferCache).getFileMapProvider(), new VirtualFreePageManager(
                             virtualBufferCache.getNumPages()), btreeInteriorFrameFactory, btreeLeafFrameFactory,
-                    btreeCmpFactories, fieldCount, new FileReference(new File(fileManager.getBaseDir() + "_virtual_b_"
-                            + i)));
+                    btreeCmpFactories, btreeCmpFactories.length, new FileReference(new File(fileManager.getBaseDir()
+                            + "_virtual_b_" + i)));
             LSMRTreeMemoryComponent mutableComponent = new LSMRTreeMemoryComponent(memRTree, memBTree,
                     virtualBufferCache, i == 0 ? true : false);
             memoryComponents.add(mutableComponent);
@@ -152,8 +152,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         }
 
         if (flushOnExit) {
-            BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
-                    ioOpCallback);
+            BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(ioOpCallback);
             ILSMIndexAccessor accessor = createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             accessor.scheduleFlush(cb);
             try {

@@ -66,9 +66,16 @@ public class LSMRTreeUtils {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            ILinearizeComparatorFactory linearizeCmpFactory) throws TreeIndexException {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] buddyBTreeFields) throws TreeIndexException {
+
+        ITypeTraits[] btreeTypeTraits = new ITypeTraits[buddyBTreeFields.length];
+        for (int i = 0; i < btreeTypeTraits.length; i++) {
+            btreeTypeTraits[i] = typeTraits[buddyBTreeFields[i]];
+        }
+
         LSMTypeAwareTupleWriterFactory rtreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, false);
-        LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(typeTraits, true);
+        LSMTypeAwareTupleWriterFactory btreeTupleWriterFactory = new LSMTypeAwareTupleWriterFactory(btreeTypeTraits,
+                true);
 
         ITreeIndexFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(rtreeTupleWriterFactory,
                 valueProviderFactories, rtreePolicyType);
@@ -87,7 +94,7 @@ public class LSMRTreeUtils {
                 typeTraits.length);
         TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(diskBufferCache, diskFileMapProvider,
                 freePageManagerFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories,
-                typeTraits.length);
+                btreeTypeTraits.length);
 
         int[] comparatorFields = { 0 };
         IBinaryComparatorFactory[] linearizerArray = { linearizeCmpFactory };
@@ -105,7 +112,7 @@ public class LSMRTreeUtils {
                 btreeInteriorFrameFactory, btreeLeafFrameFactory, fileNameManager, diskRTreeFactory, diskBTreeFactory,
                 bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider, typeTraits.length,
                 rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields, linearizerArray,
-                mergePolicy, opTracker, ioScheduler, ioOpCallback);
+                mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields);
         return lsmTree;
     }
 
