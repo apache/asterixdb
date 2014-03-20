@@ -57,37 +57,6 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.7.2</version>
-				<executions>
-					<execution>
-						<id>default-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-						<configuration>
-							<forkMode>pertest</forkMode>
-							<argLine>-enableassertions -Xmx1024m -Dfile.encoding=UTF-8
-								-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
-							<includes>
-								<include>**/*TestSuite.java</include>
-								<include>**/*Test.java</include>
-							</includes>
-						</configuration>
-					</execution>
-				</executions>
-				<configuration>
-					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx1536m -Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
-					<includes>
-						<include>**/*TestSuite.java</include>
-						<include>**/*Test.java</include>
-					</includes>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>appassembler-maven-plugin</artifactId>
 				<version>1.0</version>
@@ -176,12 +145,6 @@
 			<artifactId>httpcore</artifactId>
 			<version>4.2.2</version>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

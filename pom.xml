@@ -14,28 +14,62 @@
  ! limitations under the License.
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>edu.uci.ics.asterix</groupId>
-	<artifactId>asterix</artifactId>
-	<version>0.8.4-SNAPSHOT</version>
-	<packaging>pom</packaging>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.uci.ics.asterix</groupId>
+  <artifactId>asterix</artifactId>
+  <version>0.8.4-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  
+  <properties>
+    <algebricks.version>0.2.11-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
+    <jvm.extraargs />
+    <skipSlowTests>true</skipSlowTests>
 
-    <properties>
-    	<algebricks.version>0.2.11-SNAPSHOT</algebricks.version>
-    	<hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
-    </properties>
+    <!-- Definition of tests in various categories which may be excluded -->
+    <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
+    <metadata.tests>**/metadata/*Test.java</metadata.tests>
+    <execution.tests>**/ExecutionTest.java</execution.tests>
+    <invalid.tests>**/DmlTest.java</invalid.tests>
+    <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
+    <test.excludes>${optimizer.tests},${metadata.tests},${execution.tests},${invalid.tests}</test.excludes>
+  </properties>
 
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.1</version>
-				<configuration>
-                    <goals>package source:jar javadoc:jar deploy:deploy</goals>
-				</configuration>
-			</plugin>
-		</plugins>
+	  <plugins>
+	    <plugin>
+	      <groupId>org.apache.maven.plugins</groupId>
+	      <artifactId>maven-release-plugin</artifactId>
+	      <version>2.1</version>
+	      <configuration>
+                <goals>package source:jar javadoc:jar deploy:deploy</goals>
+	      </configuration>
+	    </plugin>
+	    <plugin>
+	      <groupId>org.apache.maven.plugins</groupId>
+	      <artifactId>maven-surefire-plugin</artifactId>
+	      <version>2.16</version>
+	      <configuration>
+		<failIfNoTests>false</failIfNoTests>
+		<systemPropertyVariables>
+                  <skipFredSlowTests>true</skipFredSlowTests>
+		</systemPropertyVariables>
+		<forkCount>1</forkCount>
+                <reuseForks>false</reuseForks>
+		<argLine>-enableassertions -Xmx${test.heap.size}m
+		-Dfile.encoding=UTF-8
+		-Djava.util.logging.config.file=${user.home}/logging.properties
+		-Xdebug
+		-Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
+		<includes>
+		  <include>${test.includes}</include>
+		</includes>
+                <excludes>
+                  <exclude>${test.excludes}</exclude>
+                </excludes>
+	      </configuration>
+	    </plugin>
+	  </plugins>
 	</build>
 
 	<scm>
@@ -55,6 +89,30 @@
 	</distributionManagement>
 
     <profiles>
+      <profile>
+        <id>optimizer-tests</id>
+        <properties>
+          <optimizer.tests />
+        </properties>
+      </profile>
+      <profile>
+        <id>metadata-tests</id>
+        <properties>
+          <metadata.tests />
+        </properties>
+      </profile>
+      <profile>
+        <id>execution-tests</id>
+        <properties>
+          <execution.tests />
+        </properties>
+      </profile>
+      <profile>
+        <id>invalid-tests</id>
+        <properties>
+          <invalid.tests />
+        </properties>
+      </profile>
         <profile>
           <id>32bitvm</id>
           <activation>
@@ -80,6 +138,14 @@
             <test.heap.size>3072</test.heap.size>
           </properties>
         </profile>
+
+        <profile>
+          <id>slow</id>
+          <properties>
+            <skipSlowTests>false</skipSlowTests>
+          </properties>
+        </profile>
+
     </profiles>
 
 	<modules>
@@ -152,6 +218,11 @@
 	</repositories>
         <dependencyManagement>
     	<dependencies>
+          <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.1</version>
+          </dependency>
     		<dependency>
     			<groupId>edu.uci.ics.hyracks</groupId>
     			<artifactId>algebricks-compiler</artifactId>

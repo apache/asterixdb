@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.uci.ics.asterix.testframework.xml.CategoryEnum;
 import edu.uci.ics.asterix.testframework.xml.TestCase;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 import edu.uci.ics.asterix.testframework.xml.TestGroup;
@@ -156,9 +157,12 @@ public class TestCaseContext {
         }
 
         private void addContexts(File tsRoot, TestSuite ts, List<TestGroup> tgPath, List<TestCaseContext> tccs) {
+            boolean doSlow = System.getProperty("runSlowAQLTests") != null;
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
-                tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
+                if (doSlow || tc.getCategory() != CategoryEnum.SLOW) {
+                    tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
+                }
             }
             addContexts(tsRoot, ts, tgPath, tg.getTestGroup(), tccs);
         }

@@ -92,12 +92,6 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
 			<version>0.8.4-SNAPSHOT</version>
