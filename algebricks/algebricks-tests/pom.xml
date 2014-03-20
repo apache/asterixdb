@@ -96,31 +96,30 @@
     </pluginManagement>
   </build>
   <dependencies>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>algebricks-compiler</artifactId>
-  	<version>0.2.11-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>junit</groupId>
-  	<artifactId>junit</artifactId>
-  	<version>4.8.1</version>
-  	<scope>test</scope>
-  </dependency>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-control-cc</artifactId>
-  	<version>0.2.11-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-control-nc</artifactId>
-  	<version>0.2.11-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
-  	<artifactId>hyracks-data-std</artifactId>
-  	<version>0.2.11-SNAPSHOT</version>
-  </dependency>
+    <dependency>
+      <!-- Dependency management inherited from top-level hyracks -->
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>edu.uci.ics.hyracks</groupId>
+      <artifactId>algebricks-compiler</artifactId>
+      <version>0.2.11-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.uci.ics.hyracks</groupId>
+      <artifactId>hyracks-control-cc</artifactId>
+      <version>0.2.11-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.uci.ics.hyracks</groupId>
+      <artifactId>hyracks-control-nc</artifactId>
+      <version>0.2.11-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.uci.ics.hyracks</groupId>
+      <artifactId>hyracks-data-std</artifactId>
+      <version>0.2.11-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>
