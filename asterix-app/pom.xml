@@ -8,14 +8,14 @@
 	License for the specific language governing permissions and ! limitations 
 	under the License. ! -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.4-SNAPSHOT</version>
-	</parent>
-	<artifactId>asterix-app</artifactId>
-
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>asterix</artifactId>
+    <groupId>edu.uci.ics.asterix</groupId>
+    <version>0.8.4-SNAPSHOT</version>
+  </parent>
+  <artifactId>asterix-app</artifactId>
+  
 	<build>
 		<plugins>
 			<plugin>
@@ -76,26 +76,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.8</version>
-				<configuration>
-					<!-- doesn't work from m2eclipse, currently <additionalClasspathElements> 
-						<additionalClasspathElement>${basedir}/src/main/resources</additionalClasspathElement> 
-						</additionalClasspathElements> -->
-					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx${test.heap.size}m
-						-Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties
-						-Xdebug
-						-Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
-					<includes>
-						<include>**/*TestSuite.java</include>
-						<include>**/*Test.java</include>
-					</includes>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 
@@ -118,12 +98,6 @@
 			<version>8.0.0.M2</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>

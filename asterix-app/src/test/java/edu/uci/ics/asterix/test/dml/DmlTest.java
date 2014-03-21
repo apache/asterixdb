@@ -21,6 +21,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 
+import org.junit.Test;
+
 import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
 import edu.uci.ics.asterix.api.java.AsterixJavaClient;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -41,6 +43,7 @@ public class DmlTest {
 
     private static final PrintWriter ERR = new PrintWriter(System.err);
 
+    @Test
     public void enlistTest() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         if (outdir.exists()) {

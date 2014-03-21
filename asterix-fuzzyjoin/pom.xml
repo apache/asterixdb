@@ -45,24 +45,14 @@
           <outputDirectory>${basedir}/target</outputDirectory>
         </configuration>
       </plugin>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-surefire-plugin</artifactId>
-	<configuration>
-	  <forkMode>pertest</forkMode>
-	  <argLine>-enableassertions -Xmx1g</argLine>
-	</configuration>
-      </plugin>
     </plugins>
   </build>
 
   <dependencies>
     <dependency>
+      <!-- Dependency management inherited from top-level asterixdb -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.8.1</version>
-      <type>jar</type>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

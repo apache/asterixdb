@@ -135,6 +135,7 @@
 
                <!-- This name is always equal to the name of the test case -->
                <xs:attribute name="name" type="xs:string" use="required"/>
+
             </xs:complexType>
          </xs:element>
 
@@ -150,7 +151,23 @@
 
       <xs:attribute name="FilePath" type="test:SimplifiedRelativeFilePath" use="required"/>
       <xs:attribute name="date" type="xs:date" use="required"/>
+      <xs:attribute name="category" type="test:category-enum"/>
    </xs:complexType>
+
+   <!-- category-enum type                                                   -->
+   <!--    Identify which category of test this is. Currently only "slow".   -->
+
+   <xs:simpleType name="category-enum">
+      <xs:annotation>
+         <xs:documentation>
+            Identify the category of test, for limiting when it is run.
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="slow"/>
+      </xs:restriction>
+   </xs:simpleType>
 
    <!-- comparison-enum type                                                 -->
    <!--    Identify the type of comparison used to determine whether an      -->

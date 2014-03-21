@@ -89,7 +89,7 @@ public class FeedUtil {
             return spec;
         }
 
-        JobSpecification altered = new JobSpecification();
+        JobSpecification altered = new JobSpecification(spec.getFrameSize());
         Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
 
         // copy operators
