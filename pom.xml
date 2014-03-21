@@ -157,15 +157,16 @@
 		<module>asterix-runtime</module>
 		<module>asterix-om</module>
 		<module>asterix-aql</module>
-                <module>asterix-external-data</module>
-                <module>asterix-metadata</module>
-                <module>asterix-test-framework</module>
-                <module>asterix-maven-plugins</module>
-                <module>asterix-server</module>
-                <module>asterix-installer</module>
-                <module>asterix-events</module>
-                <module>asterix-doc</module>
-                <module>asterix-fuzzyjoin</module>
+        <module>asterix-external-data</module>
+        <module>asterix-examples</module>
+        <module>asterix-metadata</module>
+        <module>asterix-test-framework</module>
+        <module>asterix-maven-plugins</module>
+        <module>asterix-server</module>
+        <module>asterix-installer</module>
+        <module>asterix-events</module>
+        <module>asterix-doc</module>
+        <module>asterix-fuzzyjoin</module>
         </modules>
 
 	<repositories>
