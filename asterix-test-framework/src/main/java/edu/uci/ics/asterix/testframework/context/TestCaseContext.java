@@ -130,7 +130,9 @@ public class TestCaseContext {
     }
 
     public static class Builder {
+        private final boolean m_doSlow;
         public Builder() {
+            m_doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
         }
 
         public List<TestCaseContext> build(File tsRoot) throws Exception {
@@ -157,10 +159,9 @@ public class TestCaseContext {
         }
 
         private void addContexts(File tsRoot, TestSuite ts, List<TestGroup> tgPath, List<TestCaseContext> tccs) {
-            boolean doSlow = System.getProperty("runSlowAQLTests") != null;
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
-                if (doSlow || tc.getCategory() != CategoryEnum.SLOW) {
+                if (m_doSlow || tc.getCategory() != CategoryEnum.SLOW) {
                     tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
                 }
             }

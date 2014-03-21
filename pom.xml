@@ -24,7 +24,7 @@
     <algebricks.version>0.2.11-SNAPSHOT</algebricks.version>
     <hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
     <jvm.extraargs />
-    <skipSlowTests>true</skipSlowTests>
+    <runSlowAQLTests>false</runSlowAQLTests>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
@@ -59,6 +59,7 @@
 		<argLine>-enableassertions -Xmx${test.heap.size}m
 		-Dfile.encoding=UTF-8
 		-Djava.util.logging.config.file=${user.home}/logging.properties
+                -DrunSlowAQLTests=${runSlowAQLTests}
 		-Xdebug
 		-Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
 		<includes>
@@ -89,6 +90,12 @@
 	</distributionManagement>
 
     <profiles>
+      <profile>
+        <id>slow-aql-tests</id>
+        <properties>
+          <runSlowAQLTests>true</runSlowAQLTests>
+        </properties>
+      </profile>
       <profile>
         <id>optimizer-tests</id>
         <properties>
@@ -136,13 +143,6 @@
           </activation>
           <properties>
             <test.heap.size>3072</test.heap.size>
-          </properties>
-        </profile>
-
-        <profile>
-          <id>slow</id>
-          <properties>
-            <skipSlowTests>false</skipSlowTests>
           </properties>
         </profile>
 
