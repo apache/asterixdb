@@ -31,8 +31,8 @@
     <metadata.tests>**/metadata/*Test.java</metadata.tests>
     <execution.tests>**/ExecutionTest.java</execution.tests>
     <invalid.tests>**/DmlTest.java</invalid.tests>
-    <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
-    <test.excludes>${optimizer.tests},${metadata.tests},${execution.tests},${invalid.tests}</test.excludes>
+    <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
+    <global.test.excludes>${optimizer.tests},${metadata.tests},${execution.tests},${invalid.tests}</global.test.excludes>
   </properties>
 
 	<build>
@@ -63,10 +63,10 @@
 		-Xdebug
 		-Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
 		<includes>
-		  <include>${test.includes}</include>
+		  <include>${global.test.includes},${test.includes}</include>
 		</includes>
                 <excludes>
-                  <exclude>${test.excludes}</exclude>
+                  <exclude>${global.test.excludes},${test.excludes}</exclude>
                 </excludes>
 	      </configuration>
 	    </plugin>
