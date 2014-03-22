@@ -27,8 +27,8 @@
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
-    <test.includes>**/*TestSuite.java,**/*Test.java</test.includes>
-    <test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</test.excludes>
+    <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
+    <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</global.test.excludes>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -69,10 +69,10 @@
 	  -Xdebug
 	  -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n</argLine>
 	  <includes>
-	    <include>${test.includes}</include>
+	    <include>${global.test.includes},${test.includes}</include>
 	  </includes>
           <excludes>
-            <exclude>${test.excludes}</exclude>
+            <exclude>${global.test.excludes},${test.excludes}</exclude>
           </excludes>
 	</configuration>
       </plugin>
