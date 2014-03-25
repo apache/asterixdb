@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -44,8 +43,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -175,12 +172,11 @@ public class TestsUtils {
                             String record = resultParser.getValueAsString();
                             writer.write(record);
                         }
-                    } else {
-                        if (key.equals("summary")) {
-                            String summary = resultParser.nextTextValue();
-                            writer.write(summary);
-                            throw new Exception("Could not find results key in the JSON Object, result file is at " + actualFile);
-                        }
+                    } else if (key.equals("summary")) {
+                        String summary = resultParser.nextTextValue();
+                        writer.write(summary);
+                        throw new Exception("Could not find results key in the JSON Object, result file is at "
+                                + actualFile);
                     }
                 }
             }
