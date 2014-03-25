@@ -160,7 +160,7 @@ public class TestsUtils {
         return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
     }
 
-    public static void writeResultsToFile(File actualFile, InputStream resultStream) throws IOException, JSONException {
+    public static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         try {
             JsonFactory jsonFactory = new JsonFactory();
@@ -176,10 +176,10 @@ public class TestsUtils {
                             writer.write(record);
                         }
                     } else {
-                        String summary = resultParser.getValueAsString();
                         if (key.equals("summary")) {
+                            String summary = resultParser.nextTextValue();
                             writer.write(summary);
-                            throw new JsonMappingException("Could not find results key in the JSON Object");
+                            throw new Exception("Could not find results key in the JSON Object, result file is at " + actualFile);
                         }
                     }
                 }
@@ -377,86 +377,75 @@ public class TestsUtils {
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
                 statement = TestsUtils.readTestFile(testFile);
+                InputStream resultStream;
                 try {
                     switch (ctx.getType()) {
                         case "ddl":
                             TestsUtils.executeDDL(statement);
                             break;
                         case "update":
-
                             //isDmlRecoveryTest: set IP address
                             if (isDmlRecoveryTest && statement.contains("nc1://")) {
                                 statement = statement
                                         .replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
-
                             }
 
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
-                            try {
-                                // isDmlRecoveryTest: insert Crash and Recovery
-                                if (isDmlRecoveryTest) {
-                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
-                                            + "dml_recovery" + File.separator + "kill_cc_and_nc.sh");
-                                    executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator
-                                            + "dml_recovery" + File.separator + "stop_and_start.sh");
-                                }
-
-                                InputStream resultStream = executeQuery(statement);
-                                expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
-
-                                File actualFile = new File(actualPath + File.separator
-                                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                        + cUnit.getName() + ".adm");
-                                TestsUtils.writeResultsToFile(actualFile, resultStream);
-
-                                File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
-                                actualResultFile.getParentFile().mkdirs();
-
-                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                        expectedResultFile, actualFile);
-                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
-                                        + cUnit.getName() + " PASSED ");
-                            } catch (JsonMappingException e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
+                            // isDmlRecoveryTest: insert Crash and Recovery
+                            if (isDmlRecoveryTest) {
+                                executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
+                                        + File.separator + "kill_cc_and_nc.sh");
+                                executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
+                                        + File.separator + "stop_and_start.sh");
                             }
+
+                            resultStream = executeQuery(statement);
+                            if (queryCount >= expectedResultFileCtxs.size()) {
+                                throw new IllegalStateException("no result file for " + testFile.toString());
+                            }
+                            expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
+
+                            File actualFile = new File(actualPath + File.separator
+                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                    + cUnit.getName() + ".adm");
+                            TestsUtils.writeResultsToFile(actualFile, resultStream);
+
+                            File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
+                            actualResultFile.getParentFile().mkdirs();
+
+                            TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                    expectedResultFile, actualFile);
+                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
+                                    + " PASSED ");
+
                             queryCount++;
                             break;
                         case "mgx":
                             executeManagixCommand(statement);
                             break;
                         case "txnqbc": //qbc represents query before crash
-                            try {
-                                InputStream resultStream = executeQuery(statement);
-                                qbcFile = new File(actualPath + File.separator
-                                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                        + cUnit.getName() + "_qbc.adm");
-                                qbcFile.getParentFile().mkdirs();
-                                TestsUtils.writeResultsToFile(qbcFile, resultStream);
-                            } catch (JsonMappingException e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
-                            }
+                            resultStream = executeQuery(statement);
+                            qbcFile = new File(actualPath + File.separator
+                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                    + cUnit.getName() + "_qbc.adm");
+                            qbcFile.getParentFile().mkdirs();
+                            TestsUtils.writeResultsToFile(qbcFile, resultStream);
                             break;
                         case "txnqar": //qar represents query after recovery
-                            try {
+                            resultStream = executeQuery(statement);
+                            qarFile = new File(actualPath + File.separator
+                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
+                                    + cUnit.getName() + "_qar.adm");
+                            qarFile.getParentFile().mkdirs();
+                            TestsUtils.writeResultsToFile(qarFile, resultStream);
 
-                                InputStream resultStream = executeQuery(statement);
+                            TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
+                                    qbcFile, qarFile);
 
-                                qarFile = new File(actualPath + File.separator
-                                        + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                        + cUnit.getName() + "_qar.adm");
-                                qarFile.getParentFile().mkdirs();
-                                TestsUtils.writeResultsToFile(qarFile, resultStream);
-
-                                TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                        qbcFile, qarFile);
-
-                                LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
-                                        + cUnit.getName() + " PASSED ");
-                            } catch (JsonMappingException e) {
-                                throw new Exception("Test \"" + testFile + "\" FAILED!\n");
-                            }
+                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
+                                    + cUnit.getName() + " PASSED ");
                             break;
                         case "txneu": //eu represents erroneous update
                             try {
@@ -502,5 +491,4 @@ public class TestsUtils {
             }
         }
     }
-
 }
