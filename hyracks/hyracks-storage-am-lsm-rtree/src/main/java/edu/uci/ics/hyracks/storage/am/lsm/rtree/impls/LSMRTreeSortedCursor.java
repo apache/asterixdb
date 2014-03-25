@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
 public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
@@ -30,11 +31,13 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
     private ILinearizeComparator linearizeCmp;
     private boolean[] depletedRtreeCursors;
     private int foundIn = -1;
+    private PermutingTupleReference btreeTuple;
 
-    public LSMRTreeSortedCursor(ILSMIndexOperationContext opCtx, ILinearizeComparatorFactory linearizer)
+    public LSMRTreeSortedCursor(ILSMIndexOperationContext opCtx, ILinearizeComparatorFactory linearizer, int[] buddyBTreeFields)
             throws HyracksDataException {
         super(opCtx);
         this.linearizeCmp = linearizer.createBinaryComparator();
+        this.btreeTuple = new PermutingTupleReference(buddyBTreeFields);
         reset();
     }
 
@@ -104,11 +107,12 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
                 return false;
 
             boolean killed = false;
+            btreeTuple.reset(frameTuple);
             for (int i = 0; i < foundIn; i++) {
                 try {
                     btreeCursors[i].reset();
-                    btreeRangePredicate.setHighKey(frameTuple, true);
-                    btreeRangePredicate.setLowKey(frameTuple, true);
+                    btreeRangePredicate.setHighKey(btreeTuple, true);
+                    btreeRangePredicate.setLowKey(btreeTuple, true);
                     btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                 } catch (IndexException e) {
                     throw new HyracksDataException(e);
