@@ -74,7 +74,7 @@ public class TestsUtils {
         return path.delete();
     }
 
-    public static void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile,
+    private static void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile,
             File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
                 "UTF-8"));
@@ -157,7 +157,7 @@ public class TestsUtils {
         return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
     }
 
-    public static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
+    private static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         try {
             JsonFactory jsonFactory = new JsonFactory();
@@ -289,7 +289,7 @@ public class TestsUtils {
     // Method that reads a DDL/Update/Query File
     // and returns the contents as a string
     // This string is later passed to REST API for execution.
-    public static String readTestFile(File testFile) throws Exception {
+    private static String readTestFile(File testFile) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(testFile));
         String line = null;
         StringBuilder stringBuilder = new StringBuilder();
@@ -479,9 +479,12 @@ public class TestsUtils {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
+                        e.printStackTrace();
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
+                    } else {
+                        LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
+                                + " failed as expected: " + e.getMessage());
                     }
                 }
             }
