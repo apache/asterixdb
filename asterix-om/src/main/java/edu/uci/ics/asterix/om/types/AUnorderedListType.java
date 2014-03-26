@@ -43,7 +43,7 @@ public class AUnorderedListType extends AbstractCollectionType {
 
     @Override
     public String toString() {
-        return "{ " + itemType + " }";
+        return "{{ " + itemType + " }}";
     }
 
     @Override

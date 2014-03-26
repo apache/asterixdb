@@ -235,7 +235,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
         public String toString() {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < slots.size(); ++i) {
-                sb.append(types.get(i) + " " + slots.get(i) + "\n");
+                sb.append(types.get(i) + " " + TypeUtil.Global.toString(slots.get(i)) + "\n");
             }
             return sb.toString();
         }
