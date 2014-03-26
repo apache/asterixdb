@@ -4994,5 +4994,10 @@
         <output-dir compare="Text">type_promotion_0</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="type_promotion_1">
+        <output-dir compare="Text">type_promotion_1</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
