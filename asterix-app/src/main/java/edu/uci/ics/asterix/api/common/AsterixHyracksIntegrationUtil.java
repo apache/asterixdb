@@ -96,9 +96,9 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static void deinit() throws Exception {
-        nc2.stop();
-        nc1.stop();
-        cc.stop();
+        if (nc2 != null) nc2.stop();
+        if (nc1 != null) nc1.stop();
+        if (cc != null) cc.stop();
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
