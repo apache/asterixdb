@@ -50,6 +50,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
+import edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexer;
 import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexerException;
@@ -66,7 +67,8 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     protected boolean datasetRec;
 
     private int nullableFieldId = 0;
-
+    private ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
+    
     private Queue<ArrayBackedValueStorage> baaosPool = new ArrayDeque<ArrayBackedValueStorage>();
     private Queue<IARecordBuilder> recordBuilderPool = new ArrayDeque<IARecordBuilder>();
     private Queue<IAsterixListBuilder> orderedListBuilderPool = new ArrayDeque<IAsterixListBuilder>();
@@ -141,7 +143,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_DOUBLE_LITERAL: {
-                parseNumericLiteral(ATypeTag.DOUBLE, objectType, out);
+                parseToTarget(ATypeTag.DOUBLE, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_DOUBLE_CONS: {
@@ -149,7 +151,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_FLOAT_LITERAL: {
-                parseNumericLiteral(ATypeTag.FLOAT, objectType, out);
+                parseToTarget(ATypeTag.FLOAT, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_FLOAT_CONS: {
@@ -157,7 +159,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INT8_LITERAL: {
-                parseNumericLiteral(ATypeTag.INT8, objectType, out);
+                parseAndCast(ATypeTag.INT8, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT8_CONS: {
@@ -165,16 +167,19 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INT16_LITERAL: {
-                parseNumericLiteral(ATypeTag.INT16, objectType, out);
+                parseAndCast(ATypeTag.INT16, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT16_CONS: {
                 parseConstructor(ATypeTag.INT16, objectType, out);
                 break;
             }
-            case AdmLexer.TOKEN_INT_LITERAL:
+            case AdmLexer.TOKEN_INT_LITERAL:{
+                parseToTarget(ATypeTag.INT32, objectType, out);
+                break;
+            }
             case AdmLexer.TOKEN_INT32_LITERAL: {
-                parseNumericLiteral(ATypeTag.INT32, objectType, out);
+                parseAndCast(ATypeTag.INT32, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT32_CONS: {
@@ -182,7 +187,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INT64_LITERAL: {
-                parseNumericLiteral(ATypeTag.INT64, objectType, out);
+                parseAndCast(ATypeTag.INT64, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT64_CONS: {
@@ -713,37 +718,66 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         baaosPool.add(tempBaaos);
     }
 
-    private void parseNumericLiteral(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
-            IOException {
-        final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType, out);
-        if (targetTypeTag != null) {
-            switch (targetTypeTag) {
-                case DOUBLE:
-                    aDouble.setValue(Double.parseDouble(admLexer.getLastTokenImage()));
-                    doubleSerde.serialize(aDouble, out);
-                    return;
-                case FLOAT:
-                    aFloat.setValue(Float.parseFloat(admLexer.getLastTokenImage()));
-                    floatSerde.serialize(aFloat, out);
-                    return;
-                case INT8:
-                    parseInt8(admLexer.getLastTokenImage(), out);
-                    return;
-                case INT16:
-                    parseInt16(admLexer.getLastTokenImage(), out);
-                    return;
-                case INT32:
-                    parseInt32(admLexer.getLastTokenImage(), out);
-                    return;
-                case INT64:
-                    parseInt64(admLexer.getLastTokenImage(), out);
-                    return;
-                default: // fall through
-            }
+    private boolean parseNumeric(final ATypeTag typeTag, DataOutput out) throws HyracksDataException,
+            AsterixException {
+        switch (typeTag) {
+            case DOUBLE:
+                aDouble.setValue(Double.parseDouble(admLexer.getLastTokenImage()));
+                doubleSerde.serialize(aDouble, out);
+                return true;
+            case FLOAT:
+                aFloat.setValue(Float.parseFloat(admLexer.getLastTokenImage()));
+                floatSerde.serialize(aFloat, out);
+                return true;
+            case INT8:
+                parseInt8(admLexer.getLastTokenImage(), out);
+                return true;
+            case INT16:
+                parseInt16(admLexer.getLastTokenImage(), out);
+                return true;
+            case INT32:
+                parseInt32(admLexer.getLastTokenImage(), out);
+                return true;
+            case INT64:
+                parseInt64(admLexer.getLastTokenImage(), out);
+                return true;
+            default: // fall through
         }
-        throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
+        return false;
     }
 
+    private void parseToTarget(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
+            IOException {
+        final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType, out);
+        if (targetTypeTag == null || !parseNumeric(targetTypeTag, out)) {
+            throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
+                    + typeTag);
+        }
+    }
+    
+    private void parseAndCast(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException, IOException {
+        final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType, out);
+        DataOutput dataOutput = out;
+        if (targetTypeTag != typeTag) {
+            castBuffer.reset();
+            dataOutput = castBuffer.getDataOutput();
+        }
+
+        if (targetTypeTag == null || !parseNumeric(typeTag, dataOutput)) {
+            throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
+                    + typeTag);
+        }
+
+        if (targetTypeTag != typeTag) {
+            ITypePromoteComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag, targetTypeTag);
+            // the availability if the promote computer should be consistent with the availability of a target type
+            assert promoteComputer != null;
+            // do the promotion; note that the type tag field should be skipped
+            promoteComputer.promote(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                    castBuffer.getLength() - 1, out);
+        }
+    }
+    
     private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException {
         try {
             int token = admLexer.next();

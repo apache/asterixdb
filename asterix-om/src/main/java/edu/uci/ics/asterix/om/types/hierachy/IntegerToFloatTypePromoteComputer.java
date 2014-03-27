@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.asterix.om.types.hierachy;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
 public class IntegerToFloatTypePromoteComputer implements ITypePromoteComputer {
@@ -32,14 +32,14 @@ public class IntegerToFloatTypePromoteComputer implements ITypePromoteComputer {
      * @see edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer#promote(byte[], int, int, edu.uci.ics.hyracks.data.std.api.IMutableValueStorage)
      */
     @Override
-    public void promote(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue)
+    public void promote(byte[] data, int start, int length, DataOutput out)
             throws IOException {
-        storageForPromotedValue.getDataOutput().writeByte(ATypeTag.FLOAT.serialize());
+        out.writeByte(ATypeTag.FLOAT.serialize());
         float val = 0;
         for (int i = 0; i < length; i++) {
             val += (data[start + i] & 0xff) << (8 * (length - 1 - i));
         }
-        FloatSerializerDeserializer.INSTANCE.serialize(val, storageForPromotedValue.getDataOutput());
+        FloatSerializerDeserializer.INSTANCE.serialize(val, out);
 
     }
 
