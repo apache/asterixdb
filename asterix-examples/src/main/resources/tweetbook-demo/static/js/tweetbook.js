@@ -234,9 +234,9 @@ function initDemoUIButtonControls() {
         formData["neLat"] = Math.max(swLat, neLat);
         formData["neLng"] = Math.min(swLng, neLng);
 
-        var build_cherry_mode = "synchronous";
+        var build_tweetbook_mode = "synchronous";
         if ($('#asbox').is(":checked")) {
-            build_cherry_mode = "asynchronous";
+            build_tweetbook_mode = "asynchronous";
         }
 
         var f = buildAQLQueryFromForm(formData);
@@ -246,10 +246,10 @@ function initDemoUIButtonControls() {
             "data" : formData
         };
 
-        if (build_cherry_mode == "synchronous") {
-            A.query(f.val(), cherryQuerySyncCallback, build_cherry_mode);
+        if (build_tweetbook_mode == "synchronous") {
+            A.query(f.val(), tweetbookQuerySyncCallback, build_tweetbook_mode);
         } else {
-            A.query(f.val(), cherryQueryAsyncCallback, build_cherry_mode);
+            A.query(f.val(), tweetbookQueryAsyncCallback, build_tweetbook_mode);
         }
 
         // Clears selection rectangle on query execution, rather than waiting for another clear call.
@@ -408,7 +408,7 @@ function asynchronousQueryGetAPIQueryStatus (handle, handle_id) {
 * On-success callback after async API query
 * @param    {object}    res, a result object containing an opaque result handle to Asterix
 */
-function cherryQueryAsyncCallback(res) {
+function tweetbookQueryAsyncCallback(res) {
 
     // Parse handle, handle id and query from async call result
     var handle_query = APIqueryTracker["query"];
@@ -458,7 +458,7 @@ function cherryQueryAsyncCallback(res) {
                             "results" : res.results
                         };
 
-                        cherryQuerySyncCallback(resultTransform);
+                        tweetbookQuerySyncCallback(resultTransform);
                     }
                 );
             } else {
@@ -467,7 +467,7 @@ function cherryQueryAsyncCallback(res) {
                     "results" : asyncQueryManager[handle_id]["result"].results
                 };
 
-                cherryQuerySyncCallback(resultTransform);
+                tweetbookQuerySyncCallback(resultTransform);
             }
         }
     });
@@ -489,9 +489,9 @@ function cherryQueryAsyncCallback(res) {
 
 /**
 * A spatial data cleaning and mapping call
-* @param    {Object}    res, a result object from a cherry geospatial query
+* @param    {Object}    res, a result object from a tweetbook geospatial query
 */
-function cherryQuerySyncCallback(res) {
+function tweetbookQuerySyncCallback(res) {
     // First, we check if any results came back in.
     // If they didn't, return.
     if (!res.hasOwnProperty("results")) {

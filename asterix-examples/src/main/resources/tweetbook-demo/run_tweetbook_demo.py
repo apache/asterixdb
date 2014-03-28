@@ -1,4 +1,4 @@
-import black_cherry_bootstrap
+import tweetbook_bootstrap
 from urllib2 import URLError, urlopen
 from urllib import urlencode
 from json import loads, dumps
@@ -7,7 +7,7 @@ from bottle import route, run, template, static_file, request
 # Core Routing
 @route('/')
 def jsontest():
-    return template('cherry')
+    return template('tweetbook')
 
 @route('/static/<filename:path>')
 def send_static(filename):
@@ -69,5 +69,5 @@ def run_asterix_ddl():
 def run_asterix_update():
     return (build_response("update", dict(request.query)))
     
-res = black_cherry_bootstrap.bootstrap()
+res = tweetbook_bootstrap.bootstrap()
 run(host='localhost', port=8080, debug=True)

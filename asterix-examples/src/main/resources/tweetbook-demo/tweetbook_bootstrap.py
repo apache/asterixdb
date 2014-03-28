@@ -11,7 +11,7 @@ def bootstrap():
 
     # First, let's get the path to this script, we'll need it to configure the demo.
     base = os.path.dirname(os.path.realpath(__file__))
-    print "Running Black Cherry from",base
+    print "Running Tweetbook Demo from",base
 
     # First, we bootstrap our request query
     print "Preparing Dataset..."

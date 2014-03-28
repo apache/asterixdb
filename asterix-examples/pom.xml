@@ -16,4 +16,40 @@
 		<version>0.8.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-examples</artifactId>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
+				<executions>
+					<execution>
+						<id>adm101-demo-binary-assembly</id>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<finalName>adm101-demo</finalName>
+							<descriptor>src/main/assembly/adm101-demo-binary-assembly.xml</descriptor>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>tweetbook-demo-binary-assembly</id>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<finalName>tweetbook-demo</finalName>
+							<descriptor>src/main/assembly/tweetbook-demo-binary-assembly.xml</descriptor>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<packaging>pom</packaging>
 </project> 

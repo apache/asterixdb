@@ -18,7 +18,7 @@
   <script src="static/js/bootstrap.min.js"></script>
   <script src="static/js/asterix-sdk-stable.js"></script>
   <script src="static/js/rainbowvis.js"></script>
-  <script src="static/js/cherry.js"></script>
+  <script src="static/js/tweetbook.js"></script>
 
   <style type="text/css">
 
@@ -81,9 +81,9 @@
       <div class="container">
         <!-- Welcome Message -->
         <div class="row">
-          <p>Welcome to the top-level page of the mysteriously named Black Cherry Demo of AsterixDB.  The purpose of this demo is to illustrate how a "cool application" can be built using the JavaScript SDK of AsterixDB and to exercise all of the AsterixDB HTTP APIs.  If you are building an app of your own, reading the code for this app is a great way to get acquainted with what you'll need to know.</p>
+          <p>Welcome to the top-level page of the Tweetbook Demo of AsterixDB.  The purpose of this demo is to illustrate how a "cool application" can be built using the JavaScript SDK of AsterixDB and to exercise all of the AsterixDB HTTP APIs.  If you are building an app of your own, reading the code for this app is a great way to get acquainted with what you'll need to know.</p>
 
-          <p>In this demo, which is based on spatial analysis of Tweets (it is 2013, afterall), you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Let's walk through the demo.</p>
+          <p>In this demo, which is based on spatial analysis of Tweets, you will see how to formulate aggregate queries and drill-down queries using the query door of the AsterixDB API.  You will see how to do this either synchronously or asynchronously (for larger queries whose results may take a while to cook).  You will also see how to create and drop datasets (to manage Tweetbooks, notebooks with user commentary on Tweets) and how to perform inserts and deletes (to add/remove Tweetbook entries). Let's walk through the demo.</p>
         </div>
         
         <hr/>
