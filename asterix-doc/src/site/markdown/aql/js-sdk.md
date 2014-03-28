@@ -1,10 +1,9 @@
 # AsterixDB Javascript SDK #
 
 ## Obtaining and Including ##
-[Download](../download/asterix-sdk-stable.js) the javascript SDK.
-
-The AsterixDB javascript SDK can be included (like any other javascript library)
-by adding the following line in the appropriate HTML file:
+[Download](../download/asterix-sdk-stable.js) the javascript SDK and include it
+like any other javascript library by adding the following line in the
+appropriate HTML file:
 
 	<script src="path/to/asterix-sdk-stable.js"></script>
 
