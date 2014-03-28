@@ -83,13 +83,10 @@ class AListCaster {
                     .getStartOffset()]);
             if (reqItemType == null || reqItemType.getTypeTag().equals(ATypeTag.ANY)) {
                 itemVisitorArg.second = DefaultOpenFieldType.getDefaultOpenFieldType(typeTag);
-                item.accept(visitor, itemVisitorArg);
             } else {
-                if (typeTag != reqItemType.getTypeTag())
-                    throw new AsterixException("mismatched item type");
                 itemVisitorArg.second = reqItemType;
-                item.accept(visitor, itemVisitorArg);
             }
+            item.accept(visitor, itemVisitorArg);
             if (reqType.getTypeTag().equals(ATypeTag.ORDEREDLIST)) {
                 orderedListBuilder.addItem(itemVisitorArg.first);
             }

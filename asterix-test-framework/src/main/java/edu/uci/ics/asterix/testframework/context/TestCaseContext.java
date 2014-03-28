@@ -60,66 +60,47 @@ public class TestCaseContext {
         return testCase;
     }
 
-    public List<TestFileContext> getTestFiles(CompilationUnit cUnit) {
+    public List<TestFileContext> getFilesInDir(String basePath, String dirName, boolean withType) {
         List<TestFileContext> testFileCtxs = new ArrayList<TestFileContext>();
 
         File path = tsRoot;
-        path = new File(path, testSuite.getQueryOffsetPath());
+        path = new File(path, basePath);
         path = new File(path, testCase.getFilePath());
-        path = new File(path, cUnit.getName());
+        path = new File(path, dirName);
 
-        String fileNames[] = path.list();
-        for (String fName : fileNames) {
-            if (fName.startsWith(".")) {
-                continue;
+        if (path.isDirectory()) {
+            String fileNames[] = path.list();
+            for (String fName : fileNames) {
+                if (fName.startsWith(".")) {
+                    continue;
+                }
+
+                File testFile = new File(path, fName);
+                TestFileContext tfsc = new TestFileContext(testFile);
+                String[] nameSplits = fName.split("\\.");
+                if (nameSplits.length < 3) {
+                    throw new IllegalArgumentException("Test file '" + dirName + File.separatorChar + fName
+                            + "' does not have the proper test file name format.");
+                }
+                if (withType) {
+                    tfsc.setSeqNum(nameSplits[nameSplits.length - 3]);
+                    tfsc.setType(nameSplits[nameSplits.length - 2]);
+                } else {
+                    tfsc.setSeqNum(nameSplits[nameSplits.length - 2]);
+                }
+                testFileCtxs.add(tfsc);
             }
-            
-            File testFile = new File(path, fName);
-            TestFileContext tfsc = new TestFileContext(testFile);
-            String[] nameSplits = fName.split("\\.");
-            if (nameSplits.length < 3) {
-                throw new IllegalArgumentException("Test file '" + cUnit.getName() + File.separatorChar
-                        + fName + "' does not have the proper test file name format.");
-            }
-            tfsc.setSeqNum(nameSplits[nameSplits.length - 3]);
-            tfsc.setType(nameSplits[nameSplits.length - 2]);
-            testFileCtxs.add(tfsc);
         }
         Collections.sort(testFileCtxs);
         return testFileCtxs;
     }
 
+    public List<TestFileContext> getTestFiles(CompilationUnit cUnit) {
+        return getFilesInDir(testSuite.getQueryOffsetPath(), cUnit.getName(), true);
+    }
+
     public List<TestFileContext> getExpectedResultFiles(CompilationUnit cUnit) {
-        List<TestFileContext> resultFileCtxs = new ArrayList<TestFileContext>();
-
-        File path = tsRoot;
-        path = new File(path, testSuite.getResultOffsetPath());
-        path = new File(path, testCase.getFilePath());
-        path = new File(path, cUnit.getOutputDir().getValue());
-
-        String fileNames[] = path.list();
-
-        if (fileNames != null) {
-            for (String fName : fileNames) {
-                if (fName.startsWith(".")) {
-                    continue;
-                }
-                
-                File testFile = new File(path, fName);
-                TestFileContext tfsc = new TestFileContext(testFile);
-                String[] nameSplits = fName.split("\\.");
-                
-                if (nameSplits.length < 3) {
-                    throw new IllegalArgumentException("Test file '" + cUnit.getName() + File.separatorChar
-                            + fName + "' does not have the proper test file name format.");
-                }
-                
-                tfsc.setSeqNum(nameSplits[nameSplits.length - 2]);
-                resultFileCtxs.add(tfsc);
-            }
-            Collections.sort(resultFileCtxs);
-        }
-        return resultFileCtxs;
+        return getFilesInDir(testSuite.getResultOffsetPath(), cUnit.getOutputDir().getValue(), false);
     }
 
     public File getActualResultFile(CompilationUnit cUnit, File actualResultsBase) {
@@ -130,7 +111,9 @@ public class TestCaseContext {
     }
 
     public static class Builder {
+        private final boolean m_doSlow;
         public Builder() {
+            m_doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
         }
 
         public List<TestCaseContext> build(File tsRoot) throws Exception {
@@ -157,10 +140,9 @@ public class TestCaseContext {
         }
 
         private void addContexts(File tsRoot, TestSuite ts, List<TestGroup> tgPath, List<TestCaseContext> tccs) {
-            boolean doSlow = System.getProperty("runSlowAQLTests") != null;
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
-                if (doSlow || tc.getCategory() != CategoryEnum.SLOW) {
+                if (m_doSlow || tc.getCategory() != CategoryEnum.SLOW) {
                     tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
                 }
             }
