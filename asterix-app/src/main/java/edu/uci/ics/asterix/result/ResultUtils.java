@@ -21,6 +21,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,6 +37,24 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
+    static Map<Character, String> HTML_ENTITIES = new HashMap<Character, String>();
+    
+    static {
+        HTML_ENTITIES.put('"', "&quot;");
+        HTML_ENTITIES.put('&', "&amp;");
+        HTML_ENTITIES.put('<', "&lt;");
+        HTML_ENTITIES.put('>', "&gt;");
+    }
+    
+    public static String escapeHTML(String s) {        
+        for (Character c : HTML_ENTITIES.keySet()) {
+            if (s.indexOf(c) >= 0) {
+                s = s.replace(c.toString(), HTML_ENTITIES.get(c));
+            }
+        }
+        return s;
+    }
+
     public static void getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta, JSONArray resultRecords)
             throws HyracksDataException {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
@@ -90,11 +110,11 @@ public class ResultUtils {
     public static void webUIErrorHandler(PrintWriter out, Exception e) {
         String errorTemplate = readTemplateFile("/webui/errortemplate.html", "%s\n%s\n%s");
 
-        String errorOutput = String.format(errorTemplate, extractErrorMessage(e), extractErrorSummary(e),
-                extractFullStackTrace(e));
+        String errorOutput = String.format(errorTemplate, escapeHTML(extractErrorMessage(e)),
+                escapeHTML(extractErrorSummary(e)), escapeHTML(extractFullStackTrace(e)));
         out.println(errorOutput);
     }
-
+    
     public static void webUIParseExceptionHandler(PrintWriter out, Throwable e, String query) {
         String errorTemplate = readTemplateFile("/webui/errortemplate_message.html", "<pre class=\"error\">%s\n</pre>");
 

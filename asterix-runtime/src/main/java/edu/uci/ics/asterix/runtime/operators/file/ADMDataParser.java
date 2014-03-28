@@ -77,12 +77,57 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     private String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
     private String mismatchErrorMessage2 = " got a value of type ";
 
+    static class ParseException extends AsterixException {
+        private static final long serialVersionUID = 1L;
+        private int line = -1;
+        private int column = -1;
+
+        public ParseException(String message) {
+            super(message);
+        }
+
+        public ParseException(Throwable cause) {
+            super(cause);
+        }
+
+        public ParseException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+        public ParseException(Throwable cause, int line, int column) {
+            super(cause);
+            setLocation(line, column);
+        }
+        
+        public void setLocation(int line, int column) {
+            this.line = line;
+            this.column = column;
+        }
+        
+        public String getMessage() {
+            StringBuilder msg = new StringBuilder("Parse error");
+            if (line >= 0) {
+                if (column >= 0) {
+                    msg.append(" at (" + line + ", " + column + ")");
+                } else {
+                    msg.append(" in line " + line);
+                }
+            }
+            return msg.append(": " + super.getMessage()).toString();
+        }
+    }
+    
     @Override
     public boolean parse(DataOutput out) throws AsterixException {
         try {
             return parseAdmInstance((IAType) recordType, datasetRec, out);
-        } catch (IOException | AdmLexerException e) {
+        } catch (IOException e) {            
+            throw new ParseException(e, admLexer.getLine(), admLexer.getColumn());
+        } catch (AdmLexerException e) {
             throw new AsterixException(e);
+        } catch (ParseException e) {
+            e.setLocation(admLexer.getLine(), admLexer.getColumn());
+            throw e;
         }
     }
 
@@ -93,7 +138,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         try {
             admLexer = new AdmLexer(new java.io.InputStreamReader(in));
         } catch (IOException e) {
-            throw new AsterixException(e);
+            throw new ParseException(e);
         }
     }
 
@@ -116,14 +161,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 if (checkType(ATypeTag.NULL, objectType, out)) {
                     nullSerde.serialize(ANull.NULL, out);
                 } else
-                    throw new AsterixException(" This field can not be null ");
+                    throw new ParseException("This field can not be null");
                 break;
             }
             case AdmLexer.TOKEN_TRUE_LITERAL: {
                 if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
                     booleanSerde.serialize(ABoolean.TRUE, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
             case AdmLexer.TOKEN_BOOLEAN_CONS: {
@@ -134,7 +179,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
                     booleanSerde.serialize(ABoolean.FALSE, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
             case AdmLexer.TOKEN_DOUBLE_LITERAL: {
@@ -195,7 +240,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                             admLexer.getLastTokenImage().length() - 1));
                     stringSerde.serialize(aString, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
             case AdmLexer.TOKEN_STRING_CONS: {
@@ -226,7 +271,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                         }
                     }
                 }
-                throw new AsterixException("Wrong interval data parsing for date interval.");
+                throw new ParseException("Wrong interval data parsing for date interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_TIME_CONS: {
                 if (checkType(ATypeTag.INTERVAL, objectType, out)) {
@@ -240,7 +285,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                         }
                     }
                 }
-                throw new AsterixException("Wrong interval data parsing for time interval.");
+                throw new ParseException("Wrong interval data parsing for time interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_DATETIME_CONS: {
                 if (checkType(ATypeTag.INTERVAL, objectType, out)) {
@@ -254,7 +299,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                         }
                     }
                 }
-                throw new AsterixException("Wrong interval data parsing for datetime interval.");
+                throw new ParseException("Wrong interval data parsing for datetime interval.");
             }
             case AdmLexer.TOKEN_DURATION_CONS: {
                 parseConstructor(ATypeTag.DURATION, objectType, out);
@@ -297,7 +342,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
 
@@ -306,7 +351,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
             case AdmLexer.TOKEN_START_RECORD: {
@@ -314,14 +359,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
                     parseRecord((ARecordType) objectType, out, datasetRec);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
             case AdmLexer.TOKEN_EOF: {
                 break;
             }
             default: {
-                throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
+                throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
             }
         }
     }
@@ -401,7 +446,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             switch (token) {
                 case AdmLexer.TOKEN_END_RECORD: {
                     if (expectingRecordField) {
-                        throw new AsterixException("Found END_RECORD while expecting a record field.");
+                        throw new ParseException("Found END_RECORD while expecting a record field.");
                     }
                     inRecord = false;
                     break;
@@ -418,7 +463,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                                 admLexer.getLastTokenImage().length() - 1);
                         fieldId = recBuilder.getFieldId(fldName);
                         if (fieldId < 0 && !recType.isOpen()) {
-                            throw new AsterixException("This record is closed, you can not add extra fields !!");
+                            throw new ParseException("This record is closed, you can not add extra fields !!");
                         } else if (fieldId < 0 && recType.isOpen()) {
                             aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
                                     admLexer.getLastTokenImage().length() - 1));
@@ -441,7 +486,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
                     token = admLexer.next();
                     if (token != AdmLexer.TOKEN_COLON) {
-                        throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
+                        throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
                                 + " while expecting \":\".");
                     }
 
@@ -464,16 +509,16 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 }
                 case AdmLexer.TOKEN_COMMA: {
                     if (first) {
-                        throw new AsterixException("Found COMMA before any record field.");
+                        throw new ParseException("Found COMMA before any record field.");
                     }
                     if (expectingRecordField) {
-                        throw new AsterixException("Found COMMA while expecting a record field.");
+                        throw new ParseException("Found COMMA while expecting a record field.");
                     }
                     expectingRecordField = true;
                     break;
                 }
                 default: {
-                    throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
+                    throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
                             + " while parsing record fields.");
                 }
             }
@@ -483,7 +528,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         if (recType != null) {
             nullableFieldId = checkNullConstraints(recType, nulls);
             if (nullableFieldId != -1)
-                throw new AsterixException("Field " + nullableFieldId + " can not be null");
+                throw new ParseException("Field " + nullableFieldId + " can not be null");
         }
         recBuilder.write(out, true);
         returnRecordBuilder(recBuilder);
@@ -531,15 +576,15 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             token = admLexer.next();
             if (token == AdmLexer.TOKEN_END_ORDERED_LIST) {
                 if (expectingListItem) {
-                    throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+                    throw new ParseException("Found END_COLLECTION while expecting a list item.");
                 }
                 inList = false;
             } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
-                    throw new AsterixException("Found COMMA before any list item.");
+                    throw new ParseException("Found COMMA before any list item.");
                 }
                 if (expectingListItem) {
-                    throw new AsterixException("Found COMMA while expecting a list item.");
+                    throw new ParseException("Found COMMA while expecting a list item.");
                 }
                 expectingListItem = true;
             } else {
@@ -576,19 +621,19 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             if (token == AdmLexer.TOKEN_END_RECORD) {
                 if (admLexer.next() == AdmLexer.TOKEN_END_RECORD) {
                     if (expectingListItem) {
-                        throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+                        throw new ParseException("Found END_COLLECTION while expecting a list item.");
                     } else {
                         inList = false;
                     }
                 } else {
-                    throw new AsterixException("Found END_RECORD while expecting a list item.");
+                    throw new ParseException("Found END_RECORD while expecting a list item.");
                 }
             } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
-                    throw new AsterixException("Found COMMA before any list item.");
+                    throw new ParseException("Found COMMA before any list item.");
                 }
                 if (expectingListItem) {
-                    throw new AsterixException("Found COMMA while expecting a list item.");
+                    throw new ParseException("Found COMMA while expecting a list item.");
                 }
                 expectingListItem = true;
             } else {
@@ -657,7 +702,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
-            throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
                     + typeTag);
         }
     }
@@ -672,7 +717,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         }
 
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), typeTag, dataOutput)) {
-            throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
                     + typeTag);
         }
 
@@ -702,7 +747,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     final String unquoted = admLexer.getLastTokenImage().substring(1,
                             admLexer.getLastTokenImage().length() - 1);
                     if (!parseValue(unquoted, typeTag, dataOutput)) {
-                        throw new AsterixException("Missing deserializer method for constructor: "
+                        throw new ParseException("Missing deserializer method for constructor: "
                                 + AdmLexer.tokenKindToString(token) + ".");
                     }
                     token = admLexer.next();
@@ -721,7 +766,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 }
             }
         }
-        throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
+        throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
     }
 
     private boolean parseValue(final String unquoted, ATypeTag typeTag, DataOutput out) throws AsterixException,
@@ -802,7 +847,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         else if (bool.equals("false"))
             booleanSerde.serialize(ABoolean.FALSE, out);
         else
-            throw new AsterixException(errorMessage);
+            throw new ParseException(errorMessage);
     }
 
     private void parseInt8(String int8, DataOutput out) throws AsterixException, HyracksDataException {
@@ -823,10 +868,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             else if (int8.charAt(offset) == 'i' && int8.charAt(offset + 1) == '8' && offset + 2 == int8.length())
                 break;
             else
-                throw new AsterixException(errorMessage);
+                throw new ParseException(errorMessage);
         }
         if (value < 0)
-            throw new AsterixException(errorMessage);
+            throw new ParseException(errorMessage);
         if (value > 0 && !positive)
             value *= -1;
         aInt8.setValue(value);
@@ -852,10 +897,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     && offset + 3 == int16.length())
                 break;
             else
-                throw new AsterixException(errorMessage);
+                throw new ParseException(errorMessage);
         }
         if (value < 0)
-            throw new AsterixException(errorMessage);
+            throw new ParseException(errorMessage);
         if (value > 0 && !positive)
             value *= -1;
         aInt16.setValue(value);
@@ -881,10 +926,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     && offset + 3 == int32.length())
                 break;
             else
-                throw new AsterixException(errorMessage);
+                throw new ParseException(errorMessage);
         }
         if (value < 0)
-            throw new AsterixException(errorMessage);
+            throw new ParseException(errorMessage);
         if (value > 0 && !positive)
             value *= -1;
 
@@ -911,10 +956,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     && offset + 3 == int64.length())
                 break;
             else
-                throw new AsterixException(errorMessage);
+                throw new ParseException(errorMessage);
         }
         if (value < 0)
-            throw new AsterixException(errorMessage);
+            throw new ParseException(errorMessage);
         if (value > 0 && !positive)
             value *= -1;
 
