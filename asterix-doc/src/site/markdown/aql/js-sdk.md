@@ -8,8 +8,14 @@ appropriate HTML file:
 	<script src="path/to/asterix-sdk-stable.js"></script>
 
 ## Interactive Demos
-- Cherry demo
-- All of the examples in following section can be viewed by running the interactive demo.
+There are two interactive demos that are available for download. Both of the
+demos illustrate how the javascript API would be used in an application:
+
+* [Tweetbook Demo](../download/tweetbook-demo.zip): a contrived geo-spatial
+  application dealing with artificial Tweets allowing spatial, temporal, and
+  keyword-based filtering.
+* [ADM/AQL 101 Demo](../download/admaql101-demo.zip): an interactive version of
+  all of the examples that are provided in the following section.
 
 ## The javascript SDK: by example ##
 In this section, we explore how to form AQL queries using the javascript SDK. The queries from

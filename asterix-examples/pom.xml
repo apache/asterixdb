@@ -24,11 +24,11 @@
 				<version>2.2-beta-5</version>
 				<executions>
 					<execution>
-						<id>adm101-demo-binary-assembly</id>
+						<id>admaql101-demo-binary-assembly</id>
 						<configuration>
 							<appendAssemblyId>false</appendAssemblyId>
-							<finalName>adm101-demo</finalName>
-							<descriptor>src/main/assembly/adm101-demo-binary-assembly.xml</descriptor>
+							<finalName>admaql101-demo</finalName>
+							<descriptor>src/main/assembly/admaql101-demo-binary-assembly.xml</descriptor>
 						</configuration>
 						<phase>package</phase>
 						<goals>

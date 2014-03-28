@@ -13,14 +13,14 @@
  ! limitations under the License.
  !-->
 <assembly>
-	<id>adm101-demo-binary-assembly</id>
+	<id>admaql101-demo-binary-assembly</id>
 	<formats>
 		<format>zip</format>
 	</formats>
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
 		<fileSet>
-			<directory>src/main/resources/adm101-demo</directory>
+			<directory>src/main/resources/admaql101-demo</directory>
 			<fileMode>0755</fileMode>
 		</fileSet>
 	</fileSets>

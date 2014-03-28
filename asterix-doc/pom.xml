@@ -57,7 +57,7 @@
 								<resource>
 									<directory>../asterix-examples/target/</directory>
 									<includes>
-										<include>adm101-demo.zip</include>
+										<include>admaql101-demo.zip</include>
 										<include>tweetbook-demo.zip</include>
 									</includes>
 								</resource>
