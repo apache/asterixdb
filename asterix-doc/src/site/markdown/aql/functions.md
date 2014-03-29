@@ -636,6 +636,92 @@ Asterix provides various classes of functions to support operations on numeric, 
 
         { "min_friend_count": 18, "max_friend_count": 445 }
 
+
+### sql-count ###
+ * Syntax:
+
+        sql-count(list)
+
+ * Gets the number of non-null items in the given list.
+ * Arguments:
+    * `list`: An `orderedList` or `unorderedList` containing the items to be counted, or a `null` value.
+ * Return Value:
+    * An `int64` value representing the number of non-null items in the given list. The value `0i64` is returned if the input is `null`.
+
+ * Example:
+
+
+        let $l1 := ['hello', 'world', 1, 2, 3, null]
+        return {"count": sql-count($l1)}
+
+ * The expected result is:
+
+        { "count": 5i64 }
+
+
+### sql-avg ###
+
+ * Syntax:
+
+        sql-avg(num_list)
+
+ * Gets the average value of the non-null items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
+ * Return Value:
+    * A `double` value representing the average of the non-null numbers in the given list. The `null` value is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+
+ * Example:
+
+        let $l := [1.2, 2.3, 3.4, 0, null]
+        return {"avg": sql-avg($l)}
+
+ * The expected result is:
+
+        { "avg": 1.725d }
+
+
+### sql-sum ###
+ * Syntax:
+
+        sql-sum(num_list)
+
+ * Gets the sum of the non-null items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
+ * Return Value:
+    * The sum of the non-null numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+
+ * Example:
+
+        let $l := [1.2, 2.3, 3.4, 0, null]
+        return {"sum": sql-sum($l)}
+
+ * The expected result is:
+
+        { "sum": 6.9d }
+
+
+### sql-min/max ###
+ * Syntax:
+
+        sql-min(num_list), sql-max(num_list)
+
+ * Gets the min/max value of the non-null numeric items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
+ * Return Value:
+    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+
+ * Example:
+
+        let $l := [1.2, 2.3, 3.4, 0, null]
+        return {"min": sql-min($l), "max": sql-max($l)}
+
+ * The expected result is:
+
+        { "min": 0.0d, "max": 3.4d }
+
 ## <a id="SpatialFunctions">Spatial Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### create-point ###
  * Syntax:
@@ -2096,3 +2182,48 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         "hello"
         "world"
+
+### switch-case ###
+ * Syntax:
+
+        switch-case(condition,
+            case1, case1-result,
+            case2, case2-result,
+            ...,
+            default, default-result
+        )
+
+ * Switches amongst a sequence of cases and returns the result of the first matching case. If no match is found, the result of the default case is returned.
+ * Arguments:
+    * `condition`: A variable (any type is allowed).
+    * `caseI/default`: A variable (any type is allowed).
+    * `caseI/default-result`: A variable (any type is allowed).
+ * Return Value:
+    * Returns `caseI-result` if `condition` matches `caseI`, otherwise `default-result`.
+ * Example 1:
+
+        switch-case("a",
+            "a", 0,
+            "x", 1,
+            "y", 2,
+            "z", 3
+        )
+
+
+ * The expected result is:
+
+        0
+
+
+ * Example 2:
+
+        switch-case("a",
+            "x", 1,
+            "y", 2,
+            "z", 3
+        )
+
+
+ * The expected result is:
+
+        3
