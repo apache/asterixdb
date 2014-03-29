@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.asterix.om.types.hierachy;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class IntegerToDoubleTypePromoteComputer implements ITypePromoteComputer {
@@ -29,14 +29,14 @@ public class IntegerToDoubleTypePromoteComputer implements ITypePromoteComputer 
     }
 
     @Override
-    public void promote(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue)
+    public void promote(byte[] data, int start, int length, DataOutput out)
             throws IOException {
-        storageForPromotedValue.getDataOutput().writeByte(ATypeTag.DOUBLE.serialize());
+        out.writeByte(ATypeTag.DOUBLE.serialize());
         long val = 0L;
         for (int i = 0; i < length; i++) {
             val += ((long) (data[start + i] & 0xff)) << (8 * (length - 1 - i));
         }
-        DoubleSerializerDeserializer.INSTANCE.serialize(Double.valueOf(val), storageForPromotedValue.getDataOutput());
+        DoubleSerializerDeserializer.INSTANCE.serialize(Double.valueOf(val), out);
     }
 
 }

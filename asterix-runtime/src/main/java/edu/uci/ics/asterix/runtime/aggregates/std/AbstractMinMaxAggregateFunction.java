@@ -101,7 +101,7 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
                     tempValForCasting.reset();
                     try {
                         tpc.promote(outputVal.getByteArray(), outputVal.getStartOffset() + 1,
-                                outputVal.getLength() - 1, tempValForCasting);
+                                outputVal.getLength() - 1, tempValForCasting.getDataOutput());
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     }
@@ -119,7 +119,7 @@ public abstract class AbstractMinMaxAggregateFunction implements ICopyAggregateF
                     tempValForCasting.reset();
                     try {
                         tpc.promote(inputVal.getByteArray(), inputVal.getStartOffset() + 1, inputVal.getLength() - 1,
-                                tempValForCasting);
+                                tempValForCasting.getDataOutput());
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     }

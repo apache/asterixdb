@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.asterix.om.types.hierachy;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
@@ -33,11 +33,11 @@ public class FloatToDoubleTypePromoteComputer implements ITypePromoteComputer {
      * @see edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer#promote(byte[], int, int, edu.uci.ics.hyracks.data.std.api.IMutableValueStorage)
      */
     @Override
-    public void promote(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue)
+    public void promote(byte[] data, int start, int length, DataOutput out)
             throws IOException {
-        storageForPromotedValue.getDataOutput().writeByte(ATypeTag.DOUBLE.serialize());
+        out.writeByte(ATypeTag.DOUBLE.serialize());
         DoubleSerializerDeserializer.INSTANCE.serialize((double) (FloatSerializerDeserializer.getFloat(data, start)),
-                storageForPromotedValue.getDataOutput());
+                out);
     }
 
 }
