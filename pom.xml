@@ -21,8 +21,8 @@
   <packaging>pom</packaging>
   
   <properties>
-    <algebricks.version>0.2.11-SNAPSHOT</algebricks.version>
-    <hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
+    <algebricks.version>0.2.11</algebricks.version>
+    <hyracks.version>0.2.11</hyracks.version>
     <jvm.extraargs />
     <runSlowAQLTests>false</runSlowAQLTests>
 
