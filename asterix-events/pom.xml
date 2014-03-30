@@ -13,11 +13,11 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.4-SNAPSHOT</version>
+		<version>0.8.4</version>
 	</parent>
 	<groupId>edu.uci.ics.asterix</groupId>
 	<artifactId>asterix-events</artifactId>
-	<version>0.8.4-SNAPSHOT</version>
+	<version>0.8.4</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -187,7 +187,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.4-SNAPSHOT</version>
+			<version>0.8.4</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
