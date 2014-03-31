@@ -112,7 +112,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
                 try {
                     // do the promotion; note that the type tag field should be skipped
                     promoteComputer.promote(accessor.getByteArray(), accessor.getStartOffset() + 1,
-                            accessor.getLength() - 1, castBuffer);
+                            accessor.getLength() - 1, castBuffer.getDataOutput());
                     arg.first.set(castBuffer);
                 } catch (IOException e) {
                     throw new AsterixException(e);

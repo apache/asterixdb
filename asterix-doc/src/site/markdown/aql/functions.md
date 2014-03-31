@@ -21,7 +21,7 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Computes the absolute value of the argument.
  * Arguments:
-    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.
  * Return Value:
     * The absolute value of the argument with the same type as the input argument, or `null` if the argument is a `null` value.
 
@@ -47,7 +47,7 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Computes the smallest (closest to negative infinity) number with no fractional part that is not less than the value of the argument. If the argument is already equal to mathematical integer, then the result is the same as the argument.
  * Arguments:
-    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.
  * Return Value:
     * The ceiling value for the given number in the same type as the input argument, or `null` if the input is `null`.
 
@@ -71,9 +71,9 @@ Asterix provides various classes of functions to support operations on numeric, 
 
         numeric-floor(numeric_expression)
 
- * Computes the largest (closest to positive infinity) number with no fractional part that is not greater than the value. If the argument is already equal to mathematical integer, then the result is the same as the argument. 
+ * Computes the largest (closest to positive infinity) number with no fractional part that is not greater than the value. If the argument is already equal to mathematical integer, then the result is the same as the argument.
  * Arguments:
-    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.
  * Return Value:
     * The floor value for the given number in the same type as the input argument, or `null` if the input is `null`.
 
@@ -97,9 +97,9 @@ Asterix provides various classes of functions to support operations on numeric, 
 
         numeric-round(numeric_expression)
 
- * Computes the number with no fractional part that is closest (and also closest to positive infinity) to the argument. 
+ * Computes the number with no fractional part that is closest (and also closest to positive infinity) to the argument.
  * Arguments:
-    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.  
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.
  * Return Value:
     * The rounded value for the given number in the same type as the input argument, or `null` if the input is `null`.
 
@@ -126,7 +126,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Computes the closest numeric value to `numeric_expression` that is a multiple of ten to the power of minus `precision`. `precision` is optional and by default value `0` is used.
  * Arguments:
     * `numeric_expression`: A `int8`/`int16`/`int32`/`int64`/`float`/`double` value.
-    * `precision`: An optional integer field representing the number of digits in the fraction of the the result   
+    * `precision`: An optional integer field representing the number of digits in the fraction of the the result
  * Return Value:
     * The rounded value for the given number in the same type as the input argument, or `null` if the input is `null`.
 
@@ -174,7 +174,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $s := "Hello ASTERIX!"
         let $l := string-to-codepoint($s)
         let $ss := codepoint-to-string($l)
@@ -201,7 +201,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where contains($i.message, "phone")
         return {"mid": $i.message-id, "message": $i.message}
@@ -229,7 +229,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where like($i.message, "%at&t%")
         return $i.message
@@ -257,7 +257,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where starts-with($i.message, " like")
         return $i.message
@@ -286,7 +286,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where ends-with($i.message, ":)")
         return $i.message
@@ -338,7 +338,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $i := ["ASTERIX", "ROCKS~"]
         return string-join($i, "!! ")
 
@@ -362,7 +362,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $i := "ASTERIX"
         return lowercase($i)
 
@@ -387,7 +387,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where matches($i.message, "dislike iphone")
         return $i.message
@@ -415,7 +415,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where matches($i.message, " like iphone")
         return replace($i.message, " like iphone", "like android")
@@ -440,7 +440,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         return {"mid": $i.message-id, "message-len": string-length($i.message)}
 
@@ -480,7 +480,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where string-length($i.message) > 50
         return substring($i.message, 50)
@@ -506,7 +506,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where contains($i.message, "iphone")
         return substring-before($i.message, "iphone")
@@ -534,7 +534,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookMessages')
         where contains($i.message, "iphone")
         return substring-after($i.message, "iphone")
@@ -549,17 +549,17 @@ Asterix provides various classes of functions to support operations on numeric, 
 ## <a id="AggregateFunctions">Aggregate Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### count ###
  * Syntax:
- 
+
         count(list)
-        
+
  * Gets the number of items in the given list.
  * Arguments:
     * `list`: An `orderedList` or `unorderedList` containing the items to be counted, or a `null` value.
  * Return Value:
     * An `int64` value representing the number of items in the given list. `0i64` is returned if the input is `null`.
-    
+
  * Example:
- 
+
         use dataverse TinySocial;
 
         let $l1 := ['hello', 'world', 1, 2, 3]
@@ -567,74 +567,160 @@ Asterix provides various classes of functions to support operations on numeric, 
         return {"count1": count($l1), "count2": count($l2)}
 
  * The expected result is:
- 
-        { "count1": 5i64, "count2": 4i64 }    
-        
+
+        { "count1": 5i64, "count2": 4i64 }
+
 ### avg ###
  * Syntax:
- 
+
         avg(num_list)
-        
+
  * Gets the average value of the items in the given list.
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
  * Return Value:
     * An `double` value representing the average of the numbers in the given list. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
-    
+
  * Example:
- 
+
         use dataverse TinySocial;
 
         let $l := for $i in dataset TwitterUsers return $i.friends_count
         return {"avg_friend_count": avg($l)}
 
  * The expected result is:
- 
-        { "avg_friend_count": 191.5d }   
+
+        { "avg_friend_count": 191.5d }
 
 ### sum ###
  * Syntax:
- 
+
         sum(num_list)
-        
+
  * Gets the sum of the items in the given list.
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
  * Return Value:
     * The sum of the numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
-    
+
  * Example:
- 
+
         use dataverse TinySocial;
 
         let $l := for $i in dataset TwitterUsers return $i.friends_count
         return {"sum_friend_count": sum($l)}
 
  * The expected result is:
- 
-        { "sum_friend_count": 766 }  
-        
+
+        { "sum_friend_count": 766 }
+
 ### min/max ###
  * Syntax:
- 
+
         min(num_list), max(num_list)
-        
+
  * Gets the min/max value of numeric items in the given list.
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
  * Return Value:
     * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
-    
+
  * Example:
- 
+
         use dataverse TinySocial;
 
         let $l := for $i in dataset TwitterUsers return $i. friends_count
         return {"min_friend_count": min($l), "max_friend_count": max($l)}
 
  * The expected result is:
- 
-        { "min_friend_count": 18, "max_friend_count": 445 }    
+
+        { "min_friend_count": 18, "max_friend_count": 445 }
+
+
+### sql-count ###
+ * Syntax:
+
+        sql-count(list)
+
+ * Gets the number of non-null items in the given list.
+ * Arguments:
+    * `list`: An `orderedList` or `unorderedList` containing the items to be counted, or a `null` value.
+ * Return Value:
+    * An `int64` value representing the number of non-null items in the given list. The value `0i64` is returned if the input is `null`.
+
+ * Example:
+
+
+        let $l1 := ['hello', 'world', 1, 2, 3, null]
+        return {"count": sql-count($l1)}
+
+ * The expected result is:
+
+        { "count": 5i64 }
+
+
+### sql-avg ###
+
+ * Syntax:
+
+        sql-avg(num_list)
+
+ * Gets the average value of the non-null items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
+ * Return Value:
+    * A `double` value representing the average of the non-null numbers in the given list. The `null` value is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+
+ * Example:
+
+        let $l := [1.2, 2.3, 3.4, 0, null]
+        return {"avg": sql-avg($l)}
+
+ * The expected result is:
+
+        { "avg": 1.725d }
+
+
+### sql-sum ###
+ * Syntax:
+
+        sql-sum(num_list)
+
+ * Gets the sum of the non-null items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
+ * Return Value:
+    * The sum of the non-null numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+
+ * Example:
+
+        let $l := [1.2, 2.3, 3.4, 0, null]
+        return {"sum": sql-sum($l)}
+
+ * The expected result is:
+
+        { "sum": 6.9d }
+
+
+### sql-min/max ###
+ * Syntax:
+
+        sql-min(num_list), sql-max(num_list)
+
+ * Gets the min/max value of the non-null numeric items in the given list.
+ * Arguments:
+    * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
+ * Return Value:
+    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+
+ * Example:
+
+        let $l := [1.2, 2.3, 3.4, 0, null]
+        return {"min": sql-min($l), "max": sql-max($l)}
+
+ * The expected result is:
+
+        { "min": 0.0d, "max": 3.4d }
 
 ## <a id="SpatialFunctions">Spatial Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### create-point ###
@@ -652,7 +738,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c :=  create-point(30.0,70.0)
         return {"point": $c}
 
@@ -677,7 +763,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c :=  create-line(create-point(30.0,70.0), create-point(50.0,90.0))
         return {"line": $c}
 
@@ -702,7 +788,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c :=  create-rectangle(create-point(30.0,70.0), create-point(50.0,90.0))
         return {"rectangle": $c}
 
@@ -727,7 +813,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c :=  create-circle(create-point(30.0,70.0), 5.0)
         return {"circle": $c}
 
@@ -744,14 +830,14 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Creates the primitive type `polygon` using the double values provided in the argument `list_expression`. Each two consecutive double values represent a point starting from the first double value in the list. Note that at least six double values should be specified, meaning a total of three points.
  * Arguments:
-   * `list_expression` : An OrderedList of doubles representing the points of the polygon. 
+   * `list_expression` : An OrderedList of doubles representing the points of the polygon.
  * Return Value:
    * A `polygon`, represents a spatial simple polygon created using the points provided in `list_expression`.
 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c :=  create-polygon([1.0,1.0,2.0,2.0,3.0,3.0,4.0,4.0])
         return {"polygon": $c}
 
@@ -775,7 +861,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c := point("55.05,-138.04")
         return {"point": $c}
 
@@ -799,7 +885,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c := line("55.05,-138.04 13.54,-138.04")
         return {"line": $c}
 
@@ -823,7 +909,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c := rectangle("20.05,-125.0 40.67,-100.87")
         return {"rectangle": $c}
 
@@ -847,7 +933,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c := circle("55.05,-138.04 10.0")
         return {"circle": $c}
 
@@ -871,7 +957,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $c := polygon("55.05,-138.04 13.54,-138.04 13.54,-53.31 55.05,-53.31")
         return {"polygon": $c}
 
@@ -895,7 +981,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $point := create-point(2.3,5.0)
         return {"x-coordinate": get-x($point), "y-coordinate": get-y($point)}
 
@@ -919,7 +1005,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $line := create-line(create-point(100.6,99.4), create-point(-72.0,-76.9))
         let $rectangle := create-rectangle(create-point(9.2,49.0), create-point(77.8,111.1))
         let $polygon := create-polygon([1.0,1.0,2.0,2.0,3.0,3.0,4.0,4.0])
@@ -948,10 +1034,10 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $circle := create-circle(create-point(6.0,3.0), 1.0)
         return {"circle-radius": get-radius($circle), "circle-center": get-center($circle)}
-        
+
 
 
  * The expected result is:
@@ -975,11 +1061,11 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $d :=  spatial-distance($t.sender-location, create-point(30.0,70.0))
         return {"point": $t.sender-location, "distance": $d}
-        
+
 
 
  * The expected result is:
@@ -1012,10 +1098,10 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $circleArea := spatial-area(create-circle(create-point(0.0,0.0), 5.0))
         return {"Area":$circleArea}
-        
+
 
 
  * The expected result is:
@@ -1038,7 +1124,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         where spatial-intersect($t.sender-location, create-rectangle(create-point(30.0,70.0), create-point(40.0,80.0)))
         return $t
@@ -1068,7 +1154,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         group by $c :=  spatial-cell($t.sender-location, create-point(20.0,50.0), 5.5, 6.0) with $t
         let $num :=  count($t)
@@ -1110,7 +1196,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset('FacebookUsers')
         let $ed := edit-distance($user.name, "Suzanna Tilson")
         where $ed <= 2
@@ -1144,7 +1230,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset('FacebookUsers')
         let $ed := edit-distance-check($user.name, "Suzanna Tilson", 2)
         where $ed[0]
@@ -1171,7 +1257,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset('FacebookUsers')
         let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
         where $sim >= 0.6f
@@ -1209,7 +1295,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset('FacebookUsers')
         let $sim := similarity-jaccard-check($user.friend-ids, [1,5,9], 0.6f)
         where $sim[0]
@@ -1230,10 +1316,10 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example for Jaccard similarity:
 
         use dataverse TinySocial;
-        
+
         set simfunction "jaccard";
         set simthreshold "0.6f";
-        
+
         for $user in dataset('FacebookUsers')
         where $user.friend-ids ~= [1,5,9]
         return $user
@@ -1254,10 +1340,10 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example for edit-distance similarity:
 
         use dataverse TinySocial;
-        
+
         set simfunction "edit-distance";
         set simthreshold "2";
-        
+
         for $user in dataset('FacebookUsers')
         where $user.name ~= "Suzanna Tilson"
         return $user
@@ -1286,7 +1372,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $tokens := word-tokens($t.message-text)
         where $t.send-time >= datetime('2012-01-01T00:00:00')
@@ -1315,7 +1401,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $tokens := hashed-word-tokens($t.message-text)
         where $t.send-time >= datetime('2012-01-01T00:00:00')
@@ -1343,7 +1429,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $tokens := counthashed-word-tokens($t.message-text)
         where $t.send-time >= datetime('2012-01-01T00:00:00')
@@ -1374,7 +1460,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $tokens := gram-tokens($t.message-text, 3, true)
         where $t.send-time >= datetime('2012-01-01T00:00:00')
@@ -1409,7 +1495,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $tokens := hashed-gram-tokens($t.message-text, 3, true)
         where $t.send-time >= datetime('2012-01-01T00:00:00')
@@ -1446,7 +1532,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset('TweetMessages')
         let $tokens := counthashed-gram-tokens($t.message-text, 3, true)
         where $t.send-time >= datetime('2012-01-01T00:00:00')
@@ -1633,7 +1719,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         let $c2 := datetime("1987-11-19T23:49:23.938")
         let $c3 := time("12:23:34.930+07:00")
         let $c4 := duration("P3Y73M632DT49H743M3948.94S")
-        
+
         return {"year": year($c1), "month": month($c2), "day": day($c1), "hour": hour($c3), "min": minute($c4), "second": second($c2), "ms": millisecond($c4)}
 
 
@@ -1657,7 +1743,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('TweetMessages')
         return {"adjusted-send-time": adjust-datetime-for-timezone($i.send-time, "+08:00"), "message": $i.message-text}
 
@@ -1693,7 +1779,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('TweetMessages')
         return {"adjusted-send-time": adjust-time-for-timezone(time-from-datetime($i.send-time), "+08:00"), "message": $i.message-text}
 
@@ -1729,7 +1815,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
         return {"since-2011": subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")), "since-2011-user-friendly": calendar-duration-from-datetime($i.send-time, subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")))}
@@ -1757,7 +1843,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
         return {"since-2011": subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")),
@@ -1804,7 +1890,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         {"current-date": current-date(),
         "current-time": current-time(),
         "current-datetime": current-datetime()}
@@ -1842,7 +1928,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
         return {"send-date": date-from-datetime($i.send-time), "send-time": time-from-datetime($i.send-time)}
@@ -1891,7 +1977,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         let $d := date-from-unix-time-in-days(15800)
         let $dt := datetime-from-unix-time-in-ms(1365139700000)
         let $t := time-from-unix-time-in-ms(3748)
@@ -1917,7 +2003,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookUser')
         for $j in dataset('FacebookUser')
         where $i.user-since < $j.user-since and $i.user-since > datetime("2012-01-01T00:00:00")
@@ -1946,7 +2032,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookUser')
         for $j in dataset('FacebookUser')
         where $i.user-since < $j.user-since and $i.user-since > datetime("2012-01-01T00:00:00")
@@ -1975,7 +2061,7 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Example:
 
         use dataverse TinySocial;
-        
+
         for $i in dataset('FacebookUser')
         for $j in dataset('FacebookUser')
         where $i.user-since < $j.user-since and $i.user-since > datetime("2011-01-01T00:00:00")
@@ -1992,26 +2078,26 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "id1": 7, "id2": 1, "diff": duration("P13D") }
 
 ### interval-start-from-date/time/datetime ###
- * Syntax:  
-        
+ * Syntax:
+
         interval-start-from-date/time/datetime(date/time/datetime, duration)
-        
+
  * Construct an `interval` value by the given starting `date`/`time`/`datetime` and the `duration` that the interval lasts.
  * Arguments:
     * `date/time/datetime`: a `string` representing a `date`, `time` or `datetime`, or a `date`/`time`/`datetime` value, representing the starting time point.
     * `duration`: a `string` or `duration` value representing the duration of the interval. Note that duration cannot be negative value.
  * Return Value:
-    * An `interval` value representing the interval starting from the given time point with the length of duration. 
-   
+    * An `interval` value representing the interval starting from the given time point with the length of duration.
+
  * Example:
-        
+
         let $itv1 := interval-start-from-date("1984-01-01", "P1Y")
         let $itv2 := interval-start-from-time(time("02:23:28.394"), "PT3H24M")
         let $itv3 := interval-start-from-datetime("1999-09-09T09:09:09.999", duration("P2M30D"))
         return {"interval1": $itv1, "interval2": $itv2, "interval3": $itv3}
-        
+
  * The expectecd result is:
- 
+
         { "interval1": interval-date("1984-01-01, 1985-01-01"), "interval2": interval-time("02:23:28.394Z, 05:47:28.394Z"), "interval3": interval-datetime("1999-09-09T09:09:09.999Z, 1999-12-09T09:09:09.999Z") }
 
 ### get-interval-start, get-interval-end ###
@@ -2034,41 +2120,41 @@ AsterixDB supports queries with different similarity functions, including edit d
  * The expected result is:
 
         { "start": date("1984-01-01"), "end": date("1985-01-01") }
-        
+
 ### interval-bin ###
  * Syntax:
- 
+
         interval-bin(time-to-bin, time-bin-anchor, duration-bin-size)
-        
- * Return the `interval` value representing the bin containing the `time-to-bin` value. 
+
+ * Return the `interval` value representing the bin containing the `time-to-bin` value.
  * Arguments:
     * `time-to-bin`: a date/time/datetime value representing the time to be binned.
     * `time-bin-anchor`: a date/time/datetime value representing an anchor of a bin starts. The type of this argument should be the same as the first `time-to-bin` argument.
-    * `duration-bin-size`: the duration value representing the size of the bin, in the type of `year-month-duration` or `day-time-duration` or `null`. The sub-duration type must be compatible to the arithmetic operations between the type of "time_to_bin" and the sub-duration type must be defined. Specifically, one of the following arithmetic operations should be used:
-       * `datetime` +|- `year-month-duration`
-       * `datetime` +|- `day-time-duration`
-       * `date` +|- `year-month-duration`
-       * `date` +|- `day-time-duration`
-       * `time` +|- `day-time-duration`
+    * `duration-bin-size`: the duration value representing the size of the bin, in the type of year-month-duration or day-time-duration. The type of this duration should be compatible with the type of `time-to-bin`, so that the arithmetic operation between `time-to-bin` and `duration-bin-size` is well-defined. Currently AsterixDB supports the following arithmetic operations:
+        * datetime +|- year-month-duration
+        * datetime +|- day-time-duration
+        * date +|- year-month-duration
+        * date +|- day-time-duration
+        * time +|- day-time-duration
   * Return Value:
     * A `interval` value representing the bin containing the `time-to-bin` value. Note that the internal type of this interval value should be the same as the `time-to-bin` type.
-  
+
   * Example:
-  
+
         let $c1 := date("2010-10-30")
         let $c2 := datetime("-1987-11-19T23:49:23.938")
         let $c3 := time("12:23:34.930+07:00")
-        
+
         return { "bin1": interval-bin($c1, date("1990-01-01"), year-month-duration("P1Y")),
          "bin2": interval-bin($c2, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P6M")),
          "bin3": interval-bin($c3, time("00:00:00"), day-time-duration("PD1M")),
          "bin4": interval-bin($c2, datetime("2013-01-01T00:00:00.000"), day-time-duration("PT24H"))
        }
-                 
+
    * The expected result is:
-   
-        { "bin1": interval-date("2010-01-01, 2011-01-01"), 
-          "bin2": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z"), 
+
+        { "bin1": interval-date("2010-01-01, 2011-01-01"),
+          "bin2": interval-datetime("-1987-07-01T00:00:00.000Z, -1986-01-01T00:00:00.000Z"),
           "bin3": interval-time("05:23:00.000Z, 05:24:00.000Z"),
           "bin4": interval-datetime("-1987-11-19T00:00:00.000Z, -1987-11-20T00:00:00.000Z")}
 
@@ -2096,3 +2182,48 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         "hello"
         "world"
+
+### switch-case ###
+ * Syntax:
+
+        switch-case(condition,
+            case1, case1-result,
+            case2, case2-result,
+            ...,
+            default, default-result
+        )
+
+ * Switches amongst a sequence of cases and returns the result of the first matching case. If no match is found, the result of the default case is returned.
+ * Arguments:
+    * `condition`: A variable (any type is allowed).
+    * `caseI/default`: A variable (any type is allowed).
+    * `caseI/default-result`: A variable (any type is allowed).
+ * Return Value:
+    * Returns `caseI-result` if `condition` matches `caseI`, otherwise `default-result`.
+ * Example 1:
+
+        switch-case("a",
+            "a", 0,
+            "x", 1,
+            "y", 2,
+            "z", 3
+        )
+
+
+ * The expected result is:
+
+        0
+
+
+ * Example 2:
+
+        switch-case("a",
+            "x", 1,
+            "y", 2,
+            "z", 3
+        )
+
+
+ * The expected result is:
+
+        3

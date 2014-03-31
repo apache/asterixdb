@@ -1,0 +1,23 @@
+use dataverse TestDataverse;
+
+insert into dataset TestSet (
+  let $i08 := int8("100")
+  let $i16 := int16("10000")
+  let $i32 := 1000000
+  let $i64 := int64("10000000000")
+  return {
+    "id": 1,
+    "int8_u":  {{  $i08 }},
+    "int8_o":  [   $i08  ],
+    "int16_u": {{  $i08, $i16 }},
+    "int16_o": [   $i08, $i16  ],
+    "int32_u": {{  $i08, $i16, $i32 }},
+    "int32_o": [   $i08, $i16, $i32  ],
+    "int64_u": {{  $i08, $i16, $i32, $i64 }},
+    "int64_o": [   $i08, $i16, $i32, $i64  ],
+    "float_u": {{  $i08, $i16, $i32 }},
+    "float_o": [   $i08, $i16, $i32  ],
+    "double_u": {{ $i08, $i16, $i32, $i64 }},
+    "double_o": [  $i08, $i16, $i32, $i64  ]
+  }
+)

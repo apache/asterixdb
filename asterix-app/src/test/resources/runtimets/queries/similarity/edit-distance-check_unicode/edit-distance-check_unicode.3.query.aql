@@ -1,0 +1,15 @@
+use dataverse test;
+
+let $a := "사랑"
+let $b := "사랑해"
+let $c := "사과"
+
+let $results :=
+[
+  edit-distance-check($a, $b, 1), // TRUE
+  edit-distance-check($b, $a, 1), // TRUE
+  edit-distance-check($b, $c, 1), // FALSE
+  edit-distance-check($c, $b, 2) // TRUE
+]
+for $i in $results
+return $i

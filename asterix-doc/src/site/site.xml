@@ -5,9 +5,9 @@
  ! Licensed under the Apache License, Version 2.0 (the "License");
  ! you may not use this file except in compliance with the License.
  ! you may obtain a copy of the License from
- ! 
+ !
  !     http://www.apache.org/licenses/LICENSE-2.0
- ! 
+ !
  ! Unless required by applicable law or agreed to in writing, software
  ! distributed under the License is distributed on an "AS IS" BASIS,
  ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@
     <src>images/asterixlogo.png</src>
     <href>http://asterixdb.ics.uci.edu/</href>
   </bannerLeft>
-  
+
   <version position="right"/>
 
   <poweredBy>
@@ -60,7 +60,7 @@
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    
+
         ga('create', 'UA-41536543-1', 'uci.edu');
         ga('send', 'pageview');
       </script>
@@ -72,6 +72,7 @@
     <menu name="Documentation">
       <item name="Installing and Managing AsterixDB using Managix" href="install.html"/>
       <item name="AsterixDB 101: An ADM and AQL Primer" href="aql/primer.html"/>
+      <item name="AsterixDB Javascript SDK" href="aql/js-sdk.html"/>
       <item name="Asterix Data Model (ADM)" href="aql/datamodel.html"/>
       <item name="Asterix Query Language (AQL)" href="aql/manual.html"/>
       <item name="AQL Functions" href="aql/functions.html"/>

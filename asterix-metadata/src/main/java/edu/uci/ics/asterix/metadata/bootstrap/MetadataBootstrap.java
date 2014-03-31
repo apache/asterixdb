@@ -398,7 +398,7 @@ public class MetadataBootstrap {
                     runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
                             GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES), opTracker,
                     runtimeContext.getLSMIOScheduler(),
-                    LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback());
+                    LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex());
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
@@ -419,7 +419,7 @@ public class MetadataBootstrap {
                                 .getBloomFilterFalsePositiveRate(), runtimeContext.getMetadataMergePolicyFactory()
                                 .createMergePolicy(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES), opTracker,
                         runtimeContext.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                                .createIOOperationCallback());
+                                .createIOOperationCallback(), index.isPrimaryIndex());
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }

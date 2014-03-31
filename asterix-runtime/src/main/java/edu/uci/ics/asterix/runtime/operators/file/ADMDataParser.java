@@ -50,6 +50,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
+import edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexer;
 import edu.uci.ics.asterix.runtime.operators.file.adm.AdmLexerException;
@@ -66,6 +67,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     protected boolean datasetRec;
 
     private int nullableFieldId = 0;
+    private ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
     private Queue<ArrayBackedValueStorage> baaosPool = new ArrayDeque<ArrayBackedValueStorage>();
     private Queue<IARecordBuilder> recordBuilderPool = new ArrayDeque<IARecordBuilder>();
@@ -73,13 +75,59 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     private Queue<IAsterixListBuilder> unorderedListBuilderPool = new ArrayDeque<IAsterixListBuilder>();
 
     private String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
+    private String mismatchErrorMessage2 = " got a value of type ";
 
+    static class ParseException extends AsterixException {
+        private static final long serialVersionUID = 1L;
+        private int line = -1;
+        private int column = -1;
+
+        public ParseException(String message) {
+            super(message);
+        }
+
+        public ParseException(Throwable cause) {
+            super(cause);
+        }
+
+        public ParseException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+        public ParseException(Throwable cause, int line, int column) {
+            super(cause);
+            setLocation(line, column);
+        }
+        
+        public void setLocation(int line, int column) {
+            this.line = line;
+            this.column = column;
+        }
+        
+        public String getMessage() {
+            StringBuilder msg = new StringBuilder("Parse error");
+            if (line >= 0) {
+                if (column >= 0) {
+                    msg.append(" at (" + line + ", " + column + ")");
+                } else {
+                    msg.append(" in line " + line);
+                }
+            }
+            return msg.append(": " + super.getMessage()).toString();
+        }
+    }
+    
     @Override
-    public boolean parse(DataOutput out) throws HyracksDataException {
+    public boolean parse(DataOutput out) throws AsterixException {
         try {
             return parseAdmInstance((IAType) recordType, datasetRec, out);
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
+        } catch (IOException e) {            
+            throw new ParseException(e, admLexer.getLine(), admLexer.getColumn());
+        } catch (AdmLexerException e) {
+            throw new AsterixException(e);
+        } catch (ParseException e) {
+            e.setLocation(admLexer.getLine(), admLexer.getColumn());
+            throw e;
         }
     }
 
@@ -90,18 +138,13 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         try {
             admLexer = new AdmLexer(new java.io.InputStreamReader(in));
         } catch (IOException e) {
-            throw new AsterixException(e);
+            throw new ParseException(e);
         }
     }
 
     protected boolean parseAdmInstance(IAType objectType, boolean datasetRec, DataOutput out) throws AsterixException,
-            IOException {
-        int token;
-        try {
-            token = admLexer.next();
-        } catch (AdmLexerException e) {
-            throw new AsterixException(e);
-        }
+            IOException, AdmLexerException {
+        int token = admLexer.next();
         if (token == AdmLexer.TOKEN_EOF) {
             return false;
         } else {
@@ -111,21 +154,21 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     }
 
     private void admFromLexerStream(int token, IAType objectType, DataOutput out, Boolean datasetRec)
-            throws AsterixException, IOException {
+            throws AsterixException, IOException, AdmLexerException {
 
         switch (token) {
             case AdmLexer.TOKEN_NULL_LITERAL: {
                 if (checkType(ATypeTag.NULL, objectType, out)) {
                     nullSerde.serialize(ANull.NULL, out);
                 } else
-                    throw new AsterixException(" This field can not be null ");
+                    throw new ParseException("This field can not be null");
                 break;
             }
             case AdmLexer.TOKEN_TRUE_LITERAL: {
                 if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
                     booleanSerde.serialize(ABoolean.TRUE, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
             case AdmLexer.TOKEN_BOOLEAN_CONS: {
@@ -136,15 +179,11 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
                     booleanSerde.serialize(ABoolean.FALSE, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
             case AdmLexer.TOKEN_DOUBLE_LITERAL: {
-                if (checkType(ATypeTag.DOUBLE, objectType, out)) {
-                    aDouble.setValue(Double.parseDouble(admLexer.getLastTokenImage()));
-                    doubleSerde.serialize(aDouble, out);
-                } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                parseToNumericTarget(ATypeTag.DOUBLE, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_DOUBLE_CONS: {
@@ -152,11 +191,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_FLOAT_LITERAL: {
-                if (checkType(ATypeTag.FLOAT, objectType, out)) {
-                    aFloat.setValue(Float.parseFloat(admLexer.getLastTokenImage()));
-                    floatSerde.serialize(aFloat, out);
-                } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                parseToNumericTarget(ATypeTag.FLOAT, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_FLOAT_CONS: {
@@ -164,10 +199,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INT8_LITERAL: {
-                if (checkType(ATypeTag.INT8, objectType, out)) {
-                    parseInt8(admLexer.getLastTokenImage(), out);
-                } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                parseAndCastNumeric(ATypeTag.INT8, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT8_CONS: {
@@ -175,22 +207,19 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INT16_LITERAL: {
-                if (checkType(ATypeTag.INT16, objectType, out)) {
-                    parseInt16(admLexer.getLastTokenImage(), out);
-                } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                parseAndCastNumeric(ATypeTag.INT16, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT16_CONS: {
                 parseConstructor(ATypeTag.INT16, objectType, out);
                 break;
             }
-            case AdmLexer.TOKEN_INT_LITERAL:
+            case AdmLexer.TOKEN_INT_LITERAL: {
+                parseToNumericTarget(ATypeTag.INT32, objectType, out);
+                break;
+            }
             case AdmLexer.TOKEN_INT32_LITERAL: {
-                if (checkType(ATypeTag.INT32, objectType, out)) {
-                    parseInt32(admLexer.getLastTokenImage(), out);
-                } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                parseAndCastNumeric(ATypeTag.INT32, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT32_CONS: {
@@ -198,10 +227,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INT64_LITERAL: {
-                if (checkType(ATypeTag.INT64, objectType, out)) {
-                    parseInt64(admLexer.getLastTokenImage(), out);
-                } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                parseAndCastNumeric(ATypeTag.INT64, objectType, out);
                 break;
             }
             case AdmLexer.TOKEN_INT64_CONS: {
@@ -214,7 +240,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                             admLexer.getLastTokenImage().length() - 1));
                     stringSerde.serialize(aString, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeName());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
                 break;
             }
             case AdmLexer.TOKEN_STRING_CONS: {
@@ -234,58 +260,46 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INTERVAL_DATE_CONS: {
-                try {
-                    if (checkType(ATypeTag.INTERVAL, objectType, out)) {
-                        if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                            if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                                AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
+                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                    if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+                        if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
+                            AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
 
-                                if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
-                                    break;
-                                }
+                            if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                                break;
                             }
                         }
                     }
-                } catch (AdmLexerException ex) {
-                    throw new AsterixException(ex);
                 }
-                throw new AsterixException("Wrong interval data parsing for date interval.");
+                throw new ParseException("Wrong interval data parsing for date interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_TIME_CONS: {
-                try {
-                    if (checkType(ATypeTag.INTERVAL, objectType, out)) {
-                        if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                            if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                                AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
+                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                    if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+                        if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
+                            AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
 
-                                if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
-                                    break;
-                                }
+                            if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                                break;
                             }
                         }
                     }
-                } catch (AdmLexerException ex) {
-                    throw new AsterixException(ex);
                 }
-                throw new AsterixException("Wrong interval data parsing for time interval.");
+                throw new ParseException("Wrong interval data parsing for time interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_DATETIME_CONS: {
-                try {
-                    if (checkType(ATypeTag.INTERVAL, objectType, out)) {
-                        if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                            if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
-                                AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
+                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                    if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
+                        if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
+                            AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
 
-                                if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
-                                    break;
-                                }
+                            if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                                break;
                             }
                         }
                     }
-                } catch (AdmLexerException ex) {
-                    throw new AsterixException(ex);
                 }
-                throw new AsterixException("Wrong interval data parsing for datetime interval.");
+                throw new ParseException("Wrong interval data parsing for datetime interval.");
             }
             case AdmLexer.TOKEN_DURATION_CONS: {
                 parseConstructor(ATypeTag.DURATION, objectType, out);
@@ -328,7 +342,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
 
@@ -337,7 +351,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
             case AdmLexer.TOKEN_START_RECORD: {
@@ -345,53 +359,19 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
                     parseRecord((ARecordType) objectType, out, datasetRec);
                 } else
-                    throw new AsterixException(mismatchErrorMessage + objectType.getTypeTag());
+                    throw new ParseException(mismatchErrorMessage + objectType.getTypeTag());
                 break;
             }
             case AdmLexer.TOKEN_EOF: {
                 break;
             }
             default: {
-                throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
+                throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
             }
         }
     }
 
-    private void parseDatetime(String datetime, DataOutput out) throws AsterixException, IOException {
-        try {
-            ADateTimeSerializerDeserializer.parse(datetime, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parseDuration(String duration, DataOutput out) throws AsterixException {
-        try {
-            ADurationSerializerDeserializer.parse(duration, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-
-    }
-
-    private void parseYearMonthDuration(String duration, DataOutput out) throws AsterixException {
-        try {
-            AYearMonthDurationSerializerDeserializer.INSTANCE.parse(duration, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parseDayTimeDuration(String duration, DataOutput out) throws AsterixException {
-        try {
-            ADayTimeDurationSerializerDeserializer.INSTANCE.parse(duration, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
     private IAType getComplexType(IAType aObjectType, ATypeTag tag) {
-
         if (aObjectType == null) {
             return null;
         }
@@ -400,7 +380,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             return aObjectType;
 
         if (aObjectType.getTypeTag() == ATypeTag.UNION) {
-            unionList = ((AUnionType) aObjectType).getUnionList();
+            List<IAType> unionList = ((AUnionType) aObjectType).getUnionList();
             for (int i = 0; i < unionList.size(); i++)
                 if (unionList.get(i).getTypeTag() == tag) {
                     return unionList.get(i);
@@ -409,34 +389,36 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         return null; // wont get here
     }
 
-    List<IAType> unionList;
-
-    private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType, DataOutput out) throws IOException {
-
-        if (aObjectType == null)
-            return true;
-
+    private ATypeTag getTargetTypeTag(ATypeTag expectedTypeTag, IAType aObjectType) throws IOException {
+        if (aObjectType == null) {
+            return expectedTypeTag;
+        }
         if (aObjectType.getTypeTag() != ATypeTag.UNION) {
-            return ATypeHierarchy.canPromote(expectedTypeTag, aObjectType.getTypeTag());
+            final ATypeTag typeTag = aObjectType.getTypeTag();
+            return ATypeHierarchy.canPromote(expectedTypeTag, typeTag) ? typeTag : null;
         } else { // union
-            unionList = ((AUnionType) aObjectType).getUnionList();
+            List<IAType> unionList = ((AUnionType) aObjectType).getUnionList();
             for (IAType t : unionList) {
-                if (ATypeHierarchy.canPromote(t.getTypeTag(), expectedTypeTag)) {
-                    return true;
+                final ATypeTag typeTag = t.getTypeTag();
+                if (ATypeHierarchy.canPromote(expectedTypeTag, typeTag)) {
+                    return typeTag;
                 }
             }
         }
-        return false;
+        return null;
+    }
+
+    private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType, DataOutput out) throws IOException {
+        return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
     }
 
     private void parseRecord(ARecordType recType, DataOutput out, Boolean datasetRec) throws IOException,
-            AsterixException {
+            AsterixException, AdmLexerException {
 
         ArrayBackedValueStorage fieldValueBuffer = getTempBuffer();
         ArrayBackedValueStorage fieldNameBuffer = getTempBuffer();
         IARecordBuilder recBuilder = getRecordBuilder();
 
-        // Boolean[] nulls = null;
         BitSet nulls = null;
         if (datasetRec) {
             if (recType != null) {
@@ -460,11 +442,11 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         int fieldId = 0;
         IAType fieldType = null;
         do {
-            token = nextToken();
+            token = admLexer.next();
             switch (token) {
                 case AdmLexer.TOKEN_END_RECORD: {
                     if (expectingRecordField) {
-                        throw new AsterixException("Found END_RECORD while expecting a record field.");
+                        throw new ParseException("Found END_RECORD while expecting a record field.");
                     }
                     inRecord = false;
                     break;
@@ -481,7 +463,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                                 admLexer.getLastTokenImage().length() - 1);
                         fieldId = recBuilder.getFieldId(fldName);
                         if (fieldId < 0 && !recType.isOpen()) {
-                            throw new AsterixException("This record is closed, you can not add extra fields !!");
+                            throw new ParseException("This record is closed, you can not add extra fields !!");
                         } else if (fieldId < 0 && recType.isOpen()) {
                             aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
                                     admLexer.getLastTokenImage().length() - 1));
@@ -502,13 +484,13 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                         fieldType = null;
                     }
 
-                    token = nextToken();
+                    token = admLexer.next();
                     if (token != AdmLexer.TOKEN_COLON) {
-                        throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
+                        throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
                                 + " while expecting \":\".");
                     }
 
-                    token = nextToken();
+                    token = admLexer.next();
                     this.admFromLexerStream(token, fieldType, fieldValueBuffer.getDataOutput(), false);
                     if (openRecordField) {
                         if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize())
@@ -527,16 +509,16 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 }
                 case AdmLexer.TOKEN_COMMA: {
                     if (first) {
-                        throw new AsterixException("Found COMMA before any record field.");
+                        throw new ParseException("Found COMMA before any record field.");
                     }
                     if (expectingRecordField) {
-                        throw new AsterixException("Found COMMA while expecting a record field.");
+                        throw new ParseException("Found COMMA while expecting a record field.");
                     }
                     expectingRecordField = true;
                     break;
                 }
                 default: {
-                    throw new AsterixException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
+                    throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token)
                             + " while parsing record fields.");
                 }
             }
@@ -546,7 +528,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         if (recType != null) {
             nullableFieldId = checkNullConstraints(recType, nulls);
             if (nullableFieldId != -1)
-                throw new AsterixException("Field " + nullableFieldId + " can not be null");
+                throw new ParseException("Field " + nullableFieldId + " can not be null");
         }
         recBuilder.write(out, true);
         returnRecordBuilder(recBuilder);
@@ -555,7 +537,6 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
     }
 
     private int checkNullConstraints(ARecordType recType, BitSet nulls) {
-
         boolean isNull = false;
         for (int i = 0; i < recType.getFieldTypes().length; i++)
             if (nulls.get(i) == false) {
@@ -564,7 +545,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                     return i;
 
                 if (type.getTypeTag() == ATypeTag.UNION) { // union
-                    unionList = ((AUnionType) type).getUnionList();
+                    List<IAType> unionList = ((AUnionType) type).getUnionList();
                     for (int j = 0; j < unionList.size(); j++)
                         if (unionList.get(j).getTypeTag() == ATypeTag.NULL) {
                             isNull = true;
@@ -577,8 +558,8 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         return -1;
     }
 
-    private void parseOrderedList(AOrderedListType oltype, DataOutput out) throws IOException, AsterixException {
-
+    private void parseOrderedList(AOrderedListType oltype, DataOutput out) throws IOException, AsterixException,
+            AdmLexerException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
         OrderedListBuilder orderedListBuilder = (OrderedListBuilder) getOrderedListBuilder();
 
@@ -592,18 +573,18 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         boolean expectingListItem = false;
         boolean first = true;
         do {
-            token = nextToken();
+            token = admLexer.next();
             if (token == AdmLexer.TOKEN_END_ORDERED_LIST) {
                 if (expectingListItem) {
-                    throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+                    throw new ParseException("Found END_COLLECTION while expecting a list item.");
                 }
                 inList = false;
             } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
-                    throw new AsterixException("Found COMMA before any list item.");
+                    throw new ParseException("Found COMMA before any list item.");
                 }
                 if (expectingListItem) {
-                    throw new AsterixException("Found COMMA while expecting a list item.");
+                    throw new ParseException("Found COMMA while expecting a list item.");
                 }
                 expectingListItem = true;
             } else {
@@ -620,8 +601,8 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         returnTempBuffer(itemBuffer);
     }
 
-    private void parseUnorderedList(AUnorderedListType uoltype, DataOutput out) throws IOException, AsterixException {
-
+    private void parseUnorderedList(AUnorderedListType uoltype, DataOutput out) throws IOException, AsterixException,
+            AdmLexerException {
         ArrayBackedValueStorage itemBuffer = getTempBuffer();
         UnorderedListBuilder unorderedListBuilder = (UnorderedListBuilder) getUnorderedListBuilder();
 
@@ -636,23 +617,23 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         boolean expectingListItem = false;
         boolean first = true;
         do {
-            token = nextToken();
+            token = admLexer.next();
             if (token == AdmLexer.TOKEN_END_RECORD) {
-                if (nextToken() == AdmLexer.TOKEN_END_RECORD) {
+                if (admLexer.next() == AdmLexer.TOKEN_END_RECORD) {
                     if (expectingListItem) {
-                        throw new AsterixException("Found END_COLLECTION while expecting a list item.");
+                        throw new ParseException("Found END_COLLECTION while expecting a list item.");
                     } else {
                         inList = false;
                     }
                 } else {
-                    throw new AsterixException("Found END_RECORD while expecting a list item.");
+                    throw new ParseException("Found END_RECORD while expecting a list item.");
                 }
             } else if (token == AdmLexer.TOKEN_COMMA) {
                 if (first) {
-                    throw new AsterixException("Found COMMA before any list item.");
+                    throw new ParseException("Found COMMA before any list item.");
                 }
                 if (expectingListItem) {
-                    throw new AsterixException("Found COMMA while expecting a list item.");
+                    throw new ParseException("Found COMMA while expecting a list item.");
                 }
                 expectingListItem = true;
             } else {
@@ -666,16 +647,6 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         unorderedListBuilder.write(out, true);
         returnUnorderedListBuilder(unorderedListBuilder);
         returnTempBuffer(itemBuffer);
-    }
-
-    private int nextToken() throws AsterixException {
-        try {
-            return admLexer.next();
-        } catch (AdmLexerException e) {
-            throw new AsterixException(e);
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
     }
 
     private IARecordBuilder getRecordBuilder() {
@@ -727,341 +698,272 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         baaosPool.add(tempBaaos);
     }
 
-    private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException {
-        try {
+    private void parseToNumericTarget(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
+            IOException {
+        final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
+        if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
+                    + typeTag);
+        }
+    }
+
+    private void parseAndCastNumeric(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
+            IOException {
+        final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
+        DataOutput dataOutput = out;
+        if (targetTypeTag != typeTag) {
+            castBuffer.reset();
+            dataOutput = castBuffer.getDataOutput();
+        }
+
+        if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), typeTag, dataOutput)) {
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
+                    + typeTag);
+        }
+
+        if (targetTypeTag != typeTag) {
+            ITypePromoteComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag, targetTypeTag);
+            // the availability if the promote computer should be consistent with the availability of a target type
+            assert promoteComputer != null;
+            // do the promotion; note that the type tag field should be skipped
+            promoteComputer.promote(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                    castBuffer.getLength() - 1, out);
+        }
+    }
+
+    private void parseConstructor(ATypeTag typeTag, IAType objectType, DataOutput out) throws AsterixException,
+            AdmLexerException, IOException {
+        final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
+        if (targetTypeTag != null) {
+            DataOutput dataOutput = out;
+            if (targetTypeTag != typeTag) {
+                castBuffer.reset();
+                dataOutput = castBuffer.getDataOutput();
+            }
             int token = admLexer.next();
             if (token == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
-                if (checkType(typeTag, objectType, out)) {
+                token = admLexer.next();
+                if (token == AdmLexer.TOKEN_STRING_LITERAL) {
+                    final String unquoted = admLexer.getLastTokenImage().substring(1,
+                            admLexer.getLastTokenImage().length() - 1);
+                    if (!parseValue(unquoted, typeTag, dataOutput)) {
+                        throw new ParseException("Missing deserializer method for constructor: "
+                                + AdmLexer.tokenKindToString(token) + ".");
+                    }
                     token = admLexer.next();
-                    if (token == AdmLexer.TOKEN_STRING_LITERAL) {
-                        switch (typeTag) {
-                            case BOOLEAN:
-                                parseBoolean(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case INT8:
-                                parseInt8(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case INT16:
-                                parseInt16(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case INT32:
-                                parseInt32(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case INT64:
-                                parseInt64(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case FLOAT:
-                                aFloat.setValue(Float.parseFloat(admLexer.getLastTokenImage().substring(1,
-                                        admLexer.getLastTokenImage().length() - 1)));
-                                floatSerde.serialize(aFloat, out);
-                                break;
-                            case DOUBLE:
-                                aDouble.setValue(Double.parseDouble(admLexer.getLastTokenImage().substring(1,
-                                        admLexer.getLastTokenImage().length() - 1)));
-                                doubleSerde.serialize(aDouble, out);
-                                break;
-                            case STRING:
-                                aString.setValue(admLexer.getLastTokenImage().substring(1,
-                                        admLexer.getLastTokenImage().length() - 1));
-                                stringSerde.serialize(aString, out);
-                                break;
-                            case TIME:
-                                parseTime(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case DATE:
-                                parseDate(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case DATETIME:
-                                parseDatetime(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case DURATION:
-                                parseDuration(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case DAYTIMEDURATION:
-                                parseDayTimeDuration(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case YEARMONTHDURATION:
-                                parseYearMonthDuration(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case POINT:
-                                parsePoint(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case POINT3D:
-                                parsePoint3d(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case CIRCLE:
-                                parseCircle(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case RECTANGLE:
-                                parseRectangle(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case LINE:
-                                parseLine(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            case POLYGON:
-                                parsePolygon(
-                                        admLexer.getLastTokenImage().substring(1,
-                                                admLexer.getLastTokenImage().length() - 1), out);
-                                break;
-                            default:
-                                throw new AsterixException("Missing deserializer method for constructor: "
-                                        + AdmLexer.tokenKindToString(token) + ".");
-
+                    if (token == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
+                        if (targetTypeTag != typeTag) {
+                            ITypePromoteComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag,
+                                    targetTypeTag);
+                            // the availability if the promote computer should be consistent with the availability of a target type
+                            assert promoteComputer != null;
+                            // do the promotion; note that the type tag field should be skipped
+                            promoteComputer.promote(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                                    castBuffer.getLength() - 1, out);
                         }
-                        token = admLexer.next();
-                        if (token == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE)
-                            return;
+                        return;
                     }
                 }
             }
-        } catch (Exception e) {
-            throw new AsterixException(e);
         }
-        throw new AsterixException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
+        throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + ". Got " + typeTag + " instead.");
     }
 
-    private void parseBoolean(String bool, DataOutput out) throws AsterixException {
+    private boolean parseValue(final String unquoted, ATypeTag typeTag, DataOutput out) throws AsterixException,
+            HyracksDataException, IOException {
+        switch (typeTag) {
+            case BOOLEAN:
+                parseBoolean(unquoted, out);
+                return true;
+            case INT8:
+                parseInt8(unquoted, out);
+                return true;
+            case INT16:
+                parseInt16(unquoted, out);
+                return true;
+            case INT32:
+                parseInt32(unquoted, out);
+                return true;
+            case INT64:
+                parseInt64(unquoted, out);
+                return true;
+            case FLOAT:
+                aFloat.setValue(Float.parseFloat(unquoted));
+                floatSerde.serialize(aFloat, out);
+                return true;
+            case DOUBLE:
+                aDouble.setValue(Double.parseDouble(unquoted));
+                doubleSerde.serialize(aDouble, out);
+                return true;
+            case STRING:
+                aString.setValue(unquoted);
+                stringSerde.serialize(aString, out);
+                return true;
+            case TIME:
+                ATimeSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case DATE:
+                ADateSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case DATETIME:
+                ADateTimeSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case DURATION:
+                ADurationSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case DAYTIMEDURATION:
+                ADayTimeDurationSerializerDeserializer.INSTANCE.parse(unquoted, out);
+                return true;
+            case YEARMONTHDURATION:
+                AYearMonthDurationSerializerDeserializer.INSTANCE.parse(unquoted, out);
+                return true;
+            case POINT:
+                APointSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case POINT3D:
+                APoint3DSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case CIRCLE:
+                ACircleSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case RECTANGLE:
+                ARectangleSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case LINE:
+                ALineSerializerDeserializer.parse(unquoted, out);
+                return true;
+            case POLYGON:
+                APolygonSerializerDeserializer.parse(unquoted, out);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void parseBoolean(String bool, DataOutput out) throws AsterixException, HyracksDataException {
         String errorMessage = "This can not be an instance of boolean";
-        try {
-            if (bool.equals("true"))
-                booleanSerde.serialize(ABoolean.TRUE, out);
-            else if (bool.equals("false"))
-                booleanSerde.serialize(ABoolean.FALSE, out);
-            else
-                throw new AsterixException(errorMessage);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(errorMessage);
-        }
+        if (bool.equals("true"))
+            booleanSerde.serialize(ABoolean.TRUE, out);
+        else if (bool.equals("false"))
+            booleanSerde.serialize(ABoolean.FALSE, out);
+        else
+            throw new ParseException(errorMessage);
     }
 
-    private void parseInt8(String int8, DataOutput out) throws AsterixException {
+    private void parseInt8(String int8, DataOutput out) throws AsterixException, HyracksDataException {
         String errorMessage = "This can not be an instance of int8";
-        try {
-            boolean positive = true;
-            byte value = 0;
-            int offset = 0;
+        boolean positive = true;
+        byte value = 0;
+        int offset = 0;
 
-            if (int8.charAt(offset) == '+')
-                offset++;
-            else if (int8.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-            for (; offset < int8.length(); offset++) {
-                if (int8.charAt(offset) >= '0' && int8.charAt(offset) <= '9')
-                    value = (byte) (value * 10 + int8.charAt(offset) - '0');
-                else if (int8.charAt(offset) == 'i' && int8.charAt(offset + 1) == '8' && offset + 2 == int8.length())
-                    break;
-                else
-                    throw new AsterixException(errorMessage);
-            }
-            if (value < 0)
-                throw new AsterixException(errorMessage);
-            if (value > 0 && !positive)
-                value *= -1;
-            aInt8.setValue(value);
-            int8Serde.serialize(aInt8, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(errorMessage);
+        if (int8.charAt(offset) == '+')
+            offset++;
+        else if (int8.charAt(offset) == '-') {
+            offset++;
+            positive = false;
         }
+        for (; offset < int8.length(); offset++) {
+            if (int8.charAt(offset) >= '0' && int8.charAt(offset) <= '9')
+                value = (byte) (value * 10 + int8.charAt(offset) - '0');
+            else if (int8.charAt(offset) == 'i' && int8.charAt(offset + 1) == '8' && offset + 2 == int8.length())
+                break;
+            else
+                throw new ParseException(errorMessage);
+        }
+        if (value < 0)
+            throw new ParseException(errorMessage);
+        if (value > 0 && !positive)
+            value *= -1;
+        aInt8.setValue(value);
+        int8Serde.serialize(aInt8, out);
     }
 
-    private void parseInt16(String int16, DataOutput out) throws AsterixException {
+    private void parseInt16(String int16, DataOutput out) throws AsterixException, HyracksDataException {
         String errorMessage = "This can not be an instance of int16";
-        try {
-            boolean positive = true;
-            short value = 0;
-            int offset = 0;
+        boolean positive = true;
+        short value = 0;
+        int offset = 0;
 
-            if (int16.charAt(offset) == '+')
-                offset++;
-            else if (int16.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-            for (; offset < int16.length(); offset++) {
-                if (int16.charAt(offset) >= '0' && int16.charAt(offset) <= '9')
-                    value = (short) (value * 10 + int16.charAt(offset) - '0');
-                else if (int16.charAt(offset) == 'i' && int16.charAt(offset + 1) == '1'
-                        && int16.charAt(offset + 2) == '6' && offset + 3 == int16.length())
-                    break;
-                else
-                    throw new AsterixException(errorMessage);
-            }
-            if (value < 0)
-                throw new AsterixException(errorMessage);
-            if (value > 0 && !positive)
-                value *= -1;
-            aInt16.setValue(value);
-            int16Serde.serialize(aInt16, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(errorMessage);
+        if (int16.charAt(offset) == '+')
+            offset++;
+        else if (int16.charAt(offset) == '-') {
+            offset++;
+            positive = false;
         }
+        for (; offset < int16.length(); offset++) {
+            if (int16.charAt(offset) >= '0' && int16.charAt(offset) <= '9')
+                value = (short) (value * 10 + int16.charAt(offset) - '0');
+            else if (int16.charAt(offset) == 'i' && int16.charAt(offset + 1) == '1' && int16.charAt(offset + 2) == '6'
+                    && offset + 3 == int16.length())
+                break;
+            else
+                throw new ParseException(errorMessage);
+        }
+        if (value < 0)
+            throw new ParseException(errorMessage);
+        if (value > 0 && !positive)
+            value *= -1;
+        aInt16.setValue(value);
+        int16Serde.serialize(aInt16, out);
     }
 
-    private void parseInt32(String int32, DataOutput out) throws AsterixException {
-
+    private void parseInt32(String int32, DataOutput out) throws AsterixException, HyracksDataException {
         String errorMessage = "This can not be an instance of int32";
-        try {
-            boolean positive = true;
-            int value = 0;
-            int offset = 0;
+        boolean positive = true;
+        int value = 0;
+        int offset = 0;
 
-            if (int32.charAt(offset) == '+')
-                offset++;
-            else if (int32.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-            for (; offset < int32.length(); offset++) {
-                if (int32.charAt(offset) >= '0' && int32.charAt(offset) <= '9')
-                    value = (value * 10 + int32.charAt(offset) - '0');
-                else if (int32.charAt(offset) == 'i' && int32.charAt(offset + 1) == '3'
-                        && int32.charAt(offset + 2) == '2' && offset + 3 == int32.length())
-                    break;
-                else
-                    throw new AsterixException(errorMessage);
-            }
-            if (value < 0)
-                throw new AsterixException(errorMessage);
-            if (value > 0 && !positive)
-                value *= -1;
-
-            aInt32.setValue(value);
-            int32Serde.serialize(aInt32, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(errorMessage);
+        if (int32.charAt(offset) == '+')
+            offset++;
+        else if (int32.charAt(offset) == '-') {
+            offset++;
+            positive = false;
         }
+        for (; offset < int32.length(); offset++) {
+            if (int32.charAt(offset) >= '0' && int32.charAt(offset) <= '9')
+                value = (value * 10 + int32.charAt(offset) - '0');
+            else if (int32.charAt(offset) == 'i' && int32.charAt(offset + 1) == '3' && int32.charAt(offset + 2) == '2'
+                    && offset + 3 == int32.length())
+                break;
+            else
+                throw new ParseException(errorMessage);
+        }
+        if (value < 0)
+            throw new ParseException(errorMessage);
+        if (value > 0 && !positive)
+            value *= -1;
+
+        aInt32.setValue(value);
+        int32Serde.serialize(aInt32, out);
     }
 
-    private void parseInt64(String int64, DataOutput out) throws AsterixException {
+    private void parseInt64(String int64, DataOutput out) throws AsterixException, HyracksDataException {
         String errorMessage = "This can not be an instance of int64";
-        try {
-            boolean positive = true;
-            long value = 0;
-            int offset = 0;
+        boolean positive = true;
+        long value = 0;
+        int offset = 0;
 
-            if (int64.charAt(offset) == '+')
-                offset++;
-            else if (int64.charAt(offset) == '-') {
-                offset++;
-                positive = false;
-            }
-            for (; offset < int64.length(); offset++) {
-                if (int64.charAt(offset) >= '0' && int64.charAt(offset) <= '9')
-                    value = (value * 10 + int64.charAt(offset) - '0');
-                else if (int64.charAt(offset) == 'i' && int64.charAt(offset + 1) == '6'
-                        && int64.charAt(offset + 2) == '4' && offset + 3 == int64.length())
-                    break;
-                else
-                    throw new AsterixException(errorMessage);
-            }
-            if (value < 0)
-                throw new AsterixException(errorMessage);
-            if (value > 0 && !positive)
-                value *= -1;
-
-            aInt64.setValue(value);
-            int64Serde.serialize(aInt64, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(errorMessage);
+        if (int64.charAt(offset) == '+')
+            offset++;
+        else if (int64.charAt(offset) == '-') {
+            offset++;
+            positive = false;
         }
-    }
-
-    private void parsePoint(String point, DataOutput out) throws AsterixException {
-        try {
-            APointSerializerDeserializer.parse(point, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
+        for (; offset < int64.length(); offset++) {
+            if (int64.charAt(offset) >= '0' && int64.charAt(offset) <= '9')
+                value = (value * 10 + int64.charAt(offset) - '0');
+            else if (int64.charAt(offset) == 'i' && int64.charAt(offset + 1) == '6' && int64.charAt(offset + 2) == '4'
+                    && offset + 3 == int64.length())
+                break;
+            else
+                throw new ParseException(errorMessage);
         }
-    }
+        if (value < 0)
+            throw new ParseException(errorMessage);
+        if (value > 0 && !positive)
+            value *= -1;
 
-    private void parsePoint3d(String point3d, DataOutput out) throws AsterixException {
-        try {
-            APoint3DSerializerDeserializer.parse(point3d, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
+        aInt64.setValue(value);
+        int64Serde.serialize(aInt64, out);
     }
-
-    private void parseCircle(String circle, DataOutput out) throws AsterixException {
-        try {
-            ACircleSerializerDeserializer.parse(circle, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parseRectangle(String rectangle, DataOutput out) throws AsterixException {
-        try {
-            ARectangleSerializerDeserializer.parse(rectangle, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parseLine(String line, DataOutput out) throws AsterixException {
-        try {
-            ALineSerializerDeserializer.parse(line, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parsePolygon(String polygon, DataOutput out) throws AsterixException, IOException {
-        try {
-            APolygonSerializerDeserializer.parse(polygon, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parseTime(String time, DataOutput out) throws AsterixException {
-        try {
-            ATimeSerializerDeserializer.parse(time, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
-    private void parseDate(String date, DataOutput out) throws AsterixException, IOException {
-        try {
-            ADateSerializerDeserializer.parse(date, out);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
-
 }

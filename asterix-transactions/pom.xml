@@ -17,7 +17,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.3</version>
+		<version>0.8.5-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-transactions</artifactId>
 
@@ -36,7 +36,7 @@
             <plugin>
                 <groupId>edu.uci.ics.asterix</groupId>
                 <artifactId>record-manager-generator-maven-plugin</artifactId>
-                <version>0.8.3</version>
+                <version>0.8.5-SNAPSHOT</version>
                 <configuration>
                     <debug>false</debug>
                     <inputFiles>
@@ -98,7 +98,7 @@
                 <dependency>
                         <groupId>edu.uci.ics.asterix</groupId>
                         <artifactId>asterix-common</artifactId>
-                        <version>0.8.3</version>
+                        <version>0.8.5-SNAPSHOT</version>
                         <type>jar</type>
                         <scope>compile</scope>
                 </dependency>

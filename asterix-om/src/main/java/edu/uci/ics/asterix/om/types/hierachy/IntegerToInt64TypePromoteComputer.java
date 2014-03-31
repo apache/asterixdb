@@ -14,10 +14,10 @@
  */
 package edu.uci.ics.asterix.om.types.hierachy;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 
 public class IntegerToInt64TypePromoteComputer extends AbstractIntegerTypePromoteComputer {
 
@@ -30,9 +30,9 @@ public class IntegerToInt64TypePromoteComputer extends AbstractIntegerTypePromot
      * @see edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer#promote(byte[], int, int, edu.uci.ics.hyracks.data.std.api.IMutableValueStorage)
      */
     @Override
-    public void promote(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue)
+    public void promote(byte[] data, int start, int length, DataOutput out)
             throws IOException {
-        promoteIntegerType(data, start, length, storageForPromotedValue, ATypeTag.INT64, 8);
+        promoteIntegerType(data, start, length, out, ATypeTag.INT64, 8);
     }
 
 }

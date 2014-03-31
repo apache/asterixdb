@@ -14,23 +14,23 @@
  */
 package edu.uci.ics.asterix.om.types.hierachy;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 
 public abstract class AbstractIntegerTypePromoteComputer implements ITypePromoteComputer {
 
-    public void promoteIntegerType(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue,
+    public void promoteIntegerType(byte[] data, int start, int length, DataOutput out,
             ATypeTag targetType, int targetTypeLength) throws IOException {
-        storageForPromotedValue.getDataOutput().writeByte(targetType.serialize());
+        out.writeByte(targetType.serialize());
         long num = 0;
         for (int i = start; i < start + length; i++) {
             num += (data[i] & 0xff) << ((length - 1 - (i - start)) * 8);
         }
 
         for (int i = targetTypeLength - 1; i >= 0; i--) {
-            storageForPromotedValue.getDataOutput().writeByte((byte) ((num >>> (i * 8)) & 0xFF));
+            out.writeByte((byte) ((num >>> (i * 8)) & 0xFF));
         }
     }
 }

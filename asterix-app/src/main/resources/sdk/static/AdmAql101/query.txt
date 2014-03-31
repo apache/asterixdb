@@ -1,0 +1,68 @@
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int32,
+        statuses_count: int32,
+        name: string,
+        followers_count: int32
+}
+
+create type TweetMessageType as closed {
+        tweetid: string,
+        user: TwitterUserType,
+        sender-location: point?,
+        send-time: datetime,
+        referred-topics: {{ string }},
+        message-text: string
+}
+
+create type EmploymentType as open {
+        organization-name: string,      
+        start-date: date,
+        end-date: date?
+}
+
+create type FacebookUserType as closed {
+        id: int32,
+        alias: string,
+        name: string,
+        user-since: datetime,
+        friend-ids: {{ int32 }},
+        employment: [EmploymentType]
+}
+
+create type FacebookMessageType as closed {
+        message-id: int32,
+        author-id: int32,
+        in-response-to: int32?,
+        sender-location: point?,
+        message: string
+}
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create dataset FacebookMessages(FacebookMessageType)
+primary key message-id;
+
+create dataset TwitterUsers(TwitterUserType)
+primary key screen-name;
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+load dataset FacebookUsers using localfs
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/fbu.adm"),("format"="adm"));
+
+load dataset FacebookMessages using localfs
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/fbm.adm"),("format"="adm"));
+
+load dataset TwitterUsers using localfs
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/twu.adm"),("format"="adm"));
+
+load dataset TweetMessages using localfs
+(("path"="localhost:///home/genia/asterix-dev/asterixdb/asterix-app/src/main/resources/sdk/static/AdmAql101/tinysocial/twm.adm"),("format"="adm"));

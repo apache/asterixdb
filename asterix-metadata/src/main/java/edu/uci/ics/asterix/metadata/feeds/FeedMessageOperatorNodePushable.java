@@ -57,7 +57,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     public void initialize() throws HyracksDataException {
         try {
             writer.open();
-            FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.INGESTION, feedId, partition);
+            FeedRuntimeId runtimeId = new FeedRuntimeId(feedId, FeedRuntimeType.INGESTION, partition);
             FeedRuntime feedRuntime = feedManager.getFeedRuntime(runtimeId);
             boolean ingestionLocation = feedRuntime != null;
 

@@ -22,8 +22,8 @@ public class TestSuiteParser {
     public TestSuiteParser() {
     }
 
-    public TestSuite parse(File testSuiteCatalog) throws Exception {
-        JAXBContext ctx = JAXBContext.newInstance(TestSuite.class);
-        return (TestSuite) ctx.createUnmarshaller().unmarshal(testSuiteCatalog);
+    public edu.uci.ics.asterix.testframework.xml.TestSuite parse(File testSuiteCatalog) throws Exception {
+        JAXBContext ctx = JAXBContext.newInstance(edu.uci.ics.asterix.testframework.xml.TestSuite.class);
+        return (edu.uci.ics.asterix.testframework.xml.TestSuite) ctx.createUnmarshaller().unmarshal(testSuiteCatalog);
     }
 }

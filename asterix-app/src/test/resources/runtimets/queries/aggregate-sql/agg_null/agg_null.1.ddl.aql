@@ -1,0 +1,5 @@
+/*
+* Description  : Run aggregates over both ordered list and unordered list with only null items.
+* Expected Res : Success
+* Date         : Feb 7th 2014
+*/

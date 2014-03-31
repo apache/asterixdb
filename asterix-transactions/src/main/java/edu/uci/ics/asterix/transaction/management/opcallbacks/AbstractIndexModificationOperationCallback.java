@@ -51,11 +51,10 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord.setJobId(txnCtx.getJobId().getId());
         logRecord.setDatasetId(datasetId);
         logRecord.setResourceId(resourceId);
-        logRecord.setResourceType(resourceType);
         logRecord.setNewOp((byte) (indexOp.ordinal()));
     }
 
-    protected void log(int PKHash, ITupleReference newValue, IndexOperation oldOp, ITupleReference oldValue)
+    protected void log(int PKHash, ITupleReference newValue)
             throws ACIDException {
         logRecord.setPKHashValue(PKHash);
         logRecord.setPKFields(primaryKeyFields);
@@ -66,15 +65,6 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
             logRecord.setNewValue(newValue);
         } else {
             logRecord.setNewValueSize(0);
-        }
-        if (resourceType == ResourceType.LSM_BTREE) {
-            logRecord.setOldOp((byte) (oldOp.ordinal()));
-            if (oldValue != null) {
-                logRecord.setOldValueSize(tupleWriter.bytesRequired(oldValue));
-                logRecord.setOldValue(oldValue);
-            } else {
-                logRecord.setOldValueSize(0);
-            }
         }
         logRecord.computeAndSetLogSize();
         txnSubsystem.getLogManager().log(logRecord);

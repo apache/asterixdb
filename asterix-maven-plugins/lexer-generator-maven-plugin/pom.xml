@@ -19,7 +19,7 @@
 	<parent>
 		<artifactId>asterix-maven-plugins</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.3</version>
+		<version>0.8.5-SNAPSHOT</version>
 	</parent>
 
   <packaging>maven-plugin</packaging>
@@ -42,10 +42,9 @@
 
   <dependencies>
     <dependency>
+      <!-- Dependency management inherited from top-level asterixdb -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.8.1</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>

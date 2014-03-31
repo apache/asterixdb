@@ -66,7 +66,7 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
                         (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
                 runtimeContextProvider.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                        .createIOOperationCallback());
+                        .createIOOperationCallback(), isPrimary);
         return lsmBTree;
     }
 

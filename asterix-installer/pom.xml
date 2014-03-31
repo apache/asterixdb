@@ -12,12 +12,12 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.3</version>
+		<version>0.8.5-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-installer</artifactId>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<test.excludes>**/DmlRecoveryIT.java</test.excludes>
+		<failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
 	</properties>
 
 	<build>
@@ -108,7 +108,7 @@
 					<runOrder>alphabetical</runOrder>
 					<forkMode>pertest</forkMode>
 					<excludes>
-						<exclude>${test.excludes}</exclude>
+						<exclude>${failsafe.test.excludes}</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -124,12 +124,6 @@
 	</build>
 
 	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>args4j</groupId>
 			<artifactId>args4j</artifactId>
@@ -164,28 +158,28 @@
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
-			<version>0.8.3</version>
+			<version>0.8.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.3</version>
+			<version>0.8.5-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
-			<version>0.8.3</version>
+			<version>0.8.5-SNAPSHOT</version>
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
-			<version>0.8.3</version>
+			<version>0.8.5-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

@@ -1,0 +1,13 @@
+/*
+ * Description      :   sql-sum() aggregate function must return the numeric sql-sum, when non null values are given as input to sql-sum().
+ *                  :   Get the sql-sum for those tuples which are non null for salary fields.
+ * Expected result  :   Success
+ * Date             :   July 20th 2012
+ */
+
+use dataverse test;
+set import-private-functions 'true';
+
+sql-sum(for $l in dataset('tdst')
+where not(is-null($l.sal))
+return $l.sal)

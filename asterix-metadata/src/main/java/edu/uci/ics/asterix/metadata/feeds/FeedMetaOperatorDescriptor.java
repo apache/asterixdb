@@ -62,8 +62,11 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
      */
     private final FeedRuntimeType runtimeType;
 
+    private final String operandId;
+
     public FeedMetaOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId,
-            IOperatorDescriptor coreOperatorDescriptor, FeedPolicy feedPolicy, FeedRuntimeType runtimeType) {
+            IOperatorDescriptor coreOperatorDescriptor, FeedPolicy feedPolicy, FeedRuntimeType runtimeType,
+            String operandId) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicy = feedPolicy;
@@ -72,13 +75,14 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         }
         this.coreOperator = coreOperatorDescriptor;
         this.runtimeType = runtimeType;
+        this.operandId = operandId;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new FeedMetaNodePushable(ctx, recordDescProvider, partition, nPartitions, coreOperator,
-                feedConnectionId, feedPolicy, runtimeType);
+                feedConnectionId, feedPolicy, runtimeType, operandId);
     }
 
     @Override
@@ -131,9 +135,11 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         /** The (singleton) instance of IFeedManager **/
         private IFeedManager feedManager;
 
+        private final String operandId;
+
         public FeedMetaNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
                 int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
-                FeedPolicy feedPolicy, FeedRuntimeType runtimeType) throws HyracksDataException {
+                FeedPolicy feedPolicy, FeedRuntimeType runtimeType, String operationId) throws HyracksDataException {
             this.coreOperatorNodePushable = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                     .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
             this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicy.getProperties());
@@ -145,15 +151,16 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
             IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                     .getApplicationContext().getApplicationObject();
             this.feedManager = runtimeCtx.getFeedManager();
+            this.operandId = operationId;
         }
 
         @Override
         public void open() throws HyracksDataException {
-            FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, feedId, partition);
+            FeedRuntimeId runtimeId = new FeedRuntimeId(feedId, runtimeType, operandId, partition);
             try {
                 feedRuntime = feedManager.getFeedRuntime(runtimeId);
                 if (feedRuntime == null) {
-                    feedRuntime = new FeedRuntime(feedId, partition, runtimeType);
+                    feedRuntime = new FeedRuntime(feedId, partition, runtimeType, operandId);
                     feedManager.registerFeedRuntime(feedRuntime);
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.warning("Did not find a saved state from a previous zombie, starting a new instance for "
@@ -183,12 +190,14 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
             try {
                 if (resumeOldState) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("State from previous zombie instance "
-                                + feedRuntime.getRuntimeState().getFrame());
+                    FeedRuntimeState runtimeState = feedRuntime.getRuntimeState();
+                    if (runtimeState != null) {
+                        if (LOGGER.isLoggable(Level.WARNING)) {
+                            LOGGER.warning("State from previous zombie instance " + feedRuntime.getRuntimeState());
+                        }
+                        coreOperatorNodePushable.nextFrame(feedRuntime.getRuntimeState().getFrame());
+                        feedRuntime.setRuntimeState(null);
                     }
-                    coreOperatorNodePushable.nextFrame(feedRuntime.getRuntimeState().getFrame());
-                    feedRuntime.setRuntimeState(null);
                     resumeOldState = false;
                 }
                 currentBuffer = buffer;
