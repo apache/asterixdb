@@ -38,12 +38,12 @@ public class AsterixHyracksIntegrationUtil {
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
-
+    
     private static ClusterControllerService cc;
     private static NodeControllerService nc1;
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
-
+    
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.clusterNetIpAddress = "127.0.0.1";
@@ -96,9 +96,9 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static void deinit() throws Exception {
-        nc2.stop();
-        nc1.stop();
-        cc.stop();
+        if (nc2 != null) nc2.stop();
+        if (nc1 != null) nc1.stop();
+        if (cc != null) cc.stop();
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
@@ -106,6 +106,37 @@ public class AsterixHyracksIntegrationUtil {
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         GlobalConfig.ASTERIX_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
+    }
+    
+    /**
+     * main method to run a simple 2 node cluster in-process
+     * 
+     * suggested VM arguments: 
+     * <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
+     * 
+     * @param args unused
+     */
+    public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                try {
+                    deinit();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        try {
+            System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
+            System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
+
+            init();
+            while (true) {
+                Thread.sleep(10000);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

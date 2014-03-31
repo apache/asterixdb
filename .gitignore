@@ -17,3 +17,4 @@ build
 asterix_logs
 bin/
 *-coredump
+*.pyc

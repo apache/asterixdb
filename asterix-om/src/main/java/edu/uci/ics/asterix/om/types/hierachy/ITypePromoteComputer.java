@@ -14,12 +14,11 @@
  */
 package edu.uci.ics.asterix.om.types.hierachy;
 
+import java.io.DataOutput;
 import java.io.IOException;
-
-import edu.uci.ics.hyracks.data.std.api.IMutableValueStorage;
 
 public interface ITypePromoteComputer {
 
-    void promote(byte[] data, int start, int length, IMutableValueStorage storageForPromotedValue) throws IOException;
+    void promote(byte[] data, int start, int length, DataOutput out) throws IOException;
 
 }

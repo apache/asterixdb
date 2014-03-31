@@ -17,12 +17,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.asterix</groupId>
   <artifactId>asterix</artifactId>
-  <version>0.8.4-SNAPSHOT</version>
+  <version>0.8.5-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <properties>
-    <algebricks.version>0.2.11-SNAPSHOT</algebricks.version>
-    <hyracks.version>0.2.11-SNAPSHOT</hyracks.version>
+    <algebricks.version>0.2.12-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.2.12-SNAPSHOT</hyracks.version>
     <jvm.extraargs />
     <runSlowAQLTests>false</runSlowAQLTests>
 
@@ -157,15 +157,16 @@
 		<module>asterix-runtime</module>
 		<module>asterix-om</module>
 		<module>asterix-aql</module>
-                <module>asterix-external-data</module>
-                <module>asterix-metadata</module>
-                <module>asterix-test-framework</module>
-                <module>asterix-maven-plugins</module>
-                <module>asterix-server</module>
-                <module>asterix-installer</module>
-                <module>asterix-events</module>
-                <module>asterix-doc</module>
-                <module>asterix-fuzzyjoin</module>
+        <module>asterix-external-data</module>
+        <module>asterix-examples</module>
+        <module>asterix-metadata</module>
+        <module>asterix-test-framework</module>
+        <module>asterix-maven-plugins</module>
+        <module>asterix-server</module>
+        <module>asterix-installer</module>
+        <module>asterix-events</module>
+        <module>asterix-doc</module>
+        <module>asterix-fuzzyjoin</module>
         </modules>
 
 	<repositories>
