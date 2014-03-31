@@ -4,5 +4,5 @@
  * Date         : 7th Aug 2012
  */
 
-let $x := "\"'-=_+|\,./<>?:;~`"
+let $x := "\"'-=_+|\\,./<>?:;~`"
 return string-to-codepoint($x)

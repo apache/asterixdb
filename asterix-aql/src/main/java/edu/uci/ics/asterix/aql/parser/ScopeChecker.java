@@ -157,7 +157,8 @@ public abstract class ScopeChecker {
     public static final String removeQuotesAndEscapes(String s) {
         char q = s.charAt(0); // simple or double quote
         String stripped = s.substring(1, s.length() - 1);
-        return stripped.replaceAll("\\\\" + q, "\\" + q);
+        stripped = stripped.replace("\\" + q, "" + q);
+        return stripped.replace("\\\\", "\\");
     }
 
     public String extractFragment(int beginLine, int beginColumn, int endLine, int endColumn) {

@@ -2297,9 +2297,11 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <STRING_LITERAL : ("\"" (<EscapeQuot> | ~["\""])* "\"") | ("\'"(<EscapeApos> | ~["\'"])* "\'")>
+    <STRING_LITERAL : ("\"" (<EscapeQuot> | <EscapeBslash> | ~["\"","\\"])* "\"") 
+        | ("\'"(<EscapeApos> | <EscapeBslash> | ~["\'","\\"])* "\'")>
   | < #EscapeQuot: "\\\"" >
   | < #EscapeApos: "\\\'" >
+  | < #EscapeBslash: "\\\\" >
 }
 
 <DEFAULT,IN_DBL_BRACE>
