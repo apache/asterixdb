@@ -337,6 +337,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             btreeTupleBuilder.reset();
             DataOutput output = btreeTupleBuilder.getDataOutput();
             // Add key fields.
+            lastTuple.reset(lastTupleBuilder.getFieldEndOffsets(), lastTupleBuilder.getByteArray());
             for (int i = 0; i < numTokenFields; i++) {
                 btreeTupleBuilder.addField(lastTuple.getFieldData(i), lastTuple.getFieldStart(i),
                         lastTuple.getFieldLength(i));
@@ -462,7 +463,7 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     public BTree getBTree() {
         return btree;
     }
-    
+
     public FileReference getInvListsFile() {
         return invListsFile;
     }
@@ -565,11 +566,11 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
         public ByteBuffer allocateFrame() {
             return ByteBuffer.allocate(FRAME_SIZE);
         }
-        
+
         @Override
         public void deallocateFrames(int frameCount) {
             // TODO Auto-generated method stub
-            
+
         }
     }
 
