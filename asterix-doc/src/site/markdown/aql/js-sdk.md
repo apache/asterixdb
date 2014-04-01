@@ -1,7 +1,7 @@
 # AsterixDB Javascript SDK #
 
 ## Obtaining and Including ##
-[Download](../download/asterix-sdk-stable.js) the javascript SDK and include it
+[Download](http://asterixdb.ics.uci.edu/download/bindings/asterix-sdk-stable.js) the javascript SDK and include it
 like any other javascript library by adding the following line in the
 appropriate HTML file:
 
@@ -11,10 +11,10 @@ appropriate HTML file:
 There are two interactive demos that are available for download. Both of the
 demos illustrate how the javascript API would be used in an application:
 
-* [Tweetbook Demo](../download/tweetbook-demo.zip): a contrived geo-spatial
+* [Tweetbook Demo](http://asterixdb.ics.uci.edu/download/demos/tweetbook-demo.zip): a contrived geo-spatial
   application dealing with artificial Tweets allowing spatial, temporal, and
   keyword-based filtering.
-* [ADM/AQL 101 Demo](../download/admaql101-demo.zip): an interactive version of
+* [ADM/AQL 101 Demo](http://asterixdb.ics.uci.edu/download/demos/admaql101-demo.zip): an interactive version of
   all of the examples that are provided in the following section.
 
 ## The javascript SDK: by example ##
