@@ -17,7 +17,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.asterix</groupId>
   <artifactId>asterix</artifactId>
-  <version>0.8.5-SNAPSHOT</version>
+  <version>0.8.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <properties>

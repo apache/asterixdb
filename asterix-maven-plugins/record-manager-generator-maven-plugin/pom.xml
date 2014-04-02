@@ -19,7 +19,7 @@
     <parent>
         <artifactId>asterix-maven-plugins</artifactId>
         <groupId>edu.uci.ics.asterix</groupId>
-        <version>0.8.5-SNAPSHOT</version>
+        <version>0.8.6-SNAPSHOT</version>
     </parent>
 
   <packaging>maven-plugin</packaging>
