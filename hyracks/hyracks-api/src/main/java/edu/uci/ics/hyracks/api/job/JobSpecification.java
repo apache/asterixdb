@@ -340,34 +340,18 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
                 Iterator<Constraint> test = userConstraints.iterator();
                 while (test.hasNext()) {
                     Constraint constraint = test.next();
-                    String value = "";
-                    // Right Value
-                    switch (constraint.getRValue().getTag()) {
-                        case CONSTANT:
-                            ConstantExpression ce = (ConstantExpression) constraint.getRValue();
-                            value = ce.getValue().toString();
-                            break;
-                        case PARTITION_COUNT:
-                            PartitionCountExpression pce = (PartitionCountExpression) constraint.getRValue();
-                            value = pce.toString();
-                            break;
-                        case PARTITION_LOCATION:
-                            PartitionLocationExpression ple = (PartitionLocationExpression) constraint.getRValue();
-                            value = ple.toString();
-                            break;
-                    }
-                    // Left Value
                     switch (constraint.getLValue().getTag()) {
                         case PARTITION_COUNT:
                             PartitionCountExpression pce = (PartitionCountExpression) constraint.getLValue();
                             if (e.getKey() == pce.getOperatorDescriptorId()) {
-                                pcObject.put("count", value);
+                                pcObject.put("count", getConstraintExpressionRValue(constraint));
                             }
                             break;
                         case PARTITION_LOCATION:
                             PartitionLocationExpression ple = (PartitionLocationExpression) constraint.getLValue();
                             if (e.getKey() == ple.getOperatorDescriptorId()) {
-                                pleObject.put(Integer.toString(ple.getPartition()), value);
+                                pleObject.put(Integer.toString(ple.getPartition()),
+                                        getConstraintExpressionRValue(constraint));
                             }
                             break;
                     }
@@ -400,5 +384,15 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         jjob.put("connectors", jcArray);
 
         return jjob;
+    }
+
+    private static String getConstraintExpressionRValue(Constraint constraint) {
+        switch (constraint.getRValue().getTag()) {
+            case CONSTANT:
+                ConstantExpression ce = (ConstantExpression) constraint.getRValue();
+                return ce.getValue().toString();
+            default:
+                return constraint.getRValue().toString();
+        }
     }
 }
