@@ -29,6 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.hyracks.api.constraints.Constraint;
+import edu.uci.ics.hyracks.api.constraints.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionCountExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -334,27 +335,48 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
             JSONObject op = e.getValue().toJSON();
             if (!userConstraints.isEmpty()) {
                 // Add operator partition constraints to each JSON operator.
+                JSONObject pcObject = new JSONObject();
                 JSONObject pleObject = new JSONObject();
                 Iterator<Constraint> test = userConstraints.iterator();
                 while (test.hasNext()) {
                     Constraint constraint = test.next();
+                    String value = "";
+                    // Right Value
+                    switch (constraint.getRValue().getTag()) {
+                        case CONSTANT:
+                            ConstantExpression ce = (ConstantExpression) constraint.getRValue();
+                            value = ce.getValue().toString();
+                            break;
+                        case PARTITION_COUNT:
+                            PartitionCountExpression pce = (PartitionCountExpression) constraint.getRValue();
+                            value = pce.toString();
+                            break;
+                        case PARTITION_LOCATION:
+                            PartitionLocationExpression ple = (PartitionLocationExpression) constraint.getRValue();
+                            value = ple.toString();
+                            break;
+                    }
+                    // Left Value
                     switch (constraint.getLValue().getTag()) {
                         case PARTITION_COUNT:
                             PartitionCountExpression pce = (PartitionCountExpression) constraint.getLValue();
                             if (e.getKey() == pce.getOperatorDescriptorId()) {
-                                op.put("partition-count", constraint.getRValue().toString());
+                                pcObject.put("count", value);
                             }
                             break;
                         case PARTITION_LOCATION:
                             PartitionLocationExpression ple = (PartitionLocationExpression) constraint.getLValue();
                             if (e.getKey() == ple.getOperatorDescriptorId()) {
-                                pleObject.put(Integer.toString(ple.getPartition()), constraint.getRValue().toString());
+                                pleObject.put(Integer.toString(ple.getPartition()), value);
                             }
                             break;
                     }
                 }
                 if (pleObject.length() > 0) {
-                    op.put("partition-location", pleObject);
+                    pcObject.put("location", pleObject);
+                }
+                if (pcObject.length() > 0) {
+                    op.put("partition-constraints", pcObject);
                 }
             }
             jopArray.put(op);
