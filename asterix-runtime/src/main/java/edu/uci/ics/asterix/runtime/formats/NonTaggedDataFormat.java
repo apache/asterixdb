@@ -912,21 +912,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl) {
-        if (decl.isDelimitedFileFormat()) {
-            int n = recType.getFieldTypes().length;
-            IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
-            for (int i = 0; i < n; i++) {
-                ATypeTag tag = recType.getFieldTypes()[i].getTypeTag();
-                IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
-                if (vpf == null) {
-                    throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
-                }
-                fieldParserFactories[i] = vpf;
-            }
-            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, decl.getDelimChar());
-        } else {
-            return new AdmSchemafullRecordParserFactory(recType);
-        }
+        return createTupleParser(recType, decl.isDelimitedFileFormat(), decl.getDelimChar());
     }
 
     @Override

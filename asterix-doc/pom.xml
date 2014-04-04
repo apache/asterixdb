@@ -12,7 +12,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>edu.uci.ics.asterix</groupId>
-		<version>0.8.5-SNAPSHOT</version>
+		<version>0.8.6-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-doc</artifactId>
 	<build>
@@ -33,42 +33,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.6</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<inherited>false</inherited>
-						<configuration>
-							<outputDirectory>${project.build.directory}/site/download</outputDirectory>
-							<resources>
-								<resource>
-									<directory>../asterix-examples/src/main/resources/</directory>
-									<includes>
-										<include>asterix-sdk-stable.js</include>
-									</includes>
-								</resource>
-								<resource>
-									<directory>../asterix-examples/target/</directory>
-									<includes>
-										<include>admaql101-demo.zip</include>
-										<include>tweetbook-demo.zip</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-assembly-plugin</artifactId> 
-				<executions> <execution> <phase>package</phase> <goals> <goal>assembly</goal> 
-				</goals> <inherited>false</inherited> <configuration> <descriptor>src/assembly/assembly.xml</descriptor> 
-				</configuration> </execution> </executions> </plugin> -->
 		</plugins>
 	</build>
 </project>
