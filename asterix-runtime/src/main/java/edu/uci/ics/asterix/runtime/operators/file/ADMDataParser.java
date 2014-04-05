@@ -158,14 +158,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
         switch (token) {
             case AdmLexer.TOKEN_NULL_LITERAL: {
-                if (checkType(ATypeTag.NULL, objectType, out)) {
+                if (checkType(ATypeTag.NULL, objectType)) {
                     nullSerde.serialize(ANull.NULL, out);
                 } else
                     throw new ParseException("This field can not be null");
                 break;
             }
             case AdmLexer.TOKEN_TRUE_LITERAL: {
-                if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
+                if (checkType(ATypeTag.BOOLEAN, objectType)) {
                     booleanSerde.serialize(ABoolean.TRUE, out);
                 } else
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -176,7 +176,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_FALSE_LITERAL: {
-                if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
+                if (checkType(ATypeTag.BOOLEAN, objectType)) {
                     booleanSerde.serialize(ABoolean.FALSE, out);
                 } else
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -235,9 +235,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_STRING_LITERAL: {
-                if (checkType(ATypeTag.STRING, objectType, out)) {
-                    aString.setValue(admLexer.getLastTokenImage().substring(1,
-                            admLexer.getLastTokenImage().length() - 1));
+                if (checkType(ATypeTag.STRING, objectType)) {
+                    final String tokenImage = admLexer.getLastTokenImage().substring(1,
+                            admLexer.getLastTokenImage().length() - 1);
+                    aString.setValue(admLexer.containsEscapes() ? replaceEscapes(tokenImage) : tokenImage);
                     stringSerde.serialize(aString, out);
                 } else
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -260,7 +261,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INTERVAL_DATE_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                             AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
@@ -274,7 +275,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 throw new ParseException("Wrong interval data parsing for date interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_TIME_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                             AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
@@ -288,7 +289,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 throw new ParseException("Wrong interval data parsing for time interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_DATETIME_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                             AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
@@ -338,7 +339,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_START_UNORDERED_LIST: {
-                if (checkType(ATypeTag.UNORDEREDLIST, objectType, out)) {
+                if (checkType(ATypeTag.UNORDEREDLIST, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else
@@ -347,7 +348,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             }
 
             case AdmLexer.TOKEN_START_ORDERED_LIST: {
-                if (checkType(ATypeTag.ORDEREDLIST, objectType, out)) {
+                if (checkType(ATypeTag.ORDEREDLIST, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else
@@ -355,7 +356,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_START_RECORD: {
-                if (checkType(ATypeTag.RECORD, objectType, out)) {
+                if (checkType(ATypeTag.RECORD, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
                     parseRecord((ARecordType) objectType, out, datasetRec);
                 } else
@@ -369,6 +370,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
             }
         }
+    }
+
+    private String replaceEscapes(String tokenImage) {
+        return tokenImage.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
     private IAType getComplexType(IAType aObjectType, ATypeTag tag) {
@@ -408,7 +413,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         return null;
     }
 
-    private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType, DataOutput out) throws IOException {
+    private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType) throws IOException {
         return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
     }
 

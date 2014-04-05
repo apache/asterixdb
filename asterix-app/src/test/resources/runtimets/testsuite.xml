@@ -4745,6 +4745,11 @@
         <output-dir compare="Text">type_promotion_0</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="escapes">
+        <output-dir compare="Text">escapes</output-dir>
+      </compilation-unit>
+    </test-case>
      <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue244">
         <output-dir compare="Text">query-issue244</output-dir>
