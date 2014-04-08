@@ -1,0 +1,10 @@
+drop dataverse TestDataverse if exists;
+create dataverse TestDataverse;
+use dataverse TestDataverse;
+
+create type TestType as {
+  id: string
+}
+
+create dataset TestSet(TestType)
+primary key id;

@@ -4750,6 +4750,12 @@
         <output-dir compare="Text">escapes</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="escapes-err-1">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error>
+      </compilation-unit>
+    </test-case>
      <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue244">
         <output-dir compare="Text">query-issue244</output-dir>

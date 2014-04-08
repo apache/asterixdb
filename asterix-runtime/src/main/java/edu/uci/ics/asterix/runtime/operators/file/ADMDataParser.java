@@ -372,8 +372,27 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         }
     }
 
-    private String replaceEscapes(String tokenImage) {
-        return tokenImage.replace("\\\"", "\"").replace("\\\\", "\\");
+    private String replaceEscapes(String tokenImage) throws ParseException {
+        char[] chars = tokenImage.toCharArray();
+        int len = chars.length;
+        int idx = 0;
+        while (idx < len) {
+            if (chars[idx] == '\\') {
+                switch (chars[idx + 1]) {
+                    case '\\':
+                    case '\"':
+                        for (int i = idx + 1; i < len; ++i) {
+                            chars[i - 1] = chars[i];
+                        }
+                        --len;
+                        break;
+                    default:
+                        throw new ParseException("Illegal escape '\\" + chars[idx + 1] + "'");
+                }
+            }
+            ++idx;
+        }
+        return new String(chars, 0, len);
     }
 
     private IAType getComplexType(IAType aObjectType, ATypeTag tag) {
