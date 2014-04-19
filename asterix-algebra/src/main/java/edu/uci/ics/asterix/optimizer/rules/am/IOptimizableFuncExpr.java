@@ -47,4 +47,8 @@ public interface IOptimizableFuncExpr {
     public int findFieldName(String fieldName);
 
     public void substituteVar(LogicalVariable original, LogicalVariable substitution);
+
+    public void setPartialField(boolean partialField);
+
+    public boolean containsPartialField();
 }

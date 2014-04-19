@@ -28,6 +28,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final String[] fieldNames;
     protected final OptimizableOperatorSubTree[] subTrees;
     protected final IAlgebricksConstantValue[] constantVals;
+    protected boolean partialField;
 
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable[] logicalVars,
             IAlgebricksConstantValue[] constantVals) {
@@ -35,6 +36,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.logicalVars = logicalVars;
         this.constantVals = constantVals;
         this.fieldNames = new String[logicalVars.length];
+        this.partialField = false;
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
     }
 
@@ -43,6 +45,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
             IAlgebricksConstantValue constantVal) {
         this.funcExpr = funcExpr;
         this.logicalVars = new LogicalVariable[] { logicalVar };
+        this.partialField = false;
         this.constantVals = new IAlgebricksConstantValue[] { constantVal };
         this.fieldNames = new String[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
@@ -123,5 +126,15 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
                 }
             }
         }
+    }
+
+    @Override
+    public void setPartialField(boolean partialField) {
+        this.partialField = partialField;
+    }
+ 
+    @Override
+    public boolean containsPartialField() {
+        return partialField;
     }
 }

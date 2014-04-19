@@ -48,6 +48,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -66,8 +67,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveEditDistanceSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.EditDistanceSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifierFactory;
@@ -84,6 +87,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         CONJUNCTIVE,
         JACCARD,
         EDIT_DISTANCE,
+        CONJUNCTIVE_EDIT_DISTANCE,
         INVALID
     }
 
@@ -111,15 +115,15 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
             AccessMethodAnalysisContext analysisCtx) {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
             return AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
         }
-        return analyzeGetItemFuncExpr(funcExpr, assigns, analysisCtx);
+        return analyzeGetItemFuncExpr(funcExpr, assignsAndUnnests, analysisCtx);
     }
 
-    public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+    public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
             AccessMethodAnalysisContext analysisCtx) {
         if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.GET_ITEM) {
             return false;
@@ -141,31 +145,49 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         if (arg1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             matchedFuncExpr = (AbstractFunctionCallExpression) arg1;
         }
-        // The get-item arg is a variable. Search the assigns for its origination function.
-        int matchedAssignIndex = -1;
+        // The get-item arg is a variable. Search the assigns and unnests for its origination function.
+        int matchedAssignOrUnnestIndex = -1;
         if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             VariableReferenceExpression varRefExpr = (VariableReferenceExpression) arg1;
             // Try to find variable ref expr in all assigns.
-            for (int i = 0; i < assigns.size(); i++) {
-                AssignOperator assign = assigns.get(i);
-                List<LogicalVariable> assignVars = assign.getVariables();
-                List<Mutable<ILogicalExpression>> assignExprs = assign.getExpressions();
-                for (int j = 0; j < assignVars.size(); j++) {
-                    LogicalVariable var = assignVars.get(j);
-                    if (var != varRefExpr.getVariableReference()) {
-                        continue;
+            for (int i = 0; i < assignsAndUnnests.size(); i++) {
+                AbstractLogicalOperator op = assignsAndUnnests.get(i);
+                if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                    AssignOperator assign = (AssignOperator) op;
+                    List<LogicalVariable> assignVars = assign.getVariables();
+                    List<Mutable<ILogicalExpression>> assignExprs = assign.getExpressions();
+                    for (int j = 0; j < assignVars.size(); j++) {
+                        LogicalVariable var = assignVars.get(j);
+                        if (var != varRefExpr.getVariableReference()) {
+                            continue;
+                        }
+                        // We've matched the variable in the first assign. Now analyze the originating function.
+                        ILogicalExpression matchedExpr = assignExprs.get(j).getValue();
+                        if (matchedExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                            return false;
+                        }
+                        matchedFuncExpr = (AbstractFunctionCallExpression) matchedExpr;
+                        break;
                     }
-                    // We've matched the variable in the first assign. Now analyze the originating function.
-                    ILogicalExpression matchedExpr = assignExprs.get(j).getValue();
-                    if (matchedExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                        return false;
+                }
+                else {
+                    UnnestOperator unnest = (UnnestOperator) op;
+                    LogicalVariable var = unnest.getVariable();
+                    if (var == varRefExpr.getVariableReference()) {
+                        ILogicalExpression matchedExpr = unnest.getExpressionRef().getValue();
+                        if (matchedExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                            return false;
+                        }
+                        AbstractFunctionCallExpression unnestFuncExpr = (AbstractFunctionCallExpression) matchedExpr;
+                        if (unnestFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+                            return false;
+                        }
+                        matchedFuncExpr = (AbstractFunctionCallExpression) unnestFuncExpr.getArguments().get(0).getValue();
                     }
-                    matchedAssignIndex = i;
-                    matchedFuncExpr = (AbstractFunctionCallExpression) matchedExpr;
-                    break;
                 }
                 // We've already found a match.
                 if (matchedFuncExpr != null) {
+                    matchedAssignOrUnnestIndex = i;
                     break;
                 }
             }
@@ -174,9 +196,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         if (!secondLevelFuncIdents.contains(matchedFuncExpr.getFunctionIdentifier())) {
             return false;
         }
-        boolean selectMatchFound = analyzeSelectSimilarityCheckFuncExprArgs(matchedFuncExpr, assigns,
-                matchedAssignIndex, analysisCtx);
-        boolean joinMatchFound = analyzeJoinSimilarityCheckFuncExprArgs(matchedFuncExpr, assigns, matchedAssignIndex,
+        boolean selectMatchFound = analyzeSelectSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests,
+                matchedAssignOrUnnestIndex, analysisCtx);
+        boolean joinMatchFound = analyzeJoinSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests, matchedAssignOrUnnestIndex,
                 analysisCtx);
         if (selectMatchFound || joinMatchFound) {
             return true;
@@ -185,7 +207,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean analyzeJoinSimilarityCheckFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AssignOperator> assigns, int matchedAssignIndex, AccessMethodAnalysisContext analysisCtx) {
+            List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex, AccessMethodAnalysisContext analysisCtx) {
         // There should be exactly three arguments.
         // The last function argument is assumed to be the similarity threshold.
         IAlgebricksConstantValue constThreshVal = null;
@@ -201,11 +223,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 || arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return false;
         }
-        LogicalVariable fieldVar1 = getNonConstArgFieldVar(arg1, funcExpr, assigns, matchedAssignIndex);
+        LogicalVariable fieldVar1 = getNonConstArgFieldVar(arg1, funcExpr, assignsAndUnnests, matchedAssignOrUnnestIndex);
         if (fieldVar1 == null) {
             return false;
         }
-        LogicalVariable fieldVar2 = getNonConstArgFieldVar(arg2, funcExpr, assigns, matchedAssignIndex);
+        LogicalVariable fieldVar2 = getNonConstArgFieldVar(arg2, funcExpr, assignsAndUnnests, matchedAssignOrUnnestIndex);
         if (fieldVar2 == null) {
             return false;
         }
@@ -215,7 +237,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean analyzeSelectSimilarityCheckFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AssignOperator> assigns, int matchedAssignIndex, AccessMethodAnalysisContext analysisCtx) {
+            List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex, AccessMethodAnalysisContext analysisCtx) {
         // There should be exactly three arguments.
         // The last function argument is assumed to be the similarity threshold.
         IAlgebricksConstantValue constThreshVal = null;
@@ -242,7 +264,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         ConstantExpression constExpr = (ConstantExpression) constArg;
         IAlgebricksConstantValue constFilterVal = constExpr.getValue();
-        LogicalVariable fieldVar = getNonConstArgFieldVar(nonConstArg, funcExpr, assigns, matchedAssignIndex);
+        LogicalVariable fieldVar = getNonConstArgFieldVar(nonConstArg, funcExpr, assignsAndUnnests, matchedAssignOrUnnestIndex);
         if (fieldVar == null) {
             return false;
         }
@@ -252,7 +274,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private LogicalVariable getNonConstArgFieldVar(ILogicalExpression nonConstArg,
-            AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns, int matchedAssignIndex) {
+            AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex) {
         LogicalVariable fieldVar = null;
         // Analyze nonConstArg depending on similarity function.
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
@@ -267,48 +289,22 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 // Find the variable that is being tokenized.
                 nonConstArg = nonConstFuncExpr.getArguments().get(0).getValue();
             }
-            if (nonConstArg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                VariableReferenceExpression varExpr = (VariableReferenceExpression) nonConstArg;
-                fieldVar = varExpr.getVariableReference();
-                // Find expr corresponding to var in assigns below.
-                for (int i = matchedAssignIndex + 1; i < assigns.size(); i++) {
-                    AssignOperator assign = assigns.get(i);
-                    boolean found = false;
-                    for (int j = 0; j < assign.getVariables().size(); j++) {
-                        if (fieldVar != assign.getVariables().get(j)) {
-                            continue;
-                        }
-                        ILogicalExpression childExpr = assign.getExpressions().get(j).getValue();
-                        if (childExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                            break;
-                        }
-                        AbstractFunctionCallExpression childFuncExpr = (AbstractFunctionCallExpression) childExpr;
-                        // If fieldVar references the result of a tokenization, then we should remember the variable being tokenized.
-                        if (childFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.WORD_TOKENS
-                                && childFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.GRAM_TOKENS) {
-                            break;
-                        }
-                        // We expect the tokenizer's argument to be a variable, otherwise we cannot apply an index.
-                        ILogicalExpression tokArgExpr = childFuncExpr.getArguments().get(0).getValue();
-                        if (tokArgExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                            break;
-                        }
-                        // Pass the variable being tokenized to the optimizable func expr.
-                        VariableReferenceExpression tokArgVarExpr = (VariableReferenceExpression) tokArgExpr;
-                        fieldVar = tokArgVarExpr.getVariableReference();
-                        found = true;
-                        break;
-                    }
-                    if (found) {
-                        break;
-                    }
-                }
-            }
         }
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
-            if (nonConstArg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                fieldVar = ((VariableReferenceExpression) nonConstArg).getVariableReference();
+            if(nonConstArg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression nonConstFuncExpr = (AbstractFunctionCallExpression) nonConstArg;
+                if (nonConstFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.WORD_TOKENS
+                        && nonConstFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SUBSTRING
+                        && nonConstFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SUBSTRING_BEFORE
+                        && nonConstFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SUBSTRING_AFTER) {
+                    return null;
+                }
+                // Find the variable whose substring is used in the similarity function
+                nonConstArg = nonConstFuncExpr.getArguments().get(0).getValue();
             }
+        }
+        if (nonConstArg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            fieldVar = ((VariableReferenceExpression) nonConstArg).getVariableReference();
         }
         return fieldVar;
     }
@@ -748,7 +744,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             jobGenParams.setSimilarityThreshold(optFuncExpr.getConstantVal(optFuncExpr.getNumConstantVals() - 1));
         }
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
-            jobGenParams.setSearchModifierType(SearchModifierType.EDIT_DISTANCE);
+            if (optFuncExpr.containsPartialField()) {
+                jobGenParams.setSearchModifierType(SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE);
+            } else {
+                jobGenParams.setSearchModifierType(SearchModifierType.EDIT_DISTANCE);
+            }
             // Add the similarity threshold which, by convention, is the last constant value.
             jobGenParams.setSimilarityThreshold(optFuncExpr.getConstantVal(optFuncExpr.getNumConstantVals() - 1));
         }
@@ -788,9 +788,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING
                     && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
                 AString astr = (AString) listOrStrObj;
-                // Compute merge threshold.
-                mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
+                // Compute merge threshold depending on the query grams contain pre- and postfixing
+                if (optFuncExpr.containsPartialField()) {
+                    mergeThreshold = (astr.getStringValue().length() - index.getGramLength() + 1)
+                            - edThresh.getIntegerValue() * index.getGramLength();
+                } else {
+                    mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
                         - edThresh.getIntegerValue() * index.getGramLength();
+                }
             }
             // We can only optimize edit distance on lists using a word index.
             if ((listOrStrObj.getType().getTypeTag() == ATypeTag.ORDEREDLIST || listOrStrObj.getType().getTypeTag() == ATypeTag.UNORDEREDLIST)
@@ -861,7 +866,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 // Make sure not to use pre- and postfixing for conjunctive searches.
-                boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE) ? false : true;
+                boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE || searchModifierType == SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE) ? false : true;
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
                         index.getGramLength(), prePost, false);
             }
@@ -899,6 +904,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                                 + "' for index type '" + index.getIndexType() + "'");
                     }
                 }
+            }
+            case CONJUNCTIVE_EDIT_DISTANCE: {
+                int edThresh = ((AInt32) simThresh).getIntegerValue();
+                return new ConjunctiveEditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
             }
             default: {
                 throw new AlgebricksException("Unknown search modifier type '" + searchModifierType + "'.");

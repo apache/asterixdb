@@ -33,20 +33,19 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 
 /**
  * Operator subtree that matches the following patterns, and provides convenient access to its nodes:
- * (select)? <-- (assign)+ <-- (datasource scan)
+ * (select)? <-- (assign | unnest)+ <-- (datasource scan)
  * and
  * (select)? <-- (datasource scan)
  */
 public class OptimizableOperatorSubTree {
     public ILogicalOperator root = null;
     public Mutable<ILogicalOperator> rootRef = null;
-    public final List<Mutable<ILogicalOperator>> assignRefs = new ArrayList<Mutable<ILogicalOperator>>();
-    public final List<AssignOperator> assigns = new ArrayList<AssignOperator>();
+    public final List<Mutable<ILogicalOperator>> assignsAndUnnestsRefs = new ArrayList<Mutable<ILogicalOperator>>();
+    public final List<AbstractLogicalOperator> assignsAndUnnests = new ArrayList<AbstractLogicalOperator>();
     public Mutable<ILogicalOperator> dataSourceScanRef = null;
     public DataSourceScanOperator dataSourceScan = null;
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
@@ -65,7 +64,7 @@ public class OptimizableOperatorSubTree {
             subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
         }
         // Check primary-index pattern.
-        if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+        if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN && subTreeOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             // Pattern may still match if we are looking for primary index matches as well.
             if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 dataSourceScanRef = subTreeOpRef;
@@ -74,24 +73,21 @@ public class OptimizableOperatorSubTree {
             }
             return false;
         }
-        // Match (assign)+.
+        // Match (assign | unnest)+.
         do {
-            assignRefs.add(subTreeOpRef);
-            assigns.add((AssignOperator) subTreeOp);
+            assignsAndUnnestsRefs.add(subTreeOpRef);
+            assignsAndUnnests.add(subTreeOp);
+
             subTreeOpRef = subTreeOp.getInputs().get(0);
             subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
-        } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN);
-        // Set to last valid assigns.
-        subTreeOpRef = assignRefs.get(assignRefs.size() - 1);
-        subTreeOp = assigns.get(assigns.size() - 1);
+        } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST);
+
         // Match datasource scan.
-        Mutable<ILogicalOperator> opRef3 = subTreeOp.getInputs().get(0);
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
-        if (op3.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
+        if (subTreeOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
             return false;
         }
-        dataSourceScanRef = opRef3;
-        dataSourceScan = (DataSourceScanOperator) op3;
+        dataSourceScanRef = subTreeOpRef;
+        dataSourceScan = (DataSourceScanOperator) subTreeOp;
         return true;
     }
 
@@ -133,8 +129,8 @@ public class OptimizableOperatorSubTree {
     public void reset() {
         root = null;
         rootRef = null;
-        assignRefs.clear();
-        assigns.clear();
+        assignsAndUnnestsRefs.clear();
+        assignsAndUnnests.clear();
         dataSourceScanRef = null;
         dataSourceScan = null;
         dataset = null;

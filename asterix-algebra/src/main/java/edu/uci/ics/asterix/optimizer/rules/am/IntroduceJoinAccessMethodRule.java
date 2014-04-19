@@ -38,8 +38,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 /**
  * This rule optimizes a join with secondary indexes into an indexed nested-loop join.
  * Matches the following operator pattern:
- * (join) <-- (select)? <-- (assign)+ <-- (datasource scan)
- * <-- (select)? <-- (assign)+ <-- (datasource scan)
+ * (join) <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
+ * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
  * Replaces the above pattern with the following simplified plan:
  * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan)
  * The sort is optional, and some access methods may choose not to sort.
@@ -86,10 +86,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         boolean matchInLeftSubTree = false;
         boolean matchInRightSubTree = false;
         if (leftSubTree.hasDataSourceScan()) {
-            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assigns, analyzedAMs);
+            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assignsAndUnnests, analyzedAMs);
         }
         if (rightSubTree.hasDataSourceScan()) {
-            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assigns, analyzedAMs);
+            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assignsAndUnnests, analyzedAMs);
         }
         if (!matchInLeftSubTree && !matchInRightSubTree) {
             return false;

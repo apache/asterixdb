@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 
 /**
@@ -51,7 +52,7 @@ public interface IAccessMethod {
      * @return true if funcExpr is optimizable by this access method, false
      *         otherwise
      */
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
             AccessMethodAnalysisContext analysisCtx);
 
     /**

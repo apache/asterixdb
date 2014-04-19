@@ -87,7 +87,7 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AssignOperator> assigns,
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
             AccessMethodAnalysisContext analysisCtx) {
         boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
         if (!matches) {
@@ -118,25 +118,25 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (primaryIndexUnnestOp == null) {
             return false;
         }
-        Mutable<ILogicalOperator> assignRef = (subTree.assignRefs.isEmpty()) ? null : subTree.assignRefs.get(0);
-        AssignOperator assign = null;
-        if (assignRef != null) {
-            assign = (AssignOperator) assignRef.getValue();
+        Mutable<ILogicalOperator> opRef = (subTree.assignsAndUnnestsRefs.isEmpty()) ? null : subTree.assignsAndUnnestsRefs.get(0);
+        ILogicalOperator op = null;
+        if (opRef != null) {
+            op = opRef.getValue();
         }
         // Generate new select using the new condition.
         if (conditionRef.getValue() != null) {
             select.getInputs().clear();
-            if (assign != null) {
+            if (op != null) {
                 subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
-                select.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                select.getInputs().add(new MutableObject<ILogicalOperator>(op));
             } else {
                 select.getInputs().add(new MutableObject<ILogicalOperator>(primaryIndexUnnestOp));
             }
         } else {
             ((AbstractLogicalOperator) primaryIndexUnnestOp).setExecutionMode(ExecutionMode.PARTITIONED);
-            if (assign != null) {
+            if (op != null) {
                 subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
-                selectRef.setValue(assign);
+                selectRef.setValue(op);
             } else {
                 selectRef.setValue(primaryIndexUnnestOp);
             }
