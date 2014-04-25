@@ -102,8 +102,10 @@ public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ITreeIndexCursor
 
             int c = cmp.selectiveFieldCompare(rtreeTuple, btreeTuple, comparatorFields);
             if (c == 0) {
+                frameTuple = rtreeTuple;
                 leftOverTuple = null;
-                continue;
+                foundNext = true;
+                return true;
             } else if (c < 0) {
                 frameTuple = rtreeTuple;
                 leftOverTuple = btreeTuple;

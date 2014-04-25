@@ -61,8 +61,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final int[] comparatorFields;
     protected final IBinaryComparatorFactory[] linearizerArray;
 
-    protected TreeTupleSorter rTreeTupleSorter;
-
     // On-disk components.
     // For creating RTree's used in flush and merge.
     protected final ILSMComponentFactory componentFactory;
@@ -115,7 +113,6 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.linearizer = linearizer;
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
-        rTreeTupleSorter = null;
     }
 
     @Override
@@ -225,6 +222,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 break;
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
+                break;
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }

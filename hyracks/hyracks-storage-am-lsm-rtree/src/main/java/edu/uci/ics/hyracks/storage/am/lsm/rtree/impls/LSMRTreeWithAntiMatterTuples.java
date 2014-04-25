@@ -57,9 +57,6 @@ import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
-
-    private TreeTupleSorter bTreeTupleSorter;
-
     // On-disk components.
     // For creating RTree's used in bulk load. Different from diskRTreeFactory
     // because it should have a different tuple writer in it's leaf frames.
@@ -79,7 +76,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                         diskRTreeFactory), diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories,
                 linearizer, comparatorFields, linearizerArray, 0, mergePolicy, opTracker, ioScheduler, ioOpCallback);
         bulkLoaComponentFactory = new LSMRTreeWithAntiMatterTuplesDiskComponentFactory(bulkLoadRTreeFactory);
-        this.bTreeTupleSorter = null;
     }
 
     @Override
@@ -183,11 +179,11 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         // Since the LSM-RTree is used as a secondary assumption, the
         // primary key will be the last comparator in the BTree comparators
-        rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
+        TreeTupleSorter rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
                 rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), flushingComponent.getRTree()
                         .getBufferCache(), comparatorFields);
 
-        bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBTree().getFileId(), linearizerArray,
+        TreeTupleSorter bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBTree().getFileId(), linearizerArray,
                 btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(), flushingComponent.getBTree()
                         .getBufferCache(), comparatorFields);
         // BulkLoad the tuples from the in-memory tree into the new disk

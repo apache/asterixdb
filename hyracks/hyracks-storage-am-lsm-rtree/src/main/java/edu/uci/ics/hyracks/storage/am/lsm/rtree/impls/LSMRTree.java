@@ -206,9 +206,9 @@ public class LSMRTree extends AbstractLSMRTree {
 
         IBinaryComparatorFactory[] linearizerArray = { linearizer };
 
-        rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(), linearizerArray,
-                rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(), flushingComponent.getRTree()
-                        .getBufferCache(), comparatorFields);
+        TreeTupleSorter rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getRTree().getFileId(),
+                linearizerArray, rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(),
+                flushingComponent.getRTree().getBufferCache(), comparatorFields);
         // BulkLoad the tuples from the in-memory tree into the new disk
         // RTree.
 
@@ -391,7 +391,7 @@ public class LSMRTree extends AbstractLSMRTree {
             ctx.setOperation(IndexOperation.DELETE);
             lsmHarness.modify(ctx, false, dualTuple);
         }
-        
+
         @Override
         public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException {
             dualTuple.reset(tuple);

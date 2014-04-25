@@ -82,6 +82,9 @@ public class BloomFilter {
     }
 
     public boolean contains(ITupleReference tuple, long[] hashes) throws HyracksDataException {
+        if (numPages == 0) {
+            return false;
+        }
         MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
         for (int i = 0; i < numHashes; ++i) {
             long hash = Math.abs((hashes[0] + (long) i * hashes[1]) % numBits);
@@ -210,7 +213,7 @@ public class BloomFilter {
                 throw new HyracksDataException("Failed to create the bloom filter builder since it is not activated.");
             }
 
-            this.numElements = numElements == 0 ? 1 : numElements;
+            this.numElements = numElements;
             this.numHashes = numHashes;
             numBits = this.numElements * numBitsPerElement;
             long tmp = (long) Math.ceil(numBits / (double) numBitsPerPage);
@@ -263,6 +266,10 @@ public class BloomFilter {
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
+            if (numPages == 0) {
+                throw new HyracksDataException(
+                        "Cannot add elements to this filter since it is supposed to be empty (number of elements hint passed to the filter during construction was 0).");
+            }
             MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
             for (int i = 0; i < numHashes; ++i) {
                 long hash = Math.abs((hashes[0] + (long) i * hashes[1]) % numBits);

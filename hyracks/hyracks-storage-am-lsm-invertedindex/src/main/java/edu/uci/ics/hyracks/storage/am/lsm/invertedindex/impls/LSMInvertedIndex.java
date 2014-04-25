@@ -295,6 +295,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 break;
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
+                break;
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }
