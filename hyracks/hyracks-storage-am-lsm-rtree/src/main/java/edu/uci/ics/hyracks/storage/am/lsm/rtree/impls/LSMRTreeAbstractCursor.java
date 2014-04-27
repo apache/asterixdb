@@ -140,6 +140,7 @@ public abstract class LSMRTreeAbstractCursor implements ITreeIndexCursor {
             lsmHarness.endSearch(opCtx);
         }
 
+        foundNext = false;
         open = false;
     }
 

@@ -52,6 +52,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
     private int currentCursor;
     private SearchPredicate rtreeSearchPredicate;
     private int numMutableComponents;
+    private boolean open;
 
     public LSMRTreeWithAntiMatterTuplesSearchCursor(ILSMIndexOperationContext opCtx) {
         this(opCtx, false);
@@ -123,6 +124,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
         searchNextCursor();
         setPriorityQueueComparator();
         initPriorityQueue();
+        open = true;
     }
 
     private void searchNextCursor() throws HyracksDataException, IndexException {
@@ -191,18 +193,25 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
 
     @Override
     public void reset() throws HyracksDataException, IndexException {
+        if (!open) {
+            return;
+        }
+        currentCursor = 0;
+        foundNext = false;
         if (includeMutableComponent) {
             for (int i = 0; i < numMutableComponents; i++) {
                 mutableRTreeCursors[i].reset();
                 btreeCursors[i].reset();
             }
         }
-        currentCursor = 0;
         super.reset();
     }
 
     @Override
     public void close() throws HyracksDataException {
+        if (!open) {
+            return;
+        }
         if (includeMutableComponent) {
             for (int i = 0; i < numMutableComponents; i++) {
                 mutableRTreeCursors[i].close();
@@ -210,6 +219,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
             }
         }
         currentCursor = 0;
+        open = false;
         super.close();
     }
 

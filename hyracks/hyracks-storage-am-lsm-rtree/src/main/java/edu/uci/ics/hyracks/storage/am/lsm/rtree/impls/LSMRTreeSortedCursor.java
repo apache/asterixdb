@@ -97,7 +97,7 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
                 if (linearizeCmp.compare(frameTuple.getFieldData(0), frameTuple.getFieldStart(0),
                         frameTuple.getFieldLength(0) * linearizeCmp.getDimensions(), rtreeCursors[i].getTuple()
                                 .getFieldData(0), rtreeCursors[i].getTuple().getFieldStart(0), rtreeCursors[i]
-                                .getTuple().getFieldLength(0) * linearizeCmp.getDimensions()) <= 0) {
+                                .getTuple().getFieldLength(0) * linearizeCmp.getDimensions()) > 0) {
                     frameTuple = rtreeCursors[i].getTuple();
                     foundIn = i;
                 }
