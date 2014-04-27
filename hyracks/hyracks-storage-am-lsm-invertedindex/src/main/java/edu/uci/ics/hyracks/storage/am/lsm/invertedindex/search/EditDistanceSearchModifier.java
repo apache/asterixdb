@@ -19,8 +19,8 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearch
 
 public class EditDistanceSearchModifier implements IInvertedIndexSearchModifier {
 
-    private int gramLength;
-    private int edThresh;
+    protected int gramLength;
+    protected int edThresh;
 
     public EditDistanceSearchModifier(int gramLength, int edThresh) {
         this.gramLength = gramLength;

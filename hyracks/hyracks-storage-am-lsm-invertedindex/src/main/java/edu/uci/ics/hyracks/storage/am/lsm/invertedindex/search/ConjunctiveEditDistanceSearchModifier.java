@@ -17,9 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
 
 public class ConjunctiveEditDistanceSearchModifier extends EditDistanceSearchModifier {
 
-    private int gramLength;
-    private int edThresh;
-    
+
     public ConjunctiveEditDistanceSearchModifier(int gramLength, int edThresh) {
         super(gramLength, edThresh);
     }
