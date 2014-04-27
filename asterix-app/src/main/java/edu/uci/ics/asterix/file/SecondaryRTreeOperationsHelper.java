@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
@@ -174,6 +175,11 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeyFields);
         }
 
+        // Sort by secondary keys.
+        ExternalSortOperatorDescriptor sortOp = createSortOp(spec,
+                new IBinaryComparatorFactory[] { AqlMetadataProvider.proposeLinearizer(keyType,
+                        secondaryComparatorFactories.length) }, secondaryRecDesc);
+
         AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
         // Create secondary RTree bulk load op.
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec,
@@ -190,10 +196,11 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
         spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
         if (anySecondaryKeyIsNullable) {
             spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, secondaryBulkLoadOp, 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
         } else {
-            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, secondaryBulkLoadOp, 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
         }
+        spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
         spec.addRoot(secondaryBulkLoadOp);
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         return spec;
