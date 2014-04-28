@@ -213,4 +213,60 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
             return ed;
         }
     }
+
+    // checks whether the first string contains a similar string to the second string
+    public int UTF8StringEditDistanceContains(byte[] bytes, int fsStart, int ssStart, int edThresh) {
+
+        int fsLen = StringUtils.getStrLen(bytes, fsStart);
+        int ssLen = StringUtils.getStrLen(bytes, ssStart);
+
+        // reuse existing matrix if possible
+        if (ssLen >= cols) {
+            cols = ssLen + 1;
+            matrix = new int[rows][cols];
+        }
+
+        int fsDataStart = fsStart + utf8SizeIndicatorSize;
+        int ssDataStart = ssStart + utf8SizeIndicatorSize;
+
+        // init matrix
+        for (int i = 0; i <= ssLen; i++) {
+            matrix[0][i] = 0;
+        }
+
+        int currRow = 1;
+        int prevRow = 0;
+        int minEd = Integer.MAX_VALUE;
+        // expand dynamic programming matrix row by row
+        int fsPos = fsDataStart;
+        for (int i = 1; i <= fsLen; i++) {
+            matrix[currRow][0] = i;
+            char fsChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, fsPos));
+
+            int ssPos = ssDataStart;
+            for (int j = 1; j <= ssLen; j++) {
+                char ssChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, ssPos));
+
+                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
+                        matrix[prevRow][j - 1] + (fsChar == ssChar ? 0 : 1));
+
+                ssPos += StringUtils.charSize(bytes, ssPos);
+
+                if (i == fsLen && matrix[currRow][j] < minEd) {
+                    minEd = matrix[currRow][j];
+                }
+            }
+
+            fsPos += StringUtils.charSize(bytes, fsPos);
+
+            int tmp = currRow;
+            currRow = prevRow;
+            prevRow = tmp;
+        }
+        if (minEd > edThresh) {
+            return -1;
+        } else {
+            return minEd;
+        }
+    }
 }

@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -36,8 +37,12 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.logicalVars = logicalVars;
         this.constantVals = constantVals;
         this.fieldNames = new String[logicalVars.length];
-        this.partialField = false;
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+            this.partialField = true;
+        } else {
+            this.partialField = false;
+        }
     }
 
     // Special, more convenient c'tor for simple binary functions.
@@ -45,10 +50,14 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
             IAlgebricksConstantValue constantVal) {
         this.funcExpr = funcExpr;
         this.logicalVars = new LogicalVariable[] { logicalVar };
-        this.partialField = false;
         this.constantVals = new IAlgebricksConstantValue[] { constantVal };
         this.fieldNames = new String[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+            this.partialField = true;
+        } else {
+            this.partialField = false;
+        }
     }
 
     @Override

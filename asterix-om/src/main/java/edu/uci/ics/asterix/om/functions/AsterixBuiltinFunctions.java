@@ -390,6 +390,8 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "edit-distance-list-is-filterable", 2);
     public final static FunctionIdentifier EDIT_DISTANCE_STRING_IS_FILTERABLE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "edit-distance-string-is-filterable", 4);
+    public final static FunctionIdentifier EDIT_DISTANCE_CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "edit-distance-contains", 3);
 
     // tokenizers:
     public final static FunctionIdentifier WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -827,6 +829,7 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(SERIAL_LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
+        addFunction(EDIT_DISTANCE_CONTAINS, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE, true);
         addFunction(SIMILARITY_JACCARD_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addPrivateFunction(SIMILARITY_JACCARD_SORTED, AFloatTypeComputer.INSTANCE, true);
@@ -1277,6 +1280,7 @@ public class AsterixBuiltinFunctions {
         similarityFunctions.add(getAsterixFunctionInfo(SIMILARITY_JACCARD_CHECK));
         similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE));
         similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE_CHECK));
+        similarityFunctions.add(getAsterixFunctionInfo(EDIT_DISTANCE_CONTAINS));
     }
 
     public static boolean isSimilarityFunction(FunctionIdentifier fi) {

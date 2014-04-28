@@ -105,6 +105,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     static {
         secondLevelFuncIdents.add(AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK);
         secondLevelFuncIdents.add(AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK);
+        secondLevelFuncIdents.add(AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS);
     }
 
     public static InvertedIndexAccessMethod INSTANCE = new InvertedIndexAccessMethod();
@@ -115,16 +116,16 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
-            AccessMethodAnalysisContext analysisCtx) {
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
             return AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
         }
         return analyzeGetItemFuncExpr(funcExpr, assignsAndUnnests, analysisCtx);
     }
 
-    public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
-            AccessMethodAnalysisContext analysisCtx) {
+    public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr,
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
         if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.GET_ITEM) {
             return false;
         }
@@ -169,8 +170,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         matchedFuncExpr = (AbstractFunctionCallExpression) matchedExpr;
                         break;
                     }
-                }
-                else {
+                } else {
                     UnnestOperator unnest = (UnnestOperator) op;
                     LogicalVariable var = unnest.getVariable();
                     if (var == varRefExpr.getVariableReference()) {
@@ -182,7 +182,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         if (unnestFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
                             return false;
                         }
-                        matchedFuncExpr = (AbstractFunctionCallExpression) unnestFuncExpr.getArguments().get(0).getValue();
+                        matchedFuncExpr = (AbstractFunctionCallExpression) unnestFuncExpr.getArguments().get(0)
+                                .getValue();
                     }
                 }
                 // We've already found a match.
@@ -198,8 +199,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         boolean selectMatchFound = analyzeSelectSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests,
                 matchedAssignOrUnnestIndex, analysisCtx);
-        boolean joinMatchFound = analyzeJoinSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests, matchedAssignOrUnnestIndex,
-                analysisCtx);
+        boolean joinMatchFound = analyzeJoinSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests,
+                matchedAssignOrUnnestIndex, analysisCtx);
         if (selectMatchFound || joinMatchFound) {
             return true;
         }
@@ -207,7 +208,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean analyzeJoinSimilarityCheckFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex, AccessMethodAnalysisContext analysisCtx) {
+            List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex,
+            AccessMethodAnalysisContext analysisCtx) {
         // There should be exactly three arguments.
         // The last function argument is assumed to be the similarity threshold.
         IAlgebricksConstantValue constThreshVal = null;
@@ -223,11 +225,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 || arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return false;
         }
-        LogicalVariable fieldVar1 = getNonConstArgFieldVar(arg1, funcExpr, assignsAndUnnests, matchedAssignOrUnnestIndex);
+        LogicalVariable fieldVar1 = getNonConstArgFieldVar(arg1, funcExpr, assignsAndUnnests,
+                matchedAssignOrUnnestIndex);
         if (fieldVar1 == null) {
             return false;
         }
-        LogicalVariable fieldVar2 = getNonConstArgFieldVar(arg2, funcExpr, assignsAndUnnests, matchedAssignOrUnnestIndex);
+        LogicalVariable fieldVar2 = getNonConstArgFieldVar(arg2, funcExpr, assignsAndUnnests,
+                matchedAssignOrUnnestIndex);
         if (fieldVar2 == null) {
             return false;
         }
@@ -237,7 +241,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean analyzeSelectSimilarityCheckFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex, AccessMethodAnalysisContext analysisCtx) {
+            List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex,
+            AccessMethodAnalysisContext analysisCtx) {
         // There should be exactly three arguments.
         // The last function argument is assumed to be the similarity threshold.
         IAlgebricksConstantValue constThreshVal = null;
@@ -264,7 +269,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         ConstantExpression constExpr = (ConstantExpression) constArg;
         IAlgebricksConstantValue constFilterVal = constExpr.getValue();
-        LogicalVariable fieldVar = getNonConstArgFieldVar(nonConstArg, funcExpr, assignsAndUnnests, matchedAssignOrUnnestIndex);
+        LogicalVariable fieldVar = getNonConstArgFieldVar(nonConstArg, funcExpr, assignsAndUnnests,
+                matchedAssignOrUnnestIndex);
         if (fieldVar == null) {
             return false;
         }
@@ -274,7 +280,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private LogicalVariable getNonConstArgFieldVar(ILogicalExpression nonConstArg,
-            AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex) {
+            AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
+            int matchedAssignOrUnnestIndex) {
         LogicalVariable fieldVar = null;
         // Analyze nonConstArg depending on similarity function.
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
@@ -290,7 +297,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 nonConstArg = nonConstFuncExpr.getArguments().get(0).getValue();
             }
         }
-        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
+        if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
+                || funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             while (nonConstArg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 AbstractFunctionCallExpression nonConstFuncExpr = (AbstractFunctionCallExpression) nonConstArg;
                 if (nonConstFuncExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.WORD_TOKENS
@@ -431,7 +439,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Create "panic" (non indexed) nested-loop join path if necessary.
         Mutable<ILogicalOperator> panicJoinRef = null;
         Map<LogicalVariable, LogicalVariable> panicVarMap = null;
-        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
+                || optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             panicJoinRef = new MutableObject<ILogicalOperator>(joinRef.getValue());
             panicVarMap = new HashMap<LogicalVariable, LogicalVariable>();
             Mutable<ILogicalOperator> newProbeRootRef = createPanicNestedLoopJoinPlan(panicJoinRef, indexSubTree,
@@ -658,9 +667,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         .getConstantVal(0))));
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils
                         .createInt32Constant(chosenIndex.getGramLength())));
-                // TODO: Currently usePrePost is hardcoded to be true.
+                boolean usePrePost = optFuncExpr.containsPartialField() ? false : true;
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils
-                        .createBooleanConstant(true)));
+                        .createBooleanConstant(usePrePost)));
                 isFilterableExpr = new ScalarFunctionCallExpression(
                         FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE),
                         isFilterableArgs);
@@ -743,7 +752,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             // Add the similarity threshold which, by convention, is the last constant value.
             jobGenParams.setSimilarityThreshold(optFuncExpr.getConstantVal(optFuncExpr.getNumConstantVals() - 1));
         }
-        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
+                || optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             if (optFuncExpr.containsPartialField()) {
                 jobGenParams.setSearchModifierType(SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE);
             } else {
@@ -771,7 +781,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
             return false;
         }
-        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK) {
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
+                || optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             // Must be for a join query.
             if (optFuncExpr.getNumConstantVals() == 1) {
                 return true;
@@ -794,7 +805,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                             - edThresh.getIntegerValue() * index.getGramLength();
                 } else {
                     mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
-                        - edThresh.getIntegerValue() * index.getGramLength();
+                            - edThresh.getIntegerValue() * index.getGramLength();
                 }
             }
             // We can only optimize edit distance on lists using a word index.
@@ -866,7 +877,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 // Make sure not to use pre- and postfixing for conjunctive searches.
-                boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE || searchModifierType == SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE) ? false : true;
+                boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE || searchModifierType == SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE) ? false
+                        : true;
                 return AqlBinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
                         index.getGramLength(), prePost, false);
             }

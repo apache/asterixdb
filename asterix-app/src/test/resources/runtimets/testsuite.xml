@@ -2340,6 +2340,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ngram-edit-distance-contains">
+        <output-dir compare="Text">inverted-index-ngram-edit-distance-contains</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-olist-edit-distance-panic">
         <output-dir compare="Text">inverted-index-olist-edit-distance-panic</output-dir>
       </compilation-unit>

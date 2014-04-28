@@ -166,6 +166,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.CreatePolygonDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceCheckDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceContainsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceListIsFilterable;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterable;
@@ -533,6 +534,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(EditDistanceCheckDescriptor.FACTORY);
         temp.add(EditDistanceStringIsFilterable.FACTORY);
         temp.add(EditDistanceListIsFilterable.FACTORY);
+        temp.add(EditDistanceContainsDescriptor.FACTORY);
 
         temp.add(SimilarityJaccardDescriptor.FACTORY);
         temp.add(SimilarityJaccardCheckDescriptor.FACTORY);
