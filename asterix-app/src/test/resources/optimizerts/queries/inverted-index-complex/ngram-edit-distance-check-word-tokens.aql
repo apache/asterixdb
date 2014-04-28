@@ -24,7 +24,9 @@ create index ngram_index on DBLP(title) type ngram(3);
 write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm";
 
 for $paper in dataset('DBLP')
-where (some $word in word-tokens($paper.title) satisfies edit-distance-check($word, "datbase", 1)[0] )
+for $word in word-tokens($paper.title)
+where edit-distance-check($word, "Multmedia", 1)[0]
+distinct by $paper.id
 return {
   "id" : $paper.id,
   "title" : $paper.title

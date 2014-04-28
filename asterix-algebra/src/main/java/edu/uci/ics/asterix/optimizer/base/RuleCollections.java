@@ -32,7 +32,6 @@ import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
-import edu.uci.ics.asterix.optimizer.rules.IntroduceDistinctByForExistentialSubplanRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceInstantLockSearchCallbackRule;
@@ -181,7 +180,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new NestGroupByRule());
         condPushDownAndJoinInference.add(new EliminateGroupByEmptyKeyRule());
         condPushDownAndJoinInference.add(new LeftOuterJoinToInnerJoinRule());
-        condPushDownAndJoinInference.add(new IntroduceDistinctByForExistentialSubplanRule());
 
         return condPushDownAndJoinInference;
     }
