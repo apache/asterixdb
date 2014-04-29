@@ -15,46 +15,24 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
 
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+public class ConjunctiveListEditDistanceSearchModifier extends ListEditDistanceSearchModifier {
 
-public class ListEditDistanceSearchModifier implements IInvertedIndexSearchModifier {
-
-    protected int edThresh;
-
-    public ListEditDistanceSearchModifier(int edThresh) {
-        this.edThresh = edThresh;
-    }
-
-    public int getEdThresh() {
-        return edThresh;
-    }
-
-    public void setEdThresh(int edThresh) {
-        this.edThresh = edThresh;
-    }
-
-    @Override
-    public int getOccurrenceThreshold(int numQueryTokens) {
-        return numQueryTokens - edThresh;
-    }
-
-    @Override
-    public int getNumPrefixLists(int occurrenceThreshold, int numInvLists) {
-        return numInvLists - occurrenceThreshold + 1;
+    public ConjunctiveListEditDistanceSearchModifier(int edThresh) {
+        super(edThresh);
     }
 
     @Override
     public short getNumTokensLowerBound(short numQueryTokens) {
-        return (short) (numQueryTokens - edThresh);
+        return -1;
     }
 
     @Override
     public short getNumTokensUpperBound(short numQueryTokens) {
-        return (short) (numQueryTokens + edThresh);
+        return -1;
     }
     
     @Override
     public String toString() {
-        return "List Edit Distance Search Modifier, Threshold: " + edThresh;
+        return "Conjunctive List Edit Distance Search Modifier, Threshold: " + edThresh;
     }
 }
