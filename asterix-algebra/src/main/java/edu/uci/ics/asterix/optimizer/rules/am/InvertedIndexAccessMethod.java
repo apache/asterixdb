@@ -71,6 +71,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOpera
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveEditDistanceSearchModifierFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveListEditDistanceSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.EditDistanceSearchModifierFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifierFactory;
@@ -258,6 +259,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         ILogicalExpression nonConstArg = null;
         if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && arg2.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+            // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if it is on the first argument
+            if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+                return false;
+            }
             constArg = arg1;
             nonConstArg = arg2;
         } else if (arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT
@@ -404,6 +409,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
+        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
@@ -413,10 +419,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
         } else if (dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
+            // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if it is on the left side
+            if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+                return false;
+            }
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
-        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         InnerJoinOperator join = (InnerJoinOperator) joinRef.getValue();
 
         // Remember the original probe subtree, and its primary-key variables,
@@ -898,28 +907,33 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 float jaccThresh = ((AFloat) simThresh).getFloatValue();
                 return new JaccardSearchModifierFactory(jaccThresh);
             }
-            case EDIT_DISTANCE: {
+            case EDIT_DISTANCE:
+            case CONJUNCTIVE_EDIT_DISTANCE: {
                 int edThresh = ((AInt32) simThresh).getIntegerValue();
                 switch (index.getIndexType()) {
                     case SINGLE_PARTITION_NGRAM_INVIX:
                     case LENGTH_PARTITIONED_NGRAM_INVIX: {
                         // Edit distance on strings, filtered with overlapping grams.
-                        return new EditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
+                        if (searchModifierType == SearchModifierType.EDIT_DISTANCE) {
+                            return new EditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
+                        } else {
+                            return new ConjunctiveEditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
+                        }
                     }
                     case SINGLE_PARTITION_WORD_INVIX:
                     case LENGTH_PARTITIONED_WORD_INVIX: {
                         // Edit distance on two lists. The list-elements are non-overlapping.
-                        return new ListEditDistanceSearchModifierFactory(edThresh);
+                        if (searchModifierType == SearchModifierType.EDIT_DISTANCE) {
+                            return new ListEditDistanceSearchModifierFactory(edThresh);
+                        } else {
+                            return new ConjunctiveListEditDistanceSearchModifierFactory(edThresh);
+                        }
                     }
                     default: {
                         throw new AlgebricksException("Incompatible search modifier '" + searchModifierType
                                 + "' for index type '" + index.getIndexType() + "'");
                     }
                 }
-            }
-            case CONJUNCTIVE_EDIT_DISTANCE: {
-                int edThresh = ((AInt32) simThresh).getIntegerValue();
-                return new ConjunctiveEditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
             }
             default: {
                 throw new AlgebricksException("Unknown search modifier type '" + searchModifierType + "'.");

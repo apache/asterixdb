@@ -110,6 +110,10 @@ public class AccessMethodUtils {
         // One of the args must be a constant, and the other arg must be a variable.
         if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            // The arguments of contains() function are asymmetrical, we can only use index if it is on the first argument
+            if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
+                return false;
+            }
             ConstantExpression constExpr = (ConstantExpression) arg1;
             constFilterVal = constExpr.getValue();
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg2;
