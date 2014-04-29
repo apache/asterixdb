@@ -415,14 +415,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
+        if (leftSubTree.dataset != null && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
-        } else if (dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
-            // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if it is on the left side
-            if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
-                return false;
-            }
+        } else if (rightSubTree.dataset != null && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }

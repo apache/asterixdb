@@ -286,6 +286,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         if (funcVarIndex == -1) {
                             continue;
                         }
+                        // We only look for index on the first variable of the function, because edit-distance-contains() arguments are asymmetric
+                        if (funcVarIndex > 0 && optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
+                            continue;
+                        }
                         // At this point we have matched the optimizable func expr at optFuncExprIndex to an assigned variable.
                         // Remember matching subtree.
                         optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
@@ -304,6 +308,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     int funcVarIndex = optFuncExpr.findLogicalVar(var);
                     // No matching var in optFuncExpr.
                     if (funcVarIndex == -1) {
+                        continue;
+                    }
+                    // We only look for index on the first variable of the function, because edit-distance-contains() arguments are asymmetric
+                    if (funcVarIndex > 0 && optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
                         continue;
                     }
                     // At this point we have matched the optimizable func expr at optFuncExprIndex to an unnest variable.
@@ -326,6 +334,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 int funcVarIndex = optFuncExpr.findLogicalVar(var);
                 // No matching var in optFuncExpr.
                 if (funcVarIndex == -1) {
+                    continue;
+                }
+                // We only look for index on the first variable of the function, because edit-distance-contains() arguments are asymmetric
+                if (funcVarIndex > 0 && optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
                     continue;
                 }
                 // The variable value is one of the partitioning fields.
