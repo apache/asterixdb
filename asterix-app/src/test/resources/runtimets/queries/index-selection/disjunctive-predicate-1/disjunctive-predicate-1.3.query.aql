@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $x in dataset TestSet
+where $x.id = "one" or $x.id = "two" or $x.id = "two"
+return $x

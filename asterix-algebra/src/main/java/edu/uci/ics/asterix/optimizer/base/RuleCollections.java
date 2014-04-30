@@ -53,6 +53,7 @@ import edu.uci.ics.asterix.optimizer.rules.RemoveRedundantListifyRule;
 import edu.uci.ics.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
 import edu.uci.ics.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.ReplaceSinkOpWithCommitOpRule;
+import edu.uci.ics.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
 import edu.uci.ics.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
@@ -158,6 +159,7 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexJoinInferenceRule());
+        condPushDownAndJoinInference.add(new DisjunctivePredicateToJoinRule());
         condPushDownAndJoinInference.add(new PushSelectIntoJoinRule());
         condPushDownAndJoinInference.add(new IntroJoinInsideSubplanRule());
         condPushDownAndJoinInference.add(new PushAssignDownThroughProductRule());
