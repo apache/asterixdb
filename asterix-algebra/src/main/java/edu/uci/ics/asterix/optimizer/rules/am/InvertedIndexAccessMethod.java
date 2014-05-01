@@ -409,7 +409,6 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
-        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
@@ -421,6 +420,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         } else if (rightSubTree.dataset != null && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
+        }
+        IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
+        // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if the dataset of index subtree and the dataset of first argument's subtree is the same     
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS
+                && optFuncExpr.getOperatorSubTree(0).dataset != null
+                && !optFuncExpr.getOperatorSubTree(0).dataset.getDatasetName().equals(
+                        indexSubTree.dataset.getDatasetName())) {
+            return false;
         }
         InnerJoinOperator join = (InnerJoinOperator) joinRef.getValue();
 
