@@ -137,7 +137,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             return false;
         }
         selectCond = (AbstractFunctionCallExpression) condExpr;
-        return subTree.initFromSubTree(op1.getInputs().get(0));
+        boolean res = subTree.initFromSubTree(op1.getInputs().get(0));
+        return res && subTree.hasDataSourceScan();
     }
 
     @Override

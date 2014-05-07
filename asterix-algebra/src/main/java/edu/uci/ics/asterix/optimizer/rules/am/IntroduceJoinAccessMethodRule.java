@@ -39,9 +39,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * This rule optimizes a join with secondary indexes into an indexed nested-loop join.
  * Matches the following operator pattern:
  * (join) <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
- * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
+ * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan | unnest-map)
+ * The order of the join inputs does not matter.
  * Replaces the above pattern with the following simplified plan:
- * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan)
+ * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan | unnest-map)
  * The sort is optional, and some access methods may choose not to sort.
  * Note that for some index-based optimizations we do not remove the triggering
  * condition from the join, since the secondary index may only act as a filter, and the
@@ -52,8 +53,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * 3. Check metadata to see if there are applicable indexes.
  * 4. Choose an index to apply (for now only a single index will be chosen).
  * 5. Rewrite plan using index (delegated to IAccessMethods).
- * TODO (Alex): Currently this rule requires a data scan on both inputs of the join. I should generalize the pattern
- * to accept any subtree on one side, as long as the other side has a datasource scan.
  */
 public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethodRule {
 
@@ -85,10 +84,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new HashMap<IAccessMethod, AccessMethodAnalysisContext>();
         boolean matchInLeftSubTree = false;
         boolean matchInRightSubTree = false;
-        if (leftSubTree.hasDataSourceScan()) {
+        if (leftSubTree.hasDataSource()) {
             matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assignsAndUnnests, analyzedAMs);
         }
-        if (rightSubTree.hasDataSourceScan()) {
+        if (rightSubTree.hasDataSource()) {
             matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assignsAndUnnests, analyzedAMs);
         }
         if (!matchInLeftSubTree && !matchInRightSubTree) {

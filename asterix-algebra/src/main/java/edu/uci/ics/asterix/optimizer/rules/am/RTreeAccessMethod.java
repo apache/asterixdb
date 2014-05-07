@@ -98,7 +98,7 @@ public class RTreeAccessMethod implements IAccessMethod {
             return false;
         }
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
-        subTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
+        subTree.dataSourceRef.setValue(primaryIndexUnnestOp);
         return true;
     }
 
@@ -111,10 +111,11 @@ public class RTreeAccessMethod implements IAccessMethod {
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (leftSubTree.dataset != null && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
+        if (leftSubTree.hasDataSourceScan() && leftSubTree.dataset != null
+                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
-        } else if (rightSubTree.dataset != null
+        } else if (rightSubTree.hasDataSourceScan() && rightSubTree.dataset != null
                 && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
@@ -126,7 +127,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (primaryIndexUnnestOp == null) {
             return false;
         }
-        indexSubTree.dataSourceScanRef.setValue(primaryIndexUnnestOp);
+        indexSubTree.dataSourceRef.setValue(primaryIndexUnnestOp);
         // Change join into a select with the same condition.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         SelectOperator topSelect = new SelectOperator(joinOp.getCondition());
@@ -149,8 +150,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         IAType spatialType = keyPairType.first;
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
-
-        DataSourceScanOperator dataSourceScan = indexSubTree.dataSourceScan;
+        // we made sure indexSubTree has datasource scan
+        DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.dataSourceRef.getValue();
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // A spatial object is serialized in the constant of the func expr we are optimizing.

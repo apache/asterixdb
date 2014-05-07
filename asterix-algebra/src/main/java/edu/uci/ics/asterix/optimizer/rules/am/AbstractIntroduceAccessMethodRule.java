@@ -295,7 +295,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         }
                         // Set the fieldName in the corresponding matched function expression.
                         optFuncExpr.setFieldName(funcVarIndex, fieldName);
-                        fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                        if (subTree.hasDataSourceScan()) {
+                            fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                        }
                     }
                 }
                 else {
@@ -315,12 +317,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     }
                     // Set the fieldName in the corresponding matched function expression.
                     optFuncExpr.setFieldName(funcVarIndex, fieldName);
-                    fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                    if (subTree.hasDataSourceScan()) {
+                        fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                    }
                 }
             }
 
             // Try to match variables from optFuncExpr to datasourcescan if not already matched in assigns.
-            List<LogicalVariable> dsVarList = subTree.dataSourceScan.getVariables();
+            List<LogicalVariable> dsVarList = subTree.getDataSourceVariables();
             for (int varIndex = 0; varIndex < dsVarList.size(); varIndex++) {
                 LogicalVariable var = dsVarList.get(varIndex);
                 int funcVarIndex = optFuncExpr.findLogicalVar(var);
@@ -333,7 +337,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
                 optFuncExpr.setFieldName(funcVarIndex, fieldName);
                 optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
-                fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                if (subTree.hasDataSourceScan()) {
+                    fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
+                }
             }
         }
     }
