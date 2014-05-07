@@ -1,0 +1,14 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as {
+  "id" : string,
+  "idx" : string,
+  "no-idx" : string
+};
+
+create dataset TestSet(TestType) primary key "id";
+create index TestSetIndex on TestSet(idx);
+
+delete $x from dataset TestSet where $x.no-idx = "one" or $x.no-idx = "two";
