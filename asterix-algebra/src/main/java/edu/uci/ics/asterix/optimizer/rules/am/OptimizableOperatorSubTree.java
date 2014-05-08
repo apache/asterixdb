@@ -42,9 +42,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOp
 
 /**
  * Operator subtree that matches the following patterns, and provides convenient access to its nodes:
- * (select)? <-- (assign | unnest)+ <-- (datasource scan | unnest-map)
- * and
- * (select)? <-- (datasource scan | unnest-map)
+ * (select)? <-- (assign | unnest)* <-- (datasource scan | unnest-map)
  */
 public class OptimizableOperatorSubTree {
 
@@ -78,27 +76,7 @@ public class OptimizableOperatorSubTree {
         // Check primary-index pattern.
         if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN && subTreeOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             // Pattern may still match if we are looking for primary index matches as well.
-            if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                dataSourceType = DataSourceType.DATASOURCE_SCAN;
-                dataSourceRef = subTreeOpRef;
-                return true;
-            } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
-                UnnestMapOperator unnestMapOp = (UnnestMapOperator) subTreeOp;
-                ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
-                if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                    AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
-                    if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
-                        AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
-                        jobGenParams.readFromFuncArgs(f.getArguments());
-                        if(jobGenParams.isPrimaryIndex()) {
-                            dataSourceType = DataSourceType.PRIMARY_INDEX_LOOKUP;
-                            dataSourceRef = subTreeOpRef;
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
+            return initializeDataSource(subTreeOpRef);
         }
         // Match (assign | unnest)+.
         do {
@@ -109,8 +87,17 @@ public class OptimizableOperatorSubTree {
             subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
         } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST);
 
-        // Match index search.
-        if (subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
+        // Match data source (datasource scan or primary index search).
+        return initializeDataSource(subTreeOpRef);
+    }
+
+    private boolean initializeDataSource(Mutable<ILogicalOperator> subTreeOpRef) {
+        AbstractLogicalOperator subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
+        if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            dataSourceType = DataSourceType.DATASOURCE_SCAN;
+            dataSourceRef = subTreeOpRef;
+            return true;
+        } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
             UnnestMapOperator unnestMapOp = (UnnestMapOperator) subTreeOp;
             ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
             if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -126,14 +113,7 @@ public class OptimizableOperatorSubTree {
                 }
             }
         }
-
-        // Match datasource scan.
-        if (subTreeOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
-            return false;
-        }
-        dataSourceType = DataSourceType.DATASOURCE_SCAN;
-        dataSourceRef = subTreeOpRef;
-        return true;
+        return false;
     }
 
     /**
@@ -153,13 +133,7 @@ public class OptimizableOperatorSubTree {
             case PRIMARY_INDEX_LOOKUP:
                 UnnestMapOperator unnestMapOp = (UnnestMapOperator) dataSourceRef.getValue();
                 ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
-                if (unnestExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                    return false;
-                }
                 AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
-                if (!f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
-                    return false;
-                }
                 AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                 jobGenParams.readFromFuncArgs(f.getArguments());
                 datasetName = jobGenParams.getDatasetName();
@@ -167,7 +141,7 @@ public class OptimizableOperatorSubTree {
                 break;
             case NO_DATASOURCE:
             default:
-                break;
+                return false;
         }
         if (dataverseName == null || datasetName == null) {
             return false;
@@ -208,7 +182,8 @@ public class OptimizableOperatorSubTree {
         recordType = null;
     }
 
-    public void getPrimaryKeyVars(List<LogicalVariable> target, AqlMetadataProvider metadataProvider) {
+    public void getPrimaryKeyVars(List<LogicalVariable> target, AqlMetadataProvider metadataProvider)
+            throws AlgebricksException {
         switch (dataSourceType) {
             case DATASOURCE_SCAN:
                 DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) dataSourceRef.getValue();
@@ -225,11 +200,11 @@ public class OptimizableOperatorSubTree {
                 break;
             case NO_DATASOURCE:
             default:
-                break;
+                throw new AlgebricksException("The subtree does not have any data source.");
         }
     }
 
-    public List<LogicalVariable> getDataSourceVariables() {
+    public List<LogicalVariable> getDataSourceVariables() throws AlgebricksException {
         switch (dataSourceType) {
             case DATASOURCE_SCAN:
                 DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) dataSourceRef.getValue();
@@ -239,7 +214,7 @@ public class OptimizableOperatorSubTree {
                 return unnestMapOp.getVariables();
             case NO_DATASOURCE:
             default:
-                return new ArrayList<LogicalVariable>();
+                throw new AlgebricksException("The subtree does not have any data source.");
         }
     }
 }
