@@ -182,7 +182,7 @@ public class OptimizableOperatorSubTree {
         recordType = null;
     }
 
-    public void getPrimaryKeyVars(List<LogicalVariable> target, AqlMetadataProvider metadataProvider)
+    public void getPrimaryKeyVars(List<LogicalVariable> target)
             throws AlgebricksException {
         switch (dataSourceType) {
             case DATASOURCE_SCAN:

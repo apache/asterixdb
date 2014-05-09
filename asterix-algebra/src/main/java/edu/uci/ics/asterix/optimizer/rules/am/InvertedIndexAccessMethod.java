@@ -416,16 +416,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (leftSubTree.hasDataSourceScan() && leftSubTree.dataset != null
-                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
+        if (leftSubTree.hasDataSourceScan() && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
-        } else if (rightSubTree.hasDataSourceScan() && rightSubTree.dataset != null
+        } else if (rightSubTree.hasDataSourceScan()
                 && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
-        } else {
-            return false;
         }
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if the dataset of index subtree and the dataset of first argument's subtree is the same     
@@ -527,8 +524,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             ILogicalExpression joinCond, IOptimizableFuncExpr optFuncExpr, List<LogicalVariable> originalSubTreePKs,
             List<LogicalVariable> surrogateSubTreePKs, IOptimizationContext context) throws AlgebricksException {
 
-        AqlMetadataProvider metadataProvider = (AqlMetadataProvider) context.getMetadataProvider();
-        probeSubTree.getPrimaryKeyVars(originalSubTreePKs, metadataProvider);
+        probeSubTree.getPrimaryKeyVars(originalSubTreePKs);
 
         // Create two copies of the original probe subtree.
         // The first copy, which becomes the new probe subtree, will retain the primary-key and secondary-search key variables,

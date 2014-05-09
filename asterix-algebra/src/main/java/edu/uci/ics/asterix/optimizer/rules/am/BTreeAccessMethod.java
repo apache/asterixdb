@@ -155,11 +155,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (leftSubTree.hasDataSourceScan() && leftSubTree.dataset != null
-                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
+        if (leftSubTree.hasDataSourceScan() && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
-        } else if (rightSubTree.hasDataSourceScan() && rightSubTree.dataset != null
+        } else if (rightSubTree.hasDataSourceScan()
                 && dataset.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
