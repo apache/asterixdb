@@ -768,10 +768,7 @@ Expression Index() throws ParseException:
 		}
 	}
 
-  	| "?"
-	{
-	  // ANY
-	}
+  	| "?" // ANY
  	 
   	)
 
