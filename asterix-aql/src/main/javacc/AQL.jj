@@ -1471,7 +1471,7 @@ Expression ValueExpr()throws ParseException:
   Expression expr = null;
   Identifier ident = null;
   AbstractAccessor fa = null;
-  int index;
+  Expression indexExpr = null;
 }
 {
   expr = PrimaryExpr() ( ident = Field()
@@ -1479,10 +1479,10 @@ Expression ValueExpr()throws ParseException:
 	  fa = (fa == null ? new FieldAccessor(expr, ident) 
                        : new FieldAccessor(fa, ident));
     }
-  | index = Index()
+  | indexExpr = Index()
     {
-      fa = (fa == null ? new IndexAccessor(expr, index)
-                       : new IndexAccessor(fa, index));
+      fa = (fa == null ? new IndexAccessor(expr, indexExpr)
+                       : new IndexAccessor(fa, indexExpr));
      }
   )*
     {
@@ -1501,10 +1501,9 @@ Identifier Field() throws ParseException:
     }
 }
 
-int Index() throws ParseException:
+Expression Index() throws ParseException:
 {
 	Expression expr = null;
-	int idx = -2;
 }
 {
   <LEFTBRACKET> ( expr = Expression()
@@ -1512,20 +1511,15 @@ int Index() throws ParseException:
 		if(expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
 		{
 			Literal lit = ((LiteralExpr)expr).getValue();
-			if(lit.getLiteralType() == Literal.Type.INTEGER || 
-			   lit.getLiteralType() == Literal.Type.LONG) {
-				idx = Integer.valueOf(lit.getStringValue());
-			}
-			else {
+			if(lit.getLiteralType() != Literal.Type.INTEGER &&
+			   lit.getLiteralType() != Literal.Type.LONG) {
 				throw new ParseException("Index should be an INTEGER");				
             }
 		}
-
 	}
 
   	| <QUES>
 	{
-		idx = IndexAccessor.ANY;
 	  // ANY
 	}
  	 
@@ -1533,7 +1527,7 @@ int Index() throws ParseException:
 
    <RIGHTBRACKET>
 	{
-	  return idx;
+	  return expr;
 	}
 }
 

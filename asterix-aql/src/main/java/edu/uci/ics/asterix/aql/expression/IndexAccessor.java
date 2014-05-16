@@ -21,15 +21,15 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class IndexAccessor extends AbstractAccessor {
     private boolean any;
-    private int index;
+    private Expression indexExpr;
 
     public final static int ANY = -1;
 
-    public IndexAccessor(Expression expr, int index) {
+    public IndexAccessor(Expression expr, Expression indexExpr) {
         super(expr);
-        if (index == -1)
+        if (indexExpr == null)
             this.any = true;
-        this.index = index;
+        this.indexExpr = indexExpr;
     }
 
     public boolean isAny() {
@@ -40,12 +40,12 @@ public class IndexAccessor extends AbstractAccessor {
         this.any = any;
     }
 
-    public int getIndex() {
-        return index;
+    public Expression getIndexExpr() {
+        return indexExpr;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
+    public void setIndexExpr(Expression indexExpr) {
+        this.indexExpr = indexExpr;
     }
 
     @Override

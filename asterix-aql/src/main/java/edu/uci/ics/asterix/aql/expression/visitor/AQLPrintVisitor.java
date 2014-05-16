@@ -329,10 +329,12 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
         out.println(skip(step) + "IndexAccessor [");
         fa.getExpr().accept(this, step + 1);
         out.print(skip(step + 1) + "Index: ");
-        out.println((((IndexAccessor) fa).isAny() ? "ANY" : ((IndexAccessor) fa).getIndex()));
-
+        if (fa.isAny()) {
+            out.println("ANY");
+        } else {
+            fa.getIndexExpr().accept(this, step + 1);
+        }
         out.println(skip(step) + "]");
-
     }
 
     @Override

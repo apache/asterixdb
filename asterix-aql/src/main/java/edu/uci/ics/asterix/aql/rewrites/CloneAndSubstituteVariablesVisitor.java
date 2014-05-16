@@ -257,7 +257,12 @@ public class CloneAndSubstituteVariablesVisitor implements
     public Pair<IAqlExpression, List<VariableSubstitution>> visitIndexAccessor(IndexAccessor ia,
             List<VariableSubstitution> arg) throws AsterixException {
         Pair<IAqlExpression, List<VariableSubstitution>> p1 = ia.getExpr().accept(this, arg);
-        IndexAccessor i = new IndexAccessor((Expression) p1.first, ia.getIndex());
+        Expression indexExpr = null;
+        if (!ia.isAny()) {
+            Pair<IAqlExpression, List<VariableSubstitution>> p2 = ia.getIndexExpr().accept(this, arg);
+            indexExpr = (Expression) p2.first;
+        }
+        IndexAccessor i = new IndexAccessor((Expression) p1.first, indexExpr);
         i.setAny(ia.isAny());
         return new Pair<IAqlExpression, List<VariableSubstitution>>(i, arg);
     }

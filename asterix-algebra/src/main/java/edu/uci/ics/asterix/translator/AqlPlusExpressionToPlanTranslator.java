@@ -423,17 +423,16 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = aqlExprToAlgExpression(ia.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression f;
-        int i = ia.getIndex();
-        if (i == IndexAccessor.ANY) {
+        if (ia.isAny()) {
             f = new ScalarFunctionCallExpression(
                     FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.ANY_COLLECTION_MEMBER));
             f.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
         } else {
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair = aqlExprToAlgExpression(ia.getIndexExpr(), tupSource);
             f = new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.GET_ITEM));
             f.getArguments().add(new MutableObject<ILogicalExpression>(p.first));
             f.getArguments().add(
-                    new MutableObject<ILogicalExpression>(new ConstantExpression(
-                            new AsterixConstantValue(new AInt32(i)))));
+                    new MutableObject<ILogicalExpression>(indexPair.first));
         }
         AssignOperator a = new AssignOperator(v, new MutableObject<ILogicalExpression>(f));
         a.getInputs().add(p.second);
