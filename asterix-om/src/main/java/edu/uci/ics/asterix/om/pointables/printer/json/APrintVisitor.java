@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ACirclePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADatePrinter;
@@ -181,6 +182,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case DAYTIMEDURATION: {
                     ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case UUID: {
+                    AUUIDPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 default: {
