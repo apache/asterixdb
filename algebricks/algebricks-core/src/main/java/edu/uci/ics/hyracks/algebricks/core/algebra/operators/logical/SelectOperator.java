@@ -38,9 +38,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisi
 
 public class SelectOperator extends AbstractLogicalOperator {
     private final Mutable<ILogicalExpression> condition;
+    private final boolean retainNull;
+    private final LogicalVariable nullPlaceholderVar;
 
-    public SelectOperator(Mutable<ILogicalExpression> condition) {
+    public SelectOperator(Mutable<ILogicalExpression> condition, boolean retainNull, LogicalVariable nullPlaceholderVar) {
         this.condition = condition;
+        this.retainNull = retainNull;
+        this.nullPlaceholderVar = nullPlaceholderVar;
     }
 
     @Override
@@ -50,6 +54,14 @@ public class SelectOperator extends AbstractLogicalOperator {
 
     public Mutable<ILogicalExpression> getCondition() {
         return condition;
+    }
+
+    public boolean getRetainNull() {
+        return retainNull;
+    }
+
+    public LogicalVariable getNullPlaceholderVariable() throws AlgebricksException {
+        return nullPlaceholderVar;
     }
 
     @Override

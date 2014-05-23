@@ -197,7 +197,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerGreaterThanEvalFactory(new IntegerConstantEvalFactory(2),
                 new TupleFieldEvaluatorFactory(0));
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 0 },
-                BinaryBooleanInspectorImpl.FACTORY);
+                BinaryBooleanInspectorImpl.FACTORY, false, -1, null);
         RecordDescriptor selectDesc = intScannerDesc;
 
         String filePath = PATH_ACTUAL + SEPARATOR + "scanSelectWrite.out";
@@ -450,7 +450,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new TupleFieldEvaluatorFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.FACTORY);
+                BinaryBooleanInspectorImpl.FACTORY, false, -1, null);
         RecordDescriptor selectDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
@@ -520,7 +520,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new TupleFieldEvaluatorFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.FACTORY);
+                BinaryBooleanInspectorImpl.FACTORY, false, -1, null);
         RecordDescriptor selectDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
@@ -853,7 +853,7 @@ public class PushRuntimeTest {
         IScalarEvaluatorFactory cond = new IntegerEqualsEvalFactory(new IntegerConstantEvalFactory(3),
                 new TupleFieldEvaluatorFactory(0)); // Canadian customers
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(cond, new int[] { 1 },
-                BinaryBooleanInspectorImpl.FACTORY);
+                BinaryBooleanInspectorImpl.FACTORY, false, -1, null);
         RecordDescriptor selectDesc = new RecordDescriptor(
                 new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 

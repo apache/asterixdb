@@ -52,4 +52,9 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             searchKey.reset(accessor, tupleIndex);
         }
     }
+
+    @Override
+    protected int getFieldCount() {
+        return ((ITreeIndex)index).getFieldCount();
+    }
 }

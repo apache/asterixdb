@@ -42,8 +42,8 @@ public class LSMTreeIndexCompactOperatorDescriptor extends AbstractTreeIndexOper
             IModificationOperationCallbackFactory modificationOpCallbackProvider) {
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false,
-                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
-                modificationOpCallbackProvider);
+                false, null,
+                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackProvider);
     }
 
     @Override

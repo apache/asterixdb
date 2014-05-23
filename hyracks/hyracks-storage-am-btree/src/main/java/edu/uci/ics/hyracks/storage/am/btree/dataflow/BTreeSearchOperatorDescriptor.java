@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.btree.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -45,11 +46,11 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
-            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput,
-            ISearchOperationCallbackFactory searchOpCallbackProvider) {
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
+            INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, retainInput,
-                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
+                comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, retainInput, retainNull,
+                nullWriterFactory, NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;

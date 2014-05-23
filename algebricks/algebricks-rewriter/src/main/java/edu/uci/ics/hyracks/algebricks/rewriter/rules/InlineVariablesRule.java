@@ -36,7 +36,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReference
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -140,6 +142,15 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         boolean modified = false;
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
             if (inlineVariables(inputOpRef, context)) {
+                modified = true;
+            }
+        }
+
+        // Descend into subplan
+        if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
+            ALogicalPlanImpl subPlan = (ALogicalPlanImpl) ((SubplanOperator) op).getNestedPlans().get(0);
+            Mutable<ILogicalOperator> subPlanRootOpRef = subPlan.getRoots().get(0);
+            if (inlineVariables(subPlanRootOpRef, context)) {
                 modified = true;
             }
         }

@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -37,6 +38,8 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final IIndexDataflowHelperFactory dataflowHelperFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
     protected final boolean retainInput;
+    protected final boolean retainNull;
+    protected final INullWriterFactory nullWriterFactory;
     protected final ISearchOperationCallbackFactory searchOpCallbackFactory;
     protected final IModificationOperationCallbackFactory modificationOpCallbackFactory;
     protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
@@ -45,7 +48,8 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, ILocalResourceFactoryProvider localResourceFactoryProvider,
+            boolean retainInput, boolean retainNull, INullWriterFactory nullWriterFactory,
+            ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity);
@@ -54,6 +58,8 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
         this.lifecycleManagerProvider = lifecycleManagerProvider;
         this.dataflowHelperFactory = dataflowHelperFactory;
         this.retainInput = retainInput;
+        this.retainNull = retainNull;
+        this.nullWriterFactory = nullWriterFactory;
         this.tupleFilterFactory = tupleFilterFactory;
         this.localResourceFactoryProvider = localResourceFactoryProvider;
         this.searchOpCallbackFactory = searchOpCallbackFactory;
@@ -94,10 +100,20 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     }
 
     @Override
+    public boolean getRetainNull() {
+        return retainNull;
+    }
+
+    @Override
+    public INullWriterFactory getNullWriterFactory() {
+        return nullWriterFactory;
+    }
+
+    @Override
     public ISearchOperationCallbackFactory getSearchOpCallbackFactory() {
         return searchOpCallbackFactory;
     }
-    
+
     @Override
     public IModificationOperationCallbackFactory getModificationOpCallbackFactory() {
         return modificationOpCallbackFactory;
@@ -107,7 +123,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     public ITupleFilterFactory getTupleFilterFactory() {
         return tupleFilterFactory;
     }
-    
+
     @Override
     public ILocalResourceFactoryProvider getLocalResourceFactoryProvider() {
         return localResourceFactoryProvider;

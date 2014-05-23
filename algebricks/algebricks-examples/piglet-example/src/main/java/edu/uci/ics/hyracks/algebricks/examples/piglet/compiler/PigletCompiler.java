@@ -247,7 +247,7 @@ public class PigletCompiler {
                 Pair<Relation, LogicalVariable> tempInput = translateScalarExpression(inputRel, conditionNode);
                 Relation rel = new Relation();
                 rel.op = new SelectOperator(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                        tempInput.second)));
+                        tempInput.second)), false, null);
                 rel.op.getInputs().add(new MutableObject<ILogicalOperator>(tempInput.first.op));
                 rel.schema.putAll(tempInput.first.schema);
                 return rel;

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.IActivity;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
@@ -38,11 +39,15 @@ public interface IIndexOperatorDescriptor extends IActivity {
 
     public boolean getRetainInput();
 
+    public boolean getRetainNull();
+
+    public INullWriterFactory getNullWriterFactory();
+
     public ISearchOperationCallbackFactory getSearchOpCallbackFactory();
-    
+
     public IModificationOperationCallbackFactory getModificationOpCallbackFactory();
-    
+
     public ITupleFilterFactory getTupleFilterFactory();
-    
+
     public ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
 }

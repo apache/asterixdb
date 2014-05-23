@@ -67,4 +67,9 @@ public class BTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         highKeySearchCmp = BTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), highKey);
         return new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp, highKeySearchCmp);
     }
+
+    @Override
+    protected int getFieldCount() {
+        return ((ITreeIndex) index).getFieldCount();
+    }
 }

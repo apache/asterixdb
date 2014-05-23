@@ -56,8 +56,8 @@ public class IndexNestedLoopJoinOperatorDescriptor extends AbstractTreeIndexOper
             IBinaryComparatorFactory[] comparatorFactories, boolean isForward, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory opHelperFactory) {
         super(spec, 1, 1, recDesc, storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, null, opHelperFactory, null, false, new TransientLocalResourceFactoryProvider(),
-                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
+                comparatorFactories, null, opHelperFactory, null, false, false,
+                null, new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;
@@ -73,8 +73,8 @@ public class IndexNestedLoopJoinOperatorDescriptor extends AbstractTreeIndexOper
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory opHelperFactory,
             boolean isRightOuter, INullWriterFactory[] nullWriterFactories) {
         super(spec, 1, 1, recDesc, storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, null, opHelperFactory, null, false, new TransientLocalResourceFactoryProvider(),
-                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
+                comparatorFactories, null, opHelperFactory, null, false, false,
+                null, new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;
@@ -92,8 +92,8 @@ public class IndexNestedLoopJoinOperatorDescriptor extends AbstractTreeIndexOper
             boolean lowKeyInclusive, boolean highKeyInclusive, IIndexDataflowHelperFactory opHelperFactory,
             boolean isSetUnion) {
         super(spec, 1, 1, recDesc, storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, null, opHelperFactory, null, false, new TransientLocalResourceFactoryProvider(),
-                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
+                comparatorFactories, null, opHelperFactory, null, false, false,
+                null, new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;

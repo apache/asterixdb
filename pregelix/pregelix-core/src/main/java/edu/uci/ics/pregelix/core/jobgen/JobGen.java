@@ -356,7 +356,7 @@ public abstract class JobGen implements IJobGen {
         typeTraits[1] = new TypeTraits(false);
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
-                null, null, true, true, getIndexDataflowHelperFactory(), false, NoOpOperationCallbackFactory.INSTANCE);
+                null, null, true, true, getIndexDataflowHelperFactory(), false, false, null, NoOpOperationCallbackFactory.INSTANCE);
         setLocationConstraint(spec, scanner);
 
         /**
@@ -619,7 +619,7 @@ public abstract class JobGen implements IJobGen {
 
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
-                null, null, true, true, getIndexDataflowHelperFactory(), false, NoOpOperationCallbackFactory.INSTANCE);
+                null, null, true, true, getIndexDataflowHelperFactory(), false, false, null, NoOpOperationCallbackFactory.INSTANCE);
         setLocationConstraint(spec, scanner);
 
         ExternalSortOperatorDescriptor sort = null;

@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -48,13 +49,13 @@ public abstract class AbstractLSMInvertedIndexOperatorDescriptor extends Abstrac
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenComparatorFactories,
             ITypeTraits[] invListsTypeTraits, IBinaryComparatorFactory[] invListComparatorFactories,
             IBinaryTokenizerFactory tokenizerFactory, IIndexDataflowHelperFactory dataflowHelperFactory,
-            ITupleFilterFactory tupleFilterFactory, boolean retainInput,
-            ILocalResourceFactoryProvider localResourceFactoryProvider,
+            ITupleFilterFactory tupleFilterFactory, boolean retainInput, boolean retainNull,
+            INullWriterFactory nullWriterFactory, ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
-                dataflowHelperFactory, tupleFilterFactory, retainInput, localResourceFactoryProvider,
-                searchOpCallbackFactory, modificationOpCallbackFactory);
+                dataflowHelperFactory, tupleFilterFactory, retainInput, retainNull, nullWriterFactory,
+                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory);
         this.invListsTypeTraits = invListsTypeTraits;
         this.invListComparatorFactories = invListComparatorFactories;
         this.tokenTypeTraits = tokenTypeTraits;

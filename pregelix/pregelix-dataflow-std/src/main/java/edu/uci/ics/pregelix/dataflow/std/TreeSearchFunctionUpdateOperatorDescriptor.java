@@ -62,8 +62,8 @@ public class TreeSearchFunctionUpdateOperatorDescriptor extends AbstractTreeInde
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory, RecordDescriptor... rDescs) {
         super(spec, 1, outputArity, recDesc, storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, dataflowHelperFactory, null, false,
-                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE);
+                false, null,
+                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;

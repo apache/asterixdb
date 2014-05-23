@@ -80,7 +80,7 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
                 secondaryRecDesc, storageManager, lcManagerProvider, secondarySplitProvider, secondaryTypeTraits,
                 secondaryComparatorFactories, secondaryBloomFilterKeyFields, secondaryLowKeyFields,
-                secondaryHighKeyFields, true, true, dataflowHelperFactory, false, NoOpOperationCallbackFactory.INSTANCE);
+                secondaryHighKeyFields, true, true, dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
         // second field from the tuples coming from secondary index
@@ -92,7 +92,7 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 primaryBloomFilterKeyFields, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                dataflowHelperFactory, false, NoOpOperationCallbackFactory.INSTANCE);
+                dataflowHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,

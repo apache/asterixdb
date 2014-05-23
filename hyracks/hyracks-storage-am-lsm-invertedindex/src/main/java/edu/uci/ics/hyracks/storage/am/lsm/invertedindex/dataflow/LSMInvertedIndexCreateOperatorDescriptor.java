@@ -45,8 +45,8 @@ public class LSMInvertedIndexCreateOperatorDescriptor extends AbstractLSMInverte
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 0, 0, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
-                btreeDataflowHelperFactory, null, false, localResourceFactoryProvider,
-                NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
+                btreeDataflowHelperFactory, null, false, false,
+                null, localResourceFactoryProvider, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
     }
 
     @Override

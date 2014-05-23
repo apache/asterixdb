@@ -42,8 +42,8 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorD
             IIndexDataflowHelperFactory dataflowHelperFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, 0, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false,
-                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
-                NoOpOperationCallbackFactory.INSTANCE);
+                false, null,
+                NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider, NoOpOperationCallbackFactory.INSTANCE);
     }
 
     @Override

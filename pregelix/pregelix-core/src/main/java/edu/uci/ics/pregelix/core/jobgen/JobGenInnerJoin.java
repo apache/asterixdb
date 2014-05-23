@@ -681,7 +681,7 @@ public class JobGenInnerJoin extends JobGen {
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, secondaryFileSplitProviderRead, typeTraits,
                 comparatorFactories, null, null, null, true, true, getIndexDataflowHelperFactory(), false,
-                NoOpOperationCallbackFactory.INSTANCE);
+                false, null, NoOpOperationCallbackFactory.INSTANCE);
         setLocationConstraint(spec, scanner);
 
         /**

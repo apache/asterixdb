@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -40,12 +41,13 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields,
             IIndexDataflowHelperFactory dataflowHelperFactory, ITupleFilterFactory tupleFilterFactory,
-            boolean retainInput, ILocalResourceFactoryProvider localResourceFactoryProvider,
+            boolean retainInput, boolean retainNull, INullWriterFactory nullWriterFactory,
+            ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
-                dataflowHelperFactory, tupleFilterFactory, retainInput, localResourceFactoryProvider,
-                searchOpCallbackFactory, modificationOpCallbackFactory);
+                dataflowHelperFactory, tupleFilterFactory, retainInput, retainNull, nullWriterFactory,
+                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory);
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;

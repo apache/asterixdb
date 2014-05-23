@@ -50,8 +50,8 @@ public class LSMInvertedIndexBulkLoadOperatorDescriptor extends AbstractLSMInver
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 1, 0, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
-                invertedIndexDataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
+                invertedIndexDataflowHelperFactory, null, false, false,
+                null, NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
         this.fieldPermutation = fieldPermutation;
         this.verifyInput = verifyInput;
         this.numElementsHint = numElementsHint;

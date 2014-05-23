@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.rtree.dataflow;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -41,13 +42,12 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, int[] keyFields,
-            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput,
-            ISearchOperationCallbackFactory searchOpCallbackFactory) {
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
+            INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory) {
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
-                comparatorFactories, null, dataflowHelperFactory, null, retainInput,
+                comparatorFactories, null, dataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
                 NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackFactory,
                 NoOpOperationCallbackFactory.INSTANCE);
-
         this.keyFields = keyFields;
     }
 

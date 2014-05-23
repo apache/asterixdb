@@ -184,7 +184,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         IFunctionInfo finfoNot = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NOT);
         ScalarFunctionCallExpression nonNullTest = new ScalarFunctionCallExpression(finfoNot,
                 new MutableObject<ILogicalExpression>(isNullTest));
-        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest));
+        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false, null);
         GroupByOperator g = new GroupByOperator();
         Mutable<ILogicalOperator> newSubplanRef = new MutableObject<ILogicalOperator>(subplan);
         NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(g));

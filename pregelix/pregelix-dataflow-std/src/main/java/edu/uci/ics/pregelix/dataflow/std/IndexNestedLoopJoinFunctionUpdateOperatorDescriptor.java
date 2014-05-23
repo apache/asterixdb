@@ -69,8 +69,8 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorDescriptor extends Abstrac
             IRuntimeHookFactory preHookFactory, IRuntimeHookFactory postHookFactory, RecordDescriptor... rDescs) {
         super(spec, 1, outputArity, rDescs[0], storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, highKeyFields, opHelperFactory, null, false,
-                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE);
+                false, null,
+                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;
@@ -99,8 +99,8 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorDescriptor extends Abstrac
             IRuntimeHookFactory postHookFactory, RecordDescriptor... rDescs) {
         super(spec, 1, outputArity, rDescs[0], storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, highKeyFields, opHelperFactory, null, false,
-                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE);
+                false, null,
+                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;
@@ -132,8 +132,8 @@ public class IndexNestedLoopJoinFunctionUpdateOperatorDescriptor extends Abstrac
             IRuntimeHookFactory postHookFactory, RecordDescriptor... rDescs) {
         super(spec, 1, outputArity, rDescs[0], storageManager, lcManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, highKeyFields, opHelperFactory, null, false,
-                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE);
+                false, null,
+                new TransientLocalResourceFactoryProvider(), NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.isForward = isForward;
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;

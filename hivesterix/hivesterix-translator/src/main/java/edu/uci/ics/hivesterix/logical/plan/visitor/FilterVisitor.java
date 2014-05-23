@@ -42,7 +42,7 @@ public class FilterVisitor extends DefaultVisitor {
         t.rewriteExpression(predicate);
 
         Mutable<ILogicalExpression> exprs = t.translateScalarFucntion(desc.getPredicate());
-        ILogicalOperator currentOperator = new SelectOperator(exprs);
+        ILogicalOperator currentOperator = new SelectOperator(exprs, false, null);
         currentOperator.getInputs().add(AlgebricksParentOperatorRef);
 
         // populate the schema from upstream operator

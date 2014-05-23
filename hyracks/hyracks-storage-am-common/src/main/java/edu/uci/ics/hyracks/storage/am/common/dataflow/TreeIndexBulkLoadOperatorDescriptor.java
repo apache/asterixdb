@@ -47,8 +47,8 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractTreeIndexOperat
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 1, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, false,
-                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE,
-                modificationOpCallbackFactory);
+                false, null,
+                NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
         this.fieldPermutation = fieldPermutation;
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;

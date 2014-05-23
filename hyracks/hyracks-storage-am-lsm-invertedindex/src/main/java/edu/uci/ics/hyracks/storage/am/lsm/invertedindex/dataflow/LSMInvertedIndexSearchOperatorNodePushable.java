@@ -57,4 +57,9 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
         invIndexSearchPred.setQueryTuple(frameTuple);
         invIndexSearchPred.setQueryFieldIndex(queryFieldIndex);
     }
+
+    @Override
+    protected int getFieldCount() {
+        return invListFields;
+    }
 }

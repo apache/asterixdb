@@ -43,8 +43,8 @@ public class LSMInvertedIndexCompactOperator extends AbstractLSMInvertedIndexOpe
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, 1, 1, null, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, tokenizerFactory,
-                dataflowHelperFactory, null, false, NoOpLocalResourceFactoryProvider.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
+                dataflowHelperFactory, null, false, false,
+                null, NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, modificationOpCallbackFactory);
     }
 
     @Override
