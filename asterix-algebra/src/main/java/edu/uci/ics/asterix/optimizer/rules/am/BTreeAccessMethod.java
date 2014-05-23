@@ -87,8 +87,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
-            AccessMethodAnalysisContext analysisCtx) {
+    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
         boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
         if (!matches) {
             matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVars(funcExpr, analysisCtx);
@@ -114,11 +114,12 @@ public class BTreeAccessMethod implements IAccessMethod {
         SelectOperator select = (SelectOperator) selectRef.getValue();
         Mutable<ILogicalExpression> conditionRef = select.getCondition();
         ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(selectRef, conditionRef, subTree, null,
-                chosenIndex, analysisCtx, false, false, context);
+                chosenIndex, analysisCtx, false, false, false, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
-        Mutable<ILogicalOperator> opRef = (subTree.assignsAndUnnestsRefs.isEmpty()) ? null : subTree.assignsAndUnnestsRefs.get(0);
+        Mutable<ILogicalOperator> opRef = (subTree.assignsAndUnnestsRefs.isEmpty()) ? null
+                : subTree.assignsAndUnnestsRefs.get(0);
         ILogicalOperator op = null;
         if (opRef != null) {
             op = opRef.getValue();
@@ -147,7 +148,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin)
+            throws AlgebricksException {
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
         // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
@@ -155,7 +157,8 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (leftSubTree.hasDataSourceScan() && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
+        if (!isLeftOuterJoin && leftSubTree.hasDataSourceScan()
+                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
         } else if (rightSubTree.hasDataSourceScan()
@@ -163,15 +166,33 @@ public class BTreeAccessMethod implements IAccessMethod {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
+        if (indexSubTree == null) {
+            //This may happen for left outer join case
+            return false;
+        }
+
+        LogicalVariable newNullPlaceHolderVar = null;
+        if (isLeftOuterJoin) {
+            //get a new null place holder variable that is the first field variable of the primary key 
+            //from the indexSubTree's datasourceScanOp
+            newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
+        }
+
         ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(joinRef, conditionRef, indexSubTree,
-                probeSubTree, chosenIndex, analysisCtx, true, true, context);
+                probeSubTree, chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context);
         if (primaryIndexUnnestOp == null) {
             return false;
         }
+
+        if (isLeftOuterJoin) {
+            //reset the null place holder variable
+            AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+        }
+
         // If there are conditions left, add a new select operator on top.
         indexSubTree.dataSourceRef.setValue(primaryIndexUnnestOp);
         if (conditionRef.getValue() != null) {
-            SelectOperator topSelect = new SelectOperator(conditionRef);
+            SelectOperator topSelect = new SelectOperator(conditionRef, isLeftOuterJoin, newNullPlaceHolderVar);
             topSelect.getInputs().add(indexSubTree.rootRef);
             topSelect.setExecutionMode(ExecutionMode.LOCAL);
             context.computeAndSetTypeEnvironmentForOperator(topSelect);
@@ -186,7 +207,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     private ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalOperator> topOpRef,
             Mutable<ILogicalExpression> conditionRef, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            boolean retainInput, boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
+            throws AlgebricksException {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
         // we made sure indexSubTree has datasource scan
@@ -392,7 +414,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 keyVarList, context);
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
+                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
         jobGenParams.setLowKeyInclusive(lowKeyInclusive[0]);
         jobGenParams.setHighKeyInclusive(highKeyInclusive[0]);
         jobGenParams.setIsEqCondition(isEqCondition);
@@ -416,11 +438,11 @@ public class BTreeAccessMethod implements IAccessMethod {
                 chosenIndex, inputOp, jobGenParams, context, false, retainInput);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.        
-        UnnestMapOperator primaryIndexUnnestOp;
-        boolean isPrimaryIndex = chosenIndex.getIndexName().equals(dataset.getDatasetName());
+        UnnestMapOperator primaryIndexUnnestOp = null;
+        boolean isPrimaryIndex = chosenIndex.isPrimaryIndex();
         if (!isPrimaryIndex) {
             primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset, recordType,
-                    secondaryIndexUnnestOp, context, true, retainInput, false);
+                    secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
 
             // Replace the datasource scan with the new plan rooted at
             // primaryIndexUnnestMap.
@@ -448,6 +470,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 }
             }
         }
+
         return primaryIndexUnnestOp;
     }
 

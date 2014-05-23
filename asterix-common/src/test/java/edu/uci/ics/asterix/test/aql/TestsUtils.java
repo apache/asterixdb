@@ -437,11 +437,11 @@ public class TestsUtils {
                             qarFile.getParentFile().mkdirs();
                             TestsUtils.writeResultsToFile(qarFile, resultStream);
 
-                            TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                    qbcFile, qarFile);
+                            TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile,
+                                    qarFile);
 
-                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
-                                    + cUnit.getName() + " PASSED ");
+                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
+                                    + " PASSED ");
                             break;
                         case "txneu": //eu represents erroneous update
                             try {

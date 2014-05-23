@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -27,6 +28,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final AbstractFunctionCallExpression funcExpr;
     protected final LogicalVariable[] logicalVars;
     protected final String[] fieldNames;
+    protected final ATypeTag[] typeTags;
     protected final OptimizableOperatorSubTree[] subTrees;
     protected final IAlgebricksConstantValue[] constantVals;
     protected boolean partialField;
@@ -37,7 +39,9 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.logicalVars = logicalVars;
         this.constantVals = constantVals;
         this.fieldNames = new String[logicalVars.length];
+        this.typeTags = new ATypeTag[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
+
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             this.partialField = true;
         } else {
@@ -52,6 +56,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.logicalVars = new LogicalVariable[] { logicalVar };
         this.constantVals = new IAlgebricksConstantValue[] { constantVal };
         this.fieldNames = new String[logicalVars.length];
+        this.typeTags = new ATypeTag[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             this.partialField = true;
@@ -141,9 +146,19 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     public void setPartialField(boolean partialField) {
         this.partialField = partialField;
     }
- 
+
     @Override
     public boolean containsPartialField() {
         return partialField;
+    }
+
+    @Override
+    public void setTypeTag(int index, ATypeTag typeTag) {
+        typeTags[index] = typeTag;
+    }
+
+    @Override
+    public ATypeTag getTypeTag(int index) {
+        return typeTags[index];
     }
 }

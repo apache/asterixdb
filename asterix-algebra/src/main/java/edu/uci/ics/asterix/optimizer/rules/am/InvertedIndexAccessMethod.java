@@ -28,7 +28,6 @@ import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
-import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.base.AFloat;
@@ -59,6 +58,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -120,8 +120,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
+        
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
-            return AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
+            boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
+            if (!matches) {
+                matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVars(funcExpr, analysisCtx);
+            }
+            return matches;
         }
         return analyzeGetItemFuncExpr(funcExpr, assignsAndUnnests, analysisCtx);
     }
@@ -335,7 +340,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, IOptimizableFuncExpr optFuncExpr,
-            boolean retainInput, boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
+            throws AlgebricksException {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
         // we made sure indexSubTree has datasource scan
@@ -343,7 +349,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams(chosenIndex.getIndexName(),
                 chosenIndex.getIndexType(), dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
-                requiresBroadcast);
+                retainNull, requiresBroadcast);
         // Add function-specific args such as search modifier, and possibly a similarity threshold.
         addFunctionSpecificArgs(optFuncExpr, jobGenParams);
         // Add the type of search key from the optFuncExpr.
@@ -374,9 +380,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         jobGenParams.setKeyVarList(keyVarList);
         UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 chosenIndex, inputOp, jobGenParams, context, true, retainInput);
+
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset,
-                recordType, secondaryIndexUnnestOp, context, true, retainInput, false);
+                recordType, secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
+
         return primaryIndexUnnestOp;
     }
 
@@ -401,7 +409,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             IOptimizationContext context) throws AlgebricksException {
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(subTree, null, chosenIndex, optFuncExpr, false,
-                false, context);
+                false, false, context);
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.dataSourceRef.setValue(indexPlanRootOp);
         return true;
@@ -410,13 +418,15 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin)
+            throws AlgebricksException {
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
         OptimizableOperatorSubTree indexSubTree = null;
         OptimizableOperatorSubTree probeSubTree = null;
-        if (leftSubTree.hasDataSourceScan() && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
+        if (!isLeftOuterJoin && leftSubTree.hasDataSourceScan()
+                && dataset.getDatasetName().equals(leftSubTree.dataset.getDatasetName())) {
             indexSubTree = leftSubTree;
             probeSubTree = rightSubTree;
         } else if (rightSubTree.hasDataSourceScan()
@@ -424,15 +434,33 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             indexSubTree = rightSubTree;
             probeSubTree = leftSubTree;
         }
+        if (indexSubTree == null) {
+            //This may happen for left outer join case
+            return false;
+        }
+
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
-        // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if the dataset of index subtree and the dataset of first argument's subtree is the same     
+        // The arguments of edit-distance-contains() function are asymmetrical, we can only use index 
+        // if the dataset of index subtree and the dataset of first argument's subtree is the same     
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS
                 && optFuncExpr.getOperatorSubTree(0).dataset != null
                 && !optFuncExpr.getOperatorSubTree(0).dataset.getDatasetName().equals(
                         indexSubTree.dataset.getDatasetName())) {
             return false;
         }
-        InnerJoinOperator join = (InnerJoinOperator) joinRef.getValue();
+
+        //if LOJ, reset null place holder variable
+        LogicalVariable newNullPlaceHolderVar = null;
+        if (isLeftOuterJoin) {
+            //get a new null place holder variable that is the first field variable of the primary key 
+            //from the indexSubTree's datasourceScanOp
+            newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
+
+            //reset the null place holder variable
+            AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+        }
+
+        AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) joinRef.getValue();
 
         // Remember the original probe subtree, and its primary-key variables,
         // so we can later retrieve the missing attributes via an equi join.
@@ -465,11 +493,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
         // Create regular indexed-nested loop join path.
         ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(indexSubTree, probeSubTree, chosenIndex,
-                optFuncExpr, true, true, context);
+                optFuncExpr, true, isLeftOuterJoin, true, context);
         indexSubTree.dataSourceRef.setValue(indexPlanRootOp);
 
         // Change join into a select with the same condition.
-        SelectOperator topSelect = new SelectOperator(new MutableObject<ILogicalExpression>(joinCond));
+        SelectOperator topSelect = new SelectOperator(new MutableObject<ILogicalExpression>(joinCond), isLeftOuterJoin,
+                newNullPlaceHolderVar);
         topSelect.getInputs().add(indexSubTree.rootRef);
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
@@ -650,7 +679,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Replace the inputs of the given join op, and replace variables in its
         // condition since we deep-copied one of the scanner subtrees which
         // changed variables. 
-        InnerJoinOperator joinOp = (InnerJoinOperator) joinRef.getValue();
+        AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         for (Map.Entry<LogicalVariable, LogicalVariable> entry : copyVarMap.entrySet()) {
             joinOp.getCondition().getValue().substituteVar(entry.getKey(), entry.getValue());
         }
@@ -707,7 +736,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
         }
         SelectOperator isFilterableSelectOp = new SelectOperator(
-                new MutableObject<ILogicalExpression>(isFilterableExpr));
+                new MutableObject<ILogicalExpression>(isFilterableExpr), false, null);
         isFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         isFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(isFilterableSelectOp);
@@ -718,7 +747,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         ILogicalExpression isNotFilterableExpr = new ScalarFunctionCallExpression(
                 FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT), isNotFilterableArgs);
         SelectOperator isNotFilterableSelectOp = new SelectOperator(new MutableObject<ILogicalExpression>(
-                isNotFilterableExpr));
+                isNotFilterableExpr), false, null);
         isNotFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         isNotFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(isNotFilterableSelectOp);
@@ -796,88 +825,227 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
             return false;
         }
+
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
                 || optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
-            // Must be for a join query.
-            if (optFuncExpr.getNumConstantVals() == 1) {
-                return true;
-            }
-            // Check for panic in selection query.
-            // TODO: Panic also depends on prePost which is currently hardcoded to be true.
-            AsterixConstantValue listOrStrConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
-            AsterixConstantValue intConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(1);
-            IAObject listOrStrObj = listOrStrConstVal.getObject();
-            IAObject intObj = intConstVal.getObject();
-            AInt32 edThresh = (AInt32) intObj;
-            int mergeThreshold = 0;
-            // We can only optimize edit distance on strings using an ngram index.
-            if (listOrStrObj.getType().getTypeTag() == ATypeTag.STRING
-                    && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
-                AString astr = (AString) listOrStrObj;
-                // Compute merge threshold depending on the query grams contain pre- and postfixing
-                if (optFuncExpr.containsPartialField()) {
-                    mergeThreshold = (astr.getStringValue().length() - index.getGramLength() + 1)
-                            - edThresh.getIntegerValue() * index.getGramLength();
-                } else {
-                    mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
-                            - edThresh.getIntegerValue() * index.getGramLength();
-                }
-            }
-            // We can only optimize edit distance on lists using a word index.
-            if ((listOrStrObj.getType().getTypeTag() == ATypeTag.ORDEREDLIST || listOrStrObj.getType().getTypeTag() == ATypeTag.UNORDEREDLIST)
-                    && (index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
-                IACollection alist = (IACollection) listOrStrObj;
-                // Compute merge threshold.
-                mergeThreshold = alist.size() - edThresh.getIntegerValue();
-            }
-            if (mergeThreshold <= 0) {
-                // We cannot use index to optimize expr.
-                return false;
-            }
+            return isEditDistanceFuncOptimizable(index, optFuncExpr);
+        }
+
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
+            return isJaccardFuncOptimizable(index, optFuncExpr);
+        }
+
+        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
+            return isContainsFuncOptimizable(index, optFuncExpr);
+        }
+
+        return false;
+    }
+
+    private boolean isEditDistanceFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        if (optFuncExpr.getNumConstantVals() == 1) {
+            return isEditDistanceFuncJoinOptimizable(index, optFuncExpr);
+        } else {
+            return isEditDistanceFuncSelectOptimizable(index, optFuncExpr);
+        }
+    }
+
+    private boolean isEditDistanceFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        return isEditDistanceFuncCompatible(optFuncExpr.getTypeTag(0), index.getIndexType());
+    }
+
+    private boolean isEditDistanceFuncCompatible(ATypeTag typeTag, IndexType indexType) {
+        // We can only optimize edit distance on strings using an ngram index.
+        if (typeTag == ATypeTag.STRING
+                && (indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
             return true;
         }
-        // TODO: We need more checking: gram length, prePost, etc.
-        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
-            // Check the tokenization function of the non-constant func arg to see if it fits the concrete index type.
-            ILogicalExpression arg1 = optFuncExpr.getFuncExpr().getArguments().get(0).getValue();
-            ILogicalExpression arg2 = optFuncExpr.getFuncExpr().getArguments().get(1).getValue();
-            ILogicalExpression nonConstArg = null;
-            if (arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                nonConstArg = arg1;
+        // We can only optimize edit distance on lists using a word index.
+        if ((typeTag == ATypeTag.ORDEREDLIST)
+                && (indexType == IndexType.SINGLE_PARTITION_WORD_INVIX || indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isEditDistanceFuncSelectOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+
+        // Check for panic in selection query.
+        // TODO: Panic also depends on prePost which is currently hardcoded to be true.
+        AsterixConstantValue listOrStrConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
+        IAObject listOrStrObj = listOrStrConstVal.getObject();
+        ATypeTag typeTag = listOrStrObj.getType().getTypeTag();
+
+        if (!isEditDistanceFuncCompatible(typeTag, index.getIndexType())) {
+            return false;
+        }
+
+        AsterixConstantValue intConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(1);
+        IAObject intObj = intConstVal.getObject();
+        AInt32 edThresh = (AInt32) intObj;
+        int mergeThreshold = 0;
+
+        if (typeTag == ATypeTag.STRING) {
+            AString astr = (AString) listOrStrObj;
+            // Compute merge threshold depending on the query grams contain pre- and postfixing
+            if (optFuncExpr.containsPartialField()) {
+                mergeThreshold = (astr.getStringValue().length() - index.getGramLength() + 1)
+                        - edThresh.getIntegerValue() * index.getGramLength();
             } else {
-                nonConstArg = arg2;
+                mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
+                        - edThresh.getIntegerValue() * index.getGramLength();
             }
-            if (nonConstArg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                AbstractFunctionCallExpression nonConstfuncExpr = (AbstractFunctionCallExpression) nonConstArg;
-                // We can use this index if the tokenization function matches the index type.
-                if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.WORD_TOKENS
-                        && (index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
-                    return true;
-                }
-                if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.GRAM_TOKENS
-                        && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
-                    return true;
-                }
+        }
+
+        if ((typeTag == ATypeTag.ORDEREDLIST)
+                && (index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
+            IACollection alist = (IACollection) listOrStrObj;
+            // Compute merge threshold.
+            mergeThreshold = alist.size() - edThresh.getIntegerValue();
+        }
+        if (mergeThreshold <= 0) {
+            // We cannot use index to optimize expr.
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isJaccardFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        //TODO we need to split join and select cases in order to check join case more thoroughly.
+
+        int variableCount = optFuncExpr.getNumLogicalVars();
+
+        //check whether gram-tokens function is optimizable
+        ScalarFunctionCallExpression funcExpr = null;
+        for (int i = 0; i < variableCount; i++) {
+            funcExpr = findTokensFunc(AsterixBuiltinFunctions.GRAM_TOKENS, optFuncExpr, i);
+            if (funcExpr != null) {
+                return isJaccardFuncCompatible(funcExpr, optFuncExpr.getTypeTag(i), index.getIndexType());
             }
-            // The non-constant arg is not a function call. Perhaps a variable?
-            // We must have already verified during our analysis of the select condition, that this variable
-            // refers to a list, or to a tokenization function.
-            if (nonConstArg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+        }
+
+        //check whether word-tokens function is optimizable
+        for (int i = 0; i < variableCount; i++) {
+            funcExpr = findTokensFunc(AsterixBuiltinFunctions.WORD_TOKENS, optFuncExpr, i);
+            if (funcExpr != null) {
+                return isJaccardFuncCompatible(funcExpr, optFuncExpr.getTypeTag(i), index.getIndexType());
+            }
+        }
+
+        //check whether a search variable is optimizable
+        OptimizableOperatorSubTree subTree = null;
+        LogicalVariable targetVar = null;
+        for (int i = 0; i < variableCount; i++) {
+            subTree = optFuncExpr.getOperatorSubTree(i);
+            if (subTree == null)
+                continue;
+            targetVar = optFuncExpr.getLogicalVar(i);
+            if (targetVar == null)
+                continue;
+            return isJaccardFuncCompatible(optFuncExpr.getFuncExpr().getArguments().get(i).getValue(),
+                    optFuncExpr.getTypeTag(i), index.getIndexType());
+        }
+
+        return false;
+    }
+
+    private ScalarFunctionCallExpression findTokensFunc(FunctionIdentifier funcId, IOptimizableFuncExpr optFuncExpr,
+            int subTreeIndex) {
+        //find either a gram-tokens or a word-tokens function that exists in optFuncExpr.subTrees' assignsAndUnnests
+        OptimizableOperatorSubTree subTree = null;
+        LogicalVariable targetVar = null;
+
+        subTree = optFuncExpr.getOperatorSubTree(subTreeIndex);
+        if (subTree == null) {
+            return null;
+        }
+
+        targetVar = optFuncExpr.getLogicalVar(subTreeIndex);
+        if (targetVar == null) {
+            return null;
+        }
+
+        for (AbstractLogicalOperator op : subTree.assignsAndUnnests) {
+            if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN)
+                continue;
+            List<Mutable<ILogicalExpression>> exprList = ((AssignOperator) op).getExpressions();
+            for (Mutable<ILogicalExpression> expr : exprList) {
+                if (expr.getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL)
+                    continue;
+                AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr.getValue();
+                if (funcExpr.getFunctionIdentifier() != funcId)
+                    continue;
+                ILogicalExpression varExpr = funcExpr.getArguments().get(0).getValue();
+                if (varExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE)
+                    continue;
+                if (((VariableReferenceExpression) varExpr).getVariableReference() == targetVar)
+                    continue;
+                return (ScalarFunctionCallExpression) funcExpr;
+            }
+        }
+        return null;
+    }
+
+    private boolean isJaccardFuncCompatible(ILogicalExpression nonConstArg, ATypeTag typeTag, IndexType indexType) {
+        if (nonConstArg.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            AbstractFunctionCallExpression nonConstfuncExpr = (AbstractFunctionCallExpression) nonConstArg;
+            // We can use this index if the tokenization function matches the index type.
+            if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.WORD_TOKENS
+                    && (indexType == IndexType.SINGLE_PARTITION_WORD_INVIX || indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
+                return true;
+            }
+            if (nonConstfuncExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.GRAM_TOKENS
+                    && (indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
                 return true;
             }
         }
-        // We can only optimize contains with ngram indexes.
-        if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS
-                && (index.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX || index.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
-            // Check that the constant search string has at least gramLength characters.
-            AsterixConstantValue strConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
-            IAObject strObj = strConstVal.getObject();
-            if (strObj.getType().getTypeTag() == ATypeTag.STRING) {
-                AString astr = (AString) strObj;
-                if (astr.getStringValue().length() >= index.getGramLength()) {
-                    return true;
-                }
+
+        if (nonConstArg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            if ((typeTag == ATypeTag.ORDEREDLIST || typeTag == ATypeTag.UNORDEREDLIST)
+                    && (indexType == IndexType.SINGLE_PARTITION_WORD_INVIX || indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
+                return true;
             }
+            // We assume that the given list variable doesn't have ngram list in it since it is unrealistic.  
+        }
+        return false;
+    }
+
+    private boolean isContainsFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        if (optFuncExpr.getNumLogicalVars() == 2) {
+            return isContainsFuncJoinOptimizable(index, optFuncExpr);
+        } else {
+            return isContainsFuncSelectOptimizable(index, optFuncExpr);
+        }
+    }
+
+    private boolean isContainsFuncSelectOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        AsterixConstantValue strConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
+        IAObject strObj = strConstVal.getObject();
+        ATypeTag typeTag = strObj.getType().getTypeTag();
+
+        if (!isContainsFuncCompatible(typeTag, index.getIndexType())) {
+            return false;
+        }
+
+        // Check that the constant search string has at least gramLength characters.
+        if (strObj.getType().getTypeTag() == ATypeTag.STRING) {
+            AString astr = (AString) strObj;
+            if (astr.getStringValue().length() >= index.getGramLength()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isContainsFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+        return isContainsFuncCompatible(optFuncExpr.getTypeTag(0), index.getIndexType());
+    }
+
+    private boolean isContainsFuncCompatible(ATypeTag typeTag, IndexType indexType) {
+        //We can only optimize contains with ngram indexes.
+        if ((typeTag == ATypeTag.STRING)
+                && (indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX)) {
+            return true;
         }
         return false;
     }

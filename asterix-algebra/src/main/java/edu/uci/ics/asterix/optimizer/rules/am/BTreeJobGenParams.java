@@ -43,8 +43,8 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
     }
 
     public BTreeJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
-            boolean retainInput, boolean requiresBroadcast) {
-        super(indexName, indexType, dataverseName, datasetName, retainInput, requiresBroadcast);
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast) {
+        super(indexName, indexType, dataverseName, datasetName, retainInput, retainNull, requiresBroadcast);
     }
 
     public void setLowKeyVarList(List<LogicalVariable> keyVarList, int startIndex, int numKeys) {

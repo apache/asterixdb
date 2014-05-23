@@ -98,7 +98,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             return false;
         }
 
-        fillSubTreeIndexExprs(subTree, analyzedAMs);
+        fillSubTreeIndexExprs(subTree, analyzedAMs, context);
         pruneIndexCandidates(analyzedAMs);
 
         // Choose index to be applied.

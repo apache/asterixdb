@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -80,14 +81,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
+            throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
             AccessMethodAnalysisContext amCtx = entry.getValue();
             // For the current access method type, map variables to applicable indexes.
-            fillAllIndexExprs(subTree, amCtx);
+            fillAllIndexExprs(subTree, amCtx, context);
         }
     }
 
@@ -205,8 +207,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * on the function identifier, and an analysis of the function's arguments.
      * Updates the analyzedAMs accordingly.
      */
-    protected boolean analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr, List<AbstractLogicalOperator> assignsAndUnnests,
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected boolean analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr,
+            List<AbstractLogicalOperator> assignsAndUnnests, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         if (funcIdent == AlgebricksBuiltinFunctions.AND) {
             return false;
@@ -252,7 +254,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         List<Index> datasetIndexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(),
                 dataset.getDatasetName());
         List<Index> indexCandidates = new ArrayList<Index>();
-        // Add an index to the candidates if one of the indexed fields is fieldName.
+        // Add an index to the candidates if one of the indexed fields is fieldName
         for (Index index : datasetIndexes) {
             if (index.getKeyFieldNames().contains(fieldName)) {
                 indexCandidates.add(index);
@@ -269,8 +271,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return true;
     }
 
-    protected void fillAllIndexExprs(OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx)
-            throws AlgebricksException {
+    protected void fillAllIndexExprs(OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context) throws AlgebricksException {
         for (int optFuncExprIndex = 0; optFuncExprIndex < analysisCtx.matchedFuncExprs.size(); optFuncExprIndex++) {
             IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(optFuncExprIndex);
             // Try to match variables from optFuncExpr to assigns or unnests.
@@ -295,12 +297,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         }
                         // Set the fieldName in the corresponding matched function expression.
                         optFuncExpr.setFieldName(funcVarIndex, fieldName);
+                        setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
                         if (subTree.hasDataSourceScan()) {
                             fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
                         }
                     }
-                }
-                else {
+                } else {
                     UnnestOperator unnestOp = (UnnestOperator) op;
                     LogicalVariable var = unnestOp.getVariable();
                     int funcVarIndex = optFuncExpr.findLogicalVar(var);
@@ -317,6 +319,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     }
                     // Set the fieldName in the corresponding matched function expression.
                     optFuncExpr.setFieldName(funcVarIndex, fieldName);
+                    setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
                     if (subTree.hasDataSourceScan()) {
                         fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
                     }
@@ -337,17 +340,28 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 // Set the fieldName in the corresponding matched function expression, and remember matching subtree.
                 optFuncExpr.setFieldName(funcVarIndex, fieldName);
                 optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
+                setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
                 if (subTree.hasDataSourceScan()) {
                     fillIndexExprs(fieldName, optFuncExprIndex, subTree.dataset, analysisCtx);
                 }
             }
         }
     }
+
+    private void setTypeTag(IOptimizationContext context, OptimizableOperatorSubTree subTree,
+            IOptimizableFuncExpr optFuncExpr, int funcVarIndex) throws AlgebricksException {
+        // Set the typeTag if the type is not null
+        IAType type = (IAType) context.getOutputTypeEnvironment(subTree.root).getVarType(
+                optFuncExpr.getLogicalVar(funcVarIndex));
+        optFuncExpr.setTypeTag(funcVarIndex, type.getTypeTag());
+    }
+
     /**
      * Returns the field name corresponding to the assigned variable at varIndex.
      * Returns null if the expr at varIndex does not yield to a field access function after following a set of allowed functions.
      */
-    protected String getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex) {
+    protected String getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree,
+            int opIndex, int assignVarIndex) {
         // Get expression corresponding to opVar at varIndex.
         AbstractLogicalExpression expr = null;
         AbstractLogicalOperator op = subTree.assignsAndUnnests.get(opIndex);
@@ -387,8 +401,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             int fieldIndex = ((AInt32) ((AsterixConstantValue) constExpr.getValue()).getObject()).getIntegerValue();
             return subTree.recordType.getFieldNames()[fieldIndex];
         }
-        if (funcIdent != AsterixBuiltinFunctions.WORD_TOKENS
-                && funcIdent != AsterixBuiltinFunctions.GRAM_TOKENS
+        if (funcIdent != AsterixBuiltinFunctions.WORD_TOKENS && funcIdent != AsterixBuiltinFunctions.GRAM_TOKENS
                 && funcIdent != AsterixBuiltinFunctions.SUBSTRING
                 && funcIdent != AsterixBuiltinFunctions.SUBSTRING_BEFORE
                 && funcIdent != AsterixBuiltinFunctions.SUBSTRING_AFTER) {
@@ -416,8 +429,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         return getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex);
                     }
                 }
-            }
-            else {
+            } else {
                 UnnestOperator unnestOp = (UnnestOperator) curOp;
                 LogicalVariable var = unnestOp.getVariable();
                 if (var.equals(curVar)) {

@@ -315,7 +315,7 @@ public abstract class SecondaryIndexOperationsHelper {
                         mergePolicyFactory, mergePolicyFactoryProperties, new PrimaryIndexOperationTrackerProvider(
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate(), true), false, searchCallbackFactory);
+                        storageProperties.getBloomFilterFalsePositiveRate(), true), false, false, null, searchCallbackFactory);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;
@@ -402,7 +402,7 @@ public abstract class SecondaryIndexOperationsHelper {
         }
         StreamSelectRuntimeFactory select = new StreamSelectRuntimeFactory(
                 new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter.ScalarEvaluatorFactoryAdapter(selectCond),
-                null, AqlBinaryBooleanInspectorImpl.FACTORY);
+                null, AqlBinaryBooleanInspectorImpl.FACTORY, false, -1, null);
         AlgebricksMetaOperatorDescriptor asterixSelectOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { select }, new RecordDescriptor[] { secondaryRecDesc });
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixSelectOp,

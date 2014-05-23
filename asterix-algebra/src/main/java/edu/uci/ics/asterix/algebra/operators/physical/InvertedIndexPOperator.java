@@ -128,8 +128,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         // Build runtime.
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> invIndexSearch = buildInvertedIndexRuntime(
                 metadataProvider, context, builder.getJobSpec(), unnestMapOp, opSchema, jobGenParams.getRetainInput(),
-                jobGenParams.getDatasetName(), dataset, jobGenParams.getIndexName(), jobGenParams.getSearchKeyType(),
-                keyIndexes, jobGenParams.getSearchModifierType(), jobGenParams.getSimilarityThreshold());
+                jobGenParams.getRetainNull(), jobGenParams.getDatasetName(), dataset, jobGenParams.getIndexName(),
+                jobGenParams.getSearchKeyType(), keyIndexes, jobGenParams.getSearchModifierType(),
+                jobGenParams.getSimilarityThreshold());
         // Contribute operator in hyracks job.
         builder.contributeHyracksOperator(unnestMapOp, invIndexSearch.first);
         builder.contributeAlgebricksPartitionConstraint(invIndexSearch.first, invIndexSearch.second);
@@ -139,8 +140,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInvertedIndexRuntime(
             AqlMetadataProvider metadataProvider, JobGenContext context, JobSpecification jobSpec,
-            UnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, String datasetName,
-            Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
+            UnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainNull,
+            String datasetName, Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
             SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold)
             throws AlgebricksException {
         try {
@@ -239,7 +240,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                     jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,
                     appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
                     invListsTypeTraits, invListsComparatorFactories, dataflowHelperFactory, queryTokenizerFactory,
-                    searchModifierFactory, outputRecDesc, retainInput, NoOpOperationCallbackFactory.INSTANCE);
+                    searchModifierFactory, outputRecDesc, retainInput, retainNull, context.getNullWriterFactory(),
+                    NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(invIndexSearchOp,
                     secondarySplitsAndConstraint.second);
         } catch (MetadataException e) {

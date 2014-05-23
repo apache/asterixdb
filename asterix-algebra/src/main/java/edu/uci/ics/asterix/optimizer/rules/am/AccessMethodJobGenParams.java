@@ -37,21 +37,23 @@ public class AccessMethodJobGenParams {
     protected String dataverseName;
     protected String datasetName;
     protected boolean retainInput;
+    protected boolean retainNull;
     protected boolean requiresBroadcast;
     protected boolean isPrimaryIndex;
 
-    private final int NUM_PARAMS = 6;
+    private final int NUM_PARAMS = 7;
 
     public AccessMethodJobGenParams() {
     }
 
     public AccessMethodJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
-            boolean retainInput, boolean requiresBroadcast) {
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast) {
         this.indexName = indexName;
         this.indexType = indexType;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.retainInput = retainInput;
+        this.retainNull = retainNull;
         this.requiresBroadcast = requiresBroadcast;
         this.isPrimaryIndex = datasetName.equals(indexName);
     }
@@ -62,6 +64,7 @@ public class AccessMethodJobGenParams {
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(dataverseName)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createStringConstant(datasetName)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(retainInput)));
+        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(retainNull)));
         funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(requiresBroadcast)));
     }
 
@@ -71,7 +74,8 @@ public class AccessMethodJobGenParams {
         dataverseName = AccessMethodUtils.getStringConstant(funcArgs.get(2));
         datasetName = AccessMethodUtils.getStringConstant(funcArgs.get(3));
         retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
-        requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
+        retainNull = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
+        requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(6));
         isPrimaryIndex = datasetName.equals(indexName);
     }
 
@@ -93,6 +97,10 @@ public class AccessMethodJobGenParams {
 
     public boolean getRetainInput() {
         return retainInput;
+    }
+    
+    public boolean getRetainNull() {
+        return retainNull;
     }
 
     public boolean getRequiresBroadcast() {

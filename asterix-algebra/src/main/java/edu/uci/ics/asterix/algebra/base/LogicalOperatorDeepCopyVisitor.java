@@ -359,7 +359,8 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitSelectOperator(SelectOperator op, ILogicalOperator arg) throws AlgebricksException {
-        SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()));
+        SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
+                op.getRetainNull(), deepCopyVariable(op.getNullPlaceholderVariable()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
@@ -384,10 +385,11 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     }
 
     @Override
-    public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg) throws AlgebricksException {
+    public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
         UnnestMapOperator opCopy = new UnnestMapOperator(deepCopyVariableList(op.getVariables()),
-                exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                op.getVariableTypes(), op.propagatesInput());
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
+                op.propagatesInput());
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());

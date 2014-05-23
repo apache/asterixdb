@@ -35,8 +35,8 @@ public class RTreeJobGenParams extends AccessMethodJobGenParams {
     }
 
     public RTreeJobGenParams(String indexName, IndexType indexType, String dataverseName, String datasetName,
-            boolean retainInput, boolean requiresBroadcast) {
-        super(indexName, indexType, dataverseName, datasetName, retainInput, requiresBroadcast);
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast) {
+        super(indexName, indexType, dataverseName, datasetName, retainInput, retainNull, requiresBroadcast);
     }
 
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {

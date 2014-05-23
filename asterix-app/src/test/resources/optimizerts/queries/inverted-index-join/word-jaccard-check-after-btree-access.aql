@@ -42,7 +42,7 @@ write output to nc1:"rttest/inverted-index-join_word-jaccard-check-after-btree-a
 
 for $t1 in dataset('TweetMessages')
 for $t2 in dataset('TweetMessages')
-let $sim := similarity-jaccard-check($t1.message-text, $t2.message-text, 0.6f)
+let $sim := similarity-jaccard-check(word-tokens($t1.message-text), word-tokens($t2.message-text), 0.6f)
 where $sim[0] and $t1.tweetid < int64("20") and $t2.tweetid != $t1.tweetid
 return {
     "t1": $t1.tweetid,
