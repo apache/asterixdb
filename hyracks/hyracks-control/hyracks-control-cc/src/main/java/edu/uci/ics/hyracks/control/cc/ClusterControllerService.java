@@ -222,7 +222,6 @@ public class ClusterControllerService extends AbstractRemoteService {
         clientIPC.start();
         webServer.setPort(ccConfig.httpPort);
         webServer.start();
-        workQueue.start();
         info = new ClusterControllerInfo(ccConfig.clientNetIpAddress, ccConfig.clientNetPort,
                 webServer.getListeningPort());
         timer.schedule(sweeper, 0, ccConfig.heartbeatPeriod);
@@ -230,6 +229,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         startApplication();
 
         datasetDirectoryService.init(executor);
+        workQueue.start();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
     }
 
