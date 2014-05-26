@@ -16,10 +16,13 @@ package edu.uci.ics.asterix.common.config;
 
 public class AsterixCompilerProperties extends AbstractAsterixProperties {
     private static final String COMPILER_SORTMEMORY_KEY = "compiler.sortmemory";
-    private static final long COMPILER_SORTMEMORY_DEFAULT = (512 << 20); // 512MB
+    private static final long COMPILER_SORTMEMORY_DEFAULT = (32 << 20); // 32MB
+
+    private static final String COMPILER_GROUPMEMORY_KEY = "compiler.groupmemory";
+    private static final long COMPILER_GROUPMEMORY_DEFAULT = (32 << 20); // 32MB
 
     private static final String COMPILER_JOINMEMORY_KEY = "compiler.joinmemory";
-    private static final long COMPILER_JOINMEMORY_DEFAULT = (512 << 20); // 512MB
+    private static final long COMPILER_JOINMEMORY_DEFAULT = (32 << 20); // 32MB
 
     private static final String COMPILER_FRAMESIZE_KEY = "compiler.framesize";
     private static int COMPILER_FRAMESIZE_DEFAULT = (32 << 10); // 32KB
@@ -38,8 +41,14 @@ public class AsterixCompilerProperties extends AbstractAsterixProperties {
                 PropertyInterpreters.getLongPropertyInterpreter());
     }
 
+    public long getGroupMemorySize() {
+        return accessor.getProperty(COMPILER_GROUPMEMORY_KEY, COMPILER_GROUPMEMORY_DEFAULT,
+                PropertyInterpreters.getLongPropertyInterpreter());
+    }
+
     public int getFrameSize() {
         return accessor.getProperty(COMPILER_FRAMESIZE_KEY, COMPILER_FRAMESIZE_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
+
 }

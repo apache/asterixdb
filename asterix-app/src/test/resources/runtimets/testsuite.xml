@@ -2683,6 +2683,11 @@
         <output-dir compare="Text">query_issue267</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="stable_sort">
+        <output-dir compare="Text">stable_sort</output-dir>
+      </compilation-unit>
+    </test-case>
    <!--
     <test-case FilePath="misc">
       <compilation-unit name="range_01">
@@ -4332,6 +4337,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
+      <compilation-unit name="q17_large_gby_variant">
+        <output-dir compare="Text">q17_large_gby_variant</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="q18_large_volume_customer">
         <output-dir compare="Text">q18_large_volume_customer</output-dir>
       </compilation-unit>
@@ -4836,11 +4846,13 @@
         <output-dir compare="Text">feeds_05</output-dir>
       </compilation-unit>
     </test-case>
+    <!--Disable it because of sporadic failures. Raman will re-enable it.
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_06">
         <output-dir compare="Text">feeds_06</output-dir>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_07">
         <output-dir compare="Text">feeds_07</output-dir>

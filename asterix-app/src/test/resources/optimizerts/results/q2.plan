@@ -24,22 +24,20 @@
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
                         -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$32(ASC), $$33(ASC)] HASH:[$$32]  |PARTITIONED|
-                          -- PRE_CLUSTERED_GROUP_BY[$$23, $$24]  |PARTITIONED|
+                          -- SORT_GROUP_BY[$$23, $$24]  |PARTITIONED|
                                   {
                                     -- AGGREGATE  |LOCAL|
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                                   }
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- STABLE_SORT [$$23(ASC), $$24(ASC)]  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- STREAM_PROJECT  |PARTITIONED|
+                                -- ASSIGN  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
-                                    -- ASSIGN  |PARTITIONED|
+                                    -- UNNEST  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
-                                        -- UNNEST  |PARTITIONED|
+                                        -- ASSIGN  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
-                                            -- ASSIGN  |PARTITIONED|
-                                              -- STREAM_PROJECT  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN  |PARTITIONED|
-                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

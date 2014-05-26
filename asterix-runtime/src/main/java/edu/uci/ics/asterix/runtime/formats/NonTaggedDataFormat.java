@@ -75,6 +75,8 @@ import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableAvgAg
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableIntermediateAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlSumAggregateDescriptor;
@@ -87,6 +89,8 @@ import edu.uci.ics.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.CountAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.GlobalSqlAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.IntermediateAvgAggregateDescriptor;
+import edu.uci.ics.asterix.runtime.aggregates.std.IntermediateSqlAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalMaxAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.std.LocalMinAggregateDescriptor;
@@ -425,6 +429,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(CountAggregateDescriptor.FACTORY);
         temp.add(AvgAggregateDescriptor.FACTORY);
         temp.add(LocalAvgAggregateDescriptor.FACTORY);
+        temp.add(IntermediateAvgAggregateDescriptor.FACTORY);
         temp.add(GlobalAvgAggregateDescriptor.FACTORY);
         temp.add(SumAggregateDescriptor.FACTORY);
         temp.add(LocalSumAggregateDescriptor.FACTORY);
@@ -437,6 +442,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SerializableCountAggregateDescriptor.FACTORY);
         temp.add(SerializableAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
+        temp.add(SerializableIntermediateAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableGlobalAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableSumAggregateDescriptor.FACTORY);
         temp.add(SerializableLocalSumAggregateDescriptor.FACTORY);
@@ -452,6 +458,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SqlCountAggregateDescriptor.FACTORY);
         temp.add(SqlAvgAggregateDescriptor.FACTORY);
         temp.add(LocalSqlAvgAggregateDescriptor.FACTORY);
+        temp.add(IntermediateSqlAvgAggregateDescriptor.FACTORY);
         temp.add(GlobalSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SqlSumAggregateDescriptor.FACTORY);
         temp.add(LocalSqlSumAggregateDescriptor.FACTORY);
@@ -464,6 +471,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(SerializableSqlCountAggregateDescriptor.FACTORY);
         temp.add(SerializableSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableLocalSqlAvgAggregateDescriptor.FACTORY);
+        temp.add(SerializableIntermediateSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableGlobalSqlAvgAggregateDescriptor.FACTORY);
         temp.add(SerializableSqlSumAggregateDescriptor.FACTORY);
         temp.add(SerializableLocalSqlSumAggregateDescriptor.FACTORY);

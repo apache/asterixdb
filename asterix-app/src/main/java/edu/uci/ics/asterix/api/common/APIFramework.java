@@ -262,9 +262,11 @@ public class APIFramework {
         AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
+        int groupFrameLimit = (int) (compilerProperties.getGroupMemorySize() / frameSize);
         int joinFrameLimit = (int) (compilerProperties.getJoinMemorySize() / frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setFrameSize(frameSize);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalSort(sortFrameLimit);
+        OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesExternalGroupBy(groupFrameLimit);
         OptimizationConfUtil.getPhysicalOptimizationConfig().setMaxFramesHybridHash(joinFrameLimit);
 
         HeuristicCompilerFactoryBuilder builder = new HeuristicCompilerFactoryBuilder(

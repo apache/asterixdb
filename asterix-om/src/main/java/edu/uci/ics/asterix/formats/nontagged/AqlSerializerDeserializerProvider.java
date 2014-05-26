@@ -70,6 +70,9 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
     @Override
     public ISerializerDeserializer getSerializerDeserializer(Object typeInfo) {
         IAType aqlType = (IAType) typeInfo;
+        if (aqlType == null) {
+            return null;
+        }
         switch (aqlType.getTypeTag()) {
             case ANY:
             case UNION: { // we could do smth better for nullable fields
