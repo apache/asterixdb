@@ -39,7 +39,11 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     private final boolean asyncMode;
 
+    private final boolean orderedResult;
+
     private final int partition;
+
+    private final int nPartitions;
 
     private final DatasetMemoryManager datasetMemoryManager;
 
@@ -47,14 +51,18 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     private final ResultState resultState;
 
+    private boolean partitionRegistered;
+
     public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
-            ResultSetId rsId, boolean asyncMode, int partition, DatasetMemoryManager datasetMemoryManager,
-            IWorkspaceFileFactory fileFactory) {
+            ResultSetId rsId, boolean asyncMode, boolean orderedResult, int partition, int nPartitions,
+            DatasetMemoryManager datasetMemoryManager, IWorkspaceFileFactory fileFactory) {
         this.manager = manager;
         this.jobId = jobId;
         this.resultSetId = rsId;
         this.asyncMode = asyncMode;
+        this.orderedResult = orderedResult;
         this.partition = partition;
+        this.nPartitions = nPartitions;
         this.datasetMemoryManager = datasetMemoryManager;
 
         resultSetPartitionId = new ResultSetPartitionId(jobId, rsId, partition);
@@ -71,11 +79,16 @@ public class DatasetPartitionWriter implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("open(" + partition + ")");
         }
+        partitionRegistered = false;
         resultState.open();
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        if (!partitionRegistered) {
+            registerResultPartitionLocation(false);
+            partitionRegistered = true;
+        }
         if (datasetMemoryManager == null) {
             resultState.write(buffer);
         } else {
@@ -99,12 +112,28 @@ public class DatasetPartitionWriter implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + partition + ")");
         }
-
+        if (!partitionRegistered) {
+            registerResultPartitionLocation(true);
+            partitionRegistered = true;
+        }
+        resultState.close();
         try {
-            resultState.close();
             manager.reportPartitionWriteCompletion(jobId, resultSetId, partition);
         } catch (HyracksException e) {
             throw new HyracksDataException(e);
         }
     }
+
+    void registerResultPartitionLocation(boolean empty) throws HyracksDataException {
+        try {
+            manager.registerResultPartitionLocation(jobId, resultSetId, partition, nPartitions, orderedResult, empty);
+        } catch (HyracksException e) {
+            if (e instanceof HyracksDataException) {
+                throw (HyracksDataException) e;
+            } else {
+                throw new HyracksDataException(e);
+            }
+        }
+    }
+
 }

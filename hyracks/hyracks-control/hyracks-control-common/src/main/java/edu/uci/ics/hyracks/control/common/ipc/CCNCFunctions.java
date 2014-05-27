@@ -456,6 +456,8 @@ public class CCNCFunctions {
 
         private final boolean orderedResult;
 
+        private final boolean emptyResult;
+
         private final int partition;
 
         private final int nPartitions;
@@ -463,10 +465,11 @@ public class CCNCFunctions {
         private NetworkAddress networkAddress;
 
         public RegisterResultPartitionLocationFunction(JobId jobId, ResultSetId rsId, boolean orderedResult,
-                int partition, int nPartitions, NetworkAddress networkAddress) {
+                boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) {
             this.jobId = jobId;
             this.rsId = rsId;
             this.orderedResult = orderedResult;
+            this.emptyResult = emptyResult;
             this.partition = partition;
             this.nPartitions = nPartitions;
             this.networkAddress = networkAddress;
@@ -487,6 +490,10 @@ public class CCNCFunctions {
 
         public boolean getOrderedResult() {
             return orderedResult;
+        }
+
+        public boolean getEmptyResult() {
+            return emptyResult;
         }
 
         public int getPartition() {

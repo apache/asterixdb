@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,8 @@ public class DatasetDirectoryRecord implements Serializable {
 
     private Status status;
 
+    private boolean empty;
+
     public DatasetDirectoryRecord() {
         this.address = null;
         this.readEOS = false;
@@ -46,6 +48,14 @@ public class DatasetDirectoryRecord implements Serializable {
 
     public NetworkAddress getNetworkAddress() {
         return address;
+    }
+
+    public void setEmpty(boolean empty) {
+        this.empty = empty;
+    }
+
+    public boolean getEmpty() {
+        return empty;
     }
 
     public void readEOS() {
@@ -81,5 +91,10 @@ public class DatasetDirectoryRecord implements Serializable {
             return false;
         }
         return address.equals(((DatasetDirectoryRecord) o).address);
+    }
+
+    @Override
+    public String toString() {
+        return address.toString() + " " + status + (empty ? " (empty)" : "") + (readEOS ? " (EOS)" : "");
     }
 }

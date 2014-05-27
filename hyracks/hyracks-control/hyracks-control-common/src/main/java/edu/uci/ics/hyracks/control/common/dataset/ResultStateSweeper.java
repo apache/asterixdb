@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,12 +17,10 @@ package edu.uci.ics.hyracks.control.common.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.dataset.IDatasetManager;
-import edu.uci.ics.hyracks.api.dataset.IDatasetStateRecord;
 import edu.uci.ics.hyracks.api.job.JobId;
 
 /**
@@ -64,9 +62,9 @@ public class ResultStateSweeper implements Runnable {
     private void sweep() {
         synchronized (datasetManager) {
             toBeCollected.clear();
-            for (Map.Entry<JobId, IDatasetStateRecord> entry : datasetManager.getStateMap().entrySet()) {
-                if (System.currentTimeMillis() > entry.getValue().getTimestamp() + resultTTL) {
-                    toBeCollected.add(entry.getKey());
+            for (JobId jobId : datasetManager.getJobIds()) {
+                if (System.currentTimeMillis() > datasetManager.getState(jobId).getTimestamp() + resultTTL) {
+                    toBeCollected.add(jobId);
                 }
             }
             for (JobId jobId : toBeCollected) {

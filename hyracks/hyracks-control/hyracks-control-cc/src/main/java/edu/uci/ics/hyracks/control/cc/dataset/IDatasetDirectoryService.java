@@ -25,12 +25,13 @@ import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
 import edu.uci.ics.hyracks.api.job.JobId;
+import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 
 public interface IDatasetDirectoryService extends IJobLifecycleListener, IDatasetManager {
     public void init(ExecutorService executor);
 
-    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
-            int nPartitions, NetworkAddress networkAddress);
+    public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
+            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress);
 
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition);
 
@@ -40,6 +41,6 @@ public interface IDatasetDirectoryService extends IJobLifecycleListener, IDatase
 
     public Status getResultStatus(JobId jobId, ResultSetId rsId) throws HyracksDataException;
 
-    public DatasetDirectoryRecord[] getResultPartitionLocations(JobId jobId, ResultSetId rsId,
-            DatasetDirectoryRecord[] knownLocations) throws HyracksDataException;
+    public void getResultPartitionLocations(JobId jobId, ResultSetId rsId, DatasetDirectoryRecord[] knownLocations,
+            IResultCallback<DatasetDirectoryRecord[]> callback) throws HyracksDataException;
 }
