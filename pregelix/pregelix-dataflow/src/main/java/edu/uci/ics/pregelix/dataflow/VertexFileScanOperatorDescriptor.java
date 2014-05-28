@@ -16,7 +16,6 @@ package edu.uci.ics.pregelix.dataflow;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -49,6 +48,7 @@ import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 @SuppressWarnings("rawtypes")
 public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
@@ -140,14 +140,8 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldSize);
                 DataOutput dos = tb.getDataOutput();
 
-                /**
-                 * set context
-                 */
-                ClassLoader cl = ctx.getJobletContext().getClassLoader();
-                Class<?> vClass = (Class<?>) cl.loadClass("edu.uci.ics.pregelix.api.graph.Vertex");
-                Field contextField = vClass.getDeclaredField("context");
-                contextField.setAccessible(true);
-                contextField.set(null, mapperContext);
+                IterationUtils.setJobContext(BspUtils.getJobId(conf), ctx, mapperContext);
+                Vertex.taskContext = mapperContext;
 
                 /**
                  * empty vertex value

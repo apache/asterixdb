@@ -23,9 +23,12 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +39,7 @@ import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import edu.uci.ics.hyracks.api.dataflow.connectors.ConnectorPolicyFactory;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -176,10 +180,10 @@ public class CCNCFunctions {
     public static class NotifyTaskCompleteFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final JobId jobId;
-        private final TaskAttemptId taskId;
-        private final String nodeId;
-        private final TaskProfile statistics;
+        private JobId jobId;
+        private TaskAttemptId taskId;
+        private String nodeId;
+        private TaskProfile statistics;
 
         public NotifyTaskCompleteFunction(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics) {
             this.jobId = jobId;
@@ -207,6 +211,26 @@ public class CCNCFunctions {
 
         public TaskProfile getStatistics() {
             return statistics;
+        }
+
+        public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
+            ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), length);
+            DataInputStream dis = new DataInputStream(bais);
+
+            JobId jobId = JobId.create(dis);
+            String nodeId = dis.readUTF();
+            TaskAttemptId taskId = TaskAttemptId.create(dis);
+            TaskProfile statistics = TaskProfile.create(dis);
+            return new NotifyTaskCompleteFunction(jobId, taskId, nodeId, statistics);
+        }
+
+        public static void serialize(OutputStream out, Object object) throws Exception {
+            NotifyTaskCompleteFunction fn = (NotifyTaskCompleteFunction) object;
+            DataOutputStream dos = new DataOutputStream(out);
+            fn.jobId.writeFields(dos);
+            dos.writeUTF(fn.nodeId);
+            fn.taskId.writeFields(dos);
+            fn.statistics.writeFields(dos);
         }
     }
 
@@ -270,6 +294,23 @@ public class CCNCFunctions {
         public String getNodeId() {
             return nodeId;
         }
+
+        public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
+            ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), length);
+            DataInputStream dis = new DataInputStream(bais);
+
+            JobId jobId = JobId.create(dis);
+            String nodeId = dis.readUTF();
+
+            return new NotifyJobletCleanupFunction(jobId, nodeId);
+        }
+
+        public static void serialize(OutputStream out, Object object) throws Exception {
+            NotifyJobletCleanupFunction fn = (NotifyJobletCleanupFunction) object;
+            DataOutputStream dos = new DataOutputStream(out);
+            fn.jobId.writeFields(dos);
+            dos.writeUTF(fn.nodeId);
+        }
     }
 
     public static class NodeHeartbeatFunction extends Function {
@@ -294,6 +335,23 @@ public class CCNCFunctions {
 
         public HeartbeatData getHeartbeatData() {
             return hbData;
+        }
+
+        public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
+            ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), length);
+            DataInputStream dis = new DataInputStream(bais);
+
+            String nodeId = dis.readUTF();
+            HeartbeatData hbData = new HeartbeatData();
+            hbData.readFields(dis);
+            return new NodeHeartbeatFunction(nodeId, hbData);
+        }
+
+        public static void serialize(OutputStream out, Object object) throws Exception {
+            NodeHeartbeatFunction fn = (NodeHeartbeatFunction) object;
+            DataOutputStream dos = new DataOutputStream(out);
+            dos.writeUTF(fn.nodeId);
+            fn.hbData.write(dos);
         }
     }
 
@@ -650,6 +708,90 @@ public class CCNCFunctions {
         public EnumSet<JobFlag> getFlags() {
             return flags;
         }
+
+        public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
+            ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), length);
+            DataInputStream dis = new DataInputStream(bais);
+
+            //read jobId and taskId
+            JobId jobId = JobId.create(dis);
+            DeploymentId deploymentId = null;
+            boolean hasDeployed = dis.readBoolean();
+            if (hasDeployed) {
+                deploymentId = DeploymentId.create(dis);
+            }
+
+            // read plan bytes
+            int planBytesSize = dis.readInt();
+            byte[] planBytes = null;
+            if (planBytesSize >= 0) {
+                planBytes = new byte[planBytesSize];
+                dis.read(planBytes, 0, planBytesSize);
+            }
+
+            // read task attempt descriptors
+            int tadSize = dis.readInt();
+            List<TaskAttemptDescriptor> taskDescriptors = new ArrayList<TaskAttemptDescriptor>();
+            for (int i = 0; i < tadSize; i++) {
+                TaskAttemptDescriptor tad = TaskAttemptDescriptor.create(dis);
+                taskDescriptors.add(tad);
+            }
+
+            //read connector policies
+            int cpSize = dis.readInt();
+            Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
+            for (int i = 0; i < cpSize; i++) {
+                ConnectorDescriptorId cid = ConnectorDescriptorId.create(dis);
+                IConnectorPolicy policy = ConnectorPolicyFactory.INSTANCE.getConnectorPolicy(dis);
+                connectorPolicies.put(cid, policy);
+            }
+
+            // read flags
+            int flagSize = dis.readInt();
+            EnumSet<JobFlag> flags = EnumSet.noneOf(JobFlag.class);
+            for (int i = 0; i < flagSize; i++) {
+                flags.add(JobFlag.values()[(dis.readInt())]);
+            }
+
+            return new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors, connectorPolicies, flags);
+        }
+
+        public static void serialize(OutputStream out, Object object) throws Exception {
+            StartTasksFunction fn = (StartTasksFunction) object;
+            DataOutputStream dos = new DataOutputStream(out);
+
+            //write jobId and deploymentId
+            fn.jobId.writeFields(dos);
+            dos.writeBoolean(fn.deploymentId == null ? false : true);
+            if (fn.deploymentId != null) {
+                fn.deploymentId.writeFields(dos);
+            }
+
+            //write plan bytes
+            dos.writeInt(fn.planBytes == null ? -1 : fn.planBytes.length);
+            if (fn.planBytes != null) {
+                dos.write(fn.planBytes, 0, fn.planBytes.length);
+            }
+
+            //write task descriptors
+            dos.writeInt(fn.taskDescriptors.size());
+            for (int i = 0; i < fn.taskDescriptors.size(); i++) {
+                fn.taskDescriptors.get(i).writeFields(dos);
+            }
+
+            //write connector policies
+            dos.writeInt(fn.connectorPolicies.size());
+            for (Entry<ConnectorDescriptorId, IConnectorPolicy> entry : fn.connectorPolicies.entrySet()) {
+                entry.getKey().writeFields(dos);
+                ConnectorPolicyFactory.INSTANCE.writeConnectorPolicy(entry.getValue(), dos);
+            }
+
+            //write flags
+            dos.writeInt(fn.flags.size());
+            for (JobFlag flag : fn.flags) {
+                dos.writeInt(flag.ordinal());
+            }
+        }
     }
 
     public static class AbortTasksFunction extends Function {
@@ -699,6 +841,23 @@ public class CCNCFunctions {
 
         public JobStatus getStatus() {
             return status;
+        }
+
+        public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
+            ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), length);
+            DataInputStream dis = new DataInputStream(bais);
+
+            JobId jobId = JobId.create(dis);
+            JobStatus status = JobStatus.values()[dis.readInt()];
+
+            return new CleanupJobletFunction(jobId, status);
+        }
+
+        public static void serialize(OutputStream out, Object object) throws Exception {
+            CleanupJobletFunction fn = (CleanupJobletFunction) object;
+            DataOutputStream dos = new DataOutputStream(out);
+            fn.jobId.writeFields(dos);
+            dos.writeInt(fn.status.ordinal());
         }
     }
 
@@ -978,6 +1137,25 @@ public class CCNCFunctions {
                 case REPORT_PARTITION_AVAILABILITY:
                     ReportPartitionAvailabilityFunction.serialize(out, object);
                     return;
+
+                case NODE_HEARTBEAT:
+                    NodeHeartbeatFunction.serialize(out, object);
+                    return;
+
+                case START_TASKS:
+                    StartTasksFunction.serialize(out, object);
+                    return;
+
+                case NOTIFY_TASK_COMPLETE:
+                    NotifyTaskCompleteFunction.serialize(out, object);
+                    return;
+
+                case NOTIFY_JOBLET_CLEANUP:
+                    NotifyJobletCleanupFunction.serialize(out, object);
+                    return;
+                case CLEANUP_JOBLET:
+                    CleanupJobletFunction.serialize(out, object);
+                    return;
             }
             JavaSerializationBasedPayloadSerializerDeserializer.serialize(out, object);
         }
@@ -992,6 +1170,21 @@ public class CCNCFunctions {
 
                 case REPORT_PARTITION_AVAILABILITY:
                     return ReportPartitionAvailabilityFunction.deserialize(buffer, length);
+
+                case NODE_HEARTBEAT:
+                    return NodeHeartbeatFunction.deserialize(buffer, length);
+
+                case START_TASKS:
+                    return StartTasksFunction.deserialize(buffer, length);
+
+                case NOTIFY_TASK_COMPLETE:
+                    return NotifyTaskCompleteFunction.deserialize(buffer, length);
+
+                case NOTIFY_JOBLET_CLEANUP:
+                    return NotifyJobletCleanupFunction.deserialize(buffer, length);
+
+                case CLEANUP_JOBLET:
+                    return CleanupJobletFunction.deserialize(buffer, length);
             }
 
             return javaSerde.deserializeObject(buffer, length);

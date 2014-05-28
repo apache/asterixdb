@@ -65,6 +65,10 @@ public class MultiJobPageRankTest {
                 @Override
                 public void run() {
                     try {
+                        synchronized (this) {
+                            this.wait(5000);
+                            this.notifyAll();
+                        }
                         Driver driver = new Driver(PageRankVertex.class);
                         PregelixJob job2 = new PregelixJob(PageRankVertex.class.getName());
                         job2.setVertexClass(PageRankVertex.class);

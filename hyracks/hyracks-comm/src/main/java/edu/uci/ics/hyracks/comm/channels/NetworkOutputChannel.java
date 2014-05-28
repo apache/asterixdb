@@ -32,6 +32,10 @@ public class NetworkOutputChannel implements IFrameWriter {
 
     private boolean aborted;
 
+    private int frameSize = 32768;
+
+    private int allocateCounter = 0;
+
     public NetworkOutputChannel(ChannelControlBlock ccb, int nBuffers) {
         this.ccb = ccb;
         this.nBuffers = nBuffers;
@@ -40,9 +44,7 @@ public class NetworkOutputChannel implements IFrameWriter {
     }
 
     public void setFrameSize(int frameSize) {
-        for (int i = 0; i < nBuffers; ++i) {
-            emptyStack.push(ByteBuffer.allocateDirect(frameSize));
-        }
+        this.frameSize = frameSize;
     }
 
     @Override
@@ -58,6 +60,10 @@ public class NetworkOutputChannel implements IFrameWriter {
                     throw new HyracksDataException("Connection has been aborted");
                 }
                 destBuffer = emptyStack.poll();
+                if (destBuffer == null && allocateCounter < nBuffers) {
+                    destBuffer = ByteBuffer.allocateDirect(frameSize);
+                    allocateCounter++;
+                }
                 if (destBuffer != null) {
                     break;
                 }

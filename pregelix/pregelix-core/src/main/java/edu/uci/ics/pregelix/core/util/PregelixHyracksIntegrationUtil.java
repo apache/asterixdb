@@ -62,7 +62,7 @@ public class PregelixHyracksIntegrationUtil {
         ccConfig.jobHistorySize = 1;
         ccConfig.profileDumpPeriod = -1;
         ccConfig.heartbeatPeriod = 50;
-        ccConfig.maxHeartbeatLapsePeriods = 10;
+        ccConfig.maxHeartbeatLapsePeriods = 20;
 
         // cluster controller
         cc = new ClusterControllerService(ccConfig);
@@ -122,6 +122,7 @@ public class PregelixHyracksIntegrationUtil {
 
     public static void runJob(JobSpecification spec, String appName) throws Exception {
         spec.setFrameSize(FRAME_SIZE);
+        spec.setReportTaskDetails(false);
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         hcc.waitForCompletion(jobId);
     }

@@ -25,6 +25,7 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.pregelix.api.io.Pointable;
 import edu.uci.ics.pregelix.api.util.FrameTupleUtils;
 
 @SuppressWarnings("rawtypes")
@@ -59,6 +60,8 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
     /** whether alive message should be pushed out */
     private boolean pushAlive;
 
+    private boolean pointableMsg = false;
+
     public VertexDelegate(Vertex vertex) {
         this.vertex = vertex;
     }
@@ -85,13 +88,23 @@ class VertexDelegate<I extends WritableComparable, V extends Writable, E extends
          * send out message along message channel
          */
         try {
-            message.reset();
-            DataOutput outputMsg = message.getDataOutput();
-            id.write(outputMsg);
-            message.addFieldEndOffset();
-            msg.write(outputMsg);
-            message.addFieldEndOffset();
-            FrameTupleUtils.flushTuple(appenderMsg, message, msgWriter);
+            if (pointableMsg) {
+                FrameTupleUtils.flushPointableKeyValueTuple(appenderMsg, msgWriter, (Pointable) id, (Pointable) msg);
+            } else {
+                if ((id instanceof Pointable) && (msg instanceof Pointable)) {
+                    FrameTupleUtils
+                            .flushPointableKeyValueTuple(appenderMsg, msgWriter, (Pointable) id, (Pointable) msg);
+                    pointableMsg = true;
+                } else {
+                    message.reset();
+                    DataOutput outputMsg = message.getDataOutput();
+                    id.write(outputMsg);
+                    message.addFieldEndOffset();
+                    msg.write(outputMsg);
+                    message.addFieldEndOffset();
+                    FrameTupleUtils.flushTuple(appenderMsg, message, msgWriter);
+                }
+            }
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

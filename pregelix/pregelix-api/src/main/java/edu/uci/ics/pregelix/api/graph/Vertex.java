@@ -53,11 +53,10 @@ import edu.uci.ics.pregelix.api.util.JobStateUtils;
 @SuppressWarnings("rawtypes")
 public abstract class Vertex<I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable>
         implements Writable {
-    private static long superstep = 0;
-    /** Class-wide number of vertices */
-    private static long numVertices = -1;
-    /** Class-wide number of edges */
-    private static long numEdges = -1;
+    /** task context, only used in scanners */
+    public static TaskAttemptContext taskContext;
+    /** vertex context */
+    private VertexContext context;
     /** Vertex id */
     private I vertexId = null;
     /** Vertex value */
@@ -68,8 +67,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     boolean halt = false;
     /** List of incoming messages from the previous superstep */
     private final List<M> msgList = new ArrayList<M>();
-    /** map context */
-    private static TaskAttemptContext context = null;
     /** a delegate for hyracks stuff */
     private VertexDelegate<I, V, E, M> delegate = new VertexDelegate<I, V, E, M>(this);
     /** this vertex is updated or not */
@@ -234,19 +231,19 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Vote to halt. Once all vertex vote to halt and no more messages, a
      * Pregelix job will terminate.
-     * 
      * The state of the current vertex value is saved.
      */
     public final void voteToHalt() {
         halt = true;
         updated = true;
     }
-    
+
     /**
      * Vote to halt. Once all vertex vote to halt and no more messages, a
      * Pregelix job will terminate.
      * 
-     * @param update whether or not to save the vertex value
+     * @param update
+     *            whether or not to save the vertex value
      */
     public final void voteToHalt(boolean update) {
         halt = true;
@@ -255,18 +252,18 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Activate a halted vertex such that it is alive again.
-     * 
      * The state of the current vertex value is saved.
      */
     public final void activate() {
         halt = false;
         updated = true;
     }
-    
+
     /**
      * Activate a halted vertex such that it is alive again.
      * 
-     * @param update whether or not to save the vertex value
+     * @param update
+     *            whether or not to save the vertex value
      */
     public final void activate(boolean update) {
         halt = false;
@@ -473,16 +470,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     }
 
     /**
-     * Set the global superstep for all the vertices (internal use)
-     * 
-     * @param superstep
-     *            New superstep
-     */
-    public static final void setSuperstep(long superstep) {
-        Vertex.superstep = superstep;
-    }
-
-    /**
      * Add an outgoing edge into the vertex
      * 
      * @param edge
@@ -553,18 +540,8 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * 
      * @return the current superstep number
      */
-    public static final long getSuperstep() {
-        return superstep;
-    }
-
-    /**
-     * Set the total number of vertices from the last superstep.
-     * 
-     * @param numVertices
-     *            Aggregate vertices in the last superstep
-     */
-    public static final void setNumVertices(long numVertices) {
-        Vertex.numVertices = numVertices;
+    public final long getSuperstep() {
+        return context.getSuperstep();
     }
 
     /**
@@ -572,18 +549,8 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * 
      * @return the number of vertexes in the graph
      */
-    public static final long getNumVertices() {
-        return numVertices;
-    }
-
-    /**
-     * Set the total number of edges from the last superstep.
-     * 
-     * @param numEdges
-     *            Aggregate edges in the last superstep
-     */
-    public static void setNumEdges(long numEdges) {
-        Vertex.numEdges = numEdges;
+    public final long getNumVertices() {
+        return context.getNumVertices();
     }
 
     /**
@@ -591,15 +558,19 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * 
      * @return the number of edges in the graph
      */
-    public static final long getNumEdges() {
-        return numEdges;
+    public final long getNumEdges() {
+        return context.getNumVertices();
     }
 
     /**
      * Pregelix internal use only
      */
-    public static final TaskAttemptContext getContext() {
-        return context;
+    public final TaskAttemptContext getContext() {
+        if (context != null) {
+            return context.getContext();
+        } else {
+            return taskContext;
+        }
     }
 
     @Override
@@ -611,6 +582,26 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     public boolean equals(Object object) {
         Vertex vertex = (Vertex) object;
         return vertexId.equals(vertex.getVertexId());
+    }
+
+    /**
+     * called *once* per partition at the start of each iteration,
+     * before calls to open() or compute()
+     * Users can override this method to configure the pregelix job
+     * and vertex state.
+     */
+    public void configure(Configuration conf) {
+
+    }
+    
+    /**
+     * called *once* per partition at the end of each iteration,
+     * before calls to compute() or close()
+     * Users can override this method to configure the pregelix job
+     * and vertex state.
+     */
+    public void endSuperstep(Configuration conf) {
+
     }
 
     /**
@@ -657,6 +648,24 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      */
     public boolean isPartitionTerminated() {
         return terminatePartition;
+    }
+
+    /**
+     * Set the vertex context
+     * 
+     * @param ctx
+     */
+    public void setVertexContext(VertexContext ctx) {
+        this.context = ctx;
+    }
+
+    /***
+     * Get the vertex context
+     * 
+     * @return the vertex context
+     */
+    public VertexContext getVertexContext() {
+        return this.context;
     }
 
 }

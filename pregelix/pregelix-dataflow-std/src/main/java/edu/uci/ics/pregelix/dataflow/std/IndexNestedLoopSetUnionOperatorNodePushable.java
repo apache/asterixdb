@@ -125,7 +125,7 @@ public class IndexNestedLoopSetUnionOperatorNodePushable extends AbstractUnaryIn
             }
 
         } catch (Exception e) {
-            treeIndexOpHelper.close();
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -158,6 +158,7 @@ public class IndexNestedLoopSetUnionOperatorNodePushable extends AbstractUnaryIn
                 }
             }
         } catch (Exception e) {
+            closeResource();
             throw new HyracksDataException(e);
         }
     }
@@ -190,21 +191,27 @@ public class IndexNestedLoopSetUnionOperatorNodePushable extends AbstractUnaryIn
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(writeBuffer, writer);
             }
-            writer.close();
             try {
                 cursor.close();
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
         } catch (Exception e) {
+            closeResource();
             throw new HyracksDataException(e);
-        } finally {
+        } finally{
             treeIndexOpHelper.close();
+            writer.close();
         }
     }
 
     @Override
     public void fail() throws HyracksDataException {
+        closeResource();
+        populateFailure();
+    }
+
+    private void closeResource() throws HyracksDataException {
         try {
             cursor.close();
         } catch (Exception e) {
@@ -212,6 +219,9 @@ public class IndexNestedLoopSetUnionOperatorNodePushable extends AbstractUnaryIn
         } finally {
             treeIndexOpHelper.close();
         }
+    }
+
+    private void populateFailure() throws HyracksDataException {
         writer.fail();
     }
 

@@ -21,6 +21,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import junit.framework.Test;
+
+import org.apache.commons.io.FileUtils;
+
 import edu.uci.ics.hivesterix.test.base.AbstractTestSuiteClass;
 
 public class OptimizerTestSuite extends AbstractTestSuiteClass {
@@ -41,6 +44,7 @@ public class OptimizerTestSuite extends AbstractTestSuiteClass {
         try {
             testSuite.setup();
             testSuite.loadData();
+            FileUtils.forceMkdir(new File("optest"));
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException(e.getMessage());

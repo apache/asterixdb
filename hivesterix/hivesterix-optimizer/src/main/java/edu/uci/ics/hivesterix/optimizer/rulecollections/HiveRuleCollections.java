@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRul
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
@@ -38,7 +39,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerR
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IntroduceGroupByCombinerRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushGroupByIntoSortRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectIntoDataSourceScanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
@@ -121,6 +122,7 @@ public final class HiveRuleCollections {
         prepareJobGenRules.add(new LocalGroupByRule());
         prepareJobGenRules.add(new PushProjectIntoDataSourceScanRule());
         prepareJobGenRules.add(new ReinferAllTypesRule());
+        prepareJobGenRules.add(new PushGroupByIntoSortRule());
         prepareJobGenRules.add(new SetExecutionModeRule());
     }
 

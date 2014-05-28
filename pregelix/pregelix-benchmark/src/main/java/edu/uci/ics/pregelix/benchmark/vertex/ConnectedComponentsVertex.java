@@ -17,12 +17,13 @@ package edu.uci.ics.pregelix.benchmark.vertex;
 
 import java.io.IOException;
 
+import org.apache.giraph.combiner.Combiner;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.VLongWritable;
 
-public class ConnectedComponentsVertex extends Vertex<LongWritable, LongWritable, NullWritable, LongWritable> {
+public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritable, NullWritable, VLongWritable> {
     /**
      * Propagates the smallest vertex id to all neighbors. Will always choose to
      * halt and only reactivate if a smaller id has been sent to it.
@@ -32,12 +33,12 @@ public class ConnectedComponentsVertex extends Vertex<LongWritable, LongWritable
      * @throws IOException
      */
     @Override
-    public void compute(Iterable<LongWritable> messages) throws IOException {
+    public void compute(Iterable<VLongWritable> messages) throws IOException {
         long currentComponent = getValue().get();
 
         // First superstep is special, because we can simply look at the neighbors
         if (getSuperstep() == 0) {
-            for (Edge<LongWritable, NullWritable> edge : getEdges()) {
+            for (Edge<VLongWritable, NullWritable> edge : getEdges()) {
                 long neighbor = edge.getTargetVertexId().get();
                 if (neighbor < currentComponent) {
                     currentComponent = neighbor;
@@ -45,9 +46,9 @@ public class ConnectedComponentsVertex extends Vertex<LongWritable, LongWritable
             }
             // Only need to send value if it is not the own id
             if (currentComponent != getValue().get()) {
-                setValue(new LongWritable(currentComponent));
-                for (Edge<LongWritable, NullWritable> edge : getEdges()) {
-                    LongWritable neighbor = edge.getTargetVertexId();
+                setValue(new VLongWritable(currentComponent));
+                for (Edge<VLongWritable, NullWritable> edge : getEdges()) {
+                    VLongWritable neighbor = edge.getTargetVertexId();
                     if (neighbor.get() > currentComponent) {
                         sendMessage(neighbor, getValue());
                     }
@@ -60,7 +61,7 @@ public class ConnectedComponentsVertex extends Vertex<LongWritable, LongWritable
 
         boolean changed = false;
         // did we get a smaller id ?
-        for (LongWritable message : messages) {
+        for (VLongWritable message : messages) {
             long candidateComponent = message.get();
             if (candidateComponent < currentComponent) {
                 currentComponent = candidateComponent;
@@ -70,9 +71,27 @@ public class ConnectedComponentsVertex extends Vertex<LongWritable, LongWritable
 
         // propagate new component id to the neighbors
         if (changed) {
-            setValue(new LongWritable(currentComponent));
+            setValue(new VLongWritable(currentComponent));
             sendMessageToAllEdges(getValue());
         }
         voteToHalt();
+    }
+
+    public static class MinCombiner extends Combiner<VLongWritable, VLongWritable> {
+
+        @Override
+        public void combine(VLongWritable vertexIndex, VLongWritable originalMessage, VLongWritable messageToCombine) {
+            long oldValue = messageToCombine.get();
+            long newValue = originalMessage.get();
+            if (newValue < oldValue) {
+                messageToCombine.set(newValue);
+            }
+        }
+
+        @Override
+        public VLongWritable createInitialMessage() {
+            return new VLongWritable(Integer.MAX_VALUE);
+        }
+
     }
 }

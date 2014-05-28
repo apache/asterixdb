@@ -32,10 +32,12 @@ import edu.uci.ics.pregelix.dataflow.context.RuntimeContext;
 public class ClearStateOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
     private static final long serialVersionUID = 1L;
     private String jobId;
+    private boolean allStates;
 
-    public ClearStateOperatorDescriptor(JobSpecification spec, String jobId) {
+    public ClearStateOperatorDescriptor(JobSpecification spec, String jobId, boolean allStates) {
         super(spec, 0, 0);
         this.jobId = jobId;
+        this.allStates = allStates;
     }
 
     @Override
@@ -47,7 +49,8 @@ public class ClearStateOperatorDescriptor extends AbstractSingleActivityOperator
             public void initialize() throws HyracksDataException {
                 RuntimeContext context = (RuntimeContext) ctx.getJobletContext().getApplicationContext()
                         .getApplicationObject();
-                context.clearState(jobId);
+                context.clearState(jobId, allStates);
+                System.gc();
             }
 
             @Override

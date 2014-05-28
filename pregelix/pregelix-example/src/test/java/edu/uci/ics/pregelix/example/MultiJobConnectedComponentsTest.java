@@ -68,6 +68,10 @@ public class MultiJobConnectedComponentsTest {
                 @Override
                 public void run() {
                     try {
+                        synchronized (this) {
+                            this.wait(2000);
+                            this.notifyAll();
+                        }
                         Driver driver = new Driver(PageRankVertex.class);
                         PregelixJob job2 = new PregelixJob(ConnectedComponentsVertex.class.getName());
                         job2.setVertexClass(ConnectedComponentsVertex.class);

@@ -36,6 +36,9 @@ public class WritableComparingBinaryComparatorFactory<T> implements IBinaryCompa
         return new IBinaryComparator() {
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+                if (b1 == b2 && s1 == s2) {
+                    return 0;
+                }
                 return instance.compare(b1, s1, l1, b2, s2, l2);
             }
         };

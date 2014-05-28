@@ -74,16 +74,16 @@ write [%0->$$10, %0->$$11, %0->$$12, %0->$$14]
                         nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- EXTERNAL_GROUP_BY[$$5, $$6, $$7]  |PARTITIONED|
+            -- PRE_CLUSTERED_GROUP_BY[$$5, $$6, $$7]  |PARTITIONED|
               exchange 
-              -- HASH_PARTITION_EXCHANGE [$$5, $$6, $$7]  |PARTITIONED|
+              -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$5(ASC), $$6(ASC), $$7(ASC), $$8(ASC)] HASH:[$$5, $$6, $$7]  |PARTITIONED|
                 group by ([$$5 := %0->$$1; $$6 := %0->$$2; $$7 := %0->$$3; $$8 := %0->$$4]) decor ([]) {
                           aggregate [] <- []
                           -- AGGREGATE  |LOCAL|
                             nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
-                -- EXTERNAL_GROUP_BY[$$1, $$2, $$3, $$4]  |PARTITIONED|
+                -- SORT_GROUP_BY[$$1, $$2, $$3, $$4]  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     select (function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:or, Args:[function-call: algebricks:eq, Args:[%0->$$3, 49], function-call: algebricks:eq, Args:[%0->$$3, 14]], function-call: algebricks:eq, Args:[%0->$$3, 23]], function-call: algebricks:eq, Args:[%0->$$3, 45]], function-call: algebricks:eq, Args:[%0->$$3, 19]], function-call: algebricks:eq, Args:[%0->$$3, 3]], function-call: algebricks:eq, Args:[%0->$$3, 36]], function-call: algebricks:eq, Args:[%0->$$3, 9]])

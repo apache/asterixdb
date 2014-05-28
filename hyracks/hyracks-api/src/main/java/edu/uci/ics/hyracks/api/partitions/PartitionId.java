@@ -14,21 +14,35 @@
  */
 package edu.uci.ics.hyracks.api.partitions;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.io.IWritable;
 import edu.uci.ics.hyracks.api.job.JobId;
 
-public final class PartitionId implements Serializable {
+public final class PartitionId implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final JobId jobId;
+    private JobId jobId;
 
-    private final ConnectorDescriptorId cdId;
+    private ConnectorDescriptorId cdId;
 
-    private final int senderIndex;
+    private int senderIndex;
 
-    private final int receiverIndex;
+    private int receiverIndex;
+
+    public static PartitionId create(DataInput dis) throws IOException {
+        PartitionId partitionId = new PartitionId();
+        partitionId.readFields(dis);
+        return partitionId;
+    }
+
+    private PartitionId() {
+
+    }
 
     public PartitionId(JobId jobId, ConnectorDescriptorId cdId, int senderIndex, int receiverIndex) {
         this.jobId = jobId;
@@ -93,5 +107,21 @@ public final class PartitionId implements Serializable {
     @Override
     public String toString() {
         return jobId.toString() + ":" + cdId + ":" + senderIndex + ":" + receiverIndex;
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        cdId.writeFields(output);
+        jobId.writeFields(output);
+        output.writeInt(receiverIndex);
+        output.writeInt(senderIndex);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        cdId = ConnectorDescriptorId.create(input);
+        jobId = JobId.create(input);
+        receiverIndex = input.readInt();
+        senderIndex = input.readInt();
     }
 }

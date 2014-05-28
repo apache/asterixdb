@@ -108,9 +108,17 @@ public class ChannelControlBlock {
 
         private ByteBuffer currentReadBuffer;
 
+        private IBufferFactory bufferFactory;
+
         ReadInterface() {
             riEmptyStack = new ArrayDeque<ByteBuffer>();
             credits = 0;
+        }
+
+        @Override
+        public void setBufferFactory(IBufferFactory bufferFactory, int limit, int frameSize) {
+            this.bufferFactory = bufferFactory;
+            cSet.addPendingCredits(channelId, limit * frameSize);
         }
 
         @Override
@@ -130,6 +138,11 @@ public class ChannelControlBlock {
                 }
                 if (currentReadBuffer == null) {
                     currentReadBuffer = riEmptyStack.poll();
+                    //if current buffer == null and limit not reached
+                    // factory.createBuffer factory
+                    if (currentReadBuffer == null) {
+                        currentReadBuffer = bufferFactory.createBuffer();
+                    }
                     assert currentReadBuffer != null;
                 }
                 int rSize = Math.min(size, currentReadBuffer.remaining());
@@ -170,6 +183,8 @@ public class ChannelControlBlock {
         private final Queue<ByteBuffer> wiFullQueue;
 
         private boolean channelWritabilityState;
+
+        private IBufferFactory bufferFactory;
 
         private final ICloseableBufferAcceptor fba = new ICloseableBufferAcceptor() {
             @Override
@@ -224,6 +239,22 @@ public class ChannelControlBlock {
             eosSent = false;
             ecode = -1;
             ecodeSent = false;
+        }
+
+        @Override
+        public void setBufferFactory(IBufferFactory bufferFactory, int limit, int frameSize) {
+            this.bufferFactory = bufferFactory;
+            if (!channelWritabilityState) {
+                cSet.markPendingWrite(channelId);
+            }
+            channelWritabilityState = true;
+            if (eos) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Received duplicate close() on channel: " + channelId);
+                }
+                return;
+            }
+            eos = true;
         }
 
         @Override

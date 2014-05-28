@@ -17,7 +17,6 @@ package edu.uci.ics.pregelix.example;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Text;
@@ -35,7 +34,7 @@ import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.data.VLongNormalizedKeyComputer;
-import edu.uci.ics.pregelix.example.inputformat.TextPageRankInputFormat;
+import edu.uci.ics.pregelix.example.inputformat.TextConnectedComponentsInputFormat;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
@@ -53,8 +52,9 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
         @Override
         public void stepPartial(VLongWritable vertexIndex, VLongWritable msg) throws HyracksDataException {
             long value = msg.get();
-            if (min > value)
+            if (min > value) {
                 min = value;
+            }
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -66,8 +66,10 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
 
         @Override
         public void stepFinal(VLongWritable vertexIndex, VLongWritable partialAggregate) throws HyracksDataException {
-            if (min > partialAggregate.get())
-                min = partialAggregate.get();
+            long value = partialAggregate.get();
+            if (min > value) {
+                min = value;
+            }
         }
 
         @Override
@@ -83,48 +85,66 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
             msgList.add(agg);
             return msgList;
         }
+
+        @Override
+        public void stepPartial2(VLongWritable vertexIndex, VLongWritable partialAggregate) throws HyracksDataException {
+            long value = partialAggregate.get();
+            if (min > value) {
+                min = value;
+            }
+        }
+
+        @Override
+        public VLongWritable finishPartial2() {
+            agg.set(min);
+            return agg;
+        }
     }
 
-    private VLongWritable outputValue = new VLongWritable();
     private VLongWritable tmpVertexValue = new VLongWritable();
-    private long minID;
 
     @Override
     public void compute(Iterator<VLongWritable> msgIterator) {
+        long currentComponent = getVertexValue().get();
+        // First superstep is special, because we can simply look at the neighbors
         if (getSuperstep() == 1) {
-            minID = getVertexId().get();
-            List<Edge<VLongWritable, FloatWritable>> edges = this.getEdges();
-            for (int i = 0; i < edges.size(); i++) {
-                Edge<VLongWritable, FloatWritable> edge = edges.get(i);
+            for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
                 long neighbor = edge.getDestVertexId().get();
-                if (minID > neighbor) {
-                    minID = neighbor;
+                if (neighbor < currentComponent) {
+                    currentComponent = neighbor;
                 }
             }
-            tmpVertexValue.set(minID);
-            setVertexValue(tmpVertexValue);
-            sendOutMsgs();
-        } else {
-            minID = getVertexId().get();
-            while (msgIterator.hasNext()) {
-                minID = Math.min(minID, msgIterator.next().get());
-            }
-            if (minID < getVertexValue().get()) {
-                tmpVertexValue.set(minID);
+            // Only need to send value if it is not the own id
+            if (currentComponent != getVertexValue().get()) {
+                tmpVertexValue.set(currentComponent);
                 setVertexValue(tmpVertexValue);
-                sendOutMsgs();
+                for (Edge<VLongWritable, FloatWritable> edge : getEdges()) {
+                    VLongWritable neighbor = edge.getDestVertexId();
+                    if (neighbor.get() > currentComponent) {
+                        sendMsg(neighbor, tmpVertexValue);
+                    }
+                }
+            }
+        } else {
+            boolean changed = false;
+            // did we get a smaller id ?
+            while (msgIterator.hasNext()) {
+                VLongWritable message = msgIterator.next();
+                long candidateComponent = message.get();
+                if (candidateComponent < currentComponent) {
+                    currentComponent = candidateComponent;
+                    changed = true;
+                }
+            }
+
+            // propagate new component id to the neighbors
+            if (changed) {
+                tmpVertexValue.set(currentComponent);
+                setVertexValue(tmpVertexValue);
+                sendMsgToAllEdges(tmpVertexValue);
             }
         }
         voteToHalt();
-    }
-
-    private void sendOutMsgs() {
-        List<Edge<VLongWritable, FloatWritable>> edges = this.getEdges();
-        outputValue.set(minID);
-        for (int i = 0; i < edges.size(); i++) {
-            Edge<VLongWritable, FloatWritable> edge = edges.get(i);
-            sendMsg(edge.getDestVertexId(), outputValue);
-        }
     }
 
     @Override
@@ -135,11 +155,12 @@ public class ConnectedComponentsVertex extends Vertex<VLongWritable, VLongWritab
     public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(ConnectedComponentsVertex.class.getSimpleName());
         job.setVertexClass(ConnectedComponentsVertex.class);
-        job.setVertexInputFormatClass(TextPageRankInputFormat.class);
+        job.setVertexInputFormatClass(TextConnectedComponentsInputFormat.class);
         job.setVertexOutputFormatClass(SimpleConnectedComponentsVertexOutputFormat.class);
         job.setMessageCombinerClass(ConnectedComponentsVertex.SimpleMinCombiner.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
         job.setDynamicVertexValueSize(true);
+        job.setSkipCombinerKey(true);
         Client.run(args, job);
     }
 

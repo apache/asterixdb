@@ -16,4 +16,6 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 
 public interface IBufferCacheInternal extends IBufferCache {
     public ICachedPageInternal getPage(int cpid);
+
+    public void addPage(ICachedPageInternal page);
 }

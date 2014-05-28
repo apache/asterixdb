@@ -41,11 +41,11 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
-import edu.uci.ics.pregelix.dataflow.util.CopyUpdateUtil;
-import edu.uci.ics.pregelix.dataflow.util.FunctionProxy;
-import edu.uci.ics.pregelix.dataflow.util.SearchKeyTupleReference;
-import edu.uci.ics.pregelix.dataflow.util.StorageType;
-import edu.uci.ics.pregelix.dataflow.util.UpdateBuffer;
+import edu.uci.ics.pregelix.dataflow.std.util.CopyUpdateUtil;
+import edu.uci.ics.pregelix.dataflow.std.util.FunctionProxy;
+import edu.uci.ics.pregelix.dataflow.std.util.SearchKeyTupleReference;
+import edu.uci.ics.pregelix.dataflow.std.util.StorageType;
+import edu.uci.ics.pregelix.dataflow.std.util.UpdateBuffer;
 
 public class IndexNestedLoopSetUnionFunctionUpdateOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     private IndexDataflowHelper treeIndexOpHelper;

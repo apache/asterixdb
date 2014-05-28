@@ -22,10 +22,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.ArrayListWritable;
+import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 public class DatatypeHelper {
     private static final class WritableSerializerDeserializer<T extends Writable> implements ISerializerDeserializer<T> {
@@ -33,11 +37,13 @@ public class DatatypeHelper {
 
         private final Class<T> clazz;
         private transient Configuration conf;
+        private IHyracksTaskContext ctx;
         private T object;
 
-        private WritableSerializerDeserializer(Class<T> clazz, Configuration conf) {
+        private WritableSerializerDeserializer(Class<T> clazz, Configuration conf, IHyracksTaskContext ctx) {
             this.clazz = clazz;
             this.conf = conf;
+            this.ctx = ctx;
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -49,6 +55,12 @@ public class DatatypeHelper {
             }
             try {
                 T t = clazz.newInstance();
+                if (t instanceof Vertex) {
+                    Vertex vertex = (Vertex) t;
+                    if (vertex.getVertexContext() == null && ctx != null) {
+                        vertex.setVertexContext(IterationUtils.getVertexContext(BspUtils.getJobId(conf), ctx));
+                    }
+                }
                 if (t instanceof ArrayListWritable) {
                     ((ArrayListWritable) t).setConf(conf);
                 }
@@ -87,16 +99,16 @@ public class DatatypeHelper {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static ISerializerDeserializer<? extends Writable> createSerializerDeserializer(
-            Class<? extends Writable> fClass, Configuration conf) {
-        return new WritableSerializerDeserializer(fClass, conf);
+            Class<? extends Writable> fClass, Configuration conf, IHyracksTaskContext ctx) {
+        return new WritableSerializerDeserializer(fClass, conf, ctx);
     }
 
     public static RecordDescriptor createKeyValueRecordDescriptor(Class<? extends Writable> keyClass,
             Class<? extends Writable> valueClass, Configuration conf) {
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] fields = new ISerializerDeserializer[2];
-        fields[0] = createSerializerDeserializer(keyClass, conf);
-        fields[1] = createSerializerDeserializer(valueClass, conf);
+        fields[0] = createSerializerDeserializer(keyClass, conf, null);
+        fields[1] = createSerializerDeserializer(valueClass, conf, null);
         return new RecordDescriptor(fields);
     }
 }

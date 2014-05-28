@@ -48,11 +48,14 @@ public class DatasetNetworkManager implements IChannelConnectionFactory {
 
     private final MuxDemux md;
 
+    private final int nBuffers;
+
     private NetworkAddress networkAddress;
 
-    public DatasetNetworkManager(InetAddress inetAddress, IDatasetPartitionManager partitionManager, int nThreads)
-            throws IOException {
+    public DatasetNetworkManager(InetAddress inetAddress, IDatasetPartitionManager partitionManager, int nThreads,
+            int nBuffers) throws IOException {
         this.partitionManager = partitionManager;
+        this.nBuffers = nBuffers;
         md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads,
                 MAX_CONNECTION_ATTEMPTS);
     }
@@ -102,7 +105,7 @@ public class DatasetNetworkManager implements IChannelConnectionFactory {
                 LOGGER.fine("Received initial dataset partition read request for JobId: " + jobId + " partition: "
                         + partition + " on channel: " + ccb);
             }
-            noc = new NetworkOutputChannel(ccb, 1);
+            noc = new NetworkOutputChannel(ccb, nBuffers);
             try {
                 partitionManager.initializeDatasetPartitionReader(jobId, rsId, partition, noc);
             } catch (HyracksException e) {

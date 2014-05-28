@@ -21,7 +21,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.ConservativeCheckpointHook;
 import edu.uci.ics.pregelix.api.util.DefaultVertexPartitioner;
@@ -58,26 +57,10 @@ public class FailureRecoveryConnectedComponentsTest {
             FileOutputFormat.setOutputPath(job, new Path(OUTPUTPAH));
             job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 23);
             job.setCheckpointHook(ConservativeCheckpointHook.class);
+            job.setIterationCompleteReporterHook(FailureInjectionIterationCompleteHook.class);
 
             testCluster.setUp();
             Driver driver = new Driver(PageRankVertex.class);
-            Thread thread = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        synchronized (this) {
-                            while (Vertex.getSuperstep() <= 5) {
-                                this.wait(200);
-                            }
-                            PregelixHyracksIntegrationUtil.shutdownNC1();
-                        }
-                    } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                    }
-                }
-            });
-            thread.start();
             driver.runJob(job, "127.0.0.1", PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
 
             TestUtils.compareWithResultDir(new File(EXPECTEDPATH), new File(OUTPUTPAH));

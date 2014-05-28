@@ -16,11 +16,8 @@ package edu.uci.ics.hyracks.dataflow.common.comm.util;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ByteBufferInputStream extends InputStream {
-    private static final Logger LOGGER = Logger.getLogger(ByteBufferInputStream.class.getName());
 
     private ByteBuffer buffer;
 
@@ -37,20 +34,13 @@ public class ByteBufferInputStream extends InputStream {
     @Override
     public int read() {
         int remaining = buffer.capacity() - position;
-        int value = remaining > 0 ? (buffer.get(position++) & 0xff) : -1;
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("read(): value: " + value + " remaining: " + remaining + " position: " + position);
-        }
+        int value = remaining > 0 ? (buffer.array()[position++] & 0xff) : -1;
         return value;
     }
 
     @Override
     public int read(byte[] bytes, int offset, int length) {
         int remaining = buffer.capacity() - position;
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("read(bytes[], int, int): remaining: " + remaining + " offset: " + offset + " length: "
-                    + length + " position: " + position);
-        }
         if (remaining == 0) {
             return -1;
         }

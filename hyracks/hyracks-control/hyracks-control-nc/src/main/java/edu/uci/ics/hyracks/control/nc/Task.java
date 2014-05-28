@@ -28,6 +28,7 @@ import java.util.concurrent.Semaphore;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
+import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -89,7 +90,10 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private NodeControllerService ncs;
 
-    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor, NodeControllerService ncs) {
+    private List<List<PartitionChannel>> inputChannelsFromConnectors;
+
+    public Task(Joblet joblet, TaskAttemptId taskId, String displayName, Executor executor, NodeControllerService ncs,
+            List<List<PartitionChannel>> inputChannelsFromConnectors) {
         this.joblet = joblet;
         this.taskAttemptId = taskId;
         this.displayName = displayName;
@@ -102,6 +106,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         pendingThreads = new LinkedHashSet<Thread>();
         exceptions = new ArrayList<>();
         this.ncs = ncs;
+        this.inputChannelsFromConnectors = inputChannelsFromConnectors;
     }
 
     public void setTaskRuntime(IPartitionCollector[] collectors, IOperatorNodePushable operator) {
@@ -113,7 +118,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public ByteBuffer allocateFrame() throws HyracksDataException {
         return joblet.allocateFrame();
     }
-    
+
     @Override
     public void deallocateFrames(int frameCount) {
         joblet.deallocateFrames(frameCount);
@@ -242,7 +247,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         final int cIdx = i;
                         executor.execute(new Runnable() {
                             @Override
-							public void run() {
+                            public void run() {
                                 if (aborted) {
                                     return;
                                 }
@@ -252,7 +257,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                 thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
                                 thread.setPriority(Thread.MIN_PRIORITY);
                                 try {
-                                    pushFrames(collector, writer);
+                                    pushFrames(collector, inputChannelsFromConnectors.get(cIdx), writer);
                                 } catch (HyracksDataException e) {
                                     synchronized (Task.this) {
                                         exceptions.add(e);
@@ -266,7 +271,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         });
                     }
                     try {
-                        pushFrames(collectors[0], operator.getInputFrameWriter(0));
+                        pushFrames(collectors[0], inputChannelsFromConnectors.get(0), operator.getInputFrameWriter(0));
                     } finally {
                         sem.acquire(collectors.length - 1);
                     }
@@ -293,15 +298,20 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         }
     }
 
-    private void pushFrames(IPartitionCollector collector, IFrameWriter writer) throws HyracksDataException {
+    private void pushFrames(IPartitionCollector collector, List<PartitionChannel> inputChannels, IFrameWriter writer)
+            throws HyracksDataException {
         if (aborted) {
             return;
         }
         try {
             collector.open();
             try {
-                joblet.advertisePartitionRequest(taskAttemptId, collector.getRequiredPartitionIds(), collector,
-                        PartitionState.STARTED);
+                if (inputChannels.size() <= 0) {
+                    joblet.advertisePartitionRequest(taskAttemptId, collector.getRequiredPartitionIds(), collector,
+                            PartitionState.STARTED);
+                } else {
+                    collector.addPartitions(inputChannels);
+                }
                 IFrameReader reader = collector.getReader();
                 reader.open();
                 try {

@@ -73,6 +73,9 @@ public class Client {
 
         @Option(name = "-dyn-opt", usage = "whether to enable dynamic optimization -- for better performance", required = false)
         public String dynamicOptimization = "false";
+
+        @Option(name = "-cust-prop", usage = "comma separated customized properties, for example: pregelix.xyz=abc,pregelix.efg=hij", required = false)
+        public String customizedProperties = "";
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -133,6 +136,23 @@ public class Client {
         if (options.numIteration > 0)
             job.getConfiguration().setLong(PageRankVertex.ITERATIONS, options.numIteration);
         job.setCheckpointingInterval(options.ckpInterval);
+
+        /**
+         * set customized key value pairs
+         */
+        String customizedProperties = options.customizedProperties;
+        if (customizedProperties.length() > 0) {
+            String[] properties = customizedProperties.split(",");
+            for (String property : properties) {
+                String[] keyValue = property.split("=");
+                if (keyValue.length != 2) {
+                    throw new IllegalStateException(property + " is not a valid key value pair!");
+                }
+                String key = keyValue[0];
+                String value = keyValue[1];
+                job.getConfiguration().set(key, value);
+            }
+        }
     }
 
 }

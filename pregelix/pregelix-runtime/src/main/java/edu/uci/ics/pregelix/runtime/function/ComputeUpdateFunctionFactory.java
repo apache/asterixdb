@@ -42,7 +42,7 @@ import edu.uci.ics.pregelix.api.util.FrameTupleUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunction;
 import edu.uci.ics.pregelix.dataflow.std.base.IUpdateFunctionFactory;
-import edu.uci.ics.pregelix.dataflow.util.ResetableByteArrayOutputStream;
+import edu.uci.ics.pregelix.dataflow.std.util.ResetableByteArrayOutputStream;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
@@ -107,6 +107,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
             private final List<ArrayTupleBuilder> tbs = new ArrayList<ArrayTupleBuilder>();
             private Configuration conf;
             private boolean dynamicStateLength;
+            private boolean userConfigured;
 
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
@@ -115,6 +116,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 //LSM index does not have in-place update
                 this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf) || BspUtils.useLSM(conf);
                 this.aggregators = BspUtils.createGlobalAggregators(conf);
+                this.userConfigured = false;
                 for (int i = 0; i < aggregators.size(); i++) {
                     this.aggregators.get(i).init();
                 }
@@ -123,7 +125,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
 
                 this.writerMsg = writers[0];
                 this.bufferMsg = ctx.allocateFrame();
-                this.appenderMsg = new FrameTupleAppender(ctx.getFrameSize());
+                this.appenderMsg = new FrameTupleAppender(ctx.getFrameSize(), 2);
                 this.appenderMsg.reset(bufferMsg, true);
                 this.writers.add(writerMsg);
                 this.appenders.add(appenderMsg);
@@ -155,7 +157,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 if (writers.length > 5) {
                     this.writerAlive = writers[5];
                     this.bufferAlive = ctx.allocateFrame();
-                    this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize());
+                    this.appenderAlive = new FrameTupleAppender(ctx.getFrameSize(), 2);
                     this.appenderAlive.reset(bufferAlive, true);
                     this.pushAlive = true;
                     this.writers.add(writerAlive);
@@ -195,6 +197,10 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                 }
 
                 try {
+                    if (!userConfigured) {
+                        vertex.configure(conf);
+                        userConfigured = true;
+                    }
                     if (msgContentList.segmentStart()) {
                         vertex.open();
                     }
@@ -239,6 +245,11 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
 
                 /** write out global aggregate value */
                 writeOutGlobalAggregate();
+
+                /** end of a superstep, for vertices to release resources */
+                if (userConfigured) {
+                    vertex.endSuperstep(conf);
+                }
             }
 
             private void writeOutGlobalAggregate() throws HyracksDataException {
@@ -255,7 +266,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                     if (!appenderGlobalAggregate.append(tbGlobalAggregate.getFieldEndOffsets(),
                             tbGlobalAggregate.getByteArray(), 0, tbGlobalAggregate.getSize())) {
                         // aggregate state exceed the page size, write to HDFS
-                        FrameTupleUtils.flushTupleToHDFS(tbGlobalAggregate, conf, Vertex.getSuperstep());
+                        FrameTupleUtils.flushTupleToHDFS(tbGlobalAggregate, conf, vertex.getSuperstep());
                         appenderGlobalAggregate.reset(bufferGlobalAggregate, true);
                     }
                     FrameTupleUtils.flushTuplesFinal(appenderGlobalAggregate, writerGlobalAggregate);

@@ -21,13 +21,17 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.core.runtime.touchpoint.WritableRecordDescriptorFactory;
-import edu.uci.ics.pregelix.dataflow.group.IClusteredAggregatorDescriptorFactory;
+import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IAggregateFunctionFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
-import edu.uci.ics.pregelix.runtime.simpleagg.AccumulatingAggregatorFactory;
-import edu.uci.ics.pregelix.runtime.simpleagg.AggregationFunctionFactory;
+import edu.uci.ics.pregelix.dataflow.std.base.ISerializableAggregateFunctionFactory;
+import edu.uci.ics.pregelix.dataflow.std.group.IClusteredAggregatorDescriptorFactory;
+import edu.uci.ics.pregelix.runtime.agg.AccumulatingAggregatorFactory;
+import edu.uci.ics.pregelix.runtime.agg.AggregationFunctionFactory;
+import edu.uci.ics.pregelix.runtime.agg.SerializableAggregationFunctionFactory;
+import edu.uci.ics.pregelix.runtime.agg.SerializableAggregatorDescriptorFactory;
 import edu.uci.ics.pregelix.runtime.touchpoint.DatatypeHelper;
 
 public class DataflowUtils {
@@ -62,7 +66,7 @@ public class DataflowUtils {
             int i = 0;
             for (String className : classNames)
                 serdes[i++] = DatatypeHelper.createSerializerDeserializer(
-                        (Class<? extends Writable>) loader.loadClass(className), conf);
+                        (Class<? extends Writable>) loader.loadClass(className), conf, null);
         } catch (ClassNotFoundException cnfe) {
             throw new HyracksException(cnfe);
         }
@@ -70,18 +74,26 @@ public class DataflowUtils {
         return recordDescriptor;
     }
 
-    public static IRecordDescriptorFactory getWritableRecordDescriptorFactoryFromWritableClasses(Configuration conf,
-            String... classNames) throws HyracksException {
-        IRecordDescriptorFactory rdFactory = new WritableRecordDescriptorFactory(conf, classNames);
+    public static IRecordDescriptorFactory getWritableRecordDescriptorFactoryFromWritableClasses(
+            IConfigurationFactory confFactory, String... classNames) throws HyracksException {
+        IRecordDescriptorFactory rdFactory = new WritableRecordDescriptorFactory(confFactory, classNames);
         return rdFactory;
     }
 
-    public static IClusteredAggregatorDescriptorFactory getAccumulatingAggregatorFactory(Configuration conf,
-            boolean isFinal, boolean partialAggAsInput) {
-        IAggregateFunctionFactory aggFuncFactory = new AggregationFunctionFactory(new ConfigurationFactory(conf),
-                isFinal, partialAggAsInput);
+    public static IClusteredAggregatorDescriptorFactory getAccumulatingAggregatorFactory(
+            IConfigurationFactory confFactory, boolean isFinal, boolean partialAggAsInput) {
+        IAggregateFunctionFactory aggFuncFactory = new AggregationFunctionFactory(confFactory, isFinal,
+                partialAggAsInput);
         IClusteredAggregatorDescriptorFactory aggregatorFactory = new AccumulatingAggregatorFactory(
                 new IAggregateFunctionFactory[] { aggFuncFactory });
+        return aggregatorFactory;
+    }
+
+    public static IAggregatorDescriptorFactory getSerializableAggregatorFactory(IConfigurationFactory confFactory,
+            boolean isFinal, boolean partialAggAsInput) {
+        ISerializableAggregateFunctionFactory aggFuncFactory = new SerializableAggregationFunctionFactory(confFactory,
+                partialAggAsInput);
+        IAggregatorDescriptorFactory aggregatorFactory = new SerializableAggregatorDescriptorFactory(aggFuncFactory);
         return aggregatorFactory;
     }
 
@@ -108,7 +120,7 @@ public class DataflowUtils {
             int i = 0;
             for (String className : classNames) {
                 Class<? extends Writable> c = (Class<? extends Writable>) ctx.getJobletContext().loadClass(className);
-                serdes[i++] = DatatypeHelper.createSerializerDeserializer(c, conf);
+                serdes[i++] = DatatypeHelper.createSerializerDeserializer(c, conf, ctx);
                 //System.out.println("thread " + Thread.currentThread().getId() + " after creating serde " + c.getClassLoader());
             }
         } catch (Exception cnfe) {

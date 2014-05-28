@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,9 +32,19 @@ import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolution
 public class TaskProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
-    private final TaskAttemptId taskAttemptId;
+    private TaskAttemptId taskAttemptId;
 
-    private final Map<PartitionId, PartitionProfile> partitionSendProfile;
+    private Map<PartitionId, PartitionProfile> partitionSendProfile;
+
+    public static TaskProfile create(DataInput dis) throws IOException {
+        TaskProfile taskProfile = new TaskProfile();
+        taskProfile.readFields(dis);
+        return taskProfile;
+    }
+
+    private TaskProfile() {
+
+    }
 
     public TaskProfile(TaskAttemptId taskAttemptId, Map<PartitionId, PartitionProfile> partitionSendProfile) {
         this.taskAttemptId = taskAttemptId;
@@ -83,5 +97,29 @@ public class TaskProfile extends AbstractProfile {
         populateCounters(json);
 
         return json;
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        super.readFields(input);
+        taskAttemptId = TaskAttemptId.create(input);
+        int size = input.readInt();
+        partitionSendProfile = new HashMap<PartitionId, PartitionProfile>();
+        for (int i = 0; i < size; i++) {
+            PartitionId key = PartitionId.create(input);
+            PartitionProfile value = PartitionProfile.create(input);
+            partitionSendProfile.put(key, value);
+        }
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        super.writeFields(output);
+        taskAttemptId.writeFields(output);
+        output.writeInt(partitionSendProfile.size());
+        for (Entry<PartitionId, PartitionProfile> entry : partitionSendProfile.entrySet()) {
+            entry.getKey().writeFields(output);
+            entry.getValue().writeFields(output);
+        }
     }
 }

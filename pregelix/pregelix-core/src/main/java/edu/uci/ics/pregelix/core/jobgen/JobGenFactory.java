@@ -30,12 +30,6 @@ public class JobGenFactory {
             case OUTER_JOIN:
                 jobGen = new JobGenOuterJoin(currentJob, optimizer);
                 break;
-            case OUTER_JOIN_SORT:
-                jobGen = new JobGenOuterJoinSort(currentJob, optimizer);
-                break;
-            case OUTER_JOIN_SINGLE_SORT:
-                jobGen = new JobGenOuterJoinSingleSort(currentJob, optimizer);
-                break;
             default:
                 jobGen = new JobGenInnerJoin(currentJob, optimizer);
         }

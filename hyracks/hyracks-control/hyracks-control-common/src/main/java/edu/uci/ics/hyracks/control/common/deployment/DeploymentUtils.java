@@ -28,7 +28,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import edu.uci.ics.hyracks.api.application.IApplicationContext;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -200,7 +200,7 @@ public class DeploymentUtils {
                     String filePath = deploymentDir + File.separator + fileName;
                     File targetFile = new File(filePath);
                     if (isNC) {
-                        HttpClient hc = new DefaultHttpClient();
+                        HttpClient hc = HttpClientBuilder.create().build();
                         HttpGet get = new HttpGet(url.toString());
                         HttpResponse response = hc.execute(get);
                         InputStream is = response.getEntity().getContent();
@@ -216,6 +216,7 @@ public class DeploymentUtils {
                 }
                 return downloadedFileURLs;
             } catch (Exception e) {
+                e.printStackTrace();
                 trace = e;
             }
         }

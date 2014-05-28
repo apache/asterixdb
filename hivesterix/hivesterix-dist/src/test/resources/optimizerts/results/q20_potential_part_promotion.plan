@@ -36,16 +36,16 @@ write [%0->$$17, %0->$$18, %0->$$20]
                     nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
-        -- EXTERNAL_GROUP_BY[$$23, $$24]  |PARTITIONED|
+        -- PRE_CLUSTERED_GROUP_BY[$$23, $$24]  |PARTITIONED|
           exchange 
-          -- HASH_PARTITION_EXCHANGE [$$23, $$24]  |PARTITIONED|
+          -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$23(ASC), $$24(ASC)] HASH:[$$23, $$24]  |PARTITIONED|
             group by ([$$23 := %0->$$2; $$24 := %0->$$3]) decor ([]) {
                       aggregate [$$22] <- [function-call: hive:sum(PARTIAL1), Args:[%0->$$5]]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- EXTERNAL_GROUP_BY[$$2, $$3]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$2, $$3]  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 project ([$$2, $$3, $$5])

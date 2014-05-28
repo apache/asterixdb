@@ -39,4 +39,17 @@ public interface IChannelWriteInterface {
      * @return the full buffer acceptor.
      */
     public ICloseableBufferAcceptor getFullBufferAcceptor();
+
+    /**
+     * Set the buffer factory which is in charge of creating buffers if the request does not
+     * make the number of allocated buffers goes beyond limit
+     * 
+     * @param bufferFactory
+     *            - the buffer factory
+     * @param limit
+     *            - the limit of buffers
+     * @param frameSize
+     *            - the size of each buffer
+     */
+    public void setBufferFactory(IBufferFactory bufferFactory, int limit, int frameSize);
 }

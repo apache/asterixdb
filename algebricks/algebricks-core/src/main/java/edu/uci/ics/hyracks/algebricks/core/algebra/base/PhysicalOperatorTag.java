@@ -41,6 +41,7 @@ public enum PhysicalOperatorTag {
     RANDOM_MERGE_EXCHANGE,
     RTREE_SEARCH,
     RUNNING_AGGREGATE,
+    SORT_GROUP_BY,
     SORT_MERGE_EXCHANGE,
     SINK,
     SINK_WRITE,

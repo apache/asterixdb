@@ -75,6 +75,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private boolean useConnectorPolicyForScheduling;
 
+    private boolean reportTaskDetails;
+
     private transient int operatorIdCounter;
 
     private transient int connectorIdCounter;
@@ -98,7 +100,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         operatorIdCounter = 0;
         connectorIdCounter = 0;
         maxReattempts = 2;
-        useConnectorPolicyForScheduling = true;
+        useConnectorPolicyForScheduling = false;
+        reportTaskDetails = true;
         setFrameSize(frameSize);
     }
 
@@ -286,6 +289,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void setUseConnectorPolicyForScheduling(boolean useConnectorPolicyForScheduling) {
         this.useConnectorPolicyForScheduling = useConnectorPolicyForScheduling;
+    }
+
+    public boolean isReportTaskDetails() {
+        return reportTaskDetails;
+    }
+
+    public void setReportTaskDetails(boolean reportTaskDetails) {
+        this.reportTaskDetails = reportTaskDetails;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

@@ -16,18 +16,15 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,11 +43,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private static final int MIN_CLEANED_COUNT_DIFF = 3;
     private static final int PIN_MAX_WAIT_TIME = 50;
 
-    private final int maxOpenFiles;
-
-    private final IIOManager ioManager;
     private final int pageSize;
-    private final int numPages;
+    private final int maxOpenFiles;
+    private final IIOManager ioManager;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
     private final IPageCleanerPolicy pageCleanerPolicy;
@@ -58,26 +53,20 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
 
-    private CachedPage[] cachedPages;
+    private List<ICachedPageInternal> cachedPages = new ArrayList<ICachedPageInternal>();
 
     private boolean closed;
 
-    public BufferCache(IIOManager ioManager, ICacheMemoryAllocator allocator,
-            IPageReplacementStrategy pageReplacementStrategy, IPageCleanerPolicy pageCleanerPolicy,
-            IFileMapManager fileMapManager, int pageSize, int numPages, int maxOpenFiles, ThreadFactory threadFactory) {
+    public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
+            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
+            ThreadFactory threadFactory) {
         this.ioManager = ioManager;
-        this.pageSize = pageSize;
-        this.numPages = numPages;
+        this.pageSize = pageReplacementStrategy.getPageSize();
         this.maxOpenFiles = maxOpenFiles;
         pageReplacementStrategy.setBufferCache(this);
-        pageMap = new CacheBucket[numPages * MAP_FACTOR];
+        pageMap = new CacheBucket[pageReplacementStrategy.getMaxAllowedNumPages() * MAP_FACTOR];
         for (int i = 0; i < pageMap.length; ++i) {
             pageMap[i] = new CacheBucket();
-        }
-        ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
-        cachedPages = new CachedPage[buffers.length];
-        for (int i = 0; i < buffers.length; ++i) {
-            cachedPages[i] = new CachedPage(i, buffers[i], pageReplacementStrategy);
         }
         this.pageReplacementStrategy = pageReplacementStrategy;
         this.pageCleanerPolicy = pageCleanerPolicy;
@@ -96,7 +85,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public int getNumPages() {
-        return numPages;
+        return pageReplacementStrategy.getMaxAllowedNumPages();
     }
 
     private void pinSanityCheck(long dpid) throws HyracksDataException {
@@ -338,7 +327,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         StringBuilder buffer = new StringBuilder();
         buffer.append("Buffer cache state\n");
         buffer.append("Page Size: ").append(pageSize).append('\n');
-        buffer.append("Number of physical pages: ").append(numPages).append('\n');
+        buffer.append("Number of physical pages: ").append(pageReplacementStrategy.getMaxAllowedNumPages())
+                .append('\n');
         buffer.append("Hash table size: ").append(pageMap.length).append('\n');
         buffer.append("Page Map:\n");
         int nCachedPages = 0;
@@ -416,88 +406,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
     }
 
-    private class CachedPage implements ICachedPageInternal {
-        private final int cpid;
-        private final ByteBuffer buffer;
-        private final AtomicInteger pinCount;
-        private final AtomicBoolean dirty;
-        private final ReadWriteLock latch;
-        private final Object replacementStrategyObject;
-        volatile long dpid;
-        CachedPage next;
-        volatile boolean valid;
-
-        public CachedPage(int cpid, ByteBuffer buffer, IPageReplacementStrategy pageReplacementStrategy) {
-            this.cpid = cpid;
-            this.buffer = buffer;
-            pinCount = new AtomicInteger();
-            dirty = new AtomicBoolean();
-            latch = new ReentrantReadWriteLock(true);
-            replacementStrategyObject = pageReplacementStrategy.createPerPageStrategyObject(cpid);
-            dpid = -1;
-            valid = false;
-        }
-
-        public void reset(long dpid) {
-            this.dpid = dpid;
-            dirty.set(false);
-            valid = false;
-            pageReplacementStrategy.notifyCachePageReset(this);
-        }
-
-        public void invalidate() {
-            reset(-1);
-        }
-
-        @Override
-        public ByteBuffer getBuffer() {
-            return buffer;
-        }
-
-        @Override
-        public Object getReplacementStrategyObject() {
-            return replacementStrategyObject;
-        }
-
-        @Override
-        public boolean pinIfGoodVictim() {
-            return pinCount.compareAndSet(0, 1);
-        }
-
-        @Override
-        public int getCachedPageId() {
-            return cpid;
-        }
-
-        @Override
-        public void acquireReadLatch() {
-            latch.readLock().lock();
-        }
-
-        @Override
-        public void acquireWriteLatch() {
-            latch.writeLock().lock();
-        }
-
-        @Override
-        public void releaseReadLatch() {
-            latch.readLock().unlock();
-        }
-
-        @Override
-        public void releaseWriteLatch(boolean markDirty) {
-            if (markDirty) {
-                if (dirty.compareAndSet(false, true)) {
-                    pinCount.incrementAndGet();
-                }
-            }
-            latch.writeLock().unlock();
-        }
-    }
-
     @Override
     public ICachedPageInternal getPage(int cpid) {
-        return cachedPages[cpid];
+        return cachedPages.get(cpid);
     }
 
     private class CleanerThread extends Thread {
@@ -564,8 +475,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             try {
                 while (true) {
                     pageCleanerPolicy.notifyCleanCycleStart(this);
+                    int numPages = pageReplacementStrategy.getNumPages();
                     for (int i = 0; i < numPages; ++i) {
-                        CachedPage cPage = cachedPages[i];
+                        CachedPage cPage = (CachedPage) cachedPages.get(i);
                         cleanPage(cPage, false);
                     }
                     if (shutdownStart) {
@@ -715,7 +627,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             } else {
                 pinCount = cPage.pinCount.get();
             }
-            if (pinCount != 0) {
+            if (pinCount > 0) {
                 throw new IllegalStateException("Page is pinned and file is being closed. Pincount is: " + pinCount);
             }
             cPage.invalidate();
@@ -808,6 +720,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
+    public void addPage(ICachedPageInternal page) {
+        cachedPages.add(page);
+    }
+
     public void dumpState(OutputStream os) throws IOException {
         os.write(dumpState().getBytes());
     }

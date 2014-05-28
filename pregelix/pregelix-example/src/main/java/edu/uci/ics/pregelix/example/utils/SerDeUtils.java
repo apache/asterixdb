@@ -53,4 +53,35 @@ public class SerDeUtils {
         return value < -120 || (value >= -112 && value < 0);
     }
 
+    /**
+     * read a long value from an offset
+     * 
+     * @param data
+     * @param offset
+     * @return the long value
+     */
+    public static long readLong(byte[] data, int offset) {
+        return (((long) data[0] << 56) + ((long) (data[1] & 255) << 48)
+                + ((long) (data[2] & 255) << 40) + ((long) (data[3] & 255) << 32)
+                + ((long) (data[4] & 255) << 24) + ((data[5] & 255) << 16) + ((data[6] & 255) << 8) + ((data[7] & 255) << 0));
+    }
+
+    /**
+     * write a long value to a byte region
+     * 
+     * @param v
+     * @param data
+     * @param offset
+     */
+    public static void writeLong(long v, byte[] data, int offset) {
+        data[0] = (byte) (v >>> 56);
+        data[1] = (byte) (v >>> 48);
+        data[2] = (byte) (v >>> 40);
+        data[3] = (byte) (v >>> 32);
+        data[4] = (byte) (v >>> 24);
+        data[5] = (byte) (v >>> 16);
+        data[6] = (byte) (v >>> 8);
+        data[7] = (byte) (v >>> 0);
+    }
+
 }

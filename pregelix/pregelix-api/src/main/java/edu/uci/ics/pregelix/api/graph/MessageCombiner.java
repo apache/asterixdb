@@ -60,6 +60,17 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
     public abstract void stepPartial(I vertexIndex, M msg) throws HyracksDataException;
 
     /**
+     * step call for partial combiner
+     * 
+     * @param vertexIndex
+     *            the receiver vertex identifier
+     * @param partialAggregate
+     *            a partial aggregate value
+     * @throws HyracksDataException
+     */
+    public abstract void stepPartial2(I vertexIndex, P partialAggregate) throws HyracksDataException;
+
+    /**
      * step call for global combiner
      * 
      * @param vertexIndex
@@ -71,7 +82,14 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
     public abstract void stepFinal(I vertexIndex, P partialAggregate) throws HyracksDataException;
 
     /**
-     * finish partial combiner
+     * finish partial combiner at the second aggregate stage (if any)
+     * 
+     * @return the intermediate combined message of type P
+     */
+    public abstract P finishPartial2();
+
+    /**
+     * finish partial combiner at the first aggregate stage
      * 
      * @return the intermediate combined message of type P
      */
@@ -112,7 +130,25 @@ public abstract class MessageCombiner<I extends WritableComparable, M extends Wr
     /**
      * @return the accumulated byte size
      */
+    public int estimateAccumulatedStateByteSizePartial2(I vertexIndex, P partialAggregate) throws HyracksDataException {
+        return 0;
+    }
+
+    /**
+     * @return the accumulated byte size
+     */
     public int estimateAccumulatedStateByteSizeFinal(I vertexIndex, P partialAggregate) throws HyracksDataException {
         return 0;
     }
+
+    /**
+     * set the intermediate combine result
+     * 
+     * @param p
+     *            the intermediate combine result
+     */
+    public void setPartialCombineState(P p) {
+        throw new IllegalStateException("customized message combiner implementation does not implement this method!");
+    }
+
 }

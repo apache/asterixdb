@@ -589,6 +589,7 @@ public class HyracksExecutionEngine implements IExecutionEngine {
             }
         }
 
+        job.setReportTaskDetails(false);
         long start = System.currentTimeMillis();
         JobId jobId = hcc.startJob(job);
         hcc.waitForCompletion(jobId);

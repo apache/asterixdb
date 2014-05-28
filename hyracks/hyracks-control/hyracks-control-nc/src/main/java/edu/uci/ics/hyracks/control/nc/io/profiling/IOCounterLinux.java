@@ -16,17 +16,18 @@
 package edu.uci.ics.hyracks.control.nc.io.profiling;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 public class IOCounterLinux implements IIOCounter {
     public static final String COMMAND = "iostat";
-    public static final String COMMAND2 = "cat /proc/self/io";
+    public static final String STATFILE = "/proc/self/io";
     public static final int PAGE_SIZE = 4096;
 
-    private final long baseReads;
-    private final long baseWrites;
+    private long baseReads = 0;
+    private long baseWrites = 0;
 
     public IOCounterLinux() {
         baseReads = getReads();
@@ -36,12 +37,12 @@ public class IOCounterLinux implements IIOCounter {
     @Override
     public long getReads() {
         try {
-            long reads = extractColumn(4);
-            return reads - baseReads;
+            long reads = extractRow(4);
+            return reads;
         } catch (IOException e) {
             try {
-                long reads = extractRow(4);
-                return reads / PAGE_SIZE;
+                long reads = extractColumn(4) * PAGE_SIZE;
+                return reads - baseReads;
             } catch (IOException e2) {
                 return 0;
             }
@@ -51,13 +52,13 @@ public class IOCounterLinux implements IIOCounter {
     @Override
     public long getWrites() {
         try {
-            long writes = extractColumn(5);
-            return writes - baseWrites;
+            long writes = extractRow(5);
+            long cancelledWrites = extractRow(6);
+            return (writes - cancelledWrites);
         } catch (IOException e) {
             try {
-                long writes = extractRow(5);
-                long cancelledWrites = extractRow(6);
-                return (writes - cancelledWrites) / PAGE_SIZE;
+                long writes = extractColumn(5) * PAGE_SIZE;
+                return writes - baseWrites;
             } catch (IOException e2) {
                 return 0;
             }
@@ -92,7 +93,7 @@ public class IOCounterLinux implements IIOCounter {
     }
 
     private long extractRow(int rowIndex) throws IOException {
-        BufferedReader reader = exec(COMMAND2);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(STATFILE)));
         String line = null;
         long ios = 0;
         int i = 0;

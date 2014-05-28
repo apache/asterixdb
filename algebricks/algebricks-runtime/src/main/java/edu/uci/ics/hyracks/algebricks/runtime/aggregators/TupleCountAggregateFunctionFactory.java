@@ -55,6 +55,11 @@ public class TupleCountAggregateFunctionFactory implements IAggregateEvaluatorFa
                     throw new AlgebricksException(e);
                 }
             }
+
+            @Override
+            public void finishPartial(IPointable result) throws AlgebricksException {
+                finish(result);
+            }
         };
     }
 

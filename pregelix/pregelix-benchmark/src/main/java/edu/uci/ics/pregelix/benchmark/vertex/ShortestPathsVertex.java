@@ -20,15 +20,16 @@ package edu.uci.ics.pregelix.benchmark.vertex;
 
 import java.io.IOException;
 
+import org.apache.giraph.combiner.Combiner;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.VLongWritable;
 
 /**
  * Shortest paths algorithm.
  */
-public class ShortestPathsVertex extends Vertex<LongWritable, DoubleWritable, DoubleWritable, DoubleWritable> {
+public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, DoubleWritable, DoubleWritable> {
     /** Source id. */
     public static final String SOURCE_ID = "giraph.shortestPathsBenchmark.sourceId";
     /** Default source id. */
@@ -51,12 +52,30 @@ public class ShortestPathsVertex extends Vertex<LongWritable, DoubleWritable, Do
 
         if (minDist < getValue().get()) {
             setValue(new DoubleWritable(minDist));
-            for (Edge<LongWritable, DoubleWritable> edge : getEdges()) {
+            for (Edge<VLongWritable, DoubleWritable> edge : getEdges()) {
                 double distance = minDist + edge.getValue().get();
                 sendMessage(edge.getTargetVertexId(), new DoubleWritable(distance));
             }
         }
 
         voteToHalt();
+    }
+
+    public static class MinCombiner extends Combiner<VLongWritable, DoubleWritable> {
+
+        @Override
+        public void combine(VLongWritable vertexIndex, DoubleWritable originalMessage, DoubleWritable messageToCombine) {
+            double oldValue = messageToCombine.get();
+            double newValue = originalMessage.get();
+            if (newValue < oldValue) {
+                messageToCombine.set(newValue);
+            }
+        }
+
+        @Override
+        public DoubleWritable createInitialMessage() {
+            return new DoubleWritable(Integer.MAX_VALUE);
+        }
+
     }
 }

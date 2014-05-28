@@ -77,6 +77,7 @@ public class IPCSystem {
         Exception exception = null;
         if (message.getFlag() == Message.ERROR) {
             exception = (Exception) message.getPayload();
+            exception.printStackTrace();
         } else {
             payload = message.getPayload();
         }

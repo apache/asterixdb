@@ -25,13 +25,13 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.PipeliningConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.connectors.SendSideMaterializedBlockingConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.connectors.SendSideMaterializedPipeliningConnectorPolicy;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexInsertUpdateDeleteOperatorDescriptor;
 
 public class ConnectorPolicyAssignmentPolicy implements IConnectorPolicyAssignmentPolicy {
     private static final long serialVersionUID = 1L;
     private IConnectorPolicy senderSideMatPipPolicy = new SendSideMaterializedPipeliningConnectorPolicy();
-    private IConnectorPolicy senderSideMatBlkPolicy = new SendSideMaterializedBlockingConnectorPolicy();
+    //private IConnectorPolicy senderSidePipeliningReceiverSideMatBlkPolicy = new SendSidePipeliningReceiveSideMaterializedBlockingConnectorPolicy();
+    private IConnectorPolicy senderSidePipeliningReceiverSideMatBlkPolicy = new SendSideMaterializedBlockingConnectorPolicy();
     private IConnectorPolicy pipeliningPolicy = new PipeliningConnectorPolicy();
     private JobSpecification spec;
 
@@ -42,14 +42,14 @@ public class ConnectorPolicyAssignmentPolicy implements IConnectorPolicyAssignme
     @Override
     public IConnectorPolicy getConnectorPolicyAssignment(IConnectorDescriptor c, int nProducers, int nConsumers,
             int[] fanouts) {
-        if (c instanceof MToNPartitioningMergingConnectorDescriptor) {
+        if (c.getClass().getName().contains("MToNPartitioningMergingConnectorDescriptor")) {
             return senderSideMatPipPolicy;
         } else {
             Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> endPoints = spec
                     .getConnectorOperatorMap().get(c.getConnectorId());
             IOperatorDescriptor consumer = endPoints.getRight().getLeft();
             if (consumer instanceof TreeIndexInsertUpdateDeleteOperatorDescriptor) {
-                return senderSideMatBlkPolicy;
+                return senderSidePipeliningReceiverSideMatBlkPolicy;
             } else {
                 return pipeliningPolicy;
             }

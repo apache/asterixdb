@@ -168,7 +168,8 @@ public class NodeControllerService extends AbstractRemoteService {
             throw new Exception("id not set");
         }
         partitionManager = new PartitionManager(this);
-        netManager = new NetworkManager(getIpAddress(ncConfig.dataIPAddress), partitionManager, ncConfig.nNetThreads);
+        netManager = new NetworkManager(getIpAddress(ncConfig.dataIPAddress), partitionManager, ncConfig.nNetThreads,
+                ncConfig.nNetBuffers);
 
         lccm = new LifeCycleComponentManager();
         queue = new WorkQueue();
@@ -243,7 +244,7 @@ public class NodeControllerService extends AbstractRemoteService {
         datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.resultManagerMemory,
                 ncConfig.resultTTL, ncConfig.resultSweepThreshold);
         datasetNetworkManager = new DatasetNetworkManager(getIpAddress(ncConfig.datasetIPAddress),
-                datasetPartitionManager, ncConfig.nNetThreads);
+                datasetPartitionManager, ncConfig.nNetThreads, ncConfig.nNetBuffers);
     }
 
     @Override

@@ -47,12 +47,16 @@ public class NetworkManager implements IChannelConnectionFactory {
 
     private final PartitionManager partitionManager;
 
+    private final int nBuffers;
+
     private final MuxDemux md;
 
     private NetworkAddress networkAddress;
 
-    public NetworkManager(InetAddress inetAddress, PartitionManager partitionManager, int nThreads) throws IOException {
+    public NetworkManager(InetAddress inetAddress, PartitionManager partitionManager, int nThreads, int nBuffers)
+            throws IOException {
         this.partitionManager = partitionManager;
+        this.nBuffers = nBuffers;
         md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads,
                 MAX_CONNECTION_ATTEMPTS);
     }
@@ -99,10 +103,11 @@ public class NetworkManager implements IChannelConnectionFactory {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("Received initial partition request: " + pid + " on channel: " + ccb);
             }
-            noc = new NetworkOutputChannel(ccb, 1);
+            noc = new NetworkOutputChannel(ccb, nBuffers);
             try {
                 partitionManager.registerPartitionRequest(pid, noc);
             } catch (HyracksException e) {
+                e.printStackTrace();
                 noc.abort();
             }
         }

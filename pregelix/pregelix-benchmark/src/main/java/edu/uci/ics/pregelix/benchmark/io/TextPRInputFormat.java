@@ -20,28 +20,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringTokenizer;
 
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.MapMutableEdge;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class TextPRInputFormat extends TextVertexInputFormat<LongWritable, DoubleWritable, NullWritable> {
+public class TextPRInputFormat extends TextVertexInputFormat<VLongWritable, DoubleWritable, NullWritable> {
 
     @Override
     public TextVertexReader createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
         return new TextVertexReaderFromEachLine() {
-            String[] items;
+            StringTokenizer items;
 
             @Override
-            protected LongWritable getId(Text line) throws IOException {
-                items = line.toString().split(" ");
-                return new LongWritable(Long.parseLong(items[0]));
+            protected VLongWritable getId(Text line) throws IOException {
+                items = new StringTokenizer(line.toString());
+                return new VLongWritable(Long.parseLong(items.nextToken()));
             }
 
             @Override
@@ -50,14 +51,14 @@ public class TextPRInputFormat extends TextVertexInputFormat<LongWritable, Doubl
             }
 
             @Override
-            protected Iterable<Edge<LongWritable, NullWritable>> getEdges(Text line) throws IOException {
-                List<Edge<LongWritable, NullWritable>> edges = new ArrayList<Edge<LongWritable, NullWritable>>();
-                Map<LongWritable, NullWritable> edgeMap = new HashMap<LongWritable, NullWritable>();
-                for (int i = 1; i < items.length; i++) {
-                    edgeMap.put(new LongWritable(Long.parseLong(items[i])), null);
+            protected Iterable<Edge<VLongWritable, NullWritable>> getEdges(Text line) throws IOException {
+                List<Edge<VLongWritable, NullWritable>> edges = new ArrayList<Edge<VLongWritable, NullWritable>>();
+                Map<VLongWritable, NullWritable> edgeMap = new HashMap<VLongWritable, NullWritable>();
+                while (items.hasMoreTokens()) {
+                    edgeMap.put(new VLongWritable(Long.parseLong(items.nextToken())), null);
                 }
-                for (Entry<LongWritable, NullWritable> entry : edgeMap.entrySet()) {
-                    MapMutableEdge<LongWritable, NullWritable> edge = new MapMutableEdge<LongWritable, NullWritable>();
+                for (Entry<VLongWritable, NullWritable> entry : edgeMap.entrySet()) {
+                    MapMutableEdge<VLongWritable, NullWritable> edge = new MapMutableEdge<VLongWritable, NullWritable>();
                     edge.setEntry(entry);
                     edge.setValue(null);
                     edges.add(edge);

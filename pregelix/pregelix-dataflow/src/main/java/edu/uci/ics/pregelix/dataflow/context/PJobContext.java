@@ -1,6 +1,5 @@
 package edu.uci.ics.pregelix.dataflow.context;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,7 +10,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.graph.VertexContext;
 
 public class PJobContext {
     private static final Logger LOGGER = Logger.getLogger(RuntimeContext.class.getName());
@@ -20,6 +19,7 @@ public class PJobContext {
     private final Map<TaskIterationID, IStateObject> appStateMap = new ConcurrentHashMap<TaskIterationID, IStateObject>();
     private Long jobIdToSuperStep;
     private Boolean jobIdToMove;
+    private VertexContext vCtx = new VertexContext();
 
     public void close() throws HyracksDataException {
         for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
@@ -32,8 +32,11 @@ public class PJobContext {
 
     public void clearState() throws HyracksDataException {
         for (Entry<Long, List<FileReference>> entry : iterationToFiles.entrySet())
-            for (FileReference fileRef : entry.getValue())
-                fileRef.delete();
+            for (FileReference fileRef : entry.getValue()) {
+                if (fileRef != null) {
+                    fileRef.delete();
+                }
+            }
 
         iterationToFiles.clear();
         appStateMap.clear();
@@ -69,7 +72,6 @@ public class PJobContext {
 
             setProperties(numVertices, numEdges, currentIteration, superStep, false, cl);
         }
-        System.gc();
     }
 
     public void recoverVertexProperties(long numVertices, long numEdges, long currentIteration, ClassLoader cl) {
@@ -96,35 +98,31 @@ public class PJobContext {
 
     public void endSuperStep() {
         jobIdToMove = true;
-        LOGGER.info("end iteration " + Vertex.getSuperstep());
+        LOGGER.info("end iteration " + vCtx.getSuperstep());
     }
 
     public Map<Long, List<FileReference>> getIterationToFiles() {
         return iterationToFiles;
     }
 
+    public VertexContext getVertexContext() {
+        return vCtx;
+    }
+
     private void setProperties(long numVertices, long numEdges, long currentIteration, long superStep, boolean toMove,
             ClassLoader cl) {
         try {
-            Class<?> vClass = (Class<?>) cl.loadClass("edu.uci.ics.pregelix.api.graph.Vertex");
-            Method superStepMethod = vClass.getMethod("setSuperstep", Long.TYPE);
-            Method numVerticesMethod = vClass.getMethod("setNumVertices", Long.TYPE);
-            Method numEdgesMethod = vClass.getMethod("setNumEdges", Long.TYPE);
-
             if (currentIteration > 0) {
-                //Vertex.setSuperstep(currentIteration);
-                superStepMethod.invoke(null, currentIteration);
+                vCtx.setSuperstep(currentIteration);
             } else {
-                //Vertex.setSuperstep(++superStep);
-                superStepMethod.invoke(null, ++superStep);
+                vCtx.setSuperstep(++superStep);
             }
-            //Vertex.setNumVertices(numVertices);
-            numVerticesMethod.invoke(null, numVertices);
-            //Vertex.setNumEdges(numEdges);
-            numEdgesMethod.invoke(null, numEdges);
+            vCtx.setNumVertices(numVertices);
+            vCtx.setNumEdges(numEdges);
+
             jobIdToSuperStep = superStep;
             jobIdToMove = toMove;
-            LOGGER.info("start iteration " + Vertex.getSuperstep());
+            LOGGER.info("start iteration " + vCtx.getSuperstep());
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

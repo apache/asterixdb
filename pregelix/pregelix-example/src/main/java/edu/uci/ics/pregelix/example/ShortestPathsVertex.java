@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.example;
 
 import java.util.Iterator;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.FloatWritable;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -47,8 +48,9 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         @Override
         public void stepPartial(VLongWritable vertexIndex, DoubleWritable msg) throws HyracksDataException {
             double value = msg.get();
-            if (min > value)
+            if (min > value) {
                 min = value;
+            }
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -67,8 +69,9 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         @Override
         public void stepFinal(VLongWritable vertexIndex, DoubleWritable partialAggregate) throws HyracksDataException {
             double value = partialAggregate.get();
-            if (min > value)
+            if (min > value) {
                 min = value;
+            }
         }
 
         @Override
@@ -77,6 +80,21 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
             msgList.clear();
             msgList.add(agg);
             return msgList;
+        }
+
+        @Override
+        public void stepPartial2(VLongWritable vertexIndex, DoubleWritable partialAggregate)
+                throws HyracksDataException {
+            double value = partialAggregate.get();
+            if (min > value) {
+                min = value;
+            }
+        }
+
+        @Override
+        public DoubleWritable finishPartial2() {
+            agg.set(min);
+            return agg;
         }
     }
 
@@ -99,10 +117,12 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
     }
 
     @Override
+    public void configure(Configuration conf) {
+        sourceId = conf.getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
+    }
+
+    @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
-        if (sourceId < 0) {
-            sourceId = getContext().getConfiguration().getLong(SOURCE_ID, SOURCE_ID_DEFAULT);
-        }
         if (getSuperstep() == 1) {
             tmpVertexValue.set(Double.MAX_VALUE);
             setVertexValue(tmpVertexValue);
@@ -134,7 +154,8 @@ public class ShortestPathsVertex extends Vertex<VLongWritable, DoubleWritable, F
         job.setVertexOutputFormatClass(SimplePageRankVertexOutputFormat.class);
         job.setMessageCombinerClass(ShortestPathsVertex.SimpleMinCombiner.class);
         job.setNoramlizedKeyComputerClass(VLongNormalizedKeyComputer.class);
-        job.getConfiguration().setLong(SOURCE_ID, 0);
+        job.setSkipCombinerKey(true);
+        job.setFixedVertexValueSize(true);
         Client.run(args, job);
     }
 

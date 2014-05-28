@@ -30,11 +30,13 @@ import java.util.logging.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.constraints.Constraint;
 import edu.uci.ics.hyracks.api.constraints.expressions.LValueConstraintExpression;
 import edu.uci.ics.hyracks.api.constraints.expressions.PartitionLocationExpression;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
+import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
@@ -338,29 +340,45 @@ public class JobScheduler {
         tcAttempt.initializePendingTaskCounter();
         tcAttempts.add(tcAttempt);
 
-        /* TODO - Further improvement for reducing messages -- not yet complete.
+        /**
+         * Improvement for reducing master/slave message communications, for each TaskAttemptDescriptor,
+         * we set the NetworkAddress[][] partitionLocations, in which each row is for an incoming connector descriptor
+         * and each column is for an input channel of the connector.
+         */
         for (Map.Entry<String, List<TaskAttemptDescriptor>> e : taskAttemptMap.entrySet()) {
             List<TaskAttemptDescriptor> tads = e.getValue();
             for (TaskAttemptDescriptor tad : tads) {
-                TaskId tid = tad.getTaskAttemptId().getTaskId();
+                TaskAttemptId taid = tad.getTaskAttemptId();
+                int attempt = taid.getAttempt();
+                TaskId tid = taid.getTaskId();
                 ActivityId aid = tid.getActivityId();
-                List<IConnectorDescriptor> inConnectors = jag.getActivityInputConnectorDescriptors(aid);
+                List<IConnectorDescriptor> inConnectors = acg.getActivityInputs(aid);
                 int[] inPartitionCounts = tad.getInputPartitionCounts();
-                NetworkAddress[][] partitionLocations = new NetworkAddress[inPartitionCounts.length][];
-                for (int i = 0; i < inPartitionCounts.length; ++i) {
-                    ConnectorDescriptorId cdId = inConnectors.get(i).getConnectorId();
-                    ActivityId producerAid = jag.getProducerActivity(cdId);
-                    partitionLocations[i] = new NetworkAddress[inPartitionCounts[i]];
-                    for (int j = 0; j < inPartitionCounts[i]; ++j) {
-                        TaskId producerTaskId = new TaskId(producerAid, j);
-                        String nodeId = findTaskLocation(producerTaskId);
-                        partitionLocations[i][j] = ccs.getNodeMap().get(nodeId).getDataPort();
+                if (inPartitionCounts != null) {
+                    NetworkAddress[][] partitionLocations = new NetworkAddress[inPartitionCounts.length][];
+                    for (int i = 0; i < inPartitionCounts.length; ++i) {
+                        ConnectorDescriptorId cdId = inConnectors.get(i).getConnectorId();
+                        IConnectorPolicy policy = jobRun.getConnectorPolicyMap().get(cdId);
+                        /**
+                         * carry sender location information into a task
+                         * when it is not the case that it is an re-attempt and the send-side
+                         * is materialized blocking.
+                         */
+                        if (!(attempt > 0 && policy.materializeOnSendSide() && policy
+                                .consumerWaitsForProducerToFinish())) {
+                            ActivityId producerAid = acg.getProducerActivity(cdId);
+                            partitionLocations[i] = new NetworkAddress[inPartitionCounts[i]];
+                            for (int j = 0; j < inPartitionCounts[i]; ++j) {
+                                TaskId producerTaskId = new TaskId(producerAid, j);
+                                String nodeId = findTaskLocation(producerTaskId);
+                                partitionLocations[i][j] = ccs.getNodeMap().get(nodeId).getDataPort();
+                            }
+                        }
                     }
+                    tad.setInputPartitionLocations(partitionLocations);
                 }
-                tad.setInputPartitionLocations(partitionLocations);
             }
         }
-        */
 
         tcAttempt.setStatus(TaskClusterAttempt.TaskClusterStatus.RUNNING);
         tcAttempt.setStartTime(System.currentTimeMillis());
@@ -442,24 +460,25 @@ public class JobScheduler {
         final ActivityClusterGraph acg = jobRun.getActivityClusterGraph();
         final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies = new HashMap<ConnectorDescriptorId, IConnectorPolicy>(
                 jobRun.getConnectorPolicyMap());
-        for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
-            String nodeId = entry.getKey();
-            final List<TaskAttemptDescriptor> taskDescriptors = entry.getValue();
-            final NodeControllerState node = ccs.getNodeMap().get(nodeId);
-            if (node != null) {
-                node.getActiveJobIds().add(jobRun.getJobId());
-                boolean changed = jobRun.getParticipatingNodeIds().add(nodeId);
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
-                }
-                try {
-                    byte[] jagBytes = changed ? JavaSerializationUtils.serialize(acg) : null;
+        try {
+            byte[] acgBytes = JavaSerializationUtils.serialize(acg);
+            for (Map.Entry<String, List<TaskAttemptDescriptor>> entry : taskAttemptMap.entrySet()) {
+                String nodeId = entry.getKey();
+                final List<TaskAttemptDescriptor> taskDescriptors = entry.getValue();
+                final NodeControllerState node = ccs.getNodeMap().get(nodeId);
+                if (node != null) {
+                    node.getActiveJobIds().add(jobRun.getJobId());
+                    boolean changed = jobRun.getParticipatingNodeIds().add(nodeId);
+                    if (LOGGER.isLoggable(Level.FINE)) {
+                        LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
+                    }
+                    byte[] jagBytes = changed ? acgBytes : null;
                     node.getNodeController().startTasks(deploymentId, jobId, jagBytes, taskDescriptors,
                             connectorPolicies, jobRun.getFlags());
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
+        } catch (Exception e) {
+            throw new HyracksException(e);
         }
     }
 
@@ -702,10 +721,16 @@ public class JobScheduler {
         ccs.getActiveRunMap().remove(jobId);
         ccs.getRunMapArchive().put(jobId, run);
         ccs.getRunHistory().put(jobId, run.getExceptions());
-        try {
-            ccs.getJobLogFile().log(createJobLogObject(run));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+
+        if (run.getActivityClusterGraph().isReportTaskDetails()) {
+            /**
+             * log job details when task-profiling is enabled
+             */
+            try {
+                ccs.getJobLogFile().log(createJobLogObject(run));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

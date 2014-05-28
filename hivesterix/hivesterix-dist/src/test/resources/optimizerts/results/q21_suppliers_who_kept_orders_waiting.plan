@@ -21,19 +21,15 @@ write [%0->$$21, %0->$$24, %0->$$23]
                         nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- PRE_CLUSTERED_GROUP_BY[$$1, $$3]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$1, $$3]  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (ASC, %0->$$1) (ASC, %0->$$3) 
-                -- STABLE_SORT [$$1(ASC), $$3(ASC)]  |PARTITIONED|
+                data-scan [$$1, $$3]<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, $$12, $$13, $$14, $$15, $$16] <- default.lineitem
+                -- DATASOURCE_SCAN  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan [$$1, $$3]<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, $$12, $$13, $$14, $$15, $$16] <- default.lineitem
-                    -- DATASOURCE_SCAN  |PARTITIONED|
-                      exchange 
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        empty-tuple-source
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
 write [%0->$$21, %0->$$24, %0->$$23]
 -- SINK_WRITE  |PARTITIONED|
   project ([$$21, $$24, $$23])
@@ -57,25 +53,21 @@ write [%0->$$21, %0->$$24, %0->$$23]
                         nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- PRE_CLUSTERED_GROUP_BY[$$1, $$3]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$1, $$3]  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (ASC, %0->$$1) (ASC, %0->$$3) 
-                -- STABLE_SORT [$$1(ASC), $$3(ASC)]  |PARTITIONED|
-                  exchange 
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$1, $$3])
-                    -- STREAM_PROJECT  |PARTITIONED|
-                      select (function-call: algebricks:gt, Args:[%0->$$13, %0->$$12])
-                      -- STREAM_SELECT  |PARTITIONED|
+                project ([$$1, $$3])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  select (function-call: algebricks:gt, Args:[%0->$$13, %0->$$12])
+                  -- STREAM_SELECT  |PARTITIONED|
+                    exchange 
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan [$$1, $$3, $$12, $$13]<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, $$12, $$13, $$14, $$15, $$16] <- default.lineitem
+                      -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange 
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan [$$1, $$3, $$12, $$13]<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, $$12, $$13, $$14, $$15, $$16] <- default.lineitem
-                          -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange 
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          empty-tuple-source
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
 write [%0->$$43, %0->$$45]
 -- SINK_WRITE  |UNPARTITIONED|
   project ([$$43, $$45])
@@ -102,16 +94,16 @@ write [%0->$$43, %0->$$45]
                                 nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                            }
-                    -- EXTERNAL_GROUP_BY[$$48]  |PARTITIONED|
+                    -- PRE_CLUSTERED_GROUP_BY[$$48]  |PARTITIONED|
                       exchange 
-                      -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+                      -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$48(ASC)] HASH:[$$48]  |PARTITIONED|
                         group by ([$$48 := %0->$$37]) decor ([]) {
                                   aggregate [$$47] <- [function-call: hive:count(PARTIAL1), Args:[1]]
                                   -- AGGREGATE  |LOCAL|
                                     nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                                }
-                        -- EXTERNAL_GROUP_BY[$$37]  |PARTITIONED|
+                        -- SORT_GROUP_BY[$$37]  |PARTITIONED|
                           exchange 
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             project ([$$37])

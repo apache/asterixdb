@@ -29,7 +29,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Counters;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
@@ -50,7 +49,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * them.
  */
 public class BspUtils {
-    
+
     public static final String TMP_DIR = "/tmp/";
     private static final String COUNTERS_VALUE_ON_ITERATION = ".counters.valueOnIter.";
     private static final String COUNTERS_LAST_ITERATION_COMPLETED = ".counters.lastIterCompleted";
@@ -80,8 +79,12 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable> VertexInputFormat<I, V, E, M> createVertexInputFormat(
             Configuration conf) {
         Class<? extends VertexInputFormat<I, V, E, M>> vertexInputFormatClass = getVertexInputFormatClass(conf);
-        VertexInputFormat<I, V, E, M> inputFormat = ReflectionUtils.newInstance(vertexInputFormatClass, conf);
-        return inputFormat;
+        try {
+            VertexInputFormat<I, V, E, M> inputFormat = vertexInputFormatClass.newInstance();
+            return inputFormat;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -109,7 +112,11 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable> VertexOutputFormat<I, V, E> createVertexOutputFormat(
             Configuration conf) {
         Class<? extends VertexOutputFormat<I, V, E>> vertexOutputFormatClass = getVertexOutputFormatClass(conf);
-        return ReflectionUtils.newInstance(vertexOutputFormatClass, conf);
+        try {
+            return vertexOutputFormatClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -172,7 +179,11 @@ public class BspUtils {
     public static <I extends WritableComparable, M extends WritableSizable, P extends Writable> MessageCombiner<I, M, P> createMessageCombiner(
             Configuration conf) {
         Class<? extends MessageCombiner<I, M, P>> vertexCombinerClass = getMessageCombinerClass(conf);
-        return ReflectionUtils.newInstance(vertexCombinerClass, conf);
+        try {
+            return vertexCombinerClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -184,7 +195,11 @@ public class BspUtils {
      */
     public static NormalizedKeyComputer createNormalizedKeyComputer(Configuration conf) {
         Class<? extends NormalizedKeyComputer> nmkClass = getNormalizedKeyComputerClass(conf);
-        return ReflectionUtils.newInstance(nmkClass, conf);
+        try {
+            return nmkClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -199,10 +214,14 @@ public class BspUtils {
             Configuration conf) {
         List<Class<? extends GlobalAggregator<I, V, E, M, P, F>>> globalAggregatorClasses = getGlobalAggregatorClasses(conf);
         List<GlobalAggregator> aggs = new ArrayList<GlobalAggregator>();
-        for (Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggClass : globalAggregatorClasses) {
-            aggs.add(ReflectionUtils.newInstance(globalAggClass, conf));
+        try {
+            for (Class<? extends GlobalAggregator<I, V, E, M, P, F>> globalAggClass : globalAggregatorClasses) {
+                aggs.add(globalAggClass.newInstance());
+            }
+            return aggs;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
-        return aggs;
     }
 
     /**
@@ -267,8 +286,13 @@ public class BspUtils {
     public static <I extends WritableComparable, V extends Writable, E extends Writable, M extends WritableSizable> Vertex<I, V, E, M> createVertex(
             Configuration conf) {
         Class<? extends Vertex<I, V, E, M>> vertexClass = getVertexClass(conf);
-        Vertex<I, V, E, M> vertex = ReflectionUtils.newInstance(vertexClass, conf);
-        return vertex;
+        try {
+            Vertex<I, V, E, M> vertex = vertexClass.newInstance();
+            return vertex;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     /**
@@ -745,6 +769,76 @@ public class BspUtils {
      */
     public static int getCheckpointingInterval(Configuration conf) {
         return conf.getInt(PregelixJob.CKP_INTERVAL, -1);
+    }
+
+    /**
+     * Get the grouping algorithm
+     * 
+     * @param conf
+     * @return true-sort; false-hash
+     */
+    public static boolean getGroupingAlgorithm(Configuration conf) {
+        return conf.getBoolean(PregelixJob.GROUPING_ALGORITHM, true);
+    }
+
+    /**
+     * Get the memory limit for the grouping algorithm (hash only)
+     * 
+     * @param conf
+     * @return the memory limit for hash-based grouping
+     */
+    public static int getGroupingMemoryLimit(Configuration conf) {
+        return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
+    }
+
+    /**
+     * Get the memory limit for the sort algorithm
+     * 
+     * @param conf
+     * @return the memory limit for sorting
+     */
+    public static int getSortMemoryLimit(Configuration conf) {
+        return conf.getInt(PregelixJob.GROUPING_MEM, 1000);
+    }
+
+    /**
+     * Get the desired number of workers
+     * 
+     * @param conf
+     * @return the number of workers
+     */
+    public static int getNumberWorkers(Configuration conf) {
+        return conf.getInt(PregelixJob.NUM_WORKERS, -1);
+    }
+
+    /**
+     * Get whether the combiner key can be skipped when calling a user-defined combine function
+     * 
+     * @param conf
+     * @return true to skip; false otherwise
+     */
+    public static boolean getSkipCombinerKey(Configuration conf) {
+        return conf.getBoolean(PregelixJob.SKIP_COMBINER_KEY, false);
+    }
+
+    /**
+     * Get whether a merge connector is used
+     * 
+     * @param conf
+     * @return true -merge; false-no merge
+     */
+    public static boolean getMergingConnector(Configuration conf) {
+        return conf.getBoolean(PregelixJob.MERGE_CONNECTOR, true);
+    }
+
+    /**
+     * return the maximum iteration number
+     * 
+     * @param conf
+     * @return the maximum iteration number
+     */
+    public static int getMaxIteration(Configuration conf) {
+        return conf.getInt(PregelixJob.MAX_ITERATION, Integer.MAX_VALUE);
     }
 
     public static Writable readGlobalAggregateValue(Configuration conf, String jobId, String aggClassName)

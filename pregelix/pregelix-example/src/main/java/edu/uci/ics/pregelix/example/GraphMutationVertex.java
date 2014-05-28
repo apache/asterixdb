@@ -45,7 +45,7 @@ public class GraphMutationVertex extends Vertex<VLongWritable, DoubleWritable, F
 
     @Override
     public void compute(Iterator<DoubleWritable> msgIterator) {
-        if (Vertex.getSuperstep() == 1) {
+        if (getSuperstep() == 1) {
             if (newVertex == null) {
                 newVertex = new GraphMutationVertex();
             }

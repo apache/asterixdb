@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.nc.work;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -25,6 +28,8 @@ import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
 import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
+import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.comm.PartitionChannel;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -43,6 +48,7 @@ import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.comm.channels.NetworkInputChannel;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
@@ -89,8 +95,7 @@ public class StartTasksWork extends AbstractWork {
     public void run() {
         try {
             NCApplicationContext appCtx = ncs.getApplicationContext();
-            final Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, appCtx, acgBytes == null ? null
-                    : (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId, appCtx));
+            final Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, appCtx, acgBytes);
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
@@ -119,12 +124,13 @@ public class StartTasksWork extends AbstractWork {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 final int partition = tid.getPartition();
-                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs);
+                List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
+                Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
+                        createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
                 List<IPartitionCollector> collectors = new ArrayList<IPartitionCollector>();
 
-                List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
                 if (inputs != null) {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
@@ -169,13 +175,15 @@ public class StartTasksWork extends AbstractWork {
     }
 
     private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, JobId jobId, INCApplicationContext appCtx,
-            ActivityClusterGraph acg) throws Exception {
+            byte[] acgBytes) throws Exception {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
-            if (acg == null) {
+            if (acgBytes == null) {
                 throw new NullPointerException("JobActivityGraph was null");
             }
+            ActivityClusterGraph acg = (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId,
+                    appCtx);
             ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg);
             jobletMap.put(jobId, ji);
         }
@@ -230,5 +238,39 @@ public class StartTasksWork extends AbstractWork {
             factory = new ProfilingPartitionWriterFactory(ctx, conn, senderIndex, factory);
         }
         return factory;
+    }
+
+    /**
+     * Create a list of known channels for each input connector
+     * 
+     * @param td
+     *            the task attempt id
+     * @param inputs
+     *            the input connector descriptors
+     * @return a list of known channels, one for each connector
+     * @throws UnknownHostException
+     */
+    private List<List<PartitionChannel>> createInputChannels(TaskAttemptDescriptor td, List<IConnectorDescriptor> inputs)
+            throws UnknownHostException {
+        NetworkAddress[][] inputAddresses = td.getInputPartitionLocations();
+        List<List<PartitionChannel>> channelsForInputConnectors = new ArrayList<List<PartitionChannel>>();
+        if (inputAddresses != null) {
+            for (int i = 0; i < inputAddresses.length; i++) {
+                List<PartitionChannel> channels = new ArrayList<PartitionChannel>();
+                if (inputAddresses[i] != null) {
+                    for (int j = 0; j < inputAddresses[i].length; j++) {
+                        NetworkAddress networkAddress = inputAddresses[i][j];
+                        PartitionId pid = new PartitionId(jobId, inputs.get(i).getConnectorId(), j, td
+                                .getTaskAttemptId().getTaskId().getPartition());
+                        PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(
+                                ncs.getNetworkManager(), new InetSocketAddress(InetAddress.getByAddress(networkAddress
+                                        .getIpAddress()), networkAddress.getPort()), pid, 5));
+                        channels.add(channel);
+                    }
+                }
+                channelsForInputConnectors.add(channels);
+            }
+        }
+        return channelsForInputConnectors;
     }
 }

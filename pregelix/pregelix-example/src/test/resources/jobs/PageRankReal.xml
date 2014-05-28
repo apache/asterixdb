@@ -23,6 +23,7 @@
 <property><name>mapred.queue.default.acl-administer-jobs</name><value>*</value></property>
 <property><name>mapred.queue.default.acl-submit-job</name><value>*</value></property>
 <property><name>mapred.skip.map.auto.incr.proc.count</name><value>true</value></property>
+<property><name>pregelix.framesize</name><value>1024</value></property>
 <property><name>io.mapfile.bloom.size</name><value>1048576</value></property>
 <property><name>tasktracker.http.threads</name><value>40</value></property>
 <property><name>mapred.job.shuffle.merge.percent</name><value>0.66</value></property>
@@ -45,6 +46,7 @@
 <property><name>io.mapfile.bloom.error.rate</name><value>0.005</value></property>
 <property><name>mapred.max.tracker.blacklists</name><value>4</value></property>
 <property><name>mapred.task.profile.maps</name><value>0-2</value></property>
+<property><name>pregelix.groupmem</name><value>3</value></property>
 <property><name>mapred.userlog.retain.hours</name><value>24</value></property>
 <property><name>pregelix.numVertices</name><value>20</value></property>
 <property><name>mapred.job.tracker.persist.jobstatus.active</name><value>false</value></property>
@@ -85,7 +87,6 @@
 <property><name>fs.checkpoint.period</name><value>3600</value></property>
 <property><name>mapred.job.reuse.jvm.num.tasks</name><value>1</value></property>
 <property><name>mapred.jobtracker.completeuserjobs.maximum</name><value>100</value></property>
-<property><name>pregelix.dynamicopt</name><value>true</value></property>
 <property><name>fs.s3.maxRetries</name><value>4</value></property>
 <property><name>mapred.local.dir</name><value>${hadoop.tmp.dir}/mapred/local</value></property>
 <property><name>fs.hftp.impl</name><value>org.apache.hadoop.hdfs.HftpFileSystem</value></property>
@@ -115,6 +116,7 @@
 <property><name>io.seqfile.compress.blocksize</name><value>1000000</value></property>
 <property><name>fs.s3.block.size</name><value>67108864</value></property>
 <property><name>mapred.tasktracker.taskmemorymanager.monitoring-interval</name><value>5000</value></property>
+<property><name>pregelix.groupalg</name><value>false</value></property>
 <property><name>mapred.acls.enabled</name><value>false</value></property>
 <property><name>mapred.queue.names</name><value>default</value></property>
 <property><name>fs.hsftp.impl</name><value>org.apache.hadoop.hdfs.HsftpFileSystem</value></property>

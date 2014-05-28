@@ -10,16 +10,16 @@ write [%0->$$17, %0->$$18]
                   nested tuple source
                   -- NESTED_TUPLE_SOURCE  |LOCAL|
              }
-      -- EXTERNAL_GROUP_BY[$$21]  |PARTITIONED|
+      -- PRE_CLUSTERED_GROUP_BY[$$21]  |PARTITIONED|
         exchange 
-        -- HASH_PARTITION_EXCHANGE [$$21]  |PARTITIONED|
+        -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$21(ASC)] HASH:[$$21]  |PARTITIONED|
           group by ([$$21 := %0->$$1]) decor ([]) {
                     aggregate [$$20] <- [function-call: hive:sum(PARTIAL1), Args:[%0->$$5]]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
-          -- EXTERNAL_GROUP_BY[$$1]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$1]  |PARTITIONED|
             exchange 
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               data-scan [$$1, $$5]<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, $$12, $$13, $$14, $$15, $$16] <- default.lineitem
@@ -52,16 +52,16 @@ write [%0->$$36, %0->$$37, %0->$$38, %0->$$39, %0->$$40, %0->$$41]
                               nested tuple source
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                          }
-                  -- EXTERNAL_GROUP_BY[$$44, $$45, $$46, $$47, $$48]  |PARTITIONED|
+                  -- PRE_CLUSTERED_GROUP_BY[$$44, $$45, $$46, $$47, $$48]  |PARTITIONED|
                     exchange 
-                    -- HASH_PARTITION_EXCHANGE [$$44, $$45, $$46, $$47, $$48]  |PARTITIONED|
+                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$44(ASC), $$45(ASC), $$46(ASC), $$47(ASC), $$48(ASC)] HASH:[$$44, $$45, $$46, $$47, $$48]  |PARTITIONED|
                       group by ([$$44 := %0->$$20; $$45 := %0->$$19; $$46 := %0->$$27; $$47 := %0->$$31; $$48 := %0->$$30]) decor ([]) {
                                 aggregate [$$43] <- [function-call: hive:sum(PARTIAL1), Args:[%0->$$7]]
                                 -- AGGREGATE  |LOCAL|
                                   nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                              }
-                      -- EXTERNAL_GROUP_BY[$$20, $$19, $$27, $$31, $$30]  |PARTITIONED|
+                      -- SORT_GROUP_BY[$$20, $$19, $$27, $$31, $$30]  |PARTITIONED|
                         exchange 
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           project ([$$19, $$20, $$27, $$30, $$31, $$7])

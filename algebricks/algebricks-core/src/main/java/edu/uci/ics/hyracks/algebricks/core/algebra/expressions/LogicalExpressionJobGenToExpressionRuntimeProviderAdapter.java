@@ -136,10 +136,17 @@ public class LogicalExpressionJobGenToExpressionRuntimeProviderAdapter implement
                 }
 
                 @Override
+                public void finishPartial(IPointable result) throws AlgebricksException {
+                    caf.finishPartial();
+                    result.set(abvs);
+                }
+
+                @Override
                 public void finish(IPointable result) throws AlgebricksException {
                     caf.finish();
                     result.set(abvs);
                 }
+
             };
         }
     }

@@ -31,6 +31,9 @@ public class RawBinaryComparatorFactory implements IBinaryComparatorFactory {
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+                if (b1 == b2 && s1 == s2) {
+                    return 0;
+                }
                 int commonLength = Math.min(l1, l2);
                 for (int i = 0; i < commonLength; i++) {
                     if (b1[s1 + i] != b2[s2 + i]) {

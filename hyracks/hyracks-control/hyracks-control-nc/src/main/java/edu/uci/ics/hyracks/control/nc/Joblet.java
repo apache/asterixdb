@@ -267,6 +267,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         return globalJobData;
     }
 
+    public IJobletEventListener getJobletEventListener() {
+        return jobletEventListener;
+    }
+
     public synchronized void advertisePartitionRequest(TaskAttemptId taId, Collection<PartitionId> pids,
             IPartitionCollector collector, PartitionState minState) throws Exception {
         for (PartitionId pid : pids) {
@@ -281,10 +285,6 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         if (collector != null) {
             collector.addPartitions(Collections.singleton(channel));
         }
-    }
-
-    public IJobletEventListener getJobletEventListener() {
-        return jobletEventListener;
     }
 
     public void cleanup(JobStatus status) {

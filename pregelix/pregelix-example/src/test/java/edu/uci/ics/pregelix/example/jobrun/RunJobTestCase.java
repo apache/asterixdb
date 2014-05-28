@@ -94,11 +94,16 @@ public class RunJobTestCase extends TestCase {
     @Test
     public void test() throws Exception {
         setUp();
-        Plan[] plans = new Plan[] { Plan.INNER_JOIN, Plan.OUTER_JOIN, Plan.OUTER_JOIN_SINGLE_SORT, Plan.OUTER_JOIN_SORT };
+        Plan[] plans = new Plan[] { Plan.OUTER_JOIN, Plan.INNER_JOIN };
         for (Plan plan : plans) {
+            job.setMergeConnector(true);
             driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
                     PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
             compareResults();
+            //job.setMergeConnector(false);
+            //driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
+            //        PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
+            //compareResults();
         }
         tearDown();
         waitawhile();

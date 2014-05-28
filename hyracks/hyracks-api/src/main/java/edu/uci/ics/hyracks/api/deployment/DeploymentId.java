@@ -15,17 +15,32 @@
 
 package edu.uci.ics.hyracks.api.deployment;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
+
+import edu.uci.ics.hyracks.api.io.IWritable;
 
 /**
  * The representation of a deployment id
  * 
  * @author yingyib
  */
-public class DeploymentId implements Serializable {
+public class DeploymentId implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String deploymentKey;
+    private String deploymentKey;
+
+    public static DeploymentId create(DataInput dis) throws IOException {
+        DeploymentId deploymentId = new DeploymentId();
+        deploymentId.readFields(dis);
+        return deploymentId;
+    }
+
+    private DeploymentId() {
+
+    }
 
     public DeploymentId(String deploymentKey) {
         this.deploymentKey = deploymentKey;
@@ -49,5 +64,15 @@ public class DeploymentId implements Serializable {
     @Override
     public String toString() {
         return deploymentKey;
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        output.writeUTF(deploymentKey);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        deploymentKey = input.readUTF();
     }
 }

@@ -49,6 +49,9 @@ public class NCConfig implements Serializable {
     @Option(name = "-net-thread-count", usage = "Number of threads to use for Network I/O (default: 1)")
     public int nNetThreads = 1;
 
+    @Option(name = "-net-buffer-count", usage = "Number of network buffers per input/output channel (default:1)", required = false)
+    public int nNetBuffers = 1;
+
     @Option(name = "-max-memory", usage = "Maximum memory usable at this Node Controller in bytes (default: -1 auto)")
     public int maxMemory = -1;
 
@@ -84,6 +87,8 @@ public class NCConfig implements Serializable {
         cList.add(ioDevices);
         cList.add("-net-thread-count");
         cList.add(String.valueOf(nNetThreads));
+        cList.add("-net-buffer-count");
+        cList.add(String.valueOf(nNetBuffers));
         cList.add("-max-memory");
         cList.add(String.valueOf(maxMemory));
         cList.add("-result-time-to-live");
@@ -113,6 +118,7 @@ public class NCConfig implements Serializable {
         configuration.put("data-ip-address", dataIPAddress);
         configuration.put("iodevices", ioDevices);
         configuration.put("net-thread-count", String.valueOf(nNetThreads));
+        configuration.put("net-buffer-count", String.valueOf(nNetBuffers));
         configuration.put("max-memory", String.valueOf(maxMemory));
         configuration.put("result-time-to-live", String.valueOf(resultTTL));
         configuration.put("result-sweep-threshold", String.valueOf(resultSweepThreshold));

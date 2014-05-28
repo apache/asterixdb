@@ -65,15 +65,17 @@ public class MaterializedPartitionWriter implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("open(" + pid + " by " + taId);
         }
-        fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString());
-        handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-        size = 0;
         failed = false;
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        if (handle == null) {
+            fRef = manager.getFileFactory().createUnmanagedWorkspaceFile(pid.toString());
+            handle = ctx.getIOManager().open(fRef, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+            size = 0;
+        }
         size += ctx.getIOManager().syncWrite(handle, size, buffer);
     }
 
@@ -87,11 +89,14 @@ public class MaterializedPartitionWriter implements IFrameWriter {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("close(" + pid + " by " + taId);
         }
-        ctx.getIOManager().close(handle);
+        if (handle != null) {
+            ctx.getIOManager().close(handle);
+        }
         if (!failed) {
             manager.registerPartition(pid, taId,
                     new MaterializedPartition(ctx, fRef, executor, (IOManager) ctx.getIOManager()),
-                    PartitionState.COMMITTED);
+                    PartitionState.COMMITTED, taId.getAttempt() == 0 ? false : true);
+
         }
     }
 }

@@ -14,18 +14,24 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public abstract class AbstractProfile implements Serializable {
+import edu.uci.ics.hyracks.api.io.IWritable;
+
+public abstract class AbstractProfile implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    protected final Map<String, Long> counters;
+    protected Map<String, Long> counters;
 
     public AbstractProfile() {
         counters = new HashMap<String, Long>();
@@ -50,5 +56,25 @@ public abstract class AbstractProfile implements Serializable {
 
     protected void merge(AbstractProfile profile) {
         counters.putAll(profile.counters);
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        output.writeInt(counters.size());
+        for (Entry<String, Long> entry : counters.entrySet()) {
+            output.writeUTF(entry.getKey());
+            output.writeLong(entry.getValue());
+        }
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        int size = input.readInt();
+        counters = new HashMap<String, Long>();
+        for (int i = 0; i < size; i++) {
+            String key = input.readUTF();
+            long value = input.readLong();
+            counters.put(key, value);
+        }
     }
 }

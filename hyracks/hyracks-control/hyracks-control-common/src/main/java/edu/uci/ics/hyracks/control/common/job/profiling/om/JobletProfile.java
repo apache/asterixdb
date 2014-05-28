@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,9 +30,19 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 public class JobletProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
-    private final String nodeId;
+    private String nodeId;
 
-    private final Map<TaskAttemptId, TaskProfile> taskProfiles;
+    private Map<TaskAttemptId, TaskProfile> taskProfiles;
+
+    public static JobletProfile create(DataInput dis) throws IOException {
+        JobletProfile jobletProfile = new JobletProfile();
+        jobletProfile.readFields(dis);
+        return jobletProfile;
+    }
+
+    private JobletProfile() {
+
+    }
 
     public JobletProfile(String nodeId) {
         this.nodeId = nodeId;
@@ -66,6 +80,30 @@ public class JobletProfile extends AbstractProfile {
             } else {
                 taskProfiles.put(tp.getTaskId(), tp);
             }
+        }
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        super.readFields(input);
+        nodeId = input.readUTF();
+        int size = input.readInt();
+        taskProfiles = new HashMap<TaskAttemptId, TaskProfile>();
+        for (int i = 0; i < size; i++) {
+            TaskAttemptId key = TaskAttemptId.create(input);
+            TaskProfile value = TaskProfile.create(input);
+            taskProfiles.put(key, value);
+        }
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        super.writeFields(output);
+        output.writeUTF(nodeId);
+        output.writeInt(taskProfiles.size());
+        for (Entry<TaskAttemptId, TaskProfile> entry : taskProfiles.entrySet()) {
+            entry.getKey().writeFields(output);
+            entry.getValue().writeFields(output);
         }
     }
 }

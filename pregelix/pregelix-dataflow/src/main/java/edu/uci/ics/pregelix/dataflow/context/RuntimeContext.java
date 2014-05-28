@@ -21,6 +21,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
@@ -44,7 +46,7 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
 import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
 import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceRepository;
-import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.graph.VertexContext;
 
 public class RuntimeContext implements IWorkspaceFileFactory {
 
@@ -65,17 +67,17 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     };
 
     public RuntimeContext(INCApplicationContext appCtx) {
-        fileMapManager = new TransientFileMapManager();
-        ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         int pageSize = 64 * 1024;
         long memSize = Runtime.getRuntime().maxMemory();
         long bufferSize = memSize / 4;
         int numPages = (int) (bufferSize / pageSize);
+
+        fileMapManager = new TransientFileMapManager();
+        ICacheMemoryAllocator allocator = new HeapBufferAllocator();
+        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
         /** let the buffer cache never flush dirty pages */
-        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
-                new PreDelayPageCleanerPolicy(Long.MAX_VALUE), fileMapManager, pageSize, numPages, 1000000,
-                threadFactory);
+        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), prs, new PreDelayPageCleanerPolicy(
+                Long.MAX_VALUE), fileMapManager, 1000000, threadFactory);
         int numPagesInMemComponents = numPages / 8;
         vbcs = new ArrayList<IVirtualBufferCache>();
         IVirtualBufferCache vBufferCache = new MultitenantVirtualBufferCache(new VirtualBufferCache(
@@ -136,7 +138,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
 
     public synchronized void setVertexProperties(String jobId, long numVertices, long numEdges, long currentIteration,
             ClassLoader cl) {
-        PJobContext activeJob = getActiveJob(jobId);
+        PJobContext activeJob = getOrCreateActiveJob(jobId);
         activeJob.setVertexProperties(numVertices, numEdges, currentIteration, cl);
     }
 
@@ -151,13 +153,37 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         activeJob.endSuperStep();
     }
 
-    public synchronized void clearState(String jobId) throws HyracksDataException {
+    public synchronized void clearState(String jobId, boolean allStates) throws HyracksDataException {
         PJobContext activeJob = getActiveJob(jobId);
-        activeJob.clearState();
-        activeJobs.remove(jobId);
+        if (activeJob != null) {
+            activeJob.clearState();
+            if (allStates) {
+                activeJobs.remove(jobId);
+            }
+        }
+    }
+
+    public long getSuperstep(String jobId) {
+        PJobContext activeJob = getActiveJob(jobId);
+        return activeJob == null ? 0 : activeJob.getVertexContext().getSuperstep();
+    }
+
+    public void setJobContext(String jobId, TaskAttemptContext tCtx) {
+        PJobContext activeJob = getOrCreateActiveJob(jobId);
+        activeJob.getVertexContext().setContext(tCtx);
+    }
+
+    public VertexContext getVertexContext(String jobId) {
+        PJobContext activeJob = getActiveJob(jobId);
+        return activeJob.getVertexContext();
     }
 
     private PJobContext getActiveJob(String jobId) {
+        PJobContext activeJob = activeJobs.get(jobId);
+        return activeJob;
+    }
+
+    private PJobContext getOrCreateActiveJob(String jobId) {
         PJobContext activeJob = activeJobs.get(jobId);
         if (activeJob == null) {
             activeJob = new PJobContext();
@@ -170,10 +196,11 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     public FileReference createManagedWorkspaceFile(String jobId) throws HyracksDataException {
         final FileReference fRef = ioManager.createWorkspaceFile(jobId);
         PJobContext activeJob = getActiveJob(jobId);
-        List<FileReference> files = activeJob.getIterationToFiles().get(Vertex.getSuperstep());
+        long superstep = activeJob.getVertexContext().getSuperstep();
+        List<FileReference> files = activeJob.getIterationToFiles().get(superstep);
         if (files == null) {
             files = new ArrayList<FileReference>();
-            activeJob.getIterationToFiles().put(Vertex.getSuperstep(), files);
+            activeJob.getIterationToFiles().put(superstep, files);
         }
         files.add(fRef);
         return fRef;

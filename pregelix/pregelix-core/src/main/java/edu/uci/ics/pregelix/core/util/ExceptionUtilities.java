@@ -35,6 +35,13 @@ public class ExceptionUtilities {
     public static boolean recoverable(Exception exception, Set<String> blackListNodes) {
         String message = exception.getMessage();
 
+        /**
+         * Don't know to recover or not, return true
+         */
+        if (message == null) {
+            return true;
+        }
+
         /***
          * check interrupted exception
          */

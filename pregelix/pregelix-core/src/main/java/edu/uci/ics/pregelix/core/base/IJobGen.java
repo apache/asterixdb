@@ -30,6 +30,6 @@ public interface IJobGen {
 
     public JobSpecification[] generateLoadingCheckpoint(int lastCheckpointedIteration) throws HyracksException;
 
-    public JobSpecification generateClearState() throws HyracksException;
+    public JobSpecification generateClearState(boolean allStates) throws HyracksException;
 
 }

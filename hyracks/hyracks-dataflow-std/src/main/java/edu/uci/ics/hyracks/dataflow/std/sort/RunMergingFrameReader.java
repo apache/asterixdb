@@ -149,14 +149,10 @@ public class RunMergingFrameReader implements IFrameReader {
         return new Comparator<ReferenceEntry>() {
             public int compare(ReferenceEntry tp1, ReferenceEntry tp2) {
                 int nmk1 = tp1.getNormalizedKey();
-                int nmk2 = tp1.getNormalizedKey();
-                if (nmk1 > nmk2) {
-                    return 1;
+                int nmk2 = tp2.getNormalizedKey();
+                if (nmk1 != nmk2) {
+                    return ((((long) nmk1) & 0xffffffffL) < (((long) nmk2) & 0xffffffffL)) ? -1 : 1;
                 }
-                if (nmk1 < nmk2) {
-                    return -1;
-                }
-
                 FrameTupleAccessor fta1 = (FrameTupleAccessor) tp1.getAccessor();
                 FrameTupleAccessor fta2 = (FrameTupleAccessor) tp2.getAccessor();
                 byte[] b1 = fta1.getBuffer().array();
@@ -171,7 +167,9 @@ public class RunMergingFrameReader implements IFrameReader {
                         return c;
                     }
                 }
-                return 0;
+                int runid1 = tp1.getRunid();
+                int runid2 = tp2.getRunid();
+                return runid1 < runid2 ? -1 : (runid1 == runid2 ? 0 : 1);
             }
         };
     }

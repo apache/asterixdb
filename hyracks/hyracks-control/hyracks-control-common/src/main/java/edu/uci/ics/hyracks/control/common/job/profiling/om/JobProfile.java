@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,9 +30,19 @@ import edu.uci.ics.hyracks.api.job.JobId;
 public class JobProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;
 
-    private final JobId jobId;
+    private JobId jobId;
 
-    private final Map<String, JobletProfile> jobletProfiles;
+    private Map<String, JobletProfile> jobletProfiles;
+
+    public static JobProfile create(DataInput dis) throws IOException {
+        JobProfile jobProfile = new JobProfile();
+        jobProfile.readFields(dis);
+        return jobProfile;
+    }
+
+    private JobProfile() {
+
+    }
 
     public JobProfile(JobId jobId) {
         this.jobId = jobId;
@@ -66,6 +80,28 @@ public class JobProfile extends AbstractProfile {
             } else {
                 jobletProfiles.put(jp.getNodeId(), jp);
             }
+        }
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        jobId = JobId.create(input);
+        int size = input.readInt();
+        jobletProfiles = new HashMap<String, JobletProfile>();
+        for (int i = 0; i < size; i++) {
+            String key = input.readUTF();
+            JobletProfile value = JobletProfile.create(input);
+            jobletProfiles.put(key, value);
+        }
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        jobId.writeFields(output);
+        output.writeInt(jobletProfiles.size());
+        for (Entry<String, JobletProfile> entry : jobletProfiles.entrySet()) {
+            output.writeUTF(entry.getKey());
+            entry.getValue().writeFields(output);
         }
     }
 }

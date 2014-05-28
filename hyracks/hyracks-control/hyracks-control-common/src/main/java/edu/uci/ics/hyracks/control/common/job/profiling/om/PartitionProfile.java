@@ -14,21 +14,35 @@
  */
 package edu.uci.ics.hyracks.control.common.job.profiling.om;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.io.IWritable;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
 
-public class PartitionProfile implements Serializable {
+public class PartitionProfile implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final PartitionId pid;
+    private PartitionId pid;
 
-    private final long openTime;
+    private long openTime;
 
-    private final long closeTime;
+    private long closeTime;
 
-    private final MultiResolutionEventProfiler mrep;
+    private MultiResolutionEventProfiler mrep;
+
+    public static PartitionProfile create(DataInput dis) throws IOException {
+        PartitionProfile partitionProfile = new PartitionProfile();
+        partitionProfile.readFields(dis);
+        return partitionProfile;
+    }
+
+    private PartitionProfile() {
+
+    }
 
     public PartitionProfile(PartitionId pid, long openTime, long closeTime, MultiResolutionEventProfiler mrep) {
         this.pid = pid;
@@ -51,5 +65,21 @@ public class PartitionProfile implements Serializable {
 
     public MultiResolutionEventProfiler getSamples() {
         return mrep;
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        output.writeLong(closeTime);
+        output.writeLong(openTime);
+        mrep.writeFields(output);
+        pid.writeFields(output);
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        closeTime = input.readLong();
+        openTime = input.readLong();
+        mrep = MultiResolutionEventProfiler.create(input);
+        pid = PartitionId.create(input);
     }
 }

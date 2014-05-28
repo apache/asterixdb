@@ -25,7 +25,7 @@
     <jvm.extraargs />
 
     <!-- Definition of tests in various categories which may be excluded -->
-    <hanging.pregelix.tests>**/pregelix/**/*.java</hanging.pregelix.tests>
+    <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
     <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</global.test.excludes>

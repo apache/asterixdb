@@ -50,7 +50,9 @@ public class MaterializedPartition implements IPartition {
 
     @Override
     public void deallocate() {
-        partitionFile.delete();
+        if (partitionFile != null) {
+            partitionFile.delete();
+        }
     }
 
     @Override
@@ -59,6 +61,11 @@ public class MaterializedPartition implements IPartition {
             @Override
             public void run() {
                 try {
+                    if (partitionFile == null) {
+                        writer.open();
+                        writer.close();
+                        return;
+                    }
                     IFileHandle fh = ioManager.open(partitionFile, IIOManager.FileReadWriteMode.READ_ONLY,
                             IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {

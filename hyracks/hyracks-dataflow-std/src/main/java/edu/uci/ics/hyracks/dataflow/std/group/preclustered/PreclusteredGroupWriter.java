@@ -41,10 +41,18 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private final ByteBuffer outFrame;
     private final FrameTupleAppender appender;
     private final ArrayTupleBuilder tupleBuilder;
+    private boolean outputPartial = false;
 
     private boolean first;
 
     private boolean isFailed = false;
+
+    public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
+            IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
+            IFrameWriter writer, boolean outputPartial) throws HyracksDataException {
+        this(ctx, groupFields, comparators, aggregator, inRecordDesc, outRecordDesc, writer);
+        this.outputPartial = outputPartial;
+    }
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
@@ -121,10 +129,13 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         for (int j = 0; j < groupFields.length; j++) {
             tupleBuilder.addField(lastTupleAccessor, lastTupleIndex, groupFields[j]);
         }
-        boolean hasOutput = aggregator.outputFinalResult(tupleBuilder, lastTupleAccessor, lastTupleIndex, aggregateState);
+        boolean hasOutput = outputPartial ? aggregator.outputPartialResult(tupleBuilder, lastTupleAccessor,
+                lastTupleIndex, aggregateState) : aggregator.outputFinalResult(tupleBuilder, lastTupleAccessor,
+                lastTupleIndex, aggregateState);
 
-        if (hasOutput && !appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                tupleBuilder.getSize())) {
+        if (hasOutput
+                && !appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                        tupleBuilder.getSize())) {
             FrameUtils.flushFrame(outFrame, writer);
             appender.reset(outFrame, true);
             if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,

@@ -79,10 +79,10 @@ public class TestStorageManagerComponentHolder {
     public synchronized static IBufferCache getBufferCache(IHyracksTaskContext ctx) {
         if (bufferCache == null) {
             ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-            IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
+            IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
             IFileMapProvider fileMapProvider = getFileMapProvider(ctx);
-            bufferCache = new BufferCache(ctx.getIOManager(), allocator, prs, new DelayPageCleanerPolicy(1000),
-                    (IFileMapManager) fileMapProvider, pageSize, numPages, maxOpenFiles, threadFactory);
+            bufferCache = new BufferCache(ctx.getIOManager(), prs, new DelayPageCleanerPolicy(1000),
+                    (IFileMapManager) fileMapProvider, maxOpenFiles, threadFactory);
         }
         return bufferCache;
     }

@@ -72,6 +72,7 @@ public class DataLoadTest {
         job.getConfiguration().setClass(PregelixJob.VERTEX_VALUE_CLASS, DoubleWritable.class, Writable.class);
         job.getConfiguration().setClass(PregelixJob.EDGE_VALUE_CLASS, FloatWritable.class, Writable.class);
         job.getConfiguration().setClass(PregelixJob.MESSAGE_VALUE_CLASS, DoubleWritable.class, Writable.class);
+        job.getConfiguration().set(PregelixJob.JOB_ID, "test_job");
     }
 
     public void setUp() throws Exception {

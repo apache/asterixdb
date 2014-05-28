@@ -16,16 +16,16 @@ write [%0->$$22, %0->$$23]
                         nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
-            -- EXTERNAL_GROUP_BY[$$26]  |PARTITIONED|
+            -- PRE_CLUSTERED_GROUP_BY[$$26]  |PARTITIONED|
               exchange 
-              -- HASH_PARTITION_EXCHANGE [$$26]  |PARTITIONED|
+              -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$26(ASC)] HASH:[$$26]  |PARTITIONED|
                 group by ([$$26 := %0->$$19]) decor ([]) {
                           aggregate [$$25] <- [function-call: hive:count(PARTIAL1), Args:[1]]
                           -- AGGREGATE  |LOCAL|
                             nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
-                -- EXTERNAL_GROUP_BY[$$19]  |PARTITIONED|
+                -- SORT_GROUP_BY[$$19]  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     project ([$$19])
@@ -38,7 +38,7 @@ write [%0->$$22, %0->$$23]
                                     nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                                }
-                        -- EXTERNAL_GROUP_BY[$$10]  |PARTITIONED|
+                        -- SORT_GROUP_BY[$$10]  |PARTITIONED|
                           exchange 
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             project ([$$10, $$1])

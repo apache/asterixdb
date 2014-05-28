@@ -65,7 +65,7 @@ public class TreeIndexBulkReLoadOperatorNodePushable extends AbstractUnaryInputS
         treeIndexOpHelper.open();
         try {
             index = (ITreeIndex) treeIndexOpHelper.getIndexInstance();
-            bulkLoader = index.createBulkLoader(fillFactor, false, 0, false);
+            bulkLoader = index.createBulkLoader(fillFactor, false, 100000, false);
         } catch (Exception e) {
             // cleanup in case of failure
             treeIndexOpHelper.close();

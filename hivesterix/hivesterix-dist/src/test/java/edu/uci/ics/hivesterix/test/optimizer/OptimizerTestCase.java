@@ -14,7 +14,10 @@
  */
 package edu.uci.ics.hivesterix.test.optimizer;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -60,6 +63,10 @@ public class OptimizerTestCase extends AbstractHivesterixTestCase {
         }
         StringBuilder buf = new StringBuilder();
         readFileToString(resultFile, buf);
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("optest/"
+                + resultFile.getName())));
+        writer.write(sw.toString());
+        writer.close();
         if (!buf.toString().equals(sw.toString())) {
             throw new Exception("Result for " + queryFile + " changed:\n" + sw.toString());
         }

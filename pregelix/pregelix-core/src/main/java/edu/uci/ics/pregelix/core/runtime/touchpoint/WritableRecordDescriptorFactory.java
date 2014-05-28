@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.pregelix.core.hadoop.config.ConfigurationFactory;
 import edu.uci.ics.pregelix.core.util.DataflowUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
@@ -30,9 +29,9 @@ public class WritableRecordDescriptorFactory implements IRecordDescriptorFactory
     private String[] fieldClasses;
     private IConfigurationFactory confFactory;
 
-    public WritableRecordDescriptorFactory(Configuration conf, String... fieldClasses) {
+    public WritableRecordDescriptorFactory(IConfigurationFactory confFactory, String... fieldClasses) {
         this.fieldClasses = fieldClasses;
-        this.confFactory = new ConfigurationFactory(conf);
+        this.confFactory = confFactory;
     }
 
     @Override

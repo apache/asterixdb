@@ -44,8 +44,8 @@ public class HiveMergeAggregationExpressionFactory implements IMergeAggregationE
     public static IMergeAggregationExpressionFactory INSTANCE = new HiveMergeAggregationExpressionFactory();
 
     @Override
-    public ILogicalExpression createMergeAggregation(ILogicalExpression expr, IOptimizationContext context)
-            throws AlgebricksException {
+    public ILogicalExpression createMergeAggregation(LogicalVariable inputVar, ILogicalExpression expr,
+            IOptimizationContext context) throws AlgebricksException {
         /**
          * type inference for scalar function
          */
@@ -55,7 +55,6 @@ public class HiveMergeAggregationExpressionFactory implements IMergeAggregationE
              * hive aggregation info
              */
             AggregationDesc aggregator = (AggregationDesc) ((HiveFunctionInfo) funcExpr.getFunctionInfo()).getInfo();
-            LogicalVariable inputVar = context.newVar();
             ExprNodeDesc col = new ExprNodeColumnDesc(TypeInfoFactory.voidTypeInfo, inputVar.toString(), null, false);
             ArrayList<ExprNodeDesc> parameters = new ArrayList<ExprNodeDesc>();
             parameters.add(col);

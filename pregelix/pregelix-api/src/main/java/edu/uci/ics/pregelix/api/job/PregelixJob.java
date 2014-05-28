@@ -27,9 +27,10 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.graph.VertexPartitioner;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
-import edu.uci.ics.pregelix.api.util.HadoopCountersGlobalAggregateHook;
-import edu.uci.ics.pregelix.api.util.GlobalCountAggregator;
+import edu.uci.ics.pregelix.api.util.GlobalEdgeCountAggregator;
+import edu.uci.ics.pregelix.api.util.GlobalVertexCountAggregator;
 import edu.uci.ics.pregelix.api.util.HadoopCountersAggregator;
+import edu.uci.ics.pregelix.api.util.HadoopCountersGlobalAggregateHook;
 
 /**
  * This class represents a Pregelix job.
@@ -92,9 +93,24 @@ public class PregelixJob extends Job {
     /** period */
     public static final String PERIOD_STR = ".";
     /** the names of the aggregator classes active for all vertex types */
-    public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalCountAggregator.class.getName() };
+    public static final String[] DEFAULT_GLOBAL_AGGREGATOR_CLASSES = { GlobalVertexCountAggregator.class.getName(),
+            GlobalEdgeCountAggregator.class.getName() };
     /** The name of an optional class that aggregates all Vertexes into mapreduce.Counters */
     public static final String COUNTERS_AGGREGATOR_CLASS = "pregelix.aggregatedCountersClass";
+    /** the group-by algorithm */
+    public static final String GROUPING_ALGORITHM = "pregelix.groupalg";
+    /** the memory assigned to group-by */
+    public static final String GROUPING_MEM = "pregelix.groupmem";
+    /** the memory assigned for the sort operator */
+    public static final String SORT_MEM = "pregelix.sortmem";
+    /** the number of workers */
+    public static final String NUM_WORKERS = "pregelix.numworkers";
+    /** the application allows to skip combiner key during aggregations */
+    public static final String SKIP_COMBINER_KEY = "pregelix.skipCombinerKey";
+    /** the merge connector */
+    public static final String MERGE_CONNECTOR = "pregelix.merge";
+    /** the maximum allowed iteration */
+    public static final String MAX_ITERATION="pregelix.maxiteration";
 
     /**
      * Construct a Pregelix job from an existing configuration
@@ -290,13 +306,85 @@ public class PregelixJob extends Job {
         getConfiguration().setBoolean(DYNAMIC_OPTIMIZATION, dynamicOpt);
     }
 
+    /**
+     * Set the counter aggregator class
+     * 
+     * @param aggClass
+     */
     final public void setCounterAggregatorClass(Class<? extends HadoopCountersAggregator<?, ?, ?, ?, ?>> aggClass) {
         if (Modifier.isAbstract(aggClass.getModifiers())) {
-            throw new IllegalArgumentException("Aggregate class must be a concrete class, not an abstract one! (was " + aggClass.getName() + ")");
+            throw new IllegalArgumentException("Aggregate class must be a concrete class, not an abstract one! (was "
+                    + aggClass.getName() + ")");
         }
         getConfiguration().setClass(COUNTERS_AGGREGATOR_CLASS, aggClass, HadoopCountersAggregator.class);
         addGlobalAggregatorClass(aggClass);
         setIterationCompleteReporterHook(HadoopCountersGlobalAggregateHook.class);
+    }
+
+    /**
+     * Set the group-by algorithm: sort-true or hash-false
+     * 
+     * @param sortOrHash
+     */
+    final public void setGroupByAlgorithm(boolean sortOrHash) {
+        getConfiguration().setBoolean(GROUPING_ALGORITHM, sortOrHash);
+    }
+
+    /**
+     * Set the memory buget for group-by operators (only hash-based)
+     * 
+     * @param numberOfPages
+     */
+    final public void setGroupByMemoryLimit(int numberOfPages) {
+        getConfiguration().setInt(GROUPING_MEM, numberOfPages);
+    }
+
+    /**
+     * Set the memory buget for sort operators (only hash-based)
+     * 
+     * @param numberOfPages
+     */
+    final public void setSortMemoryLimit(int numberOfPages) {
+        getConfiguration().setInt(SORT_MEM, numberOfPages);
+    }
+
+    /**
+     * Set the number of workers
+     * 
+     * @param numWorkers
+     */
+    final public void setNumWorkers(int numWorkers) {
+        getConfiguration().setInt(NUM_WORKERS, numWorkers);
+    }
+
+    /**
+     * Whether an application allows to skip the combiner key during message combination,
+     * this is a performance improvement tip.
+     * By default, the key is not skipped
+     * 
+     * @param skip
+     *            true to skip; otherwise, not.
+     */
+    final public void setSkipCombinerKey(boolean skip) {
+        getConfiguration().setBoolean(SKIP_COMBINER_KEY, skip);
+    }
+    
+    /**
+     * Whether to use merge connector
+     * 
+     * @param merge
+     */
+    final public void setMergeConnector(boolean merge){
+        getConfiguration().setBoolean(MERGE_CONNECTOR, merge);
+    }
+    
+    /***
+     * Set the maximum allowed iteration
+     * 
+     * @param iteration
+     */
+    final public void setMaxIteration(int iteration){
+        getConfiguration().setInt(MAX_ITERATION, iteration);
     }
 
     @Override

@@ -69,7 +69,7 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
 
     @Override
     public void open() throws HyracksDataException {
-        manager.registerPartition(pid, taId, this, PartitionState.STARTED);
+        manager.registerPartition(pid, taId, this, PartitionState.STARTED, false);
         failed = false;
         pendingConnection = true;
     }
@@ -108,7 +108,6 @@ public class PipelinedPartition implements IFrameWriter, IPartition {
     public void close() throws HyracksDataException {
         if (!failed) {
             ensureConnected();
-            manager.updatePartitionState(pid, taId, this, PartitionState.COMMITTED);
             delegate.close();
         }
     }

@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.pregelix.runtime.touchpoint;
 
-import java.lang.reflect.Field;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
@@ -23,9 +21,11 @@ import org.apache.hadoop.mapreduce.TaskAttemptID;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.hdfs.ContextFactory;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHook;
 import edu.uci.ics.pregelix.dataflow.std.base.IRuntimeHookFactory;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 public class RuntimeHookFactory implements IRuntimeHookFactory {
 
@@ -48,12 +48,10 @@ public class RuntimeHookFactory implements IRuntimeHookFactory {
                 try {
                     TaskAttemptContext mapperContext = ctxFactory.createContext(conf, new TaskAttemptID());
                     mapperContext.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
-
-                    ClassLoader cl = ctx.getJobletContext().getClassLoader();
-                    Class<?> vClass = (Class<?>) cl.loadClass("edu.uci.ics.pregelix.api.graph.Vertex");
-                    Field contextField = vClass.getDeclaredField("context");
-                    contextField.setAccessible(true);
-                    contextField.set(null, mapperContext);
+                    if(BspUtils.getJobId(conf)==null){
+                        System.out.println("here");
+                    }
+                    IterationUtils.setJobContext(BspUtils.getJobId(conf), ctx, mapperContext);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }

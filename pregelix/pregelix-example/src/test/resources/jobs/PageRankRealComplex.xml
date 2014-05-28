@@ -81,12 +81,12 @@
 <property><name>mapred.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>io.map.index.skip</name><value>0</value></property>
 <property><name>ipc.server.tcpnodelay</name><value>false</value></property>
+<property><name>pregelix.skipCombinerKey</name><value>true</value></property>
 <property><name>hadoop.logfile.size</name><value>10000000</value></property>
 <property><name>mapred.reduce.tasks.speculative.execution</name><value>true</value></property>
 <property><name>fs.checkpoint.period</name><value>3600</value></property>
 <property><name>mapred.job.reuse.jvm.num.tasks</name><value>1</value></property>
 <property><name>mapred.jobtracker.completeuserjobs.maximum</name><value>100</value></property>
-<property><name>pregelix.dynamicopt</name><value>true</value></property>
 <property><name>fs.s3.maxRetries</name><value>4</value></property>
 <property><name>mapred.local.dir</name><value>${hadoop.tmp.dir}/mapred/local</value></property>
 <property><name>fs.hftp.impl</name><value>org.apache.hadoop.hdfs.HftpFileSystem</value></property>

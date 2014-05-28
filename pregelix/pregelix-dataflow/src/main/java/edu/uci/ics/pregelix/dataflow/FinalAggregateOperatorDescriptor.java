@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 import edu.uci.ics.pregelix.dataflow.std.base.IRecordDescriptorFactory;
@@ -114,7 +113,8 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
                     List<Writable> aggValues = new ArrayList<Writable>();
                     // iterate over hdfs spilled aggregates
                     FileSystem dfs = FileSystem.get(conf);
-                    String spillingDir = BspUtils.getGlobalAggregateSpillingDirName(conf, Vertex.getSuperstep());
+                    String spillingDir = BspUtils.getGlobalAggregateSpillingDirName(conf,
+                            IterationUtils.getSuperstep(BspUtils.getJobId(conf), ctx));
                     FileStatus[] files = dfs.listStatus(new Path(spillingDir));
                     if (files != null) {
                         // goes into this branch only when there are spilled files

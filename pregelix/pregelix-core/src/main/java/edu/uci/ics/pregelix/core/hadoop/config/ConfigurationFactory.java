@@ -25,6 +25,7 @@ import edu.uci.ics.pregelix.dataflow.base.IConfigurationFactory;
 public class ConfigurationFactory implements IConfigurationFactory {
     private static final long serialVersionUID = 1L;
     private final byte[] data;
+    private transient Configuration confCache;
 
     public ConfigurationFactory(Configuration conf) {
         try {
@@ -35,22 +36,30 @@ public class ConfigurationFactory implements IConfigurationFactory {
     }
 
     @Override
-    public Configuration createConfiguration(IHyracksTaskContext ctx) throws HyracksDataException {
+    public synchronized Configuration createConfiguration(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
+            if (confCache != null) {
+                return confCache;
+            }
             Configuration conf = new Configuration();
             conf.setClassLoader(ctx.getJobletContext().getClassLoader());
             SerDeUtils.deserialize(conf, data);
+            confCache = conf;
             return conf;
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }
-    
+
     @Override
-    public Configuration createConfiguration() throws HyracksDataException{
+    public synchronized Configuration createConfiguration() throws HyracksDataException {
         try {
+            if (confCache != null) {
+                return confCache;
+            }
             Configuration conf = new Configuration();
             SerDeUtils.deserialize(conf, data);
+            confCache = conf;
             return conf;
         } catch (Exception e) {
             throw new HyracksDataException(e);

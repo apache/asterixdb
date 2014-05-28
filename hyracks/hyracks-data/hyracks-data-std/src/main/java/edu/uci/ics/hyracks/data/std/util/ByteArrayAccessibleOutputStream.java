@@ -15,11 +15,9 @@
 package edu.uci.ics.hyracks.data.std.util;
 
 import java.io.ByteArrayOutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Arrays;
 
 public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
-    private static final Logger LOGGER = Logger.getLogger(ByteArrayAccessibleOutputStream.class.getName());
 
     public ByteArrayAccessibleOutputStream() {
         super();
@@ -34,17 +32,45 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
     }
 
     public void write(int b) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("write(byte) value: " + b);
-        }
-        super.write(b);
+        ensureCapacity(count + 1);
+        buf[count] = (byte) b;
+        count += 1;
     }
 
     @Override
-    public void write(byte[] bytes, int offset, int length) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("write(byte[], int, int) offset: " + offset + " length" + length);
+    public void write(byte[] b, int off, int len) {
+        if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) - b.length > 0)) {
+            throw new IndexOutOfBoundsException();
         }
-        super.write(bytes, offset, length);
+        ensureCapacity(count + len);
+        System.arraycopy(b, off, buf, count, len);
+        count += len;
+    }
+
+    private void ensureCapacity(int minCapacity) {
+        // overflow-conscious code
+        if (minCapacity - buf.length > 0)
+            grow(minCapacity);
+    }
+
+    /**
+     * Increases the capacity to ensure that it can hold at least the
+     * number of elements specified by the minimum capacity argument.
+     * 
+     * @param minCapacity
+     *            the desired minimum capacity
+     */
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        int oldCapacity = buf.length;
+        int newCapacity = oldCapacity << 1;
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity < 0) {
+            if (minCapacity < 0) // overflow
+                throw new OutOfMemoryError();
+            newCapacity = Integer.MAX_VALUE;
+        }
+        buf = Arrays.copyOf(buf, newCapacity);
     }
 }

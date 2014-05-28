@@ -24,9 +24,7 @@ public interface IDriver {
 
     public static enum Plan {
         INNER_JOIN,
-        OUTER_JOIN,
-        OUTER_JOIN_SORT,
-        OUTER_JOIN_SINGLE_SORT
+        OUTER_JOIN
     }
 
     public void runJob(PregelixJob job, String ipAddress, int port) throws HyracksException;

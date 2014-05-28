@@ -17,6 +17,7 @@ package edu.uci.ics.pregelix.example.inputformat;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -43,10 +44,8 @@ public class TextReachibilityVertexInputFormat extends
 }
 
 @SuppressWarnings("rawtypes")
-class TextReachibilityGraphReader extends
-        TextVertexReader<VLongWritable, VLongWritable, FloatWritable, VLongWritable> {
+class TextReachibilityGraphReader extends TextVertexReader<VLongWritable, VLongWritable, FloatWritable, VLongWritable> {
 
-    private final static String separator = " ";
     private Vertex vertex;
     private VLongWritable vertexId = new VLongWritable();
     private List<VLongWritable> pool = new ArrayList<VLongWritable>();
@@ -73,13 +72,14 @@ class TextReachibilityGraphReader extends
 
         vertex.reset();
         Text line = getRecordReader().getCurrentValue();
-        String[] fields = line.toString().split(separator);
+        String lineStr = line.toString();
+        StringTokenizer tokenizer = new StringTokenizer(lineStr);
 
-        if (fields.length > 0) {
+        if (tokenizer.hasMoreTokens()) {
             /**
              * set the src vertex id
              */
-            long src = Long.parseLong(fields[0]);
+            long src = Long.parseLong(tokenizer.nextToken());
             vertexId.set(src);
             vertex.setVertexId(vertexId);
             long dest = -1L;
@@ -87,8 +87,8 @@ class TextReachibilityGraphReader extends
             /**
              * set up edges
              */
-            for (int i = 1; i < fields.length; i++) {
-                dest = Long.parseLong(fields[i]);
+            while (tokenizer.hasMoreTokens()) {
+                dest = Long.parseLong(tokenizer.nextToken());
                 VLongWritable destId = allocate();
                 destId.set(dest);
                 vertex.addEdge(destId, null);

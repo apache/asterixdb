@@ -53,9 +53,9 @@ public class RuntimeContext {
     public RuntimeContext(INCApplicationContext appCtx) throws HyracksDataException {
         fileMapManager = new TransientFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), allocator, prs,
-                new DelayPageCleanerPolicy(1000), fileMapManager, 32768, 50, 100, threadFactory);
+        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
+        bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), prs, new DelayPageCleanerPolicy(1000),
+                fileMapManager, 100, threadFactory);
         lcManager = new IndexLifecycleManager();
         ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
         localResourceRepository = localResourceRepositoryFactory.createRepository();

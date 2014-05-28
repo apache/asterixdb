@@ -31,6 +31,6 @@ public class WritableSerializerDeserializerFactory<T extends Writable> implement
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public ISerializerDeserializer getSerializerDeserializer(Configuration conf) {
-        return DatatypeHelper.createSerializerDeserializer(clazz, conf);
+        return DatatypeHelper.createSerializerDeserializer(clazz, conf, null);
     }
 }

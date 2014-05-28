@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.client.stats.impl;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -39,7 +40,7 @@ import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
  */
 public class ClientCounterContext implements IClusterCounterContext {
     private static String[] RESET_COUNTERS = { Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE,
-            Counters.MEMORY_USAGE, Counters.DISK_READ, Counters.DISK_WRITE, Counters.NUM_PROCESSOR };
+            Counters.MEMORY_USAGE, Counters.MEMORY_MAX, Counters.DISK_READ, Counters.DISK_WRITE, Counters.NUM_PROCESSOR };
     private static String[] AGG_COUNTERS = { Counters.SYSTEM_LOAD };
     private static int UPDATE_INTERVAL = 10000;
 
@@ -135,7 +136,7 @@ public class ClientCounterContext implements IClusterCounterContext {
                 }
             }
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            //ignore
         }
     }
 
@@ -173,16 +174,24 @@ public class ClientCounterContext implements IClusterCounterContext {
         } else if (counterObject instanceof JSONArray) {
             JSONArray jArray = (JSONArray) counterObject;
             Object[] values = jArray.toArray();
+            /**
+             * use the last non-zero value as the counter value
+             */
             for (Object value : values) {
                 if (value instanceof Double) {
                     Double dValue = (Double) value;
-                    counterValue += dValue.doubleValue();
+                    double currentVal = dValue.doubleValue();
+                    if (currentVal != 0) {
+                        counterValue = (long) currentVal;
+                    }
                 } else if (value instanceof Long) {
                     Long lValue = (Long) value;
-                    counterValue += lValue.longValue();
+                    long currentVal = lValue.longValue();
+                    if (currentVal != 0) {
+                        counterValue = lValue.longValue();
+                    }
                 }
             }
-            counterValue /= values.length;
         } else {
             Long val = (Long) counterObject;
             counterValue = val.longValue();
@@ -215,7 +224,11 @@ public class ClientCounterContext implements IClusterCounterContext {
             in.close();
             return response.toString();
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            if (!(e instanceof java.net.ConnectException || e instanceof IOException)) {
+                throw new IllegalStateException(e);
+            } else {
+                return "";
+            }
         }
     }
 

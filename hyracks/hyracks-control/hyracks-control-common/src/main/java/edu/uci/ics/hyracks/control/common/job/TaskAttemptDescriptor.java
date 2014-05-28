@@ -14,24 +14,38 @@
  */
 package edu.uci.ics.hyracks.control.common.job;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import edu.uci.ics.hyracks.api.io.IWritable;
 
-public class TaskAttemptDescriptor implements Serializable {
+public class TaskAttemptDescriptor implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final TaskAttemptId taId;
+    private TaskAttemptId taId;
 
-    private final int nPartitions;
+    private int nPartitions;
 
-    private final int[] nInputPartitions;
+    private int[] nInputPartitions;
 
-    private final int[] nOutputPartitions;
+    private int[] nOutputPartitions;
 
     private NetworkAddress[][] inputPartitionLocations;
+
+    public static TaskAttemptDescriptor create(DataInput dis) throws IOException {
+        TaskAttemptDescriptor taskAttemptDescriptor = new TaskAttemptDescriptor();
+        taskAttemptDescriptor.readFields(dis);
+        return taskAttemptDescriptor;
+    }
+
+    private TaskAttemptDescriptor() {
+
+    }
 
     public TaskAttemptDescriptor(TaskAttemptId taId, int nPartitions, int[] nInputPartitions, int[] nOutputPartitions) {
         this.taId = taId;
@@ -69,5 +83,75 @@ public class TaskAttemptDescriptor implements Serializable {
         return "TaskAttemptDescriptor[taId = " + taId + ", nPartitions = " + nPartitions + ", nInputPartitions = "
                 + Arrays.toString(nInputPartitions) + ", nOutputPartitions = " + Arrays.toString(nOutputPartitions)
                 + "]";
+    }
+
+    @Override
+    public void writeFields(DataOutput output) throws IOException {
+        taId.writeFields(output);
+        output.writeInt(nPartitions);
+
+        output.writeInt(nInputPartitions == null ? -1 : nInputPartitions.length);
+        if (nInputPartitions != null) {
+            for (int i = 0; i < nInputPartitions.length; i++) {
+                output.writeInt(nInputPartitions[i]);
+            }
+        }
+
+        output.writeInt(nOutputPartitions == null ? -1 : nOutputPartitions.length);
+        if (nOutputPartitions != null) {
+            for (int i = 0; i < nOutputPartitions.length; i++) {
+                output.writeInt(nOutputPartitions[i]);
+            }
+        }
+
+        output.writeInt(inputPartitionLocations == null ? -1 : inputPartitionLocations.length);
+        if (inputPartitionLocations != null) {
+            for (int i = 0; i < inputPartitionLocations.length; i++) {
+                if (inputPartitionLocations[i] != null) {
+                    output.writeInt(inputPartitionLocations[i].length);
+                    for (int j = 0; j < inputPartitionLocations[i].length; j++) {
+                        inputPartitionLocations[i][j].writeFields(output);
+                    }
+                } else {
+                    output.writeInt(-1);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void readFields(DataInput input) throws IOException {
+        taId = TaskAttemptId.create(input);
+        nPartitions = input.readInt();
+
+        int inputCount = input.readInt();
+        if (inputCount >= 0) {
+            nInputPartitions = new int[inputCount];
+            for (int i = 0; i < nInputPartitions.length; i++) {
+                nInputPartitions[i] = input.readInt();
+            }
+        }
+
+        int outputCount = input.readInt();
+        if (outputCount >= 0) {
+            nOutputPartitions = new int[outputCount];
+            for (int i = 0; i < nOutputPartitions.length; i++) {
+                nOutputPartitions[i] = input.readInt();
+            }
+        }
+
+        int addrCount = input.readInt();
+        if (addrCount >= 0) {
+            inputPartitionLocations = new NetworkAddress[addrCount][];
+            for (int i = 0; i < inputPartitionLocations.length; i++) {
+                int columns = input.readInt();
+                if (columns >= 0) {
+                    inputPartitionLocations[i] = new NetworkAddress[columns];
+                    for (int j = 0; j < columns; j++) {
+                        inputPartitionLocations[i][j] = NetworkAddress.create(input);
+                    }
+                }
+            }
+        }
     }
 }

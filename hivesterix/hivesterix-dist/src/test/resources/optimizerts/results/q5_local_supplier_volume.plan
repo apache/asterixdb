@@ -14,16 +14,16 @@ write [%0->$$48, %0->$$49]
                       nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
-          -- EXTERNAL_GROUP_BY[$$52]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$52]  |PARTITIONED|
             exchange 
-            -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+            -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$52(ASC)] HASH:[$$52]  |PARTITIONED|
               group by ([$$52 := %0->$$42]) decor ([]) {
                         aggregate [$$51] <- [function-call: hive:sum(PARTIAL1), Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFOPMultiply, Args:[%0->$$23, function-call: hive:org.apache.hadoop.hive.ql.udf.UDFOPMinus, Args:[1, %0->$$24]]]]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- EXTERNAL_GROUP_BY[$$42]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$42]  |PARTITIONED|
                 exchange 
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   project ([$$42, $$23, $$24])

@@ -92,4 +92,28 @@ public class DefaultMessageCombiner<I extends WritableComparable, M extends Writ
         }
         return size;
     }
+
+    @Override
+    public int estimateAccumulatedStateByteSizePartial2(I vertexIndex, MsgList partialAggregate)
+            throws HyracksDataException {
+        int size = accumulatedSize;
+        for (int i = 0; i < partialAggregate.size(); i++) {
+            size += ((M) partialAggregate.get(i)).sizeInBytes();
+        }
+        return size;
+    }
+
+    @Override
+    public void stepPartial2(I vertexIndex, MsgList partialAggregate) throws HyracksDataException {
+        msgList.addAllElements(partialAggregate);
+        for (int i = 0; i < partialAggregate.size(); i++) {
+            accumulatedSize += ((M) partialAggregate.get(i)).sizeInBytes();
+        }
+    }
+
+    @Override
+    public MsgList finishPartial2() {
+        msgList.setSegmentEnd(false);
+        return msgList;
+    }
 }

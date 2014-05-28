@@ -18,11 +18,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
@@ -71,24 +67,6 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
             ccs.getActiveRunMap().remove(jobId);
             ccs.getRunMapArchive().put(jobId, run);
             ccs.getRunHistory().put(jobId, run.getExceptions());
-            try {
-                ccs.getJobLogFile().log(createJobLogObject(run));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
         }
-    }
-
-    private JSONObject createJobLogObject(final JobRun run) {
-        JSONObject jobLogObject = new JSONObject();
-        try {
-            ActivityClusterGraph acg = run.getActivityClusterGraph();
-            jobLogObject.put("activity-cluster-graph", acg.toJSON());
-            jobLogObject.put("job-run", run.toJSON());
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        return jobLogObject;
     }
 }
