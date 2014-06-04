@@ -720,7 +720,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         @Override
         public ILogicalOperator visitUnnestOperator(UnnestOperator op, Void arg) throws AlgebricksException {
             return new UnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
-                    op.getPositionalVariable(), op.getPositionalVariableType());
+                    op.getPositionalVariable(), op.getPositionalVariableType(), op.getPositionWriter());
         }
 
         @Override

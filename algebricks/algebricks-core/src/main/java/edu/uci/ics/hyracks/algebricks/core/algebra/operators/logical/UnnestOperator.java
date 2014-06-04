@@ -26,6 +26,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvi
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
+import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
 
 public class UnnestOperator extends AbstractUnnestOperator {
 
@@ -37,6 +38,11 @@ public class UnnestOperator extends AbstractUnnestOperator {
     private ILogicalExpression positionOffsetExpr;
 
     /**
+     * Specify the writer of the positional variable
+     */
+    private IUnnestingPositionWriter positionWriter;
+
+    /**
      * Specify the type of the positional variable
      */
     private Object positionalVariableType;
@@ -46,10 +52,11 @@ public class UnnestOperator extends AbstractUnnestOperator {
     }
 
     public UnnestOperator(LogicalVariable variable, Mutable<ILogicalExpression> expression,
-            LogicalVariable positionalVariable, Object positionalVariableType) {
+            LogicalVariable positionalVariable, Object positionalVariableType, IUnnestingPositionWriter positionWriter) {
         this(variable, expression);
         this.setPositionalVariable(positionalVariable);
         this.setPositionalVariableType(positionalVariableType);
+        this.setPositionWriter(positionWriter);
     }
 
     @Override
@@ -67,6 +74,14 @@ public class UnnestOperator extends AbstractUnnestOperator {
 
     public LogicalVariable getPositionalVariable() {
         return positionalVariable;
+    }
+
+    public void setPositionWriter(IUnnestingPositionWriter positionWriter) {
+        this.positionWriter = positionWriter;
+    }
+
+    public IUnnestingPositionWriter getPositionWriter() {
+        return positionalVariable != null ? positionWriter : null;
     }
 
     public void setPositionalVariableType(Object positionalVariableType) {
