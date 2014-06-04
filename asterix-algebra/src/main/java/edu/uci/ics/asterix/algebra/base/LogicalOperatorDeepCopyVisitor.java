@@ -400,7 +400,7 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
         UnnestOperator opCopy = new UnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
