@@ -23,7 +23,11 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
-        rCtx = new RuntimeContext(ncAppCtx);
+        int vFrameSize = 65536;
+        if(args.length >0){
+            vFrameSize = Integer.parseInt(args[0]);
+        }
+        rCtx = new RuntimeContext(ncAppCtx, vFrameSize);
         ncAppCtx.setApplicationObject(rCtx);
     }
 

@@ -66,8 +66,8 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         }
     };
 
-    public RuntimeContext(INCApplicationContext appCtx) {
-        int pageSize = 64 * 1024;
+    public RuntimeContext(INCApplicationContext appCtx, int vFrameSize) {
+        int pageSize = vFrameSize;
         long memSize = Runtime.getRuntime().maxMemory();
         long bufferSize = memSize / 4;
         int numPages = (int) (bufferSize / pageSize);

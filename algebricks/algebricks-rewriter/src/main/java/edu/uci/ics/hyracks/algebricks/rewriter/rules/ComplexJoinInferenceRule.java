@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -76,6 +77,7 @@ public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
         }
 
         ntsToEtsInSubplan(subplan, context);
+        cleanupJoins(subplan);
         InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
         join.getInputs().add(opRef3);
         opRef2.setValue(OperatorManipulationUtil.eliminateSingleSubplanOverEts(subplan));
@@ -88,6 +90,30 @@ public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
+    }
+
+    private static void cleanupJoins(SubplanOperator s) {
+        for (ILogicalPlan p : s.getNestedPlans()) {
+            for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                cleanupJoins(r);
+            }
+        }
+    }
+
+    /** clean up joins that have one input branch that is empty tuple source */
+    private static void cleanupJoins(Mutable<ILogicalOperator> opRef) {
+        if (opRef.getValue() instanceof AbstractBinaryJoinOperator) {
+            for (Mutable<ILogicalOperator> inputRef : opRef.getValue().getInputs()) {
+                if (inputRef.getValue().getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                    opRef.getValue().getInputs().remove(inputRef);
+                    opRef.setValue(opRef.getValue().getInputs().get(0).getValue());
+                    break;
+                }
+            }
+        }
+        for (Mutable<ILogicalOperator> inputRef : opRef.getValue().getInputs()) {
+            cleanupJoins(inputRef);
+        }
     }
 
     private static void ntsToEtsInSubplan(SubplanOperator s, IOptimizationContext context) throws AlgebricksException {

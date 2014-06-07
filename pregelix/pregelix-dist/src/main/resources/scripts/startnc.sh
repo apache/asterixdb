@@ -96,7 +96,7 @@ export JAVA_OPTS=$NCJAVA_OPTS" -Xmx"$MEM_SIZE
 cmd=( "${PREGELIX_HOME}/bin/pregelixnc" )
 cmd+=( -cc-host $CCHOST -cc-port $CC_CLUSTERPORT 
 	   -cluster-net-ip-address $IPADDR -data-ip-address $IPADDR -result-ip-address $IPADDR
-	   -node-id $NODEID -iodevices "${IO_DIRS}" -net-buffer-count 5 );
+	   -node-id $NODEID -iodevices "${IO_DIRS}" -net-buffer-count 5 -- ${VFRAME_SIZE});
 
 printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "${cmd[*]}" >> "$NCLOGS_DIR/$NODEID.log"
 ${cmd[@]} >> "$NCLOGS_DIR/$NODEID.log" 2>&1 &

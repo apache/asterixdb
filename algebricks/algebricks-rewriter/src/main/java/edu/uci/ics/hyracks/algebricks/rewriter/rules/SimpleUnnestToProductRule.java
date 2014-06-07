@@ -63,19 +63,42 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        InnerJoinOperator product = new InnerJoinOperator(
-                new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        /**
+         * finding the boundary between left branch and right branch
+         * operator pipeline on-top-of boundaryOpRef (exclusive) is the inner branch
+         * operator pipeline under boundaryOpRef (inclusive) is the outer branch
+         */
+        Mutable<ILogicalOperator> currentOpRef = opRef;
+        Mutable<ILogicalOperator> boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
+        while (currentOpRef.getValue().getInputs().size() == 1) {
+            currentOpRef = currentOpRef.getValue().getInputs().get(0);
+        }
+        Mutable<ILogicalOperator> tupleSourceOpRef = currentOpRef;
+        currentOpRef = opRef;
+        if (tupleSourceOpRef.getValue().getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            while (currentOpRef.getValue().getInputs().size() == 1
+                    && currentOpRef.getValue() instanceof AbstractScanOperator
+                    && descOrSelfIsSourceScan((AbstractLogicalOperator) currentOpRef.getValue())) {
+                if (opsAreIndependent(currentOpRef.getValue(), tupleSourceOpRef.getValue())) {
+                    /** move down the boundary if the operator is independent of the tuple source */
+                    boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
+                } else {
+                    break;
+                }
+                currentOpRef = currentOpRef.getValue().getInputs().get(0);
+            }
+        }
 
-        EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
-        context.computeAndSetTypeEnvironmentForOperator(ets);
-        Mutable<ILogicalOperator> emptySrc = new MutableObject<ILogicalOperator>(ets);
-        List<Mutable<ILogicalOperator>> opInpList = op.getInputs();
-        opInpList.clear();
-        opInpList.add(emptySrc);
-        product.getInputs().add(opRef2); // outer branch
-        product.getInputs().add(new MutableObject<ILogicalOperator>(op));
-        opRef.setValue(product); // plug the product in the plan
-        context.computeAndSetTypeEnvironmentForOperator(product);
+        /** join the two independent branches */
+        InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE),
+                new MutableObject<ILogicalOperator>(boundaryOpRef.getValue()), new MutableObject<ILogicalOperator>(
+                        opRef.getValue()));
+        opRef.setValue(join);
+        ILogicalOperator ets = new EmptyTupleSourceOperator();
+        boundaryOpRef.setValue(ets);
+        context.computeAndSetTypeEnvironmentForOperator(boundaryOpRef.getValue());
+        context.computeAndSetTypeEnvironmentForOperator(opRef.getValue());
+        context.computeAndSetTypeEnvironmentForOperator(join);
         return true;
     }
 
@@ -98,6 +121,9 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
     }
 
     private boolean opsAreIndependent(ILogicalOperator unnestOp, ILogicalOperator outer) throws AlgebricksException {
+        if (unnestOp.equals(outer)) {
+            return false;
+        }
         List<LogicalVariable> opUsedVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getUsedVariables(unnestOp, opUsedVars);
         Set<LogicalVariable> op2LiveVars = new HashSet<LogicalVariable>();
