@@ -1,0 +1,11 @@
+{ "nation_key": 1, "name": "ARGENTINA", "aggregates": [ { "order_date": "1997-08-14", "sum_price": 16763.95d }, { "order_date": "1997-11-26", "sum_price": 18653.09d }, { "order_date": "1998-04-20", "sum_price": 24637.96d } ] }
+{ "nation_key": 2, "name": "BRAZIL", "aggregates": [  ] }
+{ "nation_key": 19, "name": "ROMANIA", "aggregates": [  ] }
+{ "nation_key": 21, "name": "VIETNAM", "aggregates": [  ] }
+{ "nation_key": 3, "name": "CANADA", "aggregates": [ { "order_date": "1992-02-22", "sum_price": 1084.38d }, { "order_date": "1992-11-28", "sum_price": 4766.19d }, { "order_date": "1995-02-17", "sum_price": 4913.06d } ] }
+{ "nation_key": 23, "name": "UNITED KINGDOM", "aggregates": [  ] }
+{ "nation_key": 4, "name": "EGYPT", "aggregates": [ { "order_date": "1998-04-19", "sum_price": 3089.42d }, { "order_date": "1996-03-12", "sum_price": 3892.77d }, { "order_date": "1997-07-25", "sum_price": 11405.4d } ] }
+{ "nation_key": 22, "name": "RUSSIA", "aggregates": [  ] }
+{ "nation_key": 24, "name": "UNITED STATES", "aggregates": [  ] }
+{ "nation_key": 0, "name": "ALGERIA", "aggregates": [ { "order_date": "1994-05-27", "sum_price": 1051.15d }, { "order_date": "1994-05-08", "sum_price": 4819.91d }, { "order_date": "1993-08-27", "sum_price": 10500.27d } ] }
+{ "nation_key": 20, "name": "SAUDI ARABIA", "aggregates": [  ] }

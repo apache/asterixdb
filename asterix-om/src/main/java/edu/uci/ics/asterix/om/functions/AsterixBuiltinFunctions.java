@@ -653,6 +653,8 @@ public class AsterixBuiltinFunctions {
     public static final FunctionIdentifier NUMERIC_ADD = AlgebricksBuiltinFunctions.NUMERIC_ADD;
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
 
+    public static final FunctionIdentifier IS_SYSTEM_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "is-system-null", 1);;
     public static final FunctionIdentifier NOT_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "not-null",
             1);
     public static final FunctionIdentifier COLLECTION_TO_SEQUENCE = new FunctionIdentifier(
@@ -670,6 +672,7 @@ public class AsterixBuiltinFunctions {
 
         // first, take care of Algebricks builtin functions
         addFunction(IS_NULL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_SYSTEM_NULL, ABooleanTypeComputer.INSTANCE, true);
         addFunction(NOT, UnaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
 
         addPrivateFunction(EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);

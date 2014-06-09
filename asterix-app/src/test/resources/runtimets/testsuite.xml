@@ -4292,6 +4292,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
+      <compilation-unit name="nest_aggregate">
+        <output-dir compare="Text">nest_aggregate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="q10_returned_item">
         <output-dir compare="Text">q10_returned_item</output-dir>
       </compilation-unit>

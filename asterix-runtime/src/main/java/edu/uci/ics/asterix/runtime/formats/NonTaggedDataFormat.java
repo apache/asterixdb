@@ -186,6 +186,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.HashedGramTokensDescript
 import edu.uci.ics.asterix.runtime.evaluators.functions.HashedWordTokensDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.IsNullDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.IsSystemNullDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.LenDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.LikeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NotDescriptor;
@@ -394,6 +395,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericModuloDescriptor.FACTORY);
         temp.add(NumericCaretDescriptor.FACTORY);
         temp.add(IsNullDescriptor.FACTORY);
+        temp.add(IsSystemNullDescriptor.FACTORY);
         temp.add(NotDescriptor.FACTORY);
         temp.add(LenDescriptor.FACTORY);
         temp.add(EmptyStreamAggregateDescriptor.FACTORY);
