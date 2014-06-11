@@ -41,6 +41,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeR
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -666,7 +667,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
 
         @Override
         public ILogicalOperator visitSelectOperator(SelectOperator op, Void arg) throws AlgebricksException {
-            return new SelectOperator(deepCopyExpressionRef(op.getCondition()), op.getRetainNull(), op.getNullPlaceholderVariable());
+            return new SelectOperator(deepCopyExpressionRef(op.getCondition()), op.getRetainNull(),
+                    op.getNullPlaceholderVariable());
         }
 
         @Override
@@ -824,6 +826,21 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         public ILogicalOperator visitExtensionOperator(ExtensionOperator op, Void arg) throws AlgebricksException {
             return new ExtensionOperator(op.getNewInstanceOfDelegateOperator());
         }
+
+        @Override
+        public ILogicalOperator visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg)
+                throws AlgebricksException {
+            ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
+            newInputList.addAll(op.getVariables());
+            return new ExternalDataLookupOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
+                    new ArrayList<Object>(op.getVariableTypes()), op.isPropagateInput());
+        }
+    }
+
+    @Override
+    public Boolean visitExternalDataLookupOperator(ExternalDataLookupOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        return Boolean.FALSE;
     }
 
 }

@@ -202,4 +202,9 @@ public class InMemoryInvertedIndex implements IInvertedIndex {
     public IBinaryComparatorFactory[] getTokenCmpFactories() {
         return tokenCmpFactories;
     }
+
+    @Override
+    public boolean hasMemoryComponents() {
+        return true;
+    }
 }

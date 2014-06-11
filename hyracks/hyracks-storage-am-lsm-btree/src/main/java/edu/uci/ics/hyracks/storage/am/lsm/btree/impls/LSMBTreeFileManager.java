@@ -17,6 +17,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -78,16 +81,19 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
 
+        // create transaction filter <to hide transaction files>
+        FilenameFilter transactionFilter = getTransactionFileFilter(false);
+
         // Gather files
 
         // List of valid BTree files.
-        cleanupAndGetValidFilesInternal(btreeFilter, btreeFactory, allBTreeFiles);
+        cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles);
         HashSet<String> btreeFilesSet = new HashSet<String>();
         for (ComparableFileName cmpFileName : allBTreeFiles) {
             int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
             btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
-        validateFiles(btreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+        validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(transactionFilter, bloomFilterFilter), null);
 
         // Sanity check.
         if (allBTreeFiles.size() != allBloomFilterFiles.size()) {
@@ -158,5 +164,60 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         return validFiles;
+    }
+
+    @Override
+    public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
+        Date date = new Date();
+        String ts = formatter.format(date);
+        // Create transaction lock file
+        Files.createFile(Paths.get(baseDir + TRANSACTION_PREFIX + ts));
+
+        String baseName = baseDir + ts + SPLIT_STRING + ts;
+        // Begin timestamp and end timestamp are identical since it is a transaction
+        return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING), null,
+                createFlushFile(baseName + SPLIT_STRING + BLOOM_FILTER_STRING));
+    }
+
+    @Override
+    public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException {
+        FilenameFilter transactionFilter;
+        File dir = new File(baseDir);
+        String[] files = dir.list(transactionFileNameFilter);
+        if (files.length == 0) {
+            return null;
+        }
+        if (files.length != 1) {
+            throw new HyracksDataException("More than one transaction lock found:" + files.length);
+        } else {
+            transactionFilter = getTransactionFileFilter(true);
+            String txnFileName = dir.getPath() + File.separator + files[0];
+            // get the actual transaction files
+            files = dir.list(transactionFilter);
+            if (files.length < 2) {
+                throw new HyracksDataException("LSM Btree transaction has less than 2 files :" + files.length);
+            }
+            try {
+                Files.delete(Paths.get(txnFileName));
+            } catch (IOException e) {
+                throw new HyracksDataException("Failed to delete transaction lock :" + txnFileName);
+            }
+        }
+        File bTreeFile = null;
+        File bloomFilterFile = null;
+
+        for (String fileName : files) {
+            if (fileName.endsWith(BTREE_STRING)) {
+                bTreeFile = new File(dir.getPath() + File.separator + fileName);
+            } else if (fileName.endsWith(BLOOM_FILTER_STRING)) {
+                bloomFilterFile = new File(dir.getPath() + File.separator + fileName);
+            } else {
+                throw new HyracksDataException("unrecognized file found = " + fileName);
+            }
+        }
+        FileReference bTreeFileRef = new FileReference(bTreeFile);
+        FileReference bloomFilterFileRef = new FileReference(bloomFilterFile);
+
+        return new LSMComponentFileReferences(bTreeFileRef, null, bloomFilterFileRef);
     }
 }

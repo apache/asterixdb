@@ -75,17 +75,17 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
 
     // For creating BTree's used in flush and merge.
-    private final LSMBTreeDiskComponentFactory componentFactory;
+    protected final LSMBTreeDiskComponentFactory componentFactory;
     // For creating BTree's used in bulk load. Different from diskBTreeFactory
     // because it should have a different tuple writer in it's leaf frames.
-    private final LSMBTreeDiskComponentFactory bulkLoadComponentFactory;
+    protected final LSMBTreeDiskComponentFactory bulkLoadComponentFactory;
 
     // Common for in-memory and on-disk components.
-    private final ITreeIndexFrameFactory insertLeafFrameFactory;
-    private final ITreeIndexFrameFactory deleteLeafFrameFactory;
-    private final IBinaryComparatorFactory[] cmpFactories;
+    protected final ITreeIndexFrameFactory insertLeafFrameFactory;
+    protected final ITreeIndexFrameFactory deleteLeafFrameFactory;
+    protected final IBinaryComparatorFactory[] cmpFactories;
 
-    private final boolean needKeyDupCheck;
+    protected final boolean needKeyDupCheck;
 
     public LSMBTree(List<IVirtualBufferCache> virtualBufferCaches, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory insertLeafFrameFactory, ITreeIndexFrameFactory deleteLeafFrameFactory,
@@ -107,6 +107,24 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ++i;
         }
 
+        this.insertLeafFrameFactory = insertLeafFrameFactory;
+        this.deleteLeafFrameFactory = deleteLeafFrameFactory;
+        this.cmpFactories = cmpFactories;
+        componentFactory = new LSMBTreeDiskComponentFactory(diskBTreeFactory, bloomFilterFactory);
+        bulkLoadComponentFactory = new LSMBTreeDiskComponentFactory(bulkLoadBTreeFactory, bloomFilterFactory);
+        this.needKeyDupCheck = needKeyDupCheck;
+    }
+
+    // Without memory components
+    public LSMBTree(ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory insertLeafFrameFactory,
+            ITreeIndexFrameFactory deleteLeafFrameFactory, ILSMIndexFileManager fileManager,
+            TreeIndexFactory<BTree> diskBTreeFactory, TreeIndexFactory<BTree> bulkLoadBTreeFactory,
+            BloomFilterFactory bloomFilterFactory, double bloomFilterFalsePositiveRate,
+            IFileMapProvider diskFileMapProvider, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallback ioOpCallback, boolean needKeyDupCheck) {
+        super(diskBTreeFactory.getBufferCache(), fileManager, diskFileMapProvider, bloomFilterFalsePositiveRate,
+                mergePolicy, opTracker, ioScheduler, ioOpCallback);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;
@@ -489,8 +507,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         return mergedComponent;
     }
 
-    private LSMBTreeDiskComponent createDiskComponent(LSMBTreeDiskComponentFactory factory, FileReference btreeFileRef,
-            FileReference bloomFilterFileRef, boolean createComponent) throws HyracksDataException, IndexException {
+    protected LSMBTreeDiskComponent createDiskComponent(LSMBTreeDiskComponentFactory factory,
+            FileReference btreeFileRef, FileReference bloomFilterFileRef, boolean createComponent)
+            throws HyracksDataException, IndexException {
         // Create new BTree instance.
         LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) factory
                 .createLSMComponentInstance(new LSMComponentFileReferences(btreeFileRef, null, bloomFilterFileRef));
@@ -514,7 +533,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         }
     }
 
-    private ILSMComponent createBulkLoadTarget() throws HyracksDataException, IndexException {
+    protected ILSMComponent createBulkLoadTarget() throws HyracksDataException, IndexException {
         LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
         return createDiskComponent(bulkLoadComponentFactory, componentFileRefs.getInsertIndexFileReference(),
                 componentFileRefs.getBloomFilterFileReference(), true);

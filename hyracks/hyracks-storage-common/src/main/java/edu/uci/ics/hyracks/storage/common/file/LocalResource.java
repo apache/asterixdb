@@ -28,6 +28,9 @@ public class LocalResource implements Serializable {
     public static final int LSMBTreeResource = 1;
     public static final int LSMRTreeResource = 2;
     public static final int LSMInvertedIndexResource = 3;
+    public static final int ExternalBTreeResource = 4;
+    public static final int ExternalRTreeResource = 5;
+    public static final int ExternalBTreeWithBuddyResource = 6;
 
     public LocalResource(long resourceId, String resourceName, int partition, int resourceType, Object object) {
         this.resourceId = resourceId;

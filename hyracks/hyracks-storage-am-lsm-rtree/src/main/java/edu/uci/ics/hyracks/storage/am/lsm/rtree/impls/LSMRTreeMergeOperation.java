@@ -37,6 +37,7 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     private final FileReference bloomFilterMergeTarget;
     private final ILSMIOOperationCallback callback;
     private final String indexIdentifier;
+    private boolean keepDeletedTuples;
 
     public LSMRTreeMergeOperation(ILSMIndexAccessorInternal accessor, List<ILSMComponent> mergingComponents,
             ITreeIndexCursor cursor, FileReference rtreeMergeTarget, FileReference btreeMergeTarget,
@@ -115,5 +116,13 @@ public class LSMRTreeMergeOperation implements ILSMIOOperation {
     @Override
     public LSMIOOpertionType getIOOpertionType() {
         return LSMIOOpertionType.MERGE;
+    }
+
+    public boolean isKeepDeletedTuples() {
+        return keepDeletedTuples;
+    }
+
+    public void setKeepDeletedTuples(boolean keepDeletedTuples) {
+        this.keepDeletedTuples = keepDeletedTuples;
     }
 }

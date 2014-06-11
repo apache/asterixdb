@@ -17,6 +17,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,6 +44,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     protected static final String SPLIT_STRING = "_";
     protected static final String BLOOM_FILTER_STRING = "f";
+    protected static final String TRANSACTION_PREFIX = ".T";
 
     protected final IFileMapProvider fileMapProvider;
 
@@ -256,6 +260,22 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return baseDir;
     }
 
+    public void recoverTransaction() throws HyracksDataException {
+        File dir = new File(baseDir);
+        String[] files = dir.list(transactionFileNameFilter);
+        try {
+            if (files.length == 0) {
+                // Do nothing
+            } else if (files.length > 1) {
+                throw new HyracksDataException("Found more than one transaction");
+            } else {
+                Files.delete(Paths.get(dir.getPath() + File.separator + files[0]));
+            }
+        } catch (IOException e) {
+            throw new HyracksDataException("Failed to recover transaction", e);
+        }
+    }
+
     protected class ComparableFileName implements Comparable<ComparableFileName> {
         public final FileReference fileRef;
         public final String fullPath;
@@ -290,5 +310,91 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             }
             return -a.interval[1].compareTo(b.interval[1]);
         }
+    }
+
+    // This function is used to delete transaction files for aborted transactions
+    @Override
+    public void deleteTransactionFiles() throws HyracksDataException {
+        File dir = new File(baseDir);
+        String[] files = dir.list(transactionFileNameFilter);
+        if (files.length == 0) {
+            // Do nothing
+        } else if (files.length > 1) {
+            throw new HyracksDataException("Found more than one transaction");
+        } else {
+            //create transaction filter
+            FilenameFilter transactionFilter = createTransactionFilter(files[0], true);
+            String[] componentsFiles = dir.list(transactionFilter);
+            for (String fileName : componentsFiles) {
+                try {
+                    String absFileName = dir.getPath() + File.separator + fileName;
+                    Files.delete(Paths.get(absFileName));
+                } catch (IOException e) {
+                    throw new HyracksDataException("Failed to delete transaction files", e);
+                }
+            }
+            // delete the txn lock file
+            String absFileName = dir.getPath() + File.separator + files[0];
+            try {
+                Files.delete(Paths.get(absFileName));
+            } catch (IOException e) {
+                throw new HyracksDataException("Failed to delete transaction files", e);
+            }
+        }
+    }
+
+    @Override
+    public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
+        return null;
+    }
+
+    @Override
+    public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException {
+        return null;
+    }
+
+    protected static FilenameFilter transactionFileNameFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return name.startsWith(".T");
+        }
+    };
+
+    protected static FilenameFilter dummyFilter = new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+            return true;
+        }
+    };
+
+    protected static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
+        final String timeStamp = transactionFileName.substring(transactionFileName.indexOf(TRANSACTION_PREFIX)
+                + TRANSACTION_PREFIX.length());
+        return new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                if (inclusive) {
+                    return name.startsWith(timeStamp);
+                } else {
+                    return !name.startsWith(timeStamp);
+                }
+            }
+        };
+    }
+
+    protected FilenameFilter getTransactionFileFilter(boolean inclusive) {
+        File dir = new File(baseDir);
+        String[] files = dir.list(transactionFileNameFilter);
+        if (files.length == 0) {
+            return dummyFilter;
+        } else {
+            return createTransactionFilter(files[0], inclusive);
+        }
+    }
+
+    protected FilenameFilter getCompoundFilter(final FilenameFilter filter1, final FilenameFilter filter2) {
+        return new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return (filter1.accept(dir, name) && filter2.accept(dir, name));
+            }
+        };
     }
 }

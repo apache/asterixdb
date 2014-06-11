@@ -122,4 +122,10 @@ public interface IIndex {
      */
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex) throws IndexException;
+    
+    /**
+     * 
+     * @return true if the index needs memory components
+     */
+    public boolean hasMemoryComponents();
 }

@@ -337,6 +337,14 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             interiorFrame.initBuffer((byte) nodeFrontiers.size());
             nodeFrontiers.add(frontier);
         }
+
+        public ITreeIndexFrame getLeafFrame() {
+            return leafFrame;
+        }
+
+        public void setLeafFrame(ITreeIndexFrame leafFrame) {
+            this.leafFrame = leafFrame;
+        }
     }
 
     public class TreeIndexInsertBulkLoader implements IIndexBulkLoader {
@@ -366,5 +374,14 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public long getMemoryAllocationSize() {
         return 0;
+    }
+
+    public IBinaryComparatorFactory[] getCmpFactories() {
+        return cmpFactories;
+    }
+    
+    @Override
+    public boolean hasMemoryComponents() {
+        return true;
     }
 }

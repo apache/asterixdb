@@ -23,7 +23,7 @@ public class TypeAwareTupleWriterFactory implements
 		ITreeIndexTupleWriterFactory {
 
 	private static final long serialVersionUID = 1L;
-	private ITypeTraits[] typeTraits;
+	protected ITypeTraits[] typeTraits;
 
 	public TypeAwareTupleWriterFactory(ITypeTraits[] typeTraits) {
 		this.typeTraits = typeTraits;

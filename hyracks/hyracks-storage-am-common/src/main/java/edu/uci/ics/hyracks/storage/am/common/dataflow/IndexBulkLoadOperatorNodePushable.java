@@ -29,18 +29,18 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
-    private final IIndexOperatorDescriptor opDesc;
-    private final IHyracksTaskContext ctx;
-    private final float fillFactor;
-    private final boolean verifyInput;
-    private final long numElementsHint;
-    private final boolean checkIfEmptyIndex;
-    private final IIndexDataflowHelper indexHelper;
-    private FrameTupleAccessor accessor;
-    private IIndex index;
-    private IIndexBulkLoader bulkLoader;
-    private IRecordDescriptorProvider recDescProvider;
-    private PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
+    protected final IIndexOperatorDescriptor opDesc;
+    protected final IHyracksTaskContext ctx;
+    protected final float fillFactor;
+    protected final boolean verifyInput;
+    protected final long numElementsHint;
+    protected final boolean checkIfEmptyIndex;
+    protected final IIndexDataflowHelper indexHelper;
+    protected FrameTupleAccessor accessor;
+    protected IIndex index;
+    protected IIndexBulkLoader bulkLoader;
+    protected IRecordDescriptorProvider recDescProvider;
+    protected PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
 
     public IndexBulkLoadOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,

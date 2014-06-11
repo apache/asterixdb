@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
 public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
-    private final boolean isAntimatter;
+    private boolean isAntimatter;
     private final int numKeyFields;
 
     public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter) {
@@ -77,5 +77,10 @@ public class LSMBTreeTupleWriter extends TypeAwareTupleWriter {
     private void setAntimatterBit(byte[] targetBuf, int targetOff) {
         // Set leftmost bit to 1.
         targetBuf[targetOff] = (byte) (targetBuf[targetOff] | (1 << 7));
+    }
+
+    // Allow using the same writer for both delete and insert tuples
+    public void setAntimatter(boolean isAntimatter) {
+        this.isAntimatter = isAntimatter;
     }
 }

@@ -39,10 +39,10 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 public class LSMHarness implements ILSMHarness {
     private static final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
 
-    private final ILSMIndexInternal lsmIndex;
-    private final ILSMMergePolicy mergePolicy;
-    private final ILSMOperationTracker opTracker;
-    private final AtomicBoolean fullMergeIsRequested;
+    protected final ILSMIndexInternal lsmIndex;
+    protected final ILSMMergePolicy mergePolicy;
+    protected final ILSMOperationTracker opTracker;
+    protected final AtomicBoolean fullMergeIsRequested;
 
     public LSMHarness(ILSMIndexInternal lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker) {
         this.lsmIndex = lsmIndex;
@@ -51,7 +51,7 @@ public class LSMHarness implements ILSMHarness {
         fullMergeIsRequested = new AtomicBoolean();
     }
 
-    private boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
+    protected boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
             throws HyracksDataException {
         synchronized (opTracker) {
             while (true) {
@@ -90,7 +90,7 @@ public class LSMHarness implements ILSMHarness {
         }
     }
 
-    private boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException {
+    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException {
         List<ILSMComponent> components = ctx.getComponentHolder();
         int numEntered = 0;
         boolean entranceSuccessful = false;
@@ -217,7 +217,7 @@ public class LSMHarness implements ILSMHarness {
         return modify(ctx, tryOperation, tuple, opType);
     }
 
-    private boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
+    protected boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
             LSMOperationType opType) throws HyracksDataException, IndexException {
         if (!getAndEnterComponents(ctx, opType, tryOperation)) {
             return false;

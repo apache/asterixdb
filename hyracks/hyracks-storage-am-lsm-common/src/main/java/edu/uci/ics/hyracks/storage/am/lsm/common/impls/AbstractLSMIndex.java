@@ -27,7 +27,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
@@ -82,6 +81,26 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         for (int i = 0; i < virtualBufferCaches.size(); i++) {
             flushRequests[i] = new AtomicBoolean();
         }
+    }
+
+    // The constructor used by external indexes
+    public AbstractLSMIndex(IBufferCache diskBufferCache, ILSMIndexFileManager fileManager,
+            IFileMapProvider diskFileMapProvider, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback) {
+        this.diskBufferCache = diskBufferCache;
+        this.diskFileMapProvider = diskFileMapProvider;
+        this.fileManager = fileManager;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
+        this.ioScheduler = ioScheduler;
+        this.ioOpCallback = ioOpCallback;
+        lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker);
+        isActivated = false;
+        diskComponents = new LinkedList<ILSMComponent>();
+        // Memory related objects are nulled
+        this.virtualBufferCaches = null;
+        memoryComponents = null;
+        currentMutableComponentId = null;
+        flushRequests = null;
     }
 
     protected void forceFlushDirtyPages(ITreeIndex treeIndex) throws HyracksDataException {
@@ -147,12 +166,13 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     }
 
     @Override
-    public void addComponent(ILSMComponent c) {
+    public void addComponent(ILSMComponent c) throws HyracksDataException {
         diskComponents.add(0, c);
     }
 
     @Override
-    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) {
+    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents)
+            throws HyracksDataException {
         int swapIndex = diskComponents.indexOf(mergedComponents.get(0));
         diskComponents.removeAll(mergedComponents);
         diskComponents.add(swapIndex, newComponent);
@@ -214,5 +234,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public String toString() {
         return "LSMIndex [" + fileManager.getBaseDir() + "]";
+    }
+    
+    @Override
+    public boolean hasMemoryComponents() {
+        return true;
     }
 }

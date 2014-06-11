@@ -35,11 +35,11 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
 
     private static final long serialVersionUID = 1L;
 
-    private final IBinaryComparatorFactory[] btreeComparatorFactories;
-    private final IPrimitiveValueProviderFactory[] valueProviderFactories;
-    private final RTreePolicyType rtreePolicyType;
-    private final ILinearizeComparatorFactory linearizeCmpFactory;
-    private final int[] btreeFields;
+    protected final IBinaryComparatorFactory[] btreeComparatorFactories;
+    protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
+    protected final RTreePolicyType rtreePolicyType;
+    protected final ILinearizeComparatorFactory linearizeCmpFactory;
+    protected final int[] btreeFields;
 
     public LSMRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,

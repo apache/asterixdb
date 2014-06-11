@@ -45,9 +45,9 @@ public interface ILSMIndexInternal extends ILSMIndex {
 
     public ILSMComponent merge(ILSMIOOperation operation) throws HyracksDataException, IndexException;
 
-    public void addComponent(ILSMComponent index);
+    public void addComponent(ILSMComponent index) throws HyracksDataException;
 
-    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents);
+    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) throws HyracksDataException;
 
     public void changeMutableComponent();
 
@@ -64,5 +64,4 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
-
 }
