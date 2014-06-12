@@ -48,6 +48,8 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
@@ -63,6 +65,7 @@ import edu.uci.ics.asterix.metadata.entitytupletranslators.DatasetTupleTranslato
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DatasourceAdapterTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DatatypeTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.DataverseTupleTranslator;
+import edu.uci.ics.asterix.metadata.entitytupletranslators.ExternalFileTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.FeedActivityTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.FeedPolicyTupleTranslator;
 import edu.uci.ics.asterix.metadata.entitytupletranslators.FeedTupleTranslator;
@@ -77,6 +80,7 @@ import edu.uci.ics.asterix.metadata.valueextractors.DatatypeNameValueExtractor;
 import edu.uci.ics.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
 import edu.uci.ics.asterix.metadata.valueextractors.NestedDatatypeNameValueExtractor;
 import edu.uci.ics.asterix.metadata.valueextractors.TupleCopyValueExtractor;
+import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.BuiltinType;
@@ -189,6 +193,13 @@ public class MetadataNode implements IMetadataNode {
                         dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), true, dataset.getPendingOp());
 
                 addIndex(jobId, primaryIndex);
+                // Add an entry for the node group
+                ITupleReference nodeGroupTuple = createTuple(id.getNodeGroupName(), dataset.getDataverseName(),
+                        dataset.getDatasetName());
+                insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
+            } else if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+                //added for external data
+                ExternalDatasetDetails id = (ExternalDatasetDetails) dataset.getDatasetDetails();
                 ITupleReference nodeGroupTuple = createTuple(id.getNodeGroupName(), dataset.getDataverseName(),
                         dataset.getDatasetName());
                 insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
@@ -417,20 +428,19 @@ public class MetadataNode implements IMetadataNode {
             }
 
             // Delete entry from secondary index 'group'.
-            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
-                ITupleReference groupNameSearchKey = createTuple(id.getNodeGroupName(), dataverseName, datasetName);
-                // Searches the index for the tuple to be deleted. Acquires an S
-                // lock on the GROUPNAME_ON_DATASET_INDEX index.
-                try {
-                    ITupleReference groupNameTuple = getTupleToBeDeleted(jobId,
-                            MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameSearchKey);
-                    deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
-                } catch (TreeIndexException tie) {
-                    // ignore this exception and continue deleting all relevant
-                    // artifacts.
-                }
+            ITupleReference groupNameSearchKey = createTuple(dataset.getDatasetDetails().getNodeGroupName(),
+                    dataverseName, datasetName);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the GROUPNAME_ON_DATASET_INDEX index.
+            try {
+                ITupleReference groupNameTuple = getTupleToBeDeleted(jobId,
+                        MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameSearchKey);
+                deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
+            } catch (TreeIndexException tie) {
+                // ignore this exception and continue deleting all relevant
+                // artifacts.
             }
+
             // Delete entry from secondary index 'type'.
             ITupleReference dataTypeSearchKey = createTuple(dataverseName, dataset.getItemTypeName(), datasetName);
             // Searches the index for the tuple to be deleted. Acquires an S
@@ -445,11 +455,22 @@ public class MetadataNode implements IMetadataNode {
             }
 
             // Delete entry(s) from the 'indexes' dataset.
-            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-                List<Index> datasetIndexes = getDatasetIndexes(jobId, dataverseName, datasetName);
-                if (datasetIndexes != null) {
-                    for (Index index : datasetIndexes) {
-                        dropIndex(jobId, dataverseName, datasetName, index.getIndexName());
+            List<Index> datasetIndexes = getDatasetIndexes(jobId, dataverseName, datasetName);
+            if (datasetIndexes != null) {
+                for (Index index : datasetIndexes) {
+                    dropIndex(jobId, dataverseName, datasetName, index.getIndexName());
+                }
+            }
+
+            if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+                // Delete External Files
+                // As a side effect, acquires an S lock on the 'ExternalFile' dataset
+                // on behalf of txnId.
+                List<ExternalFile> datasetFiles = getExternalFiles(jobId, dataset);
+                if (datasetFiles != null && datasetFiles.size() > 0) {
+                    // Drop all external files in this dataset.
+                    for (ExternalFile file : datasetFiles) {
+                        dropExternalFile(jobId, dataverseName, file.getDatasetName(), file.getFileNumber());
                     }
                 }
             }
@@ -1557,4 +1578,142 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
+    @Override
+    public void addExternalFile(JobId jobId, ExternalFile externalFile) throws MetadataException, RemoteException {
+        try {
+            // Insert into the 'externalFiles' dataset.
+            ExternalFileTupleTranslator tupleReaderWriter = new ExternalFileTupleTranslator(true);
+            ITupleReference externalFileTuple = tupleReaderWriter.getTupleFromMetadataEntity(externalFile);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, externalFileTuple);
+        } catch (TreeIndexDuplicateKeyException e) {
+            throw new MetadataException("An externalFile with this number " + externalFile.getFileNumber()
+                    + " already exists in dataset '" + externalFile.getDatasetName() + "' in dataverse '"
+                    + externalFile.getDataverseName() + "'.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public List<ExternalFile> getExternalFiles(JobId jobId, Dataset dataset) throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
+            ExternalFileTupleTranslator tupleReaderWriter = new ExternalFileTupleTranslator(false);
+            IValueExtractor<ExternalFile> valueExtractor = new MetadataEntityValueExtractor<ExternalFile>(
+                    tupleReaderWriter);
+            List<ExternalFile> results = new ArrayList<ExternalFile>();
+            searchIndex(jobId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, searchKey, valueExtractor, results);
+            return results;
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropExternalFile(JobId jobId, String dataverseName, String datasetName, int fileNumber)
+            throws MetadataException, RemoteException {
+        try {
+            // Delete entry from the 'ExternalFile' dataset.
+            ITupleReference searchKey = createExternalFileSearchTuple(dataverseName, datasetName, fileNumber);
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'ExternalFile' dataset.
+            ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET,
+                    searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, datasetTuple);
+        } catch (TreeIndexException e) {
+            throw new MetadataException("Couldn't drop externalFile.", e);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropExternalFiles(JobId jobId, Dataset dataset) throws MetadataException, RemoteException {
+        List<ExternalFile> files;
+        try {
+            files = getExternalFiles(jobId, dataset);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+        try {
+            //loop through files and delete them
+            for (int i = 0; i < files.size(); i++) {
+                dropExternalFile(jobId, files.get(i).getDataverseName(), files.get(i).getDatasetName(), files.get(i)
+                        .getFileNumber());
+            }
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    // This method is used to create a search tuple for external data file since the search tuple has an int value
+    @SuppressWarnings("unchecked")
+    public ITupleReference createExternalFileSearchTuple(String dataverseName, String datasetName, int fileNumber)
+            throws HyracksDataException {
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.AINT32);
+
+        AMutableString aString = new AMutableString("");
+        ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(3);
+
+        //dataverse field
+        aString.setValue(dataverseName);
+        stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+        tupleBuilder.addFieldEndOffset();
+
+        //dataset field
+        aString.setValue(datasetName);
+        stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+        tupleBuilder.addFieldEndOffset();
+
+        //file number field
+        intSerde.serialize(new AInt32(fileNumber), tupleBuilder.getDataOutput());
+        tupleBuilder.addFieldEndOffset();
+
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+        return tuple;
+    }
+
+    @Override
+    public ExternalFile getExternalFile(JobId jobId, String dataverseName, String datasetName, Integer fileNumber)
+            throws MetadataException, RemoteException {
+        try {
+            ITupleReference searchKey = createExternalFileSearchTuple(dataverseName, datasetName, fileNumber);
+            ExternalFileTupleTranslator tupleReaderWriter = new ExternalFileTupleTranslator(false);
+            IValueExtractor<ExternalFile> valueExtractor = new MetadataEntityValueExtractor<ExternalFile>(
+                    tupleReaderWriter);
+            List<ExternalFile> results = new ArrayList<ExternalFile>();
+            searchIndex(jobId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void updateDataset(JobId jobId, Dataset dataset) throws MetadataException, RemoteException {
+        try {
+            // This method will delete previous entry of the dataset and insert the new one
+            // Delete entry from the 'datasets' dataset.
+            ITupleReference searchKey;
+            searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
+            // Searches the index for the tuple to be deleted. Acquires an S
+            // lock on the 'dataset' dataset.
+            ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey);
+            deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
+            // Previous tuple was deleted
+            // Insert into the 'dataset' dataset.
+            DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(true);
+            datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
+            insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
+        } catch (Exception e) {
+            throw new MetadataException(e);
+        }
+    }
 }

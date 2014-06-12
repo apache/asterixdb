@@ -51,7 +51,7 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
                 writer.open();
                 IDatasourceAdapter adapter = null;
                 try {
-                    adapter = ((IAdapterFactory) adapterFactory).createAdapter(ctx, partition);
+                    adapter = adapterFactory.createAdapter(ctx, partition);
                     adapter.start(partition, writer);
                 } catch (Exception e) {
                     throw new HyracksDataException("exception during reading from external data source", e);

@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
@@ -607,4 +608,69 @@ public interface IMetadataManager {
     public List<Library> getDataverseLibraries(MetadataTransactionContext ctx, String dataverseName)
             throws MetadataException;
 
+    /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param externalFile
+     *            An instance of type ExternalFile that represents the external file being
+     *            added
+     * @throws MetadataException
+     */
+    public void addExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile) throws MetadataException;
+
+    /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataset
+     *            An instance of type Dataset that represents the "external" dataset
+     * @return A list of external files belonging to the dataset
+     * @throws MetadataException
+     */
+    public List<ExternalFile> getDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
+            throws MetadataException;
+
+    /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param externalFile
+     *            An instance of type ExternalFile that represents the external file being
+     *            dropped
+     * @throws MetadataException
+     */
+    public void dropExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile) throws MetadataException;
+
+    /**
+     * @param mdTxnCtx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataset
+     *            An instance of type dataset that owns the external files being
+     *            dropped
+     * @throws MetadataException
+     */
+    public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException;
+    
+    /**
+     * Get en external file
+     * @param mdTxnCtx
+     * @param dataverseName
+     * @param datasetName
+     * @param fileNumber
+     * @return
+     * @throws MetadataException
+     */
+    public ExternalFile getExternalFile(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName, Integer fileNumber)
+            throws MetadataException;
+    
+    /**
+     * update an existing dataset in metadata.
+     * 
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param dataset
+     *            Existing Dataset.
+     * @throws MetadataException
+     *             For example, if the dataset already exists.
+     */
+    public void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
+    
 }

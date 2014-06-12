@@ -19,7 +19,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
@@ -150,9 +149,6 @@ public class OptimizableOperatorSubTree {
         dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
-        }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL) {
-            return false;
         }
         // Get the record type for that dataset.
         IAType itemType = metadataProvider.findType(dataverseName, dataset.getItemTypeName());

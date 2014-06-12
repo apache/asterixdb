@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ import edu.uci.ics.asterix.builders.IARecordBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
@@ -43,6 +45,7 @@ import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableString;
@@ -176,7 +179,39 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                             .getStringValue();
                     properties.put(key, value);
                 }
-                datasetDetails = new ExternalDatasetDetails(adapter, properties);
+                String nodeGroupName = ((AString) datasetDetailsRecord
+                        .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX))
+                        .getStringValue();
+
+                // Timestamp
+                Date timestamp = new Date(
+                        (((ADateTime) datasetDetailsRecord
+                                .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_LAST_REFRESH_TIME_FIELD_INDEX)))
+                                .getChrononTime());
+                // State
+                ExternalDatasetTransactionState state = ExternalDatasetTransactionState.values()[((AInt32) datasetDetailsRecord
+                        .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX))
+                        .getIntegerValue()];
+                // Compaction Policy
+                String compactionPolicy = ((AString) datasetDetailsRecord
+                        .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX))
+                        .getStringValue();
+                // Compaction Policy Properties
+                cursor = ((AOrderedList) datasetDetailsRecord
+                        .getValueByPos(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX))
+                        .getCursor();
+                Map<String, String> compactionPolicyProperties = new LinkedHashMap<String, String>();
+                while (cursor.next()) {
+                    ARecord field = (ARecord) cursor.get();
+                    key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX))
+                            .getStringValue();
+                    value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX))
+                            .getStringValue();
+                    compactionPolicyProperties.put(key, value);
+                }
+
+                datasetDetails = new ExternalDatasetDetails(adapter, properties, nodeGroupName, timestamp, state,
+                        compactionPolicy, compactionPolicyProperties);
         }
 
         Map<String, String> hints = getDatasetHints(datasetRecord);
@@ -305,6 +340,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         return hints;
     }
 
+    @SuppressWarnings("unchecked")
     private void writeDatasetHintRecord(String name, String value, DataOutput out) throws HyracksDataException {
         IARecordBuilder propertyRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();

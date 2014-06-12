@@ -94,7 +94,7 @@ public class TestsUtils {
                             + "\n> ");
                 }
 
-                if (!equalStrings(lineExpected.split("Timestamp")[0], lineActual.split("Timestamp")[0])) {
+                if (!equalStrings(lineExpected.split("Time")[0], lineActual.split("Time")[0])) {
                     fail("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }

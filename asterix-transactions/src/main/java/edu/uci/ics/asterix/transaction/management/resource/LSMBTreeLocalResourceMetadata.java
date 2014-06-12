@@ -35,12 +35,12 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
 
     private static final long serialVersionUID = 1L;
 
-    private final ITypeTraits[] typeTraits;
-    private final IBinaryComparatorFactory[] cmpFactories;
-    private final int[] bloomFilterKeyFields;
-    private final boolean isPrimary;
-    private final ILSMMergePolicyFactory mergePolicyFactory;
-    private final Map<String, String> mergePolicyProperties;
+    protected final ITypeTraits[] typeTraits;
+    protected final IBinaryComparatorFactory[] cmpFactories;
+    protected final int[] bloomFilterKeyFields;
+    protected final boolean isPrimary;
+    protected final ILSMMergePolicyFactory mergePolicyFactory;
+    protected final Map<String, String> mergePolicyProperties;
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,

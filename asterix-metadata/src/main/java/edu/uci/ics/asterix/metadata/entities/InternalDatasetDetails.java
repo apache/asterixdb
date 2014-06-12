@@ -72,6 +72,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
         this.compactionPolicyProperties = compactionPolicyProperties;
     }
 
+    @Override
     public String getNodeGroupName() {
         return nodeGroupName;
     }
@@ -96,10 +97,12 @@ public class InternalDatasetDetails implements IDatasetDetails {
         return partitioningStrategy;
     }
 
+    @Override
     public String getCompactionPolicy() {
         return compactionPolicy;
     }
 
+    @Override
     public Map<String, String> getCompactionPolicyProperties() {
         return compactionPolicyProperties;
     }

@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.external.adapter.factory;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -23,12 +24,14 @@ import edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter;
 import edu.uci.ics.asterix.external.util.DNSResolverFactory;
 import edu.uci.ics.asterix.external.util.INodeResolver;
 import edu.uci.ics.asterix.external.util.INodeResolverFactory;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
@@ -140,6 +143,11 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
             nodeResolver = DEFAULT_NODE_RESOLVER;
         }
         return nodeResolver;
+    }
+
+    @Override
+    public void setFiles(List<ExternalFile> files) throws AlgebricksException{
+        throw new AlgebricksException("can't set files for this Adapter");
     }
 
 }

@@ -39,15 +39,15 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
 
     private static final long serialVersionUID = 1L;
 
-    private final ITypeTraits[] typeTraits;
-    private final IBinaryComparatorFactory[] rtreeCmpFactories;
-    private final IBinaryComparatorFactory[] btreeCmpFactories;
-    private final IPrimitiveValueProviderFactory[] valueProviderFactories;
-    private final RTreePolicyType rtreePolicyType;
-    private final ILinearizeComparatorFactory linearizeCmpFactory;
-    private final ILSMMergePolicyFactory mergePolicyFactory;
-    private final Map<String, String> mergePolicyProperties;
-    private final int[] btreeFields;
+    protected final ITypeTraits[] typeTraits;
+    protected final IBinaryComparatorFactory[] rtreeCmpFactories;
+    protected final IBinaryComparatorFactory[] btreeCmpFactories;
+    protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
+    protected final RTreePolicyType rtreePolicyType;
+    protected final ILinearizeComparatorFactory linearizeCmpFactory;
+    protected final ILSMMergePolicyFactory mergePolicyFactory;
+    protected final Map<String, String> mergePolicyProperties;
+    protected final int[] btreeFields;
 
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,

@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.file;
 
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
@@ -24,6 +25,7 @@ import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFacto
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerProvider;
@@ -66,6 +68,17 @@ public class IndexOperations {
                         physicalOptimizationConfig);
         return secondaryIndexHelper.buildLoadingJobSpec();
     }
+    
+    public static JobSpecification buildSecondaryIndexLoadingJobSpec(CompiledCreateIndexStatement createIndexStmt,
+            AqlMetadataProvider metadataProvider, List<ExternalFile> files) throws AsterixException, AlgebricksException {
+        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
+                .createIndexOperationsHelper(createIndexStmt.getIndexType(), createIndexStmt.getDataverseName(),
+                        createIndexStmt.getDatasetName(), createIndexStmt.getIndexName(),
+                        createIndexStmt.getKeyFields(), createIndexStmt.getGramLength(), metadataProvider,
+                        physicalOptimizationConfig);
+        secondaryIndexHelper.setExternalFiles(files);
+        return secondaryIndexHelper.buildLoadingJobSpec();
+    }
 
     public static JobSpecification buildDropSecondaryIndexJobSpec(CompiledIndexDropStatement indexDropStmt,
             AqlMetadataProvider metadataProvider, Dataset dataset) throws AlgebricksException, MetadataException {
@@ -76,7 +89,7 @@ public class IndexOperations {
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, indexName);
+                .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, indexName);
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
                 metadataProvider.getMetadataTxnContext());

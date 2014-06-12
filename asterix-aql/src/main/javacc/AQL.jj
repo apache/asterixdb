@@ -202,6 +202,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = FeedStatement()
     | stmt = CompactStatement()
     | stmt = Query()
+    | stmt = RefreshExternalDatasetStatement()
   )
   {
     return stmt;
@@ -320,11 +321,16 @@ DatasetDecl DatasetSpecification() throws ParseException:
     <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
     ifNotExists = IfNotExists()
     "using" adapterName = AdapterName() properties = Configuration()
+    ("on" nodeGroupName = Identifier() )?
     ( "hints" hints = Properties() )?
+    ( "using" "compaction" "policy" compactionPolicy = CompactionPolicy() compactionPolicyProperties = Configuration() )?
       {
         ExternalDetailsDecl edd = new ExternalDetailsDecl();
         edd.setAdapter(adapterName);
         edd.setProperties(properties);
+        edd.setNodegroupName(nodeGroupName != null? new Identifier(nodeGroupName): null);
+        edd.setCompactionPolicy(compactionPolicy);
+        edd.setCompactionPolicyProperties(compactionPolicyProperties);
         dsetDecl = new DatasetDecl(nameComponents.first,
                                    nameComponents.second,
                                    new Identifier(typeName),
@@ -362,6 +368,21 @@ DatasetDecl DatasetSpecification() throws ParseException:
     {
       return dsetDecl;
     }
+}
+
+RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseException:
+{
+  RefreshExternalDatasetStatement redss = new RefreshExternalDatasetStatement();
+  Pair<Identifier,Identifier> nameComponents = null;
+  String datasetName = null;
+}
+{
+	"refresh external" <DATASET> nameComponents = QualifiedName()
+	{
+	redss.setDataverseName(nameComponents.first);
+	redss.setDatasetName(nameComponents.second);
+	return redss;
+	}
 }
 
 CreateIndexStatement IndexSpecification() throws ParseException:

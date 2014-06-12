@@ -207,7 +207,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
 
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                    .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
+                    .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(),
                             datasetName, indexName);
             // TODO: Here we assume there is only one search key field.
             int queryField = keyFields[0];

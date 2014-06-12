@@ -4896,6 +4896,38 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="external-indexing">
+  	<test-case FilePath="external-indexing">
+      <compilation-unit name="text-format">
+        <output-dir compare="Text">text-format</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="sequence-format">
+        <output-dir compare="Text">sequence-format</output-dir>
+      </compilation-unit>
+    </test-case>
+  	<test-case FilePath="external-indexing">
+      <compilation-unit name="rc-format">
+        <output-dir compare="Text">rc-format</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="rtree-index">
+        <output-dir compare="Text">rtree-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="leftouterjoin">
+        <output-dir compare="Text">leftouterjoin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="leftouterjoin-rtree">
+        <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="temporal">
     <test-case FilePath="temporal">
      <compilation-unit name="parse_02">

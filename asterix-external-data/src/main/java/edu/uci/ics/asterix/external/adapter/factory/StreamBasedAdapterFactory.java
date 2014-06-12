@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.util.INodeResolver;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.feeds.ConditionalPushTupleParserFactory;
 import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -60,6 +61,8 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 
     protected ITupleParserFactory parserFactory;
     protected ITupleParser parser;
+    
+    protected List<ExternalFile> files;
 
     protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
     static {
