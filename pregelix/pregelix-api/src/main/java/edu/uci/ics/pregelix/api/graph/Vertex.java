@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableUtils;
@@ -40,7 +44,7 @@ import edu.uci.ics.pregelix.api.util.JobStateUtils;
 /**
  * User applications should all inherit {@link Vertex}, and implement their own
  * *compute* method.
- * 
+ *
  * @param <I>
  *            Vertex identifier type
  * @param <V>
@@ -68,11 +72,17 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /** List of incoming messages from the previous superstep */
     private final List<M> msgList = new ArrayList<M>();
     /** a delegate for hyracks stuff */
-    private VertexDelegate<I, V, E, M> delegate = new VertexDelegate<I, V, E, M>(this);
+    private final VertexDelegate<I, V, E, M> delegate = new VertexDelegate<I, V, E, M>(this);
     /** this vertex is updated or not */
     private boolean updated = false;
     /** has outgoing messages */
     private boolean hasMessage = false;
+    /** whether the vertex has spilled to HDFS */
+    private boolean spilled = false;
+    /** the spilled path */
+    private String pathStr;
+    /** file system handle */
+    private FileSystem dfs;
     /** created new vertex */
     private boolean createdNewLiveVertex = false;
     /** terminate the partition */
@@ -81,9 +91,9 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * use object pool for re-using objects
      */
-    private List<Edge<I, E>> edgePool = new ArrayList<Edge<I, E>>();
-    private List<M> msgPool = new ArrayList<M>();
-    private List<V> valuePool = new ArrayList<V>();
+    private final List<Edge<I, E>> edgePool = new ArrayList<Edge<I, E>>();
+    private final List<M> msgPool = new ArrayList<M>();
+    private final List<V> valuePool = new ArrayList<V>();
     private int usedEdge = 0;
     private int usedMessage = 0;
     private int usedValue = 0;
@@ -101,7 +111,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
      * 3. In each partition, the vertex Java object is reused
      * for all the vertice to be processed in the same partition. (The model
      * is the same as the key-value objects in hadoop map tasks.)
-     * 
+     *
      * @param msgIterator
      *            an iterator of incoming messages
      */
@@ -109,7 +119,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Add an edge for the vertex.
-     * 
+     *
      * @param targetVertexId
      * @param edgeValue
      * @return successful or not
@@ -125,7 +135,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Initialize a new vertex
-     * 
+     *
      * @param vertexId
      * @param vertexValue
      * @param edges
@@ -157,11 +167,12 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         usedMessage = 0;
         usedValue = 0;
         updated = false;
+        spilled = false;
     }
 
     /**
      * Set the vertex id
-     * 
+     *
      * @param vertexId
      */
     public final void setVertexId(I vertexId) {
@@ -171,7 +182,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get the vertex id
-     * 
+     *
      * @return vertex id
      */
     public final I getVertexId() {
@@ -180,7 +191,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get the vertex value
-     * 
+     *
      * @return the vertex value
      */
     public final V getVertexValue() {
@@ -189,7 +200,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Set the vertex value
-     * 
+     *
      * @param vertexValue
      */
     public final void setVertexValue(V vertexValue) {
@@ -199,7 +210,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /***
      * Send a message to a specific vertex
-     * 
+     *
      * @param id
      *            the receiver vertex id
      * @param msg
@@ -215,7 +226,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Send a message to all direct outgoing neighbors
-     * 
+     *
      * @param msg
      *            the message
      */
@@ -241,7 +252,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Vote to halt. Once all vertex vote to halt and no more messages, a
      * Pregelix job will terminate.
-     * 
+     *
      * @param update
      *            whether or not to save the vertex value
      */
@@ -261,7 +272,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Activate a halted vertex such that it is alive again.
-     * 
+     *
      * @param update
      *            whether or not to save the vertex value
      */
@@ -283,6 +294,35 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         if (vertexId == null) {
             vertexId = BspUtils.<I> createVertexIndex(getContext().getConfiguration());
         }
+
+        //read the boolean state
+        byte booleanState = in.readByte();
+        halt = (booleanState & 1) == 1 ? true : false;
+        spilled = (booleanState & 2) == 2 ? true : false;
+
+        if (!spilled) {
+            //read the vertex data
+            readVertexData(in);
+        } else {
+            //read file hosted vertex
+            if (dfs == null) {
+                dfs = FileSystem.get(getContext().getConfiguration());
+            }
+            pathStr = in.readUTF();
+            Path path = new Path(pathStr);
+            FSDataInputStream dataInput = dfs.open(path);
+            readVertexData(dataInput);
+            dataInput.close();
+        }
+    }
+
+    /**
+     * Read B-tree stored vertex
+     *
+     * @param in
+     * @throws IOException
+     */
+    private void readVertexData(DataInput in) throws IOException {
         vertexId.readFields(in);
         delegate.setVertexId(vertexId);
         boolean hasVertexValue = in.readBoolean();
@@ -307,7 +347,6 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
             msg.readFields(in);
             msgList.add(msg);
         }
-        halt = in.readBoolean();
         updated = false;
         hasMessage = false;
         createdNewLiveVertex = false;
@@ -315,6 +354,38 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     @Override
     public void write(DataOutput out) throws IOException {
+        //write boolean states
+        int haltBit = halt ? 1 : 0;
+        int spilledBit = spilled ? 2 : 0;
+        byte booleanStates = (byte) (haltBit | spilledBit);
+        out.writeByte(booleanStates);
+        if (!spilled) {
+            // write B-tree stored vertex data
+            writeVertexData(out);
+        } else {
+            //write file-hosted vertex
+            if (dfs == null) {
+                dfs = FileSystem.get(getContext().getConfiguration());
+            }
+            Path path = new Path(pathStr);
+            if (dfs.exists(path)) {
+                dfs.delete(path, true);
+            }
+            FSDataOutputStream dataOutput = dfs.create(path, true);
+            writeVertexData(dataOutput);
+            dataOutput.flush();
+            dataOutput.close();
+            // write the btree content
+            pathStr = path.toUri().toString();
+            out.writeUTF(pathStr);
+        }
+    }
+
+    /**
+     * @param out
+     * @throws IOException
+     */
+    private void writeVertexData(DataOutput out) throws IOException {
         vertexId.write(out);
         out.writeBoolean(vertexValue != null);
         if (vertexValue != null) {
@@ -328,12 +399,11 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
         for (M msg : msgList) {
             msg.write(out);
         }
-        out.writeBoolean(halt);
     }
 
     /**
      * Get the list of incoming messages
-     * 
+     *
      * @return the list of messages
      */
     public List<M> getMsgList() {
@@ -342,7 +412,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get outgoing edge list
-     * 
+     *
      * @return a list of outgoing edges
      */
     public List<Edge<I, E>> getEdges() {
@@ -350,8 +420,12 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public String toString() {
+        return getStringRepresetation();
+    }
+
+    @SuppressWarnings("unchecked")
+    public String getStringRepresetation() {
         Collections.sort(destEdgeList);
         StringBuffer edgeBuffer = new StringBuffer();
         edgeBuffer.append("(");
@@ -364,7 +438,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get the number of outgoing edges
-     * 
+     *
      * @return the number of outging edges
      */
     public int getNumOutEdges() {
@@ -373,7 +447,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Pregelix internal use only
-     * 
+     *
      * @param writers
      */
     public void setOutputWriters(List<IFrameWriter> writers) {
@@ -382,7 +456,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Pregelix internal use only
-     * 
+     *
      * @param writers
      */
     public void setOutputAppenders(List<FrameTupleAppender> appenders) {
@@ -391,7 +465,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Pregelix internal use only
-     * 
+     *
      * @param writers
      */
     public void setOutputTupleBuilders(List<ArrayTupleBuilder> tbs) {
@@ -400,7 +474,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Pregelix internal use only
-     * 
+     *
      * @param writers
      */
     public void finishCompute() throws IOException {
@@ -438,6 +512,24 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     }
 
     /**
+     * set the HDFS spilled bit and path
+     *
+     * @param spilledHDFS
+     */
+    public void setSpilled(String path) {
+        this.spilled = true;
+        this.pathStr = path;
+    }
+
+    /**
+     * set the spilled bit to false and the path to null
+     */
+    public void setUnSpilled() {
+        this.spilled = false;
+        this.pathStr = null;
+    }
+
+    /**
      * Allocate a new edge from the edge pool
      */
     private Edge<I, E> allocateEdge() {
@@ -471,7 +563,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Add an outgoing edge into the vertex
-     * 
+     *
      * @param edge
      *            the edge to be added
      * @return true if the edge list changed as a result of this call
@@ -484,7 +576,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * remove an outgoing edge in the graph
-     * 
+     *
      * @param edge
      *            the edge to be removed
      * @return true if the edge is in the edge list of the vertex
@@ -496,7 +588,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Add a new vertex into the graph
-     * 
+     *
      * @param vertexId
      *            the vertex id
      * @param vertex
@@ -509,7 +601,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Delete a vertex from id
-     * 
+     *
      * @param vertexId
      *            the vertex id
      */
@@ -519,7 +611,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Allocate a vertex value from the object pool
-     * 
+     *
      * @return a vertex value instance
      */
     private V allocateValue() {
@@ -537,7 +629,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get the current global superstep number
-     * 
+     *
      * @return the current superstep number
      */
     public final long getSuperstep() {
@@ -546,7 +638,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get the number of vertexes in the graph
-     * 
+     *
      * @return the number of vertexes in the graph
      */
     public final long getNumVertices() {
@@ -555,7 +647,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Get the number of edges from this graph
-     * 
+     *
      * @return the number of edges in the graph
      */
     public final long getNumEdges() {
@@ -593,7 +685,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     public void configure(Configuration conf) {
 
     }
-    
+
     /**
      * called *once* per partition at the end of each iteration,
      * before calls to compute() or close()
@@ -635,7 +727,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
     /**
      * Terminate the Pregelix job.
      * This will take effect only when the current iteration completed.
-     * 
+     *
      * @throws Exception
      */
     protected void terminateJob() throws Exception {
@@ -652,7 +744,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /**
      * Set the vertex context
-     * 
+     *
      * @param ctx
      */
     public void setVertexContext(VertexContext ctx) {
@@ -661,7 +753,7 @@ public abstract class Vertex<I extends WritableComparable, V extends Writable, E
 
     /***
      * Get the vertex context
-     * 
+     *
      * @return the vertex context
      */
     public VertexContext getVertexContext() {

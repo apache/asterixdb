@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,14 +59,17 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     private final IFileMapManager fileMapManager;
     private final IOManager ioManager;
     private final Map<String, PJobContext> activeJobs = new ConcurrentHashMap<String, PJobContext>();
+    private final int vFrameSize;
 
     private final ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable r) {
             return new Thread(r);
         }
     };
 
     public RuntimeContext(INCApplicationContext appCtx, int vFrameSize) {
+        this.vFrameSize = vFrameSize;
         int pageSize = vFrameSize;
         long memSize = Runtime.getRuntime().maxMemory();
         long bufferSize = memSize / 4;
@@ -166,6 +169,10 @@ public class RuntimeContext implements IWorkspaceFileFactory {
     public long getSuperstep(String jobId) {
         PJobContext activeJob = getActiveJob(jobId);
         return activeJob == null ? 0 : activeJob.getVertexContext().getSuperstep();
+    }
+
+    public int getVFrameSize() {
+        return vFrameSize;
     }
 
     public void setJobContext(String jobId, TaskAttemptContext tCtx) {

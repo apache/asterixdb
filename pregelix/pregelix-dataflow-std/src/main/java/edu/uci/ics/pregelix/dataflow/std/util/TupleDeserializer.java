@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,10 +26,10 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class TupleDeserializer {
     private static String ERROR_MSG = "Out-of-bound read in your Writable implementations of types for vertex id, vertex value, edge value or message --- check your readFields and write implmenetation";
-    private Object[] record;
-    private RecordDescriptor recordDescriptor;
-    private ResetableByteArrayInputStream bbis;
-    private DataInputStream di;
+    private final Object[] record;
+    private final RecordDescriptor recordDescriptor;
+    private final ResetableByteArrayInputStream bbis;
+    private final DataInputStream di;
 
     public TupleDeserializer(RecordDescriptor recordDescriptor) {
         this.recordDescriptor = recordDescriptor;
@@ -116,10 +116,9 @@ public class TupleDeserializer {
             if (nullLeft) {
                 byte[] rightData = right.getFieldData(1);
                 int rightFieldOffset = right.getFieldStart(1);
-                int rightLen = right.getFieldLength(1);
                 /** skip a halted and no message vertex without deserializing it */
-                if (rightData[rightFieldOffset + rightLen - 1] == 1) {
-                    // halt flag is the last byte of any vertex
+                if ((rightData[rightFieldOffset] & 1) == 1) {
+                    // halt flag is the last bit of the first byte of any vertex value
                     record[0] = null;
                     record[1] = null;
                     return record;

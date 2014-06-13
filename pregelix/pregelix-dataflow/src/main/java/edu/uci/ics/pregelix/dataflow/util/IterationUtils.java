@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.pregelix.dataflow.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class IterationUtils {
 
     /**
      * Get the input files' byte size
-     * 
+     *
      * @param job
      */
     public static long getInputFileSize(PregelixJob job) {
@@ -122,6 +123,12 @@ public class IterationUtils {
         return context.getSuperstep(pregelixJobId);
     }
 
+    public static int getVFrameSize(IHyracksTaskContext ctx) {
+        INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
+        RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
+        return context.getVFrameSize();
+    }
+
     public static void setJobContext(String pregelixJobId, IHyracksTaskContext ctx, TaskAttemptContext tCtx) {
         INCApplicationContext appContext = ctx.getJobletContext().getApplicationContext();
         RuntimeContext context = (RuntimeContext) appContext.getApplicationObject();
@@ -146,7 +153,7 @@ public class IterationUtils {
             throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + pregelixJobId;
+            String pathStr = IterationUtils.TMP_DIR + pregelixJobId + File.separator + "terminate";
             Path path = new Path(pathStr);
             FSDataOutputStream output = dfs.create(path, true);
             output.writeBoolean(terminate);
@@ -161,7 +168,7 @@ public class IterationUtils {
             List<Writable> aggs) throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + pregelixJobId + "agg";
+            String pathStr = IterationUtils.TMP_DIR + pregelixJobId + File.separator + "global-agg";
             Path path = new Path(pathStr);
             FSDataOutputStream output;
             output = dfs.create(path, true);
@@ -181,7 +188,7 @@ public class IterationUtils {
     public static boolean readTerminationState(Configuration conf, String pregelixJobId) throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = IterationUtils.TMP_DIR + pregelixJobId;
+            String pathStr = IterationUtils.TMP_DIR + pregelixJobId + File.separator + "terminate";
             Path path = new Path(pathStr);
             FSDataInputStream input = dfs.open(path);
             boolean terminate = input.readBoolean();
@@ -208,6 +215,26 @@ public class IterationUtils {
     public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
             throws HyracksDataException {
         return BspUtils.readAllGlobalAggregateValues(conf, jobId);
+    }
+
+    public static void makeTempDirectory(Configuration conf) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        String jobId = BspUtils.getJobId(conf);
+        String pathStr = TMP_DIR + jobId;
+        Path path = new Path(pathStr);
+        if (dfs.exists(path)) {
+            dfs.mkdirs(path);
+        }
+    }
+
+    public static void removeTempDirectory(Configuration conf) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        String jobId = BspUtils.getJobId(conf);
+        String pathStr = TMP_DIR + jobId;
+        Path path = new Path(pathStr);
+        if (dfs.exists(path)) {
+            dfs.deleteOnExit(path);
+        }
     }
 
 }

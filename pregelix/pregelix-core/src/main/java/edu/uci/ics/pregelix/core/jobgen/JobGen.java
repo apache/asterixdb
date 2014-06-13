@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -137,7 +137,7 @@ import edu.uci.ics.pregelix.runtime.touchpoint.WritableSerializerDeserializerFac
 
 public abstract class JobGen implements IJobGen {
     private static final Logger LOGGER = Logger.getLogger(JobGen.class.getName());
-    protected static final int BF_HINT=100000;
+    protected static final int BF_HINT = 100000;
     protected static final int MB = 1048576;
     protected static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
     protected static final int tableSize = 1575767;
@@ -149,7 +149,7 @@ public abstract class JobGen implements IJobGen {
     protected IStorageManagerInterface storageManagerInterface = StorageManagerInterface.INSTANCE;
     protected String jobId = UUID.randomUUID().toString();;
     protected int frameSize = ClusterConfig.getFrameSize();
-    protected int maxFrameNumber = (int) (((long) 64 * MB) / frameSize);
+    protected int maxFrameNumber = (int) ((long) 64 * MB / frameSize);
     protected IOptimizer optimizer;
 
     private static final Map<String, String> MERGE_POLICY_PROPERTIES;
@@ -257,19 +257,21 @@ public abstract class JobGen implements IJobGen {
 
     @Override
     public JobSpecification generateJob(int iteration) throws HyracksException {
-        if (iteration <= 0)
+        if (iteration <= 0) {
             throw new IllegalStateException("iteration number cannot be less than 1");
-        if (iteration == 1)
+        }
+        if (iteration == 1) {
             return generateFirstIteration(iteration);
-        else
+        } else {
             return generateNonFirstIteration(iteration);
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public JobSpecification scanSortPrintGraph(String nodeName, String path) throws HyracksException {
         Class<? extends WritableComparable<?>> vertexIdClass = BspUtils.getVertexIndexClass(conf);
         Class<? extends Writable> vertexClass = BspUtils.getVertexClass(conf);
-        int maxFrameLimit = (int) (((long) 512 * MB) / frameSize);
+        int maxFrameLimit = (int) ((long) 512 * MB / frameSize);
         JobSpecification spec = new JobSpecification(frameSize);
         IFileSplitProvider fileSplitProvider = getFileSplitProvider(jobId, PRIMARY_INDEX);
 
@@ -365,7 +367,8 @@ public abstract class JobGen implements IJobGen {
         typeTraits[1] = new TypeTraits(false);
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
-                null, null, true, true, getIndexDataflowHelperFactory(), false, false, null, NoOpOperationCallbackFactory.INSTANCE);
+                null, null, true, true, getIndexDataflowHelperFactory(), false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE);
         setLocationConstraint(spec, scanner);
 
         /**
@@ -436,12 +439,6 @@ public abstract class JobGen implements IJobGen {
         return spec;
     }
 
-    public void clearCheckpoints() throws IOException {
-        FileSystem dfs = FileSystem.get(conf);
-        // clear the checkpoint directory
-        dfs.delete(new Path("/tmp/ckpoint/" + jobId), true);
-    }
-
     @Override
     public JobSpecification[] generateLoadingCheckpoint(int lastCheckpointedIteration) throws HyracksException {
         try {
@@ -473,6 +470,7 @@ public abstract class JobGen implements IJobGen {
     /***
      * generate a "clear state" job
      */
+    @Override
     public JobSpecification generateClearState(boolean allStates) throws HyracksException {
         JobSpecification spec = new JobSpecification();
         ClearStateOperatorDescriptor clearState = new ClearStateOperatorDescriptor(spec, jobId, allStates);
@@ -483,7 +481,7 @@ public abstract class JobGen implements IJobGen {
 
     /***
      * drop the sindex
-     * 
+     *
      * @return JobSpecification
      * @throws HyracksException
      */
@@ -540,8 +538,9 @@ public abstract class JobGen implements IJobGen {
         try {
             splits = inputFormat.getSplits(job, fileSplitProvider.getFileSplits().length);
             LOGGER.info("number of splits: " + splits.size());
-            for (InputSplit split : splits)
+            for (InputSplit split : splits) {
                 LOGGER.info(split.toString());
+            }
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -628,7 +627,8 @@ public abstract class JobGen implements IJobGen {
 
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
-                null, null, true, true, getIndexDataflowHelperFactory(), false, false, null, NoOpOperationCallbackFactory.INSTANCE);
+                null, null, true, true, getIndexDataflowHelperFactory(), false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE);
         setLocationConstraint(spec, scanner);
 
         ExternalSortOperatorDescriptor sort = null;
@@ -747,8 +747,9 @@ public abstract class JobGen implements IJobGen {
                     job.getConfiguration());
             splits = inputFormat.getSplits(tmpJob);
             LOGGER.info("number of splits: " + splits.size());
-            for (InputSplit split : splits)
+            for (InputSplit split : splits) {
                 LOGGER.info(split.toString());
+            }
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -808,7 +809,7 @@ public abstract class JobGen implements IJobGen {
 
     /**
      * Switch the plan to a desired one
-     * 
+     *
      * @param iteration
      *            , the latest completed iteration number
      * @param plan
@@ -827,7 +828,7 @@ public abstract class JobGen implements IJobGen {
 
     /**
      * Build a jobspec to bulkload the live vertex btree
-     * 
+     *
      * @param iteration
      * @return the job specification
      * @throws HyracksException
@@ -892,7 +893,7 @@ public abstract class JobGen implements IJobGen {
 
     /**
      * set the location constraint for operators
-     * 
+     *
      * @param spec
      * @param operator
      */
@@ -902,7 +903,7 @@ public abstract class JobGen implements IJobGen {
 
     /**
      * get the file split provider
-     * 
+     *
      * @param jobId
      * @param indexName
      * @return the IFileSplitProvider instance
@@ -920,7 +921,7 @@ public abstract class JobGen implements IJobGen {
 
     /**
      * Generate the pipeline for local grouping
-     * 
+     *
      * @param spec
      *            the JobSpecification
      * @param sortOrHash
@@ -981,7 +982,7 @@ public abstract class JobGen implements IJobGen {
             }
         } else {
             int frameLimit = BspUtils.getGroupingMemoryLimit(conf);
-            int hashTableSize = Math.round(((float) frameLimit / 1000f) * tableSize);
+            int hashTableSize = Math.round(frameLimit / 1000f * tableSize);
             /**
              * construct local group-by operator
              */

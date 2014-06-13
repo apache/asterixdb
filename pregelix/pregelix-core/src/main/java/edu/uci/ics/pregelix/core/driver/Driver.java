@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -75,9 +75,9 @@ public class Driver implements IDriver {
             Counters.DISK_READ, Counters.DISK_WRITE, Counters.NETWORK_IO_READ, Counters.NETWORK_IO_WRITE };
     private static final Log LOG = LogFactory.getLog(Driver.class);
     private IHyracksClientConnection hcc;
-    private Class exampleClass;
+    private final Class exampleClass;
     private boolean profiling = false;
-    private StringBuffer counterBuffer = new StringBuffer();
+    private final StringBuffer counterBuffer = new StringBuffer();
 
     public Driver(Class exampleClass) {
         this.exampleClass = exampleClass;
@@ -148,6 +148,7 @@ public class Driver implements IDriver {
                         boolean compatible = i == 0 ? false : compatible(lastJob, currentJob);
                         /** load the data */
                         if (!failed) {
+                            IterationUtils.makeTempDirectory(currentJob.getConfiguration());
                             if (i == 0) {
                                 jobGen.reset(currentJob);
                                 loadData(currentJob, jobGen, deploymentId);
@@ -175,9 +176,6 @@ public class Driver implements IDriver {
                     /** finish the jobs */
                     finishJobs(jobGen, deploymentId);
 
-                    /** clear checkpoints if any */
-                    jobGen.clearCheckpoints();
-
                     /** clear state */
                     runClearState(deploymentId, jobGen, true);
 
@@ -203,6 +201,15 @@ public class Driver implements IDriver {
             counterContext.stop();
         } catch (Exception e) {
             throw new HyracksException(e);
+        } finally {
+            /** clear temporary directories */
+            try {
+                for (PregelixJob job : jobs) {
+                    IterationUtils.removeTempDirectory(job.getConfiguration());
+                }
+            } catch (Exception e) {
+                throw new HyracksException(e);
+            }
         }
     }
 
@@ -220,8 +227,8 @@ public class Driver implements IDriver {
         return lastVertexIdClass.equals(currentVertexIdClass)
                 && lastVertexValueClass.equals(currentVertexValueClass)
                 && lastEdgeValueClass.equals(currentEdegeValueClass)
-                && (currentInputPaths.length == 0 || (currentInputPaths.length == 1 && lastOutputPath
-                        .equals(currentInputPaths[0])));
+                && (currentInputPaths.length == 0 || currentInputPaths.length == 1
+                        && lastOutputPath.equals(currentInputPaths[0]));
     }
 
     private JobGen selectJobGen(Plan planChoice, PregelixJob currentJob, IOptimizer optimizer) {
@@ -266,9 +273,11 @@ public class Driver implements IDriver {
         URLClassLoader classLoader = (URLClassLoader) exampleClass.getClassLoader();
         List<File> jars = new ArrayList<File>();
         URL[] urls = classLoader.getURLs();
-        for (URL url : urls)
-            if (url.toString().endsWith(".jar"))
+        for (URL url : urls) {
+            if (url.toString().endsWith(".jar")) {
                 jars.add(new File(url.getPath()));
+            }
+        }
         DeploymentId deploymentId = installApplication(jars);
         return deploymentId;
     }
@@ -332,7 +341,7 @@ public class Driver implements IDriver {
             terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId())
                     || i >= BspUtils.getMaxIteration(job.getConfiguration());
-            if (ckpHook.checkpoint(i) || (ckpInterval > 0 && i % ckpInterval == 0)) {
+            if (ckpHook.checkpoint(i) || ckpInterval > 0 && i % ckpInterval == 0) {
                 runCheckpoint(deploymentId, jobGen, i);
                 snapshotJobIndex.set(currentJobIndex);
                 snapshotSuperstep.set(i);
@@ -480,12 +489,13 @@ public class Driver implements IDriver {
 }
 
 class FileFilter implements FilenameFilter {
-    private String ext;
+    private final String ext;
 
     public FileFilter(String ext) {
         this.ext = "." + ext;
     }
 
+    @Override
     public boolean accept(File dir, String name) {
         return name.endsWith(ext);
     }

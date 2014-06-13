@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 package edu.uci.ics.pregelix.dataflow;
 
 import java.io.DataOutput;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
@@ -77,18 +78,24 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
         this.recordDescriptors[0] = rd;
     }
 
+    @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
         final List<FileSplit> splits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
-            private ContextFactory ctxFactory = new ContextFactory();
+            private final ContextFactory ctxFactory = new ContextFactory();
+            private String jobId;
 
             @Override
             public void initialize() throws HyracksDataException {
                 try {
                     Configuration conf = confFactory.createConfiguration(ctx);
+
+                    //get the info for spilling vertices to HDFS
+                    jobId = BspUtils.getJobId(conf);
+
                     writer.open();
                     for (int i = 0; i < scheduledLocations.length; i++) {
                         if (scheduledLocations[i].equals(ctx.getJobletContext().getApplicationContext().getNodeId())) {
@@ -113,7 +120,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
 
             /**
              * Load the vertices
-             * 
+             *
              * @parameter IHyracks ctx
              * @throws IOException
              * @throws IllegalAccessException
@@ -125,8 +132,10 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
             private void loadVertices(final IHyracksTaskContext ctx, Configuration conf, int splitId)
                     throws IOException, ClassNotFoundException, InterruptedException, InstantiationException,
                     IllegalAccessException, NoSuchFieldException, InvocationTargetException {
+                int treeVertexSizeLimit = IterationUtils.getVFrameSize(ctx) / 2;
+                int dataflowPageSize = ctx.getFrameSize();
                 ByteBuffer frame = ctx.allocateFrame();
-                FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+                FrameTupleAppender appender = new FrameTupleAppender(dataflowPageSize);
                 appender.reset(frame, true);
 
                 VertexInputFormat vertexInputFormat = BspUtils.createVertexInputFormat(conf);
@@ -136,7 +145,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
 
                 VertexReader vertexReader = vertexInputFormat.createVertexReader(split, mapperContext);
                 vertexReader.initialize(split, mapperContext);
-                Vertex readerVertex = (Vertex) BspUtils.createVertex(mapperContext.getConfiguration());
+                Vertex readerVertex = BspUtils.createVertex(mapperContext.getConfiguration());
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldSize);
                 DataOutput dos = tb.getDataOutput();
 
@@ -146,7 +155,7 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 /**
                  * empty vertex value
                  */
-                Writable emptyVertexValue = (Writable) BspUtils.createVertexValue(conf);
+                Writable emptyVertexValue = BspUtils.createVertexValue(conf);
 
                 while (vertexReader.nextVertex()) {
                     readerVertex = vertexReader.getCurrentVertex();
@@ -165,13 +174,29 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                     readerVertex.write(dos);
                     tb.addFieldEndOffset();
 
+                    if (tb.getSize() >= treeVertexSizeLimit || tb.getSize() > dataflowPageSize) {
+                        //if (tb.getSize() < dataflowPageSize) {
+                        //spill vertex to HDFS if it cannot fit into a tree storage page
+                        String pathStr = BspUtils.TMP_DIR + jobId + File.separator + vertexId;
+                        readerVertex.setSpilled(pathStr);
+                        tb.reset();
+                        vertexId.write(dos);
+                        tb.addFieldEndOffset();
+                        //vertex content will be spilled to HDFS
+                        readerVertex.write(dos);
+                        tb.addFieldEndOffset();
+                        readerVertex.setUnSpilled();
+                    }
                     if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        if (appender.getTupleCount() <= 0)
+                        if (appender.getTupleCount() <= 0) {
                             throw new IllegalStateException("zero tuples in a frame!");
+                        }
                         FrameUtils.flushFrame(frame, writer);
                         appender.reset(frame, true);
                         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            throw new IllegalStateException();
+                            //this place should never be reached, otherwise it is a bug
+                            throw new IllegalStateException(
+                                    "An overflow vertex content should not be flushed into bulkload dataflow.");
                         }
                     }
                 }

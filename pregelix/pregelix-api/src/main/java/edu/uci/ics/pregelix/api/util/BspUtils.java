@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.pregelix.api.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,7 +57,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed {@link VertexInputFormat}.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex input format class
@@ -70,7 +71,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex input format class
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex input format class
@@ -89,7 +90,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed {@link VertexOutputFormat}.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex output format class
@@ -103,7 +104,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex output format class
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex output format class
@@ -121,7 +122,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed {@link MessageCombiner}.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex combiner class
@@ -135,7 +136,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed {@link GlobalAggregator}.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex combiner class
@@ -170,7 +171,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex combiner class
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex combiner class
@@ -188,7 +189,7 @@ public class BspUtils {
 
     /**
      * Create a user-defined normalized key computer class
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user-defined normalized key computer
@@ -204,7 +205,7 @@ public class BspUtils {
 
     /**
      * Create a global aggregator object
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex combiner class
@@ -226,7 +227,7 @@ public class BspUtils {
 
     /**
      * Get global aggregator class names
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return An array of Global aggregator names
@@ -245,7 +246,7 @@ public class BspUtils {
 
     /**
      * Get global aggregator class names
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return An array of Global aggregator names
@@ -264,7 +265,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed Vertex.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex class
@@ -277,7 +278,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex
@@ -297,7 +298,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed vertex index class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex index class
@@ -309,7 +310,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex index
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex index
@@ -328,7 +329,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed vertex value class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex value class
@@ -340,7 +341,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex value
@@ -358,7 +359,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed edge value class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex edge value class
@@ -370,7 +371,7 @@ public class BspUtils {
 
     /**
      * Create a user edge value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user edge value
@@ -388,7 +389,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed vertex message value class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's vertex message value class
@@ -400,7 +401,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed global aggregator's partial aggregate value class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's global aggregate value class
@@ -412,7 +413,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed combiner's partial combine value class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's global aggregate value class
@@ -424,7 +425,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed normalized key computer class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's normalized key computer class
@@ -437,7 +438,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed normalized key computer class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return User's global aggregate value class
@@ -449,7 +450,7 @@ public class BspUtils {
 
     /**
      * Create a user vertex message value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user vertex message value
@@ -467,7 +468,7 @@ public class BspUtils {
 
     /**
      * Create a user partial aggregate value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -485,7 +486,7 @@ public class BspUtils {
 
     /**
      * Create the list of user partial aggregate values
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user partial aggregate values
@@ -508,7 +509,7 @@ public class BspUtils {
 
     /**
      * Create a user partial combine value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -532,7 +533,7 @@ public class BspUtils {
 
     /**
      * Create a user aggregate value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -550,7 +551,7 @@ public class BspUtils {
 
     /**
      * Create the list of user aggregate values
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -573,7 +574,7 @@ public class BspUtils {
 
     /**
      * Create a user aggregate value
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -592,7 +593,7 @@ public class BspUtils {
 
     /**
      * Create a checkpoint hook
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -610,7 +611,7 @@ public class BspUtils {
 
     /**
      * Create a hook that indicates an iteration is complete
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return Instantiated user aggregate value
@@ -628,7 +629,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed vertex partitioner class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return The user defined vertex partitioner class
@@ -640,7 +641,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed checkpoint hook class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return The user defined vertex checkpoint hook class
@@ -652,7 +653,7 @@ public class BspUtils {
 
     /**
      * Get the user's subclassed iteration complete reporter hook class.
-     * 
+     *
      * @param conf
      *            Configuration to check
      * @return The user defined vertex iteration complete reporter class
@@ -666,7 +667,7 @@ public class BspUtils {
 
     /**
      * Get the job configuration parameter whether the vertex states will increase dynamically
-     * 
+     *
      * @param conf
      *            the job configuration
      * @return the boolean setting of the parameter, by default it is false
@@ -677,7 +678,7 @@ public class BspUtils {
 
     /**
      * Get the specified frame size
-     * 
+     *
      * @param conf
      *            the job configuration
      * @return the specified frame size; -1 if it is not set by users
@@ -688,7 +689,7 @@ public class BspUtils {
 
     /**
      * Should the job use LSM or B-tree to store vertices
-     * 
+     *
      * @param conf
      * @return
      */
@@ -698,52 +699,52 @@ public class BspUtils {
 
     /***
      * Get the spilling dir name for global aggregates
-     * 
+     *
      * @param conf
      * @param superStep
      * @return the spilling dir name
      */
     public static String getGlobalAggregateSpillingDirName(Configuration conf, long superStep) {
-        return "/tmp/pregelix/agg/" + conf.get(PregelixJob.JOB_ID) + "/" + superStep;
+        return TMP_DIR + conf.get(PregelixJob.JOB_ID) + "/agg/" + superStep;
     }
 
     /**
      * Get the path for vertex checkpointing
-     * 
+     *
      * @param conf
      * @param lastSuperStep
      * @return the path for vertex checkpointing
      */
     public static String getVertexCheckpointPath(Configuration conf, long lastSuperStep) {
-        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/vertex/" + lastSuperStep;
+        return TMP_DIR + BspUtils.getJobId(conf) + "/ckpoint/vertex/" + lastSuperStep;
     }
 
     /**
      * Get the path for message checkpointing
-     * 
+     *
      * @param conf
      * @param lastSuperStep
      * @return the path for message checkpointing
      */
     public static String getMessageCheckpointPath(Configuration conf, long lastSuperStep) {
-        String path = "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/message/" + lastSuperStep;
+        String path = TMP_DIR + BspUtils.getJobId(conf) + "/ckpoint/message/" + lastSuperStep;
         return path;
     }
 
     /**
      * Get the path for message checkpointing
-     * 
+     *
      * @param conf
      * @param lastSuperStep
      * @return the path for message checkpointing
      */
     public static String getSecondaryIndexCheckpointPath(Configuration conf, long lastSuperStep) {
-        return "/tmp/ckpoint/" + BspUtils.getJobId(conf) + "/secondaryindex/" + lastSuperStep;
+        return TMP_DIR + BspUtils.getJobId(conf) + "/ckpoint/secondaryindex/" + lastSuperStep;
     }
 
     /***
      * Get the recovery count
-     * 
+     *
      * @return recovery count
      */
     public static int getRecoveryCount(Configuration conf) {
@@ -752,7 +753,7 @@ public class BspUtils {
 
     /***
      * Get enable dynamic optimization
-     * 
+     *
      * @param conf
      *            Configuration
      * @return true if enabled; otherwise false
@@ -763,7 +764,7 @@ public class BspUtils {
 
     /***
      * Get the user-set checkpoint interval
-     * 
+     *
      * @param conf
      * @return the checkpoint interval
      */
@@ -773,7 +774,7 @@ public class BspUtils {
 
     /**
      * Get the grouping algorithm
-     * 
+     *
      * @param conf
      * @return true-sort; false-hash
      */
@@ -783,7 +784,7 @@ public class BspUtils {
 
     /**
      * Get the memory limit for the grouping algorithm (hash only)
-     * 
+     *
      * @param conf
      * @return the memory limit for hash-based grouping
      */
@@ -793,7 +794,7 @@ public class BspUtils {
 
     /**
      * Get the memory limit for the sort algorithm
-     * 
+     *
      * @param conf
      * @return the memory limit for sorting
      */
@@ -803,7 +804,7 @@ public class BspUtils {
 
     /**
      * Get the desired number of workers
-     * 
+     *
      * @param conf
      * @return the number of workers
      */
@@ -813,7 +814,7 @@ public class BspUtils {
 
     /**
      * Get whether the combiner key can be skipped when calling a user-defined combine function
-     * 
+     *
      * @param conf
      * @return true to skip; false otherwise
      */
@@ -823,7 +824,7 @@ public class BspUtils {
 
     /**
      * Get whether a merge connector is used
-     * 
+     *
      * @param conf
      * @return true -merge; false-no merge
      */
@@ -833,7 +834,7 @@ public class BspUtils {
 
     /**
      * return the maximum iteration number
-     * 
+     *
      * @param conf
      * @return the maximum iteration number
      */
@@ -845,7 +846,7 @@ public class BspUtils {
             throws HyracksDataException {
         try {
             FileSystem dfs = FileSystem.get(conf);
-            String pathStr = TMP_DIR + jobId + "agg";
+            String pathStr = TMP_DIR + jobId + File.separator + "global-agg";
             Path path = new Path(pathStr);
             FSDataInputStream input = dfs.open(path);
             int numOfAggs = createFinalAggregateValues(conf).size();
@@ -868,7 +869,7 @@ public class BspUtils {
 
     public static HashMap<String, Writable> readAllGlobalAggregateValues(Configuration conf, String jobId)
             throws HyracksDataException {
-        String pathStr = TMP_DIR + jobId + "agg";
+        String pathStr = TMP_DIR + jobId + File.separator + "global-agg";
         Path path = new Path(pathStr);
         List<Writable> aggValues = createFinalAggregateValues(conf);
         HashMap<String, Writable> finalAggs = new HashMap<>();
@@ -895,7 +896,7 @@ public class BspUtils {
     }
 
     static Counters readCounters(int superstep, Configuration conf, String jobId) throws HyracksDataException {
-        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
+        String pathStr = TMP_DIR + jobId + File.separator + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
         Path path = new Path(pathStr);
         Counters savedCounters = new Counters();
         try {
@@ -911,7 +912,7 @@ public class BspUtils {
 
     static void writeCounters(Counters toWrite, int superstep, Configuration conf, String jobId)
             throws HyracksDataException {
-        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
+        String pathStr = TMP_DIR + jobId + File.separator + BspUtils.COUNTERS_VALUE_ON_ITERATION + superstep;
         Path path = new Path(pathStr);
         try {
             FileSystem dfs = FileSystem.get(conf);
@@ -924,7 +925,7 @@ public class BspUtils {
     }
 
     static int readCountersLastIteration(Configuration conf, String jobId) throws HyracksDataException {
-        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
+        String pathStr = TMP_DIR + jobId + File.separator + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
         Path path = new Path(pathStr);
         IntWritable lastIter = new IntWritable();
         try {
@@ -939,7 +940,7 @@ public class BspUtils {
     }
 
     static void writeCountersLastIteration(int superstep, Configuration conf, String jobId) throws HyracksDataException {
-        String pathStr = TMP_DIR + jobId + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
+        String pathStr = TMP_DIR + jobId + File.separator + BspUtils.COUNTERS_LAST_ITERATION_COMPLETED;
         Path path = new Path(pathStr);
         try {
             FileSystem dfs = FileSystem.get(conf);
