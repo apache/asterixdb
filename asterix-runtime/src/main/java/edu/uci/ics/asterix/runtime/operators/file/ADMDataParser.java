@@ -93,17 +93,17 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         public ParseException(String message, Throwable cause) {
             super(message, cause);
         }
-        
+
         public ParseException(Throwable cause, int line, int column) {
             super(cause);
             setLocation(line, column);
         }
-        
+
         public void setLocation(int line, int column) {
             this.line = line;
             this.column = column;
         }
-        
+
         public String getMessage() {
             StringBuilder msg = new StringBuilder("Parse error");
             if (line >= 0) {
@@ -116,12 +116,12 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             return msg.append(": " + super.getMessage()).toString();
         }
     }
-    
+
     @Override
     public boolean parse(DataOutput out) throws AsterixException {
         try {
             return parseAdmInstance((IAType) recordType, datasetRec, out);
-        } catch (IOException e) {            
+        } catch (IOException e) {
             throw new ParseException(e, admLexer.getLine(), admLexer.getColumn());
         } catch (AdmLexerException e) {
             throw new AsterixException(e);
@@ -726,8 +726,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
-            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
-                    + typeTag);
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
     }
 
@@ -741,8 +740,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         }
 
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), typeTag, dataOutput)) {
-            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
-                    + typeTag);
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
 
         if (targetTypeTag != typeTag) {
@@ -824,37 +822,37 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 stringSerde.serialize(aString, out);
                 return true;
             case TIME:
-                ATimeSerializerDeserializer.parse(unquoted, out);
+                parseTime(unquoted, out);
                 return true;
             case DATE:
-                ADateSerializerDeserializer.parse(unquoted, out);
+                parseDate(unquoted, out);
                 return true;
             case DATETIME:
-                ADateTimeSerializerDeserializer.parse(unquoted, out);
+                parseDateTime(unquoted, out);
                 return true;
             case DURATION:
-                ADurationSerializerDeserializer.parse(unquoted, out);
+                parseDuration(unquoted, out);
                 return true;
             case DAYTIMEDURATION:
-                ADayTimeDurationSerializerDeserializer.INSTANCE.parse(unquoted, out);
+                parseDateTimeDuration(unquoted, out);
                 return true;
             case YEARMONTHDURATION:
-                AYearMonthDurationSerializerDeserializer.INSTANCE.parse(unquoted, out);
+                parseYearMonthDuration(unquoted, out);
                 return true;
             case POINT:
-                APointSerializerDeserializer.parse(unquoted, out);
+                parsePoint(unquoted, out);
                 return true;
             case POINT3D:
-                APoint3DSerializerDeserializer.parse(unquoted, out);
+                parse3DPoint(unquoted, out);
                 return true;
             case CIRCLE:
-                ACircleSerializerDeserializer.parse(unquoted, out);
+                parseCircle(unquoted, out);
                 return true;
             case RECTANGLE:
-                ARectangleSerializerDeserializer.parse(unquoted, out);
+                parseRectangle(unquoted, out);
                 return true;
             case LINE:
-                ALineSerializerDeserializer.parse(unquoted, out);
+                parseLine(unquoted, out);
                 return true;
             case POLYGON:
                 APolygonSerializerDeserializer.parse(unquoted, out);
