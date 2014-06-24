@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,9 +32,9 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
     private static final long serialVersionUID = 1L;
 
-    private IScalarEvaluatorFactory maxObjectsEvalFactory;
-    private IScalarEvaluatorFactory offsetEvalFactory;
-    private IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
+    private final IScalarEvaluatorFactory maxObjectsEvalFactory;
+    private final IScalarEvaluatorFactory offsetEvalFactory;
+    private final IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory;
 
     public StreamLimitRuntimeFactory(IScalarEvaluatorFactory maxObjectsEvalFactory,
             IScalarEvaluatorFactory offsetEvalFactory, int[] projectionList,
@@ -59,7 +59,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx) {
         final IBinaryIntegerInspector bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-            private IPointable p = VoidPointable.FACTORY.createPointable();
+            private final IPointable p = VoidPointable.FACTORY.createPointable();
             private IScalarEvaluator evalMaxObjects;
             private IScalarEvaluator evalOffset = null;
             private int toWrite = 0; // how many tuples still to write
@@ -128,6 +128,10 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
             @Override
             public void close() throws HyracksDataException {
+                toWrite = 0; // how many tuples still to write
+                toSkip = 0; // how many tuples still to skip
+                firstTuple = true;
+                afterLastTuple = false;
                 // if (!afterLastTuple) {
                 super.close();
                 // }
