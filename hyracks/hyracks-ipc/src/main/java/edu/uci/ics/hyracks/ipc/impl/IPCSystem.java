@@ -51,6 +51,9 @@ public class IPCSystem {
     public void start() {
         cMgr.start();
     }
+    public void stop() throws IOException{
+        cMgr.stop();
+    }
 
     public IIPCHandle getHandle(InetSocketAddress remoteAddress) throws IPCException {
         try {
@@ -61,7 +64,7 @@ public class IPCSystem {
             throw new IPCException(e);
         }
     }
-
+    
     IPayloadSerializerDeserializer getSerializerDeserializer() {
         return serde;
     }

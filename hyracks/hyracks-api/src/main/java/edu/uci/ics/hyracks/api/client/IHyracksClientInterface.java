@@ -50,4 +50,6 @@ public interface IHyracksClientInterface {
 
     public JobInfo getJobInfo(JobId jobId) throws Exception;
 
+    public void stopCluster() throws Exception;
+
 }

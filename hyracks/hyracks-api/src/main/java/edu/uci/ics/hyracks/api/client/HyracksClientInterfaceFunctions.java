@@ -40,7 +40,8 @@ public class HyracksClientInterfaceFunctions {
         WAIT_FOR_COMPLETION,
         GET_NODE_CONTROLLERS_INFO,
         CLI_DEPLOY_BINARY,
-        CLI_UNDEPLOY_BINARY
+        CLI_UNDEPLOY_BINARY,
+        CLUSTER_SHUTDOWN
     }
 
     public abstract static class Function implements Serializable {
@@ -279,4 +280,14 @@ public class HyracksClientInterfaceFunctions {
             return deploymentId;
         }
     }
+
+    public static class ClusterShutdownFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.CLUSTER_SHUTDOWN;
+        }
+    }
+
 }

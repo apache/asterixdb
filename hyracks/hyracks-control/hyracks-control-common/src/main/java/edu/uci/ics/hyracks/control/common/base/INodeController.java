@@ -46,4 +46,6 @@ public interface INodeController {
     public void undeployBinary(DeploymentId deploymentId) throws Exception;
 
     public void dumpState(String stateDumpId) throws Exception;
+
+    public void shutDown() throws Exception;
 }

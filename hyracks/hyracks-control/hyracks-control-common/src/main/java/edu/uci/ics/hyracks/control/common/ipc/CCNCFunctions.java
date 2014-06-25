@@ -91,6 +91,8 @@ public class CCNCFunctions {
         DEPLOY_BINARY,
         NOTIFY_DEPLOY_BINARY,
         UNDEPLOY_BINARY,
+        SHUTDOWN_REQUEST,
+        SHUTDOWN_RESPONSE,
 
         STATE_DUMP_REQUEST,
         STATE_DUMP_RESPONSE,
@@ -983,6 +985,36 @@ public class CCNCFunctions {
         }
     }
 
+    public static class RequestShutdownFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.SHUTDOWN_REQUEST;
+        }
+
+    }
+
+    public static class NotifyShutdownFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final String nodeId;
+
+        public NotifyShutdownFunction(String nodeId) {
+            this.nodeId = nodeId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.SHUTDOWN_RESPONSE;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+    }
+
     public static class NotifyDeployBinaryFunction extends Function {
         private static final long serialVersionUID = 1L;
 
@@ -1065,6 +1097,33 @@ public class CCNCFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.STATE_DUMP_RESPONSE;
+        }
+    }
+
+    public static class ShutdownRequestFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.SHUTDOWN_REQUEST;
+        }
+    }
+
+    public static class ShutdownResponseFunction extends Function {
+
+        private final String nodeId;
+
+        public ShutdownResponseFunction(String nodeId) {
+            this.nodeId = nodeId;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.SHUTDOWN_RESPONSE;
         }
     }
 

@@ -144,5 +144,10 @@ public class ClusterControllerRemoteProxy implements IClusterController {
                 state);
         ipcHandle.send(-1, fn, null);
     }
+    @Override
+    public void notifyShutdown(String nodeId) throws Exception{
+        CCNCFunctions.ShutdownResponseFunction sdrf = new CCNCFunctions.ShutdownResponseFunction(nodeId);
+        ipcHandle.send(-1,sdrf,null);
+    }
 
 }

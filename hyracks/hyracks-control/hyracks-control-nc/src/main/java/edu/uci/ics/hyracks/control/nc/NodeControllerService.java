@@ -82,6 +82,7 @@ import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
 import edu.uci.ics.hyracks.control.nc.work.CleanupJobletWork;
 import edu.uci.ics.hyracks.control.nc.work.DeployBinaryWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
+import edu.uci.ics.hyracks.control.nc.work.ShutdownWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
 import edu.uci.ics.hyracks.control.nc.work.StateDumpWork;
 import edu.uci.ics.hyracks.control.nc.work.UnDeployBinaryWork;
@@ -547,6 +548,10 @@ public class NodeControllerService extends AbstractRemoteService {
                 case STATE_DUMP_REQUEST: {
                     final CCNCFunctions.StateDumpRequestFunction dsrf = (StateDumpRequestFunction) fn;
                     queue.schedule(new StateDumpWork(NodeControllerService.this, dsrf.getStateDumpId()));
+                    return;
+                }
+                case SHUTDOWN_REQUEST: {
+                    queue.schedule(new ShutdownWork(NodeControllerService.this));
                     return;
                 }
             }

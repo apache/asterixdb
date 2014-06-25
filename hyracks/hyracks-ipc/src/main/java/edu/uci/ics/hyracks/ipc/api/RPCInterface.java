@@ -17,6 +17,8 @@ package edu.uci.ics.hyracks.ipc.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
+
 public class RPCInterface implements IIPCI {
     private final Map<Long, Request> reqMap;
 
@@ -26,9 +28,13 @@ public class RPCInterface implements IIPCI {
 
     public Object call(IIPCHandle handle, Object request) throws Exception {
         Request req;
+        long mid;
         synchronized (this) {
-            req = new Request();
-            long mid = handle.send(-1, request, null);
+            if (!handle.isConnected()) {
+                throw new IPCException("Cannot send on a closed handle");
+            }
+            req = new Request(handle, this);
+            mid = handle.send(-1, request, null);
             reqMap.put(mid, req);
         }
         return req.getResponse();
@@ -48,14 +54,19 @@ public class RPCInterface implements IIPCI {
         }
     }
 
+    protected synchronized void removeRequest(Request r) {
+        reqMap.remove(r);
+    }
+
     private static class Request {
+
         private boolean pending;
 
         private Object result;
 
         private Exception exception;
 
-        Request() {
+        Request(IIPCHandle carrier, RPCInterface parent) {
             pending = true;
             result = null;
             exception = null;
@@ -82,5 +93,6 @@ public class RPCInterface implements IIPCI {
             }
             return result;
         }
+
     }
 }

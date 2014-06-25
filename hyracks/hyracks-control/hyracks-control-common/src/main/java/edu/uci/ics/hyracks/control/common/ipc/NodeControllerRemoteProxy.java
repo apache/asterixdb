@@ -84,4 +84,10 @@ public class NodeControllerRemoteProxy implements INodeController {
         CCNCFunctions.StateDumpRequestFunction dsf = new CCNCFunctions.StateDumpRequestFunction(stateDumpId);
         ipcHandle.send(-1, dsf, null);
     }
+
+    @Override
+    public void shutDown() throws Exception {
+        CCNCFunctions.ShutdownRequestFunction sdrf = new CCNCFunctions.ShutdownRequestFunction();
+        ipcHandle.send(-1, sdrf, null);
+    }
 }
