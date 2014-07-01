@@ -37,7 +37,7 @@ public class AIntervalPrinter implements IPrinter {
      */
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("{ interval: { start: ");
+        ps.print("{ \"interval\": { \"start\": ");
 
         short typetag = AInt8SerializerDeserializer.getByte(b, s + 1 + 8 * 2);
 
@@ -46,17 +46,17 @@ public class AIntervalPrinter implements IPrinter {
         if (typetag == ATypeTag.DATE.serialize()) {
             timeInstancePrinter = ADatePrinter.INSTANCE;
             ((ADatePrinter) timeInstancePrinter).print(b, s + 4, 4, ps);
-            ps.print(", end: ");
+            ps.print(", \"end\": ");
             ((ADatePrinter) timeInstancePrinter).print(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.TIME.serialize()) {
             timeInstancePrinter = ATimePrinter.INSTANCE;
             ((ATimePrinter) timeInstancePrinter).print(b, s + 4, 4, ps);
-            ps.print(", end: ");
+            ps.print(", \"end\": ");
             ((ATimePrinter) timeInstancePrinter).print(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.DATETIME.serialize()) {
             timeInstancePrinter = ADateTimePrinter.INSTANCE;
             ((ADateTimePrinter) timeInstancePrinter).print(b, s, 8, ps);
-            ps.print(", end: ");
+            ps.print(", \"end\": ");
             ((ADateTimePrinter) timeInstancePrinter).print(b, s + 8, 8, ps);
         } else {
             throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);

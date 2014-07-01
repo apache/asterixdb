@@ -31,12 +31,12 @@ public class ACirclePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("{ circle: [");
+        ps.print("{ \"circle\": [");
         ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
-        ps.print(", { point: [");
+        ps.print(", { \"point\": [");
         ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 9));
-        ps.print(",");
+        ps.print(", ");
         ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 17));
-        ps.print("]}]}");
+        ps.print("] } ] }");
     }
 }

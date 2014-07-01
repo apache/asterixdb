@@ -31,10 +31,10 @@ public class APointPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("{ point: [");
+        ps.print("{ \"point\": [");
         ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
         ps.print(", ");
         ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 9));
-        ps.print("]}");
+        ps.print("] }");
     }
 }

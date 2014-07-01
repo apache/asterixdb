@@ -35,11 +35,11 @@ public class ADurationPrinter implements IPrinter {
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);
         long milliseconds = AInt64SerializerDeserializer.getLong(b, s + 5);
 
-        ps.print("{ duration: {");
-        ps.print("months: ");
+        ps.print("{ \"duration\": { ");
+        ps.print("\"months\": ");
         ps.print(months);
-        ps.print("millis: ");
+        ps.print("\"millis\": ");
         ps.print(milliseconds);
-        ps.print("}}");
+        ps.print("} }");
     }
 }

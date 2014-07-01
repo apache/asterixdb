@@ -76,10 +76,10 @@ abstract class RESTAPIServlet extends HttpServlet {
 
         PrintWriter out = response.getWriter();
         DisplayFormat format = DisplayFormat.HTML;
-        String contentType = request.getContentType();
-        if ((contentType == null) || (contentType.equals("text/plain"))) {
+        String accept = request.getHeader("Accept");
+        if ((accept == null) || (accept.contains("text/plain"))) {
             format = DisplayFormat.TEXT;
-        } else if (contentType.equals("application/json")) {
+        } else if (accept.contains("application/json")) {
             format = DisplayFormat.JSON;
         }
 

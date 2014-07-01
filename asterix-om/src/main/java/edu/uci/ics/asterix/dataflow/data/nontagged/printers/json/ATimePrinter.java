@@ -33,7 +33,7 @@ public class ATimePrinter implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         int time = AInt32SerializerDeserializer.getInt(b, s + 1);
 
-        ps.print("{ time: ");
+        ps.print("{ \"time\": ");
         ps.print(time);
         ps.print("}");
     }

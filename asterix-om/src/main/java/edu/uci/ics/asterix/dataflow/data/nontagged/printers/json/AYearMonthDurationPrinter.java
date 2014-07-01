@@ -39,7 +39,7 @@ public class AYearMonthDurationPrinter implements IPrinter {
 
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);
 
-        ps.print("{ year-month-duration: ");
+        ps.print("{ \"year-month-duration\": ");
         ps.print(months);
         ps.print("}");
     }

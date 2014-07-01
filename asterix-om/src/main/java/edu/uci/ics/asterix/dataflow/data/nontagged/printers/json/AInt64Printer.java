@@ -30,7 +30,7 @@ public class AInt64Printer implements IPrinter {
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         long d = AInt64SerializerDeserializer.getLong(b, s + 1);
-        ps.println("{ int64: ");
+        ps.println("{ \"int64\": ");
         ps.println(d);
         ps.println("}");
     }
