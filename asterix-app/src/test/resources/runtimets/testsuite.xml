@@ -5117,4 +5117,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="json">
+    <test-case FilePath="json">
+      <compilation-unit name="int01">
+        <output-dir compare="JSON">int01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

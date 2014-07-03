@@ -51,12 +51,13 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import edu.uci.ics.asterix.testframework.context.TestCaseContext.OutputFormat;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
+import edu.uci.ics.asterix.testframework.xml.ComparisonEnum;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 
 public class TestsUtils {
 
-    private static final String EXTENSION_AQL_RESULT = "adm";
     private static final Logger LOGGER = Logger.getLogger(TestsUtils.class.getName());
     private static Method managixExecuteMethod = null;
 
@@ -152,11 +153,6 @@ public class TestsUtils {
         return true;
     }
 
-    public static String aqlExtToResExt(String fname) {
-        int dot = fname.lastIndexOf('.');
-        return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
-    }
-
     private static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         try {
@@ -194,7 +190,7 @@ public class TestsUtils {
     }
 
     // Executes Query and returns results as JSONArray
-    public static InputStream executeQuery(String str) throws Exception {
+    public static InputStream executeQuery(String str, OutputFormat fmt) throws Exception {
         InputStream resultStream = null;
 
         final String url = "http://localhost:19002/query";
@@ -205,6 +201,12 @@ public class TestsUtils {
         // Create a method instance.
         GetMethod method = new GetMethod(url);
         method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
+
+        // For now, ADM means "default", which is what is returned when no
+        // explicit Accept: header is specified.
+        if (fmt == OutputFormat.JSON) {
+            method.setRequestHeader("Accept", "application/json");
+        }
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -397,22 +399,18 @@ public class TestsUtils {
                                         + File.separator + "stop_and_start.sh");
                             }
 
-                            resultStream = executeQuery(statement);
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
                             if (queryCount >= expectedResultFileCtxs.size()) {
                                 throw new IllegalStateException("no result file for " + testFile.toString());
                             }
                             expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
-                            File actualFile = new File(actualPath + File.separator
-                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                    + cUnit.getName() + ".adm");
-                            TestsUtils.writeResultsToFile(actualFile, resultStream);
-
                             File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                             actualResultFile.getParentFile().mkdirs();
+                            TestsUtils.writeResultsToFile(actualResultFile, resultStream);
 
                             TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                    expectedResultFile, actualFile);
+                                    expectedResultFile, actualResultFile);
                             LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                     + " PASSED ");
 
@@ -422,7 +420,7 @@ public class TestsUtils {
                             executeManagixCommand(statement);
                             break;
                         case "txnqbc": //qbc represents query before crash
-                            resultStream = executeQuery(statement);
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
                             qbcFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
@@ -430,7 +428,7 @@ public class TestsUtils {
                             TestsUtils.writeResultsToFile(qbcFile, resultStream);
                             break;
                         case "txnqar": //qar represents query after recovery
-                            resultStream = executeQuery(statement);
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
                             qarFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");

@@ -28,6 +28,47 @@ import edu.uci.ics.asterix.testframework.xml.TestSuite;
 import edu.uci.ics.asterix.testframework.xml.TestSuiteParser;
 
 public class TestCaseContext {
+
+    /**
+     * For specifying the desired output formatting of results.
+     */
+    public enum OutputFormat {
+        NONE  ("", ""),
+        ADM   ("adm", "application/adm"),
+        JSON  ("json", "application/json");
+
+        private final String extension;
+        private final String mimetype;
+        OutputFormat(String ext, String mime) {
+            this.extension = ext;
+            this.mimetype = mime;
+        }
+
+        public String extension() {
+            return extension;
+        }
+
+        public String mimeType() {
+            return mimetype;
+        }
+
+        //
+        public static OutputFormat forCompilationUnit(CompilationUnit cUnit) {
+            switch (cUnit.getOutputDir().getCompare()) {
+            case TEXT:
+                return OutputFormat.ADM;
+            case JSON:
+                return OutputFormat.JSON;
+            case INSPECT:
+            case IGNORE:
+                return OutputFormat.NONE;
+            default:
+                assert false: "Unknown ComparisonEnum!";
+                return OutputFormat.NONE;
+            }
+        }
+    };
+
     public static final String DEFAULT_TESTSUITE_XML_NAME = "testsuite.xml";
 
     private File tsRoot;
@@ -108,7 +149,8 @@ public class TestCaseContext {
         File path = actualResultsBase;
         path = new File(path, testSuite.getResultOffsetPath());
         path = new File(path, testCase.getFilePath());
-        return new File(path, cUnit.getOutputDir().getValue() + ".adm");
+        return new File(path, cUnit.getOutputDir().getValue() + "." +
+                        OutputFormat.forCompilationUnit(cUnit).extension());
     }
 
     public static class Builder {
