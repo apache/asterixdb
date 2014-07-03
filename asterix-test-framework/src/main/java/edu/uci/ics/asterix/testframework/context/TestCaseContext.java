@@ -18,6 +18,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import edu.uci.ics.asterix.testframework.xml.CategoryEnum;
 import edu.uci.ics.asterix.testframework.xml.TestCase;
@@ -112,8 +113,16 @@ public class TestCaseContext {
 
     public static class Builder {
         private final boolean m_doSlow;
+        private final Pattern m_re;
         public Builder() {
             m_doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
+            String re = System.getProperty("testre");
+            if (re == null) {
+                m_re = null;
+            }
+            else {
+                m_re = Pattern.compile(re);
+            }
         }
 
         public List<TestCaseContext> build(File tsRoot) throws Exception {
@@ -143,7 +152,25 @@ public class TestCaseContext {
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
                 if (m_doSlow || tc.getCategory() != CategoryEnum.SLOW) {
-                    tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
+                    boolean matches = false;
+                    if (m_re != null) {
+                        // Check all compilation units for matching
+                        // name. If ANY match, add the test.
+                        for (TestCase.CompilationUnit cu : tc.getCompilationUnit()) {
+                            if (m_re.matcher(cu.getName()).matches()) {
+                                matches = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        // No regex == everything matches
+                        matches = true;
+                    }
+
+                    if (matches) {
+                        tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
+                    }
                 }
             }
             addContexts(tsRoot, ts, tgPath, tg.getTestGroup(), tccs);
