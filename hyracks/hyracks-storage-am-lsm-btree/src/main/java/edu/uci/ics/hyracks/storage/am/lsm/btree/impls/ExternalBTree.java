@@ -94,7 +94,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         super(interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory, fileManager, diskBTreeFactory,
                 bulkLoadBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, diskFileMapProvider,
                 fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallback, false);
-        this.transactionComponentFactory = new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory);
+        this.transactionComponentFactory = new LSMBTreeDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory, null);
         this.secondDiskComponents = new LinkedList<ILSMComponent>();
         this.interiorFrameFactory = interiorFrameFactory;
         this.version = version;

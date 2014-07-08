@@ -368,7 +368,7 @@ public abstract class JobGen implements IJobGen {
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
                 null, null, true, true, getIndexDataflowHelperFactory(), false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE);
+                NoOpOperationCallbackFactory.INSTANCE, null, null);
         setLocationConstraint(spec, scanner);
 
         /**
@@ -515,7 +515,8 @@ public abstract class JobGen implements IJobGen {
             return new LSMBTreeDataflowHelperFactory(new VirtualBufferCacheProvider(),
                     new ConstantMergePolicyFactory(), MERGE_POLICY_PROPERTIES, NoOpOperationTrackerProvider.INSTANCE,
                     /* TODO verify whether key dup check is required or not in preglix: to be safe, just check it as it has been done*/
-                    SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, 0.01, true);
+                    SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, 0.01, true, null, null,
+                    null, null);
         } else {
             return new BTreeDataflowHelperFactory();
         }
@@ -628,7 +629,7 @@ public abstract class JobGen implements IJobGen {
         BTreeSearchOperatorDescriptor scanner = new BTreeSearchOperatorDescriptor(spec, recordDescriptor,
                 storageManagerInterface, lcManagerProvider, fileSplitProvider, typeTraits, comparatorFactories, null,
                 null, null, true, true, getIndexDataflowHelperFactory(), false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE);
+                NoOpOperationCallbackFactory.INSTANCE, null, null);
         setLocationConstraint(spec, scanner);
 
         ExternalSortOperatorDescriptor sort = null;

@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractMemoryLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
@@ -27,8 +28,8 @@ public class LSMInvertedIndexMemoryComponent extends AbstractMemoryLSMComponent 
     private final BTree deletedKeysBTree;
 
     public LSMInvertedIndexMemoryComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, IVirtualBufferCache vbc,
-            boolean isActive) {
-        super(vbc, isActive);
+            boolean isActive, ILSMComponentFilter filter) {
+        super(vbc, isActive, filter);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
     }

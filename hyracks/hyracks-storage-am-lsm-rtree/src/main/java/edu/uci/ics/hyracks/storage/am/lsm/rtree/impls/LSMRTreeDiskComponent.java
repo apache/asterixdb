@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 
@@ -25,7 +26,8 @@ public class LSMRTreeDiskComponent extends AbstractDiskLSMComponent {
     private final BTree btree;
     private final BloomFilter bloomFilter;
 
-    public LSMRTreeDiskComponent(RTree rtree, BTree btree, BloomFilter bloomFilter) {
+    public LSMRTreeDiskComponent(RTree rtree, BTree btree, BloomFilter bloomFilter, ILSMComponentFilter filter) {
+        super(filter);
         this.rtree = rtree;
         this.btree = btree;
         this.bloomFilter = bloomFilter;

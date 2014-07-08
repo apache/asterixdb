@@ -228,7 +228,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
                 primaryBloomFilterKeyFields, lowKeyFields, highKeyFields, true, true, dataflowHelperFactory, false,
-                false, null, NoOpOperationCallbackFactory.INSTANCE);
+                false, null, NoOpOperationCallbackFactory.INSTANCE, null, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         // sort based on secondary keys

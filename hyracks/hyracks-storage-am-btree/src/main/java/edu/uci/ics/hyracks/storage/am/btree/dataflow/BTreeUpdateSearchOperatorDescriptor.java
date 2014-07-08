@@ -44,7 +44,7 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
             ISearchOperationCallbackFactory searchOpCallbackProvider, ITupleUpdaterFactory tupleUpdaterFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields, lowKeyInclusive,
-                highKeyInclusive, dataflowHelperFactory, retainInput, false, null, searchOpCallbackProvider);
+                highKeyInclusive, dataflowHelperFactory, retainInput, false, null, searchOpCallbackProvider, null, null);
         this.tupleUpdaterFactory = tupleUpdaterFactory;
     }
 

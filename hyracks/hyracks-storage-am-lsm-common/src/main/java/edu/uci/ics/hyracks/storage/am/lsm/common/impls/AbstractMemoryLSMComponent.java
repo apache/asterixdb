@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
@@ -26,8 +27,8 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
     private final AtomicBoolean isModified;
     private boolean requestedToBeActive;
 
-    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive) {
-        super();
+    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive, ILSMComponentFilter filter) {
+        super(filter);
         this.vbc = vbc;
         writerCount = 0;
         if (isActive) {
@@ -36,6 +37,10 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             state = ComponentState.INACTIVE;
         }
         isModified = new AtomicBoolean();
+    }
+
+    public AbstractMemoryLSMComponent(IVirtualBufferCache vbc, boolean isActive) {
+        this(vbc, isActive, null);
     }
 
     @Override
@@ -174,5 +179,8 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
 
     protected void reset() throws HyracksDataException {
         isModified.set(false);
+        if (filter != null) {
+            filter.reset();
+        }
     }
 }

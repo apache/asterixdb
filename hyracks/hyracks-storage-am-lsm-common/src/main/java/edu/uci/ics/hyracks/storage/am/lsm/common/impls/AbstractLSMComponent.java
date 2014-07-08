@@ -15,18 +15,30 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 
 public abstract class AbstractLSMComponent implements ILSMComponent {
 
     protected ComponentState state;
     protected int readerCount;
+    protected final ILSMComponentFilter filter;
 
-    public AbstractLSMComponent() {
+    public AbstractLSMComponent(ILSMComponentFilter filter) {
+        this.filter = filter;
         readerCount = 0;
+    }
+    
+    public AbstractLSMComponent() {
+        this(null);
     }
 
     @Override
     public ComponentState getState() {
         return state;
+    }
+
+    @Override
+    public ILSMComponentFilter getLSMComponentFilter() {
+        return filter;
     }
 }

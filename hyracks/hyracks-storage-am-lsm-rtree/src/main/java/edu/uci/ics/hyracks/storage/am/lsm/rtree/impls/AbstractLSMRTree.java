@@ -33,10 +33,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
+import edu.uci.ics.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -49,6 +52,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -73,6 +77,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     protected final ITreeIndexFrameFactory btreeInteriorFrameFactory;
     protected final ITreeIndexFrameFactory rtreeLeafFrameFactory;
     protected final ITreeIndexFrameFactory btreeLeafFrameFactory;
+    protected final int[] rtreeFields;
 
     public AbstractLSMRTree(List<IVirtualBufferCache> virtualBufferCaches,
             ITreeIndexFrameFactory rtreeInteriorFrameFactory, ITreeIndexFrameFactory rtreeLeafFrameFactory,
@@ -82,9 +87,12 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback) {
+            ILSMIOOperationCallback ioOpCallback, ILSMComponentFilterFactory filterFactory,
+            ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
+            int[] rtreeFields, int[] filterFields) {
         super(virtualBufferCaches, componentFactory.getBufferCache(), fileManager, diskFileMapProvider,
-                bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback);
+                bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallback, filterFrameFactory,
+                filterManager, filterFields);
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache,
@@ -98,7 +106,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                     btreeCmpFactories, btreeCmpFactories.length, new FileReference(new File(fileManager.getBaseDir()
                             + "_virtual_b_" + i)));
             LSMRTreeMemoryComponent mutableComponent = new LSMRTreeMemoryComponent(memRTree, memBTree,
-                    virtualBufferCache, i == 0 ? true : false);
+                    virtualBufferCache, i == 0 ? true : false, filterFactory == null ? null
+                            : filterFactory.createLSMComponentFilter());
             memoryComponents.add(mutableComponent);
             ++i;
         }
@@ -113,6 +122,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.linearizer = linearizer;
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
+        this.rtreeFields = rtreeFields;
     }
     
     /*
@@ -138,6 +148,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.linearizer = linearizer;
         this.comparatorFields = comparatorFields;
         this.linearizerArray = linearizerArray;
+        this.rtreeFields = null;
     }
 
     @Override
@@ -240,7 +251,20 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
                 }
                 // The current mutable component is always added
                 operationalComponents.add(0, memoryComponents.get(cmc));
-                operationalComponents.addAll(immutableComponents);
+
+                if (filterManager != null) {
+                    for (ILSMComponent c : immutableComponents) {
+                        if (c.getLSMComponentFilter().satisfy(
+                                ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMinFilterTuple(),
+                                ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMaxFilterTuple(),
+                                ((LSMRTreeOpContext) ctx).filterCmp)) {
+                            operationalComponents.add(c);
+                        }
+                    }
+                } else {
+                    operationalComponents.addAll(immutableComponents);
+                }
+
                 break;
             case MERGE:
                 operationalComponents.addAll(ctx.getComponentsToBeMerged());
@@ -298,6 +322,9 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             component.getBTree().activate();
             component.getBloomFilter().activate();
         }
+        if (component.getLSMComponentFilter() != null) {
+            filterManager.readFilterInfo(component.getLSMComponentFilter(), component.getRTree());
+        }
         return component;
     }
 
@@ -350,20 +377,33 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             throw new UnsupportedOperationException("Physical delete not supported in the LSM-RTree");
         }
 
-        ctx.modificationCallback.before(tuple);
-        ctx.modificationCallback.found(null, tuple);
+        ITupleReference indexTuple;
+        if (ctx.indexTuple != null) {
+            ctx.indexTuple.reset(tuple);
+            indexTuple = ctx.indexTuple;
+        } else {
+            indexTuple = tuple;
+        }
+
+        ctx.modificationCallback.before(indexTuple);
+        ctx.modificationCallback.found(null, indexTuple);
         if (ctx.getOperation() == IndexOperation.INSERT) {
-            ctx.currentMutableRTreeAccessor.insert(tuple);
+            ctx.currentMutableRTreeAccessor.insert(indexTuple);
         } else {
             // First remove all entries in the in-memory rtree (if any).
-            ctx.currentMutableRTreeAccessor.delete(tuple);
+            ctx.currentMutableRTreeAccessor.delete(indexTuple);
             // Insert key into the deleted-keys BTree.
             try {
-                ctx.currentMutableBTreeAccessor.insert(tuple);
+                ctx.currentMutableBTreeAccessor.insert(indexTuple);
             } catch (TreeIndexDuplicateKeyException e) {
                 // Do nothing, because one delete tuple is enough to indicate
                 // that all the corresponding insert tuples are deleted
             }
+        }
+        if (ctx.filterTuple != null) {
+            ctx.filterTuple.reset(tuple);
+            memoryComponents.get(currentMutableComponentId.get()).getLSMComponentFilter()
+                    .update(ctx.filterTuple, ctx.filterCmp);
         }
     }
 
@@ -371,7 +411,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         return new LSMRTreeOpContext(memoryComponents, (IRTreeLeafFrame) rtreeLeafFrameFactory.createFrame(),
                 (IRTreeInteriorFrame) rtreeInteriorFrameFactory.createFrame(), btreeLeafFrameFactory,
                 btreeInteriorFrameFactory, rtreeCmpFactories, btreeCmpFactories, modCallback,
-                NoOpOperationCallback.INSTANCE);
+                NoOpOperationCallback.INSTANCE, rtreeFields, filterFields);
     }
 
     @Override

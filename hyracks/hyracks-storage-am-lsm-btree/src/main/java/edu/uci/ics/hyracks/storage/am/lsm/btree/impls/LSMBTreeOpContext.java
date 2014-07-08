@@ -24,10 +24,12 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTreeOpContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 
@@ -49,10 +51,14 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
+    public final PermutingTupleReference indexTuple;
+    public final MultiComparator filterCmp;
+    public final PermutingTupleReference filterTuple;
+    public ISearchPredicate searchPredicate;
 
     public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields) {
+            ISearchOperationCallback searchCallback, int numBloomFilterKeyFields, int[] btreeFields, int[] filterFields) {
         LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
         IBinaryComparatorFactory cmpFactories[] = c.getBTree().getComparatorFactories();
         if (cmpFactories[0] != null) {
@@ -88,6 +94,16 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
+
+        if (filterFields != null) {
+            indexTuple = new PermutingTupleReference(btreeFields);
+            filterCmp = MultiComparator.create(c.getLSMComponentFilter().getFilterCmpFactories());
+            filterTuple = new PermutingTupleReference(filterFields);
+        } else {
+            indexTuple = null;
+            filterCmp = null;
+            filterTuple = null;
+        }
     }
 
     @Override
@@ -160,5 +176,15 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public List<ILSMComponent> getComponentsToBeMerged() {
         return componentsToBeMerged;
+    }
+
+    @Override
+    public void setSearchPredicate(ISearchPredicate searchPredicate) {
+        this.searchPredicate = searchPredicate;
+    }
+
+    @Override
+    public ISearchPredicate getSearchPredicate() {
+        return searchPredicate;
     }
 }

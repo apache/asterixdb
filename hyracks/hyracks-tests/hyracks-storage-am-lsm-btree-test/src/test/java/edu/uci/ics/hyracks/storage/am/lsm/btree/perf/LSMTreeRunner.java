@@ -109,7 +109,8 @@ public class LSMTreeRunner implements IExperimentRunner {
 
         lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fmp, typeTraits, cmpFactories,
                 bloomFilterKeyFields, bloomFilterFalsePositiveRate, NoMergePolicy.INSTANCE,
-                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, true);
+                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null,
+                null);
     }
 
     @Override

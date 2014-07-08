@@ -73,8 +73,9 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<S> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
-            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context,
-            JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
+            List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema,
+            IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
+            throws AlgebricksException {
 
         S desc = dataSource.getId();
         HiveScanRuntimeGenerator generator = new HiveScanRuntimeGenerator((PartitionDesc) desc);
@@ -93,8 +94,8 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(IDataSource<S> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
-            LogicalVariable payLoadVar, RecordDescriptor recordDesc, JobGenContext context, JobSpecification jobSpec)
-            throws AlgebricksException {
+            LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields, RecordDescriptor recordDesc,
+            JobGenContext context, JobSpecification jobSpec) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -102,8 +103,8 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(IDataSource<S> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
-            LogicalVariable payLoadVar, RecordDescriptor recordDesc, JobGenContext context, JobSpecification jobSpec)
-            throws AlgebricksException {
+            LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields, RecordDescriptor recordDesc,
+            JobGenContext context, JobSpecification jobSpec) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -117,8 +118,9 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(IDataSource<S> arg0,
-            IOperatorSchema arg1, List<LogicalVariable> arg2, LogicalVariable arg3, JobGenContext arg4,
-            JobSpecification arg5) throws AlgebricksException {
+            IOperatorSchema arg1, List<LogicalVariable> arg2, LogicalVariable arg3,
+            List<LogicalVariable> additionalNonKeyFields, JobGenContext arg4, JobSpecification arg5)
+            throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -132,8 +134,8 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
             IDataSourceIndex<T, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
-            throws AlgebricksException {
+            List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
+            JobGenContext context, JobSpecification spec) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -142,8 +144,8 @@ public class HiveMetaDataProvider<S, T> implements IMetadataProvider<S, T> {
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
             IDataSourceIndex<T, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
-            throws AlgebricksException {
+            List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
+            JobGenContext context, JobSpecification spec) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }

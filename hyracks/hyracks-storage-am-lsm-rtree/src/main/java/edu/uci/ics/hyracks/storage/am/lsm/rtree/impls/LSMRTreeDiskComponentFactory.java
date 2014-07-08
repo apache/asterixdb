@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -30,12 +31,14 @@ public class LSMRTreeDiskComponentFactory implements ILSMComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
+    private final ILSMComponentFilterFactory filterFactory;
 
     public LSMRTreeDiskComponentFactory(TreeIndexFactory<RTree> rtreeFactory, TreeIndexFactory<BTree> btreeFactory,
-            BloomFilterFactory bloomFilterFactory) {
+            BloomFilterFactory bloomFilterFactory, ILSMComponentFilterFactory filterFactory) {
         this.rtreeFactory = rtreeFactory;
         this.btreeFactory = btreeFactory;
         this.bloomFilterFactory = bloomFilterFactory;
+        this.filterFactory = filterFactory;
     }
 
     @Override
@@ -43,7 +46,8 @@ public class LSMRTreeDiskComponentFactory implements ILSMComponentFactory {
             HyracksDataException {
         return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
                 btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
-                bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()));
+                bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),
+                filterFactory == null ? null : filterFactory.createLSMComponentFilter());
     }
 
     @Override

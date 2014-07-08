@@ -40,6 +40,8 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
 
     private final int queryField;
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
+    private final int[] minFilterFieldIndexes;
+    private final int[] maxFilterFieldIndexes;
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
             IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
@@ -49,7 +51,9 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IIndexDataflowHelperFactory btreeDataflowHelperFactory, IBinaryTokenizerFactory queryTokenizerFactory,
             IInvertedIndexSearchModifierFactory searchModifierFactory, RecordDescriptor recDesc, boolean retainInput,
             boolean retainNull, INullWriterFactory nullWriterFactory,
-            ISearchOperationCallbackFactory searchOpCallbackProvider) {
+            ISearchOperationCallbackFactory searchOpCallbackProvider, int[] minFilterFieldIndexes,
+            int[] maxFilterFieldIndexes) {
+
         super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
                 btreeDataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
@@ -57,6 +61,8 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
                 NoOpOperationCallbackFactory.INSTANCE);
         this.queryField = queryField;
         this.searchModifierFactory = searchModifierFactory;
+        this.minFilterFieldIndexes = minFilterFieldIndexes;
+        this.maxFilterFieldIndexes = maxFilterFieldIndexes;
     }
 
     @Override
@@ -64,6 +70,6 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IInvertedIndexSearchModifier searchModifier = searchModifierFactory.createSearchModifier();
         return new LSMInvertedIndexSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, queryField,
-                searchModifier);
+                searchModifier, minFilterFieldIndexes, maxFilterFieldIndexes);
     }
 }

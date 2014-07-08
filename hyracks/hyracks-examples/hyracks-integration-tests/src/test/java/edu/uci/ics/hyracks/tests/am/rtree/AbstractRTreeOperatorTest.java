@@ -188,15 +188,15 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
         rtreeDataflowHelperFactory = createDataFlowHelperFactory(secondaryValueProviderFactories,
                 RTreePolicyType.RSTARTREE, btreeComparatorFactories,
-                LSMRTreeUtils.proposeBestLinearizer(secondaryTypeTraits, secondaryComparatorFactories.length), btreeFields);
+                LSMRTreeUtils.proposeBestLinearizer(secondaryTypeTraits, secondaryComparatorFactories.length),
+                btreeFields);
 
     }
 
     protected abstract IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] secondaryValueProviderFactories, RTreePolicyType rtreePolicyType,
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
-            int[] btreeFields)
-            throws TreeIndexException;
+            int[] btreeFields) throws TreeIndexException;
 
     protected void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
@@ -291,8 +291,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         // scan primary index
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits, primaryComparatorFactories,
-                null, lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory, false,
-                false, null, NoOpOperationCallbackFactory.INSTANCE);
+                null, lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory, false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE, null, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primarySearchOp, NC1_ID);
 
         // load secondary index

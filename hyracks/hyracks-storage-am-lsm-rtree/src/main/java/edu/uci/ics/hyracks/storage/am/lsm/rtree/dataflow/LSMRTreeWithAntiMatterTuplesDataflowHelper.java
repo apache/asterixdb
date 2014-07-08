@@ -45,9 +45,11 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
         super(opDesc, ctx, partition, virtualBufferCaches, btreeComparatorFactories, valueProviderFactories,
-                rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory);
+                rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory, rtreeFields, filterTypeTraits,
+                filterCmpFactories, filterFields);
     }
 
     @Override
@@ -55,13 +57,15 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelper extends AbstractLSMRTree
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILSMOperationTracker opTracker, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory)
+            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory,  int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) 
             throws HyracksDataException {
         try {
             return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches, file, diskBufferCache,
                     diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories,
                     rtreePolicyType, mergePolicy, opTracker, ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory);
+                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, rtreeFields,
+                    filterTypeTraits, filterCmpFactories, filterFields);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

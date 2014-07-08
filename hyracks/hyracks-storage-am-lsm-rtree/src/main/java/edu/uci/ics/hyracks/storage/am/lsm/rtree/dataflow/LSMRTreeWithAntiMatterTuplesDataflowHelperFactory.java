@@ -20,6 +20,7 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -39,19 +40,22 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory extends AbstractL
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
     private final ILinearizeComparatorFactory linearizeCmpFactory;
+    private final int[] rtreeFields;
 
     public LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             IVirtualBufferCacheProvider virtualBufferCacheProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
-        super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory, ioSchedulerProvider,
-                ioOpCallbackFactory, 1.0);
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
+        super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory,
+                ioSchedulerProvider, ioOpCallbackFactory, 1.0, filterTypeTraits, filterCmpFactories, filterFields);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
         this.linearizeCmpFactory = linearizeCmpFactory;
+        this.rtreeFields = rtreeFields;
     }
 
     @Override
@@ -60,6 +64,7 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory extends AbstractL
         return new LSMRTreeWithAntiMatterTuplesDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), btreeComparatorFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicyFactory.createMergePolicy(mergePolicyProperties),
-                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory);
+                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory,
+                rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
     }
 }

@@ -44,16 +44,19 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
     protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected final RTreePolicyType rtreePolicyType;
     protected final ILinearizeComparatorFactory linearizeCmpFactory;
+    protected final int[] rtreeFields;
 
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             List<IVirtualBufferCache> virtualBufferCaches, IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
         this(opDesc, ctx, partition, virtualBufferCaches, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory,
-                ioScheduler, ioOpCallbackFactory, linearizeCmpFactory);
+                ioScheduler, ioOpCallbackFactory, linearizeCmpFactory, rtreeFields, filterTypeTraits,
+                filterCmpFactories, filterFields);
     }
 
     public AbstractLSMRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
@@ -62,13 +65,15 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
         super(opDesc, ctx, partition, virtualBufferCaches, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory,
-                ioScheduler, ioOpCallbackFactory);
+                ioScheduler, ioOpCallbackFactory, filterTypeTraits, filterCmpFactories, filterFields);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
         this.linearizeCmpFactory = linearizeCmpFactory;
+        this.rtreeFields = rtreeFields;
     }
 
     @Override
@@ -77,7 +82,8 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
         return createLSMTree(virtualBufferCaches, file, opDesc.getStorageManager().getBufferCache(ctx), opDesc
                 .getStorageManager().getFileMapProvider(ctx), treeOpDesc.getTreeIndexTypeTraits(),
                 treeOpDesc.getTreeIndexComparatorFactories(), btreeComparatorFactories,
-                opTrackerFactory.getOperationTracker(ctx), valueProviderFactories, rtreePolicyType, linearizeCmpFactory);
+                opTrackerFactory.getOperationTracker(ctx), valueProviderFactories, rtreePolicyType,
+                linearizeCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
 
     }
 
@@ -85,6 +91,7 @@ public abstract class AbstractLSMRTreeDataflowHelper extends AbstractLSMIndexDat
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILSMOperationTracker opTracker, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory)
+            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields,
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields)
             throws HyracksDataException;
 }

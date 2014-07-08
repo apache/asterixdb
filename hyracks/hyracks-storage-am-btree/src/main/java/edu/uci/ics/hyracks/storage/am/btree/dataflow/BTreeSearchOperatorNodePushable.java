@@ -36,8 +36,8 @@ public class BTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
 
     public BTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields, int[] highKeyFields,
-            boolean lowKeyInclusive, boolean highKeyInclusive) {
-        super(opDesc, ctx, partition, recordDescProvider);
+            boolean lowKeyInclusive, boolean highKeyInclusive, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
+        super(opDesc, ctx, partition, recordDescProvider, minFilterFieldIndexes, maxFilterFieldIndexes);
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         if (lowKeyFields != null && lowKeyFields.length > 0) {
@@ -58,6 +58,12 @@ public class BTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         if (highKey != null) {
             highKey.reset(accessor, tupleIndex);
         }
+        if (minFilterKey != null) {
+            minFilterKey.reset(accessor, tupleIndex);
+        }
+        if (maxFilterKey != null) {
+            maxFilterKey.reset(accessor, tupleIndex);
+        }
     }
 
     @Override
@@ -65,7 +71,8 @@ public class BTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         ITreeIndex treeIndex = (ITreeIndex) index;
         lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), lowKey);
         highKeySearchCmp = BTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), highKey);
-        return new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp, highKeySearchCmp);
+        return new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeySearchCmp,
+                highKeySearchCmp, minFilterKey, maxFilterKey);
     }
 
     @Override

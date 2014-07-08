@@ -18,6 +18,8 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -30,13 +32,22 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.AbstractLSMIndexDatafl
 public class PartitionedLSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
+    private final int[] invertedIndexFields;
+    private final int[] filterFieldsForNonBulkLoadOps;
+    private final int[] invertedIndexFieldsForNonBulkLoadOps;
 
     public PartitionedLSMInvertedIndexDataflowHelperFactory(IVirtualBufferCacheProvider virtualBufferCacheProvider,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerProvider, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate) {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate,
+            int[] invertedIndexFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields, int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps) {
         super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerProvider,
-                ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate);
+                ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate, filterTypeTraits,
+                filterCmpFactories, filterFields);
+        this.invertedIndexFields = invertedIndexFields;
+        this.filterFieldsForNonBulkLoadOps = filterFieldsForNonBulkLoadOps;
+        this.invertedIndexFieldsForNonBulkLoadOps = invertedIndexFieldsForNonBulkLoadOps;
     }
 
     @Override
@@ -45,6 +56,7 @@ public class PartitionedLSMInvertedIndexDataflowHelperFactory extends AbstractLS
         return new PartitionedLSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, invertedIndexFields, filterTypeTraits,
+                filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
     }
 }

@@ -27,10 +27,9 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeExamplesTest;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
-public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractRTreeExamplesTest {
+public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeExamplesTest {
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
     public LSMRTreeWithAntiMatterTuplesExamplesTest() {
@@ -41,13 +40,15 @@ public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractRTreeExamp
     @Override
     protected ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, int[] btreeFields) throws TreeIndexException {
+            RTreePolicyType rtreePolicyType, int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException {
         return LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(harness.getVirtualBufferCaches(),
                 harness.getFileReference(), harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits,
                 rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallback(),
-                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), rtreeFields,
+                filterTypeTraits, filterCmpFactories, filterFields);
     }
 
     @Before

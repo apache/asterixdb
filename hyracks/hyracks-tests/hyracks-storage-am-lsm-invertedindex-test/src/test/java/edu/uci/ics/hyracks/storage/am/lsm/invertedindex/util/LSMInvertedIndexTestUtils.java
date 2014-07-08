@@ -157,7 +157,7 @@ public class LSMInvertedIndexTestUtils {
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
         LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -168,7 +168,7 @@ public class LSMInvertedIndexTestUtils {
         IBinaryTokenizerFactory tokenizerFactory = new DelimitedUTF8StringBinaryTokenizerFactory(true, false,
                 tokenFactory);
         LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -179,7 +179,7 @@ public class LSMInvertedIndexTestUtils {
         IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
                 true, false, tokenFactory);
         LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -190,7 +190,7 @@ public class LSMInvertedIndexTestUtils {
         IBinaryTokenizerFactory tokenizerFactory = new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true,
                 true, false, tokenFactory);
         LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType);
+                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 

@@ -38,7 +38,10 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.frames.LSMComponentFilterFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFilterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilderFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
@@ -122,7 +125,9 @@ public class InvertedIndexUtils {
             IBinaryComparatorFactory[] tokenCmpFactories, IBinaryTokenizerFactory tokenizerFactory,
             IBufferCache diskBufferCache, String onDiskDir, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallback ioOpCallback) throws IndexException {
+            ILSMIOOperationCallback ioOpCallback, int[] invertedIndexFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields, int[] filterFieldsForNonBulkLoadOps,
+            int[] invertedIndexFieldsForNonBulkLoadOps) throws IndexException {
 
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(diskFileMapProvider, invListTypeTraits,
                 invListCmpFactories, diskBufferCache);
@@ -144,10 +149,21 @@ public class InvertedIndexUtils {
                 diskFileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
                 tokenCmpFactories, fileManager);
 
+        LSMComponentFilterFactory filterFactory = null;
+        LSMComponentFilterFrameFactory filterFrameFactory = null;
+        LSMComponentFilterManager filterManager = null;
+        if (filterCmpFactories != null) {
+            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
+            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory,
+                    diskBufferCache.getPageSize());
+            filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
+        }
         LSMInvertedIndex invIndex = new LSMInvertedIndex(virtualBufferCaches, invIndexFactory, deletedKeysBTreeFactory,
-                bloomFilterFactory, bloomFilterFalsePositiveRate, fileManager, diskFileMapProvider, invListTypeTraits,
-                invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback);
+                bloomFilterFactory, filterFactory, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate,
+                fileManager, diskFileMapProvider, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
+                tokenCmpFactories, tokenizerFactory, mergePolicy, opTracker, ioScheduler, ioOpCallback,
+                invertedIndexFields, filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
         return invIndex;
     }
 
@@ -157,7 +173,9 @@ public class InvertedIndexUtils {
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory, IBufferCache diskBufferCache, String onDiskDir,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback) throws IndexException {
+            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback, int[] invertedIndexFields,
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
+            int[] filterFieldsForNonBulkLoadOps, int[] invertedIndexFieldsForNonBulkLoadOps) throws IndexException {
 
         BTreeFactory deletedKeysBTreeFactory = createDeletedKeysBTreeFactory(diskFileMapProvider, invListTypeTraits,
                 invListCmpFactories, diskBufferCache);
@@ -179,10 +197,22 @@ public class InvertedIndexUtils {
                 diskBufferCache, diskFileMapProvider, invListBuilderFactory, invListTypeTraits, invListCmpFactories,
                 tokenTypeTraits, tokenCmpFactories, fileManager);
 
+        LSMComponentFilterFactory filterFactory = null;
+        LSMComponentFilterFrameFactory filterFrameFactory = null;
+        LSMComponentFilterManager filterManager = null;
+        if (filterCmpFactories != null) {
+            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            filterFactory = new LSMComponentFilterFactory(filterTupleWriterFactory, filterCmpFactories);
+            filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory,
+                    diskBufferCache.getPageSize());
+            filterManager = new LSMComponentFilterManager(diskBufferCache, filterFrameFactory);
+        }
         PartitionedLSMInvertedIndex invIndex = new PartitionedLSMInvertedIndex(virtualBufferCaches, invIndexFactory,
-                deletedKeysBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate, fileManager,
-                diskFileMapProvider, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
-                tokenizerFactory, mergePolicy, opTracker, ioScheduler, ioOpCallback);
+                deletedKeysBTreeFactory, bloomFilterFactory, filterFactory, filterFrameFactory, filterManager,
+                bloomFilterFalsePositiveRate, fileManager, diskFileMapProvider, invListTypeTraits, invListCmpFactories,
+                tokenTypeTraits, tokenCmpFactories, tokenizerFactory, mergePolicy, opTracker, ioScheduler,
+                ioOpCallback, invertedIndexFields, filterFields, filterFieldsForNonBulkLoadOps,
+                invertedIndexFieldsForNonBulkLoadOps);
         return invIndex;
     }
 }

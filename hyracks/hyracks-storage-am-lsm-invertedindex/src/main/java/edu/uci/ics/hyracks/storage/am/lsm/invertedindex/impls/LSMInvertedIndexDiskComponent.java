@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndex;
@@ -27,7 +28,9 @@ public class LSMInvertedIndexDiskComponent extends AbstractDiskLSMComponent {
     private final BTree deletedKeysBTree;
     private final BloomFilter bloomFilter;
 
-    public LSMInvertedIndexDiskComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, BloomFilter bloomFilter) {
+    public LSMInvertedIndexDiskComponent(IInvertedIndex invIndex, BTree deletedKeysBTree, BloomFilter bloomFilter,
+            ILSMComponentFilter filter) {
+        super(filter);
         this.invIndex = invIndex;
         this.deletedKeysBTree = deletedKeysBTree;
         this.bloomFilter = bloomFilter;

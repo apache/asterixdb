@@ -771,16 +771,24 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         public ILogicalOperator visitWriteResultOperator(WriteResultOperator op, Void arg) throws AlgebricksException {
             ArrayList<Mutable<ILogicalExpression>> newKeyExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             deepCopyExpressionRefs(newKeyExpressions, op.getKeyExpressions());
-            return new WriteResultOperator(op.getDataSource(), deepCopyExpressionRef(op.getPayloadExpression()),
-                    newKeyExpressions);
+            List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+            deepCopyExpressionRefs(newKeyExpressions, op.getAdditionalFilteringExpressions());
+            WriteResultOperator writeResultOp = new WriteResultOperator(op.getDataSource(),
+                    deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions);
+            writeResultOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
+            return writeResultOp;
         }
 
         @Override
         public ILogicalOperator visitInsertDeleteOperator(InsertDeleteOperator op, Void arg) throws AlgebricksException {
             List<Mutable<ILogicalExpression>> newKeyExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             deepCopyExpressionRefs(newKeyExpressions, op.getPrimaryKeyExpressions());
-            return new InsertDeleteOperator(op.getDataSource(), deepCopyExpressionRef(op.getPayloadExpression()),
-                    newKeyExpressions, op.getOperation());
+            List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+            deepCopyExpressionRefs(newKeyExpressions, op.getAdditionalFilteringExpressions());
+            InsertDeleteOperator insertDeleteOp = new InsertDeleteOperator(op.getDataSource(),
+                    deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions, op.getOperation());
+            insertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
+            return insertDeleteOp;
         }
 
         @Override
@@ -792,8 +800,12 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             deepCopyExpressionRefs(newSecondaryKeyExpressions, op.getSecondaryKeyExpressions());
             Mutable<ILogicalExpression> newFilterExpression = new MutableObject<ILogicalExpression>(
                     ((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
-            return new IndexInsertDeleteOperator(op.getDataSourceIndex(), newPrimaryKeyExpressions,
-                    newSecondaryKeyExpressions, newFilterExpression, op.getOperation());
+            List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+            deepCopyExpressionRefs(newLSMComponentFilterExpressions, op.getAdditionalFilteringExpressions());
+            IndexInsertDeleteOperator indexInsertDeleteOp = new IndexInsertDeleteOperator(op.getDataSourceIndex(),
+                    newPrimaryKeyExpressions, newSecondaryKeyExpressions, newFilterExpression, op.getOperation());
+            indexInsertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
+            return indexInsertDeleteOp;
         }
 
         @Override

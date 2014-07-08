@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
@@ -25,15 +26,18 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 
 public class LSMRTreeWithAntiMatterTuplesDiskComponentFactory implements ILSMComponentFactory {
     private final TreeIndexFactory<RTree> rtreeFactory;
+    private final ILSMComponentFilterFactory filterFactory;
 
-    public LSMRTreeWithAntiMatterTuplesDiskComponentFactory(TreeIndexFactory<RTree> rtreeFactory) {
+    public LSMRTreeWithAntiMatterTuplesDiskComponentFactory(TreeIndexFactory<RTree> rtreeFactory,
+            ILSMComponentFilterFactory filterFactory) {
         this.rtreeFactory = rtreeFactory;
+        this.filterFactory = filterFactory;
     }
 
     @Override
     public ILSMComponent createLSMComponentInstance(LSMComponentFileReferences cfr) throws IndexException {
-        return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()),
-                null, null);
+        return new LSMRTreeDiskComponent(rtreeFactory.createIndexInstance(cfr.getInsertIndexFileReference()), null,
+                null, filterFactory == null ? null : filterFactory.createLSMComponentFilter());
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.util.Map;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
@@ -39,6 +40,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
     protected final IPrimitiveValueProviderFactory[] valueProviderFactories;
     protected final RTreePolicyType rtreePolicyType;
     protected final ILinearizeComparatorFactory linearizeCmpFactory;
+    protected final int[] rtreeFields;
     protected final int[] btreeFields;
 
     public LSMRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
@@ -46,13 +48,17 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
             IVirtualBufferCacheProvider virtualBufferCacheProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory, double bloomFilterFalsePositiveRate, int[] btreeFields) {
+            ILinearizeComparatorFactory linearizeCmpFactory, double bloomFilterFalsePositiveRate, int[] rtreeFields,
+            int[] btreeFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] filterFields) {
         super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory,
-                ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate);
+                ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate, filterTypeTraits,
+                filterCmpFactories, filterFields);
         this.btreeComparatorFactories = btreeComparatorFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
         this.linearizeCmpFactory = linearizeCmpFactory;
+        this.rtreeFields = rtreeFields;
         this.btreeFields = btreeFields;
     }
 
@@ -63,6 +69,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, btreeFields);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, rtreeFields,
+                btreeFields, filterTypeTraits, filterCmpFactories, filterFields);
     }
 }

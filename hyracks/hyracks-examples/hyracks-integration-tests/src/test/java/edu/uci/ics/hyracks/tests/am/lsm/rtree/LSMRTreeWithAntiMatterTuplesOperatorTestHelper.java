@@ -49,6 +49,7 @@ public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOpera
         return new LSMRTreeWithAntiMatterTuplesDataflowHelperFactory(valueProviderFactories, rtreePolicyType,
                 btreeComparatorFactories, virtualBufferCacheProvider, new ConstantMergePolicyFactory(),
                 MERGE_POLICY_PROPERTIES, ThreadCountingOperationTrackerProvider.INSTANCE,
-                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory);
+                SynchronousSchedulerProvider.INSTANCE, NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory, null,
+                null, null, null);
     }
 }

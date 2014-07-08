@@ -18,7 +18,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -34,6 +37,10 @@ public class DataSourceScanOperator extends AbstractScanOperator {
     private List<LogicalVariable> projectVars;
 
     private boolean projectPushed = false;
+
+    private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
+    private List<LogicalVariable> minFilterVars;
+    private List<LogicalVariable> maxFilterVars;
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
         super(variables);
@@ -105,5 +112,29 @@ public class DataSourceScanOperator extends AbstractScanOperator {
             ++i;
         }
         return env;
+    }
+
+    public List<LogicalVariable> getMinFilterVars() {
+        return minFilterVars;
+    }
+
+    public void setMinFilterVars(List<LogicalVariable> minFilterVars) {
+        this.minFilterVars = minFilterVars;
+    }
+
+    public List<LogicalVariable> getMaxFilterVars() {
+        return maxFilterVars;
+    }
+
+    public void setMaxFilterVars(List<LogicalVariable> maxFilterVars) {
+        this.maxFilterVars = maxFilterVars;
+    }
+
+    public void setAdditionalFilteringExpressions(List<Mutable<ILogicalExpression>> additionalFilteringExpressions) {
+        this.additionalFilteringExpressions = additionalFilteringExpressions;
+    }
+
+    public List<Mutable<ILogicalExpression>> getAdditionalFilteringExpressions() {
+        return additionalFilteringExpressions;
     }
 }

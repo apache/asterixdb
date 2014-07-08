@@ -16,48 +16,55 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 
-public class InvertedIndexSearchPredicate implements ISearchPredicate {
+public class InvertedIndexSearchPredicate extends AbstractSearchPredicate {
     private static final long serialVersionUID = 1L;
 
     private ITupleReference queryTuple;
     private int queryFieldIndex;
     private final IBinaryTokenizer queryTokenizer;
-    private final IInvertedIndexSearchModifier searchModifier;    
-    
+    private final IInvertedIndexSearchModifier searchModifier;
+
     public InvertedIndexSearchPredicate(IBinaryTokenizer queryTokenizer, IInvertedIndexSearchModifier searchModifier) {
         this.queryTokenizer = queryTokenizer;
         this.searchModifier = searchModifier;
     }
-    
+
+    public InvertedIndexSearchPredicate(IBinaryTokenizer queryTokenizer, IInvertedIndexSearchModifier searchModifier,
+            ITupleReference minFilterTuple, ITupleReference maxFilterTuple) {
+        super(minFilterTuple, maxFilterTuple);
+        this.queryTokenizer = queryTokenizer;
+        this.searchModifier = searchModifier;
+    }
+
     public void setQueryTuple(ITupleReference queryTuple) {
         this.queryTuple = queryTuple;
     }
-    
+
     public ITupleReference getQueryTuple() {
         return queryTuple;
     }
-    
+
     public void setQueryFieldIndex(int queryFieldIndex) {
         this.queryFieldIndex = queryFieldIndex;
     }
-    
+
     public int getQueryFieldIndex() {
         return queryFieldIndex;
     }
-    
+
     public IInvertedIndexSearchModifier getSearchModifier() {
         return searchModifier;
     }
-    
+
     public IBinaryTokenizer getQueryTokenizer() {
         return queryTokenizer;
     }
-    
+
     @Override
     public MultiComparator getLowKeyComparator() {
         // TODO: This doesn't make sense for an inverted index. Change ISearchPredicate interface.

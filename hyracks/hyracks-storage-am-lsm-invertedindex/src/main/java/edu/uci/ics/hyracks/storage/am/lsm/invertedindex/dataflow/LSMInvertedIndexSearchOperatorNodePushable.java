@@ -32,8 +32,8 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
 
     public LSMInvertedIndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int queryFieldIndex,
-            IInvertedIndexSearchModifier searchModifier) {
-        super(opDesc, ctx, partition, recordDescProvider);
+            IInvertedIndexSearchModifier searchModifier, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
+        super(opDesc, ctx, partition, recordDescProvider, minFilterFieldIndexes, maxFilterFieldIndexes);
         this.searchModifier = searchModifier;
         this.queryFieldIndex = queryFieldIndex;
         // If retainInput is true, the frameTuple is created in IndexSearchOperatorNodePushable.open().
@@ -47,7 +47,8 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
     @Override
     protected ISearchPredicate createSearchPredicate() {
         AbstractLSMInvertedIndexOperatorDescriptor invIndexOpDesc = (AbstractLSMInvertedIndexOperatorDescriptor) opDesc;
-        return new InvertedIndexSearchPredicate(invIndexOpDesc.getTokenizerFactory().createTokenizer(), searchModifier);
+        return new InvertedIndexSearchPredicate(invIndexOpDesc.getTokenizerFactory().createTokenizer(), searchModifier,
+                minFilterKey, maxFilterKey);
     }
 
     @Override
@@ -56,6 +57,12 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
         InvertedIndexSearchPredicate invIndexSearchPred = (InvertedIndexSearchPredicate) searchPred;
         invIndexSearchPred.setQueryTuple(frameTuple);
         invIndexSearchPred.setQueryFieldIndex(queryFieldIndex);
+        if (minFilterKey != null) {
+            minFilterKey.reset(accessor, tupleIndex);
+        }
+        if (maxFilterKey != null) {
+            maxFilterKey.reset(accessor, tupleIndex);
+        }
     }
 
     @Override

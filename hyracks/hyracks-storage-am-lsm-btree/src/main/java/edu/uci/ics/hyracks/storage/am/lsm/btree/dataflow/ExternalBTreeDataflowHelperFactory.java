@@ -36,7 +36,7 @@ public class ExternalBTreeDataflowHelperFactory extends AbstractLSMIndexDataflow
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             double bloomFilterFalsePositiveRate, int version) {
         super(null, mergePolicyFactory, mergePolicyProperties, opTrackerFactory, ioSchedulerProvider,
-                ioOpCallbackFactory, bloomFilterFalsePositiveRate);
+                ioOpCallbackFactory, bloomFilterFalsePositiveRate, null, null, null);
         this.version = version;
     }
 

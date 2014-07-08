@@ -76,7 +76,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
         }
         LSMBTree lsmTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, diskBufferCache, diskFileMapProvider,
                 typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
-                ioScheduler, ioOpCallback, true);
+                ioScheduler, ioOpCallback, true, null, null, null, null);
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

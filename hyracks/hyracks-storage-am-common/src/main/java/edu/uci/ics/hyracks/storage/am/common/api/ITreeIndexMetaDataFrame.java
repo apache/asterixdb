@@ -18,38 +18,44 @@ package edu.uci.ics.hyracks.storage.am.common.api;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 
 public interface ITreeIndexMetaDataFrame {
-	public void initBuffer(byte level);
+    public void initBuffer(byte level);
 
-	public void setPage(ICachedPage page);
+    public void setPage(ICachedPage page);
 
-	public ICachedPage getPage();
+    public ICachedPage getPage();
 
-	public byte getLevel();
+    public byte getLevel();
 
-	public void setLevel(byte level);
+    public void setLevel(byte level);
 
-	public int getNextPage();
+    public int getNextPage();
 
-	public void setNextPage(int nextPage);
+    public void setNextPage(int nextPage);
 
-	public int getMaxPage();
+    public int getMaxPage();
 
-	public void setMaxPage(int maxPage);
+    public void setMaxPage(int maxPage);
 
-	public int getFreePage();
+    public int getFreePage();
 
-	public boolean hasSpace();
+    public boolean hasSpace();
 
-	public void addFreePage(int freePage);
-	
-	// Special flag for LSM-Components to mark whether they are valid or not. 
-	public boolean isValid();
-	
-	// Set special validity flag.
-	public void setValid(boolean isValid);
-	
-	// Special placeholder for LSN information. Used for transactional LSM indexes.
-	public long getLSN();
-	
-	public void setLSN(long lsn);
+    public void addFreePage(int freePage);
+
+    // Special flag for LSM-Components to mark whether they are valid or not. 
+    public boolean isValid();
+
+    // Set special validity flag.
+    public void setValid(boolean isValid);
+
+    // Return the lsm component filter page id.
+    public int getLSMComponentFilterPageId();
+
+    // Set the lsm component filter page id.
+    public void setLSMComponentFilterPageId(int filterPage);
+
+    // Special placeholder for LSN information. Used for transactional LSM indexes.
+    public long getLSN();
+
+    public void setLSN(long lsn);
 }

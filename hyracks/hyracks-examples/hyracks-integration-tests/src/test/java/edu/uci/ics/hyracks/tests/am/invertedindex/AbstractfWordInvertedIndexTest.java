@@ -193,8 +193,8 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
     }
 
     private IOperatorDescriptor createFileScanOp(JobSpecification spec) {
-        FileSplit[] dblpTitleFileSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File(
-                "data" + File.separator + "cleanednumbereddblptitles.txt"))) };
+        FileSplit[] dblpTitleFileSplits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data"
+                + File.separator + "cleanednumbereddblptitles.txt"))) };
         IFileSplitProvider dblpTitleSplitProvider = new ConstantFileSplitProvider(dblpTitleFileSplits);
         RecordDescriptor dblpTitleRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
@@ -237,7 +237,8 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 storageManager, lcManagerProvider, primaryFileSplitProvider, primaryTypeTraits,
                 primaryComparatorFactories, null, lowKeyFields, highKeyFields, true, true, btreeDataflowHelperFactory,
-                false, false, null, NoOpOperationCallbackFactory.INSTANCE);
+                false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null);
+
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         return primaryBtreeSearchOp;
     }
@@ -335,7 +336,8 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
                 0, storageManager, btreeFileSplitProvider, lcManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListsComparatorFactories,
                 invertedIndexDataflowHelperFactory, tokenizerFactory, searchModifierFactory, invListsRecDesc, false,
-                false, null, NoOpOperationCallbackFactory.INSTANCE);
+                false, null, NoOpOperationCallbackFactory.INSTANCE, null, null);
+
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, invIndexSearchOp, NC1_ID);
         return invIndexSearchOp;
     }

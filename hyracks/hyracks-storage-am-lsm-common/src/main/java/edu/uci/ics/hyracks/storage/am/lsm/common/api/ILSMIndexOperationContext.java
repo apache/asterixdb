@@ -19,10 +19,11 @@ import java.util.List;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 
 public interface ILSMIndexOperationContext extends IIndexOperationContext {
     public List<ILSMComponent> getComponentHolder();
-    
+
     public List<ILSMComponent> getComponentsToBeMerged();
 
     public ISearchOperationCallback getSearchOperationCallback();
@@ -30,4 +31,8 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     public IModificationOperationCallback getModificationCallback();
 
     public void setCurrentMutableComponentId(int currentMutableComponentId);
+
+    public void setSearchPredicate(ISearchPredicate searchPredicate);
+
+    public ISearchPredicate getSearchPredicate();
 }

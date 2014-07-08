@@ -15,12 +15,17 @@
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 
 public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
 
-    public AbstractDiskLSMComponent() {
-        super();
+    public AbstractDiskLSMComponent(ILSMComponentFilter filter) {
+        super(filter);
         state = ComponentState.READABLE_UNWRITABLE;
+    }
+
+    public AbstractDiskLSMComponent() {
+        this(null);
     }
 
     @Override

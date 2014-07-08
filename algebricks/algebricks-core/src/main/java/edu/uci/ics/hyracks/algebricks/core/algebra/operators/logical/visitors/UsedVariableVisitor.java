@@ -91,7 +91,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, Void arg) {
-        // does not use any variable
+        if (op.getAdditionalFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
+                e.getValue().getUsedVariables(usedVariables);
+            }
+        }
         return null;
     }
 
@@ -278,6 +282,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Void arg) {
         op.getExpressionRef().getValue().getUsedVariables(usedVariables);
+        if (op.getAdditionalFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
+                e.getValue().getUsedVariables(usedVariables);
+            }
+        }
         return null;
     }
 
@@ -309,6 +318,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         for (Mutable<ILogicalExpression> e : op.getKeyExpressions()) {
             e.getValue().getUsedVariables(usedVariables);
         }
+        if (op.getAdditionalFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
+                e.getValue().getUsedVariables(usedVariables);
+            }
+        }
         return null;
     }
 
@@ -317,6 +331,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         op.getPayloadExpression().getValue().getUsedVariables(usedVariables);
         for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
             e.getValue().getUsedVariables(usedVariables);
+        }
+        if (op.getAdditionalFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
+                e.getValue().getUsedVariables(usedVariables);
+            }
         }
         return null;
     }
@@ -328,6 +347,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         }
         for (Mutable<ILogicalExpression> e : op.getSecondaryKeyExpressions()) {
             e.getValue().getUsedVariables(usedVariables);
+        }
+        if (op.getAdditionalFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
+                e.getValue().getUsedVariables(usedVariables);
+            }
         }
         return null;
     }

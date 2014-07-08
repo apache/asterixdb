@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexFactory;
@@ -30,12 +31,15 @@ public class LSMInvertedIndexDiskComponentFactory implements ILSMComponentFactor
     private final OnDiskInvertedIndexFactory diskInvIndexFactory;
     private final TreeIndexFactory<BTree> btreeFactory;
     private final BloomFilterFactory bloomFilterFactory;
+    private final ILSMComponentFilterFactory filterFactory;
 
     public LSMInvertedIndexDiskComponentFactory(OnDiskInvertedIndexFactory diskInvIndexFactory,
-            TreeIndexFactory<BTree> btreeFactory, BloomFilterFactory bloomFilterFactory) {
+            TreeIndexFactory<BTree> btreeFactory, BloomFilterFactory bloomFilterFactory,
+            ILSMComponentFilterFactory filterFactory) {
         this.diskInvIndexFactory = diskInvIndexFactory;
         this.btreeFactory = btreeFactory;
         this.bloomFilterFactory = bloomFilterFactory;
+        this.filterFactory = filterFactory;
     }
 
     @Override
@@ -43,7 +47,8 @@ public class LSMInvertedIndexDiskComponentFactory implements ILSMComponentFactor
             HyracksDataException {
         return new LSMInvertedIndexDiskComponent(diskInvIndexFactory.createIndexInstance(cfr
                 .getInsertIndexFileReference()), btreeFactory.createIndexInstance(cfr.getDeleteIndexFileReference()),
-                bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()));
+                bloomFilterFactory.createBloomFiltertInstance(cfr.getBloomFilterFileReference()),
+                filterFactory == null ? null : filterFactory.createLSMComponentFilter());
     }
 
     @Override

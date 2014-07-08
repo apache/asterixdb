@@ -38,7 +38,7 @@ public class ExternalBTreeDataflowHelper extends LSMBTreeDataflowHelper {
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, int version) {
         super(opDesc, ctx, partition, null, bloomFilterFalsePositiveRate, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackFactory, false);
+                ioOpCallbackFactory, false, null, null, null, null);
         this.version = version;
     }
 

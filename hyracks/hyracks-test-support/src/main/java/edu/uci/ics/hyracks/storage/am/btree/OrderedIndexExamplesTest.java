@@ -56,7 +56,8 @@ public abstract class OrderedIndexExamplesTest {
     protected final Random rnd = new Random(50);
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
-            int[] bloomFilterKeyFields) throws TreeIndexException;
+            int[] bloomFilterKeyFields, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] btreeFields, int[] filterFields) throws TreeIndexException;
 
     /**
      * Fixed-Length Key,Value Example. Create a tree index with one fixed-length
@@ -87,7 +88,7 @@ public abstract class OrderedIndexExamplesTest {
         int[] bloomFilterKeyFields = new int[keyFieldCount];
         bloomFilterKeyFields[0] = 0;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -132,7 +133,7 @@ public abstract class OrderedIndexExamplesTest {
         ArrayTupleReference highKey = new ArrayTupleReference();
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 1000);
 
-        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey, null, null);
 
         treeIndex.validate();
         treeIndex.deactivate();
@@ -171,7 +172,7 @@ public abstract class OrderedIndexExamplesTest {
         int[] bloomFilterKeyFields = new int[keyFieldCount];
         bloomFilterKeyFields[0] = 0;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -248,7 +249,7 @@ public abstract class OrderedIndexExamplesTest {
         bloomFilterKeyFields[0] = 0;
         bloomFilterKeyFields[1] = 1;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -295,7 +296,7 @@ public abstract class OrderedIndexExamplesTest {
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 3);
 
         // Prefix-Range search in [-3, 3]
-        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey, null, null);
 
         treeIndex.validate();
         treeIndex.deactivate();
@@ -331,7 +332,7 @@ public abstract class OrderedIndexExamplesTest {
         int[] bloomFilterKeyFields = new int[keyFieldCount];
         bloomFilterKeyFields[0] = 0;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -378,7 +379,7 @@ public abstract class OrderedIndexExamplesTest {
         ArrayTupleReference highKey = new ArrayTupleReference();
         TupleUtils.createTuple(highKeyTb, highKey, fieldSerdes, "cc7");
 
-        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey, null, null);
 
         treeIndex.validate();
         treeIndex.deactivate();
@@ -415,7 +416,7 @@ public abstract class OrderedIndexExamplesTest {
         int[] bloomFilterKeyFields = new int[keyFieldCount];
         bloomFilterKeyFields[0] = 0;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -521,7 +522,7 @@ public abstract class OrderedIndexExamplesTest {
         int[] bloomFilterKeyFields = new int[keyFieldCount];
         bloomFilterKeyFields[0] = 0;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -612,7 +613,7 @@ public abstract class OrderedIndexExamplesTest {
         bloomFilterKeyFields[0] = 0;
         bloomFilterKeyFields[1] = 1;
 
-        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+        ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -649,7 +650,7 @@ public abstract class OrderedIndexExamplesTest {
         TupleUtils.createIntegerTuple(highKeyTb, highKey, 44500);
 
         // Prefix-Range search in [44444, 44500]
-        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey);
+        rangeSearch(cmpFactories, indexAccessor, fieldSerdes, lowKey, highKey, null, null);
 
         treeIndex.validate();
         treeIndex.deactivate();
@@ -687,7 +688,8 @@ public abstract class OrderedIndexExamplesTest {
 
         int ins = 1000;
         for (int i = 1; i < ins; i++) {
-            ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields);
+            ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null,
+                    null);
             treeIndex.create();
             treeIndex.activate();
 
@@ -731,7 +733,7 @@ public abstract class OrderedIndexExamplesTest {
         }
     }
 
-    private void orderedScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
+    protected void orderedScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Ordered Scan:");
         }
@@ -752,7 +754,7 @@ public abstract class OrderedIndexExamplesTest {
         }
     }
 
-    private void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
+    protected void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         try {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Disk-Order Scan:");
@@ -788,8 +790,9 @@ public abstract class OrderedIndexExamplesTest {
         }
     }
 
-    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
-            ISerializerDeserializer[] fieldSerdes, ITupleReference lowKey, ITupleReference highKey) throws Exception {
+    protected void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
+            ISerializerDeserializer[] fieldSerdes, ITupleReference lowKey, ITupleReference highKey,
+            ITupleReference minFilterTuple, ITupleReference maxFilterTuple) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             String lowKeyString = TupleUtils.printTuple(lowKey, fieldSerdes);
             String highKeyString = TupleUtils.printTuple(highKey, fieldSerdes);
@@ -798,7 +801,13 @@ public abstract class OrderedIndexExamplesTest {
         ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
         MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, lowKey);
         MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, highKey);
-        RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp, highKeySearchCmp);
+        RangePredicate rangePred;
+        if (minFilterTuple != null && maxFilterTuple != null) {
+            rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp, highKeySearchCmp,
+                    minFilterTuple, maxFilterTuple);
+        } else {
+            rangePred = new RangePredicate(lowKey, highKey, true, true, lowKeySearchCmp, highKeySearchCmp);
+        }
         indexAccessor.search(rangeCursor, rangePred);
         try {
             while (rangeCursor.hasNext()) {

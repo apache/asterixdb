@@ -37,6 +37,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import edu.uci.ics.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 
 public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     protected final IIndexOperatorDescriptor opDesc;
@@ -57,12 +58,18 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected final RecordDescriptor inputRecDesc;
     protected final boolean retainInput;
     protected FrameTupleReference frameTuple;
+
     protected final boolean retainNull;
     protected ArrayTupleBuilder nullTupleBuild;
     protected INullWriter nullWriter;
 
+    protected final int[] minFilterFieldIndexes;
+    protected final int[] maxFilterFieldIndexes;
+    protected PermutingFrameTupleReference minFilterKey;
+    protected PermutingFrameTupleReference maxFilterKey;
+
     public IndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
-            IRecordDescriptorProvider recordDescProvider) {
+            IRecordDescriptorProvider recordDescProvider, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.indexHelper = opDesc.getIndexDataflowHelperFactory().createIndexDataflowHelper(opDesc, ctx, partition);
@@ -72,6 +79,16 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             this.nullWriter = opDesc.getNullWriterFactory().createNullWriter();
         }
         this.inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
+        this.minFilterFieldIndexes = minFilterFieldIndexes;
+        this.maxFilterFieldIndexes = maxFilterFieldIndexes;
+        if (minFilterFieldIndexes != null && minFilterFieldIndexes.length > 0) {
+            minFilterKey = new PermutingFrameTupleReference();
+            minFilterKey.setFieldPermutation(minFilterFieldIndexes);
+        }
+        if (maxFilterFieldIndexes != null && maxFilterFieldIndexes.length > 0) {
+            maxFilterKey = new PermutingFrameTupleReference();
+            maxFilterKey.setFieldPermutation(maxFilterFieldIndexes);
+        }
     }
 
     protected abstract ISearchPredicate createSearchPredicate();

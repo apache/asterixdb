@@ -268,26 +268,43 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     WriteResultOperator opLoad = (WriteResultOperator) op;
                     LogicalVariable payload;
                     List<LogicalVariable> keys = new ArrayList<LogicalVariable>();
+                    List<LogicalVariable> additionalFilteringKeys = null;
                     payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getKeyExpressions(), keys);
-                    op.setPhysicalOperator(new WriteResultPOperator(opLoad.getDataSource(), payload, keys));
+                    if (opLoad.getAdditionalFilteringExpressions() != null) {
+                        additionalFilteringKeys = new ArrayList<LogicalVariable>();
+                        getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
+                    }
+                    op.setPhysicalOperator(new WriteResultPOperator(opLoad.getDataSource(), payload, keys,
+                            additionalFilteringKeys));
                     break;
                 }
                 case INSERT_DELETE: {
                     InsertDeleteOperator opLoad = (InsertDeleteOperator) op;
                     LogicalVariable payload;
                     List<LogicalVariable> keys = new ArrayList<LogicalVariable>();
+                    List<LogicalVariable> additionalFilteringKeys = null;
                     payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getPrimaryKeyExpressions(), keys);
-                    op.setPhysicalOperator(new InsertDeletePOperator(payload, keys, opLoad.getDataSource()));
+                    if (opLoad.getAdditionalFilteringExpressions() != null) {
+                        additionalFilteringKeys = new ArrayList<LogicalVariable>();
+                        getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
+                    }
+                    op.setPhysicalOperator(new InsertDeletePOperator(payload, keys, additionalFilteringKeys, opLoad
+                            .getDataSource()));
                     break;
                 }
                 case INDEX_INSERT_DELETE: {
                     IndexInsertDeleteOperator opInsDel = (IndexInsertDeleteOperator) op;
                     List<LogicalVariable> primaryKeys = new ArrayList<LogicalVariable>();
                     List<LogicalVariable> secondaryKeys = new ArrayList<LogicalVariable>();
+                    List<LogicalVariable> additionalFilteringKeys = null;
                     getKeys(opInsDel.getPrimaryKeyExpressions(), primaryKeys);
                     getKeys(opInsDel.getSecondaryKeyExpressions(), secondaryKeys);
-                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys, opInsDel
-                            .getFilterExpression(), opInsDel.getDataSourceIndex()));
+                    if (opInsDel.getAdditionalFilteringExpressions() != null) {
+                        additionalFilteringKeys = new ArrayList<LogicalVariable>();
+                        getKeys(opInsDel.getAdditionalFilteringExpressions(), additionalFilteringKeys);
+                    }
+                    op.setPhysicalOperator(new IndexInsertDeletePOperator(primaryKeys, secondaryKeys,
+                            additionalFilteringKeys, opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex()));
                     break;
                 }
                 case SINK: {

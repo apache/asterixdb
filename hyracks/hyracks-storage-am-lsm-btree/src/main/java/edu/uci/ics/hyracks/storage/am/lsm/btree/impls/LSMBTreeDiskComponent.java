@@ -17,13 +17,15 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 
 public class LSMBTreeDiskComponent extends AbstractDiskLSMComponent {
     private final BTree btree;
     private final BloomFilter bloomFilter;
 
-    public LSMBTreeDiskComponent(BTree btree, BloomFilter bloomFilter) {
+    public LSMBTreeDiskComponent(BTree btree, BloomFilter bloomFilter, ILSMComponentFilter filter) {
+        super(filter);
         this.btree = btree;
         this.bloomFilter = bloomFilter;
     }

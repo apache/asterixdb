@@ -41,7 +41,7 @@ public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFa
             double bloomFilterFalsePositiveRate, int[] btreeFields, int version) {
         super(valueProviderFactories, rtreePolicyType, btreeComparatorFactories, null, mergePolicyFactory,
                 mergePolicyProperties, opTrackerFactory, ioSchedulerProvider, ioOpCallbackFactory, linearizeCmpFactory,
-                bloomFilterFalsePositiveRate, btreeFields);
+                bloomFilterFalsePositiveRate, null, btreeFields, null, null, null);
         this.version = version;
     }
 

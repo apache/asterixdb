@@ -16,10 +16,10 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import edu.uci.ics.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 
-public class RangePredicate implements ISearchPredicate {
+public class RangePredicate extends AbstractSearchPredicate {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,10 +31,23 @@ public class RangePredicate implements ISearchPredicate {
     protected MultiComparator highKeyCmp;
 
     public RangePredicate() {
+
     }
 
     public RangePredicate(ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive,
             boolean highKeyInclusive, MultiComparator lowKeyCmp, MultiComparator highKeyCmp) {
+        this.lowKey = lowKey;
+        this.highKey = highKey;
+        this.lowKeyInclusive = lowKeyInclusive;
+        this.highKeyInclusive = highKeyInclusive;
+        this.lowKeyCmp = lowKeyCmp;
+        this.highKeyCmp = highKeyCmp;
+    }
+
+    public RangePredicate(ITupleReference lowKey, ITupleReference highKey, boolean lowKeyInclusive,
+            boolean highKeyInclusive, MultiComparator lowKeyCmp, MultiComparator highKeyCmp,
+            ITupleReference minFilterTuple, ITupleReference maxFilterTuple) {
+        super(minFilterTuple, maxFilterTuple);
         this.lowKey = lowKey;
         this.highKey = highKey;
         this.lowKeyInclusive = lowKeyInclusive;

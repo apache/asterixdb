@@ -82,7 +82,7 @@ public final class LSMRTreeWithAntiMatterTuplesTestContext extends AbstractRTree
         LSMRTreeWithAntiMatterTuples lsmTree = LSMRTreeUtils.createLSMTreeWithAntiMatterTuples(virtualBufferCaches,
                 file, diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTracker, ioScheduler, ioOpCallback,
-                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length));
+                LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, null, null, null);
         LSMRTreeWithAntiMatterTuplesTestContext testCtx = new LSMRTreeWithAntiMatterTuplesTestContext(fieldSerdes,
                 lsmTree);
         return testCtx;

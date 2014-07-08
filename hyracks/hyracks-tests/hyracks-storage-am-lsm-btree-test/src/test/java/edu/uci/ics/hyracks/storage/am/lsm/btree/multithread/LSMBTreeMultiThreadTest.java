@@ -53,7 +53,8 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
         return LSMBTreeUtils.createLSMTree(harness.getVirtualBufferCaches(), harness.getFileReference(),
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories,
                 bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
-                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true);
+                harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true, null,
+                null, null, null);
     }
 
     @Override

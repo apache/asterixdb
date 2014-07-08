@@ -237,6 +237,7 @@ public class LSMHarness implements ILSMHarness {
     public void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException, IndexException {
         LSMOperationType opType = LSMOperationType.SEARCH;
+        ctx.setSearchPredicate(pred);
         getAndEnterComponents(ctx, opType, false);
         try {
             lsmIndex.search(ctx, cursor, pred);

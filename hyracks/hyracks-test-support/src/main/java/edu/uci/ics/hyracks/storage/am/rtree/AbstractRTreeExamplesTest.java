@@ -65,8 +65,9 @@ public abstract class AbstractRTreeExamplesTest {
 
     protected abstract ITreeIndex createTreeIndex(ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType, int[] btreeFields)
-            throws TreeIndexException;
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws TreeIndexException;
 
     /**
      * Two Dimensions Example. Create an RTree index of two dimensions, where
@@ -134,7 +135,7 @@ public abstract class AbstractRTreeExamplesTest {
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
+                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -176,7 +177,7 @@ public abstract class AbstractRTreeExamplesTest {
         ArrayTupleReference key = new ArrayTupleReference();
         TupleUtils.createIntegerTuple(keyTb, key, -1000, -1000, 1000, 1000);
 
-        rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
+        rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key, null, null);
 
         treeIndex.deactivate();
         treeIndex.destroy();
@@ -245,7 +246,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         //2
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
+                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
 
         treeIndex.create();
         treeIndex.activate();
@@ -384,7 +385,7 @@ public abstract class AbstractRTreeExamplesTest {
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RSTARTREE, btreeFields);
+                valueProviderFactories, RTreePolicyType.RSTARTREE, null, btreeFields, null, null, null);
 
         treeIndex.create();
         treeIndex.activate();
@@ -534,7 +535,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         //4
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
+                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -577,7 +578,7 @@ public abstract class AbstractRTreeExamplesTest {
         ArrayTupleReference key = new ArrayTupleReference();
         TupleUtils.createDoubleTuple(keyTb, key, -1000.0, -1000.0, -1000.0, 1000.0, 1000.0, 1000.0);
 
-        rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
+        rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key, null, null);
 
         treeIndex.deactivate();
         treeIndex.destroy();
@@ -641,7 +642,7 @@ public abstract class AbstractRTreeExamplesTest {
                 rtreeCmpFactories.length, IntegerPointable.FACTORY);
 
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
+                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -778,7 +779,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         //6
         ITreeIndex treeIndex = createTreeIndex(typeTraits, rtreeCmpFactories, btreeCmpFactories,
-                valueProviderFactories, RTreePolicyType.RTREE, btreeFields);
+                valueProviderFactories, RTreePolicyType.RTREE, null, btreeFields, null, null, null);
         treeIndex.create();
         treeIndex.activate();
 
@@ -819,13 +820,13 @@ public abstract class AbstractRTreeExamplesTest {
         ArrayTupleReference key = new ArrayTupleReference();
         TupleUtils.createIntegerTuple(keyTb, key, -1000, -1000, 1000, 1000);
 
-        rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key);
+        rangeSearch(rtreeCmpFactories, indexAccessor, fieldSerdes, key, null, null);
 
         treeIndex.deactivate();
         treeIndex.destroy();
     }
 
-    private void scan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
+    protected void scan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Scan:");
         }
@@ -846,7 +847,7 @@ public abstract class AbstractRTreeExamplesTest {
         }
     }
 
-    private void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
+    protected void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         try {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Disk-Order Scan:");
@@ -882,15 +883,23 @@ public abstract class AbstractRTreeExamplesTest {
         }
     }
 
-    private void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
-            ISerializerDeserializer[] fieldSerdes, ITupleReference key) throws Exception {
+    protected void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
+            ISerializerDeserializer[] fieldSerdes, ITupleReference key, ITupleReference minFilterTuple,
+            ITupleReference maxFilterTuple) throws Exception {
         if (LOGGER.isLoggable(Level.INFO)) {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
             LOGGER.info("Range-Search using key: " + kString);
         }
         ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(cmpFactories, key);
-        SearchPredicate rangePred = new SearchPredicate(key, cmp);
+
+        SearchPredicate rangePred;
+        if (minFilterTuple != null && maxFilterTuple != null) {
+            rangePred = new SearchPredicate(key, cmp, minFilterTuple, maxFilterTuple);
+        } else {
+            rangePred = new SearchPredicate(key, cmp);
+        }
+
         indexAccessor.search(rangeCursor, rangePred);
         try {
             while (rangeCursor.hasNext()) {
@@ -905,5 +914,4 @@ public abstract class AbstractRTreeExamplesTest {
             rangeCursor.close();
         }
     }
-
 }

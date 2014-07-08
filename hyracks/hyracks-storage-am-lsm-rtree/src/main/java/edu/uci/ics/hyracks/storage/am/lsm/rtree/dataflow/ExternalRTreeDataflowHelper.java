@@ -49,7 +49,8 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields, int version) {
         super(opDesc, ctx, partition, null, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
-                mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory, btreeFields);
+                mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory, null,
+                btreeFields, null, null, null);
         this.version = version;
     }
 
@@ -61,7 +62,7 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
             ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields, int version) {
         super(opDesc, ctx, partition, null, bloomFilterFalsePositiveRate, btreeComparatorFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackFactory, linearizeCmpFactory, btreeFields);
+                ioOpCallbackFactory, linearizeCmpFactory, null, btreeFields, null, null, null);
         this.version = version;
     }
 
@@ -90,7 +91,8 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
             IBufferCache diskBufferCache, IFileMapProvider diskFileMapProvider, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] rtreeCmpFactories, IBinaryComparatorFactory[] btreeCmpFactories,
             ILSMOperationTracker opTracker, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory)
+            RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields,
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields)
             throws HyracksDataException {
         try {
             return LSMRTreeUtils.createExternalRTree(file, diskBufferCache, diskFileMapProvider, typeTraits,

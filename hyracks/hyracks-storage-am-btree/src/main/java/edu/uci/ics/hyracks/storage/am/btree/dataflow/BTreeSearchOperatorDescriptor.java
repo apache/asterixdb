@@ -40,6 +40,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     protected final int[] highKeyFields;
     protected final boolean lowKeyInclusive;
     protected final boolean highKeyInclusive;
+    private final int[] minFilterFieldIndexes;
+    private final int[] maxFilterFieldIndexes;
 
     public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
@@ -47,7 +49,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] lowKeyFields,
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
-            INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
+            INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider,
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, retainInput, retainNull,
                 nullWriterFactory, NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
@@ -56,12 +59,14 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
         this.highKeyFields = highKeyFields;
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
+        this.minFilterFieldIndexes = minFilterFieldIndexes;
+        this.maxFilterFieldIndexes = maxFilterFieldIndexes;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, lowKeyFields,
-                highKeyFields, lowKeyInclusive, highKeyInclusive);
+                highKeyFields, lowKeyInclusive, highKeyInclusive, minFilterFieldIndexes, maxFilterFieldIndexes);
     }
 }
