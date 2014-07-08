@@ -189,14 +189,24 @@ public class TestsUtils {
         return errors;
     }
 
+    private static InputStream executeHttpMethod(HttpMethod method) {
+        HttpClient client = new HttpClient();
+        try {
+            int statusCode = client.executeMethod(method);
+            if (statusCode != HttpStatus.SC_OK) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+            }
+            return method.getResponseBodyAsStream();
+        } catch (Exception e) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     // Executes Query and returns results as JSONArray
     public static InputStream executeQuery(String str, OutputFormat fmt) throws Exception {
-        InputStream resultStream = null;
-
         final String url = "http://localhost:19002/query";
-
-        // Create an instance of HttpClient.
-        HttpClient client = new HttpClient();
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
@@ -210,23 +220,7 @@ public class TestsUtils {
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
-
-        try {
-            // Execute the method.
-            int statusCode = client.executeMethod(method);
-
-            // Check if the method was executed successfully.
-            if (statusCode != HttpStatus.SC_OK) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            }
-
-            // Read the response body as stream
-            resultStream = method.getResponseBodyAsStream();
-        } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            e.printStackTrace();
-        }
-        return resultStream;
+        return executeHttpMethod(method);
     }
 
     // To execute Update statements
@@ -255,6 +249,43 @@ public class TestsUtils {
             throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
                     + errors[2]);
         }
+    }
+
+    //Executes AQL in either async or async-defer mode.
+    public static InputStream executeAnyAQLAsync(String str, boolean defer) throws Exception {
+        final String url = "http://localhost:19002/aql";
+
+        // Create a method instance.
+        PostMethod method = new PostMethod(url);
+        if (defer) {
+            method.setQueryString(new NameValuePair[] { new NameValuePair("mode", "asynchronous-deferred") });
+        } else {
+            method.setQueryString(new NameValuePair[] { new NameValuePair("mode", "asynchronous") });
+        }
+        method.setRequestEntity(new StringRequestEntity(str));
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+        InputStream resultStream = executeHttpMethod(method);
+
+        String theHandle = IOUtils.toString(resultStream, "UTF-8");
+
+        //take the handle and parse it so results can be retrieved 
+        InputStream handleResult = getHandleResult(theHandle);
+        return handleResult;
+    }
+
+    private static InputStream getHandleResult(String handle) throws Exception {
+        final String url = "http://localhost:19002/query/result";
+
+        // Create a method instance.
+        GetMethod method = new GetMethod(url);
+        method.setQueryString(new NameValuePair[] { new NameValuePair("handle", handle) });
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+
+        return executeHttpMethod(method);
     }
 
     // To execute DDL and Update statements
@@ -375,7 +406,6 @@ public class TestsUtils {
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
                 statement = TestsUtils.readTestFile(testFile);
-                InputStream resultStream;
                 try {
                     switch (ctx.getType()) {
                         case "ddl":
@@ -391,6 +421,8 @@ public class TestsUtils {
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
+                        case "async":
+                        case "asyncdefer":
                             // isDmlRecoveryTest: insert Crash and Recovery
                             if (isDmlRecoveryTest) {
                                 executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
@@ -398,8 +430,14 @@ public class TestsUtils {
                                 executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
                                         + File.separator + "stop_and_start.sh");
                             }
+                            InputStream resultStream = null;
+                            if (ctx.getType().equalsIgnoreCase("query"))
+                                resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                            else if (ctx.getType().equalsIgnoreCase("async"))
+                                resultStream = executeAnyAQLAsync(statement, false);
+                            else if (ctx.getType().equalsIgnoreCase("asyncdefer"))
+                                resultStream = executeAnyAQLAsync(statement, true);
 
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
                             if (queryCount >= expectedResultFileCtxs.size()) {
                                 throw new IllegalStateException("no result file for " + testFile.toString());
                             }

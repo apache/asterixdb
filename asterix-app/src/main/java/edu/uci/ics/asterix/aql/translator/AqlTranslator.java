@@ -158,6 +158,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
         ADDED_PENDINGOP_RECORD_TO_METADATA
     }
 
+    public static enum ResultDelivery {
+        SYNC,
+        ASYNC,
+        ASYNC_DEFERRED
+    }
+
     public static final boolean IS_DEBUG_MODE = false;//true
     private final List<Statement> aqlStatements;
     private final PrintWriter out;
@@ -192,13 +198,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
      *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
      * @param hdc
      *            A Hyracks dataset client object that is used to read the results.
-     * @param asyncResults
+     * @param resultDelivery
      *            True if the results should be read asynchronously or false if we should wait for results to be read.
      * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
      * @throws Exception
      */
-    public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc, boolean asyncResults)
-            throws Exception {
+    public List<QueryResult> compileAndExecute(IHyracksClientConnection hcc, IHyracksDataset hdc,
+            ResultDelivery resultDelivery) throws Exception {
         int resultSetIdCounter = 0;
         List<QueryResult> executionResult = new ArrayList<QueryResult>();
         FileSplit outputFile = null;
@@ -307,8 +313,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
                 case QUERY: {
                     metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                    metadataProvider.setResultAsyncMode(asyncResults);
-                    executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, asyncResults));
+                    metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
+                            || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
+                    executionResult.add(handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery));
                     break;
                 }
 
@@ -1985,7 +1992,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private QueryResult handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, boolean asyncResults) throws Exception {
+            IHyracksDataset hdc, ResultDelivery resultDelivery) throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -2004,48 +2011,64 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 JobId jobId = runJob(hcc, compiled, false);
 
                 JSONObject response = new JSONObject();
-                if (asyncResults) {
-                    JSONArray handle = new JSONArray();
-                    handle.put(jobId.getId());
-                    handle.put(metadataProvider.getResultSetId().getId());
-                    response.put("handle", handle);
-                    out.print(response);
-                    out.flush();
-                } else {
-                    if (pdf == DisplayFormat.HTML) {
-                        out.println("<h4>Results:</h4>");
-                        out.println("<pre>");
-                    }
+                switch (resultDelivery) {
+                    case ASYNC:
+                        JSONArray handle = new JSONArray();
+                        handle.put(jobId.getId());
+                        handle.put(metadataProvider.getResultSetId().getId());
+                        response.put("handle", handle);
+                        out.print(response);
+                        out.flush();
+                        hcc.waitForCompletion(jobId);
+                        break;
+                    case SYNC:
+                        if (pdf == DisplayFormat.HTML) {
+                            out.println("<h4>Results:</h4>");
+                            out.println("<pre>");
+                        }
 
-                    ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
-                    ResultReader resultReader = new ResultReader(hcc, hdc);
-                    resultReader.open(jobId, metadataProvider.getResultSetId());
-                    buffer.clear();
-
-                    JSONArray results = new JSONArray();
-                    while (resultReader.read(buffer) > 0) {
-                        ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(), results);
+                        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
+                        ResultReader resultReader = new ResultReader(hcc, hdc);
+                        resultReader.open(jobId, metadataProvider.getResultSetId());
                         buffer.clear();
-                    }
 
-                    response.put("results", results);
-                    switch (pdf) {
-                        case HTML:
-                            ResultUtils.prettyPrintHTML(out, response);
-                            break;
-                        case TEXT:
-                        case JSON:
-                            out.print(response);
-                            break;
-                    }
-                    out.flush();
+                        JSONArray results = new JSONArray();
+                        while (resultReader.read(buffer) > 0) {
+                            ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(), results);
+                            buffer.clear();
+                        }
 
-                    if (pdf == DisplayFormat.HTML) {
-                        out.println("</pre>");
-                    }
+                        response.put("results", results);
+                        switch (pdf) {
+                            case HTML:
+                                ResultUtils.prettyPrintHTML(out, response);
+                                break;
+                            case TEXT:
+                            case JSON:
+                                out.print(response);
+                                break;
+                        }
+                        out.flush();
+
+                        if (pdf == DisplayFormat.HTML) {
+                            out.println("</pre>");
+                        }
+                        hcc.waitForCompletion(jobId);
+                        break;
+                    case ASYNC_DEFERRED:
+                        handle = new JSONArray();
+                        handle.put(jobId.getId());
+                        handle.put(metadataProvider.getResultSetId().getId());
+                        response.put("handle", handle);
+                        hcc.waitForCompletion(jobId);
+                        out.print(response);
+                        out.flush();
+                        break;
+                    default:
+                        break;
 
                 }
-                hcc.waitForCompletion(jobId);
+
             }
 
             return queryResult;
