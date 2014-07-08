@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,7 +73,6 @@ public class OptimizerTest {
         // outdir.mkdirs();
 
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
-        System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
@@ -83,8 +82,8 @@ public class OptimizerTest {
         deleteTransactionLogs();
 
         AsterixHyracksIntegrationUtil.init();
-        // Set the node resolver to be the identity resolver that expects node names 
-        // to be node controller ids; a valid assumption in test environment. 
+        // Set the node resolver to be the identity resolver that expects node names
+        // to be node controller ids; a valid assumption in test environment.
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
     }
