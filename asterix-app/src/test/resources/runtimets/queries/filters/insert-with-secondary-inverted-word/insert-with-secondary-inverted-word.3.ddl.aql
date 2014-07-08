@@ -1,0 +1,4 @@
+ 
+use dataverse test;
+
+create index fbMessageIdx on FacebookMessages2(message) type keyword;

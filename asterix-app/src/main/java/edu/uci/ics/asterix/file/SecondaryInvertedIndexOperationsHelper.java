@@ -77,6 +77,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
     private IBinaryComparatorFactory[] tokenKeyPairComparatorFactories;
     private RecordDescriptor tokenKeyPairRecDesc;
     private boolean isPartitioned;
+    private int[] invertedIndexFields;
+    private int[] invertedIndexFieldsForNonBulkLoadOps;
+    private int[] secondaryFilterFieldsForNonBulkLoadOps;
 
     protected SecondaryInvertedIndexOperationsHelper(PhysicalOptimizationConfig physOptConf,
             IAsterixPropertiesProvider propertiesProvider) {
@@ -102,9 +105,10 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         }
         // Prepare record descriptor used in the assign op, and the optional
         // select op.
-        secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys];
-        ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys];
-        ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
+        secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys + numFilterFields];
+        ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys
+                + numFilterFields];
+        secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = FormatUtils.getDefaultFormat().getSerdeProvider();
         ITypeTraitProvider typeTraitProvider = FormatUtils.getDefaultFormat().getTypeTraitProvider();
         for (int i = 0; i < numSecondaryKeys; i++) {
@@ -117,7 +121,15 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
             secondaryRecFields[i] = keySerde;
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(secondaryKeyType);
         }
-        secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
+        if (numFilterFields > 0) {
+            secondaryFieldAccessEvalFactories[numSecondaryKeys] = FormatUtils.getDefaultFormat()
+                    .getFieldAccessEvaluatorFactory(itemType, filterFieldName, numPrimaryKeys);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
+            IAType type = keyTypePair.first;
+            ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
+            secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
+        }
+        secondaryRecDesc = new RecordDescriptor(secondaryRecFields);
         // Comparators and type traits for tokens.
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
         tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
@@ -143,7 +155,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         // For tokenization, sorting and loading.
         // One token (+ optional partitioning field) + primary keys.
         numTokenKeyPairFields = (!isPartitioned) ? 1 + numPrimaryKeys : 2 + numPrimaryKeys;
-        ISerializerDeserializer[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields];
+        ISerializerDeserializer[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields
+                + numFilterFields];
         ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
         tokenKeyPairComparatorFactories = new IBinaryComparatorFactory[numTokenKeyPairFields];
         tokenKeyPairFields[0] = serdeProvider.getSerializerDeserializer(secondaryKeyType);
@@ -161,7 +174,27 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
             tokenKeyPairTypeTraits[i + pkOff] = primaryRecDesc.getTypeTraits()[i];
             tokenKeyPairComparatorFactories[i + pkOff] = primaryComparatorFactories[i];
         }
+        if (numFilterFields > 0) {
+            tokenKeyPairFields[numPrimaryKeys + pkOff] = secondaryRecFields[numPrimaryKeys + numSecondaryKeys];
+        }
         tokenKeyPairRecDesc = new RecordDescriptor(tokenKeyPairFields, tokenKeyPairTypeTraits);
+        if (filterFieldName != null) {
+            invertedIndexFields = new int[numTokenKeyPairFields];
+            for (int i = 0; i < invertedIndexFields.length; i++) {
+                invertedIndexFields[i] = i;
+            }
+            secondaryFilterFieldsForNonBulkLoadOps = new int[numFilterFields];
+            secondaryFilterFieldsForNonBulkLoadOps[0] = numSecondaryKeys + numPrimaryKeys;
+            invertedIndexFieldsForNonBulkLoadOps = new int[numSecondaryKeys + numPrimaryKeys];
+            for (int i = 0; i < invertedIndexFieldsForNonBulkLoadOps.length; i++) {
+                invertedIndexFieldsForNonBulkLoadOps[i] = i;
+            }
+        }
+
+    }
+
+    protected int getNumSecondaryKeys() {
+        return numTokenKeyPairFields - numPrimaryKeys;
     }
 
     @Override
@@ -171,7 +204,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMInvertedIndexLocalResourceMetadata(invListsTypeTraits,
                 primaryComparatorFactories, tokenTypeTraits, tokenComparatorFactories, tokenizerFactory, isPartitioned,
-                dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties);
+                dataset.getDatasetId(), mergePolicyFactory, mergePolicyFactoryProperties, filterTypeTraits,
+                filterCmpFactories, invertedIndexFields, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
+                invertedIndexFieldsForNonBulkLoadOps);
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMInvertedIndexResource);
 
@@ -235,8 +270,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
 
     private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) throws AlgebricksException {
         int docField = 0;
-        int[] primaryKeyFields = new int[numPrimaryKeys];
-        for (int i = 0; i < numPrimaryKeys; i++) {
+        int[] primaryKeyFields = new int[numPrimaryKeys + numFilterFields];
+        for (int i = 0; i < primaryKeyFields.length; i++) {
             primaryKeyFields[i] = numSecondaryKeys + i;
         }
         BinaryTokenizerOperatorDescriptor tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec,
@@ -261,8 +296,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
     }
 
     private LSMInvertedIndexBulkLoadOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec) {
-        int[] fieldPermutation = new int[numTokenKeyPairFields];
-        for (int i = 0; i < numTokenKeyPairFields; i++) {
+        int[] fieldPermutation = new int[numTokenKeyPairFields + numFilterFields];
+        for (int i = 0; i < fieldPermutation.length; i++) {
             fieldPermutation[i] = i;
         }
         IIndexDataflowHelperFactory dataflowHelperFactory = createDataflowHelperFactory();
@@ -285,14 +320,18 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                     new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                     LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
-                    storageProperties.getBloomFilterFalsePositiveRate());
+                    storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
+                    filterCmpFactories, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
+                    invertedIndexFieldsForNonBulkLoadOps);
         } else {
             return new PartitionedLSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
                     dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
                     new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                     LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
-                    storageProperties.getBloomFilterFalsePositiveRate());
+                    storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
+                    filterCmpFactories, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
+                    invertedIndexFieldsForNonBulkLoadOps);
         }
     }
 

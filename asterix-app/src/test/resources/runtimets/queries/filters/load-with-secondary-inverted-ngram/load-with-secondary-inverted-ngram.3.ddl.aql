@@ -1,0 +1,4 @@
+ 
+use dataverse test;
+
+create index fbMessageIdx on FacebookMessages(message) type ngram(3);

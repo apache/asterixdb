@@ -690,11 +690,12 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @SuppressWarnings("unchecked")
     @Override
-    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn, int dimension)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn,
+            int dimension, String filterFieldName) throws AlgebricksException {
         ICopyEvaluatorFactory evalFactory = getFieldAccessEvaluatorFactory(recType, fldName, recordColumn);
         int numOfFields = dimension * 2;
-        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numOfFields];
+        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numOfFields
+                + (filterFieldName == null ? 0 : 1)];
 
         ArrayBackedValueStorage abvs1 = new ArrayBackedValueStorage();
         DataOutput dos1 = abvs1.getDataOutput();
@@ -720,6 +721,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                     abvs2.getLength()));
 
             evalFactories[i] = new CreateMBREvalFactory(evalFactory, dimensionEvalFactory, coordinateEvalFactory);
+        }
+        if (filterFieldName != null) {
+            evalFactories[numOfFields] = getFieldAccessEvaluatorFactory(recType, filterFieldName, recordColumn);
         }
         return evalFactories;
     }

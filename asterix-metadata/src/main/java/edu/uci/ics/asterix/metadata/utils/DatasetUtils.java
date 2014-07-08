@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -29,7 +28,6 @@ import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.external.IndexingConstants;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -133,6 +131,87 @@ public class DatasetUtils {
 
     public static String getNodegroupName(Dataset dataset) {
         return (((InternalDatasetDetails) dataset.getDatasetDetails())).getNodeGroupName();
+    }
+
+    public static String getFilterField(Dataset dataset) {
+        return (((InternalDatasetDetails) dataset.getDatasetDetails())).getFilterField();
+    }
+
+    public static IBinaryComparatorFactory[] computeFilterBinaryComparatorFactories(Dataset dataset,
+            ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
+            throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+        IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[1];
+        IAType type;
+        try {
+            type = itemType.getFieldType(filterField);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
+        bcfs[0] = comparatorFactoryProvider.getBinaryComparatorFactory(type, true);
+        return bcfs;
+    }
+
+    public static ITypeTraits[] computeFilterTypeTraits(Dataset dataset, ARecordType itemType)
+            throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+        ITypeTraits[] typeTraits = new ITypeTraits[1];
+
+        IAType type;
+        try {
+            type = itemType.getFieldType(filterField);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
+        typeTraits[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
+        return typeTraits;
+    }
+
+    public static int[] createFilterFields(Dataset dataset) throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        int numKeys = partitioningKeys.size();
+
+        int[] filterFields = new int[1];
+        filterFields[0] = numKeys + 1;
+        return filterFields;
+    }
+
+    public static int[] createBTreeFieldsWhenThereisAFilter(Dataset dataset) throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+
+        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        int[] btreeFields = new int[partitioningKeys.size() + 1];
+        for (int i = 0; i < btreeFields.length; ++i) {
+            btreeFields[i] = i;
+        }
+        return btreeFields;
     }
 
     public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {

@@ -47,13 +47,17 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     protected final ILinearizeComparatorFactory linearizeCmpFactory;
     protected final ILSMMergePolicyFactory mergePolicyFactory;
     protected final Map<String, String> mergePolicyProperties;
+    protected final int[] rtreeFields;
     protected final int[] btreeFields;
+
 
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
-            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] btreeFields) {
-        super(datasetID);
+            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] rtreeFields,
+            int[] btreeFields, int[] filterFields) {
+        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
         this.typeTraits = typeTraits;
         this.rtreeCmpFactories = rtreeCmpFactories;
         this.btreeCmpFactories = btreeCmpFactories;
@@ -62,6 +66,7 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         this.linearizeCmpFactory = linearizeCmpFactory;
         this.mergePolicyFactory = mergePolicyFactory;
         this.mergePolicyProperties = mergePolicyProperties;
+        this.rtreeFields = rtreeFields;
         this.btreeFields = btreeFields;
     }
 
@@ -77,7 +82,8 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties), new BaseOperationTracker(
                             (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
                     runtimeContextProvider.getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
-                            .createIOOperationCallback(), linearizeCmpFactory, btreeFields);
+                            .createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
+                    filterTypeTraits, filterCmpFactories, filterFields);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

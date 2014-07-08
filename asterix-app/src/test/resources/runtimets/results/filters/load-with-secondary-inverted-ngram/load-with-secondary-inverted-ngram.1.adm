@@ -1,0 +1,3 @@
+{ "message-id": 1, "author-id": 3, "in-response-to": 2, "sender-location": point("47.16,77.75"), "message": " love sprint its shortcut-menu is awesome:)", "send-time": datetime("2012-01-20T10:10:00.000Z") }
+{ "message-id": 5, "author-id": 6, "in-response-to": 2, "sender-location": point("34.7,90.76"), "message": " love sprint the customization is mind-blowing", "send-time": datetime("2012-05-20T10:10:00.000Z") }
+{ "message-id": 9, "author-id": 3, "in-response-to": 12, "sender-location": point("34.45,96.48"), "message": " love verizon its wireless is good", "send-time": datetime("2012-09-20T10:10:00.000Z") }

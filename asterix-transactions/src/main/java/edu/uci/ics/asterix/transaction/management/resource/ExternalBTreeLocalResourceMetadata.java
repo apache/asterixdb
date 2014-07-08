@@ -37,7 +37,7 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties) {
         super(typeTraits, cmpFactories, bloomFilterKeyFields, isPrimary, datasetID, mergePolicyFactory,
-                mergePolicyProperties);
+                mergePolicyProperties, null, null, null, null);
     }
 
     @Override

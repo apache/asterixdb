@@ -29,14 +29,15 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelper;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.ExternalBTreeWithBuddy;
 
-public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperatorNodePushable{
+public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperatorNodePushable {
 
-    public ExternalBTreeSearchOperatorNodePushable(ExternalBTreeSearchOperatorDescriptor opDesc, IHyracksTaskContext ctx,
-            int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields, int[] highKeyFields,
-            boolean lowKeyInclusive, boolean highKeyInclusive) {
-        super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive);
+    public ExternalBTreeSearchOperatorNodePushable(ExternalBTreeSearchOperatorDescriptor opDesc,
+            IHyracksTaskContext ctx, int partition, IRecordDescriptorProvider recordDescProvider, int[] lowKeyFields,
+            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive) {
+        super(opDesc, ctx, partition, recordDescProvider, lowKeyFields, highKeyFields, lowKeyInclusive,
+                highKeyInclusive, null, null);
     }
-    
+
     // We override the open function to search a specific version of the index
     @Override
     public void open() throws HyracksDataException {
@@ -45,7 +46,7 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
         writer.open();
         dataFlowHelper.open();
         index = indexHelper.getIndexInstance();
-        
+
         if (retainNull) {
             int fieldCount = getFieldCount();
             nullTupleBuild = new ArrayTupleBuilder(fieldCount);
@@ -61,7 +62,7 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
         } else {
             nullTupleBuild = null;
         }
-        
+
         ExternalBTreeWithBuddy externalIndex = (ExternalBTreeWithBuddy) index;
         try {
             searchPred = createSearchPredicate();

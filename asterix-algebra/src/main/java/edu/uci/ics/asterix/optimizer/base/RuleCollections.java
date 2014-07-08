@@ -61,6 +61,7 @@ import edu.uci.ics.asterix.optimizer.rules.SimilarityCheckRule;
 import edu.uci.ics.asterix.optimizer.rules.SweepIllegalNonfunctionalFunctions;
 import edu.uci.ics.asterix.optimizer.rules.UnnestToDataScanRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
+import edu.uci.ics.asterix.optimizer.rules.am.IntroduceLSMComponentFilterRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -227,6 +228,7 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> accessMethod = new LinkedList<IAlgebraicRewriteRule>();
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
+        accessMethod.add(new IntroduceLSMComponentFilterRule());
         accessMethod.add(new IntroduceSecondaryIndexInsertDeleteRule());
         accessMethod.add(new RemoveUnusedOneToOneEquiJoinRule());
         accessMethod.add(new PushSimilarityFunctionsBelowJoin());

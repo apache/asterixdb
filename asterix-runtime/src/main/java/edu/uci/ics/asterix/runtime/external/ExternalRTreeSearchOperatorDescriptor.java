@@ -41,7 +41,7 @@ public class ExternalRTreeSearchOperatorDescriptor extends RTreeSearchOperatorDe
             INullWriterFactory iNullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory) {
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, keyFields, dataflowHelperFactory, retainInput, retainNull, iNullWriterFactory,
-                searchOpCallbackFactory);
+                searchOpCallbackFactory, null, null);
     }
 
     @Override

@@ -43,7 +43,7 @@ public class ExternalBTreeSearchOperatorDescriptor extends BTreeSearchOperatorDe
         super(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields, lowKeyInclusive,
                 highKeyInclusive, dataflowHelperFactory, retainInput, retainNull, iNullWriterFactory,
-                searchOpCallbackProvider);
+                searchOpCallbackProvider, null, null);
     }
 
     @Override

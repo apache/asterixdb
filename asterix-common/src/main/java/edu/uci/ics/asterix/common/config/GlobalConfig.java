@@ -33,7 +33,7 @@ public class GlobalConfig {
 
     public static final String FRAME_SIZE_PROPERTY = "FrameSize";
 
-    public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
+    public static final float DEFAULT_TREE_FILL_FACTOR = 1.00f;
 
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
 

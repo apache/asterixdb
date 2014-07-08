@@ -1,0 +1,8 @@
+
+use dataverse test;
+
+for $m in dataset('FacebookMessages')
+where contains($m.message, "love")
+and $m.send-time < datetime("2012-12-20T10:10:00")
+order by $m.send-time
+return $m

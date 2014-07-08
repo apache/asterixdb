@@ -240,44 +240,63 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
             List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
             for (String keyFieldName : partitionKeys) {
-                IFunctionInfo finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
-                @SuppressWarnings("unchecked")
-                ScalarFunctionCallExpression f = new ScalarFunctionCallExpression(finfoAccess,
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
-                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                                new AString(keyFieldName)))));
-                f.substituteVar(METADATA_DUMMY_VAR, resVar);
-                exprs.add(new MutableObject<ILogicalExpression>(f));
-                LogicalVariable v = context.newVar();
-                vars.add(v);
-                varRefsForLoading.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v)));
+                prepareVarAndExpression(keyFieldName, resVar, vars, exprs, varRefsForLoading);
             }
+
+            String additionalFilteringField = DatasetUtils.getFilterField(targetDatasource.getDataset());
+            List<LogicalVariable> additionalFilteringVars = null;
+            List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions = null;
+            List<Mutable<ILogicalExpression>> additionalFilteringExpressions = null;
+            AssignOperator additionalFilteringAssign = null;
+            if (additionalFilteringField != null) {
+                additionalFilteringVars = new ArrayList<LogicalVariable>();
+                additionalFilteringAssignExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+                additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+
+                prepareVarAndExpression(additionalFilteringField, resVar, additionalFilteringVars,
+                        additionalFilteringAssignExpressions, additionalFilteringExpressions);
+
+                additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
+                        additionalFilteringAssignExpressions);
+
+            }
+
             AssignOperator assign = new AssignOperator(vars, exprs);
-            assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+
+            if (additionalFilteringAssign != null) {
+                additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+                assign.getInputs().add(new MutableObject<ILogicalOperator>(additionalFilteringAssign));
+            } else {
+                assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+            }
+
             Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                     resVar));
             ILogicalOperator leafOperator = null;
 
             switch (stmt.getKind()) {
                 case INSERT: {
-                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
-                            InsertDeleteOperator.Kind.INSERT);
+                    InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteOperator.Kind.INSERT);
+                    insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
                     break;
                 }
                 case DELETE: {
-                    ILogicalOperator deleteOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
-                            InsertDeleteOperator.Kind.DELETE);
+                    InsertDeleteOperator deleteOp = new InsertDeleteOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteOperator.Kind.DELETE);
+                    deleteOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     deleteOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(deleteOp));
                     break;
                 }
                 case CONNECT_FEED: {
-                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
-                            InsertDeleteOperator.Kind.INSERT);
+                    InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef,
+                            varRefsForLoading, InsertDeleteOperator.Kind.INSERT);
+                    insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                     leafOperator = new SinkOperator();
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
@@ -289,6 +308,24 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         globalPlanRoots.add(new MutableObject<ILogicalOperator>(topOp));
         ILogicalPlan plan = new ALogicalPlanImpl(globalPlanRoots);
         return plan;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void prepareVarAndExpression(String field, LogicalVariable resVar,
+            List<LogicalVariable> additionalFilteringVars,
+            List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions,
+            List<Mutable<ILogicalExpression>> varRefs) {
+        IFunctionInfo finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
+
+        ScalarFunctionCallExpression f = new ScalarFunctionCallExpression(finfoAccess,
+                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
+                new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                        new AString(field)))));
+        f.substituteVar(METADATA_DUMMY_VAR, resVar);
+        additionalFilteringAssignExpressions.add(new MutableObject<ILogicalExpression>(f));
+        LogicalVariable v = context.newVar();
+        additionalFilteringVars.add(v);
+        varRefs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v)));
     }
 
     private DatasetDataSource validateDatasetInfo(AqlMetadataProvider metadataProvider, String dataverseName,

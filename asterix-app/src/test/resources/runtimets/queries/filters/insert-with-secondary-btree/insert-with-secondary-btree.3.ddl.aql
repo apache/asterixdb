@@ -1,0 +1,3 @@
+use dataverse test;
+
+create index fbAuthorIdx on FacebookMessages2(author-id) type btree;

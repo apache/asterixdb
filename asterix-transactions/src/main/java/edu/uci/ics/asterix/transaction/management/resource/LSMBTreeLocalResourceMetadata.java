@@ -41,17 +41,20 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     protected final boolean isPrimary;
     protected final ILSMMergePolicyFactory mergePolicyFactory;
     protected final Map<String, String> mergePolicyProperties;
+    protected final int[] btreeFields;
 
     public LSMBTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, boolean isPrimary, int datasetID, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties) {
-        super(datasetID);
+            Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields) {
+        super(datasetID, filterTypeTraits, filterCmpFactories, filterFields);
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.isPrimary = isPrimary;
         this.mergePolicyFactory = mergePolicyFactory;
         this.mergePolicyProperties = mergePolicyProperties;
+        this.btreeFields = btreeFields;
     }
 
     @Override
@@ -66,7 +69,8 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
                         (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
                 runtimeContextProvider.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                        .createIOOperationCallback(), isPrimary);
+                        .createIOOperationCallback(), isPrimary, filterTypeTraits, filterCmpFactories, btreeFields,
+                filterFields);
         return lsmBTree;
     }
 

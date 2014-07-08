@@ -5117,11 +5117,68 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="json">
-    <test-case FilePath="json">
-      <compilation-unit name="int01">
-        <output-dir compare="JSON">int01</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
+  <test-group name="filters">
+  		<test-case FilePath="filters">
+			<compilation-unit name="equality-predicate">
+				<output-dir compare="Text">equality-predicate</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="load">
+				<output-dir compare="Text">load</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="load-with-secondary-btree">
+				<output-dir compare="Text">load-with-secondary-btree</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="load-with-secondary-inverted-ngram">
+				<output-dir compare="Text">load-with-secondary-inverted-ngram</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="load-with-secondary-inverted-word">
+				<output-dir compare="Text">load-with-secondary-inverted-word</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="load-with-secondary-rtree">
+				<output-dir compare="Text">load-with-secondary-rtree</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="insert">
+				<output-dir compare="Text">insert</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="insert-with-secondary-btree">
+				<output-dir compare="Text">insert-with-secondary-btree</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="insert-with-secondary-inverted-ngram">
+				<output-dir compare="Text">insert-with-secondary-inverted-ngram</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="insert-with-secondary-inverted-word">
+				<output-dir compare="Text">insert-with-secondary-inverted-word</output-dir>
+			</compilation-unit>
+		</test-case>
+		<test-case FilePath="filters">
+			<compilation-unit name="insert-with-secondary-rtree">
+				<output-dir compare="Text">insert-with-secondary-rtree</output-dir>
+			</compilation-unit>
+		</test-case>
+	</test-group>
+    <test-group name="json">
+		<test-case FilePath="json">
+			<compilation-unit name="int01">
+				<output-dir compare="JSON">int01</output-dir>
+			</compilation-unit>
+		</test-case>
+    </test-group>
 </test-suite>

@@ -45,7 +45,7 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLoca
     public ExternalBTreeWithBuddyLocalResourceMetadata(int datasetID, IBinaryComparatorFactory[] btreeCmpFactories,
             ITypeTraits[] typeTraits, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, int[] buddyBtreeFields) {
-        super(datasetID);
+        super(datasetID, null, null, null);
         this.btreeCmpFactories = btreeCmpFactories;
         this.typeTraits = typeTraits;
         this.mergePolicyFactory = mergePolicyFactory;

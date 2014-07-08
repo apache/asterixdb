@@ -30,13 +30,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHe
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.ExternalRTree;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorNodePushable;
 
-public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperatorNodePushable{
+public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperatorNodePushable {
 
     public ExternalRTreeSearchOperatorNodePushable(AbstractTreeIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, IRecordDescriptorProvider recordDescProvider, int[] keyFields) {
-        super(opDesc, ctx, partition, recordDescProvider, keyFields);
+        super(opDesc, ctx, partition, recordDescProvider, keyFields, null, null);
     }
-    
+
     // We override this method to specify the searched version of the index
     @Override
     public void open() throws HyracksDataException {
@@ -45,7 +45,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
         indexHelper.open();
         ExternalRTreeDataflowHelper rTreeDataflowHelper = (ExternalRTreeDataflowHelper) indexHelper;
         index = indexHelper.getIndexInstance();
-        
+
         if (retainNull) {
             int fieldCount = getFieldCount();
             nullTupleBuild = new ArrayTupleBuilder(fieldCount);
@@ -61,7 +61,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
         } else {
             nullTupleBuild = null;
         }
-        
+
         ExternalRTree rTreeIndex = (ExternalRTree) index;
         try {
             searchPred = createSearchPredicate();

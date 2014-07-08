@@ -238,7 +238,7 @@ public class MetadataBootstrap {
             IDatasetDetails id = new InternalDatasetDetails(FileStructure.BTREE, PartitioningStrategy.HASH,
                     primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
                     primaryIndexes[i].getNodeGroupName(), false, GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
-                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES);
+                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, null);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
                     id, new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
@@ -400,12 +400,14 @@ public class MetadataBootstrap {
                     runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
                             GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES), opTracker,
                     runtimeContext.getLSMIOScheduler(),
-                    LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex());
+                    LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
+                    null, null, null, null);
             lsmBtree.create();
             resourceID = runtimeContext.getResourceIdFactory().createId();
             ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
                     comparatorFactories, bloomFilterKeyFields, index.isPrimaryIndex(), index.getDatasetId().getId(),
-                    runtimeContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES);
+                    runtimeContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES,
+                    null, null, null, null);
             ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
@@ -421,7 +423,7 @@ public class MetadataBootstrap {
                                 .getBloomFilterFalsePositiveRate(), runtimeContext.getMetadataMergePolicyFactory()
                                 .createMergePolicy(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES), opTracker,
                         runtimeContext.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                                .createIOOperationCallback(), index.isPrimaryIndex());
+                                .createIOOperationCallback(), index.isPrimaryIndex(), null, null, null, null);
                 indexLifecycleManager.register(resourceID, lsmBtree);
             }
         }
