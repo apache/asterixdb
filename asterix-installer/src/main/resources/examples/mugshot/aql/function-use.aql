@@ -1,0 +1,5 @@
+use dataverse TinySocial;
+
+for $un in unemployed()
+where $un.address.zip = "94065"
+return $un

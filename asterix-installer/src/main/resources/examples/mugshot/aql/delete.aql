@@ -1,0 +1,4 @@
+use dataverse TinySocial;
+
+delete $user from dataset MugshotUsers
+where $user.id = 999;

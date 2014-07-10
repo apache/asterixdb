@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,19 +28,8 @@ import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -60,7 +49,7 @@ import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 /**
  * Parser for ADM formatted data.
  */
-public class ADMDataParser extends AbstractDataParser implements IDataParser {
+public class ADMDataParser extends AbstractDataParser {
 
     protected AdmLexer admLexer;
     protected ARecordType recordType;
@@ -79,6 +68,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     static class ParseException extends AsterixException {
         private static final long serialVersionUID = 1L;
+        private String filename;
         private int line = -1;
         private int column = -1;
 
@@ -94,18 +84,22 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             super(message, cause);
         }
 
-        public ParseException(Throwable cause, int line, int column) {
+        public ParseException(Throwable cause, String filename, int line, int column) {
             super(cause);
-            setLocation(line, column);
+            setLocation(filename, line, column);
         }
 
-        public void setLocation(int line, int column) {
+        public void setLocation(String filename, int line, int column) {
+            this.filename = filename;
             this.line = line;
             this.column = column;
         }
 
         public String getMessage() {
             StringBuilder msg = new StringBuilder("Parse error");
+            if (filename != null) {
+                msg.append(" in file " + filename);
+            }
             if (line >= 0) {
                 if (column >= 0) {
                     msg.append(" at (" + line + ", " + column + ")");
@@ -117,16 +111,24 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         }
     }
 
+    public ADMDataParser() {
+        this(null);
+    }
+
+    public ADMDataParser(String filename) {
+        this.filename = filename;
+    }
+
     @Override
     public boolean parse(DataOutput out) throws AsterixException {
         try {
             return parseAdmInstance((IAType) recordType, datasetRec, out);
         } catch (IOException e) {
-            throw new ParseException(e, admLexer.getLine(), admLexer.getColumn());
+            throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         } catch (AdmLexerException e) {
             throw new AsterixException(e);
         } catch (ParseException e) {
-            e.setLocation(admLexer.getLine(), admLexer.getColumn());
+            e.setLocation(filename, admLexer.getLine(), admLexer.getColumn());
             throw e;
         }
     }
@@ -552,7 +554,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         if (recType != null) {
             nullableFieldId = checkNullConstraints(recType, nulls);
             if (nullableFieldId != -1)
-                throw new ParseException("Field " + nullableFieldId + " can not be null");
+                throw new ParseException("Field " + recType.getFieldNames()[nullableFieldId] + " can not be null");
         }
         recBuilder.write(out, true);
         returnRecordBuilder(recBuilder);

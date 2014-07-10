@@ -1,0 +1,7 @@
+use dataverse TinySocial;
+
+load dataset MugshotUsers using localfs
+(("path"="127.0.0.1://../../../examples/mugshot/data/mugshot_users.adm"),("format"="adm"));
+
+load dataset MugshotMessages using localfs
+(("path"="127.0.0.1://../../../examples/mugshot/data/mugshot_messages.adm"),("format"="adm"));

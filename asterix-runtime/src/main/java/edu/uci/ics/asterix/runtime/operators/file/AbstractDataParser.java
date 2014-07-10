@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,9 +57,9 @@ import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
+import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -79,7 +79,6 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableFloat aFloat = new AMutableFloat(0);
     protected AMutableString aString = new AMutableString("");
     protected AMutableString aStringFieldName = new AMutableString("");
-
     // For temporal and spatial data types
     protected AMutableTime aTime = new AMutableTime(0);
     protected AMutableDateTime aDateTime = new AMutableDateTime(0L);
@@ -157,6 +156,12 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected final static ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ALINE);
+
+    protected String filename;
+
+    void setFilename(String filename) {
+        this.filename = filename;
+    }
 
     protected void parseTime(String time, DataOutput out) throws HyracksDataException {
         int chrononTimeInMs;

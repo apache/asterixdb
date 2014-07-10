@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.event.service.AsterixEventService;
 import edu.uci.ics.asterix.event.service.ILookupService;
 import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
+import edu.uci.ics.asterix.installer.command.ConfigureCommand;
 import edu.uci.ics.asterix.installer.schema.conf.Configuration;
 
 public class InstallerDriver {
@@ -48,9 +49,26 @@ public class InstallerDriver {
         AsterixEventService.initialize(conf, asterixDir, eventHome);
 
         ILookupService lookupService = ServiceProvider.INSTANCE.getLookupService();
-        if (ensureLookupServiceIsRunning && !lookupService.isRunning(conf)) {
-            lookupService.startService(conf);
+        if (ensureLookupServiceIsRunning) {
+            if (!conf.isConfigured()) {
+                try {
+                    configure();
+                    /* read back the configuration file updated as part of configure command*/
+                    conf = (Configuration) unmarshaller.unmarshal(configFile);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if (!lookupService.isRunning(conf)) {
+                lookupService.startService(conf);
+            }
         }
+
+    }
+
+    private static void configure() throws Exception {
+        ConfigureCommand cmd = new ConfigureCommand();
+        cmd.execute(new String[] { "configure" });
     }
 
     public static String getManagixHome() {
@@ -75,7 +93,8 @@ public class InstallerDriver {
             printUsage();
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-            if (e.getMessage() == null || e.getMessage().length() == 0) {
+            if (e.getMessage() == null || e.getMessage().length() < 10) {
+                // less than 10 characters of error message is probably not enough
                 e.printStackTrace();
             }
         }

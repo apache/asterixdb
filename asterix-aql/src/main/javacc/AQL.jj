@@ -2183,11 +2183,15 @@ TOKEN_MGR_DECLS:
       lexerStateStack.push( curLexState );
     }
     
-    public void popState() {
+    public void popState(String token) {
       if (lexerStateStack.size() > 0) {
          SwitchTo( lexerStateStack.pop() );
       } else {
-         throw new RuntimeException();
+         int errorLine = input_stream.getEndLine();
+         int errorColumn = input_stream.getEndColumn();
+         String msg = "Lexical error at line " + errorLine + ", column " + errorColumn + ". Encountered \"" + token
+             + "\" but state stack is empty.";
+         throw new TokenMgrError(msg, -1);
       }
     }
 }
@@ -2264,7 +2268,7 @@ TOKEN :
 <DEFAULT>
 TOKEN :
 {
-    <RIGHTBRACE : "}"> { popState(); }
+    <RIGHTBRACE : "}"> { popState("}"); }
 }
 
 <DEFAULT,IN_DBL_BRACE>
@@ -2276,7 +2280,7 @@ TOKEN :
 <IN_DBL_BRACE>
 TOKEN :
 {
-    <RIGHTDBLBRACE : "}}"> { popState(); }
+    <RIGHTDBLBRACE : "}}"> { popState("}}"); }
 }
 
 <DEFAULT,IN_DBL_BRACE>
@@ -2384,6 +2388,6 @@ SKIP:
 <INSIDE_COMMENT>
 SKIP:
 {
-    <"*/"> { popState(); }
+    <"*/"> { popState("*/"); }
   | <~[]>
 }

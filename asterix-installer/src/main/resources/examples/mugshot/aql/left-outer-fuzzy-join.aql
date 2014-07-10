@@ -1,0 +1,19 @@
+use dataverse TinySocial;
+
+set simfunction "jaccard";
+set simthreshold "0.3";
+
+for $msg in dataset MugshotMessages
+let $msgsSimilarTags := (
+  for $m2 in dataset MugshotMessages
+    where  $m2.tags ~= $msg.tags
+      and $m2.message-id != $msg.message-id
+    return $m2.message
+  )
+where count($msgsSimilarTags) > 0
+order by count($msgsSimilarTags)
+limit 10
+return {
+  "message" : $msg.message,
+  "similarly tagged" : $msgsSimilarTags
+};
