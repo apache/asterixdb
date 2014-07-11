@@ -64,6 +64,9 @@ public class NestedLoopJoin {
         this.appender.reset(outBuffer, true);
         this.outBuffers = new ArrayList<ByteBuffer>();
         this.memSize = memSize;
+        if (memSize < 3) {
+            throw new HyracksDataException("Not enough memory is available for Nested Loop Join");
+        }
         this.predEvaluator = predEval;
         this.isReversed = false;
         this.ctx = ctx;

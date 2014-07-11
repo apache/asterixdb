@@ -437,30 +437,33 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     LOGGER.fine("\n>>>Joining Partition Pairs (pid "+pid+") - (level "+level+") - wasReversed "+wasReversed+" - BuildSize:\t"+buildPartSize+"\tProbeSize:\t"+probePartSize+" - MemForJoin "+(state.memForJoin)+"  - LeftOuter is "+isLeftOuter);
                                       
                     //Apply in-Mem HJ if possible
-                    if(!skipInMemoryHJ){
-                    	if ((buildPartSize < state.memForJoin) || (probePartSize < state.memForJoin && !isLeftOuter)) {
-                            int tabSize = -1;
-                            if (!forceRR && (isLeftOuter || (buildPartSize < probePartSize)) ) {	//Case 1.1 - InMemHJ (wout Role-Reversal)
-                            	LOGGER.fine("\t>>>Case 1.1 (IsLeftOuter || buildSize<probe) AND ApplyInMemHJ - [Level "+level+"]");
-                                tabSize = wasReversed ? ohhj.getProbePartitionSizeInTup(pid) : ohhj.getBuildPartitionSizeInTup(pid);
-                                if (tabSize == 0) {
-                                    throw new HyracksDataException(
-                                            "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
-                                }
-                                	//Build Side is smaller
-                                applyInMemHashJoin(buildKeys, probeKeys, tabSize, probeRd, buildRd, hpcRep0, hpcRep1,
-                                        buildSideReader, probeSideReader, false, pid);	//checked-confirmed
-                            } else { //Case 1.2 - InMemHJ with Role Reversal
-                            	LOGGER.fine("\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ WITH RoleReversal - [Level "+level+"]");
-                                tabSize = wasReversed ? ohhj.getBuildPartitionSizeInTup(pid) : ohhj.getProbePartitionSizeInTup(pid);
-                                if (tabSize == 0) {
-                                    throw new HyracksDataException(
-                                            "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
-                                }
-                                	//Probe Side is smaller
-                                applyInMemHashJoin(probeKeys, buildKeys, tabSize, buildRd, probeRd, hpcRep1, hpcRep0,
-                                        probeSideReader, buildSideReader, true, pid);	//checked-confirmed
+                    if (!skipInMemoryHJ && (buildPartSize < state.memForJoin)
+                            || (probePartSize < state.memForJoin && !isLeftOuter)) {
+                        int tabSize = -1;
+                        if (!forceRR && (isLeftOuter || (buildPartSize < probePartSize))) { //Case 1.1 - InMemHJ (wout Role-Reversal)
+                            LOGGER.fine("\t>>>Case 1.1 (IsLeftOuter || buildSize<probe) AND ApplyInMemHJ - [Level "
+                                    + level + "]");
+                            tabSize = wasReversed ? ohhj.getProbePartitionSizeInTup(pid) : ohhj
+                                    .getBuildPartitionSizeInTup(pid);
+                            if (tabSize == 0) {
+                                throw new HyracksDataException(
+                                        "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
+                            //Build Side is smaller
+                            applyInMemHashJoin(buildKeys, probeKeys, tabSize, probeRd, buildRd, hpcRep0, hpcRep1,
+                                    buildSideReader, probeSideReader, false, pid); //checked-confirmed
+                        } else { //Case 1.2 - InMemHJ with Role Reversal
+                            LOGGER.fine("\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ WITH RoleReversal - [Level "
+                                    + level + "]");
+                            tabSize = wasReversed ? ohhj.getBuildPartitionSizeInTup(pid) : ohhj
+                                    .getProbePartitionSizeInTup(pid);
+                            if (tabSize == 0) {
+                                throw new HyracksDataException(
+                                        "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
+                            }
+                            //Probe Side is smaller
+                            applyInMemHashJoin(probeKeys, buildKeys, tabSize, buildRd, probeRd, hpcRep1, hpcRep0,
+                                    probeSideReader, buildSideReader, true, pid); //checked-confirmed
                         }
                     }
                     //Apply (Recursive) HHJ
@@ -523,10 +526,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                     int buildSideInTups = rHHj.getBuildPartitionSizeInTup(rPid);
                                     int probeSideInTups = rHHj.getProbePartitionSizeInTup(rPid);
                                     if (isLeftOuter || buildSideInTups < probeSideInTups) {
-                                        applyNestedLoopJoin(buildRd, probeRd, state.memForJoin, rprfw, rbrfw,
+                                        applyNestedLoopJoin(buildRd, probeRd, memsize, rprfw, rbrfw,
                                                 nljComparator0, false); //checked-modified
                                     } else {
-                                        applyNestedLoopJoin(probeRd, buildRd, state.memForJoin, rbrfw, rprfw,
+                                        applyNestedLoopJoin(probeRd, buildRd, memsize, rbrfw, rprfw,
                                                 nljComparator1, true); //checked-modified
                                     }
                                 }
@@ -585,10 +588,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                     long buildSideSize = rbrfw.getFileSize();
                                     long probeSideSize = rprfw.getFileSize();
                                     if (buildSideSize > probeSideSize) {
-                                        applyNestedLoopJoin(buildRd, probeRd, state.memForJoin, rbrfw, rprfw,
+                                        applyNestedLoopJoin(buildRd, probeRd, memsize, rbrfw, rprfw,
                                                 nljComparator0, true);	//checked-modified
                                     } else {
-                                        applyNestedLoopJoin(probeRd, buildRd, state.memForJoin, rprfw, rbrfw,
+                                        applyNestedLoopJoin(probeRd, buildRd, memsize, rprfw, rbrfw,
                                                 nljComparator1, true);	//checked-modified
                                     }
                                 }

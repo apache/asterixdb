@@ -64,7 +64,10 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
         // compute token count
         // ignore pre and post grams for duplicate detection
         if (!ignoreTokenCount && numPreChars == 0 && numPostChars == 0) {
-            int tmpIndex = start;
+            int tmpIndex = start + 2; // skip utf8 length indicator
+            if (sourceHasTypeTag) {
+                tmpIndex++; // skip type tag
+            }
             while (tmpIndex < currentTokenStart) {
                 tokenCount++; // assume found
                 int offset = 0;
