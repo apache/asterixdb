@@ -16,14 +16,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>pregelix</artifactId>
-  <version>0.2.12</version>
+  <version>0.2.13-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>pregelix</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>fullstack</artifactId>
-    <version>0.2.12</version>
+    <version>0.2.13-SNAPSHOT</version>
   </parent>
 
   <properties>

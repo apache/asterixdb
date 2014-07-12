@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>pregelix</artifactId>
-		<version>0.2.12</version>
+		<version>0.2.13-SNAPSHOT</version>
 	</parent>
 
 	<build>
@@ -106,7 +106,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>pregelix-core</artifactId>
-			<version>0.2.12</version>
+			<version>0.2.13-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
