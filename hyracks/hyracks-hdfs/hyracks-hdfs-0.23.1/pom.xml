@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.12-SNAPSHOT</version>
+		<version>0.2.12</version>
 	</parent>
 	<build>
 		<plugins>
@@ -204,7 +204,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.12-SNAPSHOT</version>
+			<version>0.2.12</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
