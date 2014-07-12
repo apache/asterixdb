@@ -81,7 +81,7 @@
 
   <scm>
     <connection>scm:git:https://code.google.com/p/hyracks/</connection>
-    <developerConnection>scm:git:https://code.google.com/p/hyracks/</developerConnection>
+    <developerConnection>scm:git:ssh://fulliautomatix.ics.uci.edu:29418/hyracks</developerConnection>
     <url>https://code.google.com/p/hyracks/source/browse/</url>
   </scm>
 
