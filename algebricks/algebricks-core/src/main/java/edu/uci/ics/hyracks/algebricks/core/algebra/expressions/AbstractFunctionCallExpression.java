@@ -206,6 +206,16 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
                 if (!argument.equals(fceArgument))
                     return false;
             }
+            if (opaqueParameters != null) {
+                if (opaqueParameters.length != fce.opaqueParameters.length)
+                    return false;
+                for (int i = 0; i < opaqueParameters.length; i++) {
+                    Object opaqueParameter = opaqueParameters[i];
+                    Object fceOpaqueParameter = fce.opaqueParameters[i];
+                    if (!opaqueParameter.equals(fceOpaqueParameter))
+                        return false;
+                }
+            }
             return true;
         }
     }
@@ -215,6 +225,11 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         int h = finfo.hashCode();
         for (Mutable<ILogicalExpression> e : arguments) {
             h = h * 41 + e.getValue().hashCode();
+        }
+        if (opaqueParameters != null) {
+            for (int i = 0; i < opaqueParameters.length; i++) {
+                h = h * 31 + opaqueParameters[i].hashCode();
+            }
         }
         return h;
     }
