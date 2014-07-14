@@ -34,7 +34,7 @@ public class ADayTimeDurationPrinter implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         long milliseconds = AInt64SerializerDeserializer.getLong(b, s + 1);
 
-        ps.print("{ day-time-duration: ");
+        ps.print("{ \"day-time-duration\": ");
         ps.print(milliseconds);
         ps.print("}");
     }

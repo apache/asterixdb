@@ -48,7 +48,8 @@ public abstract class AbstractAqlTranslator {
 
     public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
 
-        if (!AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.ACTIVE)) {
+        if (!(AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.ACTIVE) && AsterixClusterProperties.INSTANCE
+                .isGlobalRecoveryCompleted())) {
             int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
@@ -73,10 +74,28 @@ public abstract class AbstractAqlTranslator {
             }
         }
 
-
         if (AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.UNUSABLE)) {
             throw new AsterixException(" Asterix Cluster is in " + AsterixClusterProperties.State.UNUSABLE + " state."
                     + "\n One or more Node Controllers have left.\n");
+        }
+
+        if (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()) {
+            int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
+            int waitCycleCount = 0;
+            try {
+                while (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted() && waitCycleCount < maxWaitCycles) {
+                    Thread.sleep(1000);
+                    waitCycleCount++;
+                }
+            } catch (InterruptedException e) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.warning("Thread interrupted while waiting for cluster to complete global recovery ");
+                }
+            }
+            if (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()) {
+                throw new AsterixException(" Asterix Cluster Global recovery is not yet complete and The system is in "
+                        + AsterixClusterProperties.State.ACTIVE + " state");
+            }
         }
 
         boolean invalidOperation = false;

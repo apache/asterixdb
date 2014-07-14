@@ -15,15 +15,24 @@
 package edu.uci.ics.asterix.transaction.management.resource;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 
 public abstract class AbstractLSMLocalResourceMetadata implements ILocalResourceMetadata {
 
     private static final long serialVersionUID = 1L;
 
     protected final int datasetID;
+    protected final ITypeTraits[] filterTypeTraits;
+    protected final IBinaryComparatorFactory[] filterCmpFactories;
+    protected final int[] filterFields;
 
-    public AbstractLSMLocalResourceMetadata(int datasetID) {
+    public AbstractLSMLocalResourceMetadata(int datasetID, ITypeTraits[] filterTypeTraits,
+            IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
         this.datasetID = datasetID;
+        this.filterTypeTraits = filterTypeTraits;
+        this.filterCmpFactories = filterCmpFactories;
+        this.filterFields = filterFields;
     }
 
     public int getDatasetID() {

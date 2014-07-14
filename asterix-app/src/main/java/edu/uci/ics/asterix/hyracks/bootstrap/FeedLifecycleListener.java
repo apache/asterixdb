@@ -1115,7 +1115,8 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 statements.add(dataverseDecl);
                 statements.add(stmt);
                 AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
-                translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, false);
+                translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                        AqlTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Resumed feed: " + dataverse + ":" + dataset + " using policy " + feedPolicy);
                 }
@@ -1160,7 +1161,8 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 statements.add(dataverseDecl);
                 statements.add(stmt);
                 AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
-                translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, false);
+                translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                        AqlTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("End urecoverable feed: " + feedInfo.feedConnectionId);
                 }

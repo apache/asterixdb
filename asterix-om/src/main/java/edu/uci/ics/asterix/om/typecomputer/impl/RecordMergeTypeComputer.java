@@ -77,8 +77,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             IAType fieldType = recType1.getFieldTypes()[i];
             int pos = Collections.binarySearch(resultFieldNames, fieldName);
             if (pos >= 0) {
-                resultFieldNames.set(pos, fieldName);
-                resultFieldTypes.set(pos, fieldType);
+                throw new AlgebricksException("Duplicate field \"" + fieldName + "\" encountered");
             } else {
                 additionalFieldNames.add(fieldName);
                 additionalFieldTypes.add(fieldType);

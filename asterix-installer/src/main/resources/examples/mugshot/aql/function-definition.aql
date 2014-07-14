@@ -1,0 +1,13 @@
+use dataverse TinySocial;
+
+drop function unemployed@0 if exists;
+
+create function unemployed() {
+  for $msu in dataset MugshotUsers
+  where (every $e in $msu.employment
+         satisfies not(is-null($e.end-date)))
+  return {
+    "name" : $msu.name,
+    "address" : $msu.address
+  }
+};

@@ -1,0 +1,10 @@
+use dataverse TinySocial;
+
+for $msu in dataset MugshotUsers
+where (every $e in $msu.employment
+      satisfies not(is-null($e.end-date)))
+limit 10
+return {
+  "name" : $msu.name,
+  "address" : $msu.address
+};

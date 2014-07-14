@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
@@ -120,10 +121,26 @@ public class DatasetOperations {
             return JobSpecificationUtils.createJobSpecification();
         }
 
+        Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(),
+                dataverseName);
+        IDataFormat format;
+        try {
+            format = (IDataFormat) Class.forName(dataverse.getDataFormat()).newInstance();
+        } catch (Exception e) {
+            throw new AsterixException(e);
+        }
+
+        ARecordType itemType = (ARecordType) metadataProvider.findType(dataverseName, dataset.getItemTypeName());
+
+        ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+        IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
+                itemType, format.getBinaryComparatorFactoryProvider());
+        int[] filterFields = DatasetUtils.createFilterFields(dataset);
+        int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
         JobSpecification specPrimary = JobSpecificationUtils.createJobSpecification();
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(), datasetName,
+                .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), datasetName,
                         datasetName);
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(dataset,
@@ -134,7 +151,8 @@ public class DatasetOperations {
                         dataset.getDatasetId()), compactionInfo.first, compactionInfo.second,
                         new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate(), true));
+                        storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
+                        filterCmpFactories, btreeFields, filterFields));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
 
@@ -161,10 +179,16 @@ public class DatasetOperations {
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                 itemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
-        int[] blooFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
+        int[] bloomFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
+
+        ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+        IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
+                itemType, format.getBinaryComparatorFactoryProvider());
+        int[] filterFields = DatasetUtils.createFilterFields(dataset);
+        int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
+                .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, datasetName);
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
@@ -177,19 +201,20 @@ public class DatasetOperations {
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
         //prepare a LocalResourceMetadata which will be stored in NC's local resource repository
         ILocalResourceMetadata localResourceMetadata = new LSMBTreeLocalResourceMetadata(typeTraits,
-                comparatorFactories, blooFilterKeyFields, true, dataset.getDatasetId(), compactionInfo.first,
-                compactionInfo.second);
+                comparatorFactories, bloomFilterKeyFields, true, dataset.getDatasetId(), compactionInfo.first,
+                compactionInfo.second, filterTypeTraits, filterCmpFactories, btreeFields, filterFields);
         ILocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.LSMBTreeResource);
 
         TreeIndexCreateOperatorDescriptor indexCreateOp = new TreeIndexCreateOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                splitsAndConstraint.first, typeTraits, comparatorFactories, blooFilterKeyFields,
+                splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
                 new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                         compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(dataset
                                 .getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                .getBloomFilterFalsePositiveRate(), true), localResourceFactoryProvider,
+                                .getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
+                        btreeFields, filterFields), localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
@@ -222,19 +247,27 @@ public class DatasetOperations {
         IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                 itemType, format.getBinaryComparatorFactoryProvider());
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
-        int[] blooFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
+        int[] bloomFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
+
+        ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+        IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
+                itemType, format.getBinaryComparatorFactoryProvider());
+        int[] filterFields = DatasetUtils.createFilterFields(dataset);
+        int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
 
         ExternalDatasetDetails externalDatasetDetails = new ExternalDatasetDetails(loadStmt.getAdapter(),
-                loadStmt.getProperties());
+                loadStmt.getProperties(), null, null, ExternalDatasetTransactionState.COMMIT, null, null);
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = metadataProvider.buildExternalDataScannerRuntime(
-                spec, itemType, externalDatasetDetails, format);
+                spec, itemType, externalDatasetDetails, format, dataset);
         IOperatorDescriptor scanner = p.first;
         AlgebricksPartitionConstraint scannerPc = p.second;
-        RecordDescriptor recDesc = computePayloadKeyRecordDescriptor(dataset, itemType, payloadSerde, format);
+        RecordDescriptor recDesc = computePayloadKeyRecordDescriptor(dataset, itemType, payloadSerde, format,
+                filterTypeTraits == null ? false : true);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, scanner, scannerPc);
 
-        AssignRuntimeFactory assign = makeAssignRuntimeFactory(dataset, itemType, format);
+        AssignRuntimeFactory assign = makeAssignRuntimeFactory(dataset, itemType, format,
+                filterTypeTraits == null ? false : true);
         AlgebricksMetaOperatorDescriptor asterixOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
                 new IPushRuntimeFactory[] { assign }, new RecordDescriptor[] { recDesc });
 
@@ -245,21 +278,30 @@ public class DatasetOperations {
         for (int i = 0; i < numKeys; i++) {
             keys[i] = i + 1;
         }
+        int numFilterFields = 0;
+        if (filterTypeTraits != null) {
+            numFilterFields++;
+        }
+
         // Move key fields to front.
-        int[] fieldPermutation = new int[numKeys + 1];
+        int[] fieldPermutation = new int[numKeys + 1 + numFilterFields];
         for (int i = 0; i < numKeys; i++) {
             fieldPermutation[i] = i + 1;
         }
         fieldPermutation[numKeys] = 0;
+        if (numFilterFields > 0) {
+            fieldPermutation[numKeys + 1] = numKeys + 1;
+        }
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadataProvider
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
+                .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, datasetName);
 
         FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
             sb.append(stringOf(fs[i]) + " ");
         }
+
         LOGGER.info("LOAD into File Splits: " + sb.toString());
 
         long numElementsHint = metadataProvider.getCardinalityPerPartitionHint(dataset);
@@ -271,13 +313,14 @@ public class DatasetOperations {
             btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, splitsAndConstraint.first, typeTraits,
-                    comparatorFactories, blooFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
+                    comparatorFactories, bloomFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_TREE_FILL_FACTOR,
                     true, numElementsHint, true, new LSMBTreeDataflowHelperFactory(
                             new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
                             compactionInfo.second, new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate(), true), NoOpOperationCallbackFactory.INSTANCE);
+                            storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
+                            filterCmpFactories, btreeFields, filterFields), NoOpOperationCallbackFactory.INSTANCE);
             AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                     splitsAndConstraint.second);
 
@@ -296,13 +339,14 @@ public class DatasetOperations {
             btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                     AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, splitsAndConstraint.first, typeTraits,
-                    comparatorFactories, blooFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_BTREE_FILL_FACTOR,
+                    comparatorFactories, bloomFilterKeyFields, fieldPermutation, GlobalConfig.DEFAULT_TREE_FILL_FACTOR,
                     true, numElementsHint, true, new LSMBTreeDataflowHelperFactory(
                             new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
                             compactionInfo.second, new PrimaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate(), true), NoOpOperationCallbackFactory.INSTANCE);
+                            storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
+                            filterCmpFactories, btreeFields, filterFields), NoOpOperationCallbackFactory.INSTANCE);
             AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeBulkLoad,
                     splitsAndConstraint.second);
 
@@ -323,20 +367,31 @@ public class DatasetOperations {
     }
 
     private static AssignRuntimeFactory makeAssignRuntimeFactory(Dataset dataset, ARecordType itemType,
-            IDataFormat format) throws AlgebricksException {
+            IDataFormat format, boolean filterExist) throws AlgebricksException {
+        int numFilterFields = 0;
+        if (filterExist) {
+            numFilterFields++;
+        }
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numKeys = partitioningKeys.size();
-        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numKeys];
+        ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numKeys + numFilterFields];
         for (int i = 0; i < numKeys; i++) {
             Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = format
                     .partitioningEvaluatorFactory(itemType, partitioningKeys.get(i));
             evalFactories[i] = evalFactoryAndType.first;
         }
-        int[] outColumns = new int[numKeys];
-        int[] projectionList = new int[numKeys + 1];
+        if (numFilterFields > 0) {
+            String filterField = DatasetUtils.getFilterField(dataset);
+            Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> evalFactoryAndType = format
+                    .partitioningEvaluatorFactory(itemType, filterField);
+            evalFactories[numKeys] = evalFactoryAndType.first;
+        }
+
+        int[] outColumns = new int[numKeys + numFilterFields];
+        int[] projectionList = new int[numKeys + 1 + numFilterFields];
         projectionList[0] = 0;
 
-        for (int i = 0; i < numKeys; i++) {
+        for (int i = 0; i < numKeys + numFilterFields; i++) {
             outColumns[i] = i + 1;
             projectionList[i + 1] = i + 1;
         }
@@ -350,10 +405,15 @@ public class DatasetOperations {
 
     @SuppressWarnings("rawtypes")
     private static RecordDescriptor computePayloadKeyRecordDescriptor(Dataset dataset, ARecordType itemType,
-            ISerializerDeserializer payloadSerde, IDataFormat dataFormat) throws AlgebricksException {
+            ISerializerDeserializer payloadSerde, IDataFormat dataFormat, boolean filterExist)
+            throws AlgebricksException {
+        int numFilterFields = 0;
+        if (filterExist) {
+            numFilterFields++;
+        }
         List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numKeys = partitioningKeys.size();
-        ISerializerDeserializer[] recordFields = new ISerializerDeserializer[1 + numKeys];
+        ISerializerDeserializer[] recordFields = new ISerializerDeserializer[1 + numKeys + numFilterFields];
         recordFields[0] = payloadSerde;
         for (int i = 0; i < numKeys; i++) {
             IAType keyType;
@@ -364,6 +424,17 @@ public class DatasetOperations {
             }
             ISerializerDeserializer keySerde = dataFormat.getSerdeProvider().getSerializerDeserializer(keyType);
             recordFields[i + 1] = keySerde;
+        }
+        if (numFilterFields > 0) {
+            String filterField = DatasetUtils.getFilterField(dataset);
+            IAType type;
+            try {
+                type = itemType.getFieldType(filterField);
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
+            ISerializerDeserializer serde = dataFormat.getSerdeProvider().getSerializerDeserializer(type);
+            recordFields[numKeys + 1] = serde;
         }
         return new RecordDescriptor(recordFields);
     }
@@ -388,8 +459,14 @@ public class DatasetOperations {
         ITypeTraits[] typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
         int[] blooFilterKeyFields = DatasetUtils.createBloomFilterKeyFields(dataset);
 
+        ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+        IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(dataset,
+                itemType, format.getBinaryComparatorFactoryProvider());
+        int[] filterFields = DatasetUtils.createFilterFields(dataset);
+        int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
+
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = metadata
-                .splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataverseName, datasetName, datasetName);
+                .splitProviderAndPartitionConstraintsForDataset(dataverseName, datasetName, datasetName);
 
         AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
 
@@ -402,7 +479,8 @@ public class DatasetOperations {
                         compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                 dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate(), true), NoOpOperationCallbackFactory.INSTANCE);
+                        storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
+                        filterCmpFactories, btreeFields, filterFields), NoOpOperationCallbackFactory.INSTANCE);
         AlgebricksPartitionConstraintHelper
                 .setPartitionConstraintInJobSpec(spec, compactOp, splitsAndConstraint.second);
 

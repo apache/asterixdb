@@ -14,15 +14,26 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
+import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
+import edu.uci.ics.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactory;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -33,6 +44,7 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsoluteParti
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.InputSplitsFactory;
@@ -54,6 +66,11 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
     public static final String KEY_INPUT_FORMAT = "input-format";
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
+    // New
+    public static final String KEY_PARSER = "parser";
+    public static final String PARSER_HIVE = "hive-parser";
+    public static final String INPUT_FORMAT_RC = "rc-input-format";
+    public static final String FORMAT_BINARY = "binary";
 
     private transient AlgebricksPartitionConstraint clusterLocations;
     private String[] readSchedule;
@@ -77,13 +94,18 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         return scheduler;
     }
 
-    private static final Map<String, String> formatClassNames = initInputFormatMap();
+    protected static final Map<String, String> formatClassNames = initInputFormatMap();
 
-    private static Map<String, String> initInputFormatMap() {
+    protected static Map<String, String> initInputFormatMap() {
         Map<String, String> formatClassNames = new HashMap<String, String>();
         formatClassNames.put(INPUT_FORMAT_TEXT, "org.apache.hadoop.mapred.TextInputFormat");
         formatClassNames.put(INPUT_FORMAT_SEQUENCE, "org.apache.hadoop.mapred.SequenceFileInputFormat");
+        formatClassNames.put(INPUT_FORMAT_RC, "org.apache.hadoop.hive.ql.io.RCFileInputFormat");
         return formatClassNames;
+    }
+
+    public JobConf getJobConf() throws HyracksDataException {
+        return confFactory.getConf();
     }
 
     @Override
@@ -92,7 +114,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         InputSplit[] inputSplits = inputSplitsFactory.getSplits();
         String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
         HDFSAdapter hdfsAdapter = new HDFSAdapter(atype, readSchedule, executed, inputSplits, conf, nodeName,
-                parserFactory, ctx);
+                parserFactory, ctx, configuration, files);
         return hdfsAdapter;
     }
 
@@ -101,14 +123,17 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         return HDFS_ADAPTER_NAME;
     }
 
-    private JobConf configureJobConf(Map<String, String> configuration) throws Exception {
+    public static JobConf configureJobConf(Map<String, String> configuration) throws Exception {
         JobConf conf = new JobConf();
+        String formatClassName = (String) formatClassNames.get(((String) configuration.get(KEY_INPUT_FORMAT)).trim());
+        if (formatClassName == null) {
+            formatClassName = ((String) configuration.get(KEY_INPUT_FORMAT)).trim();
+        }
         conf.set("fs.default.name", ((String) configuration.get(KEY_HDFS_URL)).trim());
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
         conf.setClassLoader(HDFSAdapter.class.getClassLoader());
         conf.set("mapred.input.dir", ((String) configuration.get(KEY_PATH)).trim());
-        conf.set("mapred.input.format.class",
-                (String) formatClassNames.get(((String) configuration.get(KEY_INPUT_FORMAT)).trim()));
+        conf.set("mapred.input.format.class", formatClassName);
         return conf;
     }
 
@@ -138,7 +163,13 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         clusterLocations = getClusterLocations();
         int numPartitions = ((AlgebricksAbsolutePartitionConstraint) clusterLocations).getLocations().length;
 
-        InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
+        // if files list was set, we restrict the splits to the list since this dataset is indexed
+        InputSplit[] inputSplits;
+        if (files == null) {
+            inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
+        } else {
+            inputSplits = getSplits(conf);
+        }
         inputSplitsFactory = new InputSplitsFactory(inputSplits);
 
         readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
@@ -155,7 +186,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         return SupportedOperation.READ;
     }
 
-    private static AlgebricksPartitionConstraint getClusterLocations() {
+    public static AlgebricksPartitionConstraint getClusterLocations() {
         ArrayList<String> locs = new ArrayList<String>();
         Map<String, String[]> stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         for (String i : stores.keySet()) {
@@ -164,12 +195,114 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
             for (int j = 0; j < nodeStores.length; j++) {
                 for (int k = 0; k < numIODevices; k++) {
                     locs.add(i);
+                    locs.add(i);
                 }
             }
         }
         String[] cluster = new String[locs.size()];
         cluster = locs.toArray(cluster);
         return new AlgebricksAbsolutePartitionConstraint(cluster);
+    }
+
+    /*
+     * This method is overridden to do the following:
+     * if data is text data (adm or delimited text), it will use a text tuple parser, 
+     * otherwise it will use hdfs record object parser
+     */
+    protected void configureFormat(IAType sourceDatatype) throws Exception {
+        String specifiedFormat = (String) configuration.get(KEY_FORMAT);
+        if (specifiedFormat == null) {
+            throw new IllegalArgumentException(" Unspecified data format");
+        } else if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
+            parserFactory = getDelimitedDataTupleParserFactory((ARecordType) sourceDatatype, false);
+        } else if (FORMAT_ADM.equalsIgnoreCase((String) configuration.get(KEY_FORMAT))) {
+            parserFactory = getADMDataTupleParserFactory((ARecordType) sourceDatatype, false);
+        } else if (FORMAT_BINARY.equalsIgnoreCase((String) configuration.get(KEY_FORMAT))) {
+            parserFactory = new HDFSObjectTupleParserFactory((ARecordType) atype, this, configuration);
+        } else {
+            throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
+        }
+    }
+
+    /**
+     * Instead of creating the split using the input format, we do it manually
+     * This function returns fileSplits (1 per hdfs file block) irrespective of the number of partitions
+     * and the produced splits only cover intersection between current files in hdfs and files stored internally
+     * in AsterixDB
+     * 1. NoOp means appended file
+     * 2. AddOp means new file
+     * 3. UpdateOp means the delta of a file
+     * 
+     * @return
+     * @throws IOException
+     */
+    protected InputSplit[] getSplits(JobConf conf) throws IOException {
+        // Create file system object
+        FileSystem fs = FileSystem.get(conf);
+        ArrayList<FileSplit> fileSplits = new ArrayList<FileSplit>();
+        ArrayList<ExternalFile> orderedExternalFiles = new ArrayList<ExternalFile>();
+        // Create files splits
+        for (ExternalFile file : files) {
+            Path filePath = new Path(file.getFileName());
+            FileStatus fileStatus;
+            try {
+                fileStatus = fs.getFileStatus(filePath);
+            } catch (FileNotFoundException e) {
+                // file was deleted at some point, skip to next file
+                continue;
+            }
+            if (file.getPendingOp() == ExternalFilePendingOp.PENDING_ADD_OP
+                    && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
+                // Get its information from HDFS name node
+                BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, file.getSize());
+                // Create a split per block
+                for (BlockLocation block : fileBlocks) {
+                    if (block.getOffset() < file.getSize()) {
+                        fileSplits.add(new FileSplit(filePath, block.getOffset(), (block.getLength() + block
+                                .getOffset()) < file.getSize() ? block.getLength() : (file.getSize() - block
+                                .getOffset()), block.getHosts()));
+                        orderedExternalFiles.add(file);
+                    }
+                }
+            } else if (file.getPendingOp() == ExternalFilePendingOp.PENDING_NO_OP
+                    && fileStatus.getModificationTime() == file.getLastModefiedTime().getTime()) {
+                long oldSize = 0L;
+                long newSize = file.getSize();
+                for (int i = 0; i < files.size(); i++) {
+                    if (files.get(i).getFileName() == file.getFileName() && files.get(i).getSize() != file.getSize()) {
+                        newSize = files.get(i).getSize();
+                        oldSize = file.getSize();
+                        break;
+                    }
+                }
+
+                // Get its information from HDFS name node
+                BlockLocation[] fileBlocks = fs.getFileBlockLocations(fileStatus, 0, newSize);
+                // Create a split per block
+                for (BlockLocation block : fileBlocks) {
+                    if (block.getOffset() + block.getLength() > oldSize) {
+                        if (block.getOffset() < newSize) {
+                            // Block interact with delta -> Create a split
+                            long startCut = (block.getOffset() > oldSize) ? 0L : oldSize - block.getOffset();
+                            long endCut = (block.getOffset() + block.getLength() < newSize) ? 0L : block.getOffset()
+                                    + block.getLength() - newSize;
+                            long splitLength = block.getLength() - startCut - endCut;
+                            fileSplits.add(new FileSplit(filePath, block.getOffset() + startCut, splitLength, block
+                                    .getHosts()));
+                            orderedExternalFiles.add(file);
+                        }
+                    }
+                }
+            }
+        }
+        fs.close();
+        files = orderedExternalFiles;
+        return fileSplits.toArray(new FileSplit[fileSplits.size()]);
+    }
+
+    // Used to tell the factory to restrict the splits to the intersection between this list and the actual files on hdfs side
+    public void setFiles(List<ExternalFile> files) {
+        this.files = files;
     }
 
 }

@@ -33,7 +33,7 @@ public class ADateTimePrinter implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         long chrononTime = AInt64SerializerDeserializer.getLong(b, s + 1);
 
-        ps.print("{ datetime: ");
+        ps.print("{ \"datetime\": ");
         ps.print(chrononTime);
         ps.print("}");
     }

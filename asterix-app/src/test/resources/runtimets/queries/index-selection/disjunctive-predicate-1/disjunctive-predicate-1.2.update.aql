@@ -1,0 +1,9 @@
+use dataverse test;
+
+insert into dataset TestSet
+for $x in {{ "one", "two", "three" }}
+return {
+  "id" : $x,
+  "idx" : $x,
+  "no-idx" : $x
+};

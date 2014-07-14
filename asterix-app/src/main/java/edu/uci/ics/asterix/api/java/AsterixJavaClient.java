@@ -80,7 +80,7 @@ public class AsterixJavaClient {
                 printOptimizedPlan, printPhysicalOpsOnly, true, generateBinaryRuntime, printJob);
 
         AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
-        aqlTranslator.compileAndExecute(hcc, null, false);
+        aqlTranslator.compileAndExecute(hcc, null, AqlTranslator.ResultDelivery.SYNC);
         writer.flush();
     }
 

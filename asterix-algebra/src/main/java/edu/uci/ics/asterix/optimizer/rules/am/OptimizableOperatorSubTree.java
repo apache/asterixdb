@@ -19,36 +19,44 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.optimizer.base.AnalysisUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 
 /**
  * Operator subtree that matches the following patterns, and provides convenient access to its nodes:
- * (select)? <-- (assign)+ <-- (datasource scan)
- * and
- * (select)? <-- (datasource scan)
+ * (select)? <-- (assign | unnest)* <-- (datasource scan | unnest-map)
  */
 public class OptimizableOperatorSubTree {
+
+    public static enum DataSourceType {
+        DATASOURCE_SCAN,
+        PRIMARY_INDEX_LOOKUP,
+        NO_DATASOURCE
+    }
+
     public ILogicalOperator root = null;
     public Mutable<ILogicalOperator> rootRef = null;
-    public final List<Mutable<ILogicalOperator>> assignRefs = new ArrayList<Mutable<ILogicalOperator>>();
-    public final List<AssignOperator> assigns = new ArrayList<AssignOperator>();
-    public Mutable<ILogicalOperator> dataSourceScanRef = null;
-    public DataSourceScanOperator dataSourceScan = null;
+    public final List<Mutable<ILogicalOperator>> assignsAndUnnestsRefs = new ArrayList<Mutable<ILogicalOperator>>();
+    public final List<AbstractLogicalOperator> assignsAndUnnests = new ArrayList<AbstractLogicalOperator>();
+    public Mutable<ILogicalOperator> dataSourceRef = null;
+    public DataSourceType dataSourceType = DataSourceType.NO_DATASOURCE;
     // Dataset and type metadata. Set in setDatasetAndTypeMetadata().
     public Dataset dataset = null;
     public ARecordType recordType = null;
@@ -65,34 +73,46 @@ public class OptimizableOperatorSubTree {
             subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
         }
         // Check primary-index pattern.
-        if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+        if (subTreeOp.getOperatorTag() != LogicalOperatorTag.ASSIGN && subTreeOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
             // Pattern may still match if we are looking for primary index matches as well.
-            if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                dataSourceScanRef = subTreeOpRef;
-                dataSourceScan = (DataSourceScanOperator) subTreeOp;
-                return true;
-            }
-            return false;
+            return initializeDataSource(subTreeOpRef);
         }
-        // Match (assign)+.
+        // Match (assign | unnest)+.
         do {
-            assignRefs.add(subTreeOpRef);
-            assigns.add((AssignOperator) subTreeOp);
+            assignsAndUnnestsRefs.add(subTreeOpRef);
+            assignsAndUnnests.add(subTreeOp);
+
             subTreeOpRef = subTreeOp.getInputs().get(0);
             subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
-        } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN);
-        // Set to last valid assigns.
-        subTreeOpRef = assignRefs.get(assignRefs.size() - 1);
-        subTreeOp = assigns.get(assigns.size() - 1);
-        // Match datasource scan.
-        Mutable<ILogicalOperator> opRef3 = subTreeOp.getInputs().get(0);
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
-        if (op3.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
-            return false;
+        } while (subTreeOp.getOperatorTag() == LogicalOperatorTag.ASSIGN || subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST);
+
+        // Match data source (datasource scan or primary index search).
+        return initializeDataSource(subTreeOpRef);
+    }
+
+    private boolean initializeDataSource(Mutable<ILogicalOperator> subTreeOpRef) {
+        AbstractLogicalOperator subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
+        if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            dataSourceType = DataSourceType.DATASOURCE_SCAN;
+            dataSourceRef = subTreeOpRef;
+            return true;
+        } else if (subTreeOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
+            UnnestMapOperator unnestMapOp = (UnnestMapOperator) subTreeOp;
+            ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
+            if (unnestExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
+                if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.INDEX_SEARCH)) {
+                    AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
+                    jobGenParams.readFromFuncArgs(f.getArguments());
+                    if(jobGenParams.isPrimaryIndex()) {
+                        dataSourceType = DataSourceType.PRIMARY_INDEX_LOOKUP;
+                        dataSourceRef = subTreeOpRef;
+                        return true;
+                    }
+                }
+            }
         }
-        dataSourceScanRef = opRef3;
-        dataSourceScan = (DataSourceScanOperator) op3;
-        return true;
+        return false;
     }
 
     /**
@@ -100,22 +120,35 @@ public class OptimizableOperatorSubTree {
      * Also sets recordType to be the type of that dataset.
      */
     public boolean setDatasetAndTypeMetadata(AqlMetadataProvider metadataProvider) throws AlgebricksException {
-        if (dataSourceScan == null) {
-            return false;
+        String dataverseName = null;
+        String datasetName = null;
+        switch (dataSourceType) {
+            case DATASOURCE_SCAN:
+                DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) dataSourceRef.getValue();
+                Pair<String, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
+                dataverseName = datasetInfo.first;
+                datasetName = datasetInfo.second;
+                break;
+            case PRIMARY_INDEX_LOOKUP:
+                UnnestMapOperator unnestMapOp = (UnnestMapOperator) dataSourceRef.getValue();
+                ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
+                AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
+                AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
+                jobGenParams.readFromFuncArgs(f.getArguments());
+                datasetName = jobGenParams.getDatasetName();
+                dataverseName = jobGenParams.getDataverseName();
+                break;
+            case NO_DATASOURCE:
+            default:
+                return false;
         }
-        // Find the dataset corresponding to the datasource scan in the metadata.
-        Pair<String, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
-        String dataverseName = datasetInfo.first;
-        String datasetName = datasetInfo.second;
         if (dataverseName == null || datasetName == null) {
             return false;
         }
+        // Find the dataset corresponding to the datasource in the metadata.
         dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
             throw new AlgebricksException("No metadata for dataset " + datasetName);
-        }
-        if (dataset.getDatasetType() != DatasetType.INTERNAL) {
-            return false;
         }
         // Get the record type for that dataset.
         IAType itemType = metadataProvider.findType(dataverseName, dataset.getItemTypeName());
@@ -126,25 +159,58 @@ public class OptimizableOperatorSubTree {
         return true;
     }
 
+    public boolean hasDataSource() {
+        return dataSourceType != DataSourceType.NO_DATASOURCE;
+    }
+
     public boolean hasDataSourceScan() {
-        return dataSourceScan != null;
+        return dataSourceType == DataSourceType.DATASOURCE_SCAN;
     }
 
     public void reset() {
         root = null;
         rootRef = null;
-        assignRefs.clear();
-        assigns.clear();
-        dataSourceScanRef = null;
-        dataSourceScan = null;
+        assignsAndUnnestsRefs.clear();
+        assignsAndUnnests.clear();
+        dataSourceRef = null;
+        dataSourceType = DataSourceType.NO_DATASOURCE;
         dataset = null;
         recordType = null;
     }
 
-    public void getPrimaryKeyVars(List<LogicalVariable> target) {
-        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
-        for (int i = 0; i < numPrimaryKeys; i++) {
-            target.add(dataSourceScan.getVariables().get(i));
+    public void getPrimaryKeyVars(List<LogicalVariable> target)
+            throws AlgebricksException {
+        switch (dataSourceType) {
+            case DATASOURCE_SCAN:
+                DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) dataSourceRef.getValue();
+                int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+                for (int i = 0; i < numPrimaryKeys; i++) {
+                    target.add(dataSourceScan.getVariables().get(i));
+                }
+                break;
+            case PRIMARY_INDEX_LOOKUP:
+                UnnestMapOperator unnestMapOp = (UnnestMapOperator) dataSourceRef.getValue();
+                List<LogicalVariable> primaryKeys = null;
+                primaryKeys = AccessMethodUtils.getPrimaryKeyVarsFromPrimaryUnnestMap(dataset, unnestMapOp);
+                target.addAll(primaryKeys);
+                break;
+            case NO_DATASOURCE:
+            default:
+                throw new AlgebricksException("The subtree does not have any data source.");
+        }
+    }
+
+    public List<LogicalVariable> getDataSourceVariables() throws AlgebricksException {
+        switch (dataSourceType) {
+            case DATASOURCE_SCAN:
+                DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) dataSourceRef.getValue();
+                return dataSourceScan.getVariables();
+            case PRIMARY_INDEX_LOOKUP:
+                UnnestMapOperator unnestMapOp = (UnnestMapOperator) dataSourceRef.getValue();
+                return unnestMapOp.getVariables();
+            case NO_DATASOURCE:
+            default:
+                throw new AlgebricksException("The subtree does not have any data source.");
         }
     }
 }

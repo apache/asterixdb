@@ -1,0 +1,11 @@
+use dataverse TinySocial;
+
+for $t in dataset MugshotMessages
+return {
+  "message" : $t.message,
+  "nearby-messages":
+    for $t2 in dataset MugshotMessages
+    where spatial-distance($t.sender-location,
+                           $t2.sender-location) <= 1
+    return { "msgtxt" : $t2.message }
+};

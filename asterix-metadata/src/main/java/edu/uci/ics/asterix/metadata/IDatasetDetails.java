@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.metadata;
 
 import java.io.DataOutput;
 import java.io.Serializable;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -23,6 +24,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public interface IDatasetDetails extends Serializable {
 
     public DatasetType getDatasetType();
-
+    public String getNodeGroupName();
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException;
+    public String getCompactionPolicy();
+    public Map<String, String> getCompactionPolicyProperties();
 }

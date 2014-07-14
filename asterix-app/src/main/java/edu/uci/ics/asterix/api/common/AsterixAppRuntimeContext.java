@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,7 +68,15 @@ import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
 
 public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAsterixPropertiesProvider {
 
-    public static final AsterixPropertiesAccessor ASTERIX_PROPERTIES_ACCESSOR = createAsterixPropertiesAccessor();
+    private static final AsterixPropertiesAccessor ASTERIX_PROPERTIES_ACCESSOR;
+
+    static {
+        try {
+            ASTERIX_PROPERTIES_ACCESSOR = new AsterixPropertiesAccessor();
+        } catch (AsterixException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     private static final int METADATA_IO_DEVICE_ID = 0;
 
@@ -104,27 +112,17 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         txnProperties = new AsterixTransactionProperties(ASTERIX_PROPERTIES_ACCESSOR);
     }
 
-    private static AsterixPropertiesAccessor createAsterixPropertiesAccessor() {
-        AsterixPropertiesAccessor propertiesAccessor = null;
-        try {
-            propertiesAccessor = new AsterixPropertiesAccessor();
-        } catch (AsterixException e) {
-            throw new IllegalStateException("Unable to create properties accessor");
-        }
-        return propertiesAccessor;
-    }
-
     public void initialize() throws IOException, ACIDException, AsterixException {
         Logger.getLogger("edu.uci.ics").setLevel(externalProperties.getLogLevel());
 
         threadExecutor = new AsterixThreadExecutor(ncApplicationContext.getThreadFactory());
         fileMapManager = new AsterixFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
         IPageCleanerPolicy pcp = new DelayPageCleanerPolicy(600000);
         ioManager = ncApplicationContext.getRootContext().getIOManager();
-        bufferCache = new BufferCache(ioManager, allocator, prs, pcp, fileMapManager,
-                storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages(),
+        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
+                storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages());
+        bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
                 storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
 
         AsynchronousScheduler.INSTANCE.init(ncApplicationContext.getThreadFactory());

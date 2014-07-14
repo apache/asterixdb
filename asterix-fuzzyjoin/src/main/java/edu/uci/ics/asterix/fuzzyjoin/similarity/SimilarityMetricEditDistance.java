@@ -104,6 +104,55 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         }
     }
 
+    public int getSimilarityContains(IListIterator exprList, IListIterator patternList, int simThresh) {
+        int exprLen = exprList.size();
+        int patternLen = patternList.size();
+
+        // reuse existing matrix if possible
+        if (patternLen >= cols) {
+            cols = patternLen + 1;
+            matrix = new int[rows][cols];
+        }
+
+        // init matrix
+        for (int i = 0; i <= patternLen; i++) {
+            matrix[0][i] = i;
+        }
+
+        int currRow = 1;
+        int prevRow = 0;
+        int minEd = Integer.MAX_VALUE;
+        // expand dynamic programming matrix row by row
+        for (int i = 1; i <= exprLen; i++) {
+            matrix[currRow][0] = 0;
+
+            patternList.reset();
+            for (int j = 1; j <= patternLen; j++) {
+
+                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
+                        matrix[prevRow][j - 1] + (exprList.compare(patternList) == 0 ? 0 : 1));
+
+                patternList.next();
+
+                if (j == patternLen && matrix[currRow][patternLen] < minEd) {
+                    minEd = matrix[currRow][patternLen];
+                }
+            }
+
+            exprList.next();
+
+            int tmp = currRow;
+            currRow = prevRow;
+            prevRow = tmp;
+        }
+
+        if (minEd > simThresh) {
+            return -1;
+        } else {
+            return minEd;
+        }
+    }
+
     // faster implementation for common case of string edit distance
     public int UTF8StringEditDistance(byte[] bytes, int fsStart, int ssStart) {
 
@@ -211,6 +260,62 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
             return -1;
         } else {
             return ed;
+        }
+    }
+
+    // checks whether the first string contains a similar string to the second string
+    public int UTF8StringEditDistanceContains(byte[] bytes, int stringStart, int patternStart, int edThresh) {
+
+        int stringLen = StringUtils.getStrLen(bytes, stringStart);
+        int patternLen = StringUtils.getStrLen(bytes, patternStart);
+
+        // reuse existing matrix if possible
+        if (patternLen >= cols) {
+            cols = patternLen + 1;
+            matrix = new int[rows][cols];
+        }
+
+        int stringDataStart = stringStart + utf8SizeIndicatorSize;
+        int patternDataStart = patternStart + utf8SizeIndicatorSize;
+
+        // init matrix
+        for (int i = 0; i <= patternLen; i++) {
+            matrix[0][i] = i;
+        }
+
+        int currRow = 1;
+        int prevRow = 0;
+        int minEd = Integer.MAX_VALUE;
+        // expand dynamic programming matrix row by row
+        int stringPos = stringDataStart;
+        for (int i = 1; i <= stringLen; i++) {
+            matrix[currRow][0] = 0;
+            char stringChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, stringPos));
+
+            int patternPos = patternDataStart;
+            for (int j = 1; j <= patternLen; j++) {
+                char patternChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, patternPos));
+
+                matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
+                        matrix[prevRow][j - 1] + (stringChar == patternChar ? 0 : 1));
+
+                patternPos += StringUtils.charSize(bytes, patternPos);
+
+                if (j == patternLen && matrix[currRow][patternLen] < minEd) {
+                    minEd = matrix[currRow][patternLen];
+                }
+            }
+
+            stringPos += StringUtils.charSize(bytes, stringPos);
+
+            int tmp = currRow;
+            currRow = prevRow;
+            prevRow = tmp;
+        }
+        if (minEd > edThresh) {
+            return -1;
+        } else {
+            return minEd;
         }
     }
 }

@@ -94,7 +94,7 @@ public class APIServlet extends HttpServlet {
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
             double duration = 0;
             long startTime = System.currentTimeMillis();
-            aqlTranslator.compileAndExecute(hcc, hds, false);
+            aqlTranslator.compileAndExecute(hcc, hds, AqlTranslator.ResultDelivery.SYNC);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");

@@ -186,6 +186,7 @@
          <xs:enumeration value="Text"/>
          <xs:enumeration value="Inspect"/>
          <xs:enumeration value="Ignore"/>
+         <xs:enumeration value="JSON"/>
       </xs:restriction>
    </xs:simpleType>
 

@@ -1,0 +1,9 @@
+use dataverse TinySocial;
+
+for $user in dataset MugshotUsers
+limit 10
+return $user;
+
+for $message in dataset MugshotMessages
+limit 10
+return $message;

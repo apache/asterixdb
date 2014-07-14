@@ -352,7 +352,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
             getItemExprRef.setValue(ConstantExpression.TRUE);
             switch (joinOp.getJoinKind()) {
                 case INNER: {
-                    extraSelect = new SelectOperator(expRef);
+                    extraSelect = new SelectOperator(expRef, false, null);
                     extraSelect.getInputs().add(new MutableObject<ILogicalOperator>(outputOp));
                     outputOp = extraSelect;
                     break;

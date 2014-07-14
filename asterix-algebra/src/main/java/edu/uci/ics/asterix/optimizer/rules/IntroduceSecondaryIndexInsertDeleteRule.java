@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.metadata.declared.AqlIndex;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -145,32 +146,45 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             List<LogicalVariable> secondaryKeyVars = new ArrayList<LogicalVariable>();
             List<Mutable<ILogicalExpression>> expressions = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> secondaryExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+
             for (String secondaryKey : secondaryKeyFields) {
-                Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(
-                        new VariableReferenceExpression(recordVar.get(0)));
-                String[] fieldNames = recType.getFieldNames();
-                int pos = -1;
-                for (int j = 0; j < fieldNames.length; j++) {
-                    if (fieldNames[j].equals(secondaryKey)) {
-                        pos = j;
-                        break;
-                    }
+                prepareVarAndExpression(secondaryKey, recType.getFieldNames(), recordVar, expressions,
+                        secondaryKeyVars, context);
+            }
+            String additionalFilteringField = ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterField();
+            List<LogicalVariable> additionalFilteringVars = null;
+            List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions = null;
+            List<Mutable<ILogicalExpression>> additionalFilteringExpressions = null;
+            AssignOperator additionalFilteringAssign = null;
+
+            if (additionalFilteringField != null) {
+                additionalFilteringVars = new ArrayList<LogicalVariable>();
+                additionalFilteringAssignExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+                additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+                prepareVarAndExpression(additionalFilteringField, recType.getFieldNames(), recordVar,
+                        additionalFilteringAssignExpressions, additionalFilteringVars, context);
+                additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
+                        additionalFilteringAssignExpressions);
+                for (LogicalVariable var : additionalFilteringVars) {
+                    additionalFilteringExpressions.add(new MutableObject<ILogicalExpression>(
+                            new VariableReferenceExpression(var)));
                 }
-                // Assumes the indexed field is in the closed portion of the type.
-                Mutable<ILogicalExpression> indexRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
-                        new AsterixConstantValue(new AInt32(pos))));
-                AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
-                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), varRef, indexRef);
-                expressions.add(new MutableObject<ILogicalExpression>(func));
-                LogicalVariable newVar = context.newVar();
-                secondaryKeyVars.add(newVar);
             }
 
             AssignOperator assign = new AssignOperator(secondaryKeyVars, expressions);
             ProjectOperator project = new ProjectOperator(projectVars);
-            assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+
+            if (additionalFilteringAssign != null) {
+                additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+                assign.getInputs().add(new MutableObject<ILogicalOperator>(additionalFilteringAssign));
+            } else {
+                assign.getInputs().add(new MutableObject<ILogicalOperator>(project));
+            }
             project.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
             context.computeAndSetTypeEnvironmentForOperator(project);
+            if (additionalFilteringAssign != null) {
+                context.computeAndSetTypeEnvironmentForOperator(additionalFilteringAssign);
+            }
             context.computeAndSetTypeEnvironmentForOperator(assign);
             if (index.getIndexType() == IndexType.BTREE
                     || index.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
@@ -187,6 +201,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         insertOp.getOperation());
+                indexUpdate.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                 indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assign));
                 currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
@@ -229,6 +244,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 IndexInsertDeleteOperator indexUpdate = new IndexInsertDeleteOperator(dataSourceIndex,
                         insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                         insertOp.getOperation());
+                indexUpdate.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                 indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
                 currentTop = indexUpdate;
                 context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
@@ -240,6 +256,28 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         op0.getInputs().clear();
         op0.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
         return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void prepareVarAndExpression(String field, String[] fieldNames, List<LogicalVariable> recordVar,
+            List<Mutable<ILogicalExpression>> expressions, List<LogicalVariable> vars, IOptimizationContext context) {
+        Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
+                recordVar.get(0)));
+        int pos = -1;
+        for (int j = 0; j < fieldNames.length; j++) {
+            if (fieldNames[j].equals(field)) {
+                pos = j;
+                break;
+            }
+        }
+        // Assumes the indexed field is in the closed portion of the type.
+        Mutable<ILogicalExpression> indexRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
+                new AsterixConstantValue(new AInt32(pos))));
+        AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
+                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), varRef, indexRef);
+        expressions.add(new MutableObject<ILogicalExpression>(func));
+        LogicalVariable newVar = context.newVar();
+        vars.add(newVar);
     }
 
     @SuppressWarnings("unchecked")

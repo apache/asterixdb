@@ -1,0 +1,12 @@
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary btree index in index subtree.
+ * Issue        : 730, 741                 
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+use dataverse test;
+
+load dataset TweetMessages 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/twitter/tw_for_indexleftouterjoin.adm"),("format"="adm"));

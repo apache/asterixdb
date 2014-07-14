@@ -219,6 +219,7 @@ public abstract class AbstractAvgAggregateFunction implements ICopyAggregateFunc
             }
             case RECORD: {
                 // Expected.
+                aggType = ATypeTag.DOUBLE;
                 int nullBitmapSize = 0;
                 int offset1 = ARecordSerializerDeserializer.getFieldOffsetById(serBytes, SUM_FIELD_ID, nullBitmapSize,
                         false);

@@ -1,0 +1,6 @@
+use dataverse test;
+
+insert into dataset FacebookMessages2 (
+for $m in dataset('FacebookMessages')
+	return $m
+);

@@ -69,7 +69,7 @@
 { "partkey": 65, "pid": 3, "shipdate": "1992-06-26", "orderkey": 5095 }
 { "partkey": 68, "pid": 1, "shipdate": "1992-04-13", "orderkey": 3842 }
 { "partkey": 68, "pid": 2, "shipdate": "1992-06-08", "orderkey": 5121 }
-{ "partkey": 68, "pid": 3, "shipdate": "1992-06-22", "orderkey": 868 }
+{ "partkey": 68, "pid": 3, "shipdate": "1992-06-22", "orderkey": 2052 }
 { "partkey": 72, "pid": 1, "shipdate": "1992-09-16", "orderkey": 3265 }
 { "partkey": 72, "pid": 2, "shipdate": "1992-10-02", "orderkey": 5635 }
 { "partkey": 72, "pid": 3, "shipdate": "1992-10-17", "orderkey": 3655 }

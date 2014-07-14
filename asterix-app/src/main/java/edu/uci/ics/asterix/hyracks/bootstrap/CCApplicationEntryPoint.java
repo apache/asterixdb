@@ -37,6 +37,7 @@ import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
 import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
+import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
 import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
@@ -94,6 +95,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 		setupFeedServer(externalProperties);
 		feedServer.start();
 
+		AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager((HyracksConnection) getNewHyracksClientConnection());
+		ClusterManager.INSTANCE.registerSubscriber(AsterixGlobalRecoveryManager.INSTANCE);
+		
 		ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
 	}
 

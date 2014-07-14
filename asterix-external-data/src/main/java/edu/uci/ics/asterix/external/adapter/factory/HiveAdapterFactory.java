@@ -14,10 +14,12 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.HiveAdapter;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -77,7 +79,7 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IGe
         }
     }
 
-    private void populateConfiguration(Map<String, String> configuration) throws Exception {
+    public static void populateConfiguration(Map<String, String> configuration) throws Exception {
         /** configure hive */
         String database = (String) configuration.get(HIVE_DATABASE);
         String tablePath = null;
@@ -102,6 +104,11 @@ public class HiveAdapterFactory extends StreamBasedAdapterFactory implements IGe
     @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
         return hdfsAdapterFactory.getPartitionConstraint();
+    }
+
+    @Override
+    public void setFiles(List<ExternalFile> files) {
+        this.files = files;
     }
 
 }

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,15 +29,11 @@ public class GlobalConfig {
 
     public static final String CONFIG_FILE_PROPERTY = "AsterixConfigFileName";
 
-    public static final String WEB_SERVER_PORT_PROPERTY = "AsterixWebServerPort";
-
-    public static final String JSON_API_SERVER_PORT_PROPERTY = "AsterixJSONAPIServerPort";
-
     public static final int DEFAULT_FRAME_SIZE = 32768;
 
     public static final String FRAME_SIZE_PROPERTY = "FrameSize";
 
-    public static final float DEFAULT_BTREE_FILL_FACTOR = 1.00f;
+    public static final float DEFAULT_TREE_FILL_FACTOR = 1.00f;
 
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
 

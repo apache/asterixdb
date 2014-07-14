@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -46,6 +45,7 @@ public abstract class AbstractTupleParser implements ITupleParser {
     protected final ByteBuffer frame;
     protected final ARecordType recType;
     protected final IHyracksTaskContext ctx;
+    protected String filename;
 
     public AbstractTupleParser(IHyracksTaskContext ctx, ARecordType recType) throws HyracksDataException {
         appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -54,11 +54,14 @@ public abstract class AbstractTupleParser implements ITupleParser {
         this.ctx = ctx;
     }
 
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
     public abstract IDataParser getDataParser();
 
     @Override
     public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
-
         appender.reset(frame, true);
         IDataParser parser = getDataParser();
         try {
@@ -72,7 +75,6 @@ public abstract class AbstractTupleParser implements ITupleParser {
                 addTupleToFrame(writer);
             }
             if (appender.getTupleCount() > 0) {
-
                 FrameUtils.flushFrame(frame, writer);
             }
         } catch (AsterixException ae) {

@@ -39,6 +39,9 @@ public class AqlTypeTraitProvider implements ITypeTraitProvider {
     @Override
     public ITypeTraits getTypeTrait(Object type) {
         IAType aqlType = (IAType) type;
+        if (aqlType == null) {
+            return null;
+        }
         switch (aqlType.getTypeTag()) {
             case BOOLEAN:
             case INT8:

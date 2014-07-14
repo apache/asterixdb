@@ -699,7 +699,7 @@ Expression FieldOrIndexAccessor()throws ParseException:
   Expression expr = null;
   Identifier ident = null;
   AbstractAccessor fa = null;
-  int index;
+  Expression indexExpr = null;
 
 }
 {
@@ -719,12 +719,12 @@ Expression FieldOrIndexAccessor()throws ParseException:
 	}
 	)
 	| (
-		index = Index()
+		indexExpr = Index()
 		{
 		  if(fa == null)
-		  	fa = new IndexAccessor(expr, index);
+			fa = new IndexAccessor(expr, indexExpr);
 		  else
-		  	fa = new IndexAccessor(fa, index);
+			fa = new IndexAccessor(fa, indexExpr);
 		}
 	) 
 	)*
@@ -751,10 +751,9 @@ Identifier Field() throws ParseException:
 	}
 }
 
-int Index() throws ParseException:
+Expression Index() throws ParseException:
 {
 	Expression expr = null;
-	int idx = -2;
 }
 {
   "[" ( expr = Expression()
@@ -762,28 +761,20 @@ int Index() throws ParseException:
 		if(expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
 		{
 			Literal lit = ((LiteralExpr)expr).getValue();
-			if(lit.getLiteralType() == Literal.Type.INTEGER || 
- 			   lit.getLiteralType() == Literal.Type.LONG) {
-				idx = Integer.valueOf(lit.getStringValue());
-			}	
-			else {
+			if(lit.getLiteralType() != Literal.Type.INTEGER &&
+			   lit.getLiteralType() != Literal.Type.LONG) {
 				throw new ParseException("Index should be an INTEGER");				
             }
 		}
-
 	}
 
-  	| "?"
-	{
-		idx = IndexAccessor.ANY;
-	  // ANY
-	}
+  	| "?" // ANY
  	 
   	)
 
    "]"
 	{
-	  return idx;
+	  return expr;
 	}
 }
 

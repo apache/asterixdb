@@ -1,0 +1,23 @@
+use dataverse TinySocial;
+
+insert into dataset MugshotUsers
+(
+  {
+    "id":999,
+    "alias":"John",
+    "name":"JohnDoe",
+    "address":{
+      "street":"789 Jane St",
+      "city":"San Harry",
+      "zip":"98767",
+      "state":"CA",
+      "country":"USA"
+    },
+    "user-since":datetime("2010-08-15T08:10:00"),
+    "friend-ids":{{ 5, 9, 11 }},
+    "employment":[{
+        "organization-name":"Kongreen",
+        "start-date":date("2012-06-05")
+    }]
+  }
+);

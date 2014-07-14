@@ -65,7 +65,8 @@ public class DmlTest {
         }
         asterixLoad.execute();
         File enlistFile = new File(ENLIST_FILE);
-        String resultFileName = TestsUtils.aqlExtToResExt(enlistFile.getName());
+        int dot = enlistFile.getName().lastIndexOf('.');
+        String resultFileName = enlistFile.getName().substring(0, dot + 1) + ".adm";
         File expectedFile = new File(PATH_EXPECTED + SEPARATOR + resultFileName);
         File actualFile = new File(PATH_ACTUAL + SEPARATOR + resultFileName);
         // Khurram

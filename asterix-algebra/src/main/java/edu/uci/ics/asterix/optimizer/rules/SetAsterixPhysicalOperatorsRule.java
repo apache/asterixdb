@@ -109,26 +109,50 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
 
                         if ((gby.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY) == Boolean.TRUE || gby
                                 .getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY) == Boolean.TRUE)) {
+                            boolean setToExternalGby = false;
                             if (serializable) {
-                                // if not serializable, use external group-by
-                                int i = 0;
-                                for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
-                                    AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) exprRef
-                                            .getValue();
+                                // if serializable, use external group-by
+                                // now check whether the serialized version aggregation function has corresponding intermediate agg
+                                boolean hasIntermediateAgg = true;
+                                IMergeAggregationExpressionFactory mergeAggregationExpressionFactory = context
+                                        .getMergeAggregationExpressionFactory();
+                                List<LogicalVariable> originalVariables = aggOp.getVariables();
+                                List<Mutable<ILogicalExpression>> aggExprs = aggOp.getExpressions();
+                                int aggNum = aggExprs.size();
+                                for (int i = 0; i < aggNum; i++) {
+                                    AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) aggExprs
+                                            .get(i).getValue();
                                     AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
                                             .makeSerializableAggregateFunctionExpression(expr.getFunctionIdentifier(),
                                                     expr.getArguments());
-                                    aggOp.getExpressions().get(i).setValue(serialAggExpr);
-                                    i++;
+                                    if (mergeAggregationExpressionFactory.createMergeAggregation(
+                                            originalVariables.get(i), serialAggExpr, context) == null) {
+                                        hasIntermediateAgg = false;
+                                        break;
+                                    }
                                 }
 
-                                ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
-                                        gby.getGroupByList(), physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
-                                        physicalOptimizationConfig.getExternalGroupByTableSize());
-                                op.setPhysicalOperator(externalGby);
-                                generateMergeAggregationExpressions(gby, context);
-                            } else {
-                                // if not serializable, use pre-clustered group-by
+                                if (hasIntermediateAgg) {
+                                    for (int i = 0; i < aggNum; i++) {
+                                        AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) aggExprs
+                                                .get(i).getValue();
+                                        AggregateFunctionCallExpression serialAggExpr = AsterixBuiltinFunctions
+                                                .makeSerializableAggregateFunctionExpression(
+                                                        expr.getFunctionIdentifier(), expr.getArguments());
+                                        aggOp.getExpressions().get(i).setValue(serialAggExpr);
+                                    }
+                                    ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
+                                            gby.getGroupByList(),
+                                            physicalOptimizationConfig.getMaxFramesExternalGroupBy(),
+                                            physicalOptimizationConfig.getExternalGroupByTableSize());
+                                    generateMergeAggregationExpressions(gby, context);
+                                    op.setPhysicalOperator(externalGby);
+                                    setToExternalGby = true;
+                                }
+                            }
+
+                            if (!setToExternalGby) {
+                                // if not serializable or no intermediate agg, use pre-clustered group-by
                                 List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
                                 List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
                                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
@@ -251,13 +275,23 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         IMergeAggregationExpressionFactory mergeAggregationExpressionFactory = context
                 .getMergeAggregationExpressionFactory();
         Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
+        AbstractLogicalOperator r0Logical = (AbstractLogicalOperator) r0.getValue();
+        if (r0Logical.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+            throw new AlgebricksException("The merge aggregation expression generation should not process a "
+                    + r0Logical.getOperatorTag() + " operator.");
+        }
         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
         List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
+        List<LogicalVariable> aggProducedVars = aggOp.getVariables();
         int n = aggOp.getExpressions().size();
         List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<Mutable<ILogicalExpression>>();
         for (int i = 0; i < n; i++) {
-            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory.createMergeAggregation(aggFuncRefs.get(i)
-                    .getValue(), context);
+            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory.createMergeAggregation(
+                    aggProducedVars.get(i), aggFuncRefs.get(i).getValue(), context);
+            if (mergeExpr == null) {
+                throw new AlgebricksException("The aggregation function " + aggFuncRefs.get(i).getValue()
+                        + " does not have a registered intermediate aggregation function.");
+            }
             mergeExpressionRefs.add(new MutableObject<ILogicalExpression>(mergeExpr));
         }
         aggOp.setMergeExpressions(mergeExpressionRefs);

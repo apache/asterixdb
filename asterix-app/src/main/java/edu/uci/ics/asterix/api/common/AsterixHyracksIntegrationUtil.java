@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,12 +38,12 @@ public class AsterixHyracksIntegrationUtil {
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
-    
+
     private static ClusterControllerService cc;
     private static NodeControllerService nc1;
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
-    
+
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();
         ccConfig.clusterNetIpAddress = "127.0.0.1";
@@ -107,13 +107,13 @@ public class AsterixHyracksIntegrationUtil {
         GlobalConfig.ASTERIX_LOGGER.info(jobId.toString());
         hcc.waitForCompletion(jobId);
     }
-    
+
     /**
      * main method to run a simple 2 node cluster in-process
-     * 
-     * suggested VM arguments: 
+     *
+     * suggested VM arguments:
      * <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
-     * 
+     *
      * @param args unused
      */
     public static void main(String[] args) {
@@ -128,7 +128,6 @@ public class AsterixHyracksIntegrationUtil {
         });
         try {
             System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, "asterix-build-configuration.xml");
-            System.setProperty(GlobalConfig.WEB_SERVER_PORT_PROPERTY, "19002");
 
             init();
             while (true) {

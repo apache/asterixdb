@@ -18,6 +18,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import edu.uci.ics.asterix.testframework.xml.CategoryEnum;
 import edu.uci.ics.asterix.testframework.xml.TestCase;
@@ -27,6 +28,47 @@ import edu.uci.ics.asterix.testframework.xml.TestSuite;
 import edu.uci.ics.asterix.testframework.xml.TestSuiteParser;
 
 public class TestCaseContext {
+
+    /**
+     * For specifying the desired output formatting of results.
+     */
+    public enum OutputFormat {
+        NONE  ("", ""),
+        ADM   ("adm", "application/adm"),
+        JSON  ("json", "application/json");
+
+        private final String extension;
+        private final String mimetype;
+        OutputFormat(String ext, String mime) {
+            this.extension = ext;
+            this.mimetype = mime;
+        }
+
+        public String extension() {
+            return extension;
+        }
+
+        public String mimeType() {
+            return mimetype;
+        }
+
+        //
+        public static OutputFormat forCompilationUnit(CompilationUnit cUnit) {
+            switch (cUnit.getOutputDir().getCompare()) {
+            case TEXT:
+                return OutputFormat.ADM;
+            case JSON:
+                return OutputFormat.JSON;
+            case INSPECT:
+            case IGNORE:
+                return OutputFormat.NONE;
+            default:
+                assert false: "Unknown ComparisonEnum!";
+                return OutputFormat.NONE;
+            }
+        }
+    };
+
     public static final String DEFAULT_TESTSUITE_XML_NAME = "testsuite.xml";
 
     private File tsRoot;
@@ -107,13 +149,22 @@ public class TestCaseContext {
         File path = actualResultsBase;
         path = new File(path, testSuite.getResultOffsetPath());
         path = new File(path, testCase.getFilePath());
-        return new File(path, cUnit.getOutputDir().getValue() + ".adm");
+        return new File(path, cUnit.getOutputDir().getValue() + "." +
+                        OutputFormat.forCompilationUnit(cUnit).extension());
     }
 
     public static class Builder {
         private final boolean m_doSlow;
+        private final Pattern m_re;
         public Builder() {
             m_doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
+            String re = System.getProperty("testre");
+            if (re == null) {
+                m_re = null;
+            }
+            else {
+                m_re = Pattern.compile(re);
+            }
         }
 
         public List<TestCaseContext> build(File tsRoot) throws Exception {
@@ -143,7 +194,25 @@ public class TestCaseContext {
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
                 if (m_doSlow || tc.getCategory() != CategoryEnum.SLOW) {
-                    tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
+                    boolean matches = false;
+                    if (m_re != null) {
+                        // Check all compilation units for matching
+                        // name. If ANY match, add the test.
+                        for (TestCase.CompilationUnit cu : tc.getCompilationUnit()) {
+                            if (m_re.matcher(cu.getName()).matches()) {
+                                matches = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        // No regex == everything matches
+                        matches = true;
+                    }
+
+                    if (matches) {
+                        tccs.add(new TestCaseContext(tsRoot, ts, tgPath.toArray(new TestGroup[tgPath.size()]), tc));
+                    }
                 }
             }
             addContexts(tsRoot, ts, tgPath, tg.getTestGroup(), tccs);

@@ -17,22 +17,49 @@ package edu.uci.ics.asterix.aql.expression;
 import java.util.Map;
 
 public class ExternalDetailsDecl implements IDatasetDetailsDecl {
-    private Map<String, String> properties;
-    private String adapter;
+	private Map<String, String> properties;
+	private String adapter;
+	private Identifier nodegroupName;
+	private String compactionPolicy;
+    private Map<String, String> compactionPolicyProperties;
 
-    public void setAdapter(String adapter) {
-        this.adapter = adapter;
+	public void setAdapter(String adapter) {
+		this.adapter = adapter;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
+	}
+
+	public String getAdapter() {
+		return adapter;
+	}
+
+	public Map<String, String> getProperties() {
+		return properties;
+	}
+
+	public Identifier getNodegroupName() {
+		return nodegroupName;
+	}
+
+	public void setNodegroupName(Identifier nodegroupName) {
+		this.nodegroupName = nodegroupName;
+	}
+
+    public String getCompactionPolicy() {
+        return compactionPolicy;
     }
 
-    public void setProperties(Map<String, String> properties) {
-        this.properties = properties;
+    public void setCompactionPolicy(String compactionPolicy) {
+        this.compactionPolicy = compactionPolicy;
     }
 
-    public String getAdapter() {
-        return adapter;
+    public Map<String, String> getCompactionPolicyProperties() {
+        return compactionPolicyProperties;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public void setCompactionPolicyProperties(Map<String, String> compactionPolicyProperties) {
+        this.compactionPolicyProperties = compactionPolicyProperties;
     }
 }

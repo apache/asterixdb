@@ -18,8 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 
 /**
  * Context for analyzing the applicability of a single access method.
@@ -36,6 +40,10 @@ public class AccessMethodAnalysisContext {
     // Maps from index to the dataset it is indexing.
     public HashMap<Index, Dataset> indexDatasetMap = new HashMap<Index, Dataset>();
 
+    // variables for resetting null placeholder for left-outer-join
+    private Mutable<ILogicalOperator> lojGroupbyOpRef = null;
+    private ScalarFunctionCallExpression lojIsNullFuncInGroupBy = null;
+
     public void addIndexExpr(Dataset dataset, Index index, Integer exprIndex) {
         List<Integer> exprs = indexExprs.get(index);
         if (exprs == null) {
@@ -49,4 +57,21 @@ public class AccessMethodAnalysisContext {
     public List<Integer> getIndexExprs(Index index) {
         return indexExprs.get(index);
     }
+
+    public void setLOJGroupbyOpRef(Mutable<ILogicalOperator> opRef) {
+        lojGroupbyOpRef = opRef;
+    }
+
+    public Mutable<ILogicalOperator> getLOJGroupbyOpRef() {
+        return lojGroupbyOpRef;
+    }
+
+    public void setLOJIsNullFuncInGroupBy(ScalarFunctionCallExpression isNullFunc) {
+        lojIsNullFuncInGroupBy = isNullFunc;
+    }
+
+    public ScalarFunctionCallExpression getLOJIsNullFuncInGroupBy() {
+        return lojIsNullFuncInGroupBy;
+    }
+
 }

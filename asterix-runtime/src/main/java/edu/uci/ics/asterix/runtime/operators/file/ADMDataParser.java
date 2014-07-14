@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,19 +28,8 @@ import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
@@ -60,7 +49,7 @@ import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 /**
  * Parser for ADM formatted data.
  */
-public class ADMDataParser extends AbstractDataParser implements IDataParser {
+public class ADMDataParser extends AbstractDataParser {
 
     protected AdmLexer admLexer;
     protected ARecordType recordType;
@@ -79,6 +68,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
     static class ParseException extends AsterixException {
         private static final long serialVersionUID = 1L;
+        private String filename;
         private int line = -1;
         private int column = -1;
 
@@ -93,19 +83,23 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         public ParseException(String message, Throwable cause) {
             super(message, cause);
         }
-        
-        public ParseException(Throwable cause, int line, int column) {
+
+        public ParseException(Throwable cause, String filename, int line, int column) {
             super(cause);
-            setLocation(line, column);
+            setLocation(filename, line, column);
         }
-        
-        public void setLocation(int line, int column) {
+
+        public void setLocation(String filename, int line, int column) {
+            this.filename = filename;
             this.line = line;
             this.column = column;
         }
-        
+
         public String getMessage() {
             StringBuilder msg = new StringBuilder("Parse error");
+            if (filename != null) {
+                msg.append(" in file " + filename);
+            }
             if (line >= 0) {
                 if (column >= 0) {
                     msg.append(" at (" + line + ", " + column + ")");
@@ -116,17 +110,25 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             return msg.append(": " + super.getMessage()).toString();
         }
     }
-    
+
+    public ADMDataParser() {
+        this(null);
+    }
+
+    public ADMDataParser(String filename) {
+        this.filename = filename;
+    }
+
     @Override
     public boolean parse(DataOutput out) throws AsterixException {
         try {
             return parseAdmInstance((IAType) recordType, datasetRec, out);
-        } catch (IOException e) {            
-            throw new ParseException(e, admLexer.getLine(), admLexer.getColumn());
+        } catch (IOException e) {
+            throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         } catch (AdmLexerException e) {
             throw new AsterixException(e);
         } catch (ParseException e) {
-            e.setLocation(admLexer.getLine(), admLexer.getColumn());
+            e.setLocation(filename, admLexer.getLine(), admLexer.getColumn());
             throw e;
         }
     }
@@ -158,14 +160,14 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
 
         switch (token) {
             case AdmLexer.TOKEN_NULL_LITERAL: {
-                if (checkType(ATypeTag.NULL, objectType, out)) {
+                if (checkType(ATypeTag.NULL, objectType)) {
                     nullSerde.serialize(ANull.NULL, out);
                 } else
                     throw new ParseException("This field can not be null");
                 break;
             }
             case AdmLexer.TOKEN_TRUE_LITERAL: {
-                if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
+                if (checkType(ATypeTag.BOOLEAN, objectType)) {
                     booleanSerde.serialize(ABoolean.TRUE, out);
                 } else
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -176,7 +178,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_FALSE_LITERAL: {
-                if (checkType(ATypeTag.BOOLEAN, objectType, out)) {
+                if (checkType(ATypeTag.BOOLEAN, objectType)) {
                     booleanSerde.serialize(ABoolean.FALSE, out);
                 } else
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -235,9 +237,10 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_STRING_LITERAL: {
-                if (checkType(ATypeTag.STRING, objectType, out)) {
-                    aString.setValue(admLexer.getLastTokenImage().substring(1,
-                            admLexer.getLastTokenImage().length() - 1));
+                if (checkType(ATypeTag.STRING, objectType)) {
+                    final String tokenImage = admLexer.getLastTokenImage().substring(1,
+                            admLexer.getLastTokenImage().length() - 1);
+                    aString.setValue(admLexer.containsEscapes() ? replaceEscapes(tokenImage) : tokenImage);
                     stringSerde.serialize(aString, out);
                 } else
                     throw new ParseException(mismatchErrorMessage + objectType.getTypeName());
@@ -260,7 +263,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_INTERVAL_DATE_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                             AIntervalSerializerDeserializer.parseDate(admLexer.getLastTokenImage(), out);
@@ -274,7 +277,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 throw new ParseException("Wrong interval data parsing for date interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_TIME_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                             AIntervalSerializerDeserializer.parseTime(admLexer.getLastTokenImage(), out);
@@ -288,7 +291,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 throw new ParseException("Wrong interval data parsing for time interval.");
             }
             case AdmLexer.TOKEN_INTERVAL_DATETIME_CONS: {
-                if (checkType(ATypeTag.INTERVAL, objectType, out)) {
+                if (checkType(ATypeTag.INTERVAL, objectType)) {
                     if (admLexer.next() == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                         if (admLexer.next() == AdmLexer.TOKEN_STRING_LITERAL) {
                             AIntervalSerializerDeserializer.parseDatetime(admLexer.getLastTokenImage(), out);
@@ -338,7 +341,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_START_UNORDERED_LIST: {
-                if (checkType(ATypeTag.UNORDEREDLIST, objectType, out)) {
+                if (checkType(ATypeTag.UNORDEREDLIST, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.UNORDEREDLIST);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else
@@ -347,7 +350,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             }
 
             case AdmLexer.TOKEN_START_ORDERED_LIST: {
-                if (checkType(ATypeTag.ORDEREDLIST, objectType, out)) {
+                if (checkType(ATypeTag.ORDEREDLIST, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.ORDEREDLIST);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else
@@ -355,7 +358,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 break;
             }
             case AdmLexer.TOKEN_START_RECORD: {
-                if (checkType(ATypeTag.RECORD, objectType, out)) {
+                if (checkType(ATypeTag.RECORD, objectType)) {
                     objectType = getComplexType(objectType, ATypeTag.RECORD);
                     parseRecord((ARecordType) objectType, out, datasetRec);
                 } else
@@ -369,6 +372,29 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 throw new ParseException("Unexpected ADM token kind: " + AdmLexer.tokenKindToString(token) + ".");
             }
         }
+    }
+
+    private String replaceEscapes(String tokenImage) throws ParseException {
+        char[] chars = tokenImage.toCharArray();
+        int len = chars.length;
+        int idx = 0;
+        while (idx < len) {
+            if (chars[idx] == '\\') {
+                switch (chars[idx + 1]) {
+                    case '\\':
+                    case '\"':
+                        for (int i = idx + 1; i < len; ++i) {
+                            chars[i - 1] = chars[i];
+                        }
+                        --len;
+                        break;
+                    default:
+                        throw new ParseException("Illegal escape '\\" + chars[idx + 1] + "'");
+                }
+            }
+            ++idx;
+        }
+        return new String(chars, 0, len);
     }
 
     private IAType getComplexType(IAType aObjectType, ATypeTag tag) {
@@ -408,7 +434,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         return null;
     }
 
-    private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType, DataOutput out) throws IOException {
+    private boolean checkType(ATypeTag expectedTypeTag, IAType aObjectType) throws IOException {
         return getTargetTypeTag(expectedTypeTag, aObjectType) != null;
     }
 
@@ -528,7 +554,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         if (recType != null) {
             nullableFieldId = checkNullConstraints(recType, nulls);
             if (nullableFieldId != -1)
-                throw new ParseException("Field " + nullableFieldId + " can not be null");
+                throw new ParseException("Field " + recType.getFieldNames()[nullableFieldId] + " can not be null");
         }
         recBuilder.write(out, true);
         returnRecordBuilder(recBuilder);
@@ -702,8 +728,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
             IOException {
         final ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
-            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
-                    + typeTag);
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
     }
 
@@ -717,8 +742,7 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
         }
 
         if (targetTypeTag == null || !parseValue(admLexer.getLastTokenImage(), typeTag, dataOutput)) {
-            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2
-                    + typeTag);
+            throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
 
         if (targetTypeTag != typeTag) {
@@ -800,37 +824,37 @@ public class ADMDataParser extends AbstractDataParser implements IDataParser {
                 stringSerde.serialize(aString, out);
                 return true;
             case TIME:
-                ATimeSerializerDeserializer.parse(unquoted, out);
+                parseTime(unquoted, out);
                 return true;
             case DATE:
-                ADateSerializerDeserializer.parse(unquoted, out);
+                parseDate(unquoted, out);
                 return true;
             case DATETIME:
-                ADateTimeSerializerDeserializer.parse(unquoted, out);
+                parseDateTime(unquoted, out);
                 return true;
             case DURATION:
-                ADurationSerializerDeserializer.parse(unquoted, out);
+                parseDuration(unquoted, out);
                 return true;
             case DAYTIMEDURATION:
-                ADayTimeDurationSerializerDeserializer.INSTANCE.parse(unquoted, out);
+                parseDateTimeDuration(unquoted, out);
                 return true;
             case YEARMONTHDURATION:
-                AYearMonthDurationSerializerDeserializer.INSTANCE.parse(unquoted, out);
+                parseYearMonthDuration(unquoted, out);
                 return true;
             case POINT:
-                APointSerializerDeserializer.parse(unquoted, out);
+                parsePoint(unquoted, out);
                 return true;
             case POINT3D:
-                APoint3DSerializerDeserializer.parse(unquoted, out);
+                parse3DPoint(unquoted, out);
                 return true;
             case CIRCLE:
-                ACircleSerializerDeserializer.parse(unquoted, out);
+                parseCircle(unquoted, out);
                 return true;
             case RECTANGLE:
-                ARectangleSerializerDeserializer.parse(unquoted, out);
+                parseRectangle(unquoted, out);
                 return true;
             case LINE:
-                ALineSerializerDeserializer.parse(unquoted, out);
+                parseLine(unquoted, out);
                 return true;
             case POLYGON:
                 APolygonSerializerDeserializer.parse(unquoted, out);

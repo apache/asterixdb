@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.common.context.AsterixVirtualBufferCacheProvider;
@@ -36,6 +38,7 @@ import edu.uci.ics.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDes
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
@@ -45,6 +48,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveVa
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
+import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
 import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
@@ -57,12 +61,13 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter.AdapterType;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Index;
-import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.external.IndexingConstants;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.EndFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
@@ -75,6 +80,7 @@ import edu.uci.ics.asterix.metadata.feeds.IFeedMessage;
 import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.metadata.utils.ExternalDatasetsRegistry;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -83,6 +89,8 @@ import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.base.AsterixTupleFilterFactory;
+import edu.uci.ics.asterix.runtime.external.ExternalBTreeSearchOperatorDescriptor;
+import edu.uci.ics.asterix.runtime.external.ExternalRTreeSearchOperatorDescriptor;
 import edu.uci.ics.asterix.runtime.formats.FormatUtils;
 import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
 import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
@@ -146,11 +154,13 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorD
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -172,6 +182,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     private final Dataverse defaultDataverse;
     private JobId jobId;
+    private Map<String, Integer> locks;
 
     private final AsterixStorageProperties storageProperties;
 
@@ -280,16 +291,16 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(
             IDataSource<AqlSourceId> dataSource, List<LogicalVariable> scanVariables,
-            List<LogicalVariable> projectVariables, boolean projectPushed, IOperatorSchema opSchema,
-            IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
-            throws AlgebricksException {
+            List<LogicalVariable> projectVariables, boolean projectPushed, List<LogicalVariable> minFilterVars,
+            List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
+            JobGenContext context, JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
         try {
             switch (((AqlDataSource) dataSource).getDatasourceType()) {
                 case FEED:
                     return buildFeedIntakeRuntime(jobSpec, dataSource);
                 case INTERNAL_DATASET:
-                    return buildInternalDatasetScan(jobSpec, scanVariables, opSchema, typeEnv, dataSource, context,
-                            implConfig);
+                    return buildInternalDatasetScan(jobSpec, scanVariables, minFilterVars, maxFilterVars, opSchema,
+                            typeEnv, dataSource, context, implConfig);
 
                 case EXTERNAL_DATASET:
                     return buildExternalDatasetScan(jobSpec, dataSource);
@@ -304,16 +315,36 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInternalDatasetScan(JobSpecification jobSpec,
-            List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            IDataSource<AqlSourceId> dataSource, JobGenContext context, Object implConfig) throws AlgebricksException,
-            MetadataException {
+            List<LogicalVariable> outputVars, List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
+            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, IDataSource<AqlSourceId> dataSource,
+            JobGenContext context, Object implConfig) throws AlgebricksException, MetadataException {
         AqlSourceId asid = dataSource.getId();
         String dataverseName = asid.getDataverseName();
         String datasetName = asid.getDatasetName();
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, datasetName);
-        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, context, true,
+
+        int[] minFilterFieldIndexes = null;
+        if (minFilterVars != null && !minFilterVars.isEmpty()) {
+            minFilterFieldIndexes = new int[minFilterVars.size()];
+            int i = 0;
+            for (LogicalVariable v : minFilterVars) {
+                minFilterFieldIndexes[i] = opSchema.findVariable(v);
+                i++;
+            }
+        }
+        int[] maxFilterFieldIndexes = null;
+        if (maxFilterVars != null && !maxFilterVars.isEmpty()) {
+            maxFilterFieldIndexes = new int[maxFilterVars.size()];
+            int i = 0;
+            for (LogicalVariable v : maxFilterVars) {
+                maxFilterFieldIndexes[i] = opSchema.findVariable(v);
+                i++;
+            }
+        }
+
+        return buildBtreeRuntime(jobSpec, outputVars, opSchema, typeEnv, context, true, false,
                 ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null, true, true,
-                implConfig);
+                implConfig, minFilterFieldIndexes, maxFilterFieldIndexes);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetScan(JobSpecification jobSpec,
@@ -323,14 +354,14 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(), itemTypeName)
                 .getDatatype();
         return buildExternalDataScannerRuntime(jobSpec, itemType, (ExternalDatasetDetails) dataset.getDatasetDetails(),
-                NonTaggedDataFormat.INSTANCE);
+                NonTaggedDataFormat.INSTANCE, dataset);
 
     }
 
     @SuppressWarnings("rawtypes")
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataScannerRuntime(
-            JobSpecification jobSpec, IAType itemType, ExternalDatasetDetails datasetDetails, IDataFormat format)
-            throws AlgebricksException {
+            JobSpecification jobSpec, IAType itemType, ExternalDatasetDetails datasetDetails, IDataFormat format,
+            Dataset dataset) throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.RECORD) {
             throw new AlgebricksException("Can only scan datasets of records.");
         }
@@ -355,6 +386,23 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
 
             Map<String, String> configuration = datasetDetails.getProperties();
+
+            // check to see if dataset is indexed
+            Index filesIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                    dataset.getDatasetName(),
+                    dataset.getDatasetName().concat(IndexingConstants.EXTERNAL_FILE_INDEX_NAME_SUFFIX));
+
+            if (filesIndex != null && filesIndex.getPendingOp() == 0) {
+                // get files
+                List<ExternalFile> files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
+                Iterator<ExternalFile> iterator = files.iterator();
+                while (iterator.hasNext()) {
+                    if (iterator.next().getPendingOp() != ExternalFilePendingOp.PENDING_NO_OP) {
+                        iterator.remove();
+                    }
+                }
+                ((IGenericAdapterFactory) adapterFactory).setFiles(files);
+            }
 
             switch (adapterFactory.getAdapterType()) {
                 case GENERIC:
@@ -489,14 +537,16 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildBtreeRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            JobGenContext context, boolean retainInput, Dataset dataset, String indexName, int[] lowKeyFields,
-            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive, Object implConfig)
-            throws AlgebricksException {
+            JobGenContext context, boolean retainInput, boolean retainNull, Dataset dataset, String indexName,
+            int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
+            Object implConfig, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) throws AlgebricksException {
+
         boolean isSecondary = true;
+        int numSecondaryKeys = 0;
         try {
             Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                     dataset.getDatasetName(), dataset.getDatasetName());
-            if (primaryIndex != null) {
+            if (primaryIndex != null && dataset.getDatasetType() != DatasetType.EXTERNAL) {
                 isSecondary = !indexName.equals(primaryIndex.getIndexName());
             }
             int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
@@ -504,10 +554,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             int[] bloomFilterKeyFields;
             ITypeTraits[] typeTraits;
             IBinaryComparatorFactory[] comparatorFactories;
+
+            String itemTypeName = dataset.getItemTypeName();
+            ARecordType itemType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
+                    dataset.getDataverseName(), itemTypeName).getDatatype();
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, itemType, context.getBinaryComparatorFactoryProvider());
+            int[] filterFields = null;
+            int[] btreeFields = null;
+
             if (isSecondary) {
                 Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                         dataset.getDatasetName(), indexName);
-                int numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
+                numSecondaryKeys = secondaryIndex.getKeyFieldNames().size();
                 bloomFilterKeyFields = new int[numSecondaryKeys];
                 for (int i = 0; i < numSecondaryKeys; i++) {
                     bloomFilterKeyFields[i] = i;
@@ -515,24 +575,34 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, 0, outputVars.size(), typeEnv, context);
                 comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(outputVars, 0,
                         outputVars.size(), typeEnv, context);
+
+                if (filterTypeTraits != null) {
+                    filterFields = new int[1];
+                    filterFields[0] = numSecondaryKeys + numPrimaryKeys;
+                    btreeFields = new int[numSecondaryKeys + numPrimaryKeys];
+                    for (int k = 0; k < btreeFields.length; k++) {
+                        btreeFields[k] = k;
+                    }
+                }
+
             } else {
                 bloomFilterKeyFields = new int[numPrimaryKeys];
                 for (int i = 0; i < numPrimaryKeys; i++) {
                     bloomFilterKeyFields[i] = i;
                 }
-                String itemTypeName = dataset.getItemTypeName();
-                ARecordType itemType = (ARecordType) MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
-                        dataset.getDataverseName(), itemTypeName).getDatatype();
 
                 typeTraits = DatasetUtils.computeTupleTypeTraits(dataset, itemType);
                 comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset, itemType,
                         context.getBinaryComparatorFactoryProvider());
+
+                filterFields = DatasetUtils.createFilterFields(dataset);
+                btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
             }
 
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc;
             try {
-                spPc = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(dataset.getDataverseName(),
+                spPc = splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(),
                         dataset.getDatasetName(), indexName);
             } catch (Exception e) {
                 throw new AlgebricksException(e);
@@ -562,16 +632,36 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
             AsterixRuntimeComponentsProvider rtcProvider = AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
-            BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
-                    appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
-                    typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
-                    lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
-                            compactionInfo.second, isSecondary ? new SecondaryIndexOperationTrackerProvider(
-                                    dataset.getDatasetId()) : new PrimaryIndexOperationTrackerProvider(
-                                    dataset.getDatasetId()), rtcProvider, LSMBTreeIOOperationCallbackFactory.INSTANCE,
-                            storageProperties.getBloomFilterFalsePositiveRate(), !isSecondary), retainInput,
-                    searchCallbackFactory);
+            BTreeSearchOperatorDescriptor btreeSearchOp;
+            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+                btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
+                        appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
+                        spPc.first, typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
+                        lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
+                                new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
+                                compactionInfo.second, isSecondary ? new SecondaryIndexOperationTrackerProvider(
+                                        dataset.getDatasetId()) : new PrimaryIndexOperationTrackerProvider(
+                                        dataset.getDatasetId()), rtcProvider,
+                                LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                                storageProperties.getBloomFilterFalsePositiveRate(), !isSecondary, filterTypeTraits,
+                                filterCmpFactories, btreeFields, filterFields), retainInput, retainNull,
+                        context.getNullWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
+                        maxFilterFieldIndexes);
+            } else {
+                // External dataset <- use the btree with buddy btree->
+                // Be Careful of Key Start Index ?
+                int[] buddyBreeFields = new int[] { numSecondaryKeys };
+                ExternalBTreeWithBuddyDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeWithBuddyDataflowHelperFactory(
+                        compactionInfo.first, compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
+                                dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                        LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE, getStorageProperties()
+                                .getBloomFilterFalsePositiveRate(), buddyBreeFields,
+                        ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
+                btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, rtcProvider,
+                        rtcProvider, spPc.first, typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields,
+                        highKeyFields, lowKeyInclusive, highKeyInclusive, indexDataflowHelperFactory, retainInput,
+                        retainNull, context.getNullWriterFactory(), searchCallbackFactory);
+            }
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
 
@@ -580,10 +670,29 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         }
     }
 
+    /* BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
+             appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
+             typeTraits, comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields,
+             lowKeyInclusive, highKeyInclusive, new LSMBTreeDataflowHelperFactory(
+                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
+                     compactionInfo.second, isSecondary ? new SecondaryIndexOperationTrackerProvider(
+                             dataset.getDatasetId()) : new PrimaryIndexOperationTrackerProvider(
+                             dataset.getDatasetId()), rtcProvider, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                     storageProperties.getBloomFilterFalsePositiveRate(), !isSecondary), retainInput,
+             retainNull, context.getNullWriterFactory(), searchCallbackFactory);
+
+     return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeSearchOp, spPc.second);
+
+    } catch (MetadataException me) {
+     throw new AlgebricksException(me);
+    }
+    }*/
+
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            JobGenContext context, boolean retainInput, Dataset dataset, String indexName, int[] keyFields)
-            throws AlgebricksException {
+            JobGenContext context, boolean retainInput, boolean retainNull, Dataset dataset, String indexName,
+            int[] keyFields, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) throws AlgebricksException {
+
         try {
             ARecordType recType = (ARecordType) findType(dataset.getDataverseName(), dataset.getItemTypeName());
             int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
@@ -615,6 +724,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
 
             RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+            // IS NOT THE VARIABLE BELOW ALWAYS = 0 ??
             int keysStartIndex = outputRecDesc.getFieldCount() - numNestedSecondaryKeyFields - numPrimaryKeys;
             if (retainInput) {
                 keysStartIndex -= numNestedSecondaryKeyFields;
@@ -624,30 +734,69 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             ITypeTraits[] typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, keysStartIndex,
                     numNestedSecondaryKeyFields + numPrimaryKeys, typeEnv, context);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = splitProviderAndPartitionConstraintsForDataset(
                     dataset.getDataverseName(), dataset.getDatasetName(), indexName);
 
             IBinaryComparatorFactory[] primaryComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
                     dataset, recType, context.getBinaryComparatorFactoryProvider());
             int[] btreeFields = new int[primaryComparatorFactories.length];
             for (int i = 0; i < btreeFields.length; i++) {
-                btreeFields[i] = i + numSecondaryKeys;
+                btreeFields[i] = i + numNestedSecondaryKeyFields;
+            }
+
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+            int[] filterFields = null;
+            int[] rtreeFields = null;
+            if (filterTypeTraits != null) {
+                filterFields = new int[1];
+                filterFields[0] = numNestedSecondaryKeyFields + numPrimaryKeys;
+                rtreeFields = new int[numNestedSecondaryKeyFields + numPrimaryKeys];
+                for (int i = 0; i < rtreeFields.length; i++) {
+                    rtreeFields[i] = i;
+                }
             }
 
             IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
             ISearchOperationCallbackFactory searchCallbackFactory = new SecondaryIndexSearchOperationCallbackFactory();
-            RTreeSearchOperatorDescriptor rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
-                    appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(), spPc.first,
-                    typeTraits, comparatorFactories, keyFields, new LSMRTreeDataflowHelperFactory(
-                            valueProviderFactories, RTreePolicyType.RTREE, primaryComparatorFactories,
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
-                            compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            LSMRTreeIOOperationCallbackFactory.INSTANCE, proposeLinearizer(nestedKeyType.getTypeTag(),
-                                    comparatorFactories.length), storageProperties.getBloomFilterFalsePositiveRate(),
-                            btreeFields), retainInput, searchCallbackFactory);
+
+            RTreeSearchOperatorDescriptor rtreeSearchOp;
+            if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+                rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
+                        appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
+                        spPc.first, typeTraits, comparatorFactories, keyFields, new LSMRTreeDataflowHelperFactory(
+                                valueProviderFactories, RTreePolicyType.RTREE, primaryComparatorFactories,
+                                new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
+                                compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
+                                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                                LSMRTreeIOOperationCallbackFactory.INSTANCE, proposeLinearizer(
+                                        nestedKeyType.getTypeTag(), comparatorFactories.length),
+                                storageProperties.getBloomFilterFalsePositiveRate(), rtreeFields, btreeFields,
+                                filterTypeTraits, filterCmpFactories, filterFields), retainInput, retainNull,
+                        context.getNullWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
+                        maxFilterFieldIndexes);
+
+            } else {
+                // External Dataset
+                ExternalRTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalRTreeDataflowHelperFactory(
+                        valueProviderFactories, RTreePolicyType.RTREE,
+                        IndexingConstants.getBuddyBtreeComparatorFactories(), compactionInfo.first,
+                        compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                        AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
+                        proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length),
+                        getStorageProperties().getBloomFilterFalsePositiveRate(),
+                        new int[] { numNestedSecondaryKeyFields },
+                        ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
+                // Create the operator
+                rtreeSearchOp = new ExternalRTreeSearchOperatorDescriptor(jobSpec, outputRecDesc,
+                        appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
+                        spPc.first, typeTraits, comparatorFactories, keyFields, indexDataflowHelperFactory,
+                        retainInput, retainNull, context.getNullWriterFactory(), searchCallbackFactory);
+            }
+
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeSearchOp, spPc.second);
 
         } catch (MetadataException me) {
@@ -695,9 +844,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public IDataSourceIndex<String, AqlSourceId> findDataSourceIndex(String indexId, AqlSourceId dataSourceId)
             throws AlgebricksException {
         AqlDataSource ads = findDataSource(dataSourceId);
-        if (ads.getDatasourceType() == AqlDataSourceType.EXTERNAL_DATASET) {
-            throw new AlgebricksException("No index for external dataset " + dataSourceId);
-        }
         Dataset dataset = ((DatasetDataSource) ads).getDataset();
 
         try {
@@ -750,12 +896,21 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
-            LogicalVariable payload, JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields, JobGenContext context,
+            JobSpecification spec) throws AlgebricksException {
         String dataverseName = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasetName();
+
+        Dataset dataset = findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+        }
+
         int numKeys = keys.size();
+        int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
+
         // move key fields to front
-        int[] fieldPermutation = new int[numKeys + 1];
+        int[] fieldPermutation = new int[numKeys + 1 + numFilterFields];
         int[] bloomFilterKeyFields = new int[numKeys];
         // System.arraycopy(keys, 0, fieldPermutation, 0, numKeys);
         int i = 0;
@@ -766,10 +921,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             i++;
         }
         fieldPermutation[numKeys] = propagatedSchema.findVariable(payload);
-
-        Dataset dataset = findDataset(dataverseName, datasetName);
-        if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[numKeys + 1] = idx;
         }
 
         try {
@@ -784,11 +938,17 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                     itemType, context.getBinaryComparatorFactoryProvider());
 
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForDataset(
                     dataSource.getId().getDataverseName(), datasetName, indexName);
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
 
             long numElementsHint = getCardinalityPerPartitionHint(dataset);
+
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, itemType, context.getBinaryComparatorFactoryProvider());
+            int[] filterFields = DatasetUtils.createFilterFields(dataset);
+            int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
 
             // TODO
             // figure out the right behavior of the bulkload and then give the
@@ -800,13 +960,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields, fieldPermutation,
-                    GlobalConfig.DEFAULT_BTREE_FILL_FACTOR, false, numElementsHint, true,
+                    GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
                     new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()),
                             compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate(), true),
-                    NoOpOperationCallbackFactory.INSTANCE);
+                            LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                            storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
+                            filterCmpFactories, btreeFields, filterFields), NoOpOperationCallbackFactory.INSTANCE);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -816,12 +976,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertOrDeleteRuntime(IndexOperation indexOp,
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
-            List<LogicalVariable> keys, LogicalVariable payload, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
         String datasetName = dataSource.getId().getDatasetName();
+
+        Dataset dataset = findDataset(dataSource.getId().getDataverseName(), datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse "
+                    + dataSource.getId().getDataverseName());
+        }
+
         int numKeys = keys.size();
+        int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
         // Move key fields to front.
-        int[] fieldPermutation = new int[numKeys + 1];
+        int[] fieldPermutation = new int[numKeys + 1 + numFilterFields];
         int[] bloomFilterKeyFields = new int[numKeys];
         int i = 0;
         for (LogicalVariable varKey : keys) {
@@ -831,12 +999,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             i++;
         }
         fieldPermutation[numKeys] = propagatedSchema.findVariable(payload);
-
-        Dataset dataset = findDataset(dataSource.getId().getDataverseName(), datasetName);
-        if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse "
-                    + dataSource.getId().getDataverseName());
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[numKeys + 1] = idx;
         }
+
         try {
             Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                     dataset.getDatasetName(), dataset.getDatasetName());
@@ -851,7 +1018,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             IBinaryComparatorFactory[] comparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(dataset,
                     itemType, context.getBinaryComparatorFactoryProvider());
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForDataset(
                     dataSource.getId().getDataverseName(), datasetName, indexName);
 
             // prepare callback
@@ -861,6 +1028,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             for (i = 0; i < numKeys; i++) {
                 primaryKeyFields[i] = i;
             }
+
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, itemType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, itemType, context.getBinaryComparatorFactoryProvider());
+            int[] filterFields = DatasetUtils.createFilterFields(dataset);
+            int[] btreeFields = DatasetUtils.createBTreeFieldsWhenThereisAFilter(dataset);
+
             TransactionSubsystemProvider txnSubsystemProvider = new TransactionSubsystemProvider();
             PrimaryIndexModificationOperationCallbackFactory modificationCallbackFactory = new PrimaryIndexModificationOperationCallbackFactory(
                     jobId, datasetId, primaryKeyFields, txnSubsystemProvider, indexOp, ResourceType.LSM_BTREE);
@@ -875,8 +1049,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate(), true), null, modificationCallbackFactory, true,
-                    indexName);
+                                    .getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
+                            btreeFields, filterFields), null, modificationCallbackFactory, true, indexName);
 
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
                     splitsAndConstraint.second);
@@ -889,26 +1063,27 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
-            List<LogicalVariable> keys, LogicalVariable payload, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
         return getInsertOrDeleteRuntime(IndexOperation.INSERT, dataSource, propagatedSchema, typeEnv, keys, payload,
-                recordDesc, context, spec);
+                additionalNonKeyFields, recordDesc, context, spec);
     }
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
-            List<LogicalVariable> keys, LogicalVariable payload, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
         return getInsertOrDeleteRuntime(IndexOperation.DELETE, dataSource, propagatedSchema, typeEnv, keys, payload,
-                recordDesc, context, spec);
+                additionalNonKeyFields, recordDesc, context, spec);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertOrDeleteRuntime(
             IndexOperation indexOp, IDataSourceIndex<String, AqlSourceId> dataSourceIndex,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
-            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr,
-            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+            List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
+            JobGenContext context, JobSpecification spec) throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
         String dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasetName();
@@ -928,19 +1103,21 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         switch (secondaryIndex.getIndexType()) {
             case BTREE: {
                 return getBTreeDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
-                        primaryKeys, secondaryKeys, filterFactory, recordDesc, context, spec, indexOp);
+                        primaryKeys, secondaryKeys, additionalNonKeyFields, filterFactory, recordDesc, context, spec,
+                        indexOp);
             }
             case RTREE: {
                 return getRTreeDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
-                        primaryKeys, secondaryKeys, filterFactory, recordDesc, context, spec, indexOp);
+                        primaryKeys, secondaryKeys, additionalNonKeyFields, filterFactory, recordDesc, context, spec,
+                        indexOp);
             }
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 return getInvertedIndexDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
-                        primaryKeys, secondaryKeys, filterFactory, recordDesc, context, spec, indexOp,
-                        secondaryIndex.getIndexType());
+                        primaryKeys, secondaryKeys, additionalNonKeyFields, filterFactory, recordDesc, context, spec,
+                        indexOp, secondaryIndex.getIndexType());
             }
             default: {
                 throw new AlgebricksException("Insert and delete not implemented for index type: "
@@ -953,20 +1130,22 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
             IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
-            List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
-            JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
+            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
+            throws AlgebricksException {
         return getIndexInsertOrDeleteRuntime(IndexOperation.INSERT, dataSourceIndex, propagatedSchema, inputSchemas,
-                typeEnv, primaryKeys, secondaryKeys, filterExpr, recordDesc, context, spec);
+                typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec);
     }
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
             IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
-            List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
-            JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
+            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
+            throws AlgebricksException {
         return getIndexInsertOrDeleteRuntime(IndexOperation.DELETE, dataSourceIndex, propagatedSchema, inputSchemas,
-                typeEnv, primaryKeys, secondaryKeys, filterExpr, recordDesc, context, spec);
+                typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec);
     }
 
     private AsterixTupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas,
@@ -985,12 +1164,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBTreeDmlRuntime(String dataverseName,
             String datasetName, String indexName, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec, IndexOperation indexOp) throws AlgebricksException {
+            List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp)
+            throws AlgebricksException {
+
+        Dataset dataset = findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+        }
 
         int numKeys = primaryKeys.size() + secondaryKeys.size();
+        int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
+
         // generate field permutations
-        int[] fieldPermutation = new int[numKeys];
+        int[] fieldPermutation = new int[numKeys + numFilterFields];
         int[] bloomFilterKeyFields = new int[secondaryKeys.size()];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
         int i = 0;
@@ -1008,11 +1195,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             i++;
             j++;
         }
-
-        Dataset dataset = findDataset(dataverseName, datasetName);
-        if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[numKeys] = idx;
         }
+
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType;
         try {
@@ -1028,6 +1215,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // Index parameters.
             Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                     dataset.getDatasetName(), indexName);
+
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+            int[] filterFields = null;
+            int[] btreeFields = null;
+            if (filterTypeTraits != null) {
+                filterFields = new int[1];
+                filterFields[0] = numKeys;
+                btreeFields = new int[numKeys];
+                for (int k = 0; k < btreeFields.length; k++) {
+                    btreeFields[k] = k;
+                }
+            }
 
             List<String> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
             ITypeTraits[] typeTraits = new ITypeTraits[numKeys];
@@ -1050,7 +1251,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             }
 
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForDataset(
                     dataverseName, datasetName, indexName);
 
             // prepare callback
@@ -1071,8 +1272,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             compactionInfo.first, compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate(), false), filterFactory,
-                    modificationCallbackFactory, false, indexName);
+                                    .getBloomFilterFalsePositiveRate(), false, filterTypeTraits, filterCmpFactories,
+                            btreeFields, filterFields), filterFactory, modificationCallbackFactory, false, indexName);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException e) {
@@ -1085,8 +1286,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInvertedIndexDmlRuntime(String dataverseName,
             String datasetName, String indexName, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec, IndexOperation indexOp, IndexType indexType) throws AlgebricksException {
+            List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp,
+            IndexType indexType) throws AlgebricksException {
 
         // Sanity checks.
         if (primaryKeys.size() > 1) {
@@ -1096,9 +1298,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("Cannot create composite inverted index on multiple fields.");
         }
 
+        Dataset dataset = findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+        }
+
         int numKeys = primaryKeys.size() + secondaryKeys.size();
+        int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
         // generate field permutations
-        int[] fieldPermutation = new int[numKeys];
+        int[] fieldPermutation = new int[numKeys + numFilterFields];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
         int i = 0;
         int j = 0;
@@ -1114,6 +1322,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             i++;
             j++;
         }
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[numKeys] = idx;
+        }
 
         boolean isPartitioned;
         if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
@@ -1123,10 +1335,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             isPartitioned = false;
         }
 
-        Dataset dataset = findDataset(dataverseName, datasetName);
-        if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
-        }
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType;
         try {
@@ -1177,8 +1385,32 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IBinaryTokenizerFactory tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(
                     secondaryKeyType.getTypeTag(), indexType, secondaryIndex.getGramLength());
 
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+
+            int[] filterFields = null;
+            int[] invertedIndexFields = null;
+            int[] filterFieldsForNonBulkLoadOps = null;
+            int[] invertedIndexFieldsForNonBulkLoadOps = null;
+            if (filterTypeTraits != null) {
+                filterFields = new int[1];
+                filterFields[0] = numTokenFields + primaryKeys.size();
+                invertedIndexFields = new int[numTokenFields + primaryKeys.size()];
+                for (int k = 0; k < invertedIndexFields.length; k++) {
+                    invertedIndexFields[k] = k;
+                }
+
+                filterFieldsForNonBulkLoadOps = new int[numFilterFields];
+                filterFieldsForNonBulkLoadOps[0] = numKeys;
+                invertedIndexFieldsForNonBulkLoadOps = new int[numKeys];
+                for (int k = 0; k < invertedIndexFieldsForNonBulkLoadOps.length; k++) {
+                    invertedIndexFieldsForNonBulkLoadOps[k] = k;
+                }
+            }
+
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForDataset(
                     dataverseName, datasetName, indexName);
 
             // prepare callback
@@ -1198,14 +1430,18 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate());
+                        storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
+                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
+                        invertedIndexFieldsForNonBulkLoadOps);
             } else {
                 indexDataFlowFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
                         new AsterixVirtualBufferCacheProvider(datasetId), compactionInfo.first, compactionInfo.second,
                         new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
-                        storageProperties.getBloomFilterFalsePositiveRate());
+                        storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
+                        filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
+                        invertedIndexFieldsForNonBulkLoadOps);
             }
             AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor insertDeleteOp = new AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor(
                     spec, recordDesc, appContext.getStorageManagerInterface(), splitsAndConstraint.first,
@@ -1224,8 +1460,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getRTreeDmlRuntime(String dataverseName,
             String datasetName, String indexName, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec, IndexOperation indexOp) throws AlgebricksException {
+            List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp)
+            throws AlgebricksException {
         try {
             Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
             String itemTypeName = dataset.getItemTypeName();
@@ -1245,7 +1482,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             int numKeys = numSecondaryKeys + numPrimaryKeys;
             ITypeTraits[] typeTraits = new ITypeTraits[numKeys];
             IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys];
-            int[] fieldPermutation = new int[numKeys];
+
+            int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
+            int[] fieldPermutation = new int[numKeys + numFilterFields];
             int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
             int i = 0;
             int j = 0;
@@ -1261,6 +1500,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 modificationCallbackPrimaryKeyFields[j] = i;
                 i++;
                 j++;
+            }
+
+            if (numFilterFields > 0) {
+                int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+                fieldPermutation[numKeys] = idx;
             }
             IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
             IPrimitiveValueProviderFactory[] valueProviderFactories = new IPrimitiveValueProviderFactory[numSecondaryKeys];
@@ -1280,11 +1524,25 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IBinaryComparatorFactory[] primaryComparatorFactories = DatasetUtils.computeKeysBinaryComparatorFactories(
                     dataset, recType, context.getBinaryComparatorFactoryProvider());
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForDataset(
                     dataverseName, datasetName, indexName);
             int[] btreeFields = new int[primaryComparatorFactories.length];
             for (int k = 0; k < btreeFields.length; k++) {
                 btreeFields[k] = k + numSecondaryKeys;
+            }
+
+            ITypeTraits[] filterTypeTraits = DatasetUtils.computeFilterTypeTraits(dataset, recType);
+            IBinaryComparatorFactory[] filterCmpFactories = DatasetUtils.computeFilterBinaryComparatorFactories(
+                    dataset, recType, context.getBinaryComparatorFactoryProvider());
+            int[] filterFields = null;
+            int[] rtreeFields = null;
+            if (filterTypeTraits != null) {
+                filterFields = new int[1];
+                filterFields[0] = numSecondaryKeys + numPrimaryKeys;
+                rtreeFields = new int[numSecondaryKeys + numPrimaryKeys];
+                for (int k = 0; k < rtreeFields.length; k++) {
+                    rtreeFields[k] = k;
+                }
             }
 
             // prepare callback
@@ -1307,7 +1565,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMRTreeIOOperationCallbackFactory.INSTANCE, proposeLinearizer(nestedKeyType.getTypeTag(),
                                     comparatorFactories.length), storageProperties.getBloomFilterFalsePositiveRate(),
-                            btreeFields), filterFactory, modificationCallbackFactory, false, indexName);
+                            rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields),
+                    filterFactory, modificationCallbackFactory, false, indexName);
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
         } catch (MetadataException | IOException e) {
             throw new AlgebricksException(e);
@@ -1355,11 +1614,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         } else {
             numElementsHint = Long.parseLong(numElementsHintString);
         }
-
         int numPartitions = 0;
-        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
-        List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
-                .getNodeNames();
+        List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx,
+                dataset.getDatasetDetails().getNodeGroupName()).getNodeNames();
         for (String nd : nodeGroup) {
             numPartitions += AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
         }
@@ -1371,9 +1628,9 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return AsterixBuiltinFunctions.lookupFunction(fid);
     }
 
-    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForInternalOrFeedDataset(
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForDataset(
             String dataverseName, String datasetName, String targetIdxName) throws AlgebricksException {
-        FileSplit[] splits = splitsForInternalOrFeedDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName);
+        FileSplit[] splits = splitsForDataset(mdTxnCtx, dataverseName, datasetName, targetIdxName);
         return splitProviderAndPartitionConstraints(splits);
     }
 
@@ -1417,16 +1674,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return splits.toArray(new FileSplit[] {});
     }
 
-    private FileSplit[] splitsForInternalOrFeedDataset(MetadataTransactionContext mdTxnCtx, String dataverseName,
-            String datasetName, String targetIdxName) throws AlgebricksException {
-
+    private FileSplit[] splitsForDataset(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName,
+            String targetIdxName) throws AlgebricksException {
         try {
             File relPathFile = new File(getRelativePath(dataverseName, datasetName + "_idx_" + targetIdxName));
             Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
-            if (dataset.getDatasetType() != DatasetType.INTERNAL) {
-                throw new AlgebricksException("Not an internal dataset");
-            }
-            InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+            IDatasetDetails datasetDetails = dataset.getDatasetDetails();
             List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
                     .getNodeNames();
             if (nodeGroup == null) {
@@ -1594,6 +1847,75 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         Map<String, Object> wrappedProperties = new HashMap<String, Object>();
         wrappedProperties.putAll(properties);
         return wrappedProperties;
+    }
+
+    public Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraintsForFilesIndex(
+            String dataverseName, String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
+        FileSplit[] splits = splitsForFilesIndex(mdTxnCtx, dataverseName, datasetName, targetIdxName, create);
+        return splitProviderAndPartitionConstraints(splits);
+    }
+
+    private FileSplit[] splitsForFilesIndex(MetadataTransactionContext mdTxnCtx, String dataverseName,
+            String datasetName, String targetIdxName, boolean create) throws AlgebricksException {
+
+        try {
+            File relPathFile = new File(getRelativePath(dataverseName, datasetName + "_idx_" + targetIdxName));
+            Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+            ExternalDatasetDetails datasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
+            List<String> nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, datasetDetails.getNodeGroupName())
+                    .getNodeNames();
+            if (nodeGroup == null) {
+                throw new AlgebricksException("Couldn't find node group " + datasetDetails.getNodeGroupName());
+            }
+
+            List<FileSplit> splitArray = new ArrayList<FileSplit>();
+            for (String nd : nodeGroup) {
+                String[] nodeStores = stores.get(nd);
+                if (nodeStores == null) {
+                    LOGGER.warning("Node " + nd + " has no stores.");
+                    throw new AlgebricksException("Node " + nd + " has no stores.");
+                } else {
+                    // Only the first partition when create
+                    String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nd);
+                    if (create) {
+                        for (int j = 0; j < nodeStores.length; j++) {
+                            File f = new File(ioDevices[0] + File.separator + nodeStores[j] + File.separator
+                                    + relPathFile);
+                            splitArray.add(new FileSplit(nd, new FileReference(f), 0));
+                        }
+                    } else {
+                        int numIODevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nd);
+                        for (int j = 0; j < nodeStores.length; j++) {
+                            for (int k = 0; k < numIODevices; k++) {
+                                File f = new File(ioDevices[0] + File.separator + nodeStores[j] + File.separator
+                                        + relPathFile);
+                                splitArray.add(new FileSplit(nd, new FileReference(f), 0));
+                            }
+                        }
+                    }
+                }
+            }
+            FileSplit[] splits = new FileSplit[splitArray.size()];
+            int i = 0;
+            for (FileSplit fs : splitArray) {
+                splits[i++] = fs;
+            }
+            return splits;
+        } catch (MetadataException me) {
+            throw new AlgebricksException(me);
+        }
+    }
+
+    public AsterixStorageProperties getStorageProperties() {
+        return storageProperties;
+    }
+
+    public Map<String, Integer> getLocks() {
+        return locks;
+    }
+
+    public void setLocks(Map<String, Integer> locks) {
+        this.locks = locks;
     }
 
 }

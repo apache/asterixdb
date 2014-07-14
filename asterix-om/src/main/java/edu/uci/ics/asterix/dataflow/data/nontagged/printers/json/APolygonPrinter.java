@@ -35,22 +35,22 @@ public class APolygonPrinter implements IPrinter {
         short numberOfPoints = AInt16SerializerDeserializer.getShort(b, s + 1);
         s += 3;
 
-        ps.print("{ polygon: [");
+        ps.print("{ \"polygon\": [");
 
         for (int i = 0; i < numberOfPoints; i++) {
             if (i > 0)
                 ps.print(",");
 
-            ps.print("{ point: [");
+            ps.print("{ \"point\": [");
             ps.print(ADoubleSerializerDeserializer.getDouble(b, s));
-            ps.print(",");
+            ps.print(", ");
             ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 8));
-            ps.print("]}");
+            ps.print("] }");
 
             s += 16;
         }
 
-        ps.print("]}");
+        ps.print("] }");
 
     }
 }

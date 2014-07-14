@@ -19,9 +19,9 @@
 		<NFS>true</NFS>
 	</working_dir>
 	<log_dir>/tmp/asterix/logs</log_dir>
-	<txn_log_dir>/tmp/asterix/logs</txn_log_dir>
-	<iodevices>/tmp</iodevices>
-	<store>asterix/storage</store>
+	<txn_log_dir>/tmp/asterix/txnLogs</txn_log_dir>
+	<iodevices>/tmp/asterix</iodevices>
+	<store>storage</store>
 	<java_home></java_home>
 	<master_node>
 		<id>master</id>

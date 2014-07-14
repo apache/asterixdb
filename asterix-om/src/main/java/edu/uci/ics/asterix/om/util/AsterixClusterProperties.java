@@ -52,6 +52,8 @@ public class AsterixClusterProperties {
 
     private AlgebricksAbsolutePartitionConstraint clusterPartitionConstraint;
 
+    private boolean globalRecoveryCompleted = false;
+
     private AsterixClusterProperties() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(CLUSTER_CONFIGURATION_FILE);
         if (is != null) {
@@ -238,5 +240,13 @@ public class AsterixClusterProperties {
             }
 
         }
+    }
+
+    public boolean isGlobalRecoveryCompleted() {
+        return globalRecoveryCompleted;
+    }
+
+    public void setGlobalRecoveryCompleted(boolean globalRecoveryCompleted) {
+        this.globalRecoveryCompleted = globalRecoveryCompleted;
     }
 }

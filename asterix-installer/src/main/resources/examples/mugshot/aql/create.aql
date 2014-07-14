@@ -1,0 +1,51 @@
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type EmploymentType as open {
+    organization-name: string,
+    start-date: date,
+    end-date: date?
+}
+
+create type MugshotUserType as {
+    id: int32,
+    alias: string,
+    name: string,
+    user-since: datetime,
+    address: {
+        street: string,
+        city: string,
+        state: string,
+        zip: string,
+        country: string
+    },
+    friend-ids: {{ int32 }},
+    employment: [EmploymentType]
+}
+
+create type MugshotMessageType as closed {
+    message-id: int32,
+    author-id: int32,
+    timestamp: datetime,
+    in-response-to: int32?,
+    sender-location: point?,
+    tags: {{ string }},
+    message: string
+}
+
+create dataset MugshotUsers(MugshotUserType)
+    primary key id;
+create dataset MugshotMessages(MugshotMessageType)
+    primary key message-id;
+
+create index msUserSinceIdx
+    on MugshotUsers(user-since);
+create index msTimestampIdx
+    on MugshotMessages(timestamp);
+create index msAuthorIdx
+    on MugshotMessages(author-id) type btree;
+create index msSenderLocIndex
+    on MugshotMessages(sender-location) type rtree;
+create index msMessageIdx
+    on MugshotMessages(message) type keyword;

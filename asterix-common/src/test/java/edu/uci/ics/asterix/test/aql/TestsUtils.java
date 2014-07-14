@@ -51,12 +51,13 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import edu.uci.ics.asterix.testframework.context.TestCaseContext.OutputFormat;
 import edu.uci.ics.asterix.testframework.context.TestFileContext;
+import edu.uci.ics.asterix.testframework.xml.ComparisonEnum;
 import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
 
 public class TestsUtils {
 
-    private static final String EXTENSION_AQL_RESULT = "adm";
     private static final Logger LOGGER = Logger.getLogger(TestsUtils.class.getName());
     private static Method managixExecuteMethod = null;
 
@@ -94,7 +95,7 @@ public class TestsUtils {
                             + "\n> ");
                 }
 
-                if (!equalStrings(lineExpected.split("Timestamp")[0], lineActual.split("Timestamp")[0])) {
+                if (!equalStrings(lineExpected.split("Time")[0], lineActual.split("Time")[0])) {
                     fail("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }
@@ -152,11 +153,6 @@ public class TestsUtils {
         return true;
     }
 
-    public static String aqlExtToResExt(String fname) {
-        int dot = fname.lastIndexOf('.');
-        return fname.substring(0, dot + 1) + EXTENSION_AQL_RESULT;
-    }
-
     private static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         try {
@@ -193,38 +189,38 @@ public class TestsUtils {
         return errors;
     }
 
-    // Executes Query and returns results as JSONArray
-    public static InputStream executeQuery(String str) throws Exception {
-        InputStream resultStream = null;
-
-        final String url = "http://localhost:19002/query";
-
-        // Create an instance of HttpClient.
+    private static InputStream executeHttpMethod(HttpMethod method) {
         HttpClient client = new HttpClient();
+        try {
+            int statusCode = client.executeMethod(method);
+            if (statusCode != HttpStatus.SC_OK) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
+            }
+            return method.getResponseBodyAsStream();
+        } catch (Exception e) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Executes Query and returns results as JSONArray
+    public static InputStream executeQuery(String str, OutputFormat fmt) throws Exception {
+        final String url = "http://localhost:19002/query";
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
         method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
 
+        // For now, ADM means "default", which is what is returned when no
+        // explicit Accept: header is specified.
+        if (fmt == OutputFormat.JSON) {
+            method.setRequestHeader("Accept", "application/json");
+        }
+
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
-
-        try {
-            // Execute the method.
-            int statusCode = client.executeMethod(method);
-
-            // Check if the method was executed successfully.
-            if (statusCode != HttpStatus.SC_OK) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            }
-
-            // Read the response body as stream
-            resultStream = method.getResponseBodyAsStream();
-        } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            e.printStackTrace();
-        }
-        return resultStream;
+        return executeHttpMethod(method);
     }
 
     // To execute Update statements
@@ -253,6 +249,43 @@ public class TestsUtils {
             throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
                     + errors[2]);
         }
+    }
+
+    //Executes AQL in either async or async-defer mode.
+    public static InputStream executeAnyAQLAsync(String str, boolean defer) throws Exception {
+        final String url = "http://localhost:19002/aql";
+
+        // Create a method instance.
+        PostMethod method = new PostMethod(url);
+        if (defer) {
+            method.setQueryString(new NameValuePair[] { new NameValuePair("mode", "asynchronous-deferred") });
+        } else {
+            method.setQueryString(new NameValuePair[] { new NameValuePair("mode", "asynchronous") });
+        }
+        method.setRequestEntity(new StringRequestEntity(str));
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+        InputStream resultStream = executeHttpMethod(method);
+
+        String theHandle = IOUtils.toString(resultStream, "UTF-8");
+
+        //take the handle and parse it so results can be retrieved 
+        InputStream handleResult = getHandleResult(theHandle);
+        return handleResult;
+    }
+
+    private static InputStream getHandleResult(String handle) throws Exception {
+        final String url = "http://localhost:19002/query/result";
+
+        // Create a method instance.
+        GetMethod method = new GetMethod(url);
+        method.setQueryString(new NameValuePair[] { new NameValuePair("handle", handle) });
+
+        // Provide custom retry handler is necessary
+        method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
+
+        return executeHttpMethod(method);
     }
 
     // To execute DDL and Update statements
@@ -373,7 +406,6 @@ public class TestsUtils {
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
                 statement = TestsUtils.readTestFile(testFile);
-                InputStream resultStream;
                 try {
                     switch (ctx.getType()) {
                         case "ddl":
@@ -389,6 +421,8 @@ public class TestsUtils {
                             TestsUtils.executeUpdate(statement);
                             break;
                         case "query":
+                        case "async":
+                        case "asyncdefer":
                             // isDmlRecoveryTest: insert Crash and Recovery
                             if (isDmlRecoveryTest) {
                                 executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
@@ -396,23 +430,25 @@ public class TestsUtils {
                                 executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
                                         + File.separator + "stop_and_start.sh");
                             }
+                            InputStream resultStream = null;
+                            if (ctx.getType().equalsIgnoreCase("query"))
+                                resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                            else if (ctx.getType().equalsIgnoreCase("async"))
+                                resultStream = executeAnyAQLAsync(statement, false);
+                            else if (ctx.getType().equalsIgnoreCase("asyncdefer"))
+                                resultStream = executeAnyAQLAsync(statement, true);
 
-                            resultStream = executeQuery(statement);
                             if (queryCount >= expectedResultFileCtxs.size()) {
                                 throw new IllegalStateException("no result file for " + testFile.toString());
                             }
                             expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 
-                            File actualFile = new File(actualPath + File.separator
-                                    + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
-                                    + cUnit.getName() + ".adm");
-                            TestsUtils.writeResultsToFile(actualFile, resultStream);
-
                             File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                             actualResultFile.getParentFile().mkdirs();
+                            TestsUtils.writeResultsToFile(actualResultFile, resultStream);
 
                             TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                    expectedResultFile, actualFile);
+                                    expectedResultFile, actualResultFile);
                             LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                     + " PASSED ");
 
@@ -422,7 +458,7 @@ public class TestsUtils {
                             executeManagixCommand(statement);
                             break;
                         case "txnqbc": //qbc represents query before crash
-                            resultStream = executeQuery(statement);
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
                             qbcFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
@@ -430,18 +466,18 @@ public class TestsUtils {
                             TestsUtils.writeResultsToFile(qbcFile, resultStream);
                             break;
                         case "txnqar": //qar represents query after recovery
-                            resultStream = executeQuery(statement);
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
                             qarFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");
                             qarFile.getParentFile().mkdirs();
                             TestsUtils.writeResultsToFile(qarFile, resultStream);
 
-                            TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
-                                    qbcFile, qarFile);
+                            TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile,
+                                    qarFile);
 
-                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/"
-                                    + cUnit.getName() + " PASSED ");
+                            LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
+                                    + " PASSED ");
                             break;
                         case "txneu": //eu represents erroneous update
                             try {

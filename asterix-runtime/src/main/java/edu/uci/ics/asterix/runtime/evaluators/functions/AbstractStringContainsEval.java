@@ -18,6 +18,7 @@ import java.io.DataOutput;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -45,6 +46,9 @@ public abstract class AbstractStringContainsEval implements ICopyEvaluator {
     @SuppressWarnings("rawtypes")
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ANULL);
 
     private final FunctionIdentifier funcID;
 
@@ -65,17 +69,9 @@ public abstract class AbstractStringContainsEval implements ICopyEvaluator {
         evalString.evaluate(tuple);
 
         try {
-            if (array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                    boolSerde.serialize(ABoolean.TRUE, dout);
-                    return;
-                }
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                if (array1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                    boolSerde.serialize(ABoolean.FALSE, dout);
-                    return;
-                }
-
+            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                nullSerde.serialize(ANull.NULL, dout);
+                return;
             }
 
             if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {

@@ -1,0 +1,19 @@
+use dataverse tpch;
+
+for $l in dataset('LineItem')
+group by $l_partkey := $l.l_partkey with $l
+order by $l_partkey
+return {
+    "t_partkey": $l_partkey,
+    "t_count": count($l),
+    "t_avg_quantity": 0.2 * avg(for $i in $l return $i.l_quantity),
+    "t_max_suppkey": max(for $i in $l return $i.l_suppkey),
+    "t_max_linenumber": max(for $i in $l return $i.l_linenumber),
+    "t_avg_extendedprice": avg(for $i in $l return $i.l_extendedprice),
+    "t_avg_discount": avg(for $i in $l return $i.l_discount),
+    "t_avg_tax": avg(for $i in $l return $i.l_tax),
+    "t_max_shipdate": max(for $i in $l return $i.l_shipdate),
+    "t_min_commitdate": min(for $i in $l return $i.l_commitdate),
+    "t_min_receiptdate": min(for $i in $l return $i.l_receiptdate),
+    "t_max_comment": max(for $i in $l return $i.l_comment)
+}

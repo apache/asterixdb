@@ -22,10 +22,15 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import edu.uci.ics.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.external.IndexingConstants;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.AInt32;
@@ -42,6 +47,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -49,17 +55,25 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConsta
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
  * Static helper functions for rewriting plans using indexes.
  */
 public class AccessMethodUtils {
+
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, List<Object> target)
             throws IOException {
         ARecordType recordType = (ARecordType) itemType;
@@ -110,6 +124,10 @@ public class AccessMethodUtils {
         // One of the args must be a constant, and the other arg must be a variable.
         if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            // The arguments of contains() function are asymmetrical, we can only use index if it is on the first argument
+            if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
+                return false;
+            }
             ConstantExpression constExpr = (ConstantExpression) arg1;
             constFilterVal = constExpr.getValue();
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg2;
@@ -194,15 +212,28 @@ public class AccessMethodUtils {
                     }
                     break;
                 }
+                case LENGTH_PARTITIONED_NGRAM_INVIX:
+                case LENGTH_PARTITIONED_WORD_INVIX:
+                default:
+                    break;
             }
         }
         // Primary keys.
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-        for (String partitioningKey : partitioningKeys) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            //add primary keys
             try {
-                dest.add(recordType.getFieldType(partitioningKey));
-            } catch (IOException e) {
+                appendExternalRecPrimaryKeys(dataset, dest);
+            } catch (AsterixException e) {
                 throw new AlgebricksException(e);
+            }
+        } else {
+            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            for (String partitioningKey : partitioningKeys) {
+                try {
+                    dest.add(recordType.getFieldType(partitioningKey));
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
+                }
             }
         }
     }
@@ -210,7 +241,12 @@ public class AccessMethodUtils {
     public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType, Index index,
             boolean primaryKeysOnly, IOptimizationContext context, List<LogicalVariable> dest)
             throws AlgebricksException {
-        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+        int numPrimaryKeys = 0;
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
+        } else {
+            numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+        }
         int numSecondaryKeys = getNumSecondaryKeys(index, recordType);
         int numVars = (primaryKeysOnly) ? numPrimaryKeys : numPrimaryKeys + numSecondaryKeys;
         for (int i = 0; i < numVars; i++) {
@@ -218,14 +254,32 @@ public class AccessMethodUtils {
         }
     }
 
-    public static List<LogicalVariable> getPrimaryKeyVarsFromUnnestMap(Dataset dataset, ILogicalOperator unnestMapOp) {
-        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+    public static List<LogicalVariable> getPrimaryKeyVarsFromSecondaryUnnestMap(Dataset dataset,
+            ILogicalOperator unnestMapOp) {
+        int numPrimaryKeys;
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
+        } else {
+            numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+        }
         List<LogicalVariable> primaryKeyVars = new ArrayList<LogicalVariable>();
         List<LogicalVariable> sourceVars = ((UnnestMapOperator) unnestMapOp).getVariables();
         // Assumes the primary keys are located at the end.
         int start = sourceVars.size() - numPrimaryKeys;
         int stop = sourceVars.size();
         for (int i = start; i < stop; i++) {
+            primaryKeyVars.add(sourceVars.get(i));
+        }
+        return primaryKeyVars;
+    }
+
+    public static List<LogicalVariable> getPrimaryKeyVarsFromPrimaryUnnestMap(Dataset dataset,
+            ILogicalOperator unnestMapOp) {
+        int numPrimaryKeys = DatasetUtils.getPartitioningKeys(dataset).size();
+        List<LogicalVariable> primaryKeyVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> sourceVars = ((UnnestMapOperator) unnestMapOp).getVariables();
+        // Assumes the primary keys are located at the beginning.
+        for (int i = 0; i < numPrimaryKeys; i++) {
             primaryKeyVars.add(sourceVars.get(i));
         }
         return primaryKeyVars;
@@ -290,8 +344,9 @@ public class AccessMethodUtils {
 
     public static UnnestMapOperator createPrimaryIndexUnnestMap(DataSourceScanOperator dataSourceScan, Dataset dataset,
             ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context, boolean sortPrimaryKeys,
-            boolean retainInput, boolean requiresBroadcast) throws AlgebricksException {
-        List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromUnnestMap(dataset, inputOp);
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast) throws AlgebricksException {
+        List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
+                inputOp);
         // Optionally add a sort on the primary-index keys before searching the primary index.
         OrderOperator order = null;
         if (sortPrimaryKeys) {
@@ -310,12 +365,13 @@ public class AccessMethodUtils {
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments. 
         List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(dataset.getDatasetName(), IndexType.BTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
+                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
         // Set low/high inclusive to true for a point lookup.
         jobGenParams.setLowKeyInclusive(true);
         jobGenParams.setHighKeyInclusive(true);
         jobGenParams.setLowKeyVarList(primaryKeyVars, 0, primaryKeyVars.size());
         jobGenParams.setHighKeyVarList(primaryKeyVars, 0, primaryKeyVars.size());
+        jobGenParams.setIsEqCondition(true);
         jobGenParams.writeToFuncArgs(primaryIndexFuncArgs);
         // Variables and types coming out of the primary-index search.
         List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<LogicalVariable>();
@@ -346,4 +402,137 @@ public class AccessMethodUtils {
         return primaryIndexUnnestOp;
     }
 
+    public static ScalarFunctionCallExpression findLOJIsNullFuncInGroupBy(GroupByOperator lojGroupbyOp)
+            throws AlgebricksException {
+        //find IS_NULL function of which argument has the nullPlaceholder variable in the nested plan of groupby. 
+        ALogicalPlanImpl subPlan = (ALogicalPlanImpl) lojGroupbyOp.getNestedPlans().get(0);
+        Mutable<ILogicalOperator> subPlanRootOpRef = subPlan.getRoots().get(0);
+        AbstractLogicalOperator subPlanRootOp = (AbstractLogicalOperator) subPlanRootOpRef.getValue();
+        boolean foundSelectNonNull = false;
+        ScalarFunctionCallExpression isNullFuncExpr = null;
+        AbstractLogicalOperator inputOp = subPlanRootOp;
+        while (inputOp != null) {
+            if (inputOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                SelectOperator selectOp = (SelectOperator) inputOp;
+                if (selectOp.getCondition().getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    if (((AbstractFunctionCallExpression) selectOp.getCondition().getValue()).getFunctionIdentifier()
+                            .equals(AlgebricksBuiltinFunctions.NOT)) {
+                        ScalarFunctionCallExpression notFuncExpr = (ScalarFunctionCallExpression) selectOp
+                                .getCondition().getValue();
+                        if (notFuncExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                            if (((AbstractFunctionCallExpression) notFuncExpr.getArguments().get(0).getValue())
+                                    .getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
+                                isNullFuncExpr = (ScalarFunctionCallExpression) notFuncExpr.getArguments().get(0)
+                                        .getValue();
+                                if (isNullFuncExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                    foundSelectNonNull = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            inputOp = inputOp.getInputs().size() > 0 ? (AbstractLogicalOperator) inputOp.getInputs().get(0).getValue()
+                    : null;
+        }
+
+        if (!foundSelectNonNull) {
+            throw new AlgebricksException(
+                    "Could not find the non-null select operator in GroupByOperator for LEFTOUTERJOIN plan optimization.");
+        }
+        return isNullFuncExpr;
+    }
+
+    public static void resetLOJNullPlaceholderVariableInGroupByOp(AccessMethodAnalysisContext analysisCtx,
+            LogicalVariable newNullPlaceholderVaraible, IOptimizationContext context) throws AlgebricksException {
+
+        //reset the null placeholder variable in groupby operator
+        ScalarFunctionCallExpression isNullFuncExpr = analysisCtx.getLOJIsNullFuncInGroupBy();
+        isNullFuncExpr.getArguments().clear();
+        isNullFuncExpr.getArguments().add(
+                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(newNullPlaceholderVaraible)));
+
+        //recompute type environment.
+        OperatorPropertiesUtil.typeOpRec(analysisCtx.getLOJGroupbyOpRef(), context);
+    }
+
+    // New < For external datasets indexing>
+    private static void appendExternalRecTypes(Dataset dataset, IAType itemType, List<Object> target) {
+        target.add(itemType);
+    }
+
+    private static void appendExternalRecPrimaryKeys(Dataset dataset, List<Object> target) throws AsterixException {
+        int numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
+        for (int i = 0; i < numPrimaryKeys; i++) {
+            target.add(IndexingConstants.getFieldType(i));
+        }
+    }
+
+    private static void writeVarList(List<LogicalVariable> varList, List<Mutable<ILogicalExpression>> funcArgs) {
+        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
+                new AsterixConstantValue(new AInt32(varList.size()))));
+        funcArgs.add(numKeysRef);
+        for (LogicalVariable keyVar : varList) {
+            Mutable<ILogicalExpression> keyVarRef = new MutableObject<ILogicalExpression>(
+                    new VariableReferenceExpression(keyVar));
+            funcArgs.add(keyVarRef);
+        }
+    }
+
+    private static void addStringArg(String argument, List<Mutable<ILogicalExpression>> funcArgs) {
+        Mutable<ILogicalExpression> stringRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
+                new AsterixConstantValue(new AString(argument))));
+        funcArgs.add(stringRef);
+    }
+
+    public static ExternalDataLookupOperator createExternalDataLookupUnnestMap(DataSourceScanOperator dataSourceScan,
+            Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
+            Index secondaryIndex, boolean retainInput, boolean retainNull) throws AlgebricksException {
+        List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
+                inputOp);
+
+        // add a sort on the RID fields before fetching external data.
+        OrderOperator order = new OrderOperator();
+        for (LogicalVariable pkVar : primaryKeyVars) {
+            Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
+                    pkVar));
+            order.getOrderExpressions().add(
+                    new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+        }
+        // The secondary-index search feeds into the sort.
+        order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
+        order.setExecutionMode(ExecutionMode.LOCAL);
+        context.computeAndSetTypeEnvironmentForOperator(order);
+        List<Mutable<ILogicalExpression>> externalRIDAccessFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
+        //Add dataverse and dataset to the arguments
+        AccessMethodUtils.addStringArg(dataset.getDataverseName(), externalRIDAccessFuncArgs);
+        AccessMethodUtils.addStringArg(dataset.getDatasetName(), externalRIDAccessFuncArgs);
+        AccessMethodUtils.writeVarList(primaryKeyVars, externalRIDAccessFuncArgs);
+
+        // Variables and types coming out of the external access.
+        List<LogicalVariable> externalAccessByRIDVars = new ArrayList<LogicalVariable>();
+        List<Object> externalAccessOutputTypes = new ArrayList<Object>();
+        // Append output variables/types generated by the data scan (not forwarded from input).
+        externalAccessByRIDVars.addAll(dataSourceScan.getVariables());
+        appendExternalRecTypes(dataset, recordType, externalAccessOutputTypes);
+
+        IFunctionInfo externalAccessByRID = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EXTERNAL_LOOKUP);
+        AbstractFunctionCallExpression externalAccessFunc = new ScalarFunctionCallExpression(externalAccessByRID,
+                externalRIDAccessFuncArgs);
+
+        ExternalDataLookupOperator externalLookupOp = new ExternalDataLookupOperator(externalAccessByRIDVars,
+                new MutableObject<ILogicalExpression>(externalAccessFunc), externalAccessOutputTypes, retainInput);
+        // Fed by the order operator or the secondaryIndexUnnestOp.
+        externalLookupOp.getInputs().add(new MutableObject<ILogicalOperator>(order));
+
+        context.computeAndSetTypeEnvironmentForOperator(externalLookupOp);
+        externalLookupOp.setExecutionMode(ExecutionMode.PARTITIONED);
+
+        //set the physical operator
+        AqlSourceId dataSourceId = new AqlSourceId(dataset.getDataverseName(), dataset.getDatasetName());
+        externalLookupOp.setPhysicalOperator(new ExternalDataLookupPOperator(dataSourceId, dataset, recordType,
+                secondaryIndex, primaryKeyVars, false, retainInput, retainNull));
+        return externalLookupOp;
+    }
 }

@@ -32,7 +32,7 @@ public class AInt16Printer implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         short i = AInt16SerializerDeserializer.getShort(b, s + 1);
 
-        ps.println("{ int16: ");
+        ps.println("{ \"int16\": ");
         ps.println(i);
         ps.println("}");
     }

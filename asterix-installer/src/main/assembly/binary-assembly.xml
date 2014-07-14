@@ -29,6 +29,10 @@
 			<outputDirectory>clusters</outputDirectory>
 		</fileSet>
 		<fileSet>
+			<directory>src/main/resources/examples</directory>
+			<outputDirectory>examples</outputDirectory>
+		</fileSet>
+		<fileSet>
 			<directory>src/main/resources/zookeeper</directory>
 			<fileMode>0755</fileMode>
 			<outputDirectory>.installer/zookeeper/bin</outputDirectory>

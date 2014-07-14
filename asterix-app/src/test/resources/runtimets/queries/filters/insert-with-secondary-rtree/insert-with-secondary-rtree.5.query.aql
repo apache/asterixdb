@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $m in dataset('FacebookMessages')
+where spatial-intersect($m.sender-location, create-polygon([40.0,79.87,30.0,75.0,50.0,80.0,10.0,10.0]))
+and $m.send-time < datetime("2012-11-20T10:10:00.000Z")
+order by $m.send-time
+return $m

@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -47,4 +48,12 @@ public interface IOptimizableFuncExpr {
     public int findFieldName(String fieldName);
 
     public void substituteVar(LogicalVariable original, LogicalVariable substitution);
+
+    public void setPartialField(boolean partialField);
+
+    public boolean containsPartialField();
+
+    public void setTypeTag(int index, ATypeTag typeTag);
+
+    public ATypeTag getTypeTag(int index);
 }

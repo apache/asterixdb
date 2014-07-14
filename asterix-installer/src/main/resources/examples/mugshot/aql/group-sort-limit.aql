@@ -1,0 +1,13 @@
+use dataverse TinySocial;
+
+for $msg in dataset MugshotMessages
+where $msg.timestamp >= datetime("2014-02-20T00:00:00")
+  and $msg.timestamp <  datetime("2014-03-20T00:00:00")
+group by $aid := $msg.author-id with $msg
+let $cnt := count($msg)
+order by $cnt desc
+limit 3
+return {
+  "author" : $aid,
+  "no messages" : $cnt
+};

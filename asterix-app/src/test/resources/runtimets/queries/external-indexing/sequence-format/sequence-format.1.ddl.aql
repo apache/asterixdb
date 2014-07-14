@@ -1,0 +1,23 @@
+/*
+* Description  : Create an external dataset that contains records stored with sequence hdfs file format.
+                 Build an index over the external dataset age attribute
+                 Perform a query over the dataset using the index.
+* Expected Res : Success
+* Date         : 3rd Jan 2014
+*/
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type EmployeeType as closed {
+ id: int32,
+ name: string,
+ age: int32
+};
+
+create external dataset EmployeeDataset(EmployeeType)
+using hdfs
+(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/external-indexing-test.seq"),("input-format"="sequence-input-format"),("format"="delimited-text"),("delimiter"="|"));
+
+create index EmployeeAgeIdx on EmployeeDataset(age);

@@ -20,6 +20,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -49,6 +50,9 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AINT32);
+    @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ANULL);
     protected ATypeTag itemTypeTag;
 
     protected int firstStart = -1;
@@ -123,10 +127,10 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
     }
 
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws AlgebricksException {
-        // edit distance between null and anything else is 0
+        // edit distance between null and anything else is undefined
         if (typeTag1 == ATypeTag.NULL || typeTag2 == ATypeTag.NULL) {
             try {
-                writeResult(0);
+               nullSerde.serialize(ANull.NULL, out);
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }

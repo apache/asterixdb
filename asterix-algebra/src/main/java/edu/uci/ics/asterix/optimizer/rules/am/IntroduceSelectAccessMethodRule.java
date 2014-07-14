@@ -42,7 +42,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * Matches the following operator patterns:
  * Standard secondary index pattern:
  * There must be at least one assign, but there may be more, e.g., when matching similarity-jaccard-check().
- * (select) <-- (assign)+ <-- (datasource scan)
+ * (select) <-- (assign | unnest)+ <-- (datasource scan)
  * Primary index lookup pattern:
  * Since no assign is necessary to get the primary key fields (they are already stored fields in the BTree tuples).
  * (select) <-- (datasource scan)
@@ -89,7 +89,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         // Analyze select condition.
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new HashMap<IAccessMethod, AccessMethodAnalysisContext>();
-        if (!analyzeCondition(selectCond, subTree.assigns, analyzedAMs)) {
+        if (!analyzeCondition(selectCond, subTree.assignsAndUnnests, analyzedAMs)) {
             return false;
         }
 
@@ -98,7 +98,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             return false;
         }
 
-        fillSubTreeIndexExprs(subTree, analyzedAMs);
+        fillSubTreeIndexExprs(subTree, analyzedAMs, context);
         pruneIndexCandidates(analyzedAMs);
 
         // Choose index to be applied.
@@ -137,7 +137,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             return false;
         }
         selectCond = (AbstractFunctionCallExpression) condExpr;
-        return subTree.initFromSubTree(op1.getInputs().get(0));
+        boolean res = subTree.initFromSubTree(op1.getInputs().get(0));
+        return res && subTree.hasDataSourceScan();
     }
 
     @Override

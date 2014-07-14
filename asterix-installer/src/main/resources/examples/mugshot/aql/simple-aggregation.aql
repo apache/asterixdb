@@ -1,0 +1,8 @@
+use dataverse TinySocial;
+
+avg(
+  for $m in dataset MugshotMessages
+  where $m.timestamp >= datetime("2014-01-01T00:00:00")
+    and $m.timestamp <  datetime("2014-04-01T00:00:00")
+  return string-length($m.message)
+)

@@ -23,12 +23,14 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
@@ -142,5 +144,10 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
             }
             sockets.add(p);
         }
+    }
+
+    @Override
+    public void setFiles(List<ExternalFile> files) throws AlgebricksException {
+        throw new AlgebricksException("files access not supported for this adapter");
     }
 }

@@ -31,9 +31,9 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
  * APrintVisitor.
  */
 class AListPrinter {
-    private static String BEGIN = "{ unorderedlist: [";
-    private static String BEGIN_ORDERED = "{ orderedlist: [";
-    private static String END = " ]}";
+    private static String BEGIN = "{ \"unorderedlist\": [ ";
+    private static String BEGIN_ORDERED = "{ \"orderedlist\": [ ";
+    private static String END = " ] }";
     private static String COMMA = ", ";
 
     private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<PrintStream, ATypeTag>(null, null);

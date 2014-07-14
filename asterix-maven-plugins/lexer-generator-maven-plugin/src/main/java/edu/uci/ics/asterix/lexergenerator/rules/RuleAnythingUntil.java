@@ -55,14 +55,10 @@ public class RuleAnythingUntil implements Rule {
 
     @Override
     public String javaMatch(String action) {
-        StringBuilder result = new StringBuilder();
-        result.append("boolean escaped = false;");
-        result.append("while (currentChar!='").append(expected).append("' || escaped)");
-        result.append("{\nif(!escaped && currentChar=='\\\\\\\\'){escaped=true;}\nelse {escaped=false;}\ncurrentChar = readNextChar();\n}");
-        result.append("\nif (currentChar=='").append(expected).append("'){");
-        result.append(action);
-        result.append("}\n");
-        return result.toString();
+        return "boolean escaped = false;\n" + "while (currentChar != '" + expected + "' || escaped) {\n"
+                + "if(!escaped && currentChar == '\\\\\\\\') {\n" + "escaped = true;\n" + "containsEscapes = true;\n"
+                + "} else {\n" + "escaped = false;\n" + "}\n" + "currentChar = readNextChar();\n" + "}\n"
+                + "if (currentChar == '" + expected + "') {" + action + "}\n";
     }
 
 }

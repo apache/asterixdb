@@ -56,6 +56,7 @@ public final class MetadataRecordTypes {
     public static ARecordType FEED_ACTIVITY_DETAILS_RECORDTYPE;
     public static ARecordType LIBRARY_RECORDTYPE;
     public static ARecordType COMPACTION_POLICY_RECORDTYPE;
+    public static ARecordType EXTERNAL_FILE_RECORDTYPE;
 
     /**
      * Create all metadata record types.
@@ -96,6 +97,8 @@ public final class MetadataRecordTypes {
             LIBRARY_RECORDTYPE = createLibraryRecordType();
 
             COMPACTION_POLICY_RECORDTYPE = createCompactionPolicyRecordType();
+
+            EXTERNAL_FILE_RECORDTYPE = createExternalFileRecordType();
 
         } catch (AsterixException e) {
             throw new MetadataException(e);
@@ -165,12 +168,21 @@ public final class MetadataRecordTypes {
     // external details.
     public static final int EXTERNAL_DETAILS_ARECORD_DATASOURCE_ADAPTER_FIELD_INDEX = 0;
     public static final int EXTERNAL_DETAILS_ARECORD_PROPERTIES_FIELD_INDEX = 1;
+    public static final int EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX = 2;
+    public static final int EXTERNAL_DETAILS_ARECORD_LAST_REFRESH_TIME_FIELD_INDEX = 3;
+    public static final int EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX = 4;
+    public static final int EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX = 5;
+    public static final int EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX = 6;
 
     private static final ARecordType createExternalDetailsRecordType() throws AsterixException {
 
         AOrderedListType orderedPropertyListType = new AOrderedListType(DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
-        String[] fieldNames = { "DatasourceAdapter", "Properties" };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, orderedPropertyListType };
+        AOrderedListType compactionPolicyPropertyListType = new AOrderedListType(
+                COMPACTION_POLICY_PROPERTIES_RECORDTYPE, null);
+        String[] fieldNames = { "DatasourceAdapter", "Properties", "GroupName", "LastRefreshTime", "TransactionState",
+                "CompactionPolicy", "CompactionPolicyProperties" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, orderedPropertyListType, BuiltinType.ASTRING,
+                BuiltinType.ADATETIME, BuiltinType.AINT32, BuiltinType.ASTRING, compactionPolicyPropertyListType };
         return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 
@@ -459,5 +471,21 @@ public final class MetadataRecordTypes {
         String[] fieldNames = { "DataverseName", "Name", "Timestamp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING };
         return new ARecordType("LibraryRecordType", fieldNames, fieldTypes, true);
+    }
+
+    public static final int EXTERNAL_FILE_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
+    public static final int EXTERNAL_FILE_ARECORD_DATASET_NAME_FIELD_INDEX = 1;
+    public static final int EXTERNAL_FILE_ARECORD_FILE_NUMBER_FIELD_INDEX = 2;
+    public static final int EXTERNAL_FILE_ARECORD_FILE_NAME_FIELD_INDEX = 3;
+    public static final int EXTERNAL_FILE_ARECORD_FILE_SIZE_FIELD_INDEX = 4;
+    public static final int EXTERNAL_FILE_ARECORD_FILE_MOD_DATE_FIELD_INDEX = 5;
+    public static final int EXTERNAL_FILE_ARECORD_FILE_PENDING_OP_FIELD_INDEX = 6;
+
+    private static ARecordType createExternalFileRecordType() throws AsterixException {
+        String[] fieldNames = { "DataverseName", "DatasetName", "FileNumber", "FileName", "FileSize", "FileModTime",
+                "PendingOp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ASTRING,
+                BuiltinType.AINT64, BuiltinType.ADATETIME, BuiltinType.AINT32 };
+        return new ARecordType("ExternalFileRecordType", fieldNames, fieldTypes, true);
     }
 }

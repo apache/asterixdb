@@ -34,7 +34,7 @@ public class ADatePrinter implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
 
-        ps.print("{ date: ");
+        ps.print("{ \"date\": ");
         ps.print(chrononTime);
         ps.print("}");
     }

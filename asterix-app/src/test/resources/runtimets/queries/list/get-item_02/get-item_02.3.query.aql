@@ -1,0 +1,5 @@
+use dataverse test;
+
+let $x :=  [1, 2, 3, 4]
+let $idx := 2
+return $x[$idx+1]

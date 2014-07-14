@@ -26,18 +26,36 @@
 		<txnLogDirPath>target/txnLogDir/nc2</txnLogDirPath>
 	</transactionLogDir>
 
-        <property>
-                <name>max.wait.active.cluster</name>
-                <value>60</value>
-                <description>Maximum wait (in seconds) for a cluster to be ACTIVE (all nodes are available)
-                        before a submitted query/statement  can be executed. (Default = 60 seconds)
-                </description>
-        </property>
+	<property>
+		<name>max.wait.active.cluster</name>
+		<value>60</value>
+		<description>Maximum wait (in seconds) for a cluster to be ACTIVE (all
+			nodes are available)
+			before a submitted query/statement can be
+			executed. (Default = 60 seconds)
+		</description>
+	</property>
 
 	<property>
 		<name>log.level</name>
 		<value>WARNING</value>
 		<description>Log level for running tests/build</description>
+	</property>
+	<property>
+		<name>compiler.framesize</name>
+		<value>32768</value>
+	</property>
+	<property>
+		<name>compiler.sortmemory</name>
+		<value>98304</value>
+	</property>
+	<property>
+		<name>compiler.groupmemory</name>
+		<value>98304</value>
+	</property>
+	<property>
+		<name>compiler.joinmemory</name>
+		<value>131072</value>
 	</property>
 	<property>
 		<name>storage.buffercache.pagesize</name>

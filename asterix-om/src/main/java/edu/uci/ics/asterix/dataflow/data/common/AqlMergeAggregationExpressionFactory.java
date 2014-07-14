@@ -33,18 +33,26 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class AqlMergeAggregationExpressionFactory implements IMergeAggregationExpressionFactory {
 
     @Override
-    public ILogicalExpression createMergeAggregation(ILogicalExpression expr, IOptimizationContext env)
-            throws AlgebricksException {
+    public ILogicalExpression createMergeAggregation(LogicalVariable originalProducedVar, ILogicalExpression expr,
+            IOptimizationContext env) throws AlgebricksException {
         AggregateFunctionCallExpression agg = (AggregateFunctionCallExpression) expr;
         FunctionIdentifier fid = agg.getFunctionIdentifier();
-        int var = env.getVarCounter() + 1;
-        env.setVarCounter(var);
-        LogicalVariable tempVar = new LogicalVariable(var);
-        VariableReferenceExpression tempVarExpr = new VariableReferenceExpression(tempVar);
+        VariableReferenceExpression tempVarExpr = new VariableReferenceExpression(originalProducedVar);
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<Mutable<ILogicalExpression>>();
         Mutable<ILogicalExpression> mutableExpression = new MutableObject<ILogicalExpression>(tempVarExpr);
         arguments.add(mutableExpression);
-        ILogicalExpression aggExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(fid, arguments);
+        /**
+         * For global aggregate, the merge function is ALWAYS the same as the original aggregate function.
+         */
+        FunctionIdentifier mergeFid = AsterixBuiltinFunctions.isGlobalAggregateFunction(fid) ? fid
+                : AsterixBuiltinFunctions.getIntermediateAggregateFunction(fid);
+        if (mergeFid == null) {
+            /**
+             * In this case, no merge function (unimplemented) for the local-side aggregate function
+             */
+            return null;
+        }
+        ILogicalExpression aggExpr = AsterixBuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
         return aggExpr;
     }
 }

@@ -1,0 +1,66 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package edu.uci.ics.asterix.external.indexing.dataflow;
+
+import java.util.Map;
+
+import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
+import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
+import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+
+public class HDFSObjectTupleParserFactory implements ITupleParserFactory{
+    private static final long serialVersionUID = 1L;
+    // parser class name in case of binary format
+    private String parserClassName;
+    // the expected data type
+    private ARecordType atype;
+    // the hadoop job conf
+    private HDFSAdapterFactory adapterFactory;
+    // adapter arguments
+    private Map<String,String> arguments;
+    
+    public HDFSObjectTupleParserFactory(ARecordType atype, HDFSAdapterFactory adapterFactory, Map<String,String> arguments){
+        this.parserClassName = (String) arguments.get(HDFSAdapterFactory.KEY_PARSER);
+        this.atype = atype;
+        this.arguments = arguments;
+        this.adapterFactory = adapterFactory;
+    }
+    
+    @Override
+    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
+        IAsterixHDFSRecordParser objectParser;
+        if (parserClassName.equals(HDFSAdapterFactory.PARSER_HIVE)) {
+            objectParser = new HiveObjectParser();
+        } else {
+            try {
+                objectParser = (IAsterixHDFSRecordParser) Class.forName(parserClassName).newInstance();
+            } catch (Exception e) {
+                throw new HyracksDataException("Unable to create object parser", e);
+            }
+        }
+        try {
+            objectParser.initialize(atype, arguments, adapterFactory.getJobConf());
+        } catch (Exception e) {
+            throw new HyracksDataException("Unable to initialize object parser", e);
+        }
+        
+        return new HDFSObjectTupleParser(ctx, atype, objectParser);
+    }
+    
+    
+}

@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
@@ -675,5 +676,90 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public List<FeedActivity> getDatasetsServedByFeed(JobId jobId, String dataverseName, String deedName)
             throws MetadataException, RemoteException;
+    
+    /**
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param externalFile
+     *            An object representing the external file entity
+     * @throws MetadataException
+     *             for example, if the file already exists.
+     * @throws RemoteException
+     */
+    public void addExternalFile(JobId jobId, ExternalFile externalFile) throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataset
+     *            A dataset the files belongs to.
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<ExternalFile> getExternalFiles(JobId jobId, Dataset dataset) throws MetadataException, RemoteException;
+
+    /**
+     * Deletes an externalFile , acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            dataverse asociated with the external dataset that owns the file to be deleted.
+     * @param datasetName
+     *            Name of dataset owning the file to be deleted.
+     * @param fileNumber
+     *            the id number for the file to be deleted
+     * @throws RemoteException
+     */
+    public void dropExternalFile(JobId jobId, String dataverseName, String datasetName, int fileNumber)
+            throws MetadataException, RemoteException;
+
+    /**
+     * Deletes all external files belonging to a dataset, acquiring local locks on behalf of the given
+     * transaction id.
+     * 
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataset
+     *            An external dataset the files belong to.
+     * @throws RemoteException
+     */
+    public void dropExternalFiles(JobId jobId, Dataset dataset) throws MetadataException, RemoteException;
+
+    /**
+     * Retrieves the file with given number, in given dataverse and dataset,
+     * acquiring local locks on behalf of the given transaction id.
+     * 
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataverseName
+     *            Name of the datavers holding the given dataset.
+     * @param datasetName
+     *            Name of the dataset holding the index.
+     * @param fileNumber
+     *            Number of the file
+     * @return An ExternalFile instance.
+     * @throws MetadataException
+     *             For example, if the index does not exist.
+     * @throws RemoteException
+     */
+    public ExternalFile getExternalFile(JobId jobId, String dataverseName, String datasetName, Integer fileNumber)
+            throws MetadataException, RemoteException;
+    
+    
+    /**
+     * update an existing dataset in the metadata, acquiring local locks on behalf
+     * of the given transaction id.
+     * 
+     * @param jobId
+     *            A globally unique id for an active metadata transaction.
+     * @param dataset
+     *            updated Dataset instance.
+     * @throws MetadataException
+     *             For example, if the dataset already exists.
+     * @throws RemoteException
+     */
+    public void updateDataset(JobId jobId, Dataset dataset) throws MetadataException, RemoteException;
 
 }

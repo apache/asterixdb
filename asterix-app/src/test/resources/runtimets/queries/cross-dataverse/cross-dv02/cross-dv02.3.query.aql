@@ -8,4 +8,5 @@
 
 for $l in dataset('Metadata.Dataset')
 where $l.DataverseName='student' or $l.DataverseName='teacher'
+order by $l.DatasetName
 return $l

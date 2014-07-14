@@ -1,0 +1,5 @@
+use dataverse TinySocial;
+
+for $user in dataset MugshotUsers
+where $user.id = 8
+return $user;

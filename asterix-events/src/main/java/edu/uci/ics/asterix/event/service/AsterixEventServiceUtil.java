@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,8 +82,7 @@ public class AsterixEventServiceUtil {
     public static AsterixInstance createAsterixInstance(String asterixInstanceName, Cluster cluster,
             AsterixConfiguration asterixConfiguration) throws FileNotFoundException, IOException {
         Node metadataNode = getMetadataNode(asterixInstanceName, cluster);
-        String asterixZipName = AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
+        String asterixZipName = asterixZipName();
         String asterixVersion = asterixZipName.substring("asterix-server-".length(),
                 asterixZipName.indexOf("-binary-assembly"));
         AsterixInstance instance = new AsterixInstance(asterixInstanceName, cluster, asterixConfiguration,
@@ -93,9 +92,14 @@ public class AsterixEventServiceUtil {
 
     public static void createAsterixZip(AsterixInstance asterixInstance) throws IOException, InterruptedException,
             JAXBException, EventException {
+        String asterixInstanceDir = asterixInstanceDir(asterixInstance);
+        unzip(AsterixEventService.getAsterixZip(), asterixInstanceDir);
 
-        String modifiedZipPath = injectAsterixPropertyFile(AsterixEventService.getAsterixZip(), asterixInstance);
-        injectAsterixClusterConfigurationFile(modifiedZipPath, asterixInstance);
+        injectAsterixPropertyFile(asterixInstanceDir, asterixInstance);
+        injectAsterixClusterConfigurationFile(asterixInstanceDir, asterixInstance);
+
+        final String asterixZipPath = asterixInstanceDir + File.separator + asterixZipName();
+        zipDir(new File(asterixInstanceDir), new File(asterixZipPath));
     }
 
     public static void createClusterProperties(Cluster cluster, AsterixConfiguration asterixConfiguration) {
@@ -146,28 +150,34 @@ public class AsterixEventServiceUtil {
         cluster.setEnv(new Env(clusterProperties));
     }
 
-    private static String injectAsterixPropertyFile(String origZipFile, AsterixInstance asterixInstance)
+    private static String asterixZipName() {
+        return AsterixEventService.getAsterixZip().substring(
+                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
+    }
+
+    private static String asterixJarPath(AsterixInstance asterixInstance, String asterixInstanceDir) {
+        return asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
+                + asterixInstance.getAsterixVersion() + ".jar";
+    }
+
+    private static String asterixInstanceDir(AsterixInstance asterixInstance) {
+        return AsterixEventService.getAsterixDir() + File.separator + asterixInstance.getName();
+    }
+
+    private static void injectAsterixPropertyFile(String asterixInstanceDir, AsterixInstance asterixInstance)
             throws IOException, JAXBException {
         writeAsterixConfigurationFile(asterixInstance);
-        String asterixInstanceDir = AsterixEventService.getAsterixDir() + File.separator + asterixInstance.getName();
-        unzip(origZipFile, asterixInstanceDir);
-        File sourceJar = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
-                + asterixInstance.getAsterixVersion() + ".jar");
+
+        File sourceJar = new File(asterixJarPath(asterixInstance, asterixInstanceDir));
         File replacementFile = new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE);
         replaceInJar(sourceJar, ASTERIX_CONFIGURATION_FILE, replacementFile);
         new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE).delete();
-        String asterixZipName = AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
-        zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
-        return asterixInstanceDir + File.separator + asterixZipName;
     }
 
-    private static String injectAsterixLogPropertyFile(String origZipFile, AsterixInstance asterixInstance)
+    private static void injectAsterixLogPropertyFile(String asterixInstanceDir, AsterixInstance asterixInstance)
             throws IOException, EventException {
-        String asterixInstanceDir = AsterixEventService.getAsterixDir() + File.separator + asterixInstance.getName();
-        unzip(origZipFile, asterixInstanceDir);
-        File sourceJar1 = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
-                + asterixInstance.getAsterixVersion() + ".jar");
+        final String asterixJarPath = asterixJarPath(asterixInstance, asterixInstanceDir);
+        File sourceJar1 = new File(asterixJarPath);
         Properties txnLogProperties = new Properties();
         URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar1.toURI().toURL() });
         InputStream in = urlClassLoader.getResourceAsStream(TXN_LOG_CONFIGURATION_FILE);
@@ -177,34 +187,22 @@ public class AsterixEventServiceUtil {
 
         writeAsterixLogConfigurationFile(asterixInstance, txnLogProperties);
 
-        File sourceJar2 = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
-                + asterixInstance.getAsterixVersion() + ".jar");
+        File sourceJar2 = new File(asterixJarPath);
         File replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
         replaceInJar(sourceJar2, TXN_LOG_CONFIGURATION_FILE, replacementFile);
 
         new File(asterixInstanceDir + File.separator + "log.properties").delete();
-        String asterixZipName = AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
-        zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
-        return asterixInstanceDir + File.separator + asterixZipName;
     }
 
-    private static String injectAsterixClusterConfigurationFile(String origZipFile, AsterixInstance asterixInstance)
+    private static void injectAsterixClusterConfigurationFile(String asterixInstanceDir, AsterixInstance asterixInstance)
             throws IOException, EventException, JAXBException {
-        String asterixInstanceDir = AsterixEventService.getAsterixDir() + File.separator + asterixInstance.getName();
-        unzip(origZipFile, asterixInstanceDir);
-        File sourceJar = new File(asterixInstanceDir + File.separator + "repo" + File.separator + "asterix-app-"
-                + asterixInstance.getAsterixVersion() + ".jar");
+        File sourceJar = new File(asterixJarPath(asterixInstance, asterixInstanceDir));
         writeAsterixClusterConfigurationFile(asterixInstance);
 
         File replacementFile = new File(asterixInstanceDir + File.separator + "cluster.xml");
         replaceInJar(sourceJar, CLUSTER_CONFIGURATION_FILE, replacementFile);
 
         new File(asterixInstanceDir + File.separator + CLUSTER_CONFIGURATION_FILE).delete();
-        String asterixZipName = AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
-        zipDir(new File(asterixInstanceDir), new File(asterixInstanceDir + File.separator + asterixZipName));
-        return asterixInstanceDir + File.separator + asterixZipName;
     }
 
     private static void writeAsterixClusterConfigurationFile(AsterixInstance asterixInstance) throws IOException,
@@ -221,12 +219,11 @@ public class AsterixEventServiceUtil {
 
     public static void addLibraryToAsterixZip(AsterixInstance asterixInstance, String dataverseName,
             String libraryName, String libraryPath) throws IOException {
-        File instanceDir = new File(AsterixEventService.getAsterixDir() + File.separator + asterixInstance.getName());
+        File instanceDir = new File(asterixInstanceDir(asterixInstance));
         if (!instanceDir.exists()) {
             instanceDir.mkdirs();
         }
-        String asterixZipName = AsterixEventService.getAsterixZip().substring(
-                AsterixEventService.getAsterixZip().lastIndexOf(File.separator) + 1);
+        String asterixZipName = asterixZipName();
 
         String sourceZip = instanceDir.getAbsolutePath() + File.separator + asterixZipName;
         unzip(sourceZip, instanceDir.getAbsolutePath());
@@ -423,8 +420,6 @@ public class AsterixEventServiceUtil {
         String destJarSuffix = destJarName + ".jar";
         File destJar = new File(sourceJar.getParentFile().getAbsolutePath() + File.separator + destJarSuffix);
         //  File destJar = new File(sourceJar.getAbsolutePath() + ".modified");
-        InputStream jarIs = null;
-        FileInputStream fis = new FileInputStream(replacementFile);
         JarFile sourceJarFile = new JarFile(sourceJar);
         Enumeration<JarEntry> entries = sourceJarFile.entries();
         JarOutputStream jos = new JarOutputStream(new FileOutputStream(destJar));
@@ -436,20 +431,22 @@ public class AsterixEventServiceUtil {
             if (name.equals(origFile)) {
                 continue;
             }
-            jarIs = sourceJarFile.getInputStream(entry);
+            InputStream jarIs = sourceJarFile.getInputStream(entry);
             jos.putNextEntry(entry);
             while ((read = jarIs.read(buffer)) != -1) {
                 jos.write(buffer, 0, read);
             }
+            jarIs.close();
         }
+        sourceJarFile.close();
         JarEntry entry = new JarEntry(origFile);
         jos.putNextEntry(entry);
+        FileInputStream fis = new FileInputStream(replacementFile);
         while ((read = fis.read(buffer)) != -1) {
             jos.write(buffer, 0, read);
         }
         fis.close();
         jos.close();
-        jarIs.close();
         sourceJar.delete();
         destJar.renameTo(sourceJar);
         destJar.setExecutable(true);
@@ -514,7 +511,7 @@ public class AsterixEventServiceUtil {
             if (conflictFound) {
                 conflictingInstance = existing;
                 break;
-            } 
+            }
             for (Node n : existing.getCluster().getNode()) {
                 if (usedIps.contains(n.getClusterIp())) {
                     conflictFound = true;

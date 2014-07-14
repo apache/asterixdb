@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -28,6 +29,7 @@ import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
+import edu.uci.ics.asterix.metadata.external.IndexingConstants;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -43,19 +45,27 @@ public class DatasetUtils {
     public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset,
             ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
             throws AlgebricksException {
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-            throw new AlgebricksException("not implemented");
-        }
         List<String> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[partitioningKeys.size()];
-        for (int i = 0; i < partitioningKeys.size(); i++) {
-            IAType keyType;
-            try {
-                keyType = itemType.getFieldType(partitioningKeys.get(i));
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            // Get comparators for RID fields.
+            for (int i = 0; i < partitioningKeys.size(); i++) {
+                try {
+                    bcfs[i] = IndexingConstants.getComparatorFactory(i);
+                } catch (AsterixException e) {
+                    throw new AlgebricksException(e);
+                }
             }
-            bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
+        } else {
+            for (int i = 0; i < partitioningKeys.size(); i++) {
+                IAType keyType;
+                try {
+                    keyType = itemType.getFieldType(partitioningKeys.get(i));
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
+                }
+                bcfs[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
+            }
         }
         return bcfs;
     }
@@ -113,11 +123,95 @@ public class DatasetUtils {
     }
 
     public static List<String> getPartitioningKeys(Dataset dataset) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return IndexingConstants.getRIDKeys(dataset);
+        }
         return ((InternalDatasetDetails) dataset.getDatasetDetails()).getPartitioningKey();
     }
 
     public static String getNodegroupName(Dataset dataset) {
         return (((InternalDatasetDetails) dataset.getDatasetDetails())).getNodeGroupName();
+    }
+
+    public static String getFilterField(Dataset dataset) {
+        return (((InternalDatasetDetails) dataset.getDatasetDetails())).getFilterField();
+    }
+
+    public static IBinaryComparatorFactory[] computeFilterBinaryComparatorFactories(Dataset dataset,
+            ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
+            throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+        IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[1];
+        IAType type;
+        try {
+            type = itemType.getFieldType(filterField);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
+        bcfs[0] = comparatorFactoryProvider.getBinaryComparatorFactory(type, true);
+        return bcfs;
+    }
+
+    public static ITypeTraits[] computeFilterTypeTraits(Dataset dataset, ARecordType itemType)
+            throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+        ITypeTraits[] typeTraits = new ITypeTraits[1];
+
+        IAType type;
+        try {
+            type = itemType.getFieldType(filterField);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
+        typeTraits[0] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
+        return typeTraits;
+    }
+
+    public static int[] createFilterFields(Dataset dataset) throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        int numKeys = partitioningKeys.size();
+
+        int[] filterFields = new int[1];
+        filterFields[0] = numKeys + 1;
+        return filterFields;
+    }
+
+    public static int[] createBTreeFieldsWhenThereisAFilter(Dataset dataset) throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+            return null;
+        }
+
+        String filterField = getFilterField(dataset);
+        if (filterField == null) {
+            return null;
+        }
+
+        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        int[] btreeFields = new int[partitioningKeys.size() + 1];
+        for (int i = 0; i < btreeFields.length; ++i) {
+            btreeFields[i] = i;
+        }
+        return btreeFields;
     }
 
     public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {
@@ -132,8 +226,7 @@ public class DatasetUtils {
 
     public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException, MetadataException {
-        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
-        String policyName = datasetDetails.getCompactionPolicy();
+        String policyName = dataset.getDatasetDetails().getCompactionPolicy();
         CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
                 MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
         String compactionPolicyFactoryClassName = compactionPolicy.getClassName();
@@ -143,8 +236,7 @@ public class DatasetUtils {
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new AlgebricksException(e);
         }
-        Map<String, String> properties = ((InternalDatasetDetails) dataset.getDatasetDetails())
-                .getCompactionPolicyProperties();
+        Map<String, String> properties = dataset.getDatasetDetails().getCompactionPolicyProperties();
         return new Pair<ILSMMergePolicyFactory, Map<String, String>>(mergePolicyFactory, properties);
     }
 }

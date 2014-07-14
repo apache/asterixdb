@@ -39,6 +39,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistributeR
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -359,7 +360,8 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitSelectOperator(SelectOperator op, ILogicalOperator arg) throws AlgebricksException {
-        SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()));
+        SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
+                op.getRetainNull(), deepCopyVariable(op.getNullPlaceholderVariable()));
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
@@ -384,15 +386,22 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     }
 
     @Override
-    public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg) {
-        throw new UnsupportedOperationException();
+    public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        UnnestMapOperator opCopy = new UnnestMapOperator(deepCopyVariableList(op.getVariables()),
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
+                op.propagatesInput());
+        deepCopyInputs(op, opCopy, arg);
+        copyAnnotations(op, opCopy);
+        opCopy.setExecutionMode(op.getExecutionMode());
+        return opCopy;
     }
 
     @Override
     public ILogicalOperator visitUnnestOperator(UnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
         UnnestOperator opCopy = new UnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
@@ -437,5 +446,11 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     public Map<LogicalVariable, LogicalVariable> getVariableMapping() {
         return outVarMapping;
+    }
+
+    @Override
+    public ILogicalOperator visitExternalDataLookupOperator(ExternalDataLookupOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        throw new UnsupportedOperationException();
     }
 }

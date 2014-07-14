@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -81,7 +80,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         int did = getDIDfromRID(resourceID);
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
-            dsInfo = new DatasetInfo(did);
+            dsInfo = new DatasetInfo(did,!index.hasMemoryComponents());
         } else if (dsInfo.indexes.containsKey(resourceID)) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " already exists.");
         }
@@ -132,7 +131,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
 
         dsInfo.indexes.remove(resourceID);
-        if (dsInfo.referenceCount == 0 && dsInfo.isOpen && dsInfo.indexes.isEmpty()) {
+        if (dsInfo.referenceCount == 0 && dsInfo.isOpen && dsInfo.indexes.isEmpty() && !dsInfo.isExternal) {
             List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
             assert vbcs != null;
             for (IVirtualBufferCache vbc : vbcs) {
@@ -142,7 +141,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             datasetVirtualBufferCaches.remove(did);
             datasetOpTrackers.remove(did);
         }
-
     }
 
     public synchronized void declareActiveIOOperation(int datasetID) throws HyracksDataException {
@@ -177,7 +175,8 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                     + " since it does not exist.");
         }
 
-        if (!dsInfo.isOpen) {
+        // This is not needed for external datasets' indexes since they never use the virtual buffer cache.
+        if (!dsInfo.isOpen && !dsInfo.isExternal) {
             List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
             assert vbcs != null;
             long additionalSize = 0;
@@ -213,10 +212,8 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                     .get(dsInfo.datasetID);
             if (opTracker != null && opTracker.getNumActiveOperations() == 0 && dsInfo.referenceCount == 0
                     && dsInfo.isOpen) {
-
                 closeDataset(dsInfo);
                 return true;
-
             }
         }
         return false;
@@ -292,7 +289,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                 opTracker = new PrimaryIndexOperationTracker(this, datasetID);
                 datasetOpTrackers.put(datasetID, opTracker);
             }
-
             return opTracker;
         }
     }
@@ -342,11 +338,13 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         private final int datasetID;
         private long lastAccess;
         private int numActiveIOOps;
+        private final boolean isExternal; 
 
-        public DatasetInfo(int datasetID) {
+        public DatasetInfo(int datasetID, boolean isExternal) {
             this.indexes = new HashMap<Long, IndexInfo>();
             this.lastAccess = -1;
             this.datasetID = datasetID;
+            this.isExternal = isExternal;
         }
 
         public void touch() {
@@ -442,7 +440,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         for (IVirtualBufferCache vbc : vbcs) {
             used -= vbc.getNumPages() * vbc.getPageSize();
         }
-
     }
 
     @Override

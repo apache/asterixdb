@@ -1,9 +1,10 @@
-if [ -z $MANAGIX_HOME ] 
+if [ -z $MANAGIX_HOME ]
  then
-   echo "MANAGIX_HOME is not defined"
-   exit 1
+   pushd $(dirname $0) >/dev/null
+   cd ..
+   export MANAGIX_HOME=$(pwd)
+   popd >/dev/null
 fi
-
 
 for jar in `ls $MANAGIX_HOME/lib/*.jar`
   do 

@@ -1,0 +1,10 @@
+{ "tweet": { "id": 241i64, "topics": {{ "verizon", "network" }} }, "similar-tweets": [ { "id": 40i64, "topics": {{ "verizon", "network" }} }, { "id": 45i64, "topics": {{ "verizon", "network" }} }, { "id": 46i64, "topics": {{ "verizon", "network" }} }, { "id": 112i64, "topics": {{ "verizon", "network" }} } ] }
+{ "tweet": { "id": 242i64, "topics": {{ "t-mobile", "touch-screen" }} }, "similar-tweets": [ { "id": 47i64, "topics": {{ "t-mobile", "touch-screen" }} }, { "id": 150i64, "topics": {{ "t-mobile", "touch-screen" }} }, { "id": 228i64, "topics": {{ "t-mobile", "touch-screen" }} } ] }
+{ "tweet": { "id": 243i64, "topics": {{ "iphone", "touch-screen" }} }, "similar-tweets": [ { "id": 186i64, "topics": {{ "iphone", "touch-screen" }} } ] }
+{ "tweet": { "id": 244i64, "topics": {{ "iphone", "voicemail-service" }} }, "similar-tweets": [ { "id": 184i64, "topics": {{ "iphone", "voicemail-service" }} } ] }
+{ "tweet": { "id": 245i64, "topics": {{ "sprint", "touch-screen" }} }, "similar-tweets": [ { "id": 60i64, "topics": {{ "sprint", "touch-screen" }} }, { "id": 168i64, "topics": {{ "sprint", "touch-screen" }} }, { "id": 196i64, "topics": {{ "sprint", "touch-screen" }} } ] }
+{ "tweet": { "id": 246i64, "topics": {{ "sprint", "plan" }} }, "similar-tweets": [ { "id": 49i64, "topics": {{ "sprint", "plan" }} }, { "id": 130i64, "topics": {{ "sprint", "plan" }} } ] }
+{ "tweet": { "id": 247i64, "topics": {{ "sprint", "speed" }} }, "similar-tweets": [ { "id": 59i64, "topics": {{ "sprint", "speed" }} }, { "id": 208i64, "topics": {{ "sprint", "speed" }} }, { "id": 237i64, "topics": {{ "sprint", "speed" }} } ] }
+{ "tweet": { "id": 248i64, "topics": {{ "verizon", "wireless" }} }, "similar-tweets": [  ] }
+{ "tweet": { "id": 249i64, "topics": {{ "verizon", "plan" }} }, "similar-tweets": [ { "id": 179i64, "topics": {{ "verizon", "plan" }} }, { "id": 181i64, "topics": {{ "verizon", "plan" }} }, { "id": 212i64, "topics": {{ "verizon", "plan" }} } ] }
+{ "tweet": { "id": 250i64, "topics": {{ "samsung", "touch-screen" }} }, "similar-tweets": [ { "id": 124i64, "topics": {{ "samsung", "touch-screen" }} } ] }

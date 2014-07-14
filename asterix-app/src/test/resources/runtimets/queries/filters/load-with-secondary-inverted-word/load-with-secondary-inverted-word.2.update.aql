@@ -1,0 +1,5 @@
+
+use dataverse test;
+
+load dataset FacebookMessages using localfs
+(("path"="nc1://data/fbm-with-send-time.adm"),("format"="adm"));

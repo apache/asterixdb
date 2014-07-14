@@ -30,18 +30,23 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
  * This rule optimizes a join with secondary indexes into an indexed nested-loop join.
  * Matches the following operator pattern:
- * (join) <-- (select)? <-- (assign)+ <-- (datasource scan)
- * <-- (select)? <-- (assign)+ <-- (datasource scan)
+ * (join) <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
+ * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan | unnest-map)
+ * The order of the join inputs does not matter.
  * Replaces the above pattern with the following simplified plan:
- * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan)
+ * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan | unnest-map)
  * The sort is optional, and some access methods may choose not to sort.
  * Note that for some index-based optimizations we do not remove the triggering
  * condition from the join, since the secondary index may only act as a filter, and the
@@ -52,16 +57,24 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * 3. Check metadata to see if there are applicable indexes.
  * 4. Choose an index to apply (for now only a single index will be chosen).
  * 5. Rewrite plan using index (delegated to IAccessMethods).
- * TODO (Alex): Currently this rule requires a data scan on both inputs of the join. I should generalize the pattern
- * to accept any subtree on one side, as long as the other side has a datasource scan.
+ * For left-outer-join, additional patterns are checked and additional treatment is needed as follows:
+ * 1. Since left-outer-join operators always have groupby operator on top of it,
+ * first it checks a pattern: (groupby) <-- (leftouterjoin)
+ * 2. Inherently, only the right-subtree of the lojOp can be used as indexSubtree.
+ * So, the right-subtree must have at least one applicable index on join field(s)
+ * 3. The null placeholder variable introduced in groupByOp should be taken care of correctly.
+ * Here, the primary key variable from datasourceScanOp replaces the introduced null placeholder variable.
+ * If the primary key is composite key, then the first variable of the primary key variables becomes the
+ * null place holder variable. This null placeholder variable works for all three types of indexes.
  */
 public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethodRule {
 
     protected Mutable<ILogicalOperator> joinRef = null;
-    protected InnerJoinOperator join = null;
+    protected AbstractBinaryJoinOperator join = null;
     protected AbstractFunctionCallExpression joinCond = null;
     protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
     protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
+    protected boolean isLeftOuterJoin = false;
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
@@ -85,11 +98,11 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new HashMap<IAccessMethod, AccessMethodAnalysisContext>();
         boolean matchInLeftSubTree = false;
         boolean matchInRightSubTree = false;
-        if (leftSubTree.hasDataSourceScan()) {
-            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assigns, analyzedAMs);
+        if (leftSubTree.hasDataSource()) {
+            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assignsAndUnnests, analyzedAMs);
         }
-        if (rightSubTree.hasDataSourceScan()) {
-            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assigns, analyzedAMs);
+        if (rightSubTree.hasDataSource()) {
+            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assignsAndUnnests, analyzedAMs);
         }
         if (!matchInLeftSubTree && !matchInRightSubTree) {
             return false;
@@ -109,10 +122,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             return false;
         }
         if (checkLeftSubTreeMetadata) {
-            fillSubTreeIndexExprs(leftSubTree, analyzedAMs);
+            fillSubTreeIndexExprs(leftSubTree, analyzedAMs, context);
         }
         if (checkRightSubTreeMetadata) {
-            fillSubTreeIndexExprs(rightSubTree, analyzedAMs);
+            fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context);
         }
         pruneIndexCandidates(analyzedAMs);
 
@@ -125,8 +138,17 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
         // Apply plan transformation using chosen index.
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
+
+        //For LOJ, prepare objects to reset LOJ nullPlaceHolderVariable in GroupByOp 
+        if (isLeftOuterJoin) {
+            analysisCtx.setLOJGroupbyOpRef(opRef);
+            ScalarFunctionCallExpression isNullFuncExpr = AccessMethodUtils
+                    .findLOJIsNullFuncInGroupBy((GroupByOperator) opRef.getValue());
+            analysisCtx.setLOJIsNullFuncInGroupBy(isNullFuncExpr);
+        }
+
         boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
-                chosenIndex.second, analysisCtx, context);
+                chosenIndex.second, analysisCtx, context, isLeftOuterJoin);
         if (res) {
             OperatorPropertiesUtil.typeOpRec(opRef, context);
         }
@@ -140,25 +162,45 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         if (context.checkIfInDontApplySet(this, op1)) {
             return false;
         }
-        if (op1.getOperatorTag() != LogicalOperatorTag.INNERJOIN) {
+
+        boolean isInnerJoin = isInnerJoin(op1);
+        isLeftOuterJoin = isLeftOuterJoin(op1);
+
+        if (!isInnerJoin && !isLeftOuterJoin) {
             return false;
         }
+
         // Set and analyze select.
-        joinRef = opRef;
-        join = (InnerJoinOperator) op1;
+        if (isInnerJoin) {
+            joinRef = opRef;
+            join = (InnerJoinOperator) op1;
+        } else {
+            joinRef = op1.getInputs().get(0);
+            join = (LeftOuterJoinOperator) joinRef.getValue();
+        }
+
         // Check that the select's condition is a function call.
         ILogicalExpression condExpr = join.getCondition().getValue();
         if (condExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
         joinCond = (AbstractFunctionCallExpression) condExpr;
-        leftSubTree.initFromSubTree(op1.getInputs().get(0));
-        rightSubTree.initFromSubTree(op1.getInputs().get(1));
+        leftSubTree.initFromSubTree(join.getInputs().get(0));
+        rightSubTree.initFromSubTree(join.getInputs().get(1));
         // One of the subtrees must have a datasource scan.
         if (leftSubTree.hasDataSourceScan() || rightSubTree.hasDataSourceScan()) {
             return true;
         }
         return false;
+    }
+
+    private boolean isLeftOuterJoin(AbstractLogicalOperator op1) {
+        return (op1.getOperatorTag() == LogicalOperatorTag.GROUP && ((AbstractLogicalOperator) op1.getInputs().get(0)
+                .getValue()).getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN);
+    }
+
+    private boolean isInnerJoin(AbstractLogicalOperator op1) {
+        return op1.getOperatorTag() == LogicalOperatorTag.INNERJOIN;
     }
 
     @Override
@@ -170,5 +212,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         joinRef = null;
         join = null;
         joinCond = null;
+        isLeftOuterJoin = false;
     }
 }

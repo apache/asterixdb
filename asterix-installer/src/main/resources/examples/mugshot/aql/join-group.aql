@@ -1,0 +1,14 @@
+use dataverse TinySocial;
+
+for $user in dataset MugshotUsers
+for $message in dataset MugshotMessages
+where $message.author-id = $user.id
+group by $name := $user.name with $message
+let $avglen := avg(for $m in $message
+                   return string-length($m.message))
+order by $avglen desc
+limit 10
+return {
+  "uname" : $name,
+  "msg-length" : $avglen
+};

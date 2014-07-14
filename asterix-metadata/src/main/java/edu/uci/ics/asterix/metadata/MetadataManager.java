@@ -34,6 +34,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
+import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
@@ -835,4 +836,68 @@ public class MetadataManager implements IMetadataManager {
         return dataverseAdapters;
     }
 
+    @Override
+    public List<ExternalFile> getDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
+            throws MetadataException {
+        List<ExternalFile> externalFiles;
+        try {
+            externalFiles = metadataNode.getExternalFiles(mdTxnCtx.getJobId(), dataset);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return externalFiles;
+    }
+
+    @Override
+    public void addExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws MetadataException {
+        try {
+            metadataNode.addExternalFile(ctx.getJobId(), externalFile);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void dropExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws MetadataException {
+        try {
+            metadataNode.dropExternalFile(ctx.getJobId(), externalFile.getDataverseName(), externalFile.getDatasetName(),
+                    externalFile.getFileNumber());
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public ExternalFile getExternalFile(MetadataTransactionContext ctx, String dataverseName, String datasetName,
+            Integer fileNumber) throws MetadataException {
+        ExternalFile file;
+        try {
+            file = metadataNode.getExternalFile(ctx.getJobId(), dataverseName, datasetName, fileNumber);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return file;
+    }
+
+    //TODO: Optimize <-- use keys instead of object -->
+    @Override
+    public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException {
+        try {
+            metadataNode.dropExternalFiles(mdTxnCtx.getJobId(), dataset);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+    }
+
+    @Override
+    public void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException {
+        try {
+            metadataNode.updateDataset(ctx.getJobId(), dataset);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        // reflect the dataset into the cache
+        ctx.dropDataset(dataset);
+        ctx.addDataset(dataset);
+    }
 }
