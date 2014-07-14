@@ -25,7 +25,7 @@ The following is a list of the supporting documents that we have available today
 
 1. [Installing AsterixDB using Managix](install.html) :
 This is our installation guide, and it is where you should start.
-This document will tell you how to obtain, install, and manage instances of [AsterixDB](http://asterixdb.ics.uci.edu/download/0.8.3/asterix-installer-0.8.3-binary-assembly.zip), including both single-machine setup (for developers) as well as cluster installations (for deployment in its intended form).
+This document will tell you how to obtain, install, and manage instances of [AsterixDB](http://asterixdb.ics.uci.edu/download.html), including both single-machine setup (for developers) as well as cluster installations (for deployment in its intended form).
 
 2. [AsterixDB 101: An ADM and AQL Primer](aql/primer.html) :
 This is a first-timers introduction to the user model of the AsterixDB BDMS, by which we mean the view of AsterixDB as seen from the perspective of an "average user" or Big Data application developer.

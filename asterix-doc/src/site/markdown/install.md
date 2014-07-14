@@ -424,7 +424,7 @@ Next we describe how to set up AsterixDB in this cluster, assuming no Managix ha
 
 ### Step (1): Define the AsterixDB cluster ###
 
-We first log into the master machine as the user "joe". On this machine, download Managix from [here](http://asterixdb.ics.uci.edu/download/0.8.3/asterix-installer-0.8.3-binary-assembly.zip) (save as above), then do the following steps similar to the single-machine case described above:
+We first log into the master machine as the user "joe". On this machine, download Managix from [here](http://asterixdb.ics.uci.edu/download.html) (save as above), then do the following steps similar to the single-machine case described above:
 
 
         machineA> cd ~
