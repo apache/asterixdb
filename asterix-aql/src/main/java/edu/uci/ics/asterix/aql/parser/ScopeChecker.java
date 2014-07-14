@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.aql.parser;
 
+import java.util.List;
 import java.util.Stack;
 
 import edu.uci.ics.asterix.aql.context.Scope;
@@ -32,6 +33,9 @@ public abstract class ScopeChecker {
     protected String[] inputLines;
 
     protected String defaultDataverse;
+
+    private List<String> dataverses;
+    private List<String> datasets;
 
     protected void setInput(String s) {
         inputLines = s.split("\n");
@@ -174,4 +178,31 @@ public abstract class ScopeChecker {
         return extract.toString().trim();
     }
 
+    public void addDataverse(String dataverseName) {
+        if (dataverses != null) {
+            dataverses.add(dataverseName);
+        }
+    }
+
+    public void addDataset(String datasetName) {
+        if (datasets != null) {
+            datasets.add(datasetName);
+        }
+    }
+
+    public void setDataverses(List<String> dataverses) {
+        this.dataverses = dataverses;
+    }
+
+    public void setDatasets(List<String> datasets) {
+        this.datasets = datasets;
+    }
+
+    public List<String> getDataverses() {
+        return dataverses;
+    }
+
+    public List<String> getDatasets() {
+        return datasets;
+    }
 }

@@ -17,36 +17,38 @@ package edu.uci.ics.asterix.aql.expression;
 import java.util.Map;
 
 public class ExternalDetailsDecl implements IDatasetDetailsDecl {
-	private Map<String, String> properties;
-	private String adapter;
-	private Identifier nodegroupName;
-	private String compactionPolicy;
+    private Map<String, String> properties;
+    private String adapter;
+    private Identifier nodegroupName;
+    private String compactionPolicy;
     private Map<String, String> compactionPolicyProperties;
 
-	public void setAdapter(String adapter) {
-		this.adapter = adapter;
-	}
+    public void setAdapter(String adapter) {
+        this.adapter = adapter;
+    }
 
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
 
-	public String getAdapter() {
-		return adapter;
-	}
+    public String getAdapter() {
+        return adapter;
+    }
 
-	public Map<String, String> getProperties() {
-		return properties;
-	}
+    public Map<String, String> getProperties() {
+        return properties;
+    }
 
-	public Identifier getNodegroupName() {
-		return nodegroupName;
-	}
+    @Override
+    public Identifier getNodegroupName() {
+        return nodegroupName;
+    }
 
-	public void setNodegroupName(Identifier nodegroupName) {
-		this.nodegroupName = nodegroupName;
-	}
+    public void setNodegroupName(Identifier nodegroupName) {
+        this.nodegroupName = nodegroupName;
+    }
 
+    @Override
     public String getCompactionPolicy() {
         return compactionPolicy;
     }
@@ -55,6 +57,7 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
         this.compactionPolicy = compactionPolicy;
     }
 
+    @Override
     public Map<String, String> getCompactionPolicyProperties() {
         return compactionPolicyProperties;
     }

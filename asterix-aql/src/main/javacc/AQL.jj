@@ -629,7 +629,7 @@ FunctionSignature FunctionSignature() throws ParseException:
       }
 
       // TODO use fctName.library
-      String fqFunctionName = fctName.library == null ? fctName.function : fctName.library + "#" + fctName.function;
+      String fqFunctionName = fctName.library == null ? fctName.function : fctName.library + "#" + fctName.function;      
       return new FunctionSignature(fctName.dataverse, fqFunctionName, arity);
     }
 }
@@ -731,6 +731,10 @@ DeleteStatement DeleteStatement() throws ParseException:
   VariableExpr var = null;
   Expression condition = null;
   Pair<Identifier, Identifier> nameComponents;
+  // This is related to the new metadata lock management
+  setDataverses(new ArrayList<String>());
+  setDatasets(new ArrayList<String>());
+  
 }
 {
   "delete" var = Variable()
@@ -740,7 +744,14 @@ DeleteStatement DeleteStatement() throws ParseException:
   "from" <DATASET> nameComponents  = QualifiedName() 
   (<WHERE> condition = Expression())?
     {
-      return new DeleteStatement(var, nameComponents.first, nameComponents.second, condition, getVarCounter());
+      // First we get the dataverses and datasets that we want to lock
+      List<String> dataverses = getDataverses();
+      List<String> datasets = getDatasets();
+      // we remove the pointer to the dataverses and datasets
+      setDataverses(null);
+      setDatasets(null);
+      return new DeleteStatement(var, nameComponents.first, nameComponents.second, 
+      	condition, getVarCounter(), dataverses, datasets);
     }
 }
 
@@ -1233,6 +1244,9 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 Query Query() throws ParseException:
 {
   Query query = new Query();
+  // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
+  setDataverses(query.getDataverses());
+  setDatasets(query.getDatasets());
   Expression expr;
 }
 {
@@ -1240,6 +1254,9 @@ Query Query() throws ParseException:
     {
       query.setBody(expr);
       query.setVarCounter(getVarCounter());
+      // we remove the pointers to the locked entities before we return the query object
+      setDataverses(null);
+      setDatasets(null);
       return query;
     }
      
@@ -1833,6 +1850,12 @@ Expression DatasetAccessExpression() throws ParseException:
       LiteralExpr ds = new LiteralExpr();
       ds.setValue( new StringLiteral(name) );
       nameArg = ds;
+      if(arg2 != null){
+      	addDataverse(arg1.toString());
+      	addDataset(name);
+      } else {
+      	addDataset(defaultDataverse + "." + name);
+      }
     }
   | ( <LEFTPAREN> nameArg = Expression() <RIGHTPAREN> ) )  
     {

@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
 
 /**
  * This is a singelton class used to maintain the version of each external dataset with indexes
@@ -17,10 +17,10 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
  */
 public class ExternalDatasetsRegistry {
     public static ExternalDatasetsRegistry INSTANCE = new ExternalDatasetsRegistry();
-    private HashMap<String, HashMap<String, ExternalDatasetAccessManager>> globalRegister;
+    private ConcurrentHashMap<String, ExternalDatasetAccessManager> globalRegister;
 
     private ExternalDatasetsRegistry() {
-        globalRegister = new HashMap<String, HashMap<String, ExternalDatasetAccessManager>>();
+        globalRegister = new ConcurrentHashMap<String, ExternalDatasetAccessManager>();
     }
 
     /**
@@ -30,23 +30,11 @@ public class ExternalDatasetsRegistry {
      * @return
      */
     public int getDatasetVersion(Dataset dataset) {
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegister;
-        ExternalDatasetAccessManager datasetAccessMgr;
-        synchronized (this) {
-            dataverseRegister = globalRegister.get(dataset.getDataverseName());
-            if (dataverseRegister == null) {
-                // Create a register for the dataverse, and put the dataset their with the initial value of 0
-                dataverseRegister = new HashMap<String, ExternalDatasetAccessManager>();
-                datasetAccessMgr = new ExternalDatasetAccessManager();
-                dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                globalRegister.put(dataset.getDataverseName(), dataverseRegister);
-            } else {
-                datasetAccessMgr = dataverseRegister.get(dataset.getDatasetName());
-                if (datasetAccessMgr == null) {
-                    datasetAccessMgr = new ExternalDatasetAccessManager();
-                    dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                }
-            }
+        String key = dataset.getDataverseName() + "." + dataset.getDatasetName();
+        ExternalDatasetAccessManager datasetAccessMgr = globalRegister.get(key);
+        if (datasetAccessMgr == null) {
+            globalRegister.putIfAbsent(key, new ExternalDatasetAccessManager());
+            datasetAccessMgr = globalRegister.get(key);
         }
         return datasetAccessMgr.getVersion();
     }
@@ -68,31 +56,10 @@ public class ExternalDatasetsRegistry {
             }
         }
 
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegister;
-        ExternalDatasetAccessManager datasetAccessMgr;
-        dataverseRegister = globalRegister.get(dataset.getDataverseName());
-        if (dataverseRegister == null) {
-            synchronized (this) {
-                // A second time synchronized just to make sure
-                dataverseRegister = globalRegister.get(dataset.getDataverseName());
-                if (dataverseRegister == null) {
-                    // Create a register for the dataverse, and put the dataset their with the initial value of 0
-                    dataverseRegister = new HashMap<String, ExternalDatasetAccessManager>();
-                    globalRegister.put(dataset.getDataverseName(), dataverseRegister);
-                }
-            }
-        }
-
-        datasetAccessMgr = dataverseRegister.get(dataset.getDatasetName());
+        ExternalDatasetAccessManager datasetAccessMgr = globalRegister.get(lockKey);
         if (datasetAccessMgr == null) {
-            synchronized (this) {
-                // a second time synchronized just to make sure
-                datasetAccessMgr = dataverseRegister.get(dataset.getDatasetName());
-                if (datasetAccessMgr == null) {
-                    datasetAccessMgr = new ExternalDatasetAccessManager();
-                    dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                }
-            }
+            globalRegister.putIfAbsent(lockKey, new ExternalDatasetAccessManager());
+            datasetAccessMgr = globalRegister.get(lockKey);
         }
 
         // aquire the correct lock
@@ -102,74 +69,39 @@ public class ExternalDatasetsRegistry {
     }
 
     public void refreshBegin(Dataset dataset) {
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegister;
-        ExternalDatasetAccessManager datasetAccessMgr;
-        synchronized (this) {
-            dataverseRegister = globalRegister.get(dataset.getDataverseName());
-            if (dataverseRegister == null) {
-                // Create a register for the dataverse, and put the dataset their with the initial value of 0
-                dataverseRegister = new HashMap<String, ExternalDatasetAccessManager>();
-                datasetAccessMgr = new ExternalDatasetAccessManager();
-                dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                globalRegister.put(dataset.getDataverseName(), dataverseRegister);
-            } else {
-                datasetAccessMgr = dataverseRegister.get(dataset.getDatasetName());
-                if (datasetAccessMgr == null) {
-                    datasetAccessMgr = new ExternalDatasetAccessManager();
-                    dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                }
-            }
+        String key = dataset.getDataverseName() + "." + dataset.getDatasetName();
+        ExternalDatasetAccessManager datasetAccessMgr = globalRegister.get(key);
+        if (datasetAccessMgr == null) {
+            datasetAccessMgr = globalRegister.put(key, new ExternalDatasetAccessManager());
         }
         // aquire the correct lock
         datasetAccessMgr.refreshBegin();
     }
 
-    public synchronized void removeDatasetInfo(Dataset dataset) {
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegister = globalRegister
-                .get(dataset.getDataverseName());
-        if (dataverseRegister != null) {
-            dataverseRegister.remove(dataset.getDatasetName());
-        }
-    }
-
-    public synchronized void removeDataverse(Dataverse dataverse) {
-        globalRegister.remove(dataverse.getDataverseName());
+    public void removeDatasetInfo(Dataset dataset) {
+        String key = dataset.getDataverseName() + "." + dataset.getDatasetName();
+        globalRegister.remove(key);
     }
 
     public void refreshEnd(Dataset dataset, boolean success) {
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegistry = globalRegister
-                .get(dataset.getDataverseName());
-        ExternalDatasetAccessManager datasetLockManager = dataverseRegistry.get(dataset.getDatasetName());
-        datasetLockManager.refreshEnd(success);
+        String key = dataset.getDataverseName() + "." + dataset.getDatasetName();
+        globalRegister.get(key).refreshEnd(success);
     }
 
-    public void buildIndexBegin(Dataset dataset) {
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegister;
-        ExternalDatasetAccessManager datasetAccessMgr;
-        synchronized (this) {
-            dataverseRegister = globalRegister.get(dataset.getDataverseName());
-            if (dataverseRegister == null) {
-                // Create a register for the dataverse, and put the dataset their with the initial value of 0
-                dataverseRegister = new HashMap<String, ExternalDatasetAccessManager>();
-                datasetAccessMgr = new ExternalDatasetAccessManager();
-                dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                globalRegister.put(dataset.getDataverseName(), dataverseRegister);
-            } else {
-                datasetAccessMgr = dataverseRegister.get(dataset.getDatasetName());
-                if (datasetAccessMgr == null) {
-                    datasetAccessMgr = new ExternalDatasetAccessManager();
-                    dataverseRegister.put(dataset.getDatasetName(), datasetAccessMgr);
-                }
-            }
+    public void buildIndexBegin(Dataset dataset, boolean firstIndex) {
+        String key = dataset.getDataverseName() + "." + dataset.getDatasetName();
+        ExternalDatasetAccessManager datasetAccessMgr = globalRegister.get(key);
+        if (datasetAccessMgr == null) {
+            globalRegister.putIfAbsent(key, new ExternalDatasetAccessManager());
+            datasetAccessMgr = globalRegister.get(key);
         }
-        datasetAccessMgr.buildIndexBegin();
+        // aquire the correct lock
+        datasetAccessMgr.buildIndexBegin(firstIndex);
     }
 
-    public void buildIndexEnd(Dataset dataset) {
-        HashMap<String, ExternalDatasetAccessManager> dataverseRegistry = globalRegister
-                .get(dataset.getDataverseName());
-        ExternalDatasetAccessManager datasetLockManager = dataverseRegistry.get(dataset.getDatasetName());
-        datasetLockManager.buildIndexEnd();
+    public void buildIndexEnd(Dataset dataset, boolean firstIndex) {
+        String key = dataset.getDataverseName() + "." + dataset.getDatasetName();
+        globalRegister.get(key).buildIndexEnd(firstIndex);
     }
 
     public void releaseAcquiredLocks(AqlMetadataProvider metadataProvider) {
@@ -180,12 +112,7 @@ public class ExternalDatasetsRegistry {
             // if dataset was accessed already by this job, return the registered version
             Set<Entry<String, Integer>> aquiredLocks = locks.entrySet();
             for (Entry<String, Integer> entry : aquiredLocks) {
-                //Get dataverse name
-                String dvName = entry.getKey().substring(0, entry.getKey().indexOf("."));
-                String dsName = entry.getKey().substring(entry.getKey().indexOf(".") + 1);
-                HashMap<String, ExternalDatasetAccessManager> dataverseRegistry = globalRegister.get(dvName);
-                ExternalDatasetAccessManager datasetLockManager = dataverseRegistry.get(dsName);
-                datasetLockManager.queryEnd(entry.getValue());
+                globalRegister.get(entry.getKey()).queryEnd(entry.getValue());
             }
             locks.clear();
         }

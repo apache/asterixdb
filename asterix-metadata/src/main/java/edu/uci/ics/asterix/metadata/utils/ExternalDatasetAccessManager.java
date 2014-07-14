@@ -67,13 +67,21 @@ public class ExternalDatasetAccessManager {
         datasetLock.writeLock().unlock();
     }
 
-    public int buildIndexBegin() {
-        datasetLock.readLock().lock();
+    public synchronized int buildIndexBegin(boolean isFirstIndex) {
+        if (isFirstIndex) {
+            datasetLock.writeLock().lock();
+        } else {
+            datasetLock.readLock().lock();
+        }
         return version;
     }
 
-    public void buildIndexEnd() {
-        datasetLock.readLock().unlock();
+    public void buildIndexEnd(boolean isFirstIndex) {
+        if (isFirstIndex) {
+            datasetLock.writeLock().unlock();
+        } else {
+            datasetLock.readLock().unlock();
+        }
     }
 
     public int queryBegin() {

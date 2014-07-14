@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.aql.expression;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
@@ -27,14 +29,18 @@ public class DeleteStatement implements Statement {
     private Identifier datasetName;
     private Expression condition;
     private int varCounter;
+    private List<String> dataverses;
+    private List<String> datasets;
 
     public DeleteStatement(VariableExpr vars, Identifier dataverseName, Identifier datasetName, Expression condition,
-            int varCounter) {
+            int varCounter, List<String> dataverses, List<String> datasets) {
         this.vars = vars;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.condition = condition;
         this.varCounter = varCounter;
+        this.dataverses = dataverses;
+        this.datasets = datasets;
     }
 
     @Override
@@ -70,6 +76,14 @@ public class DeleteStatement implements Statement {
     @Override
     public <T> void accept(IAqlVisitorWithVoidReturn<T> visitor, T arg) throws AsterixException {
         visitor.visit(this, arg);
+    }
+
+    public List<String> getDataverses() {
+        return dataverses;
+    }
+
+    public List<String> getDatasets() {
+        return datasets;
     }
 
 }

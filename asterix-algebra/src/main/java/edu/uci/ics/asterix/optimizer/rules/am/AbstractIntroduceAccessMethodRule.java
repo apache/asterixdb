@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -256,7 +257,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         List<Index> indexCandidates = new ArrayList<Index>();
         // Add an index to the candidates if one of the indexed fields is fieldName
         for (Index index : datasetIndexes) {
-            if (index.getKeyFieldNames().contains(fieldName)) {
+            // Need to also verify the index is pending no op
+            if (index.getKeyFieldNames().contains(fieldName) && index.getPendingOp() == IMetadataEntity.PENDING_NO_OP) {
                 indexCandidates.add(index);
             }
         }
