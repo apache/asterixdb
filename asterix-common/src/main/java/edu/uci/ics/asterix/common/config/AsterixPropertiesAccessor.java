@@ -161,5 +161,4 @@ public class AsterixPropertiesAccessor {
     public String getInstanceName() {
         return instanceName;
     }
-
 }

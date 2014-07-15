@@ -34,6 +34,15 @@ public class PropertyInterpreters {
         };
     }
 
+    public static IPropertyInterpreter<Boolean> getBooleanPropertyInterpreter() {
+        return new IPropertyInterpreter<Boolean>() {
+
+            public Boolean interpret(Property p) throws IllegalArgumentException {
+                return Boolean.parseBoolean(p.getValue());
+            }
+        };
+    }
+
     public static IPropertyInterpreter<Long> getLongPropertyInterpreter() {
         return new IPropertyInterpreter<Long>() {
 

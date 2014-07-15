@@ -79,4 +79,10 @@
 			(Default = 8)
 		</description>
 	</property>
+	<property>
+		<name>plot.activate</name>
+		<value>false</value>
+		<description>Enabling plot of Algebricks plan to tmp folder. (Default = false)
+		</description>
+	</property>
 </asterixConfiguration>

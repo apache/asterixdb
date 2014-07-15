@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
 import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
 import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
+import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
 import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -62,6 +63,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregation
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
+import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
@@ -259,6 +261,13 @@ public class APIFramework {
             }
         }
 
+        //print the plot for the logical plan
+        AsterixExternalProperties xProps = AsterixAppContextInfo.getInstance().getExternalProperties();
+        Boolean plot = xProps.getIsPlottingEnabled();
+        if (plot) {
+            PlanPlotter.printLogicalPlan(plan);
+        }
+
         AsterixCompilerProperties compilerProperties = AsterixAppContextInfo.getInstance().getCompilerProperties();
         int frameSize = compilerProperties.getFrameSize();
         int sortFrameLimit = (int) (compilerProperties.getSortMemorySize() / frameSize);
@@ -285,6 +294,9 @@ public class APIFramework {
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
         if (pc.isOptimize()) {
             compiler.optimize();
+            //plot optimized logical plan
+            if (plot)
+                PlanPlotter.printOptimizedLogicalPlan(plan);
             if (pc.isPrintOptimizedLogicalPlanParam()) {
                 if (pc.isPrintPhysicalOpsOnly()) {
                     // For Optimizer tests.

@@ -39,6 +39,9 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER = "max.wait.active.cluster";
     private static int EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT = 60;
 
+    private static final String EXTERNAL_PLOT_ACTIVATE = "plot.activate";
+    private static Boolean EXTERNAL_PLOT_ACTIVATE_DEFAULT = new Boolean(false);
+
     public AsterixExternalProperties(AsterixPropertiesAccessor accessor) {
         super(accessor);
     }
@@ -77,4 +80,10 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
         return accessor.getProperty(EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER, EXTERNAL_MAX_WAIT_FOR_ACTIVE_CLUSTER_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
+
+    public Boolean getIsPlottingEnabled() {
+        return accessor.getProperty(EXTERNAL_PLOT_ACTIVATE, EXTERNAL_PLOT_ACTIVATE_DEFAULT,
+                PropertyInterpreters.getBooleanPropertyInterpreter());
+    }
+
 }
