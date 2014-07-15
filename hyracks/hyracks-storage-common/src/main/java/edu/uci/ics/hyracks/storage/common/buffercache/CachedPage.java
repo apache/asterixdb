@@ -34,6 +34,7 @@ class CachedPage implements ICachedPageInternal {
     volatile long dpid;
     CachedPage next;
     volatile boolean valid;
+    volatile boolean virtual;
 
     public CachedPage(int cpid, ByteBuffer buffer, IPageReplacementStrategy pageReplacementStrategy) {
         this.cpid = cpid;
@@ -45,6 +46,7 @@ class CachedPage implements ICachedPageInternal {
         replacementStrategyObject = pageReplacementStrategy.createPerPageStrategyObject(cpid);
         dpid = -1;
         valid = false;
+        virtual = false;
     }
 
     public void reset(long dpid) {
@@ -70,7 +72,10 @@ class CachedPage implements ICachedPageInternal {
 
     @Override
     public boolean pinIfGoodVictim() {
-        return pinCount.compareAndSet(0, 1);
+        if (virtual)
+            return false; //i am not a good victim because i cant flush!
+        else
+            return pinCount.compareAndSet(0, 1);
     }
 
     @Override

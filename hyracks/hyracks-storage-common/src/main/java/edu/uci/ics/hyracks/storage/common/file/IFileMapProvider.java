@@ -57,4 +57,5 @@ public interface IFileMapProvider extends Serializable {
      *             - If the file id is not mapped currently in this manager.
      */
     public FileReference lookupFileName(int fileId) throws HyracksDataException;
+    
 }

@@ -15,10 +15,13 @@
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.FileReference;
 
 public interface IBufferCache {
     public void createFile(FileReference fileRef) throws HyracksDataException;
+    
+    public int createMemFile() throws HyracksDataException;
 
     public void openFile(int fileId) throws HyracksDataException;
 
@@ -26,9 +29,15 @@ public interface IBufferCache {
 
     public void deleteFile(int fileId, boolean flushDirtyPages) throws HyracksDataException;
 
+    public void deleteMemFile(int fileId) throws HyracksDataException;
+
     public ICachedPage tryPin(long dpid) throws HyracksDataException;
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
+    
+    public ICachedPage pinVirtual(long vpid) throws HyracksDataException;
+    
+    public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException;
 
     public void unpin(ICachedPage page) throws HyracksDataException;
 

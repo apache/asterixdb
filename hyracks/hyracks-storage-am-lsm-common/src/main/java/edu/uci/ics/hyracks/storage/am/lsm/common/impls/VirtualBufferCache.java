@@ -341,4 +341,28 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
 
     }
+    //These 4 methods aren't applicable here.
+    @Override
+    public int createMemFile() throws HyracksDataException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public void deleteMemFile(int fileId) throws HyracksDataException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public ICachedPage pinVirtual(long vpid) throws HyracksDataException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

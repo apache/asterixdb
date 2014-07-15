@@ -42,4 +42,8 @@ public interface IFileMapManager extends IFileMapProvider {
      *             - If the fileid is not mapped currently in this manager.
      */
     public void unregisterFile(int fileId) throws HyracksDataException;
+    
+    public int registerMemoryFile();
+    
+    public void unregisterMemFile(int fileId) throws HyracksDataException;
 }
