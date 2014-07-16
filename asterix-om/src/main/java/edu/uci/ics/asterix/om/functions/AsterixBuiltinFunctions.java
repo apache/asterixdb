@@ -220,6 +220,8 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "matches", 3);
     public final static FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "lowercase", 1);
+    public final static FunctionIdentifier STRING_UPPERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "uppercase", 1);
     public final static FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "replace", 3);
     public final static FunctionIdentifier STRING_REPLACE_WITH_FLAG = new FunctionIdentifier(
@@ -788,6 +790,7 @@ public class AsterixBuiltinFunctions {
         addFunction(SUBSTRING2, Substring2TypeComputer.INSTANCE, true);
         addFunction(STRING_LENGTH, UnaryStringInt32OrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_UPPERCASE, UnaryStringOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_START_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_END_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_MATCHES, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);

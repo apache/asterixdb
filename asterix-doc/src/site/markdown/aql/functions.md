@@ -372,6 +372,30 @@ Asterix provides various classes of functions to support operations on numeric, 
         asterix
 
 
+### uppercase ###
+ * Syntax:
+
+        uppercase(string_expression)
+
+ * Converts a given string `string_expression` to its uppercase form.
+ * Arguments:
+    * `string_expression` : A `string` to be converted.
+ * Return Value:
+    * Returns a `string` as the uppercase form of the given `string_expression`.
+
+ * Example:
+
+        use dataverse TinySocial;
+
+        let $i := "asterix"
+        return uppercase($i)
+
+
+ * The expected result is:
+
+        ASTERIX
+        
+
 ### matches ###
  * Syntax:
 
@@ -545,7 +569,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         " its touch-screen is horrible"
         " the voice-command is bad:("
         " the voicemail-service is awesome"
-
+        
 ## <a id="AggregateFunctions">Aggregate Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### count ###
  * Syntax:

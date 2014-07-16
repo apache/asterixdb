@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $c1 := uppercase("Hellow")
+let $c2 := uppercase("")
+let $c3 := uppercase(null)
+return {"result1": $c1, "result2": $c2, "result3": $c3}

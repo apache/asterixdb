@@ -4195,6 +4195,11 @@
         <output-dir compare="Text">toLowerCase04</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="uppercase">
+        <output-dir compare="Text">uppercase</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">

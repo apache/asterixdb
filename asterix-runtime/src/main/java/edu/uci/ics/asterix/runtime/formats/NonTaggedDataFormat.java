@@ -233,6 +233,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.StringReplaceWithFlagsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.StringStartWithDescrtiptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.StringUpperCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.Substring2Descriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
@@ -414,6 +415,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(StringEndWithDescrtiptor.FACTORY);
         temp.add(StringMatchesDescriptor.FACTORY);
         temp.add(StringLowerCaseDescriptor.FACTORY);
+        temp.add(StringUpperCaseDescriptor.FACTORY);
         temp.add(StringMatchesWithFlagDescriptor.FACTORY);
         temp.add(StringReplaceDescriptor.FACTORY);
         temp.add(StringReplaceWithFlagsDescriptor.FACTORY);
