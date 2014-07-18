@@ -124,7 +124,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         this.linearizerArray = linearizerArray;
         this.rtreeFields = rtreeFields;
     }
-    
+
     /*
      * For External indexes with no memory components
      */
@@ -433,6 +433,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             size += virtualBufferCache.getNumPages() * virtualBufferCache.getPageSize();
         }
         return size;
+    }
+
+    @Override
+    public boolean isPrimaryIndex() {
+        return false;
     }
 
     @Override

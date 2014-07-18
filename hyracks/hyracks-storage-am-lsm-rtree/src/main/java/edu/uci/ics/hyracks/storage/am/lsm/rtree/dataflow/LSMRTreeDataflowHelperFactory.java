@@ -68,7 +68,7 @@ public class LSMRTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
         return new LSMRTreeDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, rtreeFields,
                 btreeFields, filterTypeTraits, filterCmpFactories, filterFields);
     }

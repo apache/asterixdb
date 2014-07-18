@@ -870,4 +870,9 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     public boolean hasMemoryComponents(){
         return false;
     }
+
+    @Override
+    public boolean isPrimaryIndex() {
+        return false;
+    }
 }

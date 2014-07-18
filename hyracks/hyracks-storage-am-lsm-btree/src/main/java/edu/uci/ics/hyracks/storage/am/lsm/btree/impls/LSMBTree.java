@@ -841,4 +841,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public String toString() {
         return "LSMBTree [" + fileManager.getBaseDir() + "]";
     }
+
+    @Override
+    public boolean isPrimaryIndex() {
+        return needKeyDupCheck;
+    }
 }

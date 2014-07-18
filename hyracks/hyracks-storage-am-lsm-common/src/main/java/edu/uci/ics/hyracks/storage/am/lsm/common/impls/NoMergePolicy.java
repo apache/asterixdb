@@ -16,14 +16,16 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.Map;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 
-public enum NoMergePolicy implements ILSMMergePolicy {
-    INSTANCE;
+public class NoMergePolicy implements ILSMMergePolicy {
 
     @Override
-    public void diskComponentAdded(ILSMIndex index, boolean fullMergeIsRequested) {
+    public void diskComponentAdded(final ILSMIndex index, boolean fullMergeIsRequested) throws HyracksDataException,
+            IndexException {
         // Do nothing
     }
 

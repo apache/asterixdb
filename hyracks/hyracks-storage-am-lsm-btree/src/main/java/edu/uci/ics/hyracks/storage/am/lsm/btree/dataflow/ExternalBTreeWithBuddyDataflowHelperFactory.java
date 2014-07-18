@@ -45,7 +45,7 @@ public class ExternalBTreeWithBuddyDataflowHelperFactory extends AbstractLSMInde
     public IIndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new ExternalBTreeWithBuddyDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, buddyBtreeFields, version);
     }
 

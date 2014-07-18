@@ -53,7 +53,7 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
             int partition) {
         return new LSMBTreeDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, needKeyDupCheck, filterTypeTraits,
                 filterCmpFactories, btreeFields, filterFields);
     }

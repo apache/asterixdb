@@ -44,7 +44,7 @@ public class ExternalBTreeDataflowHelperFactory extends AbstractLSMIndexDataflow
     public IIndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
         return new ExternalBTreeDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, false, version);
     }
 

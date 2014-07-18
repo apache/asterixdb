@@ -88,7 +88,7 @@ public class LSMInvertedIndexTestHarness {
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
         this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
-        this.mergePolicy = NoMergePolicy.INSTANCE;
+        this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_INVINDEX_NUM_MUTABLE_COMPONENTS;

@@ -90,7 +90,7 @@ public class LSMBTreeTestHarness {
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_BTREE_HYRACKS_FRAME_SIZE;
         this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_BTREE_BLOOMFILTER_FALSE_POSITIVE_RATE;
         this.ioScheduler = SynchronousScheduler.INSTANCE;
-        this.mergePolicy = NoMergePolicy.INSTANCE;
+        this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallback = NoOpIOOperationCallback.INSTANCE;
         this.numMutableComponents = AccessMethodTestsConfig.LSM_BTREE_NUM_MUTABLE_COMPONENTS;

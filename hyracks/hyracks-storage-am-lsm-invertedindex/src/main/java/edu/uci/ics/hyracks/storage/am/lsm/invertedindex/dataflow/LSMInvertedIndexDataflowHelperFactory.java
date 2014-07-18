@@ -55,7 +55,7 @@ public class LSMInvertedIndexDataflowHelperFactory extends AbstractLSMIndexDataf
             int partition) {
         return new LSMInvertedIndexDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
-                mergePolicyFactory.createMergePolicy(mergePolicyProperties), opTrackerFactory,
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, invertedIndexFields, filterTypeTraits,
                 filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
     }

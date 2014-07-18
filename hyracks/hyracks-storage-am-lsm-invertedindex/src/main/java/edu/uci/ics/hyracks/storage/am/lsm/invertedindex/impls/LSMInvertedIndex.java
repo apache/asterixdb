@@ -924,9 +924,14 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public String toString() {
         return "LSMInvertedIndex [" + fileManager.getBaseDir() + "]";
     }
-    
+
     @Override
     public boolean hasMemoryComponents() {
         return true;
+    }
+
+    @Override
+    public boolean isPrimaryIndex() {
+        return false;
     }
 }

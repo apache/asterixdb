@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
 import java.util.Arrays;
@@ -24,23 +25,23 @@ import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
-public class ConstantMergePolicyFactory implements ILSMMergePolicyFactory {
+public class NoMergePolicyFactory implements ILSMMergePolicyFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String[] SET_VALUES = new String[] { "num-components" };
+    private static final String[] SET_VALUES = new String[] {};
     private static final Set<String> PROPERTIES_NAMES = new HashSet<String>(Arrays.asList(SET_VALUES));
 
     @Override
     public ILSMMergePolicy createMergePolicy(Map<String, String> properties, IHyracksTaskContext ctx) {
-        ILSMMergePolicy policy = new ConstantMergePolicy();
+        ILSMMergePolicy policy = new NoMergePolicy();
         policy.configure(properties);
         return policy;
     }
 
     @Override
     public String getName() {
-        return "constant";
+        return "no-merge";
     }
 
     @Override
@@ -50,7 +51,7 @@ public class ConstantMergePolicyFactory implements ILSMMergePolicyFactory {
 
     @Override
     public ILSMMergePolicy createMergePolicy(Map<String, String> properties, IIndexLifecycleManager ilcm) {
-        ILSMMergePolicy policy = new ConstantMergePolicy();
+        ILSMMergePolicy policy = new NoMergePolicy();
         policy.configure(properties);
         return policy;
     }

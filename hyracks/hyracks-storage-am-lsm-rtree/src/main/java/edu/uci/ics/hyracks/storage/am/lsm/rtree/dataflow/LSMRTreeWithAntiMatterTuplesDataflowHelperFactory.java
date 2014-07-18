@@ -63,8 +63,8 @@ public class LSMRTreeWithAntiMatterTuplesDataflowHelperFactory extends AbstractL
             int partition) {
         return new LSMRTreeWithAntiMatterTuplesDataflowHelper(opDesc, ctx, partition,
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), btreeComparatorFactories,
-                valueProviderFactories, rtreePolicyType, mergePolicyFactory.createMergePolicy(mergePolicyProperties),
-                opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory,
-                rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
+                valueProviderFactories, rtreePolicyType, mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                        ctx), opTrackerFactory, ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory,
+                linearizeCmpFactory, rtreeFields, filterTypeTraits, filterCmpFactories, filterFields);
     }
 }
