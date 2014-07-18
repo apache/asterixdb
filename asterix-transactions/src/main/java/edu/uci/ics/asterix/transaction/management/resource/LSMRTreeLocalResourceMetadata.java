@@ -50,7 +50,6 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
     protected final int[] rtreeFields;
     protected final int[] btreeFields;
 
-
     public LSMRTreeLocalResourceMetadata(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, ILinearizeComparatorFactory linearizeCmpFactory, int datasetID,
@@ -79,7 +78,8 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
             return LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider.getBufferCache(),
                     runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                    mergePolicyFactory.createMergePolicy(mergePolicyProperties), new BaseOperationTracker(
+                    mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                            runtimeContextProvider.getIndexLifecycleManager()), new BaseOperationTracker(
                             (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
                     runtimeContextProvider.getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
                             .createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,

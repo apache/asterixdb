@@ -57,7 +57,8 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
             return LSMRTreeUtils.createExternalRTree(file, runtimeContextProvider.getBufferCache(),
                     runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                    mergePolicyFactory.createMergePolicy(mergePolicyProperties), new BaseOperationTracker(
+                    mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                            runtimeContextProvider.getIndexLifecycleManager()), new BaseOperationTracker(
                             (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
                     runtimeContextProvider.getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
                             .createIOOperationCallback(), linearizeCmpFactory, btreeFields, -1);

@@ -197,13 +197,15 @@ public class InternalDatasetDetails implements IDatasetDetails {
         // write field 7
         listBuilder
                 .reset((AOrderedListType) MetadataRecordTypes.INTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.INTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX]);
-        for (Map.Entry<String, String> property : compactionPolicyProperties.entrySet()) {
-            String name = property.getKey();
-            String value = property.getValue();
-            itemValue.reset();
-            writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
-                    MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
-            listBuilder.addItem(itemValue);
+        if (compactionPolicyProperties != null) {
+            for (Map.Entry<String, String> property : compactionPolicyProperties.entrySet()) {
+                String name = property.getKey();
+                String value = property.getValue();
+                itemValue.reset();
+                writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+                        MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
+                listBuilder.addItem(itemValue);
+            }
         }
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);

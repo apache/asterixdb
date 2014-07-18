@@ -1,7 +1,7 @@
 /* 
- * Test case Name  : compact-dataset-and-its-indexes.aql
+ * Test case Name  : cusing-prefix-merge-policy.aql
  * Description     : This test is intended to test the compact statement which merge the disk components of a dataset and
- * all of its indexes.
+ * all of its indexes using the prefix merge policy.
  * Expected Result : Success
  * Date            : Sep 19 2013
  */

@@ -65,7 +65,7 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider
                 .getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories,
                 bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(), mergePolicyFactory
-                        .createMergePolicy(mergePolicyProperties),
+                        .createMergePolicy(mergePolicyProperties, runtimeContextProvider.getIndexLifecycleManager()),
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
                         (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
                 runtimeContextProvider.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE

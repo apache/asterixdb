@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -233,6 +234,9 @@ public class DatasetUtils {
         ILSMMergePolicyFactory mergePolicyFactory;
         try {
             mergePolicyFactory = (ILSMMergePolicyFactory) Class.forName(compactionPolicyFactoryClassName).newInstance();
+            if (mergePolicyFactory.getName().compareTo("correlated-prefix") == 0) {
+                ((CorrelatedPrefixMergePolicyFactory) mergePolicyFactory).setDatasetID(dataset.getDatasetId());
+            }
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new AlgebricksException(e);
         }

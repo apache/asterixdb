@@ -415,18 +415,32 @@ public class AqlTranslator extends AbstractAqlTranslator {
     }
 
     private void validateCompactionPolicy(String compactionPolicy, Map<String, String> compactionPolicyProperties,
-            MetadataTransactionContext mdTxnCtx) throws AsterixException, Exception {
+            MetadataTransactionContext mdTxnCtx, boolean isExternalDataset) throws AsterixException, Exception {
         CompactionPolicy compactionPolicyEntity = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
                 MetadataConstants.METADATA_DATAVERSE_NAME, compactionPolicy);
         if (compactionPolicyEntity == null) {
-            throw new AsterixException("Unknown compaction policy :" + compactionPolicy);
+            throw new AsterixException("Unknown compaction policy: " + compactionPolicy);
         }
         String compactionPolicyFactoryClassName = compactionPolicyEntity.getClassName();
         ILSMMergePolicyFactory mergePolicyFactory = (ILSMMergePolicyFactory) Class.forName(
                 compactionPolicyFactoryClassName).newInstance();
-        for (Map.Entry<String, String> entry : compactionPolicyProperties.entrySet()) {
-            if (!mergePolicyFactory.getPropertiesNames().contains(entry.getKey())) {
-                throw new AsterixException("Invalid compaction policy property :" + entry.getKey());
+        if (isExternalDataset && mergePolicyFactory.getName().compareTo("correlated-prefix") == 0) {
+            throw new AsterixException("The correlated-prefix merge policy cannot be used with external dataset.");
+        }
+        if (compactionPolicyProperties == null) {
+            if (mergePolicyFactory.getName().compareTo("no-merge") != 0) {
+                throw new AsterixException("Compaction policy properties are missing.");
+            }
+        } else {
+            for (Map.Entry<String, String> entry : compactionPolicyProperties.entrySet()) {
+                if (!mergePolicyFactory.getPropertiesNames().contains(entry.getKey())) {
+                    throw new AsterixException("Invalid compaction policy property: " + entry.getKey());
+                }
+            }
+            for (String p : mergePolicyFactory.getPropertiesNames()) {
+                if (!compactionPolicyProperties.containsKey(p)) {
+                    throw new AsterixException("Missing compaction policy property: " + p);
+                }
             }
         }
     }
@@ -489,7 +503,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
                         compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
                     } else {
-                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx);
+                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx, false);
                     }
                     String filterField = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getFilterField();
                     if (filterField != null) {
@@ -510,7 +524,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
                         compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
                     } else {
-                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx);
+                        validateCompactionPolicy(compactionPolicy, compactionPolicyProperties, mdTxnCtx, true);
                     }
                     datasetDetails = new ExternalDatasetDetails(adapter, properties, ngName, new Date(),
                             ExternalDatasetTransactionState.COMMIT, compactionPolicy, compactionPolicyProperties);

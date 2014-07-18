@@ -85,7 +85,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         runtimeContextProvider.getBufferCache(),
                         filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                        mergePolicyFactory.createMergePolicy(mergePolicyProperties),
+                        mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                                runtimeContextProvider.getIndexLifecycleManager()),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
                                 .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
@@ -103,7 +104,8 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         runtimeContextProvider.getBufferCache(),
                         filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(),
-                        mergePolicyFactory.createMergePolicy(mergePolicyProperties),
+                        mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                                runtimeContextProvider.getIndexLifecycleManager()),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
                                 .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),

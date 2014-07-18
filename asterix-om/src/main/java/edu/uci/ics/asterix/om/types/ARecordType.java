@@ -435,11 +435,12 @@ public class ARecordType extends AbstractComplexType {
             case DATE:
             case TIME:
             case DATETIME:
-            case UNION:
             case UUID:
             case YEARMONTHDURATION:
             case DAYTIMEDURATION:
                 break;
+            case UNION:
+                throw new AlgebricksException("The filter field \"" + filterField + "\" cannot be nullable");
             default:
                 throw new AlgebricksException("The field \"" + filterField + "\" which is of type "
                         + fieldType.getTypeTag() + " cannot be used as a filter for a dataset.");
