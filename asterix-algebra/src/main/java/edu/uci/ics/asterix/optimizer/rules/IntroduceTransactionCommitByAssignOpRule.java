@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,14 +48,14 @@ public class IntroduceTransactionCommitByAssignOpRule implements IAlgebraicRewri
 
         Mutable<ILogicalOperator> childOfSelect = selectOperator.getInputs().get(0);
 
-        //[Direction] SelectOp(cond1)<--ChildOps... ==> SelectOp(booleanValue of cond1)<--NewAssignOp(cond1)<--ChildOps... 
-        //#. Create an assign-operator with a new local variable and the condition of the select-operator. 
+        //[Direction] SelectOp(cond1)<--ChildOps... ==> SelectOp(booleanValue of cond1)<--NewAssignOp(cond1)<--ChildOps...
+        //#. Create an assign-operator with a new local variable and the condition of the select-operator.
         //#. Set the input(child operator) of the new assign-operator to input(child operator) of the select-operator.
-        //	 (Later, the newly created assign-operator will apply the condition on behalf of the select-operator, 
+        //   (Later, the newly created assign-operator will apply the condition on behalf of the select-operator,
         //    and set the variable of the assign-operator to a boolean value according to the condition evaluation.)
         //#. Give the select-operator the result boolean value created by the newly created child assign-operator.
 
-        //create an assignOp with a variable and the condition of the select-operator. 
+        //create an assignOp with a variable and the condition of the select-operator.
         LogicalVariable v = context.newVar();
         AssignOperator assignOperator = new AssignOperator(v, new MutableObject<ILogicalExpression>(selectOperator
                 .getCondition().getValue()));

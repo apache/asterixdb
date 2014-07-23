@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,8 +51,9 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     protected String compactionPolicy;
     protected Map<String, String> compactionPolicyProperties;
 
-    public ExternalDatasetDetails(String adapter, Map<String, String> properties, String nodeGroupName, Date lastRefreshTime, ExternalDatasetTransactionState state,
-            String compactionPolicy, Map<String, String> compactionPolicyProperties) {
+    public ExternalDatasetDetails(String adapter, Map<String, String> properties, String nodeGroupName,
+            Date lastRefreshTime, ExternalDatasetTransactionState state, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties) {
         this.properties = properties;
         this.adapter = adapter;
         this.nodeGroupName = nodeGroupName;
@@ -76,7 +77,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
         IARecordBuilder externalRecordBuilder = new RecordBuilder();
         OrderedListBuilder listBuilder = new OrderedListBuilder();
@@ -84,7 +85,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         externalRecordBuilder.reset(MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
-        
+
         ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);
         ISerializerDeserializer<ADateTime> dateTimeSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -105,7 +106,8 @@ public class ExternalDatasetDetails implements IDatasetDetails {
             String name = property.getKey();
             String value = property.getValue();
             itemValue.reset();
-            writePropertyTypeRecord(name, value, itemValue.getDataOutput(), MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
+            writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+                    MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
             listBuilder.addItem(itemValue);
         }
         fieldValue.reset();
@@ -117,19 +119,20 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         aString.setValue(getNodeGroupName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
-        
-        
+
         // write field 3
         fieldValue.reset();
         dateTimeSerde.serialize(new ADateTime(lastRefreshTime.getTime()), fieldValue.getDataOutput());
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_LAST_REFRESH_TIME_FIELD_INDEX, fieldValue);
-        
+        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_LAST_REFRESH_TIME_FIELD_INDEX,
+                fieldValue);
+
         // write field 4
         fieldValue.reset();
         intSerde.serialize(new AInt32(state.ordinal()), fieldValue.getDataOutput());
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX, fieldValue);
-        
-     // write field 6
+        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX,
+                fieldValue);
+
+        // write field 6
         fieldValue.reset();
         aString.setValue(getCompactionPolicy().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
@@ -189,25 +192,25 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     }
 
     @Override
-	public String getNodeGroupName() {
-		return nodeGroupName;
-	}
+    public String getNodeGroupName() {
+        return nodeGroupName;
+    }
 
-	public Date getTimestamp() {
-		return lastRefreshTime;
-	}
+    public Date getTimestamp() {
+        return lastRefreshTime;
+    }
 
-	public void setRefreshTimestamp(Date timestamp) {
-		this.lastRefreshTime = timestamp;
-	}
+    public void setRefreshTimestamp(Date timestamp) {
+        this.lastRefreshTime = timestamp;
+    }
 
-	public ExternalDatasetTransactionState getState() {
-		return state;
-	}
+    public ExternalDatasetTransactionState getState() {
+        return state;
+    }
 
-	public void setState(ExternalDatasetTransactionState state) {
-		this.state = state;
-	}
+    public void setState(ExternalDatasetTransactionState state) {
+        this.state = state;
+    }
 
     @Override
     public String getCompactionPolicy() {

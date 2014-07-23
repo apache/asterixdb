@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,22 @@
  */
 package edu.uci.ics.asterix.lexergenerator;
 
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.*;
-import static org.junit.Assert.*;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2_action;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2_match;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2_name;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule_action;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule_match;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule_name;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.token2_name;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.token2_return;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_name;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_return;
+import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_tostring;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-
-import edu.uci.ics.asterix.lexergenerator.LexerNode;
 
 public class LexerNodeMergeNodeTest {
 
@@ -32,13 +42,13 @@ public class LexerNodeMergeNodeTest {
         node2.append(rule);
         node2.merge(node);
         node2.appendTokenName(token_name);
-        
+
         LexerNode expected = new LexerNode();
         expected.append(rule2);
         expected.append(rule);
         expected.add(rule);
         expected.appendTokenName(token_name);
-        
+
         assertEquals(expected.toString(), node2.toString());
         assertEquals(expected.toJava(), node2.toJava());
     }
@@ -53,18 +63,13 @@ public class LexerNodeMergeNodeTest {
         node2.appendTokenName(token2_name);
         node.merge(node2);
 
-        assertEquals(" ( "+rule_name+token_tostring+" || "+rule2_name+token_tostring+" ) ", node.toString());
-        assertEquals(rule_match + "{"
-        		+ "\n" + rule_action
-        		+ "\n" + token_return
-        +"}"+rule2_match+"{" 
-        + "\n" + rule2_action
-        + "\n" + token2_return
-        +"}return parseError(TOKEN_MYTOKEN,TOKEN_MYTOKEN2);\n"
-, node.toJava());
+        assertEquals(" ( " + rule_name + token_tostring + " || " + rule2_name + token_tostring + " ) ", node.toString());
+        assertEquals(rule_match + "{" + "\n" + rule_action + "\n" + token_return + "}" + rule2_match + "{" + "\n"
+                + rule2_action + "\n" + token2_return + "}return parseError(TOKEN_MYTOKEN,TOKEN_MYTOKEN2);\n",
+                node.toJava());
     }
 
-    @Test(expected=Exception.class)
+    @Test(expected = Exception.class)
     public void MergeConflict() throws Exception {
         LexerNode node = new LexerNode();
         node.append(rule);
@@ -75,7 +80,7 @@ public class LexerNodeMergeNodeTest {
         try {
             node.merge(node2);
         } catch (Exception e) {
-            assertEquals("Rule conflict between: "+token_name +" and "+token2_name, e.getMessage());
+            assertEquals("Rule conflict between: " + token_name + " and " + token2_name, e.getMessage());
             throw e;
         }
     }
@@ -92,6 +97,6 @@ public class LexerNodeMergeNodeTest {
         node2.appendTokenName(token2_name);
         node2.removeTokensName();
         node.merge(node2);
-        assertEquals(rule_name+rule_name+token_tostring, node.toString());
+        assertEquals(rule_name + rule_name + token_tostring, node.toString());
     }
 }

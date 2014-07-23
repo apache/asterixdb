@@ -29,7 +29,7 @@ public class SerializableLocalSqlAvgAggregateFunction extends AbstractSerializab
 
     @Override
     public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
-    	processDataValues(tuple, state, start, len);
+        processDataValues(tuple, state, start, len);
     }
 
     @Override

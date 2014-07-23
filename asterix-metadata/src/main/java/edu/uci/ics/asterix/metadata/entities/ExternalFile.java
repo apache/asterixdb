@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +19,7 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import edu.uci.ics.asterix.metadata.MetadataCache;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 
-public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile>{
+public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile> {
 
     /**
      * A class for metadata entity externalFile
@@ -36,7 +35,8 @@ public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile>{
     private int fileNumber;
     private ExternalFilePendingOp pendingOp;
 
-    public ExternalFile(String dataverseName, String datasetName, int fileNumber, String fileName, Date lastModefiedTime, long size, ExternalFilePendingOp pendingOp) {
+    public ExternalFile(String dataverseName, String datasetName, int fileNumber, String fileName,
+            Date lastModefiedTime, long size, ExternalFilePendingOp pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.fileNumber = fileNumber;
@@ -93,14 +93,14 @@ public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile>{
     public void setFileNumber(int fileNumber) {
         this.fileNumber = fileNumber;
     }
-    
-    public ExternalFilePendingOp getPendingOp() {
-		return pendingOp;
-	}
 
-	public void setPendingOp(ExternalFilePendingOp pendingOp) {
-		this.pendingOp = pendingOp;
-	}
+    public ExternalFilePendingOp getPendingOp() {
+        return pendingOp;
+    }
+
+    public void setPendingOp(ExternalFilePendingOp pendingOp) {
+        this.pendingOp = pendingOp;
+    }
 
     @Override
     public Object addToCache(MetadataCache cache) {
@@ -111,7 +111,7 @@ public class ExternalFile implements IMetadataEntity, Comparable<ExternalFile>{
     @Override
     public Object dropFromCache(MetadataCache cache) {
         return null;
-    	//return cache.dropExternalFile(this);
+        //return cache.dropExternalFile(this);
     }
 
     @Override

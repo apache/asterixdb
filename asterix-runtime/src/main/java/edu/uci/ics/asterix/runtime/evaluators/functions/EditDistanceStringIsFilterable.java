@@ -144,7 +144,7 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
             }
             boolean usePrePost = BooleanSerializerDeserializer.getBoolean(argBuf.getByteArray(), 1);
 
-            // Compute result.			
+            // Compute result.
             int numGrams = (usePrePost) ? strLen + gramLen - 1 : strLen - gramLen + 1;
             int lowerBound = numGrams - edThresh * gramLen;
             try {

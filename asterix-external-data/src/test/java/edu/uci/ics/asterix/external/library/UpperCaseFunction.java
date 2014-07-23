@@ -16,52 +16,46 @@ package edu.uci.ics.asterix.external.library;
 
 import java.util.Random;
 
-import edu.uci.ics.asterix.external.library.IExternalScalarFunction;
-import edu.uci.ics.asterix.external.library.IFunctionHelper;
-import edu.uci.ics.asterix.external.library.java.JTypeTag;
 import edu.uci.ics.asterix.external.library.java.JObjects.JInt;
 import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
 import edu.uci.ics.asterix.external.library.java.JObjects.JString;
+import edu.uci.ics.asterix.external.library.java.JTypeTag;
 
 /**
  * Accepts an input record of type Open{ id: int32, text: string }
- * 
  * Converts the text field into upper case and appends an additional field -
  * "substring" with value as a random substring of the text field.
- * 
  * Return Type Open{ id: int32, text: string }
- * 
  */
 public class UpperCaseFunction implements IExternalScalarFunction {
 
-	private Random random;
+    private Random random;
 
-	@Override
-	public void initialize(IFunctionHelper functionHelper) {
-		random = new Random();
-	}
+    @Override
+    public void initialize(IFunctionHelper functionHelper) {
+        random = new Random();
+    }
 
-	@Override
-	public void deinitialize() {
-	}
+    @Override
+    public void deinitialize() {
+    }
 
-	@Override
-	public void evaluate(IFunctionHelper functionHelper) throws Exception {
-		JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
-		JInt id = (JInt) inputRecord.getValueByName("id");
-		id.setValue(id.getValue() * -1); // for maintaining uniqueness
-											// constraint in the case when
-											// output is re-inserted into source
-											// dataset
-		JString text = (JString) inputRecord.getValueByName("text");
-		text.setValue(text.getValue().toUpperCase());
-		JRecord result = (JRecord) functionHelper.getResultObject();
-		result.setField("id", id);
-		result.setField("text", text);
-		JString newField = (JString) functionHelper.getObject(JTypeTag.STRING);
-		newField.setValue(text.getValue().substring(
-				random.nextInt(text.getValue().length())));
-		result.addField("substring", newField);
-		functionHelper.setResult(result);
-	}
+    @Override
+    public void evaluate(IFunctionHelper functionHelper) throws Exception {
+        JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
+        JInt id = (JInt) inputRecord.getValueByName("id");
+        id.setValue(id.getValue() * -1); // for maintaining uniqueness
+                                         // constraint in the case when
+                                         // output is re-inserted into source
+                                         // dataset
+        JString text = (JString) inputRecord.getValueByName("text");
+        text.setValue(text.getValue().toUpperCase());
+        JRecord result = (JRecord) functionHelper.getResultObject();
+        result.setField("id", id);
+        result.setField("text", text);
+        JString newField = (JString) functionHelper.getObject(JTypeTag.STRING);
+        newField.setValue(text.getValue().substring(random.nextInt(text.getValue().length())));
+        result.addField("substring", newField);
+        functionHelper.setResult(result);
+    }
 }

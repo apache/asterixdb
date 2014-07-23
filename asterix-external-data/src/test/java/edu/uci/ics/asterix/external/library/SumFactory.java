@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 package edu.uci.ics.asterix.external.library;
-        
-import edu.uci.ics.asterix.external.library.IExternalScalarFunction;
-import edu.uci.ics.asterix.external.library.IFunctionFactory;
+
 
 public class SumFactory implements IFunctionFactory {
 
-	@Override
-	public IExternalScalarFunction getExternalFunction() {
-		return new SumFunction();
-	}
+    @Override
+    public IExternalScalarFunction getExternalFunction() {
+        return new SumFunction();
+    }
 
 }

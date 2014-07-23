@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -115,7 +115,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             ConstantExpression constExpr = (ConstantExpression) arg1;
             constVal = (AsterixConstantValue) constExpr.getValue();
             nonConstExpr = arg2;
-            // Get func ident as if swapping lhs and rhs.            
+            // Get func ident as if swapping lhs and rhs.
             normFuncIdent = getLhsAndRhsSwappedFuncIdent(funcIdent);
         } else if (arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             ConstantExpression constExpr = (ConstantExpression) arg2;
@@ -144,7 +144,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             AsterixConstantValue constVal, VariableReferenceExpression varRefExpr, List<AssignOperator> assigns,
             IOptimizationContext context) throws AlgebricksException {
 
-        // Find variable in assigns to determine its originating function.    	
+        // Find variable in assigns to determine its originating function.
         LogicalVariable var = varRefExpr.getVariableReference();
         Mutable<ILogicalExpression> simFuncExprRef = null;
         ScalarFunctionCallExpression simCheckFuncExpr = null;
@@ -172,13 +172,13 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
             }
         }
 
-        // Only non-null if we found that varRefExpr refers to an optimizable similarity function call. 
+        // Only non-null if we found that varRefExpr refers to an optimizable similarity function call.
         if (simCheckFuncExpr != null) {
             // Create a new assign under matchingAssign which assigns the result of our similarity-check function to a variable.
             LogicalVariable newVar = context.newVar();
             AssignOperator newAssign = new AssignOperator(newVar, new MutableObject<ILogicalExpression>(
                     simCheckFuncExpr));
-            // Hook up inputs. 
+            // Hook up inputs.
             newAssign.getInputs()
                     .add(new MutableObject<ILogicalOperator>(matchingAssign.getInputs().get(0).getValue()));
             matchingAssign.getInputs().get(0).setValue(newAssign);

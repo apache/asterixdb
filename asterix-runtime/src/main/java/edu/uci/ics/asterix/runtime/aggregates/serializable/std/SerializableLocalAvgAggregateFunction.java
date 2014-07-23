@@ -31,7 +31,7 @@ public class SerializableLocalAvgAggregateFunction extends AbstractSerializableA
 
     @Override
     public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws AlgebricksException {
-    	processDataValues(tuple, state, start, len);
+        processDataValues(tuple, state, start, len);
     }
 
     @Override
