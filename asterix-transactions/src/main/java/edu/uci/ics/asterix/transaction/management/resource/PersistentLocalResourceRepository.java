@@ -84,10 +84,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 if (!rootMetadataDir.exists()) {
                     boolean success = rootMetadataDir.mkdirs();
                     if (!success) {
-                        if (LOGGER.isLoggable(Level.SEVERE)) {
-                            LOGGER.severe("Unable to create root metadata directory"
-                                    + rootMetadataDir.getAbsolutePath());
-                        }
+                        throw new IllegalStateException(
+                                "Unable to create root metadata directory of PersistentLocalResourceRepository in "
+                                        + rootMetadataDir.getAbsolutePath());
                     }
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("created the root-metadata-file's directory: " + rootMetadataDir.getAbsolutePath());

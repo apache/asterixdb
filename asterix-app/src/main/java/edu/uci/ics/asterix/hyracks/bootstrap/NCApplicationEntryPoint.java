@@ -88,8 +88,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         }
         if (systemState == SystemState.CORRUPTED) {
             recoveryMgr.startRecovery(true);
-        } else if (systemState == SystemState.NEW_UNIVERSE) {
-            recoveryMgr.checkpoint(true);
         }
     }
 
@@ -181,7 +179,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
         recoveryMgr.checkpoint(true);
-        
+
         if (isMetadataNode) {
             IMetadataNode stub = null;
             stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
