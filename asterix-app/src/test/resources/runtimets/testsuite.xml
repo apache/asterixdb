@@ -2430,6 +2430,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index-circular-query">
+        <output-dir compare="Text">rtree-secondary-index-circular-query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="disjunctive-predicate-1">
         <output-dir compare="Text">disjunctive-predicate-1</output-dir>
       </compilation-unit>

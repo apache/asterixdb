@@ -227,9 +227,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                .getByteArray(), ACircleSerializerDeserializer
-                                                .getCenterPointCoordinateOffset(Coordinate.X));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(
+                                                outInput0.getByteArray(),
+                                                ACircleSerializerDeserializer.getRadiusOffset());
 
                                         value = x - radius;
                                     }
@@ -238,9 +238,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                .getByteArray(), ACircleSerializerDeserializer
-                                                .getCenterPointCoordinateOffset(Coordinate.Y));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(
+                                                outInput0.getByteArray(),
+                                                ACircleSerializerDeserializer.getRadiusOffset());
 
                                         value = y - radius;
                                     }
@@ -249,9 +249,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double x = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.X));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                .getByteArray(), ACircleSerializerDeserializer
-                                                .getCenterPointCoordinateOffset(Coordinate.X));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(
+                                                outInput0.getByteArray(),
+                                                ACircleSerializerDeserializer.getRadiusOffset());
 
                                         value = x + radius;
                                     }
@@ -260,9 +260,9 @@ public class CreateMBREvalFactory implements ICopyEvaluatorFactory {
                                         double y = ADoubleSerializerDeserializer.getDouble(outInput0.getByteArray(),
                                                 ACircleSerializerDeserializer
                                                         .getCenterPointCoordinateOffset(Coordinate.Y));
-                                        double radius = ADoubleSerializerDeserializer.getDouble(outInput0
-                                                .getByteArray(), ACircleSerializerDeserializer
-                                                .getCenterPointCoordinateOffset(Coordinate.Y));
+                                        double radius = ADoubleSerializerDeserializer.getDouble(
+                                                outInput0.getByteArray(),
+                                                ACircleSerializerDeserializer.getRadiusOffset());
 
                                         value = y + radius;
                                     }
