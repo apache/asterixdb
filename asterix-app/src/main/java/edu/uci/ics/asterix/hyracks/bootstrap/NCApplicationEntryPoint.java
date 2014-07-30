@@ -58,7 +58,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting Asterix node controller  TAKE NOTE: " + nodeId);
+            LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
 
         runtimeContext = new AsterixAppRuntimeContext(ncApplicationContext);
@@ -118,7 +118,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
     @Override
     public void notifyStartupComplete() throws Exception {
-        IAsterixStateProxy proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
 
@@ -135,12 +134,18 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0], true, null);
         }
 
+        IAsterixStateProxy proxy = null;
         isMetadataNode = nodeId.equals(metadataProperties.getMetadataNodeName());
         if (isMetadataNode) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Bootstrapping metadata");
             }
             MetadataNode.INSTANCE.initialize(runtimeContext);
+
+            proxy = (IAsterixStateProxy) ncApplicationContext.getDistributedState();
+            if (proxy == null) {
+                throw new IllegalStateException("Metadata node cannot access distributed state");
+            }
 
             // This is a special case, we just give the metadataNode directly.
             // This way we can delay the registration of the metadataNode until
