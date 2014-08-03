@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,8 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,15 +40,15 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
     static Map<Character, String> HTML_ENTITIES = new HashMap<Character, String>();
-    
+
     static {
         HTML_ENTITIES.put('"', "&quot;");
         HTML_ENTITIES.put('&', "&amp;");
         HTML_ENTITIES.put('<', "&lt;");
         HTML_ENTITIES.put('>', "&gt;");
     }
-    
-    public static String escapeHTML(String s) {        
+
+    public static String escapeHTML(String s) {
         for (Character c : HTML_ENTITIES.keySet()) {
             if (s.indexOf(c) >= 0) {
                 s = s.replace(c.toString(), HTML_ENTITIES.get(c));
@@ -114,7 +116,7 @@ public class ResultUtils {
                 escapeHTML(extractErrorSummary(e)), escapeHTML(extractFullStackTrace(e)));
         out.println(errorOutput);
     }
-    
+
     public static void webUIParseExceptionHandler(PrintWriter out, Throwable e, String query) {
         String errorTemplate = readTemplateFile("/webui/errortemplate_message.html", "<pre class=\"error\">%s\n</pre>");
 
@@ -142,17 +144,20 @@ public class ResultUtils {
         String message = e.getMessage();
         message = message.replace("<", "&lt");
         message = message.replace(">", "&gt");
-        errorMessage.append("SyntaxError:" + message + "\n");
+        errorMessage.append("SyntaxError: " + message + "\n");
         int pos = message.indexOf("line");
         if (pos > 0) {
-            int columnPos = message.indexOf(",", pos + 1 + "line".length());
-            int lineNo = Integer.parseInt(message.substring(pos + "line".length() + 1, columnPos));
-            String[] lines = query.split("\n");
-            if (lineNo >= lines.length) {
-                errorMessage.append("===> &ltBLANK LINE&gt \n");
-            } else {
-                String line = lines[lineNo - 1];
-                errorMessage.append("==> " + line);
+            Pattern p = Pattern.compile("\\d+");
+            Matcher m = p.matcher(message);
+            if (m.find(pos)) {
+                int lineNo = Integer.parseInt(message.substring(m.start(), m.end()));
+                String[] lines = query.split("\n");
+                if (lineNo > lines.length) {
+                    errorMessage.append("===> &ltBLANK LINE&gt \n");
+                } else {
+                    String line = lines[lineNo - 1];
+                    errorMessage.append("==> " + line);
+                }
             }
         }
         return errorMessage.toString();
@@ -169,7 +174,7 @@ public class ResultUtils {
 
     /**
      * Extract the message in the root cause of the stack trace:
-     * 
+     *
      * @param e
      * @return error message string.
      */
@@ -193,7 +198,7 @@ public class ResultUtils {
      * Extract the meaningful part of a stack trace:
      * a. the causes in the stack trace hierarchy
      * b. the top exception for each cause
-     * 
+     *
      * @param e
      * @return the contacted message containing a and b.
      */
@@ -211,7 +216,7 @@ public class ResultUtils {
 
     /**
      * Extract the full stack trace:
-     * 
+     *
      * @param e
      * @return the string containing the full stack trace of the error.
      */
@@ -225,7 +230,7 @@ public class ResultUtils {
     /**
      * Read the template file which is stored as a resource and return its content. If the file does not exist or is
      * not readable return the default template string.
-     * 
+     *
      * @param path
      *            The path to the resource template file
      * @param defaultTemplate

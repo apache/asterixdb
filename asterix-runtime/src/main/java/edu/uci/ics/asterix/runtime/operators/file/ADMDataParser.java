@@ -377,24 +377,57 @@ public class ADMDataParser extends AbstractDataParser {
     private String replaceEscapes(String tokenImage) throws ParseException {
         char[] chars = tokenImage.toCharArray();
         int len = chars.length;
-        int idx = 0;
-        while (idx < len) {
-            if (chars[idx] == '\\') {
-                switch (chars[idx + 1]) {
+        int readpos = 0;
+        int writepos = 0;
+        int movemarker = 0;
+        while (readpos < len) {
+            if (chars[readpos] == '\\') {
+                moveChars(chars, movemarker, readpos, readpos - writepos);
+                switch (chars[readpos + 1]) {
                     case '\\':
                     case '\"':
-                        for (int i = idx + 1; i < len; ++i) {
-                            chars[i - 1] = chars[i];
-                        }
-                        --len;
+                    case '/':
+                        chars[writepos] = chars[readpos + 1];
+                        break;
+                    case 'b':
+                        chars[writepos] = '\b';
+                        break;
+                    case 'f':
+                        chars[writepos] = '\f';
+                        break;
+                    case 'n':
+                        chars[writepos] = '\n';
+                        break;
+                    case 'r':
+                        chars[writepos] = '\r';
+                        break;
+                    case 't':
+                        chars[writepos] = '\t';
+                        break;
+                    case 'u':
+                        chars[writepos] = (char) Integer.parseInt(new String(chars, readpos + 2, 4), 16);
+                        readpos += 4;
                         break;
                     default:
-                        throw new ParseException("Illegal escape '\\" + chars[idx + 1] + "'");
+                        throw new ParseException("Illegal escape '\\" + chars[readpos + 1] + "'");
                 }
+                ++readpos;
+                movemarker = readpos + 1;
             }
-            ++idx;
+            ++writepos;
+            ++readpos;
         }
-        return new String(chars, 0, len);
+        moveChars(chars, movemarker, len, readpos - writepos);
+        return new String(chars, 0, len - (readpos - writepos));
+    }
+
+    private static void moveChars(final char[] chars, final int start, final int end, final int offset) {
+        if (offset == 0) {
+            return;
+        }
+        for (int i = start; i < end; ++i) {
+            chars[i - offset] = chars[i];
+        }
     }
 
     private IAType getComplexType(IAType aObjectType, ATypeTag tag) {

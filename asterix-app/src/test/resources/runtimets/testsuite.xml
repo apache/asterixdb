@@ -3879,6 +3879,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="escapes01">
+        <output-dir compare="Text">escapes01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="escapes02">
+        <output-dir compare="Text">escapes02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="length_01">
         <output-dir compare="Text">length_01</output-dir>
       </compilation-unit>
@@ -4801,8 +4811,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
-      <compilation-unit name="escapes">
-        <output-dir compare="Text">escapes</output-dir>
+      <compilation-unit name="escapes01">
+        <output-dir compare="Text">escapes01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="escapes02">
+        <output-dir compare="Text">escapes02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

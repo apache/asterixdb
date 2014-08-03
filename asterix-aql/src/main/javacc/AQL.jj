@@ -157,8 +157,18 @@ public class AQLParser extends ScopeChecker {
         File file = new File(args[0]);
         Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
         AQLParser parser = new AQLParser(fis);
-        List<Statement> st = parser.Statement();
+        List<Statement> st = parser.parse();
         //st.accept(new AQLPrintVisitor(), 0);
+    }
+
+    public List<Statement> parse() throws ParseException {
+        try {
+            return Statement();
+        } catch (Error e) {
+            // this is here as the JavaCharStream that's below the lexer somtimes throws Errors that are not handled
+            // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
+            throw new ParseException(e.getMessage());
+        }
     }
 }
 
@@ -2350,11 +2360,36 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <STRING_LITERAL : ("\"" (<EscapeQuot> | <EscapeBslash> | ~["\"","\\"])* "\"") 
-        | ("\'"(<EscapeApos> | <EscapeBslash> | ~["\'","\\"])* "\'")>
+    // backslash u + 4 hex digits escapes are handled in the underlying JavaCharStream
+    <STRING_LITERAL : ("\"" (
+          <EscapeQuot>
+        | <EscapeBslash>
+        | <EscapeSlash>
+        | <EscapeBspace>
+        | <EscapeFormf>
+        | <EscapeNl>
+        | <EscapeCr>
+        | <EscapeTab>
+        | ~["\"","\\"])* "\"")
+      | ("\'"(
+          <EscapeApos>
+        | <EscapeBslash>
+        | <EscapeSlash>
+        | <EscapeBspace>
+        | <EscapeFormf>
+        | <EscapeNl>
+        | <EscapeCr>
+        | <EscapeTab>
+        | ~["\'","\\"])* "\'")>
   | < #EscapeQuot: "\\\"" >
   | < #EscapeApos: "\\\'" >
   | < #EscapeBslash: "\\\\" >
+  | < #EscapeSlash: "\\/" >
+  | < #EscapeBspace: "\\b" >
+  | < #EscapeFormf: "\\f" >
+  | < #EscapeNl: "\\n" >
+  | < #EscapeCr: "\\r" >
+  | < #EscapeTab: "\\t" >
 }
 
 <DEFAULT,IN_DBL_BRACE>

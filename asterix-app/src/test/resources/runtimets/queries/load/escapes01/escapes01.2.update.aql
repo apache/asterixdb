@@ -1,0 +1,3 @@
+use dataverse TestDataverse;
+
+load dataset TestSet using localfs (("path"="nc1://data/escapes01.adm"),("format"="adm"));
