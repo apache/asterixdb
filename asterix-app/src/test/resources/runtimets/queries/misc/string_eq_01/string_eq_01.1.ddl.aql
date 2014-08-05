@@ -1,0 +1,25 @@
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type EmploymentType as open {
+        organization-name: string,      
+        start-date: date,
+        end-date: date?
+}
+
+create type FacebookUserType as closed {
+        id: int32,
+        alias: string,
+        name: string,
+        user-since: datetime,
+        friend-ids: {{ int32 }},
+        employment: [EmploymentType]
+}
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create index fbUserSinceIdx on FacebookUsers(user-since);
+create index fbUserAliasIdx on FacebookUsers(alias) type ngram(3);
+create index fbUserNameIdx2 on FacebookUsers(name) type keyword;

@@ -2722,6 +2722,11 @@
         <output-dir compare="Text">year_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="string_eq_01">
+        <output-dir compare="Text">string_eq_01</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="nestrecords">
     <test-case FilePath="nestrecords">

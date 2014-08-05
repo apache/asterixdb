@@ -1,0 +1,5 @@
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsers
+where $user.alias = 'Isbel'
+return $user;
