@@ -1,0 +1,9 @@
+use dataverse TinySocial;
+
+let $lonelyusers := for $d in dataset FacebookUsers where count($d.friend-ids) < 2 return $d
+let $lonelyusers2 := for $d in dataset FacebookUsers where count($d.friend-ids) < 2 return $d
+for $l1 in $lonelyusers
+for $l2 in $lonelyusers2
+where $l1.id < $l2.id
+order by $l1.id, $l2.id
+return { "user1": { "id": $l1.id, "name": $l1.name }, "user2": { "id": $l2.id, "name": $l2.name } };

@@ -90,4 +90,9 @@ public class CommitPOperator extends AbstractPhysicalOperator {
     public boolean isMicroOperator() {
         return true;
     }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

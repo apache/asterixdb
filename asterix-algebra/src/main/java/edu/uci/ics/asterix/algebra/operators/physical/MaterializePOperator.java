@@ -16,6 +16,7 @@
 package edu.uci.ics.asterix.algebra.operators.physical;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -78,5 +79,22 @@ public class MaterializePOperator extends AbstractPhysicalOperator {
     @Override
     public boolean isMicroOperator() {
         return true;
+    }
+
+    @Override
+    public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
+        int[] inputDependencyLabels = new int[] { 0 };
+        int[] outputDependencyLabels;
+        if (isSingleActivity) {
+            outputDependencyLabels = new int[] { 0 };
+        } else {
+            outputDependencyLabels = new int[] { 1 };
+        }
+        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+    }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
     }
 }

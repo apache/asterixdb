@@ -79,4 +79,9 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
             return super.getRequiredPropertiesForChildren(op, reqdByParent);
         }
     }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

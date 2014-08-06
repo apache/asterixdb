@@ -5157,6 +5157,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="materialization">
+    <test-case FilePath="materialization">
+      <compilation-unit name="assign-reuse">
+        <output-dir compare="Text">assign-reuse</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="filters">
   		<test-case FilePath="filters">
 			<compilation-unit name="equality-predicate">
