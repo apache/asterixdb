@@ -103,4 +103,9 @@ public class WriteResultPOperator extends AbstractPhysicalOperator {
         ILogicalOperator src = writeResultOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, writeResultOp, 0);
     }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

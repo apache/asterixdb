@@ -73,4 +73,8 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
         builder.contributeGraphEdge(src, 0, select, 0);
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

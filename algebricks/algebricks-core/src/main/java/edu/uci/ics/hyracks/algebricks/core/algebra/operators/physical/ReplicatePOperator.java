@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -64,10 +65,31 @@ public class ReplicatePOperator extends AbstractPhysicalOperator {
 
         ReplicateOperator rop = (ReplicateOperator) op;
         int outputArity = rop.getOutputArity();
+        boolean[] outputMaterializationFlags = rop.getOutputMaterializationFlags();
 
-        SplitOperatorDescriptor splitOpDesc = new SplitOperatorDescriptor(spec, recDescriptor, outputArity);
+        SplitOperatorDescriptor splitOpDesc = new SplitOperatorDescriptor(spec, recDescriptor, outputArity, outputMaterializationFlags);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, splitOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
+    }
+
+    @Override
+    public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
+        int[] inputDependencyLabels = new int[] { 0 };
+        ReplicateOperator rop = (ReplicateOperator) op;
+        int[] outputDependencyLabels = new int[rop.getOutputArity()];
+        // change the labels of outputs that requires materialization to 1
+        boolean[] outputMaterializationFlags = rop.getOutputMaterializationFlags();
+        for (int i = 0; i < rop.getOutputArity(); i++) {
+            if (outputMaterializationFlags[i]) {
+                outputDependencyLabels[i] = 1;
+            }
+        }
+        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+    }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
     }
 }

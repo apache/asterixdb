@@ -114,4 +114,8 @@ public class InsertDeletePOperator extends AbstractPhysicalOperator {
         return false;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

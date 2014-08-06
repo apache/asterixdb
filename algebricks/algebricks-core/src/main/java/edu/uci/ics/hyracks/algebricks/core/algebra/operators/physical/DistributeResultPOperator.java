@@ -106,4 +106,9 @@ public class DistributeResultPOperator extends AbstractPhysicalOperator {
         ILogicalOperator src = resultOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, resultOp, 0);
     }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

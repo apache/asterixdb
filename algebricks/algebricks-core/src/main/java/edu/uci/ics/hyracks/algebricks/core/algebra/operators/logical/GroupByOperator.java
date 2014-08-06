@@ -273,5 +273,4 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         }
         return env;
     }
-
 }

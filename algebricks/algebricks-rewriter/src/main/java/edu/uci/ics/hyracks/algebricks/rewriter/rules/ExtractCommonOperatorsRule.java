@@ -15,15 +15,19 @@
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -48,8 +52,11 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
     private HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents = new HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>>();
     private List<Mutable<ILogicalOperator>> roots = new ArrayList<Mutable<ILogicalOperator>>();
-    private List<Mutable<ILogicalOperator>> joins = new ArrayList<Mutable<ILogicalOperator>>();
     private List<List<Mutable<ILogicalOperator>>> equivalenceClasses = new ArrayList<List<Mutable<ILogicalOperator>>>();
+    private HashMap<Mutable<ILogicalOperator>, BitSet> opToCandidateInputs = new HashMap<Mutable<ILogicalOperator>, BitSet>();
+    private HashMap<Mutable<ILogicalOperator>, MutableInt> clusterMap = new HashMap<Mutable<ILogicalOperator>, MutableInt>();
+    private HashMap<Integer, BitSet> clusterWaitForMap = new HashMap<Integer, BitSet>();
+    private int lastUsedClusterId = 0;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
@@ -78,17 +85,18 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 changed = false;
                 // applying the rewriting until fixpoint
                 topDownMaterialization(roots);
-                removeNonJoinBuildBranchCandidates();
                 genCandidates(context);
                 removeTrivialShare();
-                removeNonJoinBuildBranchCandidates();
                 if (equivalenceClasses.size() > 0)
                     changed = rewrite(context);
                 if (!rewritten)
                     rewritten = changed;
                 equivalenceClasses.clear();
                 childrenToParents.clear();
-                joins.clear();
+                opToCandidateInputs.clear();
+                clusterMap.clear();
+                clusterWaitForMap.clear();
+                lastUsedClusterId = 0;
             } while (changed);
             roots.clear();
         }
@@ -109,41 +117,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         for (int i = equivalenceClasses.size() - 1; i >= 0; i--)
             if (equivalenceClasses.get(i).size() < 2)
                 equivalenceClasses.remove(i);
-    }
-
-    private void removeNonJoinBuildBranchCandidates() {
-        for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
-            for (int i = candidates.size() - 1; i >= 0; i--) {
-                Mutable<ILogicalOperator> opRef = candidates.get(i);
-                boolean reserve = false;
-                for (Mutable<ILogicalOperator> join : joins)
-                    if (isInJoinBuildBranch(join, opRef)) {
-                        reserve = true;
-                    }
-                if (!reserve)
-                    candidates.remove(i);
-            }
-        }
-        for (int i = equivalenceClasses.size() - 1; i >= 0; i--)
-            if (equivalenceClasses.get(i).size() < 2)
-                equivalenceClasses.remove(i);
-    }
-
-    private boolean isInJoinBuildBranch(Mutable<ILogicalOperator> joinRef, Mutable<ILogicalOperator> opRef) {
-        Mutable<ILogicalOperator> buildBranch = joinRef.getValue().getInputs().get(1);
-        do {
-            if (buildBranch.equals(opRef)) {
-                return true;
-            } else {
-                AbstractLogicalOperator aop = (AbstractLogicalOperator) buildBranch.getValue();
-                if (aop.getOperatorTag() == LogicalOperatorTag.INNERJOIN
-                        || aop.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN
-                        || buildBranch.getValue().getInputs().size() == 0)
-                    return false;
-                else
-                    buildBranch = buildBranch.getValue().getInputs().get(0);
-            }
-        } while (true);
     }
 
     private boolean rewrite(IOptimizationContext context) throws AlgebricksException {
@@ -170,40 +143,47 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     members.remove(i);
                 }
             }
-            AbstractLogicalOperator rop = new ReplicateOperator(group.size());
+            boolean[] materializationFlags = computeMaterilizationFlags(group);
+            if (group.isEmpty()) {
+                continue;
+            }
+            candidate = group.get(0);
+            ReplicateOperator rop = new ReplicateOperator(group.size(), materializationFlags);
             rop.setPhysicalOperator(new ReplicatePOperator());
             rop.setExecutionMode(ExecutionMode.PARTITIONED);
             Mutable<ILogicalOperator> ropRef = new MutableObject<ILogicalOperator>(rop);
             AbstractLogicalOperator aopCandidate = (AbstractLogicalOperator) candidate.getValue();
+            List<Mutable<ILogicalOperator>> originalCandidateParents = childrenToParents.get(candidate);
 
             if (aopCandidate.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
                 rop.getInputs().add(candidate);
             } else {
                 AbstractLogicalOperator beforeExchange = new ExchangeOperator();
                 beforeExchange.setPhysicalOperator(new OneToOneExchangePOperator());
+                Mutable<ILogicalOperator> beforeExchangeRef = new MutableObject<ILogicalOperator>(beforeExchange);
                 beforeExchange.getInputs().add(candidate);
                 context.computeAndSetTypeEnvironmentForOperator(beforeExchange);
-                rop.getInputs().add(new MutableObject<ILogicalOperator>(beforeExchange));
+                rop.getInputs().add(beforeExchangeRef);
             }
             context.computeAndSetTypeEnvironmentForOperator(rop);
 
-            List<Mutable<ILogicalOperator>> parents = childrenToParents.get(candidate);
-            for (Mutable<ILogicalOperator> parentRef : parents) {
+            for (Mutable<ILogicalOperator> parentRef : originalCandidateParents) {
                 AbstractLogicalOperator parent = (AbstractLogicalOperator) parentRef.getValue();
                 int index = parent.getInputs().indexOf(candidate);
                 if (parent.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
                     parent.getInputs().set(index, ropRef);
+                    rop.getOutputs().add(parentRef);
                 } else {
                     AbstractLogicalOperator exchange = new ExchangeOperator();
                     exchange.setPhysicalOperator(new OneToOneExchangePOperator());
+                    MutableObject<ILogicalOperator> exchangeRef = new MutableObject<ILogicalOperator>(exchange);
                     exchange.getInputs().add(ropRef);
+                    rop.getOutputs().add(exchangeRef);
                     context.computeAndSetTypeEnvironmentForOperator(exchange);
-                    // parent.getInputs().get(index).setValue(exchange);
-                    parent.getInputs().set(index, new MutableObject<ILogicalOperator>(exchange));
+                    parent.getInputs().set(index, exchangeRef);
                     context.computeAndSetTypeEnvironmentForOperator(parent);
                 }
             }
-
             List<LogicalVariable> liveVarsNew = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(candidate.getValue(), liveVarsNew);
             ArrayList<Mutable<ILogicalExpression>> assignExprs = new ArrayList<Mutable<ILogicalExpression>>();
@@ -226,9 +206,11 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 AbstractLogicalOperator exchOp = new ExchangeOperator();
                 exchOp.setPhysicalOperator(new OneToOneExchangePOperator());
                 exchOp.getInputs().add(ropRef);
-
-                assignOperator.getInputs().add(new MutableObject<ILogicalOperator>(exchOp));
+                MutableObject<ILogicalOperator> exchOpRef = new MutableObject<ILogicalOperator>(exchOp);
+                rop.getOutputs().add(exchOpRef);
+                assignOperator.getInputs().add(exchOpRef);
                 projectOperator.getInputs().add(new MutableObject<ILogicalOperator>(assignOperator));
+
                 // set the types
                 context.computeAndSetTypeEnvironmentForOperator(exchOp);
                 context.computeAndSetTypeEnvironmentForOperator(assignOperator);
@@ -247,18 +229,18 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                         }
                     }
 
-                    AbstractLogicalOperator exchg = new ExchangeOperator();
-                    exchg.setPhysicalOperator(new OneToOneExchangePOperator());
-
                     ILogicalOperator childOp = parentOp.getOperatorTag() == LogicalOperatorTag.PROJECT ? assignOperator
                             : projectOperator;
                     if (parentOp.isMap()) {
                         parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(childOp));
                     } else {
+                        AbstractLogicalOperator exchg = new ExchangeOperator();
+                        exchg.setPhysicalOperator(new OneToOneExchangePOperator());
                         exchg.getInputs().add(new MutableObject<ILogicalOperator>(childOp));
                         parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(exchg));
+                        context.computeAndSetTypeEnvironmentForOperator(exchg);
                     }
-                    context.computeAndSetTypeEnvironmentForOperator(exchg);
+                    context.computeAndSetTypeEnvironmentForOperator(parentOp);
                 }
             }
             rewritten = true;
@@ -302,11 +284,6 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalOperator>> candidates = new ArrayList<Mutable<ILogicalOperator>>();
         List<Mutable<ILogicalOperator>> nextLevel = new ArrayList<Mutable<ILogicalOperator>>();
         for (Mutable<ILogicalOperator> op : tops) {
-            AbstractLogicalOperator aop = (AbstractLogicalOperator) op.getValue();
-            if ((aop.getOperatorTag() == LogicalOperatorTag.INNERJOIN || aop.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN)
-                    && !joins.contains(op)) {
-                joins.add(op);
-            }
             for (Mutable<ILogicalOperator> opRef : op.getValue().getInputs()) {
                 List<Mutable<ILogicalOperator>> opRefList = childrenToParents.get(opRef);
                 if (opRefList == null) {
@@ -335,19 +312,34 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         candidates.clear();
         boolean validCandidate = false;
         for (Mutable<ILogicalOperator> op : opList) {
-            for (Mutable<ILogicalOperator> inputRef : op.getValue().getInputs()) {
+            List<Mutable<ILogicalOperator>> inputs = op.getValue().getInputs();
+            for (int i = 0; i < inputs.size(); i++) {
+                Mutable<ILogicalOperator> inputRef = inputs.get(i);
                 validCandidate = false;
-                // if current input is in candidates
-                for (Mutable<ILogicalOperator> candidate : previousCandidates)
-                    if (inputRef.getValue().equals(candidate.getValue()))
-                        validCandidate = true;
-                // if one input is not in candidates
-                if (!validCandidate)
-                    break;
+                for (Mutable<ILogicalOperator> candidate : previousCandidates) {
+                    // if current input is in candidates
+                    if (inputRef.getValue().equals(candidate.getValue())) {
+                        if (inputs.size() == 1) {
+                            validCandidate = true;
+                        } else {
+                            BitSet candidateInputBitMap = opToCandidateInputs.get(op);
+                            if (candidateInputBitMap == null) {
+                                candidateInputBitMap = new BitSet(inputs.size());
+                                opToCandidateInputs.put(op, candidateInputBitMap);
+                            }
+                            candidateInputBitMap.set(i);
+                            if (candidateInputBitMap.cardinality() == inputs.size()) {
+                                validCandidate = true;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
             if (!validCandidate)
                 continue;
-            candidates.add(op);
+            if (!candidates.contains(op))
+                candidates.add(op);
         }
     }
 
@@ -390,4 +382,122 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         }
     }
 
+    private boolean[] computeMaterilizationFlags(List<Mutable<ILogicalOperator>> group) {
+        lastUsedClusterId = 0;
+        for (Mutable<ILogicalOperator> root : roots) {
+            computeClusters(null, root, new MutableInt(++lastUsedClusterId));
+        }
+        boolean[] materializationFlags = new boolean[group.size()];
+        boolean worthMaterialization = worthMaterialization(group.get(0));
+        boolean requiresMaterialization;
+        // get clusterIds for each candidate in the group
+        List<Integer> groupClusterIds = new ArrayList<Integer>(group.size());
+        for (int i = 0; i < group.size(); i++) {
+            groupClusterIds.add(clusterMap.get(group.get(i)).getValue());
+        }
+        for (int i = group.size() - 1; i >= 0; i--) {
+            requiresMaterialization = requiresMaterialization(groupClusterIds, i);
+            if (requiresMaterialization && !worthMaterialization) {
+                group.remove(i);
+                groupClusterIds.remove(i);
+            }
+            materializationFlags[i] = requiresMaterialization;
+        }
+        if (group.size() < 2) {
+            group.clear();
+        }
+        // if does not worth materialization, the flags for the remaining candidates should be false
+        return worthMaterialization ? materializationFlags : new boolean[group.size()];
+    }
+
+    private boolean requiresMaterialization(List<Integer> groupClusterIds, int index) {
+        Integer clusterId = groupClusterIds.get(index);
+        BitSet blockingClusters = new BitSet();
+        getAllBlockingClusterIds(clusterId, blockingClusters);
+        if (!blockingClusters.isEmpty()) {
+            for (int i = 0; i < groupClusterIds.size(); i++) {
+                if (i == index) {
+                    continue;
+                }
+                if (blockingClusters.get(groupClusterIds.get(i))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void getAllBlockingClusterIds(int clusterId, BitSet blockingClusters) {
+        BitSet waitFor = clusterWaitForMap.get(clusterId);
+        if (waitFor != null) {
+            for (int i = waitFor.nextSetBit(0); i >= 0; i = waitFor.nextSetBit(i + 1)) {
+                getAllBlockingClusterIds(i, blockingClusters);
+            }
+            blockingClusters.or(waitFor);
+        }
+    }
+
+    private void computeClusters(Mutable<ILogicalOperator> parentRef, Mutable<ILogicalOperator> opRef,
+            MutableInt currentClusterId) {
+        // only replicate operator has multiple outputs
+        int outputIndex = 0;
+        if (opRef.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE) {
+            ReplicateOperator rop = (ReplicateOperator) opRef.getValue();
+            List<Mutable<ILogicalOperator>> outputs = rop.getOutputs();
+            for (outputIndex = 0; outputIndex < outputs.size(); outputIndex++) {
+                if (outputs.get(outputIndex).equals(parentRef)) {
+                    break;
+                }
+            }
+        }
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) opRef.getValue();
+        Pair<int[], int[]> labels = aop.getPhysicalOperator().getInputOutputDependencyLabels(opRef.getValue());
+        List<Mutable<ILogicalOperator>> inputs = opRef.getValue().getInputs();
+        for (int i = 0; i < inputs.size(); i++) {
+            Mutable<ILogicalOperator> inputRef = inputs.get(i);
+            if (labels.second[outputIndex] == 1 && labels.first[i] == 0) { // 1 -> 0
+                if (labels.second.length == 1) {
+                    clusterMap.put(opRef, currentClusterId);
+                    // start a new cluster
+                    MutableInt newClusterId = new MutableInt(++lastUsedClusterId);
+                    computeClusters(opRef, inputRef, newClusterId);
+                    BitSet waitForList = clusterWaitForMap.get(currentClusterId.getValue());
+                    if (waitForList == null) {
+                        waitForList = new BitSet();
+                        clusterWaitForMap.put(currentClusterId.getValue(), waitForList);
+                    }
+                    waitForList.set(newClusterId.getValue());
+                }
+            } else { // 0 -> 0 and 1 -> 1
+                MutableInt prevClusterId = clusterMap.get(opRef);
+                if (prevClusterId == null || prevClusterId.getValue().equals(currentClusterId.getValue())) {
+                    clusterMap.put(opRef, currentClusterId);
+                    computeClusters(opRef, inputRef, currentClusterId);
+                } else {
+                    // merge prevClusterId and currentClusterId: update all the map entries that has currentClusterId to prevClusterId
+                    for (BitSet bs : clusterWaitForMap.values()) {
+                        if (bs.get(currentClusterId.getValue())) {
+                            bs.clear(currentClusterId.getValue());
+                            bs.set(prevClusterId.getValue());
+                        }
+                    }
+                    currentClusterId.setValue(prevClusterId.getValue());
+                }
+            }
+        }
+    }
+
+    private boolean worthMaterialization(Mutable<ILogicalOperator> candidate) {
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) candidate.getValue();
+        if (aop.getPhysicalOperator().expensiveThanMaterialization()) {
+            return true;
+        }
+        List<Mutable<ILogicalOperator>> inputs = candidate.getValue().getInputs();
+        for (Mutable<ILogicalOperator> inputRef : inputs) {
+            if (worthMaterialization(inputRef)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

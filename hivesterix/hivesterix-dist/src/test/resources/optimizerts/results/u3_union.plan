@@ -12,14 +12,22 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
           -- ASSIGN  |PARTITIONED|
             select (function-call: algebricks:gt, Args:[function-call: hive:org.apache.hadoop.hive.ql.udf.UDFOPMultiply, Args:[%0->$$1, 2], 50])
             -- STREAM_SELECT  |PARTITIONED|
-              exchange 
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$1, $$2, $$3, $$4, $$5, $$6, $$7] <- default.supplier
-                -- DATASOURCE_SCAN  |PARTITIONED|
+              project ([$$1, $$2, $$3, $$4, $$5, $$6, $$7])
+              -- STREAM_PROJECT  |PARTITIONED|
+                assign [$$1, $$2, $$3, $$4, $$5, $$6, $$7] <- [%0->$$9, %0->$$10, %0->$$11, %0->$$12, %0->$$13, %0->$$14, %0->$$15]
+                -- ASSIGN  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    empty-tuple-source
-                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    replicate 
+                    -- SPLIT  |PARTITIONED|
+                      exchange 
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$9, $$10, $$11, $$12, $$13, $$14, $$15] <- default.supplier
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange 
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
       exchange 
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         project ([$$16, $$11, $$12, $$10])
@@ -30,9 +38,13 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
             -- STREAM_SELECT  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$9, $$10, $$11, $$12, $$13, $$14, $$15] <- default.supplier
-                -- DATASOURCE_SCAN  |PARTITIONED|
+                replicate 
+                -- SPLIT  |PARTITIONED|
                   exchange 
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    empty-tuple-source
-                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    data-scan []<-[$$9, $$10, $$11, $$12, $$13, $$14, $$15] <- default.supplier
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange 
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

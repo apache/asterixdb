@@ -14,38 +14,58 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
             -- NESTED_LOOP  |PARTITIONED|
               exchange 
               -- BROADCAST_EXCHANGE  |PARTITIONED|
-                select (function-call: algebricks:eq, Args:[%0->$$2, GERMANY])
-                -- STREAM_SELECT  |PARTITIONED|
-                  exchange 
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan [$$1, $$2]<-[$$1, $$2, $$3, $$4] <- default.nation
-                    -- DATASOURCE_SCAN  |PARTITIONED|
-                      exchange 
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        empty-tuple-source
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                project ([$$1, $$2])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$1, $$2] <- [%0->$$9, %0->$$10]
+                  -- ASSIGN  |PARTITIONED|
+                    exchange 
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      replicate 
+                      -- SPLIT  |PARTITIONED|
+                        exchange 
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          select (function-call: algebricks:eq, Args:[%0->$$10, GERMANY])
+                          -- STREAM_SELECT  |PARTITIONED|
+                            exchange 
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              replicate 
+                              -- SPLIT  |PARTITIONED|
+                                exchange 
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  data-scan [$$9, $$10]<-[$$9, $$10, $$11, $$12] <- default.nation
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange 
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
+                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange 
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 project ([$$5, $$6])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  select (function-call: algebricks:eq, Args:[%0->$$6, FRANCE])
-                  -- STREAM_SELECT  |PARTITIONED|
-                    project ([$$5, $$6])
-                    -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$5, $$6] <- [%0->$$9, %0->$$10]
-                      -- ASSIGN  |PARTITIONED|
-                        exchange 
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          replicate 
-                          -- SPLIT  |PARTITIONED|
-                            exchange 
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan [$$9, $$10]<-[$$9, $$10, $$11, $$12] <- default.nation
-                              -- DATASOURCE_SCAN  |PARTITIONED|
-                                exchange 
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  empty-tuple-source
-                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange 
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate 
+                    -- SPLIT  |PARTITIONED|
+                      exchange 
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (function-call: algebricks:eq, Args:[%0->$$6, FRANCE])
+                        -- STREAM_SELECT  |PARTITIONED|
+                          project ([$$5, $$6])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$5, $$6] <- [%0->$$9, %0->$$10]
+                            -- ASSIGN  |PARTITIONED|
+                              exchange 
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                replicate 
+                                -- SPLIT  |PARTITIONED|
+                                  exchange 
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    data-scan [$$9, $$10]<-[$$9, $$10, $$11, $$12] <- default.nation
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange 
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
       exchange 
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         project ([$$10, $$14, $$9, $$13])
@@ -56,34 +76,58 @@ write [%0->$$17, %0->$$18, %0->$$19, %0->$$20]
             -- NESTED_LOOP  |PARTITIONED|
               exchange 
               -- BROADCAST_EXCHANGE  |PARTITIONED|
-                select (function-call: algebricks:eq, Args:[%0->$$14, FRANCE])
-                -- STREAM_SELECT  |PARTITIONED|
-                  exchange 
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan [$$13, $$14]<-[$$13, $$14, $$15, $$16] <- default.nation
-                    -- DATASOURCE_SCAN  |PARTITIONED|
-                      exchange 
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        empty-tuple-source
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              exchange 
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$9, $$10])
+                project ([$$13, $$14])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  select (function-call: algebricks:eq, Args:[%0->$$10, GERMANY])
-                  -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$13, $$14] <- [%0->$$5, %0->$$6]
+                  -- ASSIGN  |PARTITIONED|
                     exchange 
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       replicate 
                       -- SPLIT  |PARTITIONED|
                         exchange 
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan [$$9, $$10]<-[$$9, $$10, $$11, $$12] <- default.nation
-                          -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange 
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          select (function-call: algebricks:eq, Args:[%0->$$6, FRANCE])
+                          -- STREAM_SELECT  |PARTITIONED|
+                            project ([$$5, $$6])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$5, $$6] <- [%0->$$9, %0->$$10]
+                              -- ASSIGN  |PARTITIONED|
+                                exchange 
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  replicate 
+                                  -- SPLIT  |PARTITIONED|
+                                    exchange 
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      data-scan [$$9, $$10]<-[$$9, $$10, $$11, $$12] <- default.nation
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange 
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange 
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$9, $$10])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange 
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate 
+                    -- SPLIT  |PARTITIONED|
+                      exchange 
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (function-call: algebricks:eq, Args:[%0->$$10, GERMANY])
+                        -- STREAM_SELECT  |PARTITIONED|
+                          exchange 
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate 
+                            -- SPLIT  |PARTITIONED|
+                              exchange 
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                data-scan [$$9, $$10]<-[$$9, $$10, $$11, $$12] <- default.nation
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange 
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
 write [%0->$$47, %0->$$48, %0->$$49, %0->$$50]
 -- SINK_WRITE  |PARTITIONED|
   project ([$$47, $$48, $$49, $$50])

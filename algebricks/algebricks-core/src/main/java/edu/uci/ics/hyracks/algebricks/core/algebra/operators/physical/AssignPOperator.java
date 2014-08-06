@@ -99,4 +99,8 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         this.flushFramesRapidly = flushFramesRapidly;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

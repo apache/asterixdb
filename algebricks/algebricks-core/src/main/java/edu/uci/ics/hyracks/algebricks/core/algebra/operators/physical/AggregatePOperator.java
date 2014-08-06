@@ -114,4 +114,8 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         return true;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

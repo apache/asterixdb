@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 
 public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
@@ -36,5 +38,17 @@ public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
 
     public JoinPartitioningType getPartitioningType() {
         return partitioningType;
+    }
+
+    @Override
+    public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
+        int[] inputDependencyLabels = new int[] { 1, 0 };
+        int[] outputDependencyLabels = new int[] { 1 };
+        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
+    }
+
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
     }
 }

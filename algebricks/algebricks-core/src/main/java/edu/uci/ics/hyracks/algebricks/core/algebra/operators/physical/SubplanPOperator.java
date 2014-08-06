@@ -104,4 +104,8 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         builder.contributeGraphEdge(src, 0, op, 0);
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

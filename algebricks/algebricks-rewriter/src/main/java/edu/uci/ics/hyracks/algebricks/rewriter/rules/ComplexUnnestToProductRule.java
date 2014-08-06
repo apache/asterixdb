@@ -264,7 +264,7 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
                     if (targetUsedVars == null) {
                         return false;
                     }
-                } else {
+                } else if (innerMatches != 0 && outerMatches != 0) {
                     // The current operator produces variables that are used by both partitions, so the inner and outer are not independent and, therefore, we cannot create a join.
                     // TODO: We may still be able to split the operator to create a viable partitioning.
                     return false;

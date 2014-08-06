@@ -249,4 +249,8 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         return null;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

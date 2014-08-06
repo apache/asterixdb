@@ -75,4 +75,8 @@ public class StringStreamingScriptPOperator extends AbstractPropagatePropertiesF
         computeDeliveredPropertiesForUsedVariables(s, s.getInputVariables());
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

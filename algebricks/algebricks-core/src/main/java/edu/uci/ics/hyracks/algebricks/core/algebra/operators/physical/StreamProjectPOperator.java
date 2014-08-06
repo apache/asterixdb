@@ -81,4 +81,8 @@ public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVa
         this.flushFramesRapidly = flushFramesRapidly;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

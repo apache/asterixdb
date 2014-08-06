@@ -48,22 +48,20 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * Replaces redundant variable references with their bottom-most equivalent representative.
  * Does a DFS sweep over the plan keeping track of variable equivalence classes.
  * For example, this rule would perform the following rewrite.
- * 
  * Before Plan:
  * select (function-call: func, Args:[%0->$$11])
- *   project [$11]
- *     assign [$$11] <- [$$10]
- *       assign [$$10] <- [$$9]
- *         assign [$$9] <- ...
- *           ...
- *           
+ * project [$11]
+ * assign [$$11] <- [$$10]
+ * assign [$$10] <- [$$9]
+ * assign [$$9] <- ...
+ * ...
  * After Plan:
  * select (function-call: func, Args:[%0->$$9])
- *   project [$9]
- *     assign [$$11] <- [$$9]
- *       assign [$$10] <- [$$9]
- *         assign [$$9] <- ...
- *           ...
+ * project [$9]
+ * assign [$$11] <- [$$9]
+ * assign [$$10] <- [$$9]
+ * assign [$$9] <- ...
+ * ...
  */
 public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
 
@@ -71,7 +69,7 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
     private final Map<LogicalVariable, List<LogicalVariable>> equivalentVarsMap = new HashMap<LogicalVariable, List<LogicalVariable>>();
 
     protected boolean hasRun = false;
-    
+
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
@@ -138,7 +136,7 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
             if (replaceProjectVars((ProjectOperator) op)) {
                 modified = true;
             }
-        } else if(op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+        } else if (op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
             // Replace redundant variables manually in the UnionAll operator.
             if (replaceUnionAllVars((UnionAllOperator) op)) {
                 modified = true;
@@ -205,6 +203,25 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
                 }
             }
         }
+        // find the redundant variables within the decor list
+        Map<LogicalVariable, LogicalVariable> variableToFirstDecorMap = new HashMap<LogicalVariable, LogicalVariable>();
+        Iterator<Pair<LogicalVariable, Mutable<ILogicalExpression>>> iter = groupOp.getDecorList().iterator();
+        while (iter.hasNext()) {
+            Pair<LogicalVariable, Mutable<ILogicalExpression>> dp = iter.next();
+            if (dp.first == null || dp.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                continue;
+            }
+            LogicalVariable dv = ((VariableReferenceExpression) dp.second.getValue()).getVariableReference();
+            LogicalVariable firstDecor = variableToFirstDecorMap.get(dv);
+            if (firstDecor == null) {
+                variableToFirstDecorMap.put(dv, dp.first);
+            } else {
+                // The decor variable dp.first is redundant since firstDecor is exactly the same.
+                updateEquivalenceClassMap(dp.first, firstDecor);
+                iter.remove();
+                modified = true;
+            }
+        }
         return modified;
     }
 
@@ -251,7 +268,7 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         }
         return modified;
     }
-    
+
     private class VariableSubstitutionVisitor implements ILogicalExpressionReferenceTransform {
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) {

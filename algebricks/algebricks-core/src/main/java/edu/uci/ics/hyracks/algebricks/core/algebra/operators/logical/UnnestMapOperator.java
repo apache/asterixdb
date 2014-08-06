@@ -131,5 +131,4 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
         return !propagateInput;
     }
     */
-
 }

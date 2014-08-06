@@ -100,4 +100,8 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
         builder.contributeGraphEdge(src, 0, limit, 0);
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

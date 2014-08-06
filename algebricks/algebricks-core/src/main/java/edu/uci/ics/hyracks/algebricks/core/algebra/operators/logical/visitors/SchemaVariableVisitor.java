@@ -224,7 +224,11 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Void arg) throws AlgebricksException {
-        standardLayout(op);
+        if (op.propagatesInput()) {
+            standardLayout(op);
+        } else {
+            VariableUtilities.getProducedVariables(op, schemaVariables);
+        }
         return null;
     }
 

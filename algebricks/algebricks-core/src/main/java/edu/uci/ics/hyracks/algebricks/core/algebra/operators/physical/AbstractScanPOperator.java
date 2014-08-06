@@ -26,4 +26,8 @@ public abstract class AbstractScanPOperator extends AbstractPhysicalOperator {
         return emptyUnaryRequirements();
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

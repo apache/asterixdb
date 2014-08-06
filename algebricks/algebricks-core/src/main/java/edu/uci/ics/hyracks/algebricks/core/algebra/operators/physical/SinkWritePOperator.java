@@ -104,4 +104,8 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
         builder.contributeGraphEdge(src, 0, write, 0);
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

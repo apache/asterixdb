@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitio
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -77,6 +78,17 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     @Override
     public boolean isJobGenDisabledBelowMe() {
         return disableJobGenBelow;
+    }
+
+    /**
+     * @return labels (0 or 1) for each input and output indicating the dependency between them.
+     *         The edges labeled as 1 must wait for the edges with label 0.
+     */
+    @Override
+    public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
+        int[] inputDependencyLabels = new int[op.getInputs().size()]; // filled with 0's
+        int[] outputDependencyLabels = new int[] { 0 };
+        return new Pair<int[], int[]>(inputDependencyLabels, outputDependencyLabels);
     }
 
     protected void contributeOpDesc(IHyracksJobBuilder builder, AbstractLogicalOperator op, IOperatorDescriptor opDesc) {

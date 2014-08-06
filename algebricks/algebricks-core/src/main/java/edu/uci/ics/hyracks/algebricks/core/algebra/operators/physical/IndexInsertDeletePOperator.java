@@ -124,4 +124,8 @@ public class IndexInsertDeletePOperator extends AbstractPhysicalOperator {
         return false;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

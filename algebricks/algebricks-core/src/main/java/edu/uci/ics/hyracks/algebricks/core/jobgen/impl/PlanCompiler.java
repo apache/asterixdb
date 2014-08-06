@@ -26,7 +26,9 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
@@ -43,7 +45,8 @@ public class PlanCompiler {
         return context;
     }
 
-    public JobSpecification compilePlan(ILogicalPlan plan, IOperatorSchema outerPlanSchema, IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
+    public JobSpecification compilePlan(ILogicalPlan plan, IOperatorSchema outerPlanSchema,
+            IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
         JobSpecification spec = new JobSpecification(context.getFrameSize());
         if (jobEventListenerFactory != null) {
             spec.setJobletEventListenerFactory(jobEventListenerFactory);
@@ -63,8 +66,8 @@ public class PlanCompiler {
         return spec;
     }
 
-    private void compileOpRef(Mutable<ILogicalOperator> opRef, IOperatorDescriptorRegistry spec, IHyracksJobBuilder builder,
-            IOperatorSchema outerPlanSchema) throws AlgebricksException {
+    private void compileOpRef(Mutable<ILogicalOperator> opRef, IOperatorDescriptorRegistry spec,
+            IHyracksJobBuilder builder, IOperatorSchema outerPlanSchema) throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
         int n = op.getInputs().size();
         IOperatorSchema[] schemas = new IOperatorSchema[n];
@@ -100,10 +103,21 @@ public class PlanCompiler {
             Mutable<ILogicalOperator> child = entry.getKey();
             List<Mutable<ILogicalOperator>> parents = entry.getValue();
             if (parents.size() > 1) {
-                int i = 0;
-                for (Mutable<ILogicalOperator> parent : parents) {
-                    builder.contributeGraphEdge(child.getValue(), i, parent.getValue(), 0);
-                    i++;
+                if (child.getValue().getOperatorTag() == LogicalOperatorTag.REPLICATE) {
+                    ReplicateOperator rop = (ReplicateOperator) child.getValue();
+                    if (rop.isBlocker()) {
+                        // make the order of the graph edges consistent with the order of rop's outputs
+                        List<Mutable<ILogicalOperator>> outputs = rop.getOutputs();
+                        for (Mutable<ILogicalOperator> parent : parents) {
+                            builder.contributeGraphEdge(child.getValue(), outputs.indexOf(parent), parent.getValue(), 0);
+                        }
+                    } else {
+                        int i = 0;
+                        for (Mutable<ILogicalOperator> parent : parents) {
+                            builder.contributeGraphEdge(child.getValue(), i, parent.getValue(), 0);
+                            i++;
+                        }
+                    }
                 }
             }
         }

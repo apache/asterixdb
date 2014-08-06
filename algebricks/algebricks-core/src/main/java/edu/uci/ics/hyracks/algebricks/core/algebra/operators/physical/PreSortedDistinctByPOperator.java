@@ -136,4 +136,8 @@ public class PreSortedDistinctByPOperator extends AbstractPhysicalOperator {
         return PhysicalOperatorTag.PRE_SORTED_DISTINCT_BY;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return true;
+    }
 }

@@ -40,6 +40,11 @@ public abstract class AbstractExchangePOperator extends AbstractPhysicalOperator
         return false;
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
+
     public abstract Pair<IConnectorDescriptor, TargetConstraint> createConnectorDescriptor(
             IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context)
             throws AlgebricksException;

@@ -65,4 +65,8 @@ public class EmptyTupleSourcePOperator extends AbstractPhysicalOperator {
         builder.contributeMicroOperator(op, runtime, recDesc);
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }

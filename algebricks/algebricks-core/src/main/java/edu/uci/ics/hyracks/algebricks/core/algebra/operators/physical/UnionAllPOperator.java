@@ -98,4 +98,8 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
         builder.contributeGraphEdge(src2, 0, op, 1);
     }
 
+    @Override
+    public boolean expensiveThanMaterialization() {
+        return false;
+    }
 }
