@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.aql.translator;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -2069,37 +2068,14 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         hcc.waitForCompletion(jobId);
                         break;
                     case SYNC:
-                        if (pdf == DisplayFormat.HTML) {
-                            out.println("<h4>Results:</h4>");
-                            out.println("<pre>");
-                        }
-
-                        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
                         ResultReader resultReader = new ResultReader(hcc, hdc);
                         resultReader.open(jobId, metadataProvider.getResultSetId());
-                        buffer.clear();
 
-                        JSONArray results = new JSONArray();
-                        while (resultReader.read(buffer) > 0) {
-                            ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(), results);
-                            buffer.clear();
-                        }
+                        // In this case (the normal case), we don't use the
+                        // "response" JSONObject - just stream the results
+                        // to the "out" PrintWriter
+                        ResultUtils.displayResults(resultReader, out, pdf);
 
-                        response.put("results", results);
-                        switch (pdf) {
-                            case HTML:
-                                ResultUtils.prettyPrintHTML(out, response);
-                                break;
-                            case TEXT:
-                            case JSON:
-                                out.print(response);
-                                break;
-                        }
-                        out.flush();
-
-                        if (pdf == DisplayFormat.HTML) {
-                            out.println("</pre>");
-                        }
                         hcc.waitForCompletion(jobId);
                         break;
                     case ASYNC_DEFERRED:

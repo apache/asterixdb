@@ -53,7 +53,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             String mountPoint = devices.get(i).getPath().getPath();
             File mountPointDir = new File(mountPoint);
             if (!mountPointDir.exists()) {
-                throw new HyracksDataException(mountPointDir.getAbsolutePath() + "doesn't exist.");
+                throw new HyracksDataException(mountPointDir.getAbsolutePath() + " doesn't exist.");
             }
             if (!mountPoint.endsWith(System.getProperty("file.separator"))) {
                 mountPoints[i] = new String(mountPoint + System.getProperty("file.separator"));

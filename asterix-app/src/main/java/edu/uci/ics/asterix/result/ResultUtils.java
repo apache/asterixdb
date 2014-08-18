@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -32,6 +33,7 @@ import org.json.JSONObject;
 
 import com.sun.el.parser.ParseException;
 
+import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -39,6 +41,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
+
     static Map<Character, String> HTML_ENTITIES = new HashMap<Character, String>();
 
     static {
@@ -57,26 +61,82 @@ public class ResultUtils {
         return s;
     }
 
-    public static void getJSONFromBuffer(ByteBuffer buffer, IFrameTupleAccessor fta, JSONArray resultRecords)
+    public static void displayResults(ResultReader resultReader, PrintWriter out, DisplayFormat pdf)
             throws HyracksDataException {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
+        IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
-        try {
-            fta.reset(buffer);
-            for (int tIndex = 0; tIndex < fta.getTupleCount(); tIndex++) {
-                int start = fta.getTupleStartOffset(tIndex);
-                int length = fta.getTupleEndOffset(tIndex) - start;
-                bbis.setByteBuffer(buffer, start);
-                byte[] recordBytes = new byte[length];
-                bbis.read(recordBytes, 0, length);
-                resultRecords.put(new String(recordBytes, 0, length));
-            }
-        } finally {
+        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
+        buffer.clear();
+
+        JSONArray adm_results = null;
+        switch (pdf) {
+        case HTML:
+            out.println("<h4>Results:</h4>");
+            out.println("<pre>");
+            break;
+        case JSON:
+            out.print("[ ");
+            break;
+        case TEXT:
+            // For now, keep the outer "results" JSON object for ADM results
+            out.print("{ \"results\": ");
+            adm_results = new JSONArray();
+            break;
+        }
+
+        while (resultReader.read(buffer) > 0) {
             try {
-                bbis.close();
-            } catch (IOException e) {
-                throw new HyracksDataException(e);
+                fta.reset(buffer);
+                int last = fta.getTupleCount();
+                String result;
+                for (int tIndex = 0; tIndex < last; tIndex++) {
+                    int start = fta.getTupleStartOffset(tIndex);
+                    int length = fta.getTupleEndOffset(tIndex) - start;
+                    bbis.setByteBuffer(buffer, start);
+                    byte[] recordBytes = new byte[length];
+                    bbis.read(recordBytes, 0, length);
+                    // Issue 796 - what if an instance from Hyracks exceeds
+                    // FRAME_SIZE?
+                    result = new String(recordBytes, 0, length, UTF_8);
+                    switch (pdf) {
+                    case JSON:
+                        if (tIndex != (last - 1)) {
+                            out.print(", ");
+                        }
+                        // fall through to next case to output results
+                    case HTML:
+                        out.print(result);
+                        break;
+                    case TEXT:
+                        adm_results.put(result);
+                        break;
+                    }
+                }
+                buffer.clear();
+            } finally {
+                try {
+                    bbis.close();
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
             }
+        }
+
+        if (pdf == DisplayFormat.TEXT) {
+            out.print(adm_results);
+        }
+        out.flush();
+
+        switch (pdf) {
+        case HTML:
+            out.println("</pre>");
+            break;
+        case JSON:
+            out.println(" ]");
+            break;
+        case TEXT:
+            out.println(" }");
         }
     }
 
@@ -96,17 +156,6 @@ public class ResultUtils {
             // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
         }
         return errorResp;
-    }
-
-    public static void prettyPrintHTML(PrintWriter out, JSONObject jsonResultObj) {
-        try {
-            JSONArray resultsArray = jsonResultObj.getJSONArray("results");
-            for (int i = 0; i < resultsArray.length(); i++) {
-                out.print(resultsArray.getString(i));
-            }
-        } catch (JSONException e) {
-            // TODO(madhusudancs): Figure out what to do when JSONException occurs while building the results.
-        }
     }
 
     public static void webUIErrorHandler(PrintWriter out, Exception e) {

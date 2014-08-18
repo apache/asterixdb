@@ -130,7 +130,10 @@ public class TestsUtils {
             String[] fields2 = row2.split(" ");
 
             for (int j = 0; j < fields1.length; j++) {
-                if (fields1[j].equals(fields2[j])) {
+                if (j >= fields2.length) {
+                    return false;
+                }
+                else if (fields1[j].equals(fields2[j])) {
                     continue;
                 } else if (fields1[j].indexOf('.') < 0) {
                     return false;
@@ -153,6 +156,18 @@ public class TestsUtils {
         return true;
     }
 
+    // For tests where you simply want the byte-for-byte output.
+    private static void writeOutputToFile(File actualFile, InputStream resultStream) throws Exception {
+        byte[] buffer = new byte[10240];
+        int len;
+        java.io.FileOutputStream out = new java.io.FileOutputStream(actualFile);
+        while ((len = resultStream.read(buffer)) != -1) {
+            out.write(buffer, 0, len);
+        }
+    }
+
+    // For tests where you expect the output to be a JSON object with a
+    // "results" key.
     private static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
         BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         try {
@@ -431,8 +446,9 @@ public class TestsUtils {
                                         + File.separator + "stop_and_start.sh");
                             }
                             InputStream resultStream = null;
+                            OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
                             if (ctx.getType().equalsIgnoreCase("query"))
-                                resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                                resultStream = executeQuery(statement, fmt);
                             else if (ctx.getType().equalsIgnoreCase("async"))
                                 resultStream = executeAnyAQLAsync(statement, false);
                             else if (ctx.getType().equalsIgnoreCase("asyncdefer"))
@@ -445,7 +461,13 @@ public class TestsUtils {
 
                             File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                             actualResultFile.getParentFile().mkdirs();
-                            TestsUtils.writeResultsToFile(actualResultFile, resultStream);
+                            // JSON results are pure JSON now, with no "results"
+                            // wrapper object
+                            if (fmt == OutputFormat.JSON) {
+                                TestsUtils.writeOutputToFile(actualResultFile, resultStream);
+                            } else {
+                                TestsUtils.writeResultsToFile(actualResultFile, resultStream);
+                            }
 
                             TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                     expectedResultFile, actualResultFile);

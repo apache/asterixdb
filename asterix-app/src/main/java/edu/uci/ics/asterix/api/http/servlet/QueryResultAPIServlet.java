@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
@@ -26,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -74,18 +74,13 @@ public class QueryResultAPIServlet extends HttpServlet {
             JSONArray handle = handleObj.getJSONArray("handle");
             JobId jobId = new JobId(handle.getLong(0));
             ResultSetId rsId = new ResultSetId(handle.getLong(1));
-            ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
+
             ResultReader resultReader = new ResultReader(hcc, hds);
             resultReader.open(jobId, rsId);
-            buffer.clear();
-            JSONObject jsonResponse = new JSONObject();
-            JSONArray results = new JSONArray();
-            while (resultReader.read(buffer) > 0) {
-                ResultUtils.getJSONFromBuffer(buffer, resultReader.getFrameTupleAccessor(), results);
-                buffer.clear();
-            }
-            jsonResponse.put("results", results);
-            out.write(jsonResponse.toString());
+
+            // QQQ The DisplayFormat shouldn't be fixed; needs to be some way
+            // to select the output format from this API.
+            ResultUtils.displayResults(resultReader, out, DisplayFormat.TEXT);
 
         } catch (Exception e) {
             out.println(e.getMessage());
