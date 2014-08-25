@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -89,7 +90,8 @@ public abstract class AbstractTupleParser implements ITupleParser {
             FrameUtils.flushFrame(frame, writer);
             appender.reset(frame, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new IllegalStateException();
+                throw new IllegalStateException("Tuple size(" + tb.getSize() + ") is greater than frame size("
+                        + AsterixAppContextInfo.getInstance().getCompilerProperties().getFrameSize() + ")");
             }
         }
 
