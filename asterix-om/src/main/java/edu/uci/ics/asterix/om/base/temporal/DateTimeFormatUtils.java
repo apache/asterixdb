@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.om.base.temporal;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.TimeZone;
@@ -47,6 +48,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 public class DateTimeFormatUtils {
 
     private final GregorianCalendarSystem CAL = GregorianCalendarSystem.getInstance();
+
+    private final Charset ENCODING = Charset.forName("UTF-8");
 
     // For time
     private final char HOUR_CHAR = 'h';
@@ -90,19 +93,20 @@ public class DateTimeFormatUtils {
     private final int MAX_DAY_CHARS = 2;
     private final int MAX_WEEKDAY_CHAR = 1;
 
-    private final byte[][] MONTH_NAMES = new byte[][] { "jan".getBytes(), "feb".getBytes(), "mar".getBytes(),
-            "apr".getBytes(), "may".getBytes(), "jun".getBytes(), "jul".getBytes(), "aug".getBytes(), "sep".getBytes(),
-            "oct".getBytes(), "nov".getBytes(), "dec".getBytes() };
+    private final byte[][] MONTH_NAMES = new byte[][] { "jan".getBytes(ENCODING), "feb".getBytes(ENCODING),
+            "mar".getBytes(ENCODING), "apr".getBytes(ENCODING), "may".getBytes(ENCODING), "jun".getBytes(ENCODING),
+            "jul".getBytes(ENCODING), "aug".getBytes(ENCODING), "sep".getBytes(ENCODING), "oct".getBytes(ENCODING),
+            "nov".getBytes(ENCODING), "dec".getBytes(ENCODING) };
 
-    private final byte[][] WEEKDAY_FULL_NAMES = new byte[][] { "monday".getBytes(), "tuesday".getBytes(),
-            "wednesday".getBytes(), "thursday".getBytes(), "friday".getBytes(), "saturday".getBytes(),
-            "sunday".getBytes() };
+    private final byte[][] WEEKDAY_FULL_NAMES = new byte[][] { "monday".getBytes(ENCODING),
+            "tuesday".getBytes(ENCODING), "wednesday".getBytes(ENCODING), "thursday".getBytes(ENCODING),
+            "friday".getBytes(ENCODING), "saturday".getBytes(ENCODING), "sunday".getBytes(ENCODING) };
 
-    private final byte[] UTC_BYTEARRAY = "utc".getBytes();
-    private final byte[] GMT_BYTEARRAY = "gmt".getBytes();
+    private final byte[] UTC_BYTEARRAY = "utc".getBytes(ENCODING);
+    private final byte[] GMT_BYTEARRAY = "gmt".getBytes(ENCODING);
 
-    private final byte[] AM_BYTEARRAY = "am".getBytes();
-    private final byte[] PM_BYTEARRAY = "pm".getBytes();
+    private final byte[] AM_BYTEARRAY = "am".getBytes(ENCODING);
+    private final byte[] PM_BYTEARRAY = "pm".getBytes(ENCODING);
 
     // Separators, for both time and date
     private final char HYPHEN_CHAR = '-';
@@ -122,18 +126,38 @@ public class DateTimeFormatUtils {
     private final byte TO_LOWER_OFFSET = 'A' - 'a';
 
     private final String[] TZ_IDS = TimeZone.getAvailableIDs();
+
+
+    private Comparator<byte[]> byteArrayComparator = new Comparator<byte[]>() {
+        @Override
+        public int compare(byte[] o1, byte[] o2) {
+            int i = 0;
+            for (; i < o1.length && i < o2.length; i++) {
+                if (o1[i] != o2[i]) {
+                    return o1[i] - o2[i];
+                }
+            }
+            if (i < o1.length) {
+                return -1;
+            } else if (i < o2.length) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
     private final byte[][] TIMEZONE_IDS = new byte[TZ_IDS.length][];
     {
-        Arrays.sort(TZ_IDS);
         for (int i = 0; i < TIMEZONE_IDS.length; i++) {
-            TIMEZONE_IDS[i] = TZ_IDS[i].getBytes();
+            TIMEZONE_IDS[i] = TZ_IDS[i].getBytes(ENCODING);
         }
+        Arrays.sort(TIMEZONE_IDS, byteArrayComparator);
     }
 
     private final int[] TIMEZONE_OFFSETS = new int[TIMEZONE_IDS.length];
     {
         for (int i = 0; i < TIMEZONE_IDS.length; i++) {
-            TIMEZONE_OFFSETS[i] = TimeZone.getTimeZone(TZ_IDS[i]).getRawOffset();
+            TIMEZONE_OFFSETS[i] = TimeZone.getTimeZone(new String(TIMEZONE_IDS[i], ENCODING)).getRawOffset();
         }
     }
 
@@ -196,24 +220,6 @@ public class DateTimeFormatUtils {
         }
         return beginWith;
     }
-
-    private Comparator<byte[]> byteArrayComparator = new Comparator<byte[]>() {
-        @Override
-        public int compare(byte[] o1, byte[] o2) {
-            int i = 0;
-            for (; i < o1.length && i < o2.length; i++) {
-                if (o1[i] != o2[i]) {
-                    return o1[i] - o2[i];
-                }
-            }
-            if (i < o1.length) {
-                return -1;
-            } else if (i < o2.length) {
-                return 1;
-            }
-            return 0;
-        }
-    };
 
     private int monthIDSearch(byte[] barray, int start, int length) {
         for (int i = 0; i < MONTH_NAMES.length; i++) {
@@ -622,7 +628,7 @@ public class DateTimeFormatUtils {
                         } else {
                             throw new AsterixTemporalTypeParseException("Unexpected timezone string: "
                                     + new String(Arrays.copyOfRange(data, dataStart + dataStringPointer, dataStart
-                                            + dataStringPointer)));
+                                            + timezoneEndField)));
                         }
                         dataStringPointer = timezoneEndField;
                     }
