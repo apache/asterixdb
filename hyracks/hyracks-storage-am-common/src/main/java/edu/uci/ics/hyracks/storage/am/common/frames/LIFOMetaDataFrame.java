@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,10 +37,10 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     protected static final int nextPageOff = levelOff + 1; // 21
     protected static final int validOff = nextPageOff + 4; // 25
 
-    // The additionalFilteringPageOff is used only for LSM indexes. 
+    // The additionalFilteringPageOff is used only for LSM indexes.
     // We store the page id that will be used to store the information of the the filter that is associated with a disk component.
     // It is only set in the first meta page other meta pages (i.e., with level -2) have junk in the max page field.
-    private static final int additionalFilteringPageOff = validOff + 4; // 29 
+    private static final int additionalFilteringPageOff = validOff + 4; // 29
     protected static final int lsnOff = additionalFilteringPageOff + 4; // 33
 
     protected ICachedPage page = null;

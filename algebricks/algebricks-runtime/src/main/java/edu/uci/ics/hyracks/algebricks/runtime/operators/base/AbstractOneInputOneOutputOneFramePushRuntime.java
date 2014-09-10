@@ -33,13 +33,17 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
 
     @Override
     public void close() throws HyracksDataException {
+        flushIfNotFailed();
+        writer.close();
+        appender.reset(frame, true);
+    }
+
+    protected void flushIfNotFailed() throws HyracksDataException {
         if (!failed) {
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(frame, writer);
             }
         }
-        writer.close();
-        appender.reset(frame, true);
     }
 
     protected void appendToFrameFromTupleBuilder(ArrayTupleBuilder tb) throws HyracksDataException {

@@ -85,7 +85,7 @@ public class BinaryTokenizerOperatorTest extends AbstractIntegrationTest {
                 tokenFactory);
         int[] keyFields = { 0 };
         BinaryTokenizerOperatorDescriptor binaryTokenizer = new BinaryTokenizerOperatorDescriptor(spec,
-                tokenizerRecDesc, tokenizerFactory, 1, keyFields, addNumTokensKey);
+                tokenizerRecDesc, tokenizerFactory, 1, keyFields, addNumTokensKey, false);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, binaryTokenizer, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC1_ID,

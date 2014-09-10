@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -59,6 +59,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOpera
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -468,6 +469,19 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
     }
 
     @Override
+    public Boolean visitTokenizeOperator(TokenizeOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
+        if (aop.getOperatorTag() != LogicalOperatorTag.TOKENIZE)
+            return Boolean.FALSE;
+        TokenizeOperator tokenizeOpArg = (TokenizeOperator) copyAndSubstituteVar(op, arg);
+        boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getSchema(), tokenizeOpArg.getSchema());
+        if (!op.getDataSourceIndex().equals(tokenizeOpArg.getDataSourceIndex()))
+            isomorphic = false;
+        return isomorphic;
+    }
+
+    @Override
     public Boolean visitSinkOperator(SinkOperator op, ILogicalOperator arg) throws AlgebricksException {
         return true;
     }
@@ -786,7 +800,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             deepCopyExpressionRefs(newKeyExpressions, op.getAdditionalFilteringExpressions());
             InsertDeleteOperator insertDeleteOp = new InsertDeleteOperator(op.getDataSource(),
-                    deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions, op.getOperation());
+                    deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions, op.getOperation(), op.isBulkload());
             insertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
             return insertDeleteOp;
         }
@@ -803,10 +817,32 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             deepCopyExpressionRefs(newLSMComponentFilterExpressions, op.getAdditionalFilteringExpressions());
             IndexInsertDeleteOperator indexInsertDeleteOp = new IndexInsertDeleteOperator(op.getDataSourceIndex(),
-                    newPrimaryKeyExpressions, newSecondaryKeyExpressions, newFilterExpression, op.getOperation());
+                    newPrimaryKeyExpressions, newSecondaryKeyExpressions, newFilterExpression, op.getOperation(), op.isBulkload());
             indexInsertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
             return indexInsertDeleteOp;
+                }
+
+        @Override
+        public ILogicalOperator visitTokenizeOperator(TokenizeOperator op, Void arg)
+                throws AlgebricksException {
+            List<Mutable<ILogicalExpression>> newPrimaryKeyExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+            deepCopyExpressionRefs(newPrimaryKeyExpressions, op.getPrimaryKeyExpressions());
+            List<Mutable<ILogicalExpression>> newSecondaryKeyExpressions = new ArrayList<Mutable<ILogicalExpression>>();
+            deepCopyExpressionRefs(newSecondaryKeyExpressions, op.getSecondaryKeyExpressions());
+            List<LogicalVariable> newTokenizeVars = new ArrayList<LogicalVariable>();
+            deepCopyVars(newTokenizeVars, op.getTokenizeVars());
+            Mutable<ILogicalExpression> newFilterExpression = new MutableObject<ILogicalExpression>(
+                    ((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
+            List<Object> newTokenizeVarTypes = new ArrayList<Object>();
+            deepCopyObjects(newTokenizeVarTypes, op.getTokenizeVarTypes());
+
+            TokenizeOperator tokenizeOp = new TokenizeOperator(op.getDataSourceIndex(),
+                    newPrimaryKeyExpressions, newSecondaryKeyExpressions,
+                    newTokenizeVars, newFilterExpression, op.getOperation(),
+                    op.isBulkload(), op.isPartitioned(), newTokenizeVarTypes);
+            return tokenizeOp;
         }
+
 
         @Override
         public ILogicalOperator visitSinkOperator(SinkOperator op, Void arg) throws AlgebricksException {
@@ -823,6 +859,18 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         private Mutable<ILogicalExpression> deepCopyExpressionRef(Mutable<ILogicalExpression> oldExpr) {
             return new MutableObject<ILogicalExpression>(
                     ((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression());
+        }
+
+        private List<LogicalVariable> deepCopyVars(List<LogicalVariable> newVars, List<LogicalVariable> oldVars) {
+            for (LogicalVariable oldVar : oldVars)
+                newVars.add(oldVar);
+            return newVars;
+        }
+
+        private List<Object> deepCopyObjects(List<Object> newObjs, List<Object> oldObjs) {
+            for (Object oldObj : oldObjs)
+                newObjs.add(oldObj);
+            return newObjs;
         }
 
         private List<Pair<IOrder, Mutable<ILogicalExpression>>> deepCopyOrderAndExpression(
