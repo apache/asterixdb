@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,11 +25,9 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerialize
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
-import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -207,39 +205,34 @@ public final class NonTaggedFormatUtil {
         }
     }
 
-    public static IBinaryComparatorFactory getTokenBinaryComparatorFactory(IAType keyType) throws AlgebricksException {
+    public static IAType getTokenType(IAType keyType)
+            throws AlgebricksException {
         IAType type = keyType;
         ATypeTag typeTag = keyType.getTypeTag();
         // Extract item type from list.
-        if (typeTag == ATypeTag.UNORDEREDLIST || typeTag == ATypeTag.ORDEREDLIST) {
+        if (typeTag == ATypeTag.UNORDEREDLIST
+                || typeTag == ATypeTag.ORDEREDLIST) {
             AbstractCollectionType listType = (AbstractCollectionType) keyType;
             if (!listType.isTyped()) {
-                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
+                throw new AlgebricksException(
+                        "Cannot build an inverted index on untyped lists.)");
             }
             type = listType.getItemType();
         }
-        // Ignore case for string types.
-        return AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(type, true, true);
+        return type;
     }
 
-    public static ITypeTraits getTokenTypeTrait(IAType keyType) throws AlgebricksException {
-        IAType type = keyType;
-        ATypeTag typeTag = keyType.getTypeTag();
-        // Extract item type from list.
-        if (typeTag == ATypeTag.UNORDEREDLIST) {
-            AUnorderedListType ulistType = (AUnorderedListType) keyType;
-            if (!ulistType.isTyped()) {
-                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
-            }
-            type = ulistType.getItemType();
-        }
-        if (typeTag == ATypeTag.ORDEREDLIST) {
-            AOrderedListType olistType = (AOrderedListType) keyType;
-            if (!olistType.isTyped()) {
-                throw new AlgebricksException("Cannot build an inverted index on untyped lists.)");
-            }
-            type = olistType.getItemType();
-        }
+    public static IBinaryComparatorFactory getTokenBinaryComparatorFactory(
+            IAType keyType) throws AlgebricksException {
+        IAType type = getTokenType(keyType);
+        // Ignore case for string types.
+        return AqlBinaryComparatorFactoryProvider.INSTANCE
+                .getBinaryComparatorFactory(type, true, true);
+    }
+
+    public static ITypeTraits getTokenTypeTrait(IAType keyType)
+            throws AlgebricksException {
+        IAType type = getTokenType(keyType);
         return AqlTypeTraitProvider.INSTANCE.getTypeTrait(type);
     }
 }

@@ -33,14 +33,14 @@ public class HDFSObjectTupleParserFactory implements ITupleParserFactory{
     private HDFSAdapterFactory adapterFactory;
     // adapter arguments
     private Map<String,String> arguments;
-    
+
     public HDFSObjectTupleParserFactory(ARecordType atype, HDFSAdapterFactory adapterFactory, Map<String,String> arguments){
         this.parserClassName = (String) arguments.get(HDFSAdapterFactory.KEY_PARSER);
         this.atype = atype;
         this.arguments = arguments;
         this.adapterFactory = adapterFactory;
     }
-    
+
     @Override
     public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
         IAsterixHDFSRecordParser objectParser;
@@ -58,9 +58,8 @@ public class HDFSObjectTupleParserFactory implements ITupleParserFactory{
         } catch (Exception e) {
             throw new HyracksDataException("Unable to initialize object parser", e);
         }
-        
+
         return new HDFSObjectTupleParser(ctx, atype, objectParser);
     }
-    
-    
+
 }

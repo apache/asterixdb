@@ -32,12 +32,12 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
  * This class is used with hdfs objects instead of hdfs
  */
 public class HDFSObjectTupleParser implements ITupleParser{
-    
+
     private ArrayTupleBuilder tb;
     private final FrameTupleAppender appender;
     private final ByteBuffer frame;
     private IAsterixHDFSRecordParser deserializer;
-    
+
     public HDFSObjectTupleParser(IHyracksTaskContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer) throws HyracksDataException {
         appender = new FrameTupleAppender(ctx.getFrameSize());
         frame = ctx.allocateFrame();
@@ -69,7 +69,7 @@ public class HDFSObjectTupleParser implements ITupleParser{
             throw new HyracksDataException(e);
         }
     }
-    
+
     protected void addTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
             FrameUtils.flushFrame(frame, writer);

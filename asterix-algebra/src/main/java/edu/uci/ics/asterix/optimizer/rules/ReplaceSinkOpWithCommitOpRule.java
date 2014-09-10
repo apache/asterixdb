@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import edu.uci.ics.asterix.algebra.operators.CommitOperator;
 import edu.uci.ics.asterix.algebra.operators.physical.CommitPOperator;
 import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -63,48 +62,55 @@ public class ReplaceSinkOpWithCommitOpRule implements IAlgebraicRewriteRule {
         while (descendantOp != null) {
             if (descendantOp.getOperatorTag() == LogicalOperatorTag.INDEX_INSERT_DELETE) {
                 IndexInsertDeleteOperator indexInsertDeleteOperator = (IndexInsertDeleteOperator) descendantOp;
-                primaryKeyExprs = indexInsertDeleteOperator.getPrimaryKeyExpressions();
-                datasetId = ((DatasetDataSource) indexInsertDeleteOperator.getDataSourceIndex().getDataSource())
-                        .getDataset().getDatasetId();
-                break;
+                if (!indexInsertDeleteOperator.isBulkload()) {
+                    primaryKeyExprs = indexInsertDeleteOperator.getPrimaryKeyExpressions();
+                    datasetId = ((DatasetDataSource) indexInsertDeleteOperator.getDataSourceIndex().getDataSource())
+                            .getDataset().getDatasetId();
+                    break;
+                }
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE) {
                 InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) descendantOp;
-                primaryKeyExprs = insertDeleteOperator.getPrimaryKeyExpressions();
-                datasetId = ((DatasetDataSource) insertDeleteOperator.getDataSource()).getDataset().getDatasetId();
+                if (!insertDeleteOperator.isBulkload()) {
+                    primaryKeyExprs = insertDeleteOperator.getPrimaryKeyExpressions();
+                    datasetId = ((DatasetDataSource) insertDeleteOperator.getDataSource()).getDataset().getDatasetId();
+                    break;
+                }
+            }
+            if (descendantOp.getInputs().size() < 1) {
                 break;
             }
             descendantOp = (AbstractLogicalOperator) descendantOp.getInputs().get(0).getValue();
         }
 
-        if (primaryKeyExprs != null) {
-
-            //copy primaryKeyExprs
-            List<LogicalVariable> primaryKeyLogicalVars = new ArrayList<LogicalVariable>();
-            for (Mutable<ILogicalExpression> expr : primaryKeyExprs) {
-                VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr.getValue();
-                primaryKeyLogicalVars.add(new LogicalVariable(varRefExpr.getVariableReference().getId()));
-            }
-
-            //get JobId(TransactorId)
-            AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-            JobId jobId = mp.getJobId();
-
-            //create the logical and physical operator
-            CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars);
-            CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars,
-                    mp.isWriteTransaction());
-            commitOperator.setPhysicalOperator(commitPOperator);
-
-            //create ExtensionOperator and put the commitOperator in it.
-            ExtensionOperator extensionOperator = new ExtensionOperator(commitOperator);
-            extensionOperator.setPhysicalOperator(commitPOperator);
-
-            //update plan link
-            extensionOperator.getInputs().add(sinkOperator.getInputs().get(0));
-            context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
-            opRef.setValue(extensionOperator);
+        if (primaryKeyExprs == null) {
+            return false;
         }
 
+        //copy primaryKeyExprs
+        List<LogicalVariable> primaryKeyLogicalVars = new ArrayList<LogicalVariable>();
+        for (Mutable<ILogicalExpression> expr : primaryKeyExprs) {
+            VariableReferenceExpression varRefExpr = (VariableReferenceExpression) expr.getValue();
+            primaryKeyLogicalVars.add(new LogicalVariable(varRefExpr.getVariableReference().getId()));
+        }
+
+        //get JobId(TransactorId)
+        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
+        JobId jobId = mp.getJobId();
+
+        //create the logical and physical operator
+        CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars);
+        CommitPOperator commitPOperator = new CommitPOperator(jobId, datasetId, primaryKeyLogicalVars,
+                mp.isWriteTransaction());
+        commitOperator.setPhysicalOperator(commitPOperator);
+
+        //create ExtensionOperator and put the commitOperator in it.
+        ExtensionOperator extensionOperator = new ExtensionOperator(commitOperator);
+        extensionOperator.setPhysicalOperator(commitPOperator);
+
+        //update plan link
+        extensionOperator.getInputs().add(sinkOperator.getInputs().get(0));
+        context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
+        opRef.setValue(extensionOperator);
         return true;
     }
 

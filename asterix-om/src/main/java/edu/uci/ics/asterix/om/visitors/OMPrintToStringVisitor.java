@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ import edu.uci.ics.asterix.om.base.AUnorderedList;
 import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.base.IACursor;
 import edu.uci.ics.asterix.om.base.IAObject;
+import edu.uci.ics.asterix.om.base.ShortWithoutTypeInfo;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -131,6 +132,11 @@ public class OMPrintToStringVisitor implements IOMVisitor {
     @Override
     public void visitAInt64(AInt64 obj) throws AsterixException {
         buffer.append(obj.getLongValue());
+    }
+
+    @Override
+    public void visitShortWithoutTypeInfo(ShortWithoutTypeInfo obj) throws AsterixException {
+        buffer.append(obj.getShortValue());
     }
 
     @Override

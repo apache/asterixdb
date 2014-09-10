@@ -207,7 +207,8 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 case POINT:
                 case POINT3D:
                 case POLYGON:
-                case RECTANGLE: {
+                case RECTANGLE:
+                case SHORTWITHOUTTYPEINFO: {
                     return true;
                 }
                 case RECORD: {

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
     public HDFSAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
             String nodeName, ITupleParserFactory parserFactory, IHyracksTaskContext ctx,
             Map<String, String> configuration, List<ExternalFile> files) throws HyracksDataException {
-        super(parserFactory, atype, ctx);
+        super(parserFactory, atype, ctx, false, -1);
         this.readSchedule = readSchedule;
         this.executed = executed;
         this.inputSplits = inputSplits;

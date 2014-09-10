@@ -47,6 +47,7 @@ import edu.uci.ics.asterix.om.base.AMutablePoint3D;
 import edu.uci.ics.asterix.om.base.AMutableRectangle;
 import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AMutableTime;
+import edu.uci.ics.asterix.om.base.AMutableUUID;
 import edu.uci.ics.asterix.om.base.AMutableYearMonthDuration;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.APoint;
@@ -54,6 +55,7 @@ import edu.uci.ics.asterix.om.base.APoint3D;
 import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.ATime;
+import edu.uci.ics.asterix.om.base.AUUID;
 import edu.uci.ics.asterix.om.base.AYearMonthDuration;
 import edu.uci.ics.asterix.om.base.temporal.ADateParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
@@ -62,8 +64,10 @@ import edu.uci.ics.asterix.om.base.temporal.ATimeParserFactory;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
  * Base class for data parsers. Includes the common set of definitions for
@@ -79,6 +83,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableFloat aFloat = new AMutableFloat(0);
     protected AMutableString aString = new AMutableString("");
     protected AMutableString aStringFieldName = new AMutableString("");
+    protected AMutableUUID aUUID = new AMutableUUID(0, 0);
     // For temporal and spatial data types
     protected AMutableTime aTime = new AMutableTime(0);
     protected AMutableDateTime aDateTime = new AMutableDateTime(0L);
@@ -121,6 +126,11 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
+    // For UUID, we assume that the format is the string representation of UUID
+    // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.
+    @SuppressWarnings("unchecked")
+    protected ISerializerDeserializer<AUUID> uuidSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AUUID_STRING);
 
     // To avoid race conditions, the serdes for temporal and spatial data types needs to be one per parser
     @SuppressWarnings("unchecked")

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ import edu.uci.ics.asterix.om.base.ATime;
 import edu.uci.ics.asterix.om.base.AUUID;
 import edu.uci.ics.asterix.om.base.AUnorderedList;
 import edu.uci.ics.asterix.om.base.AYearMonthDuration;
+import edu.uci.ics.asterix.om.base.ShortWithoutTypeInfo;
 import edu.uci.ics.asterix.om.types.IAType;
 
 public interface IOMVisitor {
@@ -103,4 +104,7 @@ public interface IOMVisitor {
     public void visitARectangle(ARectangle obj) throws AsterixException;
 
     public void visitAUUID(AUUID obj) throws AsterixException;
+
+    public void visitShortWithoutTypeInfo(ShortWithoutTypeInfo obj) throws AsterixException;
+
 }

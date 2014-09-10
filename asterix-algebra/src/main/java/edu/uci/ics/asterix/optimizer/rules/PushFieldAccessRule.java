@@ -300,7 +300,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                         ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
                         if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                             IDataSource<AqlSourceId> dataSource = (IDataSource<AqlSourceId>) scan.getDataSource();
-                            if (((AqlDataSource) dataSource).getDatasourceType().equals(AqlDataSourceType.FEED)) {
+                            AqlDataSourceType dsType = ((AqlDataSource) dataSource).getDatasourceType();
+                            if (dsType == AqlDataSourceType.FEED || dsType == AqlDataSourceType.ADAPTED_LOADABLE) {
                                 return false;
                             }
                             AqlSourceId asid = dataSource.getId();

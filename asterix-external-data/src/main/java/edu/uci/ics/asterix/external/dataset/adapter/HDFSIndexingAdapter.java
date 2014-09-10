@@ -45,12 +45,12 @@ public class HDFSIndexingAdapter extends FileSystemBasedAdapter{
     private String inputFormat;
     // content format <adm, delimited-text, binary>
     private String format;
-    
+
     public HDFSIndexingAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits,
             JobConf conf, AlgebricksPartitionConstraint clusterLocations, List<ExternalFile> files,
             ITupleParserFactory parserFactory, IHyracksTaskContext ctx, String nodeName,
             String inputFormat, String format) throws IOException {
-        super(parserFactory, atype, ctx);
+        super(parserFactory, atype, ctx, false, -1);
         this.nodeName = nodeName;
         this.readSchedule = readSchedule;
         this.executed = executed;

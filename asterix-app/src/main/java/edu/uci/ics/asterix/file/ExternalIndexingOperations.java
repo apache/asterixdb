@@ -267,7 +267,7 @@ public class ExternalIndexingOperations {
         HDFSIndexingAdapterFactory adapterFactory = new HDFSIndexingAdapterFactory();
         adapterFactory.setFiles(files);
         adapterFactory.configure(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties(),
-                (ARecordType) itemType);
+                (ARecordType) itemType, false, null);
         return new Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>(
                 new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());

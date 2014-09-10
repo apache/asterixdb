@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     public RateControlledFileSystemBasedAdapter(ARecordType atype, Map<String, String> configuration,
             FileSystemBasedAdapter coreAdapter, String format, ITupleParserFactory parserFactory,
             IHyracksTaskContext ctx) throws Exception {
-        super(parserFactory, atype, ctx);
+        super(parserFactory, atype, ctx, false, -1);
         this.coreAdapter = coreAdapter;
     }
 
@@ -51,7 +51,7 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     public void stop() {
         ((RateControlledTupleParser) tupleParser).stop();
     }
-    
+
     @Override
     public DataExchangeMode getDataExchangeMode() {
         return DataExchangeMode.PULL;

@@ -105,7 +105,7 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
-                if (ds.getDatasourceType() != AqlDataSourceType.FEED) {
+                if (ds.getDatasourceType() != AqlDataSourceType.FEED && ds.getDatasourceType() != AqlDataSourceType.ADAPTED_LOADABLE) {
                     if (((DatasetDataSource) ds).getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
                         return true;
                     }

@@ -35,8 +35,9 @@ public class TextOrSeqIndexingTupleParser extends AbstractIndexingTupleParser{
             AbstractHDFSReader inReader) throws Exception {
         aMutableInt.setValue(inReader.getFileNumber());
         aMutableLong.setValue(inReader.getReaderPosition());
-        
+
         tb.addField(intSerde, aMutableInt);
         tb.addField(longSerde, aMutableLong);
     }
+
 }

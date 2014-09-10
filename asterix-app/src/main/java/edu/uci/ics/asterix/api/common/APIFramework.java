@@ -22,6 +22,7 @@ import java.util.List;
 import org.json.JSONException;
 
 import edu.uci.ics.asterix.api.common.Job.SubmissionMode;
+import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.expression.FunctionDecl;
 import edu.uci.ics.asterix.aql.expression.Query;
 import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
@@ -229,7 +230,13 @@ public class APIFramework {
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
                 outputDatasetName, statement);
 
-        ILogicalPlan plan = t.translate(rwQ);
+        ILogicalPlan plan;
+        // statement = null when it's a query
+        if (statement == null || statement.getKind() != Kind.LOAD) {
+            plan = t.translate(rwQ);
+        } else {
+            plan = t.translateLoad();
+        }
         boolean isWriteTransaction = queryMetadataProvider.isWriteTransaction();
 
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
@@ -247,7 +254,7 @@ public class APIFramework {
                 }
             }
 
-            if (rwQ != null) {
+            if (rwQ != null || statement.getKind() == Kind.LOAD) {
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                 out.print(buffer);
@@ -315,7 +322,7 @@ public class APIFramework {
                             break;
                         }
                     }
-                    if (rwQ != null) {
+                    if (rwQ != null || statement.getKind() == Kind.LOAD) {
                         StringBuilder buffer = new StringBuilder();
                         PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                         out.print(buffer);

@@ -1,0 +1,20 @@
+Object SQL - A Language for the Design and Implementation of Object Databases.:Jurgen Annevelink Rafiul Ahad Amelia Carlson Daniel H. Fishman Michael L. Heytens William Kent
+OQL[C++]  Extending C++ with an Object Query Capability.:José A. Blakeley
+Transaction Management in Multidatabase Systems.:Yuri Breitbart Hector Garcia-Molina Abraham Silberschatz
+Multimedia Information Systems  Issues and Approaches.:Stavros Christodoulakis Leonidas Koveos
+Active Database Systems.:Umeshwar Dayal Eric N. Hanson Jennifer Widom
+Where Object-Oriented DBMSs Should Do Better  A Critique Based on Early Experiences.:Test Person
+Distributed Databases.:Hector Garcia-Molina Meichun Hsu
+An Object-Oriented DBMS War Story  Developing a Genome Mapping Database in C++.:Nathan Goodman
+Cooperative Transactions for Multiuser Environments.:Gail E. Kaiser
+Schema Architecture of the UniSQL/M Multidatabase System:William Kelley Sunit K. Gala Won Kim Tom C. Reyes Bruce Graham
+Physical Object Management.:Alfons Kemper Guido Moerkotte
+Introduction to Part 1  Next-Generation Database Technology.:Won Kim
+Object-Oriented Database Systems  Promises, Reality, and Future.:Won Kim
+Introduction to Part 2  Technology for Interoperating Legacy Databases.:Won Kim
+On Resolving Schematic Heterogeneity in Multidatabase Systems.:Won Kim Injun Choi Sunit K. Gala Mark Scheevel
+Requirements for a Performance Benchmark for Object-Oriented Database Systems.:Won Kim Jorge F. Garza
+On View Support in Object-Oriented Databases Systems.:Won Kim William Kelley
+The POSC Solution to Managing E&P Data.:Vincent J. Kowalski
+C++ Bindings to an Object Database.:David Krieger Tim Andrews
+Authorization in Object-Oriented Databases.:Teresa F. Lunt

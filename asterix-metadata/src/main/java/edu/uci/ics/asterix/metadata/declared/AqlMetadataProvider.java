@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import edu.uci.ics.asterix.common.context.TransactionSubsystemProvider;
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import edu.uci.ics.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import edu.uci.ics.asterix.common.dataflow.IAsterixApplicationContextInfo;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
@@ -64,6 +65,7 @@ import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -120,9 +122,11 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.OperatorSchemaImpl;
 import edu.uci.ics.hyracks.algebricks.data.IAWriterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IResultSerializerFactoryProvider;
+import edu.uci.ics.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
@@ -138,6 +142,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
@@ -151,12 +156,13 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
-import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexBulkLoadOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.dataflow.PartitionedLSMInvertedIndexDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
@@ -296,22 +302,88 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             JobGenContext context, JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
         try {
             switch (((AqlDataSource) dataSource).getDatasourceType()) {
-                case FEED:
+                case FEED: {
                     return buildFeedIntakeRuntime(jobSpec, dataSource);
-                case INTERNAL_DATASET:
+                }
+                case INTERNAL_DATASET: {
                     return buildInternalDatasetScan(jobSpec, scanVariables, minFilterVars, maxFilterVars, opSchema,
                             typeEnv, dataSource, context, implConfig);
+                }
+                case EXTERNAL_DATASET: {
+                    Dataset dataset = ((DatasetDataSource) dataSource).getDataset();
+                    String itemTypeName = dataset.getItemTypeName();
+                    IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(),
+                            itemTypeName).getDatatype();
+                    ExternalDatasetDetails edd = (ExternalDatasetDetails) dataset.getDatasetDetails();
+                    IAdapterFactory adapterFactory = getConfiguredAdapterFactory(dataset, edd.getAdapter(),
+                            edd.getProperties(), itemType, false, null);
+                    return buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory,
+                            NonTaggedDataFormat.INSTANCE);
+                }
+                case ADAPTED_LOADABLE: {
+                    AdaptedLoadableDataSource alds = (AdaptedLoadableDataSource) dataSource;
 
-                case EXTERNAL_DATASET:
-                    return buildExternalDatasetScan(jobSpec, dataSource);
+                    List<String> partitioningKeys = alds.getPartitioningKeys();
+                    boolean isPKAutoGenerated = ((InternalDatasetDetails) alds.getTargetDataset().getDatasetDetails())
+                            .isAutogenerated();
 
-                default:
+                    IAdapterFactory wrappedAdapterFactory = getConfiguredAdapterFactory(alds.getTargetDataset(),
+                            alds.getAdapter(), alds.getAdapterProperties(), alds.getTargetDatasetType(),
+                            isPKAutoGenerated, partitioningKeys);
+                    RecordDescriptor rDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
+                    return buildAdaptedLoadableDatasetScan(jobSpec, alds, wrappedAdapterFactory, rDesc);
+                }
+                default: {
                     throw new IllegalArgumentException();
+                }
 
             }
-        } catch (MetadataException e) {
+        } catch (AsterixException e) {
             throw new AlgebricksException(e);
         }
+    }
+
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildAdaptedLoadableDatasetScan(
+            JobSpecification jobSpec, AdaptedLoadableDataSource alds, IAdapterFactory wrappedAdapterFactory,
+            RecordDescriptor rDesc) throws AlgebricksException {
+        if (!(wrappedAdapterFactory.getSupportedOperations().equals(SupportedOperation.READ) || wrappedAdapterFactory
+                .getSupportedOperations().equals(SupportedOperation.READ_WRITE))) {
+            throw new AlgebricksException(" External dataset adapter does not support read operation");
+        }
+        ISerializerDeserializer recSerde = NonTaggedDataFormat.INSTANCE.getSerdeProvider().getSerializerDeserializer(
+                alds.getTargetDatasetType());
+        ARecordType recType = (ARecordType) alds.getTargetDatasetType();
+        int[] extractFields = new int[rDesc.getFieldCount() - 1];
+        for (int i = 0; i < extractFields.length; ++i) {
+            try {
+                extractFields[i] = recType.findFieldPosition(alds.getPartitioningKeys().get(i));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
+        }
+        IAdapterFactory fieldExtractingAdapterFactory = new FieldExtractingAdapterFactory(wrappedAdapterFactory,
+                new RecordDescriptor(new ISerializerDeserializer[] { recSerde }), rDesc, extractFields,
+                (ARecordType) alds.getTargetDatasetType());
+        ExternalDataScanOperatorDescriptor dataScanner = new ExternalDataScanOperatorDescriptor(jobSpec, rDesc,
+                fieldExtractingAdapterFactory);
+        AlgebricksPartitionConstraint constraint;
+        try {
+            constraint = fieldExtractingAdapterFactory.getPartitionConstraint();
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
+        }
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(dataScanner, constraint);
+    }
+
+    public IDataFormat getDataFormat(String dataverseName) throws AsterixException {
+        Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+        IDataFormat format;
+        try {
+            format = (IDataFormat) Class.forName(dataverse.getDataFormat()).newInstance();
+        } catch (Exception e) {
+            throw new AsterixException(e);
+        }
+        return format;
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInternalDatasetScan(JobSpecification jobSpec,
@@ -347,31 +419,13 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 implConfig, minFilterFieldIndexes, maxFilterFieldIndexes);
     }
 
-    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetScan(JobSpecification jobSpec,
-            IDataSource<AqlSourceId> dataSource) throws AlgebricksException, MetadataException {
-        Dataset dataset = ((DatasetDataSource) dataSource).getDataset();
-        String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(), itemTypeName)
-                .getDatatype();
-        return buildExternalDataScannerRuntime(jobSpec, itemType, (ExternalDatasetDetails) dataset.getDatasetDetails(),
-                NonTaggedDataFormat.INSTANCE, dataset);
-
-    }
-
-    @SuppressWarnings("rawtypes")
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataScannerRuntime(
-            JobSpecification jobSpec, IAType itemType, ExternalDatasetDetails datasetDetails, IDataFormat format,
-            Dataset dataset) throws AlgebricksException {
-        if (itemType.getTypeTag() != ATypeTag.RECORD) {
-            throw new AlgebricksException("Can only scan datasets of records.");
-        }
-
+    private IAdapterFactory getConfiguredAdapterFactory(Dataset dataset, String adapterName,
+            Map<String, String> configuration, IAType itemType, boolean isPKAutoGenerated, List<String> primaryKeys)
+            throws AlgebricksException {
         IAdapterFactory adapterFactory;
-        String adapterName;
         DatasourceAdapter adapterEntity;
         String adapterFactoryClassname;
         try {
-            adapterName = datasetDetails.getAdapter();
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                     adapterName);
             if (adapterEntity != null) {
@@ -384,8 +438,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
-
-            Map<String, String> configuration = datasetDetails.getProperties();
 
             // check to see if dataset is indexed
             Index filesIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
@@ -406,16 +458,24 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             switch (adapterFactory.getAdapterType()) {
                 case GENERIC:
-                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) itemType);
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) itemType,
+                            isPKAutoGenerated, primaryKeys);
                     break;
                 case TYPED:
                     ((ITypedAdapterFactory) adapterFactory).configure(configuration);
                     break;
             }
-        } catch (AlgebricksException ae) {
-            throw ae;
+            return adapterFactory;
         } catch (Exception e) {
             throw new AlgebricksException("Unable to create adapter " + e);
+        }
+    }
+
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDatasetDataScannerRuntime(
+            JobSpecification jobSpec, IAType itemType, IAdapterFactory adapterFactory, IDataFormat format)
+            throws AlgebricksException {
+        if (itemType.getTypeTag() != ATypeTag.RECORD) {
+            throw new AlgebricksException("Can only scan datasets of records.");
         }
 
         if (!(adapterFactory.getSupportedOperations().equals(SupportedOperation.READ) || adapterFactory
@@ -884,7 +944,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         switch (((AqlDataSource) dataSource).getDatasourceType()) {
             case INTERNAL_DATASET:
             case EXTERNAL_DATASET:
-                result = ((DatasetDataSource) dataSource).getDataset().getDatasetType() == DatasetType.EXTERNAL;
+                result = false;
                 break;
             case FEED:
                 result = true;
@@ -957,7 +1017,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             // bulkload?)
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
-            TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
+            TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, null,
                     appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
                     splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields, fieldPermutation,
                     GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
@@ -966,7 +1026,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                                     dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                             LSMBTreeIOOperationCallbackFactory.INSTANCE,
                             storageProperties.getBloomFilterFalsePositiveRate(), true, filterTypeTraits,
-                            filterCmpFactories, btreeFields, filterFields), NoOpOperationCallbackFactory.INSTANCE);
+                            filterCmpFactories, btreeFields, filterFields));
             return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
                     splitsAndConstraint.second);
         } catch (MetadataException me) {
@@ -977,9 +1037,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertOrDeleteRuntime(IndexOperation indexOp,
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
-            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
-        String datasetName = dataSource.getId().getDatasetName();
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, boolean bulkload)
+            throws AlgebricksException {
 
+        String datasetName = dataSource.getId().getDatasetName();
         Dataset dataset = findDataset(dataSource.getId().getDataverseName(), datasetName);
         if (dataset == null) {
             throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse "
@@ -1041,19 +1102,25 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
-            AsterixLSMTreeInsertDeleteOperatorDescriptor insertDeleteOp = new AsterixLSMTreeInsertDeleteOperatorDescriptor(
-                    spec, recordDesc, appContext.getStorageManagerInterface(),
-                    appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
-                    comparatorFactories, bloomFilterKeyFields, fieldPermutation, indexOp,
-                    new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(datasetId),
-                            compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
-                                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate(), true, filterTypeTraits, filterCmpFactories,
-                            btreeFields, filterFields), null, modificationCallbackFactory, true, indexName);
-
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
-                    splitsAndConstraint.second);
+            IIndexDataflowHelperFactory idfh = new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
+                    datasetId), compactionInfo.first, compactionInfo.second, new PrimaryIndexOperationTrackerProvider(
+                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                    LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties.getBloomFilterFalsePositiveRate(),
+                    true, filterTypeTraits, filterCmpFactories, btreeFields, filterFields);
+            IOperatorDescriptor op;
+            if (bulkload) {
+                long numElementsHint = getCardinalityPerPartitionHint(dataset);
+                op = new TreeIndexBulkLoadOperatorDescriptor(spec, recordDesc, appContext.getStorageManagerInterface(),
+                        appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
+                        comparatorFactories, bloomFilterKeyFields, fieldPermutation,
+                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, true, numElementsHint, true, idfh);
+            } else {
+                op = new AsterixLSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc,
+                        appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
+                        splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
+                        fieldPermutation, indexOp, idfh, null, modificationCallbackFactory, true, indexName);
+            }
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
 
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
@@ -1064,9 +1131,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(
             IDataSource<AqlSourceId> dataSource, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
-            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, boolean bulkload)
+            throws AlgebricksException {
         return getInsertOrDeleteRuntime(IndexOperation.INSERT, dataSource, propagatedSchema, typeEnv, keys, payload,
-                additionalNonKeyFields, recordDesc, context, spec);
+                additionalNonKeyFields, recordDesc, context, spec, bulkload);
     }
 
     @Override
@@ -1075,7 +1143,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> keys, LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec) throws AlgebricksException {
         return getInsertOrDeleteRuntime(IndexOperation.DELETE, dataSource, propagatedSchema, typeEnv, keys, payload,
-                additionalNonKeyFields, recordDesc, context, spec);
+                additionalNonKeyFields, recordDesc, context, spec, false);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertOrDeleteRuntime(
@@ -1083,7 +1151,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
-            JobGenContext context, JobSpecification spec) throws AlgebricksException {
+            JobGenContext context, JobSpecification spec, boolean bulkload) throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
         String dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasetName();
@@ -1104,12 +1172,12 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             case BTREE: {
                 return getBTreeDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
                         primaryKeys, secondaryKeys, additionalNonKeyFields, filterFactory, recordDesc, context, spec,
-                        indexOp);
+                        indexOp, bulkload);
             }
             case RTREE: {
                 return getRTreeDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
                         primaryKeys, secondaryKeys, additionalNonKeyFields, filterFactory, recordDesc, context, spec,
-                        indexOp);
+                        indexOp, bulkload);
             }
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
@@ -1117,7 +1185,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             case LENGTH_PARTITIONED_NGRAM_INVIX: {
                 return getInvertedIndexDmlRuntime(dataverseName, datasetName, indexName, propagatedSchema, typeEnv,
                         primaryKeys, secondaryKeys, additionalNonKeyFields, filterFactory, recordDesc, context, spec,
-                        indexOp, secondaryIndex.getIndexType());
+                        indexOp, secondaryIndex.getIndexType(), bulkload);
             }
             default: {
                 throw new AlgebricksException("Insert and delete not implemented for index type: "
@@ -1131,10 +1199,245 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
-            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
-            throws AlgebricksException {
+            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
+            boolean bulkload) throws AlgebricksException {
         return getIndexInsertOrDeleteRuntime(IndexOperation.INSERT, dataSourceIndex, propagatedSchema, inputSchemas,
-                typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec);
+                typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec,
+                bulkload);
+    }
+
+    @Override
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getTokenizerRuntime(
+            IDataSourceIndex<String, AqlSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
+            IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
+            List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
+            JobGenContext context, JobSpecification spec, boolean bulkload) throws AlgebricksException {
+
+        String indexName = dataSourceIndex.getId();
+        String dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
+        String datasetName = dataSourceIndex.getDataSource().getId().getDatasetName();
+
+        IOperatorSchema inputSchema = new OperatorSchemaImpl();
+        if (inputSchemas.length > 0) {
+            inputSchema = inputSchemas[0];
+        } else {
+            throw new AlgebricksException("TokenizeOperator can not operate without any input variable.");
+        }
+
+        Dataset dataset = findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName);
+        }
+        Index secondaryIndex;
+        try {
+            secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                    dataset.getDatasetName(), indexName);
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        }
+        AsterixTupleFilterFactory filterFactory = createTupleFilterFactory(inputSchemas, typeEnv, filterExpr, context);
+        // TokenizeOperator only supports a keyword or n-gram index.
+        switch (secondaryIndex.getIndexType()) {
+            case SINGLE_PARTITION_WORD_INVIX:
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX: {
+                return getBinaryTokenizerRuntime(dataverseName, datasetName, indexName, inputSchema, propagatedSchema,
+                        typeEnv, primaryKeys, secondaryKeys, filterFactory, recordDesc, context, spec,
+                        IndexOperation.INSERT, secondaryIndex.getIndexType(), bulkload);
+            }
+            default: {
+                throw new AlgebricksException("Currently, we do not support TokenizeOperator for the index type: "
+                        + secondaryIndex.getIndexType());
+            }
+        }
+
+    }
+
+    // Get a Tokenizer for the bulk-loading data into a n-gram or keyword index.
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBinaryTokenizerRuntime(String dataverseName,
+            String datasetName, String indexName, IOperatorSchema inputSchema, IOperatorSchema propagatedSchema,
+            IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+            AsterixTupleFilterFactory filterFactory, RecordDescriptor recordDesc, JobGenContext context,
+            JobSpecification spec, IndexOperation indexOp, IndexType indexType, boolean bulkload)
+            throws AlgebricksException {
+
+        // Sanity checks.
+        if (primaryKeys.size() > 1) {
+            throw new AlgebricksException("Cannot tokenize composite primary key.");
+        }
+        if (secondaryKeys.size() > 1) {
+            throw new AlgebricksException("Cannot tokenize composite secondary key fields.");
+        }
+
+        boolean isPartitioned;
+        if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
+            isPartitioned = true;
+        } else {
+            isPartitioned = false;
+        }
+
+        // Number of Keys that needs to be propagated
+        int numKeys = inputSchema.getSize();
+
+        // Get the rest of Logical Variables that are not (PK or SK) and each variable's positions.
+        // These variables will be propagated through TokenizeOperator.
+        List<LogicalVariable> otherKeys = new ArrayList<LogicalVariable>();
+        if (inputSchema.getSize() > 0) {
+            for (int k = 0; k < inputSchema.getSize(); k++) {
+                boolean found = false;
+                for (LogicalVariable varKey : primaryKeys) {
+                    if (varKey.equals(inputSchema.getVariable(k))) {
+                        found = true;
+                        break;
+                    } else {
+                        found = false;
+                    }
+                }
+                if (!found) {
+                    for (LogicalVariable varKey : secondaryKeys) {
+                        if (varKey.equals(inputSchema.getVariable(k))) {
+                            found = true;
+                            break;
+                        } else {
+                            found = false;
+                        }
+                    }
+                }
+                if (!found) {
+                    otherKeys.add(inputSchema.getVariable(k));
+                }
+            }
+        }
+
+        // For tokenization, sorting and loading.
+        // One token (+ optional partitioning field) + primary keys + secondary keys + other variables
+        // secondary keys and other variables will be just passed to the IndexInsertDelete Operator.
+        int numTokenKeyPairFields = (!isPartitioned) ? 1 + numKeys : 2 + numKeys;
+
+        // generate field permutations for the input
+        int[] fieldPermutation = new int[numKeys];
+
+        int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int i = 0;
+        int j = 0;
+        for (LogicalVariable varKey : primaryKeys) {
+            int idx = propagatedSchema.findVariable(varKey);
+            fieldPermutation[i] = idx;
+            modificationCallbackPrimaryKeyFields[j] = i;
+            i++;
+            j++;
+        }
+        for (LogicalVariable varKey : otherKeys) {
+            int idx = propagatedSchema.findVariable(varKey);
+            fieldPermutation[i] = idx;
+            i++;
+        }
+        for (LogicalVariable varKey : secondaryKeys) {
+            int idx = propagatedSchema.findVariable(varKey);
+            fieldPermutation[i] = idx;
+            i++;
+        }
+
+        Dataset dataset = findDataset(dataverseName, datasetName);
+        if (dataset == null) {
+            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+        }
+        String itemTypeName = dataset.getItemTypeName();
+        IAType itemType;
+        try {
+            itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getDataverseName(), itemTypeName)
+                    .getDatatype();
+
+            if (itemType.getTypeTag() != ATypeTag.RECORD) {
+                throw new AlgebricksException("Only record types can be tokenized.");
+            }
+
+            ARecordType recType = (ARecordType) itemType;
+
+            // Index parameters.
+            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                    dataset.getDatasetName(), indexName);
+
+            List<String> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
+
+            int numTokenFields = (!isPartitioned) ? secondaryKeys.size() : secondaryKeys.size() + 1;
+            ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
+            ITypeTraits[] invListsTypeTraits = new ITypeTraits[primaryKeys.size()];
+
+            // Find the key type of the secondary key. If it's a derived type, return the derived type.
+            // e.g. UNORDERED LIST -> return UNORDERED LIST type
+            IAType secondaryKeyType = null;
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyExprs.get(0).toString(),
+                    recType);
+            secondaryKeyType = keyPairType.first;
+            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            i = 0;
+            for (String partitioningKey : partitioningKeys) {
+                IAType keyType = recType.getFieldType(partitioningKey);
+                invListsTypeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+                ++i;
+            }
+
+            tokenTypeTraits[0] = NonTaggedFormatUtil.getTokenTypeTrait(secondaryKeyType);
+            if (isPartitioned) {
+                // The partitioning field is hardcoded to be a short *without*
+                // an Asterix type tag.
+                tokenTypeTraits[1] = ShortPointable.TYPE_TRAITS;
+            }
+
+            IBinaryTokenizerFactory tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(
+                    secondaryKeyType.getTypeTag(), indexType, secondaryIndex.getGramLength());
+
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = splitProviderAndPartitionConstraintsForDataset(
+                    dataverseName, datasetName, indexName);
+
+            // Generate Output Record format
+            ISerializerDeserializer[] tokenKeyPairFields = new ISerializerDeserializer[numTokenKeyPairFields];
+            ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
+            ISerializerDeserializerProvider serdeProvider = FormatUtils.getDefaultFormat().getSerdeProvider();
+
+            // The order of the output record: propagated variables (including PK and SK), token, and number of token.
+            // #1. propagate all input variables
+            for (int k = 0; k < recordDesc.getFieldCount(); k++) {
+                tokenKeyPairFields[k] = recordDesc.getFields()[k];
+                tokenKeyPairTypeTraits[k] = recordDesc.getTypeTraits()[k];
+            }
+            int tokenOffset = recordDesc.getFieldCount();
+
+            // #2. Specify the token type
+            tokenKeyPairFields[tokenOffset] = serdeProvider.getSerializerDeserializer(secondaryKeyType);
+            tokenKeyPairTypeTraits[tokenOffset] = tokenTypeTraits[0];
+            tokenOffset++;
+
+            // #3. Specify the length-partitioning key: number of token
+            if (isPartitioned) {
+                tokenKeyPairFields[tokenOffset] = ShortSerializerDeserializer.INSTANCE;
+                tokenKeyPairTypeTraits[tokenOffset] = tokenTypeTraits[1];
+            }
+
+            RecordDescriptor tokenKeyPairRecDesc = new RecordDescriptor(tokenKeyPairFields, tokenKeyPairTypeTraits);
+            IOperatorDescriptor tokenizerOp;
+
+            // Keys to be tokenized : SK
+            int docField = fieldPermutation[fieldPermutation.length - 1];
+
+            // Keys to be propagated
+            int[] keyFields = new int[numKeys];
+            for (int k = 0; k < keyFields.length; k++) {
+                keyFields[k] = k;
+            }
+
+            tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc, tokenizerFactory, docField,
+                    keyFields, isPartitioned, true);
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(tokenizerOp, splitsAndConstraint.second);
+
+        } catch (MetadataException e) {
+            throw new AlgebricksException(e);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
     }
 
     @Override
@@ -1145,7 +1448,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
             throws AlgebricksException {
         return getIndexInsertOrDeleteRuntime(IndexOperation.DELETE, dataSourceIndex, propagatedSchema, inputSchemas,
-                typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec);
+                typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc, context, spec,
+                false);
     }
 
     private AsterixTupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas,
@@ -1165,8 +1469,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             String datasetName, String indexName, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
-            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp)
-            throws AlgebricksException {
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp,
+            boolean bulkload) throws AlgebricksException {
 
         Dataset dataset = findDataset(dataverseName, datasetName);
         if (dataset == null) {
@@ -1264,18 +1568,33 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
-            AsterixLSMTreeInsertDeleteOperatorDescriptor btreeBulkLoad = new AsterixLSMTreeInsertDeleteOperatorDescriptor(
-                    spec, recordDesc, appContext.getStorageManagerInterface(),
-                    appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
-                    comparatorFactories, bloomFilterKeyFields, fieldPermutation, indexOp,
-                    new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(datasetId),
-                            compactionInfo.first, compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
-                                    dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties
-                                    .getBloomFilterFalsePositiveRate(), false, filterTypeTraits, filterCmpFactories,
-                            btreeFields, filterFields), filterFactory, modificationCallbackFactory, false, indexName);
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(btreeBulkLoad,
-                    splitsAndConstraint.second);
+            IIndexDataflowHelperFactory idfh = new LSMBTreeDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
+                    datasetId), compactionInfo.first, compactionInfo.second,
+                    new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                    AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                    storageProperties.getBloomFilterFalsePositiveRate(), false, filterTypeTraits, filterCmpFactories,
+                    btreeFields, filterFields);
+            IOperatorDescriptor op;
+            if (bulkload) {
+                long numElementsHint = getCardinalityPerPartitionHint(dataset);
+                op = new TreeIndexBulkLoadOperatorDescriptor(spec, recordDesc, appContext.getStorageManagerInterface(),
+                        appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
+                        comparatorFactories, bloomFilterKeyFields, fieldPermutation,
+                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idfh);
+            } else {
+                op = new AsterixLSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc,
+                        appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
+                        splitsAndConstraint.first, typeTraits, comparatorFactories, bloomFilterKeyFields,
+                        fieldPermutation, indexOp, new LSMBTreeDataflowHelperFactory(
+                                new AsterixVirtualBufferCacheProvider(datasetId), compactionInfo.first,
+                                compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
+                                        dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                                LSMBTreeIOOperationCallbackFactory.INSTANCE,
+                                storageProperties.getBloomFilterFalsePositiveRate(), false, filterTypeTraits,
+                                filterCmpFactories, btreeFields, filterFields), filterFactory,
+                        modificationCallbackFactory, false, indexName);
+            }
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         } catch (IOException e) {
@@ -1288,13 +1607,25 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
             RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp,
-            IndexType indexType) throws AlgebricksException {
+            IndexType indexType, boolean bulkload) throws AlgebricksException {
+
+        // Check the index is length-partitioned or not.
+        boolean isPartitioned;
+        if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
+            isPartitioned = true;
+        } else {
+            isPartitioned = false;
+        }
 
         // Sanity checks.
         if (primaryKeys.size() > 1) {
             throw new AlgebricksException("Cannot create inverted index on dataset with composite primary key.");
         }
-        if (secondaryKeys.size() > 1) {
+        // The size of secondaryKeys can be two if it receives input from its TokenizeOperator- [token, number of token]
+        if (secondaryKeys.size() > 1 && !isPartitioned) {
+            throw new AlgebricksException("Cannot create composite inverted index on multiple fields.");
+        } else if (secondaryKeys.size() > 2 && isPartitioned) {
             throw new AlgebricksException("Cannot create composite inverted index on multiple fields.");
         }
 
@@ -1303,13 +1634,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
         }
 
+        // For tokenization, sorting and loading.
+        // One token (+ optional partitioning field) + primary keys: [token, number of token, PK]
         int numKeys = primaryKeys.size() + secondaryKeys.size();
+        int numTokenKeyPairFields = (!isPartitioned) ? 1 + primaryKeys.size() : 2 + primaryKeys.size();
         int numFilterFields = DatasetUtils.getFilterField(dataset) == null ? 0 : 1;
+
         // generate field permutations
         int[] fieldPermutation = new int[numKeys + numFilterFields];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
         int i = 0;
         int j = 0;
+
+        // If the index is partitioned: [token, number of token]
+        // Otherwise: [token]
         for (LogicalVariable varKey : secondaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
@@ -1325,14 +1663,6 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         if (numFilterFields > 0) {
             int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
             fieldPermutation[numKeys] = idx;
-        }
-
-        boolean isPartitioned;
-        if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
-                || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
-            isPartitioned = true;
-        } else {
-            isPartitioned = false;
         }
 
         String itemTypeName = dataset.getItemTypeName();
@@ -1353,7 +1683,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             List<String> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
 
-            int numTokenFields = (!isPartitioned) ? secondaryKeys.size() : secondaryKeys.size() + 1;
+            int numTokenFields = 0;
+
+            // SecondaryKeys.size() can be two if it comes from the bulkload.
+            // In this case, [token, number of token] are the secondaryKeys.
+            if (!isPartitioned || secondaryKeys.size() > 1)
+                numTokenFields = secondaryKeys.size();
+            else if (isPartitioned && secondaryKeys.size() == 1)
+                numTokenFields = secondaryKeys.size() + 1;
+
             ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
             ITypeTraits[] invListsTypeTraits = new ITypeTraits[primaryKeys.size()];
             IBinaryComparatorFactory[] tokenComparatorFactories = new IBinaryComparatorFactory[numTokenFields];
@@ -1361,11 +1699,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     dataset, recType, context.getBinaryComparatorFactoryProvider());
 
             IAType secondaryKeyType = null;
-            for (i = 0; i < secondaryKeys.size(); ++i) {
-                Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyExprs.get(i)
-                        .toString(), recType);
-                secondaryKeyType = keyPairType.first;
-            }
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyExprs.get(0).toString(),
+                    recType);
+            secondaryKeyType = keyPairType.first;
+
             List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             i = 0;
             for (String partitioningKey : partitioningKeys) {
@@ -1402,8 +1739,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
 
                 filterFieldsForNonBulkLoadOps = new int[numFilterFields];
-                filterFieldsForNonBulkLoadOps[0] = numKeys;
-                invertedIndexFieldsForNonBulkLoadOps = new int[numKeys];
+                filterFieldsForNonBulkLoadOps[0] = numTokenKeyPairFields;
+                invertedIndexFieldsForNonBulkLoadOps = new int[numTokenKeyPairFields];
                 for (int k = 0; k < invertedIndexFieldsForNonBulkLoadOps.length; k++) {
                     invertedIndexFieldsForNonBulkLoadOps[k] = k;
                 }
@@ -1435,21 +1772,29 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         invertedIndexFieldsForNonBulkLoadOps);
             } else {
                 indexDataFlowFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
-                        new AsterixVirtualBufferCacheProvider(datasetId), compactionInfo.first, compactionInfo.second,
-                        new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                        new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
+                        compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
                         AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
                         invertedIndexFieldsForNonBulkLoadOps);
             }
-            AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor insertDeleteOp = new AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor(
-                    spec, recordDesc, appContext.getStorageManagerInterface(), splitsAndConstraint.first,
-                    appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
-                    invListsTypeTraits, invListComparatorFactories, tokenizerFactory, fieldPermutation, indexOp,
-                    indexDataFlowFactory, filterFactory, modificationCallbackFactory, indexName);
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(insertDeleteOp,
-                    splitsAndConstraint.second);
+            IOperatorDescriptor op;
+            if (bulkload) {
+                long numElementsHint = getCardinalityPerPartitionHint(dataset);
+                op = new LSMInvertedIndexBulkLoadOperatorDescriptor(spec, recordDesc, fieldPermutation, false,
+                        numElementsHint, false, appContext.getStorageManagerInterface(), splitsAndConstraint.first,
+                        appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
+                        invListsTypeTraits, invListComparatorFactories, tokenizerFactory, indexDataFlowFactory);
+            } else {
+                op = new AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor(spec, recordDesc,
+                        appContext.getStorageManagerInterface(), splitsAndConstraint.first,
+                        appContext.getIndexLifecycleManagerProvider(), tokenTypeTraits, tokenComparatorFactories,
+                        invListsTypeTraits, invListComparatorFactories, tokenizerFactory, fieldPermutation, indexOp,
+                        indexDataFlowFactory, filterFactory, modificationCallbackFactory, indexName);
+            }
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException e) {
             throw new AlgebricksException(e);
         } catch (IOException e) {
@@ -1461,8 +1806,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
             String datasetName, String indexName, IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv,
             List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, AsterixTupleFilterFactory filterFactory,
-            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp)
-            throws AlgebricksException {
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, IndexOperation indexOp,
+            boolean bulkload) throws AlgebricksException {
         try {
             Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
             String itemTypeName = dataset.getItemTypeName();
@@ -1555,19 +1900,37 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, mdTxnCtx);
-            AsterixLSMTreeInsertDeleteOperatorDescriptor rtreeUpdate = new AsterixLSMTreeInsertDeleteOperatorDescriptor(
-                    spec, recordDesc, appContext.getStorageManagerInterface(),
-                    appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
-                    comparatorFactories, null, fieldPermutation, indexOp, new LSMRTreeDataflowHelperFactory(
-                            valueProviderFactories, RTreePolicyType.RTREE, primaryComparatorFactories,
-                            new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
-                            compactionInfo.second, new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
-                            AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                            LSMRTreeIOOperationCallbackFactory.INSTANCE, proposeLinearizer(nestedKeyType.getTypeTag(),
-                                    comparatorFactories.length), storageProperties.getBloomFilterFalsePositiveRate(),
-                            rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields),
-                    filterFactory, modificationCallbackFactory, false, indexName);
-            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(rtreeUpdate, splitsAndConstraint.second);
+            IIndexDataflowHelperFactory idfh = new LSMRTreeDataflowHelperFactory(valueProviderFactories,
+                    RTreePolicyType.RTREE, primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(
+                            dataset.getDatasetId()), compactionInfo.first, compactionInfo.second,
+                    new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                    AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, LSMRTreeIOOperationCallbackFactory.INSTANCE,
+                    proposeLinearizer(nestedKeyType.getTypeTag(), comparatorFactories.length),
+                    storageProperties.getBloomFilterFalsePositiveRate(), rtreeFields, btreeFields, filterTypeTraits,
+                    filterCmpFactories, filterFields);
+            IOperatorDescriptor op;
+            if (bulkload) {
+                long numElementsHint = getCardinalityPerPartitionHint(dataset);
+                op = new TreeIndexBulkLoadOperatorDescriptor(spec, recordDesc, appContext.getStorageManagerInterface(),
+                        appContext.getIndexLifecycleManagerProvider(), splitsAndConstraint.first, typeTraits,
+                        primaryComparatorFactories, btreeFields, fieldPermutation,
+                        GlobalConfig.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, false, idfh);
+            } else {
+                op = new AsterixLSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc,
+                        appContext.getStorageManagerInterface(), appContext.getIndexLifecycleManagerProvider(),
+                        splitsAndConstraint.first, typeTraits, comparatorFactories, null, fieldPermutation, indexOp,
+                        new LSMRTreeDataflowHelperFactory(valueProviderFactories, RTreePolicyType.RTREE,
+                                primaryComparatorFactories, new AsterixVirtualBufferCacheProvider(dataset
+                                        .getDatasetId()), compactionInfo.first, compactionInfo.second,
+                                new SecondaryIndexOperationTrackerProvider(dataset.getDatasetId()),
+                                AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
+                                LSMRTreeIOOperationCallbackFactory.INSTANCE, proposeLinearizer(
+                                        nestedKeyType.getTypeTag(), comparatorFactories.length), storageProperties
+                                        .getBloomFilterFalsePositiveRate(), rtreeFields, btreeFields, filterTypeTraits,
+                                filterCmpFactories, filterFields), filterFactory,
+                        modificationCallbackFactory, false, indexName);
+            }
+            return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, splitsAndConstraint.second);
         } catch (MetadataException | IOException e) {
             throw new AlgebricksException(e);
         }
@@ -1599,7 +1962,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * Calculate an estimate size of the bloom filter. Note that this is an
      * estimation which assumes that the data is going to be uniformly
      * distributed across all partitions.
-     * 
+     *
      * @param dataset
      * @return Number of elements that will be used to create a bloom filter per
      *         dataset per partition
@@ -1822,7 +2185,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     /**
      * Add HDFS scheduler and the cluster location constraint into the scheduler
-     * 
+     *
      * @param properties
      *            the original dataset properties
      * @return a new map containing the original dataset properties and the
@@ -1838,7 +2201,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     /**
      * Adapt the original properties to a string-object map
-     * 
+     *
      * @param properties
      *            the original properties
      * @return the new stirng-object map

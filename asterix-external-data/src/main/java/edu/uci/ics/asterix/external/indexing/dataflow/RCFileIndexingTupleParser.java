@@ -25,7 +25,7 @@ public class RCFileIndexingTupleParser extends AbstractIndexingTupleParser{
     private Integer rowNumber = -1;
     private Integer lastFileNumber = -1;
     private long lastByteLocation = -1;
-    
+
     public RCFileIndexingTupleParser(IHyracksTaskContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer)
             throws HyracksDataException {
         super(ctx, recType, deserializer);
@@ -54,4 +54,5 @@ public class RCFileIndexingTupleParser extends AbstractIndexingTupleParser{
         aMutableInt.setValue(rowNumber);
         tb.addField(intSerde, aMutableInt);
     }
+
 }

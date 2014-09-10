@@ -10,7 +10,9 @@ import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.INodeDomain;
 
 public class DatasetDataSource extends AqlDataSource {
@@ -19,7 +21,7 @@ public class DatasetDataSource extends AqlDataSource {
 
     public DatasetDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName, IAType itemType,
             AqlDataSourceType datasourceType) throws AlgebricksException {
-        super(id, datasourceDataverse, datasourceName, itemType, datasourceType);
+        super(id, datasourceDataverse, datasourceName, datasourceType);
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
@@ -93,6 +95,12 @@ public class DatasetDataSource extends AqlDataSource {
     @Override
     public INodeDomain getDomain() {
         return domain;
+    }
+
+    @Override
+    public void computeLocalStructuralProperties(List<ILocalStructuralProperty> localProps,
+            List<LogicalVariable> variables) {
+        // do nothing
     }
 
 }

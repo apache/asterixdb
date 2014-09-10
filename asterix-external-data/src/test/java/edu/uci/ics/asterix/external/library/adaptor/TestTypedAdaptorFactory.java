@@ -72,7 +72,7 @@ public class TestTypedAdaptorFactory implements ITypedAdapterFactory {
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        ITupleParserFactory tupleParserFactory = new AdmSchemafullRecordParserFactory(adapterOutputType);
+        ITupleParserFactory tupleParserFactory = new AdmSchemafullRecordParserFactory(adapterOutputType, false, -1, null);
         return new TestTypedAdaptor(tupleParserFactory, adapterOutputType, ctx, configuration);
     }
 

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * There is a unique tag for each primitive type and for each kind of
  * non-primitive type in the object model.
- * 
+ *
  * @author Nicola
  */
 public enum ATypeTag implements IEnumSerializer {
@@ -62,7 +62,9 @@ public enum ATypeTag implements IEnumSerializer {
     SYSTEM_NULL(35),
     YEARMONTHDURATION(36),
     DAYTIMEDURATION(37),
-    UUID(38);
+    UUID(38),
+    UUID_STRING(39),
+    SHORTWITHOUTTYPEINFO(40);
 
     private byte value;
 

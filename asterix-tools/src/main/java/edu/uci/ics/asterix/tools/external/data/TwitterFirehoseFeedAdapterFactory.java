@@ -47,7 +47,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     private static final String KEY_INGESTION_CARDINALITY = "ingestion-cardinality";
 
     /*
-     * The absolute locations where ingestion operator instances will be places. 
+     * The absolute locations where ingestion operator instances will be places.
      */
     private static final String KEY_INGESTION_LOCATIONS = "ingestion-location";
 
@@ -72,7 +72,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     public void configure(Map<String, String> configuration) throws Exception {
         configuration.put(KEY_FORMAT, FORMAT_ADM);
         this.configuration = configuration;
-        this.configureFormat(initOutputType());
+        this.configureFormat(initOutputType(), false, -1, null);
     }
 
     @Override
