@@ -1,0 +1,22 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: success
+ * In this test, we check quote
+ * and delimiter in a field
+ *
+ */
+
+drop dataverse temp if exists;
+create dataverse temp
+use dataverse temp;
+
+create type test as closed {
+  id: int32,
+  float: float,
+  stringa: string,
+  stringb: string?
+};
+
+create dataset testds (test)
+primary key id;

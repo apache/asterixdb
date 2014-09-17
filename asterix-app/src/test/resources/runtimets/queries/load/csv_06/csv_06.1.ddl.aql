@@ -1,0 +1,21 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: fail - a whitespace is placed after the delimiter, and there is a quote after that.
+ * According to RFC (http://tools.ietf.org/html/rfc4180), this is not allowed.
+ *
+ */
+
+drop dataverse temp if exists;
+create dataverse temp
+use dataverse temp;
+
+create type test as closed {
+  id: int32,
+  float: float,
+  stringa: string,
+  stringb: string?
+};
+
+create dataset testds (test)
+primary key id;

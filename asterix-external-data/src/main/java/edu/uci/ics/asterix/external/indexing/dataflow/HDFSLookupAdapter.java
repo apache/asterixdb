@@ -24,6 +24,7 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
+import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.external.indexing.input.RCFileLookupReader;
 import edu.uci.ics.asterix.external.indexing.input.SequenceFileLookupInputStream;
 import edu.uci.ics.asterix.external.indexing.input.SequenceFileLookupReader;
@@ -97,8 +98,11 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
             }
         } else if (configuration.get(HDFSAdapterFactory.KEY_FORMAT).equals(HDFSAdapterFactory.FORMAT_DELIMITED_TEXT)) {
             // create a delimited text parser
+            char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
+            char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
+
             DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDilimitedDataParser((ARecordType) atype,
-                    (configuration.get(HDFSAdapterFactory.KEY_DELIMITER)).charAt(0));
+                    delimiter, quote);
             if (configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT)) {
                 // Text input format
                 TextFileLookupInputStream in = new TextFileLookupInputStream(fileIndexAccessor, jobConf);
@@ -144,7 +148,8 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
         // Do nothing
     }
 
-    private void configureRCFile(Configuration jobConf, INullWriterFactory iNullWriterFactory) throws IOException, Exception {
+    private void configureRCFile(Configuration jobConf, INullWriterFactory iNullWriterFactory) throws IOException,
+            Exception {
         // RCFileLookupReader
         RCFileLookupReader reader = new RCFileLookupReader(fileIndexAccessor,
                 HDFSAdapterFactory.configureJobConf(configuration));

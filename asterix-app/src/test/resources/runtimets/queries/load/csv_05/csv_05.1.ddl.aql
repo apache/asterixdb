@@ -1,0 +1,20 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: fail - a field is not enclosed in two quotes properly. It misses one quote.
+ *
+ */
+
+drop dataverse temp if exists;
+create dataverse temp
+use dataverse temp;
+
+create type test as closed {
+  id: int32,
+  float: float,
+  stringa: string,
+  stringb: string?
+};
+
+create dataset testds (test)
+primary key id;

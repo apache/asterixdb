@@ -1,7 +1,7 @@
 use dataverse fuzzy1;
 
 declare type CSXType as open {
-  id: int32, 
+  id: int32,
   csxid: string,
   title: string,
   authors: string,
@@ -10,11 +10,11 @@ declare type CSXType as open {
 
 declare nodegroup group1 on nc1, nc2;
 
-declare dataset CSXSmall(CSXType) 
+declare dataset CSXSmall(CSXType)
   primary key id on group1;
 
-load dataset CSXSmall 
+load dataset CSXSmall
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/fuzzyjoin/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+(("path"="nc1://data/fuzzyjoin/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000")) pre-sorted;
 
 

@@ -4814,6 +4814,34 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
+      <compilation-unit name="csv_03">
+        <output-dir compare="Text">csv_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="csv_04">
+        <output-dir compare="Text">csv_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="csv_05">
+        <output-dir compare="Text">csv_05</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="csv_06">
+        <output-dir compare="Text">csv_06</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
+      <compilation-unit name="csv_07">
+        <output-dir compare="Text">csv_07</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="load">
       <compilation-unit name="issue14_query">
         <output-dir compare="Text">none</output-dir>
         <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>

@@ -47,7 +47,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
                 dataParser = new ADMDataParser();
                 break;
             case DELIMITED_DATA:
-                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, false, -1, null);
+                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, quote, false, -1, null);
                 break;
         }
         return new ConditionalPushTupleParser(ctx, recordType, dataParser, configuration);
@@ -57,6 +57,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
     private final Map<String, String> configuration;
     private IValueParserFactory[] valueParserFactories;
     private char delimiter;
+    private char quote;
     private final ParserType parserType;
 
     public enum ParserType {
@@ -65,10 +66,11 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
     }
 
     public ConditionalPushTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, Map<String, String> configuration) {
+            char fieldDelimiter, char quote, Map<String, String> configuration) {
         this.recordType = recordType;
         this.valueParserFactories = valueParserFactories;
         this.delimiter = fieldDelimiter;
+        this.quote = quote;
         this.configuration = configuration;
         this.parserType = ParserType.DELIMITED_DATA;
 

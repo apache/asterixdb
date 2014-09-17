@@ -1,0 +1,17 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: success
+ *
+ */
+
+use dataverse temp;
+
+for $i in dataset testds
+order by $i.id
+return {
+  "id": $i.id,
+  "float": $i.float,
+  "stringa": $i.stringa,
+  "stringb": $i.stringb
+}
