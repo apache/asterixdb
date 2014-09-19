@@ -18,7 +18,7 @@
 	<parent>
 		<artifactId>hivesterix</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.13</version>
+		<version>0.2.14-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>hivesterix-serde</artifactId>
@@ -58,14 +58,14 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
-			<version>0.2.13</version>
+			<version>0.2.14-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.13</version>
+			<version>0.2.14-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
