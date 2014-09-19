@@ -19,7 +19,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.13-SNAPSHOT</version>
+    <version>0.2.13</version>
   </parent>
 
   <build>
@@ -61,7 +61,7 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-ipc</artifactId>
-  		<version>0.2.13-SNAPSHOT</version>
+  		<version>0.2.13</version>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.commons</groupId>

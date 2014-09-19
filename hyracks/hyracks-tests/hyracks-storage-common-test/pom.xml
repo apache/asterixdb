@@ -20,7 +20,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
-    <version>0.2.13-SNAPSHOT</version>
+    <version>0.2.13</version>
   </parent>
 
   <build>
@@ -41,13 +41,13 @@
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
-  		<version>0.2.13-SNAPSHOT</version>
+  		<version>0.2.13</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.2.13-SNAPSHOT</version>
+  		<version>0.2.13</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
