@@ -26,7 +26,7 @@
 
 <property>
 	<name>dfs.block.size</name>
-	<value>65536</value>
+	<value>1048576</value>
 </property>
 
 </configuration>

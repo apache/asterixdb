@@ -21,8 +21,7 @@
   <packaging>pom</packaging>
   
   <properties>
-    <algebricks.version>0.2.13</algebricks.version>
-    <hyracks.version>0.2.13</hyracks.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jvm.extraargs />
     <runSlowAQLTests>false</runSlowAQLTests>
 
@@ -33,6 +32,14 @@
     <invalid.tests>**/DmlTest.java</invalid.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
     <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests}</global.test.excludes>
+    <!-- Versions under dependencymanagement or used in many projects via properties -->
+    <algebricks.version>0.2.14-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.2.14-SNAPSHOT</hyracks.version>
+    <hadoop.version>2.2.0</hadoop.version>
+    <junit.version>4.8.1</junit.version>
+    <commons.io.version>2.4</commons.io.version>
+    <servlet.api.version>2.5</servlet.api.version>
+    <json.version>20090211</json.version>
   </properties>
 
 	<build>
@@ -222,8 +229,38 @@
           <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.1</version>
+            <version>${junit.version}</version>
           </dependency>
+          <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>2.2.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-common</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+		  <dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<version>${hadoop.version}</version>
+		  </dependency>
     		<dependency>
     			<groupId>edu.uci.ics.hyracks</groupId>
     			<artifactId>algebricks-compiler</artifactId>
@@ -314,15 +351,20 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20090211</version>
+			<version>${json.version}</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
+			<version>${servlet.api.version}</version>
 			<type>jar</type>
 		</dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+        </dependency>
     	</dependencies>
     </dependencyManagement>
 </project>

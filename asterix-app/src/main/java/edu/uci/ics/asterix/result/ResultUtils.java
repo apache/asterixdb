@@ -31,8 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.sun.el.parser.ParseException;
-
+import org.apache.http.ParseException;
 import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;

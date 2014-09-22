@@ -21,7 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.common.HdfsConstants.StartupOption;
+import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -64,7 +64,13 @@ public class HDFSCluster {
         conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
         conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
         cleanupLocal();
-        dfsCluster = new MiniDFSCluster(nameNodePort, conf, numDataNodes, true, true, StartupOption.REGULAR, null);
+        //this constructor is deprecated in hadoop 2x 
+        //dfsCluster = new MiniDFSCluster(nameNodePort, conf, numDataNodes, true, true, StartupOption.REGULAR, null);
+        MiniDFSCluster.Builder build = new MiniDFSCluster.Builder(conf);
+        build.nameNodePort(nameNodePort);
+        build.numDataNodes(numDataNodes);
+        build.startupOption(StartupOption.REGULAR);
+        dfsCluster = build.build();
         dfs = FileSystem.get(conf);
         loadData();
     }
