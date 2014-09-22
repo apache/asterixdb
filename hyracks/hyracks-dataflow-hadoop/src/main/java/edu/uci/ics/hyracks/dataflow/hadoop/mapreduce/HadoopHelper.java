@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.hadoop.data.HadoopNewPartitionerTuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.WritableComparingBinaryComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
+import edu.uci.ics.hyracks.hdfs.ContextFactory;
 
 public class HadoopHelper {
     public static final int KEY_FIELD_INDEX = 0;
@@ -97,11 +98,14 @@ public class HadoopHelper {
         }
     }
 
-    public TaskAttemptContext createTaskAttemptContext(TaskAttemptID taId) {
+    public TaskAttemptContext createTaskAttemptContext(TaskAttemptID taId) throws HyracksDataException {
         ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(config.getClassLoader());
-            return new TaskAttemptContext(config, taId);
+            return new ContextFactory().createContext(config, taId);
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+            throw new HyracksDataException(e);
         } finally {
             Thread.currentThread().setContextClassLoader(ctxCL);
         }
@@ -111,7 +115,7 @@ public class HadoopHelper {
         ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(config.getClassLoader());
-            return new JobContext(config, null);
+            return new ContextFactory().createJobContext(config);
         } finally {
             Thread.currentThread().setContextClassLoader(ctxCL);
         }
@@ -166,7 +170,7 @@ public class HadoopHelper {
         try {
             Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
             InputFormat<K, V> fmt = getInputFormat();
-            JobContext jCtx = new JobContext(config, null);
+            JobContext jCtx = new ContextFactory().createJobContext(config);
             try {
                 return fmt.getSplits(jCtx);
             } catch (IOException e) {

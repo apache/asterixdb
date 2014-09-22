@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.dataflow.std.sort.Algorithm;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortRunMerger;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.MRContextUtil;
 
 public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, K2 extends Writable, V2 extends Writable>
         extends AbstractSingleActivityOperatorDescriptor {
@@ -252,7 +253,7 @@ public class MapperOperatorDescriptor<K1 extends Writable, V1 extends Writable, 
                                 Thread.currentThread().setContextClassLoader(ctxCL);
                             }
                             recordWriter.initBlock(blockId);
-                            Mapper<K1, V1, K2, V2>.Context mCtx = mapper.new Context(conf, taId, recordReader,
+                            Mapper<K1, V1, K2, V2>.Context mCtx = new MRContextUtil().createMapContext(conf, taId, recordReader,
                                     recordWriter, null, null, split);
                             mapper.run(mCtx);
                             recordReader.close();

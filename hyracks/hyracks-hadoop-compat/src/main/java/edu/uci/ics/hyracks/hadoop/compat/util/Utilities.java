@@ -121,6 +121,12 @@ public class Utilities {
             public Counter getCounter(Enum<?> arg0) {
                 return null;
             }
+
+            @Override
+            public float getProgress() {
+                // TODO Auto-generated method stub
+                return 0f;
+            }
         };
         return reporter;
     }

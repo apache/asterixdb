@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.counters.GenericCounter;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -34,6 +35,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.MRContextUtil;
 
 public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
     private final IHyracksTaskContext ctx;
@@ -88,10 +90,8 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
         bPtr = 0;
         group.add(ctx.allocateFrame());
         fta = new FrameTupleAppender(ctx.getFrameSize());
-        keyCounter = new Counter() {
-        };
-        valueCounter = new Counter() {
-        };
+        keyCounter = new GenericCounter();
+        valueCounter = new GenericCounter();
     }
 
     @Override
@@ -146,7 +146,7 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
     private void reduce() throws HyracksDataException {
         kvi.reset(group, bPtr + 1);
         try {
-            Reducer<K2, V2, K3, V3>.Context rCtx = reducer.new Context(helper.getConfiguration(), taId, kvi,
+            Reducer<K2, V2, K3, V3>.Context rCtx = new MRContextUtil().createReduceContext(helper.getConfiguration(), taId, kvi,
                     keyCounter, valueCounter, recordWriter, null, null,
                     (RawComparator<K2>) helper.getRawGroupingComparator(), (Class<K2>) helper.getJob()
                             .getMapOutputKeyClass(), (Class<V2>) helper.getJob().getMapOutputValueClass());

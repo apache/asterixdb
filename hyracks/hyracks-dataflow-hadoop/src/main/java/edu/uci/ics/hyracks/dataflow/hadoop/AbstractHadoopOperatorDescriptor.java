@@ -18,11 +18,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.dcache.client.DCacheClient;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
@@ -63,8 +63,8 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
     private final Map<String, String> jobConfMap;
     private IHadoopClassFactory hadoopClassFactory;
 
-    public AbstractHadoopOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, RecordDescriptor recordDescriptor,
-            JobConf jobConf, IHadoopClassFactory hadoopOperatorFactory) {
+    public AbstractHadoopOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity,
+            RecordDescriptor recordDescriptor, JobConf jobConf, IHadoopClassFactory hadoopOperatorFactory) {
         super(spec, inputArity, 1);
         jobConfMap = DatatypeHelper.jobConf2Map(jobConf);
         this.hadoopClassFactory = hadoopOperatorFactory;
@@ -118,6 +118,11 @@ public abstract class AbstractHadoopOperatorDescriptor extends AbstractSingleAct
             @Override
             public void setStatus(String status) {
 
+            }
+
+            @Override
+            public float getProgress() {
+                return 0.0f;
             }
         };
     }

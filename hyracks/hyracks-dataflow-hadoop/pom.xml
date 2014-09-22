@@ -52,9 +52,15 @@
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
+		<groupId>edu.uci.ics.hyracks</groupId>
+		<artifactId>hyracks-hdfs-2.x</artifactId>
+		<version>0.2.14-SNAPSHOT</version>
+		<type>jar</type>
+		<scope>compile</scope>
+	</dependency>
+  	<dependency>
   		<groupId>org.apache.hadoop</groupId>
-  		<artifactId>hadoop-core</artifactId>
-  		<version>0.20.2</version>
+  		<artifactId>hadoop-client</artifactId>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

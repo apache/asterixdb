@@ -26,8 +26,8 @@
   </parent>
 
   <modules>
-    <module>hyracks-hdfs-0.20.2</module>
-    <module>hyracks-hdfs-0.23.1</module>
+    <module>hyracks-hdfs-1.x</module>
+    <module>hyracks-hdfs-2.x</module>
     <module>hyracks-hdfs-core</module>
   </modules>
 </project>

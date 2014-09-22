@@ -22,21 +22,60 @@
   <name>hyracks-ecosystem-full-stack</name>
 
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jvm.extraargs />
-
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
     <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</global.test.excludes>
+    <!-- Versions under dependencymanagement or used in many projects via properties -->
+    <hadoop.version>2.2.0</hadoop.version>
+    <junit.version>4.8.1</junit.version>
+    <commons.io.version>2.4</commons.io.version>
   </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.8.1</version>
+        <version>${junit.version}</version>
       </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+        </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -133,7 +172,5 @@
   <modules>
     <module>hyracks</module>
     <module>algebricks</module>
-    <module>pregelix</module>
-    <module>hivesterix</module>
   </modules>
 </project>

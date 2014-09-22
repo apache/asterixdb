@@ -34,8 +34,7 @@
   <dependencies>
       <dependency>
          <groupId>org.apache.hadoop</groupId>
-         <artifactId>hadoop-core</artifactId>
-         <version>0.20.2</version>
+         <artifactId>hadoop-client</artifactId>
          <type>jar</type>
          <scope>compile</scope>
       </dependency>

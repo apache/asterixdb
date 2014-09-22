@@ -16,8 +16,10 @@ package edu.uci.ics.hyracks.hadoop.compat.client;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobID;
+import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
@@ -167,6 +169,36 @@ public class HyracksRunningJob implements RunningJob {
     public void killTask(TaskAttemptID arg0, boolean arg1) throws IOException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getFailureInfo() throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getHistoryUrl() throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public JobStatus getJobStatus() throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isRetired() throws IOException {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

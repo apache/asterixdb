@@ -48,10 +48,12 @@ import edu.uci.ics.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.data.RawComparingComparatorFactory;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
 import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
+import edu.uci.ics.hyracks.dataflow.hadoop.util.MRContextUtil;
 import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 import edu.uci.ics.hyracks.dataflow.std.group.DeserializedPreclusteredGroupOperator;
 import edu.uci.ics.hyracks.dataflow.std.group.IGroupAggregator;
 import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
+import edu.uci.ics.hyracks.hdfs.ContextFactory;
 
 public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHadoopOperatorDescriptor {
     private class ReducerAggregator implements IGroupAggregator {
@@ -87,16 +89,16 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
             }
         };
 
-        class ReducerContext extends org.apache.hadoop.mapreduce.Reducer.Context {
+        class ReducerContext extends org.apache.hadoop.mapreduce.lib.reduce.WrappedReducer.Context {
             private HadoopReducerOperatorDescriptor.ValueIterator iterator;
 
             @SuppressWarnings("unchecked")
             ReducerContext(org.apache.hadoop.mapreduce.Reducer reducer, JobConf conf) throws IOException,
                     InterruptedException, ClassNotFoundException {
-
-                reducer.super(conf, new TaskAttemptID(), rawKeyValueIterator, null, null, null, null, null, null, Class
-                        .forName("org.apache.hadoop.io.NullWritable"), Class
-                        .forName("org.apache.hadoop.io.NullWritable"));
+                ((org.apache.hadoop.mapreduce.lib.reduce.WrappedReducer) reducer).super(new MRContextUtil()
+                        .createReduceContext(conf, new TaskAttemptID(), rawKeyValueIterator, null, null, null, null,
+                                null, null, Class.forName("org.apache.hadoop.io.NullWritable"),
+                                Class.forName("org.apache.hadoop.io.NullWritable")));
             }
 
             public void setIterator(HadoopReducerOperatorDescriptor.ValueIterator iter) {
@@ -189,6 +191,12 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
                 @Override
                 public Counter getCounter(Enum<?> arg0) {
                     return null;
+                }
+
+                @Override
+                public float getProgress() {
+                    // TODO Auto-generated method stub
+                    return 0;
                 }
             };
         }
@@ -325,7 +333,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
             Object reducer;
             if (!useAsCombiner) {
                 if (getJobConf().getUseNewReducer()) {
-                    JobContext jobContext = new JobContext(getJobConf(), null);
+                    JobContext jobContext = new ContextFactory().createJobContext(getJobConf());
                     reducerClass = (Class<? extends org.apache.hadoop.mapreduce.Reducer<?, ?, ?, ?>>) jobContext
                             .getReducerClass();
                 } else {
@@ -333,7 +341,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
                 }
             } else {
                 if (getJobConf().getUseNewReducer()) {
-                    JobContext jobContext = new JobContext(getJobConf(), null);
+                    JobContext jobContext = new ContextFactory().createJobContext(getJobConf());
                     reducerClass = (Class<? extends org.apache.hadoop.mapreduce.Reducer<?, ?, ?, ?>>) jobContext
                             .getCombinerClass();
                 } else {
@@ -382,7 +390,7 @@ public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHad
         String outputValueClassName = null;
 
         if (conf.getUseNewMapper()) {
-            JobContext context = new JobContext(conf, null);
+            JobContext context = new ContextFactory().createJobContext(conf);
             outputKeyClassName = context.getOutputKeyClass().getName();
             outputValueClassName = context.getOutputValueClass().getName();
         } else {

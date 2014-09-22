@@ -26,7 +26,12 @@
 
 <property>
 	<name>dfs.block.size</name>
-	<value>65536</value>
+	<value>1048576</value>
+</property>
+
+<property>
+	<name>dfs.namenode.fs-limits.min-block-size</name>
+	<value>1048576</value>
 </property>
 
 </configuration>
