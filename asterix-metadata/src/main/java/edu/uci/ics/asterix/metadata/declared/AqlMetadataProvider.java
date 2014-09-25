@@ -48,6 +48,7 @@ import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders.AqlPrimitiveValueProviderFactory;
 import edu.uci.ics.asterix.formats.base.IDataFormat;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import edu.uci.ics.asterix.formats.nontagged.AqlLinearizeComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
@@ -65,10 +66,10 @@ import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity;
-import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityDetails;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.external.IndexingConstants;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.EndFeedMessage;
@@ -170,9 +171,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeDataflowHe
 import edu.uci.ics.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
-import edu.uci.ics.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 
 public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
     private static Logger LOGGER = Logger.getLogger(AqlMetadataProvider.class.getName());
@@ -1946,16 +1944,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     public static ILinearizeComparatorFactory proposeLinearizer(ATypeTag keyType, int numKeyFields)
             throws AlgebricksException {
-        if (numKeyFields / 2 == 2 && (keyType == ATypeTag.DOUBLE)) {
-            return new HilbertDoubleComparatorFactory(2);
-        } else if (keyType == ATypeTag.DOUBLE) {
-            return new ZCurveDoubleComparatorFactory(numKeyFields / 2);
-        } else if (keyType == ATypeTag.INT8 || keyType == ATypeTag.INT16 || keyType == ATypeTag.INT32
-                || keyType == ATypeTag.INT64) {
-            return new ZCurveIntComparatorFactory(numKeyFields / 2);
-        } else {
-            throw new AlgebricksException("Cannot propose linearizer for key with type " + keyType + ".");
-        }
+        return AqlLinearizeComparatorFactoryProvider.INSTANCE.getLinearizeComparatorFactory(keyType, true,
+                numKeyFields / 2);
     }
 
     /**
