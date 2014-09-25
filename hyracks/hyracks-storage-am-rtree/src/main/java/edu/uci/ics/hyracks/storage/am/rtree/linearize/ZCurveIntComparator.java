@@ -129,8 +129,8 @@ public class ZCurveIntComparator implements ILinearizeComparator {
     @Override
     public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
         for (int i = 0; i < dim; i++) {
-            a[i] = IntegerSerializerDeserializer.getInt(b1, s1 + (i * 8));
-            b[i] = IntegerSerializerDeserializer.getInt(b2, s2 + (i * 8));
+            a[i] = IntegerSerializerDeserializer.getInt(b1, s1 + (i * l1));
+            b[i] = IntegerSerializerDeserializer.getInt(b2, s2 + (i * l2));
         }
 
         return compare();
