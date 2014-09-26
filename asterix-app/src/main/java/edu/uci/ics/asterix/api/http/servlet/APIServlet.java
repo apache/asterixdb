@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
@@ -54,11 +54,11 @@ public class APIServlet extends HttpServlet {
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        DisplayFormat format = DisplayFormat.HTML;
+        OutputFormat format = OutputFormat.HTML;
         if (request.getContentType().equals("application/json")) {
-            format = DisplayFormat.JSON;
+            format = OutputFormat.JSON;
         } else if (request.getContentType().equals("text/plain")) {
-            format = DisplayFormat.TEXT;
+            format = OutputFormat.ADM;
         }
 
         String query = request.getParameter("query");

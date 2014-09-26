@@ -34,7 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
@@ -73,7 +73,6 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalDatasetTransactio
 import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
@@ -167,11 +166,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private final List<Statement> aqlStatements;
     private final PrintWriter out;
     private final SessionConfig sessionConfig;
-    private final DisplayFormat pdf;
+    private final OutputFormat pdf;
     private Dataverse activeDefaultDataverse;
     private List<FunctionDecl> declaredFunctions;
 
-    public AqlTranslator(List<Statement> aqlStatements, PrintWriter out, SessionConfig pc, DisplayFormat pdf)
+    public AqlTranslator(List<Statement> aqlStatements, PrintWriter out, SessionConfig pc, APIFramework.OutputFormat pdf)
             throws MetadataException, AsterixException {
         this.aqlStatements = aqlStatements;
         this.out = out;
@@ -2349,7 +2348,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         return jobIds[0];
     }
 
-    public JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf,
+    public JobId[] executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, APIFramework.OutputFormat pdf,
             boolean waitForCompletion) throws Exception {
         JobId[] startedJobIds = new JobId[jobs.length];
         for (int i = 0; i < jobs.length; i++) {

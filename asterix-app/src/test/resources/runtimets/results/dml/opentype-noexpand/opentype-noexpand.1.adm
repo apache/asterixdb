@@ -1,2 +1,3 @@
-{ "name": "Person One", "id": "001" }
-{ "name": null, "id": "002" }
+[ { "name": "Person One", "id": "001" }
+, { "name": null, "id": "002" }
+ ]

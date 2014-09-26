@@ -1,2 +1,3 @@
-{ "street": { "number": 389, "name": "Palo verde" }, "city": "Mountain View", "state": "CA", "zip": 27075i16 }
-null
+[ { "street": { "number": 389, "name": "Palo verde" }, "city": "Mountain View", "state": "CA", "zip": 27075i16 }
+, null
+ ]

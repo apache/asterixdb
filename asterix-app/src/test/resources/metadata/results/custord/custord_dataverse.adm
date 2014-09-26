@@ -1,1 +1,2 @@
-{ "DataverseName": "custord", "DataFormat": "edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Mon Jul 11 17:05:53 PDT 2011" }
+[ { "DataverseName": "custord", "DataFormat": "edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Mon Jul 11 17:05:53 PDT 2011" }
+ ]

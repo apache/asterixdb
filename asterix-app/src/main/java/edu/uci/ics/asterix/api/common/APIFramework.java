@@ -153,14 +153,19 @@ public class APIFramework {
 
     }
 
-    public enum DisplayFormat {
-        TEXT,
+    /**
+     * Used to select the output from the various servlets. Note: "HTML" is
+     * primarily intended for use by the built-in web interface. It produces
+     * ADM output with various HTML wrappers.
+     */
+    public enum OutputFormat {
+        ADM,
         HTML,
         JSON
     }
 
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            AqlMetadataProvider metadataProvider, Query q, SessionConfig pc, PrintWriter out, DisplayFormat pdf)
+            AqlMetadataProvider metadataProvider, Query q, SessionConfig pc, PrintWriter out, OutputFormat pdf)
             throws AsterixException {
 
         if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintExprParam()) {
@@ -171,7 +176,7 @@ public class APIFramework {
                     out.println("<pre>");
                     break;
                 }
-                case TEXT: {
+                default: {
                     out.println("----------Expression tree:");
                     break;
                 }
@@ -194,7 +199,7 @@ public class APIFramework {
 
     public static JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
-            SessionConfig pc, PrintWriter out, DisplayFormat pdf, ICompiledDmlStatement statement)
+            SessionConfig pc, PrintWriter out, OutputFormat pdf, ICompiledDmlStatement statement)
             throws AsterixException, AlgebricksException, JSONException, RemoteException, ACIDException {
 
         if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintRewrittenExprParam()) {
@@ -206,7 +211,7 @@ public class APIFramework {
                     out.println("<pre>");
                     break;
                 }
-                case TEXT: {
+                default: {
                     out.println("----------Rewritten expression:");
                     break;
                 }
@@ -248,7 +253,7 @@ public class APIFramework {
                     out.println("<pre>");
                     break;
                 }
-                case TEXT: {
+                default: {
                     out.println("----------Logical plan:");
                     break;
                 }
@@ -317,8 +322,8 @@ public class APIFramework {
                             out.println("<pre>");
                             break;
                         }
-                        case TEXT: {
-                            out.println("----------Optimized plan ");
+                        default: {
+                            out.println("----------Optimized logical plan:");
                             break;
                         }
                     }
@@ -377,7 +382,7 @@ public class APIFramework {
                     out.println("<pre>");
                     break;
                 }
-                case TEXT: {
+                default: {
                     out.println("----------Hyracks job:");
                     break;
                 }
@@ -397,7 +402,7 @@ public class APIFramework {
     }
 
     public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out,
-            DisplayFormat pdf) throws Exception {
+            OutputFormat pdf) throws Exception {
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
             JobId jobId = hcc.startJob(specs[i]);
@@ -410,7 +415,7 @@ public class APIFramework {
 
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, DisplayFormat pdf)
+    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, OutputFormat pdf)
             throws Exception {
         for (int i = 0; i < jobs.length; i++) {
             jobs[i].getJobSpec().setMaxReattempts(0);

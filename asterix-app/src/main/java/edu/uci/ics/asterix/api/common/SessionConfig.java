@@ -25,6 +25,22 @@ public class SessionConfig {
     private final boolean generateJobSpec;
     private final boolean printJob;
 
+    /**
+     * Note: the various "print" options below will cause additional output
+     * to be generated when invoking servlet functions. This output is NOT
+     * guaranteed to match the OutputFormat (JSON, ADM...) except when the
+     * OutputFormat is "HTML". This is primarily for use by the built-in
+     * web interface (APIServlet).
+     * @param optimize
+     * @param printExprParam
+     * @param printRewrittenExprParam
+     * @param printLogicalPlanParam
+     * @param printOptimizedLogicalPlanParam
+     * @param printPhysicalOpsOnly
+     * @param executeQuery
+     * @param generateJobSpec
+     * @param printJob
+     */
     public SessionConfig(boolean optimize, boolean printExprParam, boolean printRewrittenExprParam,
             boolean printLogicalPlanParam, boolean printOptimizedLogicalPlanParam, boolean printPhysicalOpsOnly,
             boolean executeQuery, boolean generateJobSpec, boolean printJob) {

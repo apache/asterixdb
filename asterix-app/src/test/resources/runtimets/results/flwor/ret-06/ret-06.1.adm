@@ -1,1 +1,2 @@
-{{ "Welcome", "UCI", "Anteater", "DBH", "ICS" }}
+[ {{ "Welcome", "UCI", "Anteater", "DBH", "ICS" }}
+ ]

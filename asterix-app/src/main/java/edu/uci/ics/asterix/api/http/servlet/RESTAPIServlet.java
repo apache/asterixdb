@@ -30,7 +30,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework;
+import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
@@ -71,18 +72,25 @@ abstract class RESTAPIServlet extends HttpServlet {
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
             throws IOException {
-        response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-        DisplayFormat format = DisplayFormat.HTML;
+        APIFramework.OutputFormat format;
+        // QQQ For now switch solely based on Accept header. Later will add
+        // an "output" query parameter.
         String accept = request.getHeader("Accept");
-        if ((accept == null) || (accept.contains("text/plain"))) {
-            format = DisplayFormat.TEXT;
-        } else if (accept.contains("application/json")) {
-            format = DisplayFormat.JSON;
+        if ((accept == null) || (accept.contains("application/x-adm"))) {
+            format = OutputFormat.ADM;
+            response.setContentType("application/x-adm");
+        } else if (accept.contains("text/html")) {
+            format = OutputFormat.HTML;
+            response.setContentType("text/html");
+        } else {
+            // JSON output is the default; most generally useful for a
+            // programmatic HTTP API
+            format = APIFramework.OutputFormat.JSON;
+            response.setContentType("application/json");
         }
-
         AqlTranslator.ResultDelivery resultDelivery = whichResultDelivery(request);
 
         ServletContext context = getServletContext();

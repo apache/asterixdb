@@ -1,154 +1,155 @@
-{ "word": "allergies", "count": 15i64 }
-{ "word": "asthma", "count": 7i64 }
-{ "word": "and", "count": 6i64 }
-{ "word": "lt", "count": 6i64 }
-{ "word": "my", "count": 6i64 }
-{ "word": "the", "count": 6i64 }
-{ "word": "got", "count": 4i64 }
-{ "word": "i", "count": 4i64 }
-{ "word": "me", "count": 4i64 }
-{ "word": "that", "count": 4i64 }
-{ "word": "up", "count": 4i64 }
-{ "word": "an", "count": 3i64 }
-{ "word": "to", "count": 3i64 }
-{ "word": "with", "count": 3i64 }
-{ "word": "you", "count": 3i64 }
-{ "word": "a", "count": 2i64 }
-{ "word": "act", "count": 2i64 }
-{ "word": "acting", "count": 2i64 }
-{ "word": "away", "count": 2i64 }
-{ "word": "cough", "count": 2i64 }
-{ "word": "damn", "count": 2i64 }
-{ "word": "go", "count": 2i64 }
-{ "word": "hate", "count": 2i64 }
-{ "word": "he", "count": 2i64 }
-{ "word": "im", "count": 2i64 }
-{ "word": "in", "count": 2i64 }
-{ "word": "it", "count": 2i64 }
-{ "word": "lol", "count": 2i64 }
-{ "word": "natural", "count": 2i64 }
-{ "word": "please", "count": 2i64 }
-{ "word": "pump", "count": 2i64 }
-{ "word": "quot", "count": 2i64 }
-{ "word": "she", "count": 2i64 }
-{ "word": "smh", "count": 2i64 }
-{ "word": "sneezing", "count": 2i64 }
-{ "word": "while", "count": 2i64 }
-{ "word": "about", "count": 1i64 }
-{ "word": "actually", "count": 1i64 }
-{ "word": "again", "count": 1i64 }
-{ "word": "are", "count": 1i64 }
-{ "word": "at", "count": 1i64 }
-{ "word": "awesome", "count": 1i64 }
-{ "word": "back", "count": 1i64 }
-{ "word": "be", "count": 1i64 }
-{ "word": "been", "count": 1i64 }
-{ "word": "begin", "count": 1i64 }
-{ "word": "being", "count": 1i64 }
-{ "word": "birthday", "count": 1i64 }
-{ "word": "bit", "count": 1i64 }
-{ "word": "bravoandy", "count": 1i64 }
-{ "word": "but", "count": 1i64 }
-{ "word": "cant", "count": 1i64 }
-{ "word": "cause", "count": 1i64 }
-{ "word": "cold", "count": 1i64 }
-{ "word": "commercial", "count": 1i64 }
-{ "word": "coughing", "count": 1i64 }
-{ "word": "could", "count": 1i64 }
-{ "word": "crazy", "count": 1i64 }
-{ "word": "deal", "count": 1i64 }
-{ "word": "digging", "count": 1i64 }
-{ "word": "dirt", "count": 1i64 }
-{ "word": "ears", "count": 1i64 }
-{ "word": "except", "count": 1i64 }
-{ "word": "exposure", "count": 1i64 }
-{ "word": "eye", "count": 1i64 }
-{ "word": "feel", "count": 1i64 }
-{ "word": "fish", "count": 1i64 }
-{ "word": "following", "count": 1i64 }
-{ "word": "from", "count": 1i64 }
-{ "word": "fuckin", "count": 1i64 }
-{ "word": "glasses", "count": 1i64 }
-{ "word": "gold", "count": 1i64 }
-{ "word": "goldennote6", "count": 1i64 }
-{ "word": "gooodd", "count": 1i64 }
-{ "word": "gt", "count": 1i64 }
-{ "word": "haha", "count": 1i64 }
-{ "word": "have", "count": 1i64 }
-{ "word": "having", "count": 1i64 }
-{ "word": "heavy", "count": 1i64 }
-{ "word": "hell", "count": 1i64 }
-{ "word": "home", "count": 1i64 }
-{ "word": "house", "count": 1i64 }
-{ "word": "http", "count": 1i64 }
-{ "word": "idk", "count": 1i64 }
-{ "word": "incrediblel", "count": 1i64 }
-{ "word": "is", "count": 1i64 }
-{ "word": "issues", "count": 1i64 }
-{ "word": "itch", "count": 1i64 }
-{ "word": "itscrystal320", "count": 1i64 }
-{ "word": "just", "count": 1i64 }
-{ "word": "keep", "count": 1i64 }
-{ "word": "killing", "count": 1i64 }
-{ "word": "knew", "count": 1i64 }
-{ "word": "know", "count": 1i64 }
-{ "word": "like", "count": 1i64 }
-{ "word": "lmmmaaaoooo", "count": 1i64 }
-{ "word": "ly", "count": 1i64 }
-{ "word": "maam", "count": 1i64 }
-{ "word": "makes", "count": 1i64 }
-{ "word": "mnwnjo", "count": 1i64 }
-{ "word": "mommy", "count": 1i64 }
-{ "word": "much", "count": 1i64 }
-{ "word": "needs", "count": 1i64 }
-{ "word": "never", "count": 1i64 }
-{ "word": "new", "count": 1i64 }
-{ "word": "nnnnooo", "count": 1i64 }
-{ "word": "nothing", "count": 1i64 }
-{ "word": "now", "count": 1i64 }
-{ "word": "of", "count": 1i64 }
-{ "word": "omg", "count": 1i64 }
-{ "word": "one", "count": 1i64 }
-{ "word": "or", "count": 1i64 }
-{ "word": "over", "count": 1i64 }
-{ "word": "papisfavwave", "count": 1i64 }
-{ "word": "pass", "count": 1i64 }
-{ "word": "pollution", "count": 1i64 }
-{ "word": "remedy", "count": 1i64 }
-{ "word": "repeated", "count": 1i64 }
-{ "word": "rock", "count": 1i64 }
-{ "word": "sick", "count": 1i64 }
-{ "word": "skin", "count": 1i64 }
-{ "word": "sleeping", "count": 1i64 }
-{ "word": "smokers", "count": 1i64 }
-{ "word": "snapped", "count": 1i64 }
-{ "word": "snorting", "count": 1i64 }
-{ "word": "so", "count": 1i64 }
-{ "word": "specifically", "count": 1i64 }
-{ "word": "splashing", "count": 1i64 }
-{ "word": "stand", "count": 1i64 }
-{ "word": "still", "count": 1i64 }
-{ "word": "study", "count": 1i64 }
-{ "word": "sure", "count": 1i64 }
-{ "word": "swollen", "count": 1i64 }
-{ "word": "thats", "count": 1i64 }
-{ "word": "thingsicanlivewithout", "count": 1i64 }
-{ "word": "this", "count": 1i64 }
-{ "word": "though", "count": 1i64 }
-{ "word": "times", "count": 1i64 }
-{ "word": "tinalee90", "count": 1i64 }
-{ "word": "tired", "count": 1i64 }
-{ "word": "trying", "count": 1i64 }
-{ "word": "u", "count": 1i64 }
-{ "word": "ur", "count": 1i64 }
-{ "word": "was", "count": 1i64 }
-{ "word": "water", "count": 1i64 }
-{ "word": "way", "count": 1i64 }
-{ "word": "whats", "count": 1i64 }
-{ "word": "who", "count": 1i64 }
-{ "word": "why", "count": 1i64 }
-{ "word": "worst", "count": 1i64 }
-{ "word": "wrong", "count": 1i64 }
-{ "word": "x", "count": 1i64 }
-{ "word": "yeah", "count": 1i64 }
-{ "word": "your", "count": 1i64 }
+[ { "word": "allergies", "count": 15i64 }
+, { "word": "asthma", "count": 7i64 }
+, { "word": "and", "count": 6i64 }
+, { "word": "lt", "count": 6i64 }
+, { "word": "my", "count": 6i64 }
+, { "word": "the", "count": 6i64 }
+, { "word": "got", "count": 4i64 }
+, { "word": "i", "count": 4i64 }
+, { "word": "me", "count": 4i64 }
+, { "word": "that", "count": 4i64 }
+, { "word": "up", "count": 4i64 }
+, { "word": "an", "count": 3i64 }
+, { "word": "to", "count": 3i64 }
+, { "word": "with", "count": 3i64 }
+, { "word": "you", "count": 3i64 }
+, { "word": "a", "count": 2i64 }
+, { "word": "act", "count": 2i64 }
+, { "word": "acting", "count": 2i64 }
+, { "word": "away", "count": 2i64 }
+, { "word": "cough", "count": 2i64 }
+, { "word": "damn", "count": 2i64 }
+, { "word": "go", "count": 2i64 }
+, { "word": "hate", "count": 2i64 }
+, { "word": "he", "count": 2i64 }
+, { "word": "im", "count": 2i64 }
+, { "word": "in", "count": 2i64 }
+, { "word": "it", "count": 2i64 }
+, { "word": "lol", "count": 2i64 }
+, { "word": "natural", "count": 2i64 }
+, { "word": "please", "count": 2i64 }
+, { "word": "pump", "count": 2i64 }
+, { "word": "quot", "count": 2i64 }
+, { "word": "she", "count": 2i64 }
+, { "word": "smh", "count": 2i64 }
+, { "word": "sneezing", "count": 2i64 }
+, { "word": "while", "count": 2i64 }
+, { "word": "about", "count": 1i64 }
+, { "word": "actually", "count": 1i64 }
+, { "word": "again", "count": 1i64 }
+, { "word": "are", "count": 1i64 }
+, { "word": "at", "count": 1i64 }
+, { "word": "awesome", "count": 1i64 }
+, { "word": "back", "count": 1i64 }
+, { "word": "be", "count": 1i64 }
+, { "word": "been", "count": 1i64 }
+, { "word": "begin", "count": 1i64 }
+, { "word": "being", "count": 1i64 }
+, { "word": "birthday", "count": 1i64 }
+, { "word": "bit", "count": 1i64 }
+, { "word": "bravoandy", "count": 1i64 }
+, { "word": "but", "count": 1i64 }
+, { "word": "cant", "count": 1i64 }
+, { "word": "cause", "count": 1i64 }
+, { "word": "cold", "count": 1i64 }
+, { "word": "commercial", "count": 1i64 }
+, { "word": "coughing", "count": 1i64 }
+, { "word": "could", "count": 1i64 }
+, { "word": "crazy", "count": 1i64 }
+, { "word": "deal", "count": 1i64 }
+, { "word": "digging", "count": 1i64 }
+, { "word": "dirt", "count": 1i64 }
+, { "word": "ears", "count": 1i64 }
+, { "word": "except", "count": 1i64 }
+, { "word": "exposure", "count": 1i64 }
+, { "word": "eye", "count": 1i64 }
+, { "word": "feel", "count": 1i64 }
+, { "word": "fish", "count": 1i64 }
+, { "word": "following", "count": 1i64 }
+, { "word": "from", "count": 1i64 }
+, { "word": "fuckin", "count": 1i64 }
+, { "word": "glasses", "count": 1i64 }
+, { "word": "gold", "count": 1i64 }
+, { "word": "goldennote6", "count": 1i64 }
+, { "word": "gooodd", "count": 1i64 }
+, { "word": "gt", "count": 1i64 }
+, { "word": "haha", "count": 1i64 }
+, { "word": "have", "count": 1i64 }
+, { "word": "having", "count": 1i64 }
+, { "word": "heavy", "count": 1i64 }
+, { "word": "hell", "count": 1i64 }
+, { "word": "home", "count": 1i64 }
+, { "word": "house", "count": 1i64 }
+, { "word": "http", "count": 1i64 }
+, { "word": "idk", "count": 1i64 }
+, { "word": "incrediblel", "count": 1i64 }
+, { "word": "is", "count": 1i64 }
+, { "word": "issues", "count": 1i64 }
+, { "word": "itch", "count": 1i64 }
+, { "word": "itscrystal320", "count": 1i64 }
+, { "word": "just", "count": 1i64 }
+, { "word": "keep", "count": 1i64 }
+, { "word": "killing", "count": 1i64 }
+, { "word": "knew", "count": 1i64 }
+, { "word": "know", "count": 1i64 }
+, { "word": "like", "count": 1i64 }
+, { "word": "lmmmaaaoooo", "count": 1i64 }
+, { "word": "ly", "count": 1i64 }
+, { "word": "maam", "count": 1i64 }
+, { "word": "makes", "count": 1i64 }
+, { "word": "mnwnjo", "count": 1i64 }
+, { "word": "mommy", "count": 1i64 }
+, { "word": "much", "count": 1i64 }
+, { "word": "needs", "count": 1i64 }
+, { "word": "never", "count": 1i64 }
+, { "word": "new", "count": 1i64 }
+, { "word": "nnnnooo", "count": 1i64 }
+, { "word": "nothing", "count": 1i64 }
+, { "word": "now", "count": 1i64 }
+, { "word": "of", "count": 1i64 }
+, { "word": "omg", "count": 1i64 }
+, { "word": "one", "count": 1i64 }
+, { "word": "or", "count": 1i64 }
+, { "word": "over", "count": 1i64 }
+, { "word": "papisfavwave", "count": 1i64 }
+, { "word": "pass", "count": 1i64 }
+, { "word": "pollution", "count": 1i64 }
+, { "word": "remedy", "count": 1i64 }
+, { "word": "repeated", "count": 1i64 }
+, { "word": "rock", "count": 1i64 }
+, { "word": "sick", "count": 1i64 }
+, { "word": "skin", "count": 1i64 }
+, { "word": "sleeping", "count": 1i64 }
+, { "word": "smokers", "count": 1i64 }
+, { "word": "snapped", "count": 1i64 }
+, { "word": "snorting", "count": 1i64 }
+, { "word": "so", "count": 1i64 }
+, { "word": "specifically", "count": 1i64 }
+, { "word": "splashing", "count": 1i64 }
+, { "word": "stand", "count": 1i64 }
+, { "word": "still", "count": 1i64 }
+, { "word": "study", "count": 1i64 }
+, { "word": "sure", "count": 1i64 }
+, { "word": "swollen", "count": 1i64 }
+, { "word": "thats", "count": 1i64 }
+, { "word": "thingsicanlivewithout", "count": 1i64 }
+, { "word": "this", "count": 1i64 }
+, { "word": "though", "count": 1i64 }
+, { "word": "times", "count": 1i64 }
+, { "word": "tinalee90", "count": 1i64 }
+, { "word": "tired", "count": 1i64 }
+, { "word": "trying", "count": 1i64 }
+, { "word": "u", "count": 1i64 }
+, { "word": "ur", "count": 1i64 }
+, { "word": "was", "count": 1i64 }
+, { "word": "water", "count": 1i64 }
+, { "word": "way", "count": 1i64 }
+, { "word": "whats", "count": 1i64 }
+, { "word": "who", "count": 1i64 }
+, { "word": "why", "count": 1i64 }
+, { "word": "worst", "count": 1i64 }
+, { "word": "wrong", "count": 1i64 }
+, { "word": "x", "count": 1i64 }
+, { "word": "yeah", "count": 1i64 }
+, { "word": "your", "count": 1i64 }
+ ]

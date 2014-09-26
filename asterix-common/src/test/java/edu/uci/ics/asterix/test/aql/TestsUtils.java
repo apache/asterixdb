@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.test.aql;
 
-import static org.junit.Assert.fail;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -96,7 +94,7 @@ public class TestsUtils {
                 }
 
                 if (!equalStrings(lineExpected.split("Time")[0], lineActual.split("Time")[0])) {
-                    fail("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
+                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }
 
@@ -138,16 +136,24 @@ public class TestsUtils {
                 } else if (fields1[j].indexOf('.') < 0) {
                     return false;
                 } else {
+                    // If the fields are floating-point numbers, test them
+                    // for equality safely
                     fields1[j] = fields1[j].split(",")[0];
                     fields2[j] = fields2[j].split(",")[0];
-                    Double double1 = Double.parseDouble(fields1[j]);
-                    Double double2 = Double.parseDouble(fields2[j]);
-                    float float1 = (float) double1.doubleValue();
-                    float float2 = (float) double2.doubleValue();
+                    try {
+                        Double double1 = Double.parseDouble(fields1[j]);
+                        Double double2 = Double.parseDouble(fields2[j]);
+                        float float1 = (float) double1.doubleValue();
+                        float float2 = (float) double2.doubleValue();
 
-                    if (Math.abs(float1 - float2) == 0)
-                        continue;
-                    else {
+                        if (Math.abs(float1 - float2) == 0)
+                            continue;
+                        else {
+                            return false;
+                        }
+                    }
+                    catch (NumberFormatException ignored) {
+                        // Guess they weren't numbers - must simply not be equal
                         return false;
                     }
                 }
@@ -161,62 +167,41 @@ public class TestsUtils {
         byte[] buffer = new byte[10240];
         int len;
         java.io.FileOutputStream out = new java.io.FileOutputStream(actualFile);
-        while ((len = resultStream.read(buffer)) != -1) {
-            out.write(buffer, 0, len);
-        }
-    }
-
-    // For tests where you expect the output to be a JSON object with a
-    // "results" key.
-    private static void writeResultsToFile(File actualFile, InputStream resultStream) throws Exception {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(actualFile));
         try {
-            JsonFactory jsonFactory = new JsonFactory();
-            JsonParser resultParser = jsonFactory.createParser(resultStream);
-            while (resultParser.nextToken() == JsonToken.START_OBJECT) {
-                while (resultParser.nextToken() != JsonToken.END_OBJECT) {
-                    String key = resultParser.getCurrentName();
-                    if (key.equals("results")) {
-                        // Start of array.
-                        resultParser.nextToken();
-                        while (resultParser.nextToken() != JsonToken.END_ARRAY) {
-                            String record = resultParser.getValueAsString();
-                            writer.write(record);
-                        }
-                    } else if (key.equals("summary")) {
-                        String summary = resultParser.nextTextValue();
-                        writer.write(summary);
-                        throw new Exception("Could not find results key in the JSON Object, result file is at "
-                                + actualFile);
-                    }
-                }
+            while ((len = resultStream.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
             }
-        } finally {
-            writer.close();
+        }
+        finally {
+            out.close();
         }
     }
 
-    private static String[] handleError(HttpMethod method) throws Exception {
-        String errorBody = method.getResponseBodyAsString();
-        JSONObject result = new JSONObject(errorBody);
-        String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                result.getString("stacktrace") };
-        return errors;
-    }
-
-    private static InputStream executeHttpMethod(HttpMethod method) {
+    private static int executeHttpMethod(HttpMethod method) throws Exception {
         HttpClient client = new HttpClient();
+        int statusCode;
         try {
-            int statusCode = client.executeMethod(method);
-            if (statusCode != HttpStatus.SC_OK) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            }
-            return method.getResponseBodyAsStream();
+            statusCode = client.executeMethod(method);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
+            throw e;
         }
-        return null;
+        if (statusCode != HttpStatus.SC_OK) {
+            // QQQ For now, we are indeed assuming we get back JSON errors.
+            // In future this may be changed depending on the requested
+            // output format sent to the servlet.
+            String errorBody = method.getResponseBodyAsString();
+            JSONObject result = new JSONObject(errorBody);
+            String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                                result.getString("stacktrace") };
+            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+            throw new Exception("HTTP operation failed: " + errors[0] + 
+                                "\nSTATUS LINE: " + method.getStatusLine() +
+                                "\nSUMMARY: " + errors[1] +
+                                "\nSTACKTRACE: " + errors[2]);
+        }
+        return statusCode;
     }
 
     // Executes Query and returns results as JSONArray
@@ -235,16 +220,14 @@ public class TestsUtils {
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
-        return executeHttpMethod(method);
+        executeHttpMethod(method);
+        return method.getResponseBodyAsStream();
     }
 
     // To execute Update statements
     // Insert and Delete statements are executed here
     public static void executeUpdate(String str) throws Exception {
         final String url = "http://localhost:19002/update";
-
-        // Create an instance of HttpClient.
-        HttpClient client = new HttpClient();
 
         // Create a method instance.
         PostMethod method = new PostMethod(url);
@@ -254,16 +237,7 @@ public class TestsUtils {
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
         // Execute the method.
-        int statusCode = client.executeMethod(method);
-
-        // Check if the method was executed successfully.
-        if (statusCode != HttpStatus.SC_OK) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            String[] errors = handleError(method);
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
-                    + errors[2]);
-        }
+        executeHttpMethod(method);
     }
 
     //Executes AQL in either async or async-defer mode.
@@ -281,7 +255,8 @@ public class TestsUtils {
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
-        InputStream resultStream = executeHttpMethod(method);
+        executeHttpMethod(method);
+        InputStream resultStream = method.getResponseBodyAsStream();
 
         String theHandle = IOUtils.toString(resultStream, "UTF-8");
 
@@ -300,7 +275,8 @@ public class TestsUtils {
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
-        return executeHttpMethod(method);
+        executeHttpMethod(method);
+        return method.getResponseBodyAsStream();
     }
 
     // To execute DDL and Update statements
@@ -312,9 +288,6 @@ public class TestsUtils {
     public static void executeDDL(String str) throws Exception {
         final String url = "http://localhost:19002/ddl";
 
-        // Create an instance of HttpClient.
-        HttpClient client = new HttpClient();
-
         // Create a method instance.
         PostMethod method = new PostMethod(url);
         method.setRequestEntity(new StringRequestEntity(str));
@@ -322,16 +295,7 @@ public class TestsUtils {
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
 
         // Execute the method.
-        int statusCode = client.executeMethod(method);
-
-        // Check if the method was executed successfully.
-        if (statusCode != HttpStatus.SC_OK) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Method failed: " + method.getStatusLine());
-            String[] errors = handleError(method);
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("DDL operation failed: " + errors[0] + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: "
-                    + errors[2]);
-        }
+        executeHttpMethod(method);
     }
 
     // Method that reads a DDL/Update/Query File
@@ -461,13 +425,7 @@ public class TestsUtils {
 
                             File actualResultFile = testCaseCtx.getActualResultFile(cUnit, new File(actualPath));
                             actualResultFile.getParentFile().mkdirs();
-                            // JSON results are pure JSON now, with no "results"
-                            // wrapper object
-                            if (fmt == OutputFormat.JSON) {
-                                TestsUtils.writeOutputToFile(actualResultFile, resultStream);
-                            } else {
-                                TestsUtils.writeResultsToFile(actualResultFile, resultStream);
-                            }
+                            TestsUtils.writeOutputToFile(actualResultFile, resultStream);
 
                             TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err),
                                     expectedResultFile, actualResultFile);
@@ -485,7 +443,7 @@ public class TestsUtils {
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
                             qbcFile.getParentFile().mkdirs();
-                            TestsUtils.writeResultsToFile(qbcFile, resultStream);
+                            TestsUtils.writeOutputToFile(qbcFile, resultStream);
                             break;
                         case "txnqar": //qar represents query after recovery
                             resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
@@ -493,8 +451,7 @@ public class TestsUtils {
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");
                             qarFile.getParentFile().mkdirs();
-                            TestsUtils.writeResultsToFile(qarFile, resultStream);
-
+                            TestsUtils.writeOutputToFile(qarFile, resultStream);
                             TestsUtils.runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile,
                                     qarFile);
 
@@ -537,10 +494,13 @@ public class TestsUtils {
                     }
 
                 } catch (Exception e) {
+                    System.err.println("testFile " + testFile.toString() + " raised an exception:");
+                    e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
-                        e.printStackTrace();
+                        System.err.println("...Unexpected!");
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     } else {
+                        System.err.println("...but that was expected.");
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                 + " failed as expected: " + e.getMessage());
                     }

@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -78,9 +78,27 @@ public class QueryResultAPIServlet extends HttpServlet {
             ResultReader resultReader = new ResultReader(hcc, hds);
             resultReader.open(jobId, rsId);
 
-            // QQQ The DisplayFormat shouldn't be fixed; needs to be some way
-            // to select the output format from this API.
-            ResultUtils.displayResults(resultReader, out, DisplayFormat.TEXT);
+            APIFramework.OutputFormat format;
+            // QQQ This code is duplicated from RESTAPIServlet, and is
+            // erroneous anyway. The output format is determined by
+            // the initial query and cannot be modified here, so we need
+            // to find a way to send the same OutputFormat value here as
+            // was originally determined there. Need to save this value on
+            // some object that we can obtain here.
+            String accept = request.getHeader("Accept");
+            if ((accept == null) || (accept.contains("application/x-adm"))) {
+                format = APIFramework.OutputFormat.ADM;
+                response.setContentType("application/x-adm");
+            } else if (accept.contains("text/html")) {
+                format = APIFramework.OutputFormat.HTML;
+                response.setContentType("text/html");
+            } else {
+                // JSON output is the default; most generally useful for a
+                // programmatic HTTP API
+                format = APIFramework.OutputFormat.JSON;
+                response.setContentType("application/json");
+            }
+            ResultUtils.displayResults(resultReader, out, format);
 
         } catch (Exception e) {
             out.println(e.getMessage());

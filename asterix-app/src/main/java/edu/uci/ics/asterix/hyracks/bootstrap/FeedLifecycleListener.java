@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
@@ -43,7 +43,6 @@ import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
 import edu.uci.ics.asterix.aql.expression.Identifier;
 import edu.uci.ics.asterix.aql.translator.AqlTranslator;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.feeds.SuperFeedManager;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
@@ -1114,7 +1113,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 List<Statement> statements = new ArrayList<Statement>();
                 statements.add(dataverseDecl);
                 statements.add(stmt);
-                AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
+                AqlTranslator translator = new AqlTranslator(statements, writer, pc, APIFramework.OutputFormat.ADM);
                 translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                         AqlTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -1160,7 +1159,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         new Identifier(feedInfo.feedConnectionId.getDataverse()));
                 statements.add(dataverseDecl);
                 statements.add(stmt);
-                AqlTranslator translator = new AqlTranslator(statements, writer, pc, DisplayFormat.TEXT);
+                AqlTranslator translator = new AqlTranslator(statements, writer, pc, APIFramework.OutputFormat.ADM);
                 translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                         AqlTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {

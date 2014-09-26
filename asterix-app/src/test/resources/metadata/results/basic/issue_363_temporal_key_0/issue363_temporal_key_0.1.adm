@@ -1,1 +1,2 @@
-{ "id": year-month-duration("P2013Y"), "name": "Bob" }
+[ { "id": year-month-duration("P2013Y"), "name": "Bob" }
+ ]

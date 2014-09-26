@@ -1,1 +1,2 @@
-{ "custname": "Mary Carey", "custage": 12 }
+[ { "custname": "Mary Carey", "custage": 12 }
+ ]

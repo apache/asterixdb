@@ -19,7 +19,7 @@ import java.io.Reader;
 import java.util.List;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.aql.base.Statement;
@@ -79,17 +79,17 @@ public class AsterixJavaClient {
         SessionConfig pc = new SessionConfig(optimize, false, printRewrittenExpressions, printLogicalPlan,
                 printOptimizedPlan, printPhysicalOpsOnly, true, generateBinaryRuntime, printJob);
 
-        AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, DisplayFormat.TEXT);
+        AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, OutputFormat.ADM);
         aqlTranslator.compileAndExecute(hcc, null, AqlTranslator.ResultDelivery.SYNC);
         writer.flush();
     }
 
     public void execute() throws Exception {
         if (dmlJobs != null) {
-            APIFramework.executeJobArray(hcc, dmlJobs, writer, DisplayFormat.TEXT);
+            APIFramework.executeJobArray(hcc, dmlJobs, writer, OutputFormat.ADM);
         }
         if (queryJobSpec != null) {
-            APIFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer, DisplayFormat.TEXT);
+            APIFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer, OutputFormat.ADM);
         }
     }
 

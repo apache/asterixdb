@@ -1,93 +1,94 @@
-{ "word": "a", "count": 68i64 }
-{ "word": "addressing", "count": 34i64 }
-{ "word": "an", "count": 34i64 }
-{ "word": "analyzing", "count": 68i64 }
-{ "word": "and", "count": 238i64 }
-{ "word": "areas", "count": 34i64 }
-{ "word": "asterix", "count": 102i64 }
-{ "word": "by", "count": 34i64 }
-{ "word": "cases", "count": 68i64 }
-{ "word": "clusters", "count": 68i64 }
-{ "word": "combining", "count": 34i64 }
-{ "word": "commodity", "count": 34i64 }
-{ "word": "computing", "count": 102i64 }
-{ "word": "content", "count": 34i64 }
-{ "word": "create", "count": 34i64 }
-{ "word": "data", "count": 238i64 }
-{ "word": "database", "count": 34i64 }
-{ "word": "databases", "count": 34i64 }
-{ "word": "datum", "count": 34i64 }
-{ "word": "declarative", "count": 34i64 }
-{ "word": "developing", "count": 34i64 }
-{ "word": "distinct", "count": 34i64 }
-{ "word": "each", "count": 34i64 }
-{ "word": "for", "count": 34i64 }
-{ "word": "formats", "count": 34i64 }
-{ "word": "from", "count": 68i64 }
-{ "word": "generation", "count": 34i64 }
-{ "word": "highly", "count": 68i64 }
-{ "word": "ideas", "count": 34i64 }
-{ "word": "including", "count": 34i64 }
-{ "word": "indexing", "count": 68i64 }
-{ "word": "information", "count": 136i64 }
-{ "word": "ingesting", "count": 34i64 }
-{ "word": "intensive", "count": 68i64 }
-{ "word": "irregular", "count": 34i64 }
-{ "word": "is", "count": 204i64 }
-{ "word": "issues", "count": 34i64 }
-{ "word": "large", "count": 68i64 }
-{ "word": "managing", "count": 34i64 }
-{ "word": "merging", "count": 34i64 }
-{ "word": "much", "count": 34i64 }
-{ "word": "new", "count": 34i64 }
-{ "word": "next", "count": 34i64 }
-{ "word": "nothing", "count": 34i64 }
-{ "word": "of", "count": 136i64 }
-{ "word": "on", "count": 102i64 }
-{ "word": "open", "count": 68i64 }
-{ "word": "parallel", "count": 68i64 }
-{ "word": "performant", "count": 34i64 }
-{ "word": "platform", "count": 34i64 }
-{ "word": "problem", "count": 34i64 }
-{ "word": "processing", "count": 34i64 }
-{ "word": "project", "count": 68i64 }
-{ "word": "quantities", "count": 34i64 }
-{ "word": "query", "count": 34i64 }
-{ "word": "querying", "count": 34i64 }
-{ "word": "range", "count": 34i64 }
-{ "word": "ranging", "count": 34i64 }
-{ "word": "regular", "count": 34i64 }
-{ "word": "research", "count": 34i64 }
-{ "word": "running", "count": 34i64 }
-{ "word": "scalable", "count": 34i64 }
-{ "word": "scales", "count": 34i64 }
-{ "word": "semi", "count": 170i64 }
-{ "word": "shared", "count": 34i64 }
-{ "word": "software", "count": 34i64 }
-{ "word": "solutions", "count": 34i64 }
-{ "word": "source", "count": 34i64 }
-{ "word": "stance", "count": 34i64 }
-{ "word": "storage", "count": 34i64 }
-{ "word": "storing", "count": 34i64 }
-{ "word": "structured", "count": 170i64 }
-{ "word": "subscribing", "count": 34i64 }
-{ "word": "support", "count": 34i64 }
-{ "word": "tagged", "count": 34i64 }
-{ "word": "taking", "count": 34i64 }
-{ "word": "targets", "count": 34i64 }
-{ "word": "techniques", "count": 68i64 }
-{ "word": "technologies", "count": 34i64 }
-{ "word": "textual", "count": 34i64 }
-{ "word": "that", "count": 34i64 }
-{ "word": "the", "count": 102i64 }
-{ "word": "three", "count": 34i64 }
-{ "word": "to", "count": 170i64 }
-{ "word": "todays", "count": 34i64 }
-{ "word": "use", "count": 68i64 }
-{ "word": "vast", "count": 34i64 }
-{ "word": "very", "count": 34i64 }
-{ "word": "well", "count": 34i64 }
-{ "word": "where", "count": 68i64 }
-{ "word": "wide", "count": 34i64 }
-{ "word": "with", "count": 34i64 }
-{ "word": "yet", "count": 34i64 }
+[ { "word": "a", "count": 68i64 }
+, { "word": "addressing", "count": 34i64 }
+, { "word": "an", "count": 34i64 }
+, { "word": "analyzing", "count": 68i64 }
+, { "word": "and", "count": 238i64 }
+, { "word": "areas", "count": 34i64 }
+, { "word": "asterix", "count": 102i64 }
+, { "word": "by", "count": 34i64 }
+, { "word": "cases", "count": 68i64 }
+, { "word": "clusters", "count": 68i64 }
+, { "word": "combining", "count": 34i64 }
+, { "word": "commodity", "count": 34i64 }
+, { "word": "computing", "count": 102i64 }
+, { "word": "content", "count": 34i64 }
+, { "word": "create", "count": 34i64 }
+, { "word": "data", "count": 238i64 }
+, { "word": "database", "count": 34i64 }
+, { "word": "databases", "count": 34i64 }
+, { "word": "datum", "count": 34i64 }
+, { "word": "declarative", "count": 34i64 }
+, { "word": "developing", "count": 34i64 }
+, { "word": "distinct", "count": 34i64 }
+, { "word": "each", "count": 34i64 }
+, { "word": "for", "count": 34i64 }
+, { "word": "formats", "count": 34i64 }
+, { "word": "from", "count": 68i64 }
+, { "word": "generation", "count": 34i64 }
+, { "word": "highly", "count": 68i64 }
+, { "word": "ideas", "count": 34i64 }
+, { "word": "including", "count": 34i64 }
+, { "word": "indexing", "count": 68i64 }
+, { "word": "information", "count": 136i64 }
+, { "word": "ingesting", "count": 34i64 }
+, { "word": "intensive", "count": 68i64 }
+, { "word": "irregular", "count": 34i64 }
+, { "word": "is", "count": 204i64 }
+, { "word": "issues", "count": 34i64 }
+, { "word": "large", "count": 68i64 }
+, { "word": "managing", "count": 34i64 }
+, { "word": "merging", "count": 34i64 }
+, { "word": "much", "count": 34i64 }
+, { "word": "new", "count": 34i64 }
+, { "word": "next", "count": 34i64 }
+, { "word": "nothing", "count": 34i64 }
+, { "word": "of", "count": 136i64 }
+, { "word": "on", "count": 102i64 }
+, { "word": "open", "count": 68i64 }
+, { "word": "parallel", "count": 68i64 }
+, { "word": "performant", "count": 34i64 }
+, { "word": "platform", "count": 34i64 }
+, { "word": "problem", "count": 34i64 }
+, { "word": "processing", "count": 34i64 }
+, { "word": "project", "count": 68i64 }
+, { "word": "quantities", "count": 34i64 }
+, { "word": "query", "count": 34i64 }
+, { "word": "querying", "count": 34i64 }
+, { "word": "range", "count": 34i64 }
+, { "word": "ranging", "count": 34i64 }
+, { "word": "regular", "count": 34i64 }
+, { "word": "research", "count": 34i64 }
+, { "word": "running", "count": 34i64 }
+, { "word": "scalable", "count": 34i64 }
+, { "word": "scales", "count": 34i64 }
+, { "word": "semi", "count": 170i64 }
+, { "word": "shared", "count": 34i64 }
+, { "word": "software", "count": 34i64 }
+, { "word": "solutions", "count": 34i64 }
+, { "word": "source", "count": 34i64 }
+, { "word": "stance", "count": 34i64 }
+, { "word": "storage", "count": 34i64 }
+, { "word": "storing", "count": 34i64 }
+, { "word": "structured", "count": 170i64 }
+, { "word": "subscribing", "count": 34i64 }
+, { "word": "support", "count": 34i64 }
+, { "word": "tagged", "count": 34i64 }
+, { "word": "taking", "count": 34i64 }
+, { "word": "targets", "count": 34i64 }
+, { "word": "techniques", "count": 68i64 }
+, { "word": "technologies", "count": 34i64 }
+, { "word": "textual", "count": 34i64 }
+, { "word": "that", "count": 34i64 }
+, { "word": "the", "count": 102i64 }
+, { "word": "three", "count": 34i64 }
+, { "word": "to", "count": 170i64 }
+, { "word": "todays", "count": 34i64 }
+, { "word": "use", "count": 68i64 }
+, { "word": "vast", "count": 34i64 }
+, { "word": "very", "count": 34i64 }
+, { "word": "well", "count": 34i64 }
+, { "word": "where", "count": 68i64 }
+, { "word": "wide", "count": 34i64 }
+, { "word": "with", "count": 34i64 }
+, { "word": "yet", "count": 34i64 }
+ ]

@@ -32,7 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.apache.http.ParseException;
-import edu.uci.ics.asterix.api.common.APIFramework.DisplayFormat;
+import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -60,7 +60,7 @@ public class ResultUtils {
         return s;
     }
 
-    public static void displayResults(ResultReader resultReader, PrintWriter out, DisplayFormat pdf)
+    public static void displayResults(ResultReader resultReader, PrintWriter out, APIFramework.OutputFormat pdf)
             throws HyracksDataException {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
@@ -68,20 +68,21 @@ public class ResultUtils {
         ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
         buffer.clear();
 
-        JSONArray adm_results = null;
+        boolean need_commas = true;
+        boolean notfirst = false;
         switch (pdf) {
-        case HTML:
-            out.println("<h4>Results:</h4>");
-            out.println("<pre>");
-            break;
-        case JSON:
-            out.print("[ ");
-            break;
-        case TEXT:
-            // For now, keep the outer "results" JSON object for ADM results
-            out.print("{ \"results\": ");
-            adm_results = new JSONArray();
-            break;
+            case HTML:
+                out.println("<h4>Results:</h4>");
+                out.println("<pre>");
+                need_commas = false;
+                break;
+            case JSON:
+            case ADM:
+                // Conveniently, JSON and ADM have the same syntax for an
+                // "ordered list", and our representation of the result of a
+                // statement is an ordered list of instances.
+                out.print("[ ");
+                break;
         }
 
         while (resultReader.read(buffer) > 0) {
@@ -95,22 +96,12 @@ public class ResultUtils {
                     bbis.setByteBuffer(buffer, start);
                     byte[] recordBytes = new byte[length];
                     bbis.read(recordBytes, 0, length);
-                    // Issue 796 - what if an instance from Hyracks exceeds
-                    // FRAME_SIZE?
                     result = new String(recordBytes, 0, length, UTF_8);
-                    switch (pdf) {
-                    case JSON:
-                        if (tIndex != (last - 1)) {
-                            out.print(", ");
-                        }
-                        // fall through to next case to output results
-                    case HTML:
-                        out.print(result);
-                        break;
-                    case TEXT:
-                        adm_results.put(result);
-                        break;
+                    if (need_commas && notfirst) {
+                        out.print(", ");
                     }
+                    notfirst = true;
+                    out.print(result);
                 }
                 buffer.clear();
             } finally {
@@ -122,20 +113,16 @@ public class ResultUtils {
             }
         }
 
-        if (pdf == DisplayFormat.TEXT) {
-            out.print(adm_results);
-        }
         out.flush();
 
         switch (pdf) {
-        case HTML:
-            out.println("</pre>");
-            break;
-        case JSON:
-            out.println(" ]");
-            break;
-        case TEXT:
-            out.println(" }");
+            case HTML:
+                out.println("</pre>");
+                break;
+            case JSON:
+            case ADM:
+                out.println(" ]");
+                break;
         }
     }
 

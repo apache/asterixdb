@@ -1,2 +1,3 @@
-{ "id": "one", "idx": "one", "no-idx": "one" }
-{ "id": "two", "idx": "two", "no-idx": "two" }
+[ { "id": "one", "idx": "one", "no-idx": "one" }
+, { "id": "two", "idx": "two", "no-idx": "two" }
+ ]

@@ -18,3 +18,6 @@ asterix_logs
 bin/
 *-coredump
 *.pyc
+*.iml
+asterix.ipr
+asterix.iws

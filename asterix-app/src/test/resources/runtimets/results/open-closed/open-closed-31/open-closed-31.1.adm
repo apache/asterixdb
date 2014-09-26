@@ -1,1 +1,2 @@
-{{ "hiking", "surfing" }}
+[ {{ "hiking", "surfing" }}
+ ]
