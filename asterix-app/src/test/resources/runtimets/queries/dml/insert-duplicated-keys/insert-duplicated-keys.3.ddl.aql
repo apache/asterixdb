@@ -1,0 +1,2 @@
+/* this should successfully drop STBench dataverse */
+drop dataverse STBench;

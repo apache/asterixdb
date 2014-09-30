@@ -1,0 +1,20 @@
+use dataverse STBench;
+
+insert into dataset SimpleGeoPlace
+{ "coordinates": point("-2.423658,53.0842802"), "id": 5, "name": "20:20 Mobile", "tags": "mobile", "categories": "Professional Services Computer Services", "phone": "" }
+;
+
+/* this should return TreeIndexDuplicateKeyException */
+insert into dataset SimpleGeoPlace
+{ "coordinates": point("-2.423658,53.0842802"), "id": 5, "name": "20:20 Mobile", "tags": "mobile", "categories": "Professional Services Computer Services", "phone": "" }
+;
+
+/* this should return TreeIndexDuplicateKeyException without hang*/
+insert into dataset SimpleGeoPlace
+{ "coordinates": point("-2.423658,53.0842802"), "id": 5, "name": "20:20 Mobile", "tags": "mobile", "categories": "Professional Services Computer Services", "phone": "" }
+;
+
+/* this should return TreeIndexDuplicateKeyException without hang*/
+insert into dataset SimpleGeoPlace
+{ "coordinates": point("-2.423658,53.0842802"), "id": 5, "name": "20:20 Mobile", "tags": "mobile", "categories": "Professional Services Computer Services", "phone": "" }
+;

@@ -1452,6 +1452,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="insert-duplicated-keys">
+        <output-dir compare="Text">insert-duplicated-keys</output-dir>
+        <expected-error>edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert_less_nc">
         <output-dir compare="Text">insert_less_nc</output-dir>
       </compilation-unit>
