@@ -51,8 +51,8 @@ public class LSMHarness implements ILSMHarness {
         fullMergeIsRequested = new AtomicBoolean();
     }
 
-    protected boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
-            throws HyracksDataException {
+    protected boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType,
+            boolean isTryOperation) throws HyracksDataException {
         synchronized (opTracker) {
             while (true) {
                 lsmIndex.getOperationalComponents(ctx);
@@ -90,7 +90,8 @@ public class LSMHarness implements ILSMHarness {
         }
     }
 
-    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException {
+    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType)
+            throws HyracksDataException {
         List<ILSMComponent> components = ctx.getComponentHolder();
         int numEntered = 0;
         boolean entranceSuccessful = false;
@@ -197,8 +198,15 @@ public class LSMHarness implements ILSMHarness {
                         break;
                 }
             } finally {
-                opTracker.afterOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
-                        ctx.getModificationCallback());
+                if (failedOperation && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                    //When the operation failed, completeOperation() method must be called 
+                    //in order to decrement active operation count which was incremented in beforeOperation() method.
+                    opTracker.completeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
+                            ctx.getModificationCallback());
+                } else {
+                    opTracker.afterOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
+                            ctx.getModificationCallback());
+                }
             }
         }
     }
@@ -219,6 +227,7 @@ public class LSMHarness implements ILSMHarness {
 
     protected boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
             LSMOperationType opType) throws HyracksDataException, IndexException {
+        boolean failedOperation = false;
         if (!getAndEnterComponents(ctx, opType, tryOperation)) {
             return false;
         }
@@ -227,8 +236,11 @@ public class LSMHarness implements ILSMHarness {
             // The mutable component is always in the first index.
             AbstractMemoryLSMComponent mutableComponent = (AbstractMemoryLSMComponent) ctx.getComponentHolder().get(0);
             mutableComponent.setIsModified();
+        } catch (Exception e) {
+            failedOperation = true;
+            throw e;
         } finally {
-            exitComponents(ctx, opType, null, false);
+            exitComponents(ctx, opType, null, failedOperation);
         }
         return true;
     }

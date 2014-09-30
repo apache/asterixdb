@@ -113,7 +113,8 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
             case MODIFICATION:
                 if (isMutableComponent) {
                     writerCount--;
-                    if (state == ComponentState.READABLE_WRITABLE && isFull()) {
+                    //A failed operation should not change the component state since it's better for the failed operation's effect to be no-op.
+                    if (state == ComponentState.READABLE_WRITABLE && !failedOperation && isFull()) {
                         state = ComponentState.READABLE_UNWRITABLE;
                     }
                 } else {
