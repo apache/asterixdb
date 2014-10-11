@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library.adaptor;
+package edu.uci.ics.asterix.external.library.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdaptor extends StreamBasedAdapter implements IFeedAdapter {
+public class TestTypedAdapter extends StreamBasedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
@@ -42,7 +42,7 @@ public class TestTypedAdaptor extends StreamBasedAdapter implements IFeedAdapter
 
     private DummyGenerator generator;
 
-    public TestTypedAdaptor(ITupleParserFactory parserFactory, ARecordType sourceDatatype, IHyracksTaskContext ctx,
+    public TestTypedAdapter(ITupleParserFactory parserFactory, ARecordType sourceDatatype, IHyracksTaskContext ctx,
             Map<String, String> configuration) throws IOException {
         super(parserFactory, sourceDatatype, ctx);
         pos = new PipedOutputStream();
@@ -71,7 +71,7 @@ public class TestTypedAdaptor extends StreamBasedAdapter implements IFeedAdapter
         private boolean continueIngestion;
 
         public DummyGenerator(Map<String, String> configuration, OutputStream os) {
-            nOutputRecords = Integer.parseInt(configuration.get(TestTypedAdaptorFactory.KEY_NUM_OUTPUT_RECORDS));
+            nOutputRecords = Integer.parseInt(configuration.get(TestTypedAdapterFactory.KEY_NUM_OUTPUT_RECORDS));
             this.os = os;
             this.continueIngestion = true;
         }

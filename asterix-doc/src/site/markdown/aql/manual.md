@@ -585,8 +585,8 @@ The primary key is also used in secondary indexes to uniquely identify the index
 An External dataset is stored outside of AsterixDB (currently datasets in HDFS or on the local filesystem(s) of the cluster's nodes are supported).
 External dataset support allows AQL queries to treat external data as though it were stored in AsterixDB,
 making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it into AsterixDB.
-For an external dataset, an appropriate adaptor must be selected to handle the nature of the desired external data.
-(See the [guide to external data](externaldata.html) for more information on the available adaptors.)
+For an external dataset, an appropriate adapter must be selected to handle the nature of the desired external data.
+(See the [guide to external data](externaldata.html) for more information on the available adapters.)
 
 The following example creates an internal dataset for storing FacefookUserType records.
 It specifies that their id field is their primary key.
@@ -595,8 +595,8 @@ It specifies that their id field is their primary key.
     create internal dataset FacebookUsers(FacebookUserType) primary key id;
 
 The next example creates an external dataset for storing LineitemType records.
-The choice of the `hdfs` adaptor means that its data will reside in HDFS.
-The create statement provides parameters used by the hdfs adaptor:
+The choice of the `hdfs` adapter means that its data will reside in HDFS.
+The create statement provides parameters used by the hdfs adapter:
 the URL and path needed to locate the data in HDFS and a description of the data format.
 
 ##### Example
@@ -702,9 +702,9 @@ The following examples illustrate uses of the drop statement.
     LoadStatement  ::= "load" "dataset" QualifiedName "using" AdapterName Configuration ( "pre-sorted" )?
     
 The load statement is used to initially populate a dataset via bulk loading of data from an external file.
-An appropriate adaptor must be selected to handle the nature of the desired external data.
-The load statement accepts the same adaptors and the same parameters as external datasets.
-(See the [guide to external data](externaldata.html) for more information on the available adaptors.)
+An appropriate adapter must be selected to handle the nature of the desired external data.
+The load statement accepts the same adapters and the same parameters as external datasets.
+(See the [guide to external data](externaldata.html) for more information on the available adapters.)
 
 The following example shows how to bulk load the FacebookUsers dataset from an external file containing
 data that has been prepared in ADM format.

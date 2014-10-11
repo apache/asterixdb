@@ -92,19 +92,19 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
                 .getValueByPos(MetadataRecordTypes.FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX)).getStringValue();
         String feedName = ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_FEED_NAME_FIELD_INDEX))
                 .getStringValue();
-        String adaptorName = ((AString) feedRecord
-                .getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_NAME_FIELD_INDEX)).getStringValue();
+        String adapterName = ((AString) feedRecord
+                .getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTER_NAME_FIELD_INDEX)).getStringValue();
 
         IACursor cursor = ((AUnorderedList) feedRecord
-                .getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIGURATION_FIELD_INDEX)).getCursor();
+                .getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX)).getCursor();
         String key;
         String value;
-        Map<String, String> adaptorConfiguration = new HashMap<String, String>();
+        Map<String, String> adapterConfiguration = new HashMap<String, String>();
         while (cursor.next()) {
             ARecord field = (ARecord) cursor.get();
             key = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_NAME_FIELD_INDEX)).getStringValue();
             value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
-            adaptorConfiguration.put(key, value);
+            adapterConfiguration.put(key, value);
         }
 
         Object o = feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_FUNCTION_FIELD_INDEX);
@@ -126,7 +126,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
             signature = new FunctionSignature(functionDataverse, nameComponents[0], Integer.parseInt(nameComponents[1]));
         }
 
-        feed = new Feed(dataverseName, feedName, adaptorName, adaptorConfiguration, signature);
+        feed = new Feed(dataverseName, feedName, adapterName, adapterConfiguration, signature);
         return feed;
     }
 
@@ -160,16 +160,16 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
         // write field 2
         fieldValue.reset();
-        aString.setValue(feed.getAdaptorName());
+        aString.setValue(feed.getAdapterName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_NAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_ADAPTER_NAME_FIELD_INDEX, fieldValue);
 
-        // write field 3 (adaptorConfiguration)
-        Map<String, String> adaptorConfiguration = feed.getAdaptorConfiguration();
+        // write field 3 (adapterConfiguration)
+        Map<String, String> adapterConfiguration = feed.getAdapterConfiguration();
         UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         listBuilder
-                .reset((AUnorderedListType) MetadataRecordTypes.FEED_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIGURATION_FIELD_INDEX]);
-        for (Map.Entry<String, String> property : adaptorConfiguration.entrySet()) {
+                .reset((AUnorderedListType) MetadataRecordTypes.FEED_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.FEED_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX]);
+        for (Map.Entry<String, String> property : adapterConfiguration.entrySet()) {
             String name = property.getKey();
             String value = property.getValue();
             itemValue.reset();
@@ -178,7 +178,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         }
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIGURATION_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX, fieldValue);
 
         // write field 4
         fieldValue.reset();
@@ -209,7 +209,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
     public void writePropertyTypeRecord(String name, String value, DataOutput out) throws HyracksDataException {
         IARecordBuilder propertyRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-        propertyRecordBuilder.reset(MetadataRecordTypes.FEED_ADAPTOR_CONFIGURATION_RECORDTYPE);
+        propertyRecordBuilder.reset(MetadataRecordTypes.FEED_ADAPTER_CONFIGURATION_RECORDTYPE);
         AMutableString aString = new AMutableString("");
         ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ASTRING);

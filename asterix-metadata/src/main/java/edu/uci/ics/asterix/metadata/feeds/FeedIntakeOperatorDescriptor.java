@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 
 /**
  * FeedIntakeOperatorDescriptor is responsible for ingesting data from an external source. This
- * operator uses a user specified for a built-in adaptor for retrieving data from the external
+ * operator uses a user specified for a built-in adapter for retrieving data from the external
  * data source.
  */
 public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
@@ -44,7 +44,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
 
-    /** The type associated with the ADM data output from the feed adaptor */
+    /** The type associated with the ADM data output from the feed adapter */
     private final IAType outputType;
 
     /** unique identifier for a feed instance. */
@@ -53,7 +53,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
     /** Map representation of policy parameters */
     private final Map<String, String> feedPolicy;
 
-    /** The adaptor factory that is used to create an instance of the feed adaptor **/
+    /** The adapter factory that is used to create an instance of the feed adapter **/
     private IAdapterFactory adapterFactory;
 
     /** The (singleton) instance of IFeedManager **/
@@ -107,13 +107,13 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         IngestionRuntime ingestionRuntime = (IngestionRuntime) feedManager.getFeedRuntime(feedRuntimeId);
         try {
             if (ingestionRuntime == null) {
-                // create an instance of a feed adaptor to ingest data.
+                // create an instance of a feed adapter to ingest data.
                 adapter = createAdapter(ctx, partition);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Beginning new feed:" + feedId);
                 }
             } else {
-                // retrieve the instance of the feed adaptor used in previous failed execution.
+                // retrieve the instance of the feed adapter used in previous failed execution.
                 adapter = ((IngestionRuntime) ingestionRuntime).getAdapterRuntimeManager().getFeedAdapter();
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Resuming old feed:" + feedId);
@@ -121,7 +121,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             }
         } catch (Exception exception) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe("Initialization of the feed adaptor failed with exception " + exception);
+                LOGGER.severe("Initialization of the feed adapter failed with exception " + exception);
             }
             throw new HyracksDataException("Initialization of the feed adapter failed", exception);
         }

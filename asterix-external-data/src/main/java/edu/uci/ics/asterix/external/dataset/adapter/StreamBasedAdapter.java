@@ -38,7 +38,7 @@ public abstract class StreamBasedAdapter implements IDatasourceAdapter {
             tupleParser.parse(in, writer);
         } else {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Could not obtain input stream for parsing from adaptor " + this + "[" + partition + "]");
+                LOGGER.warning("Could not obtain input stream for parsing from adapter " + this + "[" + partition + "]");
             }
         }
     }

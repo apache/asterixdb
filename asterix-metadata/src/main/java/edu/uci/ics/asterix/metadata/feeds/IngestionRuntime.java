@@ -22,9 +22,9 @@ public class IngestionRuntime extends FeedRuntime {
     private AdapterRuntimeManager adapterRuntimeManager;
 
     public IngestionRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType,
-            AdapterRuntimeManager adaptorRuntimeManager) {
+            AdapterRuntimeManager adapterRuntimeManager) {
         super(feedId, partition, feedRuntimeType);
-        this.adapterRuntimeManager = adaptorRuntimeManager;
+        this.adapterRuntimeManager = adapterRuntimeManager;
     }
 
     public AdapterRuntimeManager getAdapterRuntimeManager() {

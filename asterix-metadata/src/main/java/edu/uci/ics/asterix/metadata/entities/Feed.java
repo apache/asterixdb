@@ -30,16 +30,16 @@ public class Feed implements IMetadataEntity {
 
     private final String dataverseName;
     private final String feedName;
-    private final String adaptorName;
-    private final Map<String, String> adaptorConfiguration;
+    private final String adapterName;
+    private final Map<String, String> adapterConfiguration;
     private final FunctionSignature appliedFunction;
 
-    public Feed(String dataverseName, String datasetName, String adaptorName, Map<String, String> adaptorConfiguration,
+    public Feed(String dataverseName, String datasetName, String adapterName, Map<String, String> adapterConfiguration,
             FunctionSignature appliedFunction) {
         this.dataverseName = dataverseName;
         this.feedName = datasetName;
-        this.adaptorName = adaptorName;
-        this.adaptorConfiguration = adaptorConfiguration;
+        this.adapterName = adapterName;
+        this.adapterConfiguration = adapterConfiguration;
         this.appliedFunction = appliedFunction;
     }
 
@@ -51,12 +51,12 @@ public class Feed implements IMetadataEntity {
         return feedName;
     }
 
-    public String getAdaptorName() {
-        return adaptorName;
+    public String getAdapterName() {
+        return adapterName;
     }
 
-    public Map<String, String> getAdaptorConfiguration() {
-        return adaptorConfiguration;
+    public Map<String, String> getAdapterConfiguration() {
+        return adapterConfiguration;
     }
 
     public FunctionSignature getAppliedFunction() {

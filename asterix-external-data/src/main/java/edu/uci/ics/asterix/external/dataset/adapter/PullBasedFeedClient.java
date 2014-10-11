@@ -94,7 +94,7 @@ public abstract class PullBasedFeedClient implements IPullBasedFeedClient {
                             continueWait = false;
                         } else {
                             if (LOGGER.isLoggable(Level.WARNING)) {
-                                LOGGER.warning("Waiting to obtaing data from pull based adaptor");
+                                LOGGER.warning("Waiting to obtaing data from pull based adapter");
                             }
                             Thread.sleep(1000);
                             waitCount++;

@@ -11,4 +11,4 @@ use dataverse externallibtest;
 
 set wait-for-completion-feed "true";
 
-connect feed TestTypedAdaptorFeed to dataset TweetsTestAdaptor;
+connect feed TestTypedAdapterFeed to dataset TweetsTestAdapter;

@@ -110,7 +110,7 @@ public abstract class PullBasedAdapter implements IPullBasedFeedAdapter {
                             frameTupleCount = 0;
                         }
                         if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Timed out on obtaining data from pull based adaptor. Trying again!");
+                            LOGGER.warning("Timed out on obtaining data from pull based adapter. Trying again!");
                         }
                         break;
                 }

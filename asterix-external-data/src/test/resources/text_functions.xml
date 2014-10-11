@@ -52,8 +52,8 @@
 	</libraryFunctions>
 	<libraryAdapters>
 		<libraryAdapter>
-			<name>test_typed_adaptor</name>
-			<factory_class>edu.uci.ics.asterix.external.library.adaptor.TestTypedAdaptorFactory</factory_class>
+			<name>test_typed_adapter</name>
+			<factory_class>edu.uci.ics.asterix.external.library.adapter.TestTypedAdapterFactory</factory_class>
 		</libraryAdapter>
 	</libraryAdapters>
 </externalLibrary>

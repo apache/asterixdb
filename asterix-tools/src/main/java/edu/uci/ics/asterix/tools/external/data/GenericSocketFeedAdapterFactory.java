@@ -60,7 +60,7 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
 
     @Override
     public String getName() {
-        return "socket_adaptor";
+        return "socket_adapter";
     }
 
     @Override
@@ -108,7 +108,7 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
         }
         String socketsValue = configuration.get(KEY_SOCKETS);
         if (socketsValue == null) {
-            throw new IllegalArgumentException("\'sockets\' parameter not specified as part of adaptor configuration");
+            throw new IllegalArgumentException("\'sockets\' parameter not specified as part of adapter configuration");
         }
         Map<String, Set<String>> ncMap = AsterixRuntimeUtil.getNodeControllerMap();
         List<String> ncs = AsterixRuntimeUtil.getAllNodeControllers();

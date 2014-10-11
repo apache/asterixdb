@@ -552,10 +552,10 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             (ARecordType) adapterOutputType, feedDesc, feedPolicy.getProperties());
                     break;
                 case EXTERNAL:
-                    String libraryName = feedDataSource.getFeed().getAdaptorName().split("#")[0];
+                    String libraryName = feedDataSource.getFeed().getAdapterName().split("#")[0];
                     feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feedDataSource.getFeedConnectionId(),
                             libraryName, adapterFactory.getClass().getName(), feedDataSource.getFeed()
-                                    .getAdaptorConfiguration(), (ARecordType) adapterOutputType, feedDesc,
+                                    .getAdapterConfiguration(), (ARecordType) adapterOutputType, feedDesc,
                             feedPolicy.getProperties());
                     break;
             }

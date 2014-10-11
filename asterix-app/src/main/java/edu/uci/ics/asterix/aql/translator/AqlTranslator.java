@@ -1730,10 +1730,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockManager.INSTANCE.createFeedBegin(dataverseName, dataverseName + "." + feedName);
 
-        String adaptorName = null;
+        String adapterName = null;
         Feed feed = null;
         try {
-            adaptorName = cfs.getAdaptorName();
+            adapterName = cfs.getAdapterName();
 
             feed = MetadataManager.INSTANCE.getFeed(metadataProvider.getMetadataTxnContext(), dataverseName, feedName);
             if (feed != null) {
@@ -1741,11 +1741,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
                 } else {
-                    throw new AlgebricksException("A feed with this name " + adaptorName + " already exists.");
+                    throw new AlgebricksException("A feed with this name " + adapterName + " already exists.");
                 }
             }
 
-            feed = new Feed(dataverseName, feedName, adaptorName, cfs.getAdaptorConfiguration(),
+            feed = new Feed(dataverseName, feedName, adapterName, cfs.getAdapterConfiguration(),
                     cfs.getAppliedFunction());
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

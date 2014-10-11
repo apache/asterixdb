@@ -49,7 +49,7 @@ public final class MetadataRecordTypes {
     public static ARecordType FUNCTION_RECORDTYPE;
     public static ARecordType DATASOURCE_ADAPTER_RECORDTYPE;
     public static ARecordType FEED_RECORDTYPE;
-    public static ARecordType FEED_ADAPTOR_CONFIGURATION_RECORDTYPE;
+    public static ARecordType FEED_ADAPTER_CONFIGURATION_RECORDTYPE;
     public static ARecordType FEED_ACTIVITY_RECORDTYPE;
     public static ARecordType FEED_POLICY_RECORDTYPE;
     public static ARecordType POLICY_PARAMS_RECORDTYPE;
@@ -90,7 +90,7 @@ public final class MetadataRecordTypes {
             DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
 
             FEED_RECORDTYPE = createFeedRecordType();
-            FEED_ADAPTOR_CONFIGURATION_RECORDTYPE = createPropertiesRecordType();
+            FEED_ADAPTER_CONFIGURATION_RECORDTYPE = createPropertiesRecordType();
             FEED_ACTIVITY_DETAILS_RECORDTYPE = createPropertiesRecordType();
             FEED_ACTIVITY_RECORDTYPE = createFeedActivityRecordType();
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
@@ -439,14 +439,14 @@ public final class MetadataRecordTypes {
 
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_ARECORD_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ARECORD_ADAPTOR_NAME_FIELD_INDEX = 2;
-    public static final int FEED_ARECORD_ADAPTOR_CONFIGURATION_FIELD_INDEX = 3;
+    public static final int FEED_ARECORD_ADAPTER_NAME_FIELD_INDEX = 2;
+    public static final int FEED_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX = 3;
     public static final int FEED_ARECORD_FUNCTION_FIELD_INDEX = 4;
     public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 5;
 
     private static ARecordType createFeedRecordType() throws AsterixException {
 
-        AUnorderedListType unorderedAdaptorPropertyListType = new AUnorderedListType(
+        AUnorderedListType unorderedAdapterPropertyListType = new AUnorderedListType(
                 DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
 
         List<IAType> feedFunctionUnionList = new ArrayList<IAType>();
@@ -454,10 +454,10 @@ public final class MetadataRecordTypes {
         feedFunctionUnionList.add(BuiltinType.ASTRING);
         AUnionType feedFunctionUnion = new AUnionType(feedFunctionUnionList, null);
 
-        String[] fieldNames = { "DataverseName", "FeedName", "AdaptorName", "AdaptorConfiguration", "Function",
+        String[] fieldNames = { "DataverseName", "FeedName", "AdapterName", "AdapterConfiguration", "Function",
                 "Timestamp" };
         IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                unorderedAdaptorPropertyListType, feedFunctionUnion, BuiltinType.ASTRING };
+                unorderedAdapterPropertyListType, feedFunctionUnion, BuiltinType.ASTRING };
 
         return new ARecordType("FeedRecordType", fieldNames, fieldTypes, true);
 

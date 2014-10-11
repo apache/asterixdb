@@ -42,7 +42,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     private static final Logger LOGGER = Logger.getLogger(FeedMetaOperatorDescriptor.class.getName());
 
-    /** The actual (Hyracks) operator that is wrapped around by the Metafeed Adaptor **/
+    /** The actual (Hyracks) operator that is wrapped around by the Metafeed Adapter **/
     private IOperatorDescriptor coreOperator;
 
     /**

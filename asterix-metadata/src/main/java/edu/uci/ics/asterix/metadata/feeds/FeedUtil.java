@@ -250,7 +250,7 @@ public class FeedUtil {
         ARecordType adapterOutputType = null;
         Triple<IAdapterFactory, ARecordType, AdapterType> feedProps = null;
         try {
-            adapterName = feed.getAdaptorName();
+            adapterName = feed.getAdapterName();
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                     adapterName);
             if (adapterEntity == null) {
@@ -279,7 +279,7 @@ public class FeedUtil {
                 adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClassname).newInstance();
             }
 
-            Map<String, String> configuration = feed.getAdaptorConfiguration();
+            Map<String, String> configuration = feed.getAdapterConfiguration();
 
             switch (adapterFactory.getAdapterType()) {
                 case TYPED:

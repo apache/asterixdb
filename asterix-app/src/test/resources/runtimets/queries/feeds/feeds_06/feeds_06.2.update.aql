@@ -1,9 +1,9 @@
 /*
- * Description  : Create a feed dataset and a feed using the generic socket feed adaptor.
-                  To drive the socket adaptor based feed, we define another feed using the
-                  client socket test adaptor. Content from the file is read by the test adaptor
-                  and forwarded to the socket feed adaptor that is listening at a known socket.
-                  At the end, data is collected in the dataset that was fed by the socket feed adaptor.
+ * Description  : Create a feed dataset and a feed using the generic socket feed adapter.
+                  To drive the socket adapter based feed, we define another feed using the
+                  client socket test adapter. Content from the file is read by the test adapter
+                  and forwarded to the socket feed adapter that is listening at a known socket.
+                  At the end, data is collected in the dataset that was fed by the socket feed adapter.
                   Verify the existence of data in the dataset.
 
  * Expected Res : Success

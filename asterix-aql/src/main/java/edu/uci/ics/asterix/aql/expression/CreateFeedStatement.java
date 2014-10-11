@@ -26,17 +26,17 @@ public class CreateFeedStatement implements Statement {
 
     private final Identifier dataverseName;
     private final Identifier feedName;
-    private final String adaptorName;
-    private final Map<String, String> adaptorConfiguration;
+    private final String adapterName;
+    private final Map<String, String> adapterConfiguration;
     private final FunctionSignature appliedFunction;
     private final boolean ifNotExists;
 
-    public CreateFeedStatement(Identifier dataverseName, Identifier feedName, String adaptorName,
-            Map<String, String> adaptorConfiguration, FunctionSignature appliedFunction, boolean ifNotExists) {
+    public CreateFeedStatement(Identifier dataverseName, Identifier feedName, String adapterName,
+            Map<String, String> adapterConfiguration, FunctionSignature appliedFunction, boolean ifNotExists) {
         this.feedName = feedName;
         this.dataverseName = dataverseName;
-        this.adaptorName = adaptorName;
-        this.adaptorConfiguration = adaptorConfiguration;
+        this.adapterName = adapterName;
+        this.adapterConfiguration = adapterConfiguration;
         this.appliedFunction = appliedFunction;
         this.ifNotExists = ifNotExists;
     }
@@ -49,12 +49,12 @@ public class CreateFeedStatement implements Statement {
         return feedName;
     }
 
-    public String getAdaptorName() {
-        return adaptorName;
+    public String getAdapterName() {
+        return adapterName;
     }
 
-    public Map<String, String> getAdaptorConfiguration() {
-        return adaptorConfiguration;
+    public Map<String, String> getAdapterConfiguration() {
+        return adapterConfiguration;
     }
 
     public FunctionSignature getAppliedFunction() {

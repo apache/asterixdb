@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library.adaptor;
+package edu.uci.ics.asterix.external.library.adapter;
 
 import java.util.Map;
 
@@ -28,9 +28,9 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdaptorFactory implements ITypedAdapterFactory {
+public class TestTypedAdapterFactory implements ITypedAdapterFactory {
 
-    public static final String NAME = "test_typed_adaptor";
+    public static final String NAME = "test_typed_adapter";
 
     private static ARecordType adapterOutputType = initOutputType();
 
@@ -48,9 +48,9 @@ public class TestTypedAdaptorFactory implements ITypedAdapterFactory {
         IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, BuiltinType.ASTRING };
         ARecordType outputType = null;
         try {
-            outputType = new ARecordType("TestTypedAdaptorOutputType", fieldNames, fieldTypes, false);
+            outputType = new ARecordType("TestTypedAdapterOutputType", fieldNames, fieldTypes, false);
         } catch (AsterixException exception) {
-            throw new IllegalStateException("Unable to create output type for adaptor " + NAME);
+            throw new IllegalStateException("Unable to create output type for adapter " + NAME);
         }
         return outputType;
     }
@@ -73,7 +73,7 @@ public class TestTypedAdaptorFactory implements ITypedAdapterFactory {
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         ITupleParserFactory tupleParserFactory = new AdmSchemafullRecordParserFactory(adapterOutputType, false, -1, null);
-        return new TestTypedAdaptor(tupleParserFactory, adapterOutputType, ctx, configuration);
+        return new TestTypedAdapter(tupleParserFactory, adapterOutputType, ctx, configuration);
     }
 
     @Override

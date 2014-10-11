@@ -536,7 +536,7 @@ CreateFeedStatement FeedSpecification() throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;  
   boolean ifNotExists = false;
-  String adaptorName = null;
+  String adapterName = null;
   Map<String,String> properties = null;
   FunctionSignature appliedFunction = null;
   CreateFeedStatement cfs = null;
@@ -545,11 +545,11 @@ CreateFeedStatement FeedSpecification() throws ParseException:
   (
     "feed"  nameComponents = QualifiedName()
     ifNotExists = IfNotExists()
-    "using" adaptorName = AdapterName() properties = Configuration()
+    "using" adapterName = AdapterName() properties = Configuration()
     (appliedFunction = ApplyFunction())?
       {
         cfs = new CreateFeedStatement(nameComponents.first,
-                                   nameComponents.second, adaptorName, properties, appliedFunction, ifNotExists);
+                                   nameComponents.second, adapterName, properties, appliedFunction, ifNotExists);
       } 
       
   )

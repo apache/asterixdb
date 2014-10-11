@@ -153,7 +153,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
                 os.close();
             } catch (Exception e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Exception in adaptor " + e.getMessage());
+                    LOGGER.warning("Exception in adapter " + e.getMessage());
                 }
             }
         }
