@@ -16,11 +16,10 @@
                                                 -- STREAM_SELECT  |LOCAL|
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                             }
-                                      -- IN_MEMORY_STABLE_SORT [$$37(ASC), $$38(ASC)]  |LOCAL|
-                                        -- STREAM_SELECT  |LOCAL|
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      -- STREAM_SELECT  |LOCAL|
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                 }
-                          -- IN_MEMORY_STABLE_SORT [$$40(ASC), $$38(ASC)]  |LOCAL|
+                          -- IN_MEMORY_STABLE_SORT [$$40(ASC), $$37(ASC), $$38(ASC)]  |LOCAL|
                             -- STREAM_SELECT  |LOCAL|
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                     }

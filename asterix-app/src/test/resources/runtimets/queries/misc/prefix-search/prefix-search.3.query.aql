@@ -1,0 +1,17 @@
+/*
+ * Description  : This test case is to verify the fix for a
+ *                prefix search issue reported by Abdullah.
+ * Expected Res : SUCCESS
+ * Date         : 10th Oct 2014
+ */
+
+use dataverse tpch;
+
+for $l in dataset('LineItem')
+where $l.l_orderkey>=0
+      and $l.l_orderkey<100
+order by $l.l_linenumber
+return {
+  "l_linenumber": $l.l_linenumber,
+  "l_l_orderkey": $l.l_orderkey
+}

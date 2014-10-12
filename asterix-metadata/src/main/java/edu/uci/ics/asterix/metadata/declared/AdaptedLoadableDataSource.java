@@ -1,6 +1,7 @@
 package edu.uci.ics.asterix.metadata.declared;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -65,9 +66,11 @@ public class AdaptedLoadableDataSource extends AqlDataSource {
     public void computeLocalStructuralProperties(List<ILocalStructuralProperty> localProps,
             List<LogicalVariable> variables) {
         if (alreadySorted) {
+            List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
             for (int i = 0; i < partitioningKeys.size(); ++i) {
-                localProps.add(new LocalOrderProperty(new OrderColumn(variables.get(i), OrderKind.ASC)));
+                orderColumns.add(new OrderColumn(variables.get(i), OrderKind.ASC));
             }
+            localProps.add(new LocalOrderProperty(orderColumns));
         }
     }
 

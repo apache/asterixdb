@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -129,6 +129,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }
 
+    @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         if (requiresBroadcast) {
@@ -140,9 +141,11 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 searchKeyVars.addAll(highKeyVarList);
                 // Also, add a local sorting property to enforce a sort before the primary-index operator.
                 List<ILocalStructuralProperty> propsLocal = new ArrayList<ILocalStructuralProperty>();
+                List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
                 for (LogicalVariable orderVar : searchKeyVars) {
-                    propsLocal.add(new LocalOrderProperty(new OrderColumn(orderVar, OrderKind.ASC)));
+                    orderColumns.add(new OrderColumn(orderVar, OrderKind.ASC));
                 }
+                propsLocal.add(new LocalOrderProperty(orderColumns));
                 pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, null),
                         propsLocal);
                 return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);

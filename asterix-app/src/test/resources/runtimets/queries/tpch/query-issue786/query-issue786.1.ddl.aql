@@ -1,0 +1,70 @@
+/*
+ * Description  : This test case is to verify the fix for issue786
+ * https://code.google.com/p/asterixdb/issues/detail?id=786
+ * Expected Res : SUCCESS
+ * Date         : 10th Oct. 2014
+ */
+
+drop dataverse tpch if exists;
+create dataverse tpch;
+
+use dataverse tpch;
+
+create type OrderType as closed {
+  o_orderkey: int32,
+  o_custkey: int32,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
+  o_orderpriority: string,
+  o_clerk: string,
+  o_shippriority: int32,
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32,
+  c_name: string,
+  c_address: string,
+  c_nationkey: int32,
+  c_phone: string,
+  c_acctbal: double,
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create type SupplierType as closed {
+  s_suppkey: int32,
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+create type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+create type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+create dataset Orders(OrderType)
+  primary key o_orderkey;
+create dataset Supplier(SupplierType)
+  primary key s_suppkey;
+create dataset Region(RegionType)
+  primary key r_regionkey;
+create dataset Nation(NationType)
+  primary key n_nationkey;
+create dataset Customer(CustomerType)
+  primary key c_custkey;
+create dataset SelectedNation(NationType)
+  primary key n_nationkey;

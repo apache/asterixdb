@@ -2759,6 +2759,11 @@
         <output-dir compare="Text">string_eq_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="prefix-search">
+        <output-dir compare="Text">prefix-search</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="nestrecords">
     <test-case FilePath="nestrecords">
@@ -4361,6 +4366,21 @@
     <test-case FilePath="tpch">
       <compilation-unit name="nest_aggregate">
         <output-dir compare="Text">nest_aggregate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="query-issue785">
+        <output-dir compare="Text">query-issue785</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="query-issue786">
+        <output-dir compare="Text">query-issue786</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="query-issue601">
+        <output-dir compare="Text">query-issue601</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">

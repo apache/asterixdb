@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for a
+ *                prefix search issue reported by Abdullah.
+ * Expected Res : SUCCESS
+ * Date         : 10th Oct 2014
+ */
+
+use dataverse tpch;
+
+load dataset LineItem
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

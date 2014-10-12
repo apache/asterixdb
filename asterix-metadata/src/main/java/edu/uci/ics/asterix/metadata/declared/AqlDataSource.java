@@ -42,10 +42,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnorderedPartition
 
 public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
 
-    private AqlSourceId id;
-    private String datasourceDataverse;
-    private String datasourceName;
-    private AqlDataSourceType datasourceType;
+    private final AqlSourceId id;
+    private final String datasourceDataverse;
+    private final String datasourceName;
+    private final AqlDataSourceType datasourceType;
     protected IAType[] schemaTypes;
     protected INodeDomain domain;
     private Map<String, Serializable> properties = new HashMap<String, Serializable>();
@@ -73,6 +73,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         return datasourceName;
     }
 
+    @Override
     public abstract IAType[] getSchemaTypes();
 
     public abstract INodeDomain getDomain();
@@ -172,9 +173,11 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
                         pp = new UnorderedPartitionedProperty(pvars, domain);
                     }
                     propsLocal = new ArrayList<ILocalStructuralProperty>();
+                    List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
                     for (int i = 0; i < n - 1; i++) {
-                        propsLocal.add(new LocalOrderProperty(new OrderColumn(scanVariables.get(i), OrderKind.ASC)));
+                        orderColumns.add(new OrderColumn(scanVariables.get(i), OrderKind.ASC));
                     }
+                    propsLocal.add(new LocalOrderProperty(orderColumns));
                     propsVector = new StructuralPropertiesVector(pp, propsLocal);
                     break;
 
