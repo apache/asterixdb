@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -76,10 +76,12 @@ public class PreSortedDistinctByPOperator extends AbstractPhysicalOperator {
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-        List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>(columnList.size());
+        List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>();
+        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
         for (LogicalVariable column : columnList) {
-            localProps.add(new LocalOrderProperty(new OrderColumn(column, OrderKind.ASC)));
+            orderColumns.add(new OrderColumn(column, OrderKind.ASC));
         }
+        localProps.add(new LocalOrderProperty(orderColumns));
         IPartitioningProperty pp = null;
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {

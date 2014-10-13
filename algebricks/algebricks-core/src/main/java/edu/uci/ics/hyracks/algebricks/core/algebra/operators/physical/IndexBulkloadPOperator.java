@@ -67,16 +67,16 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         IPhysicalPropertiesVector physicalProps = dataSourceIndex.getDataSource().getPropertiesProvider()
                 .computePropertiesVector(scanVariables);
         List<ILocalStructuralProperty> localProperties = new ArrayList<>();
+        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
         // Data needs to be sorted based on the [token, number of token, PK]
         // OR [token, PK] if the index is not partitioned
         for (LogicalVariable skVar : secondaryKeys) {
-            localProperties.add(new LocalOrderProperty(new OrderColumn(skVar,
-                    OrderKind.ASC)));
+            orderColumns.add(new OrderColumn(skVar, OrderKind.ASC));
         }
         for (LogicalVariable pkVar : primaryKeys) {
-            localProperties.add(new LocalOrderProperty(new OrderColumn(pkVar,
-                    OrderKind.ASC)));
+            orderColumns.add(new OrderColumn(pkVar, OrderKind.ASC));
         }
+        localProperties.add(new LocalOrderProperty(orderColumns));
         StructuralPropertiesVector spv = new StructuralPropertiesVector(physicalProps.getPartitioningProperty(),
                 localProperties);
         return new PhysicalRequirements(new IPhysicalPropertiesVector[] { spv },
@@ -87,7 +87,7 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        deliveredProperties = (StructuralPropertiesVector) op2.getDeliveredPhysicalProperties().clone();
+        deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
     }
 
     @Override
@@ -121,6 +121,5 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
     public boolean expensiveThanMaterialization() {
         return false;
     }
-
 
 }

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -111,13 +111,15 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
 
         GroupByOperator gOp = (GroupByOperator) op;
         Set<LogicalVariable> columnSet = new ListSet<LogicalVariable>();
+        List<OrderColumn> ocs = new ArrayList<OrderColumn>();
 
         if (!columnSet.isEmpty()) {
             propsLocal.add(new LocalGroupingProperty(columnSet));
         }
         for (OrderColumn oc : orderColumns) {
-            propsLocal.add(new LocalOrderProperty(oc));
+            ocs.add(oc);
         }
+        propsLocal.add(new LocalOrderProperty(ocs));
         for (ILogicalPlan p : gOp.getNestedPlans()) {
             for (Mutable<ILogicalOperator> r : p.getRoots()) {
                 ILogicalOperator rOp = r.getValue();
@@ -195,13 +197,16 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
         }
 
         List<LogicalVariable> keyAndDecVariables = new ArrayList<LogicalVariable>();
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getGroupByList())
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getGroupByList()) {
             keyAndDecVariables.add(p.first);
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList())
+        }
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
             keyAndDecVariables.add(GroupByOperator.getDecorVariable(p));
+        }
 
-        for (LogicalVariable var : keyAndDecVariables)
+        for (LogicalVariable var : keyAndDecVariables) {
             aggOpInputEnv.setVarType(var, outputEnv.getVarType(var));
+        }
 
         compileSubplans(inputSchemas[0], gby, opSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
@@ -234,10 +239,12 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
         for (Object type : intermediateTypes) {
             aggOpInputEnv.setVarType(usedVars.get(i++), type);
         }
-        for (LogicalVariable keyVar : keyAndDecVariables)
+        for (LogicalVariable keyVar : keyAndDecVariables) {
             localInputSchemas[0].addVariable(keyVar);
-        for (LogicalVariable usedVar : usedVars)
+        }
+        for (LogicalVariable usedVar : usedVars) {
             localInputSchemas[0].addVariable(usedVar);
+        }
         for (i = 0; i < n; i++) {
             AggregateFunctionCallExpression mergeFun = (AggregateFunctionCallExpression) aggOp.getMergeExpressions()
                     .get(i).getValue();

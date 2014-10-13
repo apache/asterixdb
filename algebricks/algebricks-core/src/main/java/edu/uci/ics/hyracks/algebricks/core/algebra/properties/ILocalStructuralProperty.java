@@ -27,4 +27,24 @@ public interface ILocalStructuralProperty extends IStructuralProperty {
     public void getVariables(Collection<LogicalVariable> variables);
 
     public PropertyType getPropertyType();
+
+    /**
+     * Returns the retained property regarding to a collection of variables,
+     * e.g., some variables used in the property may not exist in the input
+     * collection and hence the data property changes.
+     * 
+     * @param vars
+     *            , an input collection of variables
+     * @return the retained data property.
+     */
+    public ILocalStructuralProperty retainVariables(Collection<LogicalVariable> vars);
+
+    /**
+     * Returns the additional data property within each group, which is dictated by the group keys.
+     * 
+     * @param vars
+     *            , group keys.
+     * @return the additional data property within each group.
+     */
+    public ILocalStructuralProperty regardToGroup(Collection<LogicalVariable> groupKeys);
 }

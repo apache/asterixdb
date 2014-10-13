@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -51,7 +52,7 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnec
 
 public class SortMergeExchangePOperator extends AbstractExchangePOperator {
 
-    private OrderColumn[] sortColumns;
+    private final OrderColumn[] sortColumns;
 
     public SortMergeExchangePOperator(OrderColumn[] sortColumns) {
         this.sortColumns = sortColumns;
@@ -88,24 +89,28 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
             inp1.computeDeliveredPhysicalProperties(context);
             pv1 = inp1.getDeliveredPhysicalProperties();
         }
-        int sortCol = 0;
+
+        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
         List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>(sortColumns.length);
         for (ILocalStructuralProperty prop : pv1.getLocalProperties()) {
             if (prop.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                 LocalOrderProperty lop = (LocalOrderProperty) prop;
-                if (lop.getOrderColumn().equals(sortColumns[sortCol])) {
-                    localProps.add(lop);
-                    sortCol++;
-                    if (sortCol == sortColumns.length) {
+                for (OrderColumn oc : lop.getOrderColumns()) {
+                    if (oc.equals(sortColumns[orderColumns.size()])) {
+                        orderColumns.add(oc);
+                        if (orderColumns.size() == sortColumns.length) {
+                            break;
+                        }
+                    } else {
                         break;
                     }
                 }
             } else {
-                break;
+                continue;
             }
         }
-        if (sortCol < sortColumns.length) {
-            localProps = null;
+        if (orderColumns.size() > 0) {
+            localProps.add(new LocalOrderProperty(orderColumns));
         }
         this.deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, localProps);
     }
@@ -114,9 +119,7 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent) {
         List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>(sortColumns.length);
-        for (OrderColumn oc : sortColumns) {
-            localProps.add(new LocalOrderProperty(oc));
-        }
+        localProps.add(new LocalOrderProperty(Arrays.asList(sortColumns)));
         StructuralPropertiesVector[] r = new StructuralPropertiesVector[] { new StructuralPropertiesVector(null,
                 localProps) };
         return new PhysicalRequirements(r, IPartitioningRequirementsCoordinator.NO_COORDINATION);

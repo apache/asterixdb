@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,8 +81,7 @@ public class PropertiesUtil {
                             return false;
                         }
                         LocalOrderProperty lop = (LocalOrderProperty) d;
-                        if (lop.getColumn() == ((LocalOrderProperty) r).getColumn()
-                                && lop.getOrder() == ((LocalOrderProperty) r).getOrder()) {
+                        if (lop.implies(r)) {
                             implied = true;
                         } else {
                             return false;
@@ -92,15 +91,10 @@ public class PropertiesUtil {
                     case LOCAL_GROUPING_PROPERTY: {
                         dlvdCols.clear();
                         d.getColumns(dlvdCols);
-                        for (LogicalVariable v : dlvdCols) {
-                            if (rqdCols.contains(v)) {
-                                rqdCols.remove(v);
-                            } else {
-                                return false;
-                            }
-                        }
-                        if (rqdCols.isEmpty()) {
-                            implied = true;
+                        if (d.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
+                            implied = isPrefixOf(rqdCols.iterator(), dlvdCols.iterator());
+                        } else {
+                            implied = rqdCols.equals(dlvdCols) || isPrefixOf(rqdCols.iterator(), dlvdCols.iterator());
                         }
                         break;
                     }
@@ -114,12 +108,10 @@ public class PropertiesUtil {
             }
         }
         return true;
-
     }
 
     public static boolean matchPartitioningProps(IPartitioningProperty reqd, IPartitioningProperty dlvd,
             boolean mayExpandProperties) {
-
         INodeDomain dom1 = reqd.getNodeDomain();
         INodeDomain dom2 = dlvd.getNodeDomain();
         if (dom1 != null && dom2 != null && !dom1.sameAs(dom2)) {
@@ -137,7 +129,7 @@ public class PropertiesUtil {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         UnorderedPartitionedProperty ud = (UnorderedPartitionedProperty) dlvd;
                         if (mayExpandProperties) {
-                            return ur.getColumnSet().containsAll(ud.getColumnSet());
+                            return isPrefixOf(ud.getColumnSet().iterator(), ur.getColumnSet().iterator());
                         } else {
                             return ur.getColumnSet().equals(ud.getColumnSet());
                         }
@@ -146,7 +138,8 @@ public class PropertiesUtil {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         OrderedPartitionedProperty od = (OrderedPartitionedProperty) dlvd;
                         if (mayExpandProperties) {
-                            return ur.getColumnSet().containsAll(od.getOrderColumns());
+                            List<LogicalVariable> dlvdSortColumns = orderColumnsToVariables(od.getOrderColumns());
+                            return isPrefixOf(dlvdSortColumns.iterator(), ur.getColumnSet().iterator());
                         } else {
                             return ur.getColumnSet().containsAll(od.getOrderColumns())
                                     && od.getOrderColumns().containsAll(ur.getColumnSet());
@@ -163,7 +156,7 @@ public class PropertiesUtil {
                         OrderedPartitionedProperty or = (OrderedPartitionedProperty) reqd;
                         OrderedPartitionedProperty od = (OrderedPartitionedProperty) dlvd;
                         if (mayExpandProperties) {
-                            return isPrefixOf(od.getOrderColumns(), or.getOrderColumns());
+                            return isPrefixOf(od.getOrderColumns().iterator(), or.getOrderColumns().iterator());
                         } else {
                             return od.getOrderColumns().equals(or.getOrderColumns());
                         }
@@ -180,17 +173,32 @@ public class PropertiesUtil {
     }
 
     /**
+     * Converts a list of OrderColumns to a list of LogicalVariables.
+     * 
+     * @param orderColumns
+     *            , a list of OrderColumns
+     * @return the list of LogicalVariables
+     */
+    private static List<LogicalVariable> orderColumnsToVariables(List<OrderColumn> orderColumns) {
+        List<LogicalVariable> columns = new ArrayList<LogicalVariable>();
+        for (OrderColumn oc : orderColumns) {
+            columns.add(oc.getColumn());
+        }
+        return columns;
+    }
+
+    /**
      * @param pref
      * @param target
      * @return true iff pref is a prefix of target
      */
-    private static boolean isPrefixOf(List<OrderColumn> pref, List<OrderColumn> target) {
-        Iterator<OrderColumn> iter = target.iterator();
-        for (OrderColumn v : pref) {
-            if (!iter.hasNext()) {
+    private static <T> boolean isPrefixOf(Iterator<T> pref, Iterator<T> target) {
+        while (pref.hasNext()) {
+            T v = pref.next();
+            if (!target.hasNext()) {
                 return false;
             }
-            if (!v.equals(iter.next())) {
+            if (!v.equals(target.next())) {
                 return false;
             }
         }
@@ -276,18 +284,8 @@ public class PropertiesUtil {
                 ((LocalGroupingProperty) p).normalizeGroupingColumns(equivalenceClasses, fds);
                 pos++;
             } else {
-                LocalOrderProperty ord = (LocalOrderProperty) p;
-                EquivalenceClass ec = equivalenceClasses.get(ord.getColumn());
-                if (ec != null) {
-                    if (ec.representativeIsConst()) {
-                        propIter.remove();
-                    } else {
-                        ord.getOrderColumn().setColumn(ec.getVariableRepresentative());
-                        pos++;
-                    }
-                } else {
-                    pos++;
-                }
+                ((LocalOrderProperty) p).normalizeOrderingColumns(equivalenceClasses, fds);
+                pos++;
             }
         }
 

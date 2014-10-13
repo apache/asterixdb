@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -259,7 +260,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             if (AlgebricksConfig.DEBUG) {
                 AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Removing redundant SORT operator "
                         + op.getPhysicalOperator() + "\n");
-                printOp((AbstractLogicalOperator) op);
+                printOp(op);
             }
             changed = true;
             AbstractLogicalOperator nextOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
@@ -270,7 +271,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             // Now, transfer annotations from the original sort op. to this one.
             AbstractLogicalOperator transferTo = nextOp;
             if (transferTo.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
-                // 
+                //
                 // remove duplicate exchange operator
                 transferTo = (AbstractLogicalOperator) transferTo.getInputs().get(0).getValue();
             }
@@ -338,20 +339,24 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
 
         int prefix = dlvdCols.size() - 1;
-        for (; prefix >= 0;)
-            if (!rqdCols.contains(dlvdCols.get(prefix)))
+        for (; prefix >= 0;) {
+            if (!rqdCols.contains(dlvdCols.get(prefix))) {
                 prefix--;
-            else
+            } else {
                 break;
+            }
+        }
+
+        LocalOrderProperty orderProp = (LocalOrderProperty) dlvd.get(0);
+        List<OrderColumn> orderColumns = orderProp.getOrderColumns();
         for (int j = 0; j <= prefix; j++) {
-            LocalOrderProperty orderProp = (LocalOrderProperty) dlvd.get(j);
-            returnedProperties.add(new OrderColumn(orderProp.getColumn(), orderProp.getOrder()));
+            returnedProperties.add(new OrderColumn(orderColumns.get(j).getColumn(), orderColumns.get(j).getOrder()));
         }
         // maintain other order columns after the required order columns
-        if(returnedProperties.size() != 0){
-            for(int j = prefix + 1; j < dlvdCols.size(); j++){
-                LocalOrderProperty orderProp = (LocalOrderProperty) dlvd.get(j);
-                returnedProperties.add(new OrderColumn(orderProp.getColumn(), orderProp.getOrder()));
+        if (returnedProperties.size() != 0) {
+            for (int j = prefix + 1; j < dlvdCols.size(); j++) {
+                OrderColumn oc = orderColumns.get(j);
+                returnedProperties.add(new OrderColumn(oc.getColumn(), oc.getOrder()));
             }
         }
         return returnedProperties;
@@ -371,9 +376,9 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
         AbstractStableSortPOperator sortOp = (AbstractStableSortPOperator) op.getPhysicalOperator();
         sortOp.computeLocalProperties(op);
-        List<ILocalStructuralProperty> orderProps = sortOp.getOrderProperties();
-        return PropertiesUtil.matchLocalProperties(orderProps, delivered.getLocalProperties(),
-                context.getEquivalenceClassMap(op), context.getFDList(op));
+        ILocalStructuralProperty orderProp = sortOp.getOrderProperty();
+        return PropertiesUtil.matchLocalProperties(Collections.singletonList(orderProp),
+                delivered.getLocalProperties(), context.getEquivalenceClassMap(op), context.getFDList(op));
     }
 
     private void addEnforcers(AbstractLogicalOperator op, int childIndex,
@@ -423,11 +428,13 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     LocalGroupingProperty g = (LocalGroupingProperty) prop;
                     Collection<LogicalVariable> vars = (g.getPreferredOrderEnforcer() != null) ? g
                             .getPreferredOrderEnforcer() : g.getColumnSet();
+                    List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
                     for (LogicalVariable v : vars) {
                         OrderColumn oc = new OrderColumn(v, OrderKind.ASC);
-                        LocalOrderProperty lop = new LocalOrderProperty(oc);
-                        oList.add(lop);
+                        orderColumns.add(oc);
                     }
+                    LocalOrderProperty lop = new LocalOrderProperty(orderColumns);
+                    oList.add(lop);
                     break;
                 }
                 default: {
@@ -448,11 +455,13 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             Mutable<ILogicalOperator> topOp, boolean isMicroOp, IOptimizationContext context)
             throws AlgebricksException {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> oe = new LinkedList<Pair<IOrder, Mutable<ILogicalExpression>>>();
-        for (LocalOrderProperty o : oList) {
-            IOrder ordType = (o.getOrder() == OrderKind.ASC) ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
-            Pair<IOrder, Mutable<ILogicalExpression>> pair = new Pair<IOrder, Mutable<ILogicalExpression>>(ordType,
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(o.getColumn())));
-            oe.add(pair);
+        for (LocalOrderProperty orderProperty : oList) {
+            for (OrderColumn oc : orderProperty.getOrderColumns()) {
+                IOrder ordType = (oc.getOrder() == OrderKind.ASC) ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
+                Pair<IOrder, Mutable<ILogicalExpression>> pair = new Pair<IOrder, Mutable<ILogicalExpression>>(ordType,
+                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(oc.getColumn())));
+                oe.add(pair);
+            }
         }
         OrderOperator oo = new OrderOperator(oe);
         oo.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
@@ -579,7 +588,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             for (ILocalStructuralProperty p : localProps) {
                 if (p.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                     LocalOrderProperty lop = (LocalOrderProperty) p;
-                    ordCols.add(lop.getOrderColumn());
+                    ordCols.addAll(lop.getOrderColumns());
                 } else {
                     return null;
                 }

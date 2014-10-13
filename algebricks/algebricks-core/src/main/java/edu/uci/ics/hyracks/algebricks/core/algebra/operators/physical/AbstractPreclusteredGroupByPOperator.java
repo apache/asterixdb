@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -104,12 +104,17 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     }
                     case LOCAL_ORDER_PROPERTY: {
                         LocalOrderProperty lop = (LocalOrderProperty) lsp;
-                        OrderColumn oc = lop.getOrderColumn();
-                        LogicalVariable v2 = getLhsGbyVar(gby, oc.getColumn());
-                        if (v2 != null) {
-                            propsLocal.add(new LocalOrderProperty(new OrderColumn(v2, oc.getOrder())));
-                        } else {
-                            failed = true;
+                        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
+                        for (OrderColumn oc : lop.getOrderColumns()) {
+                            LogicalVariable v2 = getLhsGbyVar(gby, oc.getColumn());
+                            if (v2 != null) {
+                                orderColumns.add(new OrderColumn(v2, oc.getOrder()));
+                            } else {
+                                failed = true;
+                            }
+                        }
+                        if (!failed) {
+                            propsLocal.add(new LocalOrderProperty(orderColumns));
                         }
                         break;
                     }
@@ -173,22 +178,26 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                         break;
                     }
                     LocalOrderProperty lop = (LocalOrderProperty) prop;
-                    LogicalVariable ord = lop.getColumn();
-                    Pair<LogicalVariable, Mutable<ILogicalExpression>> p = getGbyPairByRhsVar(gby, ord);
-                    if (p == null) {
-                        p = getDecorPairByRhsVar(gby, ord);
+                    List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
+                    List<OrderColumn> ords = lop.getOrderColumns();
+                    for (OrderColumn ord : ords) {
+                        Pair<LogicalVariable, Mutable<ILogicalExpression>> p = getGbyPairByRhsVar(gby, ord.getColumn());
                         if (p == null) {
-                            allOk = false;
-                            break;
+                            p = getDecorPairByRhsVar(gby, ord.getColumn());
+                            if (p == null) {
+                                allOk = false;
+                                break;
+                            }
                         }
+                        ILogicalExpression e = p.second.getValue();
+                        if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                            throw new IllegalStateException(
+                                    "Right hand side of group-by assignment should have been normalized to a variable reference.");
+                        }
+                        LogicalVariable v = ((VariableReferenceExpression) e).getVariableReference();
+                        orderColumns.add(new OrderColumn(v, ord.getOrder()));
                     }
-                    ILogicalExpression e = p.second.getValue();
-                    if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                        throw new IllegalStateException(
-                                "Right hand side of group-by assignment should have been normalized to a variable reference.");
-                    }
-                    LogicalVariable v = ((VariableReferenceExpression) e).getVariableReference();
-                    props.add(new LocalOrderProperty(new OrderColumn(v, lop.getOrder())));
+                    props.add(new LocalOrderProperty(orderColumns));
                 }
                 List<FunctionalDependency> fdList = new ArrayList<FunctionalDependency>();
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorPair : gby.getDecorList()) {

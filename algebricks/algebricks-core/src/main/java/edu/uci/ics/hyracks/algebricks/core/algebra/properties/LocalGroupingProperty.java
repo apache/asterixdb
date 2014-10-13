@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class LocalGroupingProperty extends AbstractGroupingProperty implements ILocalStructuralProperty {
@@ -57,5 +58,46 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
 
     public List<LogicalVariable> getPreferredOrderEnforcer() {
         return preferredOrderEnforcer;
+    }
+
+    @Override
+    public ILocalStructuralProperty retainVariables(Collection<LogicalVariable> vars) {
+        Set<LogicalVariable> newVars = new ListSet<LogicalVariable>();
+        newVars.addAll(vars);
+        newVars.retainAll(columnSet);
+        if (columnSet.equals(newVars)) {
+            return new LocalGroupingProperty(columnSet, preferredOrderEnforcer);
+        }
+        // Column set for the retained grouping property
+        Set<LogicalVariable> newColumns = new ListSet<LogicalVariable>();
+        // Matches the prefix of the original column set.
+        for (LogicalVariable v : columnSet) {
+            if (newVars.contains(v)) {
+                newColumns.add(v);
+            } else {
+                break;
+            }
+        }
+        if (newColumns.size() > 0) {
+            return new LocalGroupingProperty(newColumns, preferredOrderEnforcer.subList(0, newColumns.size()));
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public ILocalStructuralProperty regardToGroup(Collection<LogicalVariable> groupKeys) {
+        Set<LogicalVariable> newColumns = new ListSet<LogicalVariable>();
+        for (LogicalVariable v : columnSet) {
+            if (!groupKeys.contains(v)) {
+                newColumns.add(v);
+            }
+        }
+        if (newColumns.size() > 0) {
+            return new LocalGroupingProperty(newColumns, preferredOrderEnforcer.subList(groupKeys.size(),
+                    newColumns.size()));
+        } else {
+            return null;
+        }
     }
 }
