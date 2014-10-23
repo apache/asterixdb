@@ -28,15 +28,14 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private int[] outColumns;
-    private IRunningAggregateEvaluatorFactory[] runningAggregates;
+    private final int[] outColumns;
+    private final IRunningAggregateEvaluatorFactory[] runningAggregates;
 
     /**
      * @param outColumns
@@ -83,17 +82,13 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
         }
 
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
-            private IPointable p = VoidPointable.FACTORY.createPointable();
-            private IRunningAggregateEvaluator[] raggs = new IRunningAggregateEvaluator[runningAggregates.length];
-            private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
+            private final IPointable p = VoidPointable.FACTORY.createPointable();
+            private final IRunningAggregateEvaluator[] raggs = new IRunningAggregateEvaluator[runningAggregates.length];
+            private final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
 
             @Override
             public void open() throws HyracksDataException {
-                if (!first) {
-                    FrameUtils.flushFrame(frame, writer);
-                    appender.reset(frame, true);
-                }
                 initAccessAppendRef(ctx);
                 if (first) {
                     first = false;

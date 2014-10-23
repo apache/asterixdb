@@ -31,7 +31,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
 import edu.uci.ics.hyracks.dataflow.std.sort.IFrameSorter;
@@ -55,8 +54,8 @@ public class ExternalSortGroupByRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
 
-    private IFrameSorter frameSorter; // Used in External sort, no replacement
-                                      // selection
+    private final IFrameSorter frameSorter; // Used in External sort, no replacement
+    // selection
 
     private final int[] groupFields;
     private final INormalizedKeyComputer firstKeyNkc;
@@ -67,7 +66,7 @@ public class ExternalSortGroupByRunMerger {
 
     private final int[] mergeSortFields;
     private final int[] mergeGroupFields;
-    private IBinaryComparator[] groupByComparators;
+    private final IBinaryComparator[] groupByComparators;
 
     // Constructor for external sort, no replacement selection
     public ExternalSortGroupByRunMerger(IHyracksTaskContext ctx, IFrameSorter frameSorter, List<IFrameReader> runs,
@@ -115,10 +114,8 @@ public class ExternalSortGroupByRunMerger {
 
     public void process() throws HyracksDataException {
         IAggregatorDescriptorFactory aggregatorFactory = localSide ? partialAggregatorFactory : mergeAggregatorFactory;
-        IAggregatorDescriptor aggregator = aggregatorFactory.createAggregator(ctx, partialAggRecordDesc, outRecordDesc,
-                groupFields, groupFields, writer);
-        PreclusteredGroupWriter pgw = new PreclusteredGroupWriter(ctx, groupFields, groupByComparators, aggregator,
-                inputRecordDesc, outRecordDesc, writer, false);
+        PreclusteredGroupWriter pgw = new PreclusteredGroupWriter(ctx, groupFields, groupByComparators,
+                aggregatorFactory, inputRecordDesc, outRecordDesc, writer, false);
         try {
             if (runs.size() <= 0) {
                 pgw.open();
@@ -149,9 +146,7 @@ public class ExternalSortGroupByRunMerger {
                         IFrameWriter mergeResultWriter = new RunFileWriter(newRun, ctx.getIOManager());
 
                         aggregatorFactory = localSide ? mergeAggregatorFactory : partialAggregatorFactory;
-                        aggregator = aggregatorFactory.createAggregator(ctx, partialAggRecordDesc,
-                                partialAggRecordDesc, mergeGroupFields, mergeGroupFields, mergeResultWriter);
-                        pgw = new PreclusteredGroupWriter(ctx, mergeGroupFields, groupByComparators, aggregator,
+                        pgw = new PreclusteredGroupWriter(ctx, mergeGroupFields, groupByComparators, aggregatorFactory,
                                 partialAggRecordDesc, partialAggRecordDesc, mergeResultWriter, true);
                         pgw.open();
 
@@ -166,10 +161,8 @@ public class ExternalSortGroupByRunMerger {
                     }
                 }
                 if (!runs.isEmpty()) {
-                    aggregator = mergeAggregatorFactory.createAggregator(ctx, partialAggRecordDesc, outRecordDesc,
-                            mergeGroupFields, mergeGroupFields, writer);
-                    pgw = new PreclusteredGroupWriter(ctx, mergeGroupFields, groupByComparators, aggregator,
-                            partialAggRecordDesc, outRecordDesc, writer, false);
+                    pgw = new PreclusteredGroupWriter(ctx, mergeGroupFields, groupByComparators,
+                            mergeAggregatorFactory, partialAggRecordDesc, outRecordDesc, writer, false);
                     pgw.open();
                     IFrameReader[] runCursors = new RunFileReader[runs.size()];
                     for (int i = 0; i < runCursors.length; i++) {

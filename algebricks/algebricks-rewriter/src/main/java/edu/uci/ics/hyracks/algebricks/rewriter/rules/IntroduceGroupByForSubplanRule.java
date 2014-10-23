@@ -27,6 +27,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -160,6 +161,16 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
                 testForNull = innerUnnest.getVariable();
                 break;
             }
+            case RUNNINGAGGREGATE: {
+                ILogicalOperator inputToRunningAggregate = right.getInputs().get(0).getValue();
+                Set<LogicalVariable> producedVars = new ListSet<LogicalVariable>();
+                VariableUtilities.getProducedVariables(inputToRunningAggregate, producedVars);
+                if (!producedVars.isEmpty()) {
+                    // Select [ $y != null ]
+                    testForNull = producedVars.iterator().next();
+                }
+                break;
+            }
             case DATASOURCESCAN: {
                 DataSourceScanOperator innerScan = (DataSourceScanOperator) right;
                 // Select [ $y != null ]
@@ -184,7 +195,8 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         IFunctionInfo finfoNot = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NOT);
         ScalarFunctionCallExpression nonNullTest = new ScalarFunctionCallExpression(finfoNot,
                 new MutableObject<ILogicalExpression>(isNullTest));
-        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false, null);
+        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false,
+                null);
         GroupByOperator g = new GroupByOperator();
         Mutable<ILogicalOperator> newSubplanRef = new MutableObject<ILogicalOperator>(subplan);
         NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(g));

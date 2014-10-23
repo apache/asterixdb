@@ -24,22 +24,22 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppenderWrapper;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class PreclusteredGroupWriter implements IFrameWriter {
     private final int[] groupFields;
     private final IBinaryComparator[] comparators;
     private final IAggregatorDescriptor aggregator;
     private final AggregateState aggregateState;
-    private final IFrameWriter writer;
     private final ByteBuffer copyFrame;
     private final FrameTupleAccessor inFrameAccessor;
     private final FrameTupleAccessor copyFrameAccessor;
 
-    private final ByteBuffer outFrame;
-    private final FrameTupleAppender appender;
+    private final FrameTupleAppenderWrapper appenderWrapper;
     private final ArrayTupleBuilder tupleBuilder;
     private boolean outputPartial = false;
 
@@ -48,35 +48,36 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private boolean isFailed = false;
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
-            IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
-            IFrameWriter writer, boolean outputPartial) throws HyracksDataException {
-        this(ctx, groupFields, comparators, aggregator, inRecordDesc, outRecordDesc, writer);
+            IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
+            RecordDescriptor outRecordDesc, IFrameWriter writer, boolean outputPartial) throws HyracksDataException {
+        this(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc, outRecordDesc, writer);
         this.outputPartial = outputPartial;
     }
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
-            IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
-            IFrameWriter writer) throws HyracksDataException {
+            IAggregatorDescriptorFactory aggregatorFactory, RecordDescriptor inRecordDesc,
+            RecordDescriptor outRecordDesc, IFrameWriter writer) throws HyracksDataException {
         this.groupFields = groupFields;
         this.comparators = comparators;
-        this.aggregator = aggregator;
+        this.aggregator = aggregatorFactory.createAggregator(ctx, inRecordDesc, outRecordDesc, groupFields,
+                groupFields, writer);
         this.aggregateState = aggregator.createAggregateStates();
-        this.writer = writer;
         copyFrame = ctx.allocateFrame();
         inFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
         copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
         copyFrameAccessor.reset(copyFrame);
 
-        outFrame = ctx.allocateFrame();
-        appender = new FrameTupleAppender(ctx.getFrameSize());
+        ByteBuffer outFrame = ctx.allocateFrame();
+        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
         appender.reset(outFrame, true);
+        appenderWrapper = new FrameTupleAppenderWrapper(appender, outFrame, writer);
 
         tupleBuilder = new ArrayTupleBuilder(outRecordDesc.getFields().length);
     }
 
     @Override
     public void open() throws HyracksDataException {
-        writer.open();
+        appenderWrapper.open();
         first = true;
     }
 
@@ -133,15 +134,9 @@ public class PreclusteredGroupWriter implements IFrameWriter {
                 lastTupleIndex, aggregateState) : aggregator.outputFinalResult(tupleBuilder, lastTupleAccessor,
                 lastTupleIndex, aggregateState);
 
-        if (hasOutput
-                && !appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                        tupleBuilder.getSize())) {
-            FrameUtils.flushFrame(outFrame, writer);
-            appender.reset(outFrame, true);
-            if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                    tupleBuilder.getSize())) {
-                throw new HyracksDataException("The output cannot be fit into a frame.");
-            }
+        if (hasOutput) {
+            appenderWrapper.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                    tupleBuilder.getSize());
         }
 
     }
@@ -163,19 +158,17 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     @Override
     public void fail() throws HyracksDataException {
         isFailed = true;
-        writer.fail();
+        appenderWrapper.fail();
     }
 
     @Override
     public void close() throws HyracksDataException {
         if (!isFailed && !first) {
             writeOutput(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1);
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(outFrame, writer);
-            }
+            appenderWrapper.flush();
         }
         aggregator.close();
         aggregateState.close();
-        writer.close();
+        appenderWrapper.close();
     }
 }

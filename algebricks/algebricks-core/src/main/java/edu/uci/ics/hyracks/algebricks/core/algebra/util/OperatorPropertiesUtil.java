@@ -21,6 +21,7 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -97,6 +98,55 @@ public class OperatorPropertiesUtil {
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
             getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) i.getValue(), freeVars);
         }
+    }
+
+    /**
+     * Adds the free variables of the operator path from
+     * op to dest, where dest is a direct/indirect input operator of op in the query plan.
+     * 
+     * @param op
+     *            , the start operator.
+     * @param dest
+     *            , the destination operator (a direct/indirect input operator).
+     * @param freeVars
+     *            - The collection to which the free variables will be added.
+     */
+    public static void getFreeVariablesInPath(ILogicalOperator op, ILogicalOperator dest, Set<LogicalVariable> freeVars)
+            throws AlgebricksException {
+        Set<LogicalVariable> producedVars = new ListSet<LogicalVariable>();
+        VariableUtilities.getLiveVariables(op, freeVars);
+        collectUsedAndProducedVariablesInPath(op, dest, freeVars, producedVars);
+        freeVars.removeAll(producedVars);
+    }
+
+    /**
+     * @param op
+     *            , the start operator.
+     * @param dest
+     *            , the destination operator (a direct/indirect input operator).
+     * @param usedVars
+     *            , the collection of used variables.
+     * @param producedVars
+     *            , the collection of produced variables.
+     * @return if the current operator is on the path from the original start operator to the destination operator.
+     * @throws AlgebricksException
+     */
+    private static boolean collectUsedAndProducedVariablesInPath(ILogicalOperator op, ILogicalOperator dest,
+            Set<LogicalVariable> usedVars, Set<LogicalVariable> producedVars) throws AlgebricksException {
+        if (op == dest) {
+            return true;
+        }
+        boolean onPath = false;
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            if (collectUsedAndProducedVariablesInPath(childRef.getValue(), dest, usedVars, producedVars)) {
+                onPath = true;
+            }
+        }
+        if (onPath) {
+            VariableUtilities.getUsedVariables(op, usedVars);
+            VariableUtilities.getProducedVariables(op, producedVars);
+        }
+        return onPath;
     }
 
     public static void getFreeVariablesInSubplans(AbstractOperatorWithNestedPlans op, Set<LogicalVariable> freeVars)

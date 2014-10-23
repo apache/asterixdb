@@ -37,9 +37,9 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 public class NestedPlansRunningAggregatorFactory implements IAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
-    private AlgebricksPipeline[] subplans;
-    private int[] keyFieldIdx;
-    private int[] decorFieldIdx;
+    private final AlgebricksPipeline[] subplans;
+    private final int[] keyFieldIdx;
+    private final int[] decorFieldIdx;
 
     public NestedPlansRunningAggregatorFactory(AlgebricksPipeline[] subplans, int[] keyFieldIdx, int[] decorFieldIdx) {
         this.subplans = subplans;
@@ -93,7 +93,6 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
                 for (int i = 0; i < pipelines.length; i++) {
                     outputWriter.setInputIdx(i);
                     pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
-                    pipelines[i].forceFlush();
                 }
             }
 
@@ -103,13 +102,16 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
                 for (int i = 0; i < pipelines.length; i++) {
                     outputWriter.setInputIdx(i);
                     pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
-                    pipelines[i].forceFlush();
                 }
             }
 
             @Override
             public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
+                for (int i = 0; i < pipelines.length; ++i) {
+                    outputWriter.setInputIdx(i);
+                    pipelines[i].close();
+                }
                 return false;
             }
 
@@ -131,14 +133,7 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
 
             @Override
             public void close() {
-                for (int i = 0; i < pipelines.length; ++i) {
-                    try {
-                        outputWriter.setInputIdx(i);
-                        pipelines[i].close();
-                    } catch (HyracksDataException e) {
-                        throw new IllegalStateException(e);
-                    }
-                }
+
             }
         };
     }
@@ -165,15 +160,15 @@ public class NestedPlansRunningAggregatorFactory implements IAggregatorDescripto
 
     private static class RunningAggregatorOutput implements IFrameWriter {
 
-        private FrameTupleAccessor[] tAccess;
-        private RecordDescriptor[] inputRecDesc;
+        private final FrameTupleAccessor[] tAccess;
+        private final RecordDescriptor[] inputRecDesc;
         private int inputIdx;
-        private ArrayTupleBuilder tb;
-        private ArrayTupleBuilder gbyTb;
-        private AlgebricksPipeline[] subplans;
-        private IFrameWriter outputWriter;
-        private ByteBuffer outputFrame;
-        private FrameTupleAppender outputAppender;
+        private final ArrayTupleBuilder tb;
+        private final ArrayTupleBuilder gbyTb;
+        private final AlgebricksPipeline[] subplans;
+        private final IFrameWriter outputWriter;
+        private final ByteBuffer outputFrame;
+        private final FrameTupleAppender outputAppender;
 
         public RunningAggregatorOutput(IHyracksTaskContext ctx, AlgebricksPipeline[] subplans, int numKeys,
                 int numDecors, IFrameWriter outputWriter) throws HyracksDataException {
