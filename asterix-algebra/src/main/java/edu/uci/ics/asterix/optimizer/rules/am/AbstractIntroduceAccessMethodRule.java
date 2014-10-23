@@ -23,6 +23,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -162,11 +163,16 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      */
     public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx) {
         Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
+        // Used to keep track of matched expressions (added for prefix search)
+        int numMatchedKeys = 0;
+        ArrayList<Integer> matchedExpressions = new ArrayList<Integer>();
         while (it.hasNext()) {
             Map.Entry<Index, List<Integer>> entry = it.next();
             Index index = entry.getKey();
             boolean allUsed = true;
             int lastFieldMatched = -1;
+            matchedExpressions.clear();
+            numMatchedKeys = 0;
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 String keyField = index.getKeyFieldNames().get(i);
                 boolean foundKeyField = false;
@@ -183,6 +189,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // Check if any field name in the optFuncExpr matches.
                     if (optFuncExpr.findFieldName(keyField) != -1) {
                         foundKeyField = true;
+                        matchedExpressions.add(ix);
+                        numMatchedKeys++;
                         if (lastFieldMatched == i - 1) {
                             lastFieldMatched = i;
                         }
@@ -191,6 +199,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 }
                 if (!foundKeyField) {
                     allUsed = false;
+                    // if any expression was matched, remove the non-matched expressions, otherwise the index is unusable
+                    if (lastFieldMatched >= 0) {
+                        exprsIter = entry.getValue().iterator();
+                        while (exprsIter.hasNext()) {
+                            if (!matchedExpressions.contains(exprsIter.next())) {
+                                exprsIter.remove();
+                            }
+                        }
+                    }
                     break;
                 }
             }
@@ -198,11 +215,22 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             // are not, remove this candidate.
             if (!allUsed && accessMethod.matchAllIndexExprs()) {
                 it.remove();
+                continue;
             }
             // A prefix of the index exprs may have been matched.
-            if (lastFieldMatched < 0 && accessMethod.matchPrefixIndexExprs()) {
-                it.remove();
+            if (accessMethod.matchPrefixIndexExprs()) {
+                // Remove the candidate if the dataset is a metadata dataset and the index is secondary
+                if (index.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
+                        && !index.isPrimaryIndex()) {
+                    it.remove();
+                    continue;
+                }
+                if (lastFieldMatched < 0) {
+                    it.remove();
+                    continue;
+                }
             }
+            analysisCtx.indexNumMatchedKeys.put(index, new Integer(numMatchedKeys));
         }
     }
 

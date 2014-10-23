@@ -39,6 +39,9 @@ public class AccessMethodAnalysisContext {
 
     // Maps from index to the dataset it is indexing.
     public HashMap<Index, Dataset> indexDatasetMap = new HashMap<Index, Dataset>();
+    
+    // Maps from an index to the number of matched fields in the query plan (for performing prefix search)
+    public HashMap<Index, Integer> indexNumMatchedKeys = new HashMap<Index, Integer>();
 
     // variables for resetting null placeholder for left-outer-join
     private Mutable<ILogicalOperator> lojGroupbyOpRef = null;

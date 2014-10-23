@@ -5,7 +5,7 @@
  *  Date            : 13th Aug 2012
  */
 
-// Negative test - prefix search, BTree index should NOT be used in the query plan.
+// Positive test - prefix search, BTree index should be used in the query plan.
 
 drop dataverse test if exists;
 create dataverse test;

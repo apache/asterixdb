@@ -6,7 +6,7 @@
  *  Date            : 13th Aug 2012
  */
 
-// Negative test - prefix search, BTree index should not be used.
+// Positive test - prefix search, BTree index should be used.
 
 drop dataverse test if exists;
 create dataverse test;
