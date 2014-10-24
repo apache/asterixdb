@@ -188,6 +188,13 @@ public class ValidateCommand extends AbstractCommand {
             }
         }
 
+        if (node.getTxnLogDir() == null || node.getTxnLogDir().length() == 0) {
+            if (cluster.getTxnLogDir() == null || cluster.getTxnLogDir().length() == 0) {
+                valid = false;
+                LOGGER.fatal("txn_log_dir not defined at cluster/node level for node: " + node.getId() + ERROR);
+            }
+        }
+
         if (node.getStore() == null || node.getStore().length() == 0) {
             if (!cluster.getMasterNode().getId().equals(node.getId())
                     && (cluster.getStore() == null || cluster.getStore().length() == 0)) {
