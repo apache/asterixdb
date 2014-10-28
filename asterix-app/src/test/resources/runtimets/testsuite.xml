@@ -49,6 +49,11 @@
         <output-dir compare="Text">at06</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-issue550">
+        <output-dir compare="Text">query-issue550</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-case FilePath="flwor">
       <compilation-unit name="let33">
@@ -4369,8 +4374,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">
+      <compilation-unit name="query-issue638">
+        <output-dir compare="Text">query-issue638</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="query-issue785">
         <output-dir compare="Text">query-issue785</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
+      <compilation-unit name="query-issue785-2">
+        <output-dir compare="Text">query-issue785-2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpch">

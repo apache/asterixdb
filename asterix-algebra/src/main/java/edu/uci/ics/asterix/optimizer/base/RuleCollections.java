@@ -73,6 +73,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateGroupByEmptyKeyRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanWithInputCardinalityOneRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceOrderByAfterSubplan;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonExpressionsRule;
@@ -99,6 +100,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushNestedOrderByUnderPreSo
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanIntoGroupByRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushUnnestDownThroughProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
@@ -184,6 +186,9 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new NestGroupByRule());
         condPushDownAndJoinInference.add(new EliminateGroupByEmptyKeyRule());
         condPushDownAndJoinInference.add(new LeftOuterJoinToInnerJoinRule());
+        condPushDownAndJoinInference.add(new PushSubplanIntoGroupByRule());
+        condPushDownAndJoinInference.add(new NestedSubplanToJoinRule());
+        condPushDownAndJoinInference.add(new EliminateSubplanWithInputCardinalityOneRule());
 
         return condPushDownAndJoinInference;
     }

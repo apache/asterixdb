@@ -1,0 +1,22 @@
+/*
+ * Description     : This test case is to verify the fix for issue550
+ * https://code.google.com/p/asterixdb/issues/detail?id=550
+ * Expected Result : Success
+ * Date            : 25th October 2014
+ */
+
+let $sample :=
+{{ 
+   {"r": 1, "uid": "1a2b", "t": datetime("2000-01-01T01:00:00"), "event": "e1"},
+   {"r": 2, "uid": "1a2b", "t": datetime("2000-01-01T01:01:00"), "event": "e2"},
+   {"r": 3, "uid": "3c4d", "t": datetime("2000-01-01T01:02:00"), "event": "e1"},
+   {"r": 4, "uid": "3c4d", "t": datetime("2000-01-01T01:03:00"), "event": "e3"},
+   {"r": 5, "uid": "1a2b", "t": datetime("2000-01-01T01:04:00"), "event": "e1"},
+   {"r": 6, "uid": "1a2b", "t": datetime("2000-01-01T01:05:00"), "event": "e4"}
+}}
+for $s in $sample
+group by $u := $s.uid with $s
+return {
+   "u": $u,
+   "recs": ( for $srec in $s return $srec )
+ };

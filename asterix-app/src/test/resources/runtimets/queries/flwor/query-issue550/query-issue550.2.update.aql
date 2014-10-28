@@ -1,0 +1,7 @@
+/*
+ * Description     : This test case is to verify the fix for issue550
+ * https://code.google.com/p/asterixdb/issues/detail?id=550
+ * Expected Result : Success
+ * Date            : 25th October 2014
+ */
+

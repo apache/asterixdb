@@ -38,6 +38,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new TidRunningAggregateDescriptor();
         }

@@ -82,6 +82,12 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
 
             /** get the input operator of the subplan operator */
             ILogicalOperator subplanInput = subplan.getInputs().get(0).getValue();
+            AbstractLogicalOperator subplanInputOp = (AbstractLogicalOperator) subplanInput;
+
+            /** If the other join branch is a trivial plan, do not do the rewriting. */
+            if (subplanInputOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                continue;
+            }
 
             /** get all nested top operators */
             List<ILogicalPlan> nestedPlans = subplan.getNestedPlans();
@@ -91,7 +97,7 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
             }
             if (nestedRoots.size() == 0) {
                 /** there is no nested top operators */
-                return false;
+                continue;
             }
 
             /** expend the input and roots into a DAG of nested loop joins */

@@ -359,21 +359,25 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
 
             Mutable<ILogicalOperator> opRef1InSubplan = aggInSubplanOp.getInputs().get(0);
             if (opRef1InSubplan.getValue().getInputs().size() > 0) {
-                List<Mutable<ILogicalOperator>> gbyInpList = gbyAgg.getInputs();
-                gbyInpList.clear();
-                gbyInpList.add(opRef1InSubplan);
-                while (true) {
-                    Mutable<ILogicalOperator> opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
-                    AbstractLogicalOperator op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
-                    if (op2InSubplan.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-                        List<Mutable<ILogicalOperator>> opInpList = opRef1InSubplan.getValue().getInputs();
-                        opInpList.clear();
-                        opInpList.add(gbyAggChildRef);
-                        break;
-                    }
-                    opRef1InSubplan = opRef2InSubplan;
-                    if (opRef1InSubplan.getValue().getInputs().size() == 0) {
-                        throw new IllegalStateException("PushAggregateIntoGroupbyRule: could not find UNNEST.");
+                Mutable<ILogicalOperator> opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
+                AbstractLogicalOperator op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
+                if (op2InSubplan.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                    List<Mutable<ILogicalOperator>> gbyInpList = gbyAgg.getInputs();
+                    gbyInpList.clear();
+                    gbyInpList.add(opRef1InSubplan);
+                    while (true) {
+                        opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
+                        op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
+                        if (op2InSubplan.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                            List<Mutable<ILogicalOperator>> opInpList = opRef1InSubplan.getValue().getInputs();
+                            opInpList.clear();
+                            opInpList.add(gbyAggChildRef);
+                            break;
+                        }
+                        opRef1InSubplan = opRef2InSubplan;
+                        if (opRef1InSubplan.getValue().getInputs().size() == 0) {
+                            throw new IllegalStateException("PushAggregateIntoGroupbyRule: could not find UNNEST.");
+                        }
                     }
                 }
             }

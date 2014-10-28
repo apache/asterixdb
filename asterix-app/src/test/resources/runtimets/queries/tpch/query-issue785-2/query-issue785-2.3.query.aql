@@ -1,0 +1,43 @@
+/*
+ * Description  : This test case is to verify the fix for issue785
+ * https://code.google.com/p/asterixdb/issues/detail?id=785
+ * Expected Res : SUCCESS
+ * Date         : 2nd Oct. 2014
+ */
+
+use dataverse tpch;
+
+let $t := for $nation in dataset Nation
+for $sn in dataset SelectedNation
+where $nation.n_nationkey = $sn.n_nationkey  /*+ indexnl */
+return {
+    "n_nationkey": $nation.n_nationkey,
+    "n_name": $nation.n_name
+}
+
+let $X := (
+for $n in $t
+for $customer in dataset Customer
+for $order in dataset Orders
+where $order.o_custkey = $customer.c_custkey
+and  $customer.c_nationkey = $n.n_nationkey
+group by $orderdate := $order.o_orderdate, $nation_key := $n.n_nationkey with $order
+let $sum := sum(for $o in $order return $o.o_totalprice)
+return {
+    "nation_key": $nation_key,
+    "order_date": $orderdate,
+    "sum_price": $sum 
+})
+
+for $x in $X
+group by $nation_key := $x.nation_key with $x
+return {
+    "nation_key": $nation_key,
+    "sum_price": for $y in $x
+                  order by $y.sum_price desc
+                  limit 3
+                  return {
+                    "orderdate": $y.order_date,
+                    "sum_price": $y.sum_price
+                  }
+}

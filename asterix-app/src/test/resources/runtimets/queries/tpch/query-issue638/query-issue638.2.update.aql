@@ -1,0 +1,6 @@
+/*
+ * Description  : This test case is to verify the fix for issue638
+ * https://code.google.com/p/asterixdb/issues/detail?id=638
+ * Expected Res : SUCCESS
+ * Date         : 24th Oct. 2014
+ */

@@ -1,0 +1,105 @@
+/*
+ * Description  : This test case is to verify the fix for issue785
+ * https://code.google.com/p/asterixdb/issues/detail?id=785
+ * Expected Res : SUCCESS
+ * Date         : 2nd Oct. 2014
+ */
+
+drop dataverse tpch if exists;
+create dataverse tpch;
+
+use dataverse tpch;
+
+create type OrderType as closed {
+  o_orderkey: int32,
+  o_custkey: int32,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
+  o_orderpriority: string,
+  o_clerk: string,
+  o_shippriority: int32,
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32,
+  c_name: string,
+  c_address: string,
+  c_nationkey: int32,
+  c_phone: string,
+  c_acctbal: double,
+  c_mktsegment: string,
+  c_comment: string
+}
+
+create type SupplierType as closed {
+  s_suppkey: int32,
+  s_name: string,
+  s_address: string,
+  s_nationkey: int32,
+  s_phone: string,
+  s_acctbal: double,
+  s_comment: string
+}
+
+create type NationType as closed {
+  n_nationkey: int32,
+  n_name: string,
+  n_regionkey: int32,
+  n_comment: string
+}
+
+create type RegionType as closed {
+  r_regionkey: int32,
+  r_name: string,
+  r_comment: string
+}
+
+create dataset Orders(OrderType)
+  primary key o_orderkey;
+create dataset Supplier(SupplierType)
+  primary key s_suppkey;
+create dataset Region(RegionType)
+  primary key r_regionkey;
+create dataset Nation(NationType)
+  primary key n_nationkey;
+create dataset Customer(CustomerType)
+  primary key c_custkey;
+create dataset SelectedNation(NationType)
+  primary key n_nationkey;
+
+let $t := for $nation in dataset Nation
+for $sn in dataset SelectedNation
+where $nation.n_nationkey = $sn.n_nationkey  /*+ indexnl */
+return {
+    "n_nationkey": $nation.n_nationkey,
+    "n_name": $nation.n_name
+}
+
+let $X := (
+for $n in $t
+for $customer in dataset Customer
+for $order in dataset Orders
+where $order.o_custkey = $customer.c_custkey
+and  $customer.c_nationkey = $n.n_nationkey
+group by $orderdate := $order.o_orderdate, $nation_key := $n.n_nationkey with $order
+let $sum := sum(for $o in $order return $o.o_totalprice)
+return {
+    "nation_key": $nation_key,
+    "order_date": $orderdate,
+    "sum_price": $sum 
+})
+
+for $x in $X
+group by $nation_key := $x.nation_key with $x
+return {
+    "nation_key": $nation_key,
+    "sum_price": for $y in $x
+                  order by $y.sum_price desc
+                  limit 3
+                  return {
+                    "orderdate": $y.order_date,
+                    "sum_price": $y.sum_price
+                  }
+}
