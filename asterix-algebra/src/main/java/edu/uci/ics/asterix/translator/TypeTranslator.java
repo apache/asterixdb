@@ -266,7 +266,7 @@ public class TypeTranslator {
             String defaultDataverse) {
         String typeName = tre.getIdent().getValue();
         TypeSignature typeSignature = new TypeSignature(defaultDataverse, typeName);
-        List<AbstractCollectionType> typeList = incompleteItemTypes.get(typeName);
+        List<AbstractCollectionType> typeList = incompleteItemTypes.get(typeSignature);
         if (typeList == null) {
             typeList = new LinkedList<AbstractCollectionType>();
             incompleteItemTypes.put(typeSignature, typeList);

@@ -60,6 +60,7 @@ import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
@@ -788,9 +789,13 @@ public class NonTaggedDataFormat implements IDataFormat {
                 ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(null, null));
             } else {
                 IAType itemType = (IAType) context.getType(f.getArguments().get(0).getValue());
-                // Convert UNION types into ANY.
                 if (itemType instanceof AUnionType) {
-                    itemType = BuiltinType.ANY;
+                    if (((AUnionType) itemType).isNullableType())
+                        itemType = ((AUnionType) itemType).getUnionList().get(
+                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                    else
+                        // Convert UNION types into ANY.
+                        itemType = BuiltinType.ANY;
                 }
                 ((ListifyAggregateDescriptor) fd).reset(new AOrderedListType(itemType, null));
             }
@@ -934,7 +939,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public ITupleParserFactory createTupleParser(ARecordType recType, boolean delimitedFormat, char delimiter, char quote) {
+    public ITupleParserFactory createTupleParser(ARecordType recType, boolean delimitedFormat, char delimiter,
+            char quote) {
         if (delimitedFormat) {
             int n = recType.getFieldTypes().length;
             IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
@@ -946,7 +952,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
                 fieldParserFactories[i] = vpf;
             }
-            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, false, -1, null);
+            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, false, -1,
+                    null);
         } else {
             return new AdmSchemafullRecordParserFactory(recType, false, -1, null);
         }

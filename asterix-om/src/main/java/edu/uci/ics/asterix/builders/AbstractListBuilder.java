@@ -76,7 +76,7 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
     @Override
     public void addItem(IValueReference item) throws HyracksDataException {
         try {
-            if (!fixedSize)
+            if (!fixedSize && (item.getByteArray()[0] != serNullTypeTag || itemTypeTag == ATypeTag.ANY))
                 this.offsets.add((short) outputStorage.getLength());
             if (itemTypeTag == ATypeTag.ANY
                     || (itemTypeTag == ATypeTag.NULL && item.getByteArray()[0] == serNullTypeTag)) {
