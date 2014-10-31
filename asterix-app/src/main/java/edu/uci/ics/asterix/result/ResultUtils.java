@@ -27,11 +27,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.ParseException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.apache.http.ParseException;
 import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -62,12 +62,13 @@ public class ResultUtils {
 
     public static void displayResults(ResultReader resultReader, PrintWriter out, APIFramework.OutputFormat pdf)
             throws HyracksDataException {
-        ByteBufferInputStream bbis = new ByteBufferInputStream();
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
         ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
         buffer.clear();
 
+        int bytesRead = resultReader.read(buffer);
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
         boolean need_commas = true;
         boolean notfirst = false;
         switch (pdf) {
@@ -84,33 +85,34 @@ public class ResultUtils {
                 out.print("[ ");
                 break;
         }
-
-        while (resultReader.read(buffer) > 0) {
-            try {
-                fta.reset(buffer);
-                int last = fta.getTupleCount();
-                String result;
-                for (int tIndex = 0; tIndex < last; tIndex++) {
-                    int start = fta.getTupleStartOffset(tIndex);
-                    int length = fta.getTupleEndOffset(tIndex) - start;
-                    bbis.setByteBuffer(buffer, start);
-                    byte[] recordBytes = new byte[length];
-                    bbis.read(recordBytes, 0, length);
-                    result = new String(recordBytes, 0, length, UTF_8);
-                    if (need_commas && notfirst) {
-                        out.print(", ");
-                    }
-                    notfirst = true;
-                    out.print(result);
-                }
-                buffer.clear();
-            } finally {
+        if (bytesRead > 0) {
+            do {
                 try {
-                    bbis.close();
-                } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    fta.reset(buffer);
+                    int last = fta.getTupleCount();
+                    String result;
+                    for (int tIndex = 0; tIndex < last; tIndex++) {
+                        int start = fta.getTupleStartOffset(tIndex);
+                        int length = fta.getTupleEndOffset(tIndex) - start;
+                        bbis.setByteBuffer(buffer, start);
+                        byte[] recordBytes = new byte[length];
+                        bbis.read(recordBytes, 0, length);
+                        result = new String(recordBytes, 0, length, UTF_8);
+                        if (need_commas && notfirst) {
+                            out.print(", ");
+                        }
+                        notfirst = true;
+                        out.print(result);
+                    }
+                    buffer.clear();
+                } finally {
+                    try {
+                        bbis.close();
+                    } catch (IOException e) {
+                        throw new HyracksDataException(e);
+                    }
                 }
-            }
+            } while (resultReader.read(buffer) > 0);
         }
 
         out.flush();
@@ -124,6 +126,7 @@ public class ResultUtils {
                 out.println(" ]");
                 break;
         }
+
     }
 
     public static JSONObject getErrorResponse(int errorCode, String errorMessage, String errorSummary,
