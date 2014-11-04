@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -50,12 +52,22 @@ public class BufferCacheRegressionTest {
     // 1. If the file being evicted was deleted, then its dirty pages should be
     // invalidated, but most not be flushed.
     // 2. If the file was not deleted, then we must flush its dirty pages.
-    @Test
-    public void testFlushBehaviorOnFileEviction() throws IOException {
+    @Before
+    public void setUp() throws IOException{
+        resetState();
+    }
+    @After
+    public void tearDown() throws IOException{
+        resetState();
+    }
+    private void resetState() throws IOException{
         File f = new File(fileName);
         if (f.exists()) {
             f.delete();
         }
+    }
+    @Test
+    public void testFlushBehaviorOnFileEviction() throws IOException {
         flushBehaviorTest(true);
         flushBehaviorTest(false);
     }
