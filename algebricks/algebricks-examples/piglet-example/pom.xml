@@ -19,7 +19,7 @@
  <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>algebricks-examples</artifactId>
-    <version>0.2.14-SNAPSHOT</version>
+    <version>0.2.14</version>
   </parent>
 
   <build>
@@ -114,7 +114,7 @@
     <dependency>
       <groupId>edu.uci.ics.hyracks</groupId>
       <artifactId>algebricks-compiler</artifactId>
-      <version>0.2.14-SNAPSHOT</version>
+      <version>0.2.14</version>
     </dependency>
   </dependencies>
 </project>
