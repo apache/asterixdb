@@ -19,7 +19,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.14</version>
+    <version>0.2.15-SNAPSHOT</version>
   </parent>
 
   <build>

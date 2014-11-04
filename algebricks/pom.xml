@@ -16,14 +16,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks</groupId>
   <artifactId>algebricks</artifactId>
-  <version>0.2.14</version>
+  <version>0.2.15-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>algebricks</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>fullstack</artifactId>
-    <version>0.2.14</version>
+    <version>0.2.15-SNAPSHOT</version>
   </parent>
 
   <distributionManagement>

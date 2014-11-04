@@ -16,13 +16,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   <artifactId>hadoopcompatserver</artifactId>
-  <version>0.2.14</version>
+  <version>0.2.15-SNAPSHOT</version>
   <name>hadoopcompatserver</name>
 
   <parent>
     <groupId>edu.uci.ics.hyracks.examples</groupId>
     <artifactId>hadoop-compat-example</artifactId>
-    <version>0.2.14</version>
+    <version>0.2.15-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -74,7 +74,7 @@
       <plugin>
       	<groupId>edu.uci.ics.hyracks</groupId>
       	<artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
-      	<version>0.2.14</version>
+      	<version>0.2.15-SNAPSHOT</version>
         <configuration>
           <hyracksServerHome>${basedir}/target/hadoopcompatserver-${project.version}-binary-assembly</hyracksServerHome>
           <jvmOptions>${jvm.extraargs}</jvmOptions>
@@ -149,27 +149,27 @@
      <dependency>
         <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
         <artifactId>hadoopcompathelper</artifactId>
-        <version>0.2.14</version>
+        <version>0.2.15-SNAPSHOT</version>
         <scope>compile</scope>
      </dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
-  		<version>0.2.14</version>
+  		<version>0.2.15-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
-  		<version>0.2.14</version>
+  		<version>0.2.15-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
      <dependency>
         <groupId>edu.uci.ics.hyracks.examples.compat</groupId>
   	    <artifactId>hadoopcompatclient</artifactId>
-  	    <version>0.2.14</version>
+  	    <version>0.2.15-SNAPSHOT</version>
   	    <type>jar</type>
   	    <scope>test</scope>
      </dependency>
