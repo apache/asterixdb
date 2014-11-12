@@ -18,10 +18,11 @@ create type TestType as open {
     lname : string
 }
 
+// create internal dataset
 create dataset testdst(TestType) primary key id;
 
 create index sec_Idx on testdst(fname,lname);
 
-for $emp in dataset('testdst')
-where $emp.fname >= "Craig" and $emp.lname <= "Kevin" and $emp.fname <= "Mary" and $emp.lname >= "Tomes"
+for $emp in dataset('testdst') 
+where $emp.fname > "Craig" and $emp.lname > "Kevin" and $emp.fname <= "Mary" and $emp.lname <= "Tomes"
 return $emp

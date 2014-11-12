@@ -6,13 +6,11 @@
  *  Date            : 13th Aug 2012
  */
 
-// Please note this is a Positive test and the BTree index should be used in the plan.
-
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
-write output to nc1:"rttest/btree-index_btree-primary-31.adm";
+write output to nc1:"rttest/btree-index_btree-secondary-61.adm";
 
 create type TestType as open {
     id : int32,
@@ -20,10 +18,11 @@ create type TestType as open {
     lname : string
 }
 
-create dataset testdst(TestType) primary key id;
+// create internal dataset
+create dataset testdst(TestType)  primary key id;
 
 create index sec_Idx on testdst(fname,lname);
 
 for $emp in dataset('testdst') 
-where $emp.fname > "Roger"
+where $emp.fname > "Craig" and $emp.lname > "Kevin" and $emp.fname <= "Mary" and $emp.lname < "Tomes"
 return $emp

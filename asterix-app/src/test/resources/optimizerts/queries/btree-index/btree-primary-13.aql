@@ -1,12 +1,12 @@
 /*
  *  Description     : BTree Index verification test
- *                  : This test is intended to verify that the primary BTree index is NOT used 
+ *                  : This test is intended to verify that the primary BTree index is used 
  *                  : in the optimized query plan.
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */
 
-// Negative test - prefix search
+// Positive test - prefix search
 
 drop dataverse test if exists;
 create dataverse test;

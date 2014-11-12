@@ -6,6 +6,8 @@
  *  Date            : 13th Aug 2012
  */
 
+// Negative test
+
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
@@ -23,5 +25,5 @@ create dataset testdst(TestType) primary key id;
 create index sec_Idx on testdst(fname,lname);
 
 for $emp in dataset('testdst') 
-where $emp.fname > "Allan" and $emp.lname < "Zubi"
+where $emp.fname = "Julio" or $emp.lname = "Malaika"
 return $emp

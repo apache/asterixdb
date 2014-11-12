@@ -6,7 +6,7 @@
  *  Date            : 13th Aug 2012
  */
 
-// Positive test - prefix search, BTree index should be used in the query plan.
+// Positive test - prefix search, BTree index should be used in query plan
 
 drop dataverse test if exists;
 create dataverse test;
@@ -25,5 +25,5 @@ create dataset testdst(TestType) primary key id;
 create index sec_Idx on testdst(fname,lname);
 
 for $emp in dataset('testdst') 
-where $emp.fname = "Julio"
+where $emp.fname <= "Vanpatten"
 return $emp

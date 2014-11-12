@@ -1,12 +1,10 @@
 /*
  *  Description     : BTree Index verification test
- *                  : This test is intended to verify that the secondary BTree index is NOT used 
+ *                  : This test is intended to verify that the secondary BTree index is used 
  *                  : in the optimized query plan.
  *  Expected Result : Success
  *  Date            : 13th Aug 2012
  */
-
-// Negative test - prefix search
 
 drop dataverse test if exists;
 create dataverse test;
@@ -25,5 +23,5 @@ create dataset testdst(TestType) primary key id;
 create index sec_Idx on testdst(fname,lname);
 
 for $emp in dataset('testdst') 
-where $emp.fname = "Julio" and $emp.lname < "Xu"
+where $emp.fname > "Allan" and $emp.lname < "Zubi"
 return $emp

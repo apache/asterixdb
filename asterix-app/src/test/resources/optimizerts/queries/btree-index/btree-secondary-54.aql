@@ -16,11 +16,11 @@ create type TestType as open {
     fname : string,
     lname : string
 }
-
+ 
 create dataset testdst(TestType) primary key id;
 
 create index sec_Idx on testdst(fname);
 
 for $emp in dataset('testdst') 
-where $emp.fname < "Chen" 
+where $emp.fname > "Max" 
 return $emp

@@ -22,5 +22,5 @@ create dataset testdst(TestType) primary key id;
 create index sec_Idx on testdst(fname);
 
 for $emp in dataset('testdst') 
-where $emp.fname >= "Max" and $emp.fname <= "Roger" 
+where $emp.fname <= "Julio" 
 return $emp

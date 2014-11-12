@@ -384,16 +384,13 @@ public class BTreeAccessMethod implements IAccessMethod {
             }
         }
 
-        // Rule out the cases unsupported by the current btree search
-        // implementation.
-        for (int i = 1; i < numSecondaryKeys; i++) {
+        // determine cases when prefix search could be applied
+        for (int i = 1; i < lowKeyExprs.length; i++) {
             if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null
-                    && lowKeyLimits[i] == null) {
-                return null;
-            }
-            if (highKeyLimits[0] == null && highKeyLimits[i] != null || highKeyLimits[0] != null
-                    && highKeyLimits[i] == null) {
-                return null;
+                    && lowKeyLimits[i] == null || highKeyLimits[0] == null && highKeyLimits[i] != null
+                    || highKeyLimits[0] != null && highKeyLimits[i] == null) {
+                numSecondaryKeys--;
+                primaryIndexPostProccessingIsNeeded = true;
             }
         }
         if (lowKeyLimits[0] == null) {
@@ -409,10 +406,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         // List of variables and expressions for the assign.
         ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<LogicalVariable>();
         ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<Mutable<ILogicalExpression>>();
-        int numLowKeys = createKeyVarsAndExprs(lowKeyLimits, lowKeyExprs, assignKeyVarList, assignKeyExprList,
-                keyVarList, context);
-        int numHighKeys = createKeyVarsAndExprs(highKeyLimits, highKeyExprs, assignKeyVarList, assignKeyExprList,
-                keyVarList, context);
+        int numLowKeys = createKeyVarsAndExprs(numSecondaryKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList,
+                assignKeyExprList, keyVarList, context);
+        int numHighKeys = createKeyVarsAndExprs(numSecondaryKeys, highKeyLimits, highKeyExprs, assignKeyVarList,
+                assignKeyExprList, keyVarList, context);
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
@@ -444,7 +441,8 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             // External dataset
             ExternalDataLookupOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(
-                    dataSourceScan, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull);
+                    dataSourceScan, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput,
+                    retainNull);
             indexSubTree.dataSourceRef.setValue(externalDataAccessOp);
             return externalDataAccessOp;
         } else if (!isPrimaryIndex) {
@@ -481,13 +479,12 @@ public class BTreeAccessMethod implements IAccessMethod {
         return primaryIndexUnnestOp;
     }
 
-    private int createKeyVarsAndExprs(LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
+    private int createKeyVarsAndExprs(int numKeys, LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
             ArrayList<LogicalVariable> assignKeyVarList, ArrayList<Mutable<ILogicalExpression>> assignKeyExprList,
             ArrayList<LogicalVariable> keyVarList, IOptimizationContext context) {
         if (keyLimits[0] == null) {
             return 0;
         }
-        int numKeys = keyLimits.length;
         for (int i = 0; i < numKeys; i++) {
             ILogicalExpression searchKeyExpr = searchKeyExprs[i];
             LogicalVariable keyVar = null;
