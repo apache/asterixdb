@@ -64,4 +64,7 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void getOperationalComponents(ILSMIndexOperationContext ctx);
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
+    
+    public boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
+
 }

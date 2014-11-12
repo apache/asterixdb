@@ -252,4 +252,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public boolean hasMemoryComponents() {
         return true;
     }
+    
+    @Override
+    public boolean isCurrentMutableComponentEmpty() throws HyracksDataException {
+        //check if the current memory component has been modified
+        return !((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).isModified();
+    }
 }
