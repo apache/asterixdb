@@ -79,6 +79,7 @@
       <item name="AQL Allen's Relations Functions" href="aql/allens.html"/>
       <item name="AQL Support of Similarity Queries" href="aql/similarity.html"/>
       <item name="Accessing External Data" href="aql/externaldata.html"/>
+      <item name="Filter-Based LSM Index Acceleration" href="aql/filters.html"/>
       <item name="REST API to AsterixDB" href="api.html"/>
     </menu>
 

@@ -564,9 +564,12 @@ The employment field is an ordered list of instances of another named record typ
 #### Datasets
 
     DatasetSpecification ::= "internal"? "dataset" QualifiedName "(" Identifier ")" IfNotExists
-                             PrimaryKey ( "on" Identifier )? ( "hints" Properties )? 
+                             PrimaryKey ( "on" Identifier )? ( "hints" Properties )?
+                             ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )? 
+                             ( "with filter on" Identifier )?
                            | "external" "dataset" QualifiedName "(" Identifier ")" IfNotExists 
                              "using" AdapterName Configuration ( "hints" Properties )?
+                             ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )? 
     AdapterName          ::= Identifier
     Configuration        ::= "(" ( KeyValuePair ( "," KeyValuePair )* )? ")"
     KeyValuePair         ::= "(" StringLiteral "=" StringLiteral ")"
@@ -574,6 +577,7 @@ The employment field is an ordered list of instances of another named record typ
     Property             ::= Identifier "=" ( StringLiteral | IntegerLiteral )
     FunctionSignature    ::= FunctionOrTypeName "@" IntegerLiteral
     PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
+    CompactionPolicy     ::= Identifier
 
 The create dataset statement is used to create a new dataset.
 Datasets are named, unordered collections of ADM record instances; they
@@ -582,11 +586,38 @@ Datasets are typed, and AsterixDB will ensure that their contents conform to the
 An Internal dataset (the default) is a dataset that is stored in and managed by AsterixDB.
 It must have a specified unique primary key that can be used to partition data across nodes of an AsterixDB cluster.
 The primary key is also used in secondary indexes to uniquely identify the indexed primary data records.
+Optionally, a filter can be created on a field to further optimize range queries with predicates on the filter's field.
+(Refer to [Filter-Based LSM Index Acceleration](filters.html) for more information about filters.)
+
 An External dataset is stored outside of AsterixDB (currently datasets in HDFS or on the local filesystem(s) of the cluster's nodes are supported).
 External dataset support allows AQL queries to treat external data as though it were stored in AsterixDB,
 making it possible to query "legacy" file data (e.g., Hive data) without having to physically import it into AsterixDB.
 For an external dataset, an appropriate adapter must be selected to handle the nature of the desired external data.
 (See the [guide to external data](externaldata.html) for more information on the available adapters.)
+
+When creating a dataset, it is possible to choose a merge policy that controls
+which of the underlaying LSM storage components to be merged.  Currently,
+AsterixDB provides four different merge policies that can be
+configured per dataset: no-merge, constant, prefix, and correlated-prefix. The
+no-merge policy simply never merges disk components. While the constant policy merges disk components when the
+number of components reaches some constant number k, which can be
+configured by the user. The prefix policy relies on component sizes and the number of
+components to decide which components to merge. Specifically, it works
+by first trying to identify the smallest ordered (oldest to newest)
+sequence of components such that the sequence does not contain a
+single component that exceeds some threshold size M and that either
+the sum of the component's sizes exceeds M or the number of
+components in the sequence exceeds another threshold C. If such a
+sequence of components exists, then each of the components in the
+sequence are merged together to form a single component. Finally, the correlated-prefix is similar to the prefix policy but it
+delegates the decision of merging the disk components of all the
+indexes in a dataset to the primary index. When the policy decides
+that the primary index needs to be merged (using the same decision
+criteria as for the prefix policy), then it will issue successive
+merge requests on behalf of all other indexes
+associated with the same dataset. The default policy for
+AsterixDB is the prefix policy except when there is a filter on a dataset, where the preferred policy for filters is the correlated-prefix.
+
 
 The following example creates an internal dataset for storing FacefookUserType records.
 It specifies that their id field is their primary key.

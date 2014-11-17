@@ -38,6 +38,8 @@ public class GlobalConfig {
     public static int DEFAULT_INPUT_DATA_COLUMN = 0;
 
     public static final String DEFAULT_COMPACTION_POLICY_NAME = "prefix";
+    
+    public static final String DEFAULT_FILTERED_DATASET_COMPACTION_POLICY_NAME = "correlated-prefix";
 
     public static final Map<String, String> DEFAULT_COMPACTION_POLICY_PROPERTIES;
     static {
