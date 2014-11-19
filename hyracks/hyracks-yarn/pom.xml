@@ -24,6 +24,15 @@
     <version>0.2.1-SNAPSHOT</version>
   </parent>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
   <modules>
     <module>hyracks-yarn-common</module>
     <module>hyracks-yarn-client</module>

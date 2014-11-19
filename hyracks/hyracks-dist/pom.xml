@@ -21,6 +21,16 @@
 		<version>0.2.15-SNAPSHOT</version>
 	</parent>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
+
 	<artifactId>hyracks-dist</artifactId>
 	<name>hyracks-dist</name>
 
