@@ -24,3 +24,5 @@ teststore
 output
 tmp
 dist
+*.iml
+.idea/
