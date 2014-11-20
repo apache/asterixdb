@@ -1,0 +1,4 @@
+use dataverse temp;
+
+for $i in dataset testds
+return $i

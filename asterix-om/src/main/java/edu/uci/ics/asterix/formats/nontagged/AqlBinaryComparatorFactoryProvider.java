@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
+import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
 import edu.uci.ics.hyracks.data.std.primitive.BytePointable;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
@@ -64,6 +65,8 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
     // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive comparisons.    
     public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             UTF8StringLowercasePointable.FACTORY);
+    public static final PointableBinaryComparatorFactory BINARY_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
+            ByteArrayPointable.FACTORY);
 
     private AqlBinaryComparatorFactoryProvider() {
     }
@@ -168,6 +171,9 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             }
             case UUID: {
                 return addOffset(AUUIDPartialBinaryComparatorFactory.INSTANCE, ascending);
+            }
+            case BINARY: {
+                return addOffset(BINARY_POINTABLE_INSTANCE, ascending);
             }
             default: {
                 return addOffset(RawBinaryComparatorFactory.INSTANCE, ascending);

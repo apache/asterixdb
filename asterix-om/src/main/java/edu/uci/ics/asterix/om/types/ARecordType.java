@@ -279,6 +279,7 @@ public class ARecordType extends AbstractComplexType {
                     case FLOAT:
                     case DOUBLE:
                     case STRING:
+                    case BINARY:
                     case DATE:
                     case TIME:
                     case UUID:
@@ -336,6 +337,7 @@ public class ARecordType extends AbstractComplexType {
                         case FLOAT:
                         case DOUBLE:
                         case STRING:
+                        case BINARY:
                         case DATE:
                         case TIME:
                         case DATETIME:
@@ -438,6 +440,7 @@ public class ARecordType extends AbstractComplexType {
             case FLOAT:
             case DOUBLE:
             case STRING:
+            case BINARY:
             case DATE:
             case TIME:
             case DATETIME:

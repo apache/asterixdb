@@ -45,6 +45,7 @@ public final class NonTaggedFormatUtil {
     public static final boolean isFixedSizedCollection(IAType type) {
         switch (type.getTypeTag()) {
             case STRING:
+            case BINARY:
             case RECORD:
             case ORDEREDLIST:
             case UNORDEREDLIST:
@@ -135,6 +136,7 @@ public final class NonTaggedFormatUtil {
                 else
                     return AInt16SerializerDeserializer.getShort(serNonTaggedAObject, offset) * 16 + 2;
             case STRING:
+            case BINARY:
                 if (tagged)
                     return AInt16SerializerDeserializer.getUnsignedShort(serNonTaggedAObject, offset + 1) + 2;
                 else

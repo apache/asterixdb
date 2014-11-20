@@ -100,6 +100,7 @@ public class AListPointable extends AbstractVisitablePointable {
         if (typedItemList) {
             switch (itemTag) {
                 case STRING:
+                case BINARY:
                 case RECORD:
                 case ORDEREDLIST:
                 case UNORDEREDLIST:

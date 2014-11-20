@@ -1,0 +1,20 @@
+use dataverse test;
+
+load dataset UserOpen
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/adm-load/usermd5.adm"),("format"="adm")) ;
+
+load dataset UserCopyClose
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/adm-load/usermd5copy.adm"),("format"="adm")) ;
+
+
+insert into dataset UserOpen(
+for $l in dataset('UserCopyClose')
+	where $l.id>10
+	return {
+		"id": $l.id,
+		"name": $l.name,
+		"md5": $l.md5
+	}
+);

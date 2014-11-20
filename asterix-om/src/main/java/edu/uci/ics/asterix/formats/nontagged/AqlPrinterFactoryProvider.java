@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.formats.nontagged;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABinaryPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABooleanPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ACirclePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADatePrinterFactory;
@@ -65,8 +66,8 @@ public class AqlPrinterFactoryProvider implements IPrinterFactoryProvider {
 
         if (aqlType != null) {
             switch (aqlType.getTypeTag()) {
-            // case ANYTYPE:
-            // return AAnyTypePrinterFactory.INSTANCE;
+                // case ANYTYPE:
+                // return AAnyTypePrinterFactory.INSTANCE;
                 case INT8:
                     return AInt8PrinterFactory.INSTANCE;
                 case INT16:
@@ -107,6 +108,8 @@ public class AqlPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return ARectanglePrinterFactory.INSTANCE;
                 case STRING:
                     return AStringPrinterFactory.INSTANCE;
+                case BINARY:
+                    return ABinaryPrinterFactory.INSTANCE;
                 case RECORD:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
                 case ORDEREDLIST:

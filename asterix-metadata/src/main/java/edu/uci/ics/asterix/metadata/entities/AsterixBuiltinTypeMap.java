@@ -36,6 +36,7 @@ public class AsterixBuiltinTypeMap {
         _builtinTypeMap.put("float", BuiltinType.AFLOAT);
         _builtinTypeMap.put("double", BuiltinType.ADOUBLE);
         _builtinTypeMap.put("string", BuiltinType.ASTRING);
+        _builtinTypeMap.put("binary", BuiltinType.ABINARY);
         _builtinTypeMap.put("date", BuiltinType.ADATE);
         _builtinTypeMap.put("time", BuiltinType.ATIME);
         _builtinTypeMap.put("datetime", BuiltinType.ADATETIME);

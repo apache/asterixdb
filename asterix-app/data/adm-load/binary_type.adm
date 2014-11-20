@@ -1,0 +1,1 @@
+{ "ba": hex("ABCDEF0123456789"), "bb": hex("ABCDEF0123456789"), "bc": hex("0A0B0C0D0E0F"), "bd": hex("01020304050607080900"), "bx": base64("q83vASNFZ4k="), "by": hex("ABCDEF0123456789"), "bz": base64("CgsMDQ4P"), "bw": base64("AQIDBAUGBwgJAA==") }

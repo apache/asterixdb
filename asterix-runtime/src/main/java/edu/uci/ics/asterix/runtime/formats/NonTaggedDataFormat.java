@@ -127,6 +127,8 @@ import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalYearAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FunctionManagerImpl;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.ABinaryBase64StringConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.ABinaryHexStringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ABooleanConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ACircleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ADateConstructorDescriptor;
@@ -242,6 +244,14 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.UnorderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.WordTokensDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.BinaryConcatDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.BinaryLengthDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.FindBinaryDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.FindBinaryFromDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.ParseBinaryDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.PrintBinaryDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.SubBinaryFromDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.binary.SubBinaryFromToDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
@@ -410,6 +420,17 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(NumericRoundDescriptor.FACTORY);
         temp.add(NumericRoundHalfToEvenDescriptor.FACTORY);
         temp.add(NumericRoundHalfToEven2Descriptor.FACTORY);
+
+        // Binary functions
+        temp.add(BinaryLengthDescriptor.FACTORY);
+        temp.add(ParseBinaryDescriptor.FACTORY);
+        temp.add(PrintBinaryDescriptor.FACTORY);
+        temp.add(BinaryConcatDescriptor.FACTORY);
+        temp.add(SubBinaryFromDescriptor.FACTORY);
+        temp.add(SubBinaryFromToDescriptor.FACTORY);
+        temp.add(FindBinaryDescriptor.FACTORY);
+        temp.add(FindBinaryFromDescriptor.FACTORY);
+
         // String functions
         temp.add(StringEqualDescriptor.FACTORY);
         temp.add(StringStartWithDescrtiptor.FACTORY);
@@ -491,6 +512,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         // new functions - constructors
         temp.add(ABooleanConstructorDescriptor.FACTORY);
         temp.add(ANullConstructorDescriptor.FACTORY);
+        temp.add(ABinaryHexStringConstructorDescriptor.FACTORY);
+        temp.add(ABinaryBase64StringConstructorDescriptor.FACTORY);
         temp.add(AStringConstructorDescriptor.FACTORY);
         temp.add(AInt8ConstructorDescriptor.FACTORY);
         temp.add(AInt16ConstructorDescriptor.FACTORY);

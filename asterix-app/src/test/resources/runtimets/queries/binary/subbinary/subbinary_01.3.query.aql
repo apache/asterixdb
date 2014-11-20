@@ -1,0 +1,23 @@
+use dataverse test;
+
+let $x := hex("aabbccdd")
+
+let $r1 := sub-binary(hex(''),0) = hex('')
+let $r2 := sub-binary(hex(''),1) = hex('')
+let $r3 := sub-binary(hex(''),-1) = hex('')
+
+let $r4 := sub-binary($x, 1, binary-length($x)) = $x
+let $r5 := sub-binary($x, 2, 1) = hex('bb')
+let $r6 := sub-binary($x, 2) = hex('bbccdd')
+let $r7 := sub-binary($x, 5, 0) = hex('')
+let $r8 := sub-binary($x, 4, 1) = hex('dd')
+let $r9 := sub-binary($x, 2, 2) = hex('bbcc') 
+
+let $r10 := sub-binary($x, 0) = $x
+let $r11 := sub-binary($x, -1) = $x
+let $r12 := sub-binary($x, 1, 256) = $x
+let $r13 := sub-binary($x, 2, 256) = hex('bbccdd')
+let $r14 := sub-binary($x, 2, -1) = hex('')
+
+return  $r1 and $r2 and $r3 and $r4 and $r5 and $r6 and $r7 and $r8 and $r9 and $r10 and $r11 and $r12 and $r13 and $r14 
+

@@ -1,0 +1,27 @@
+use dataverse test;
+
+let $c1 := hex('0A0A')
+let $c2 := hex("0B")
+let $c11:= base64("Cgo=")
+let $c21:= base64("Cw==")
+
+let $r1 := $c1 > $c2
+let $r2 := $c1 >= $c2
+let $r3 := $c1 < $c2
+let $r4 := $c1 <= $c2
+let $r5 := $c1 = $c2
+let $r6 := $c1 != $c2
+
+let $r11 := $c11 > $c21
+let $r21 := $c11 >= $c21
+let $r31 := $c11 < $c21
+let $r41 := $c11 <= $c21
+let $r51 := $c11 = $c21
+let $r61 := $c11 != $c21
+
+let $req1 := $c1 = $c11
+let $req2 := $c2 = $c21
+let $req3 := $c1 = $c21
+let $req4 := $c2 = $c11
+
+return [ $r1,$r2,$r3,$r4,$r5,$r6,$r11,$r21,$r31,$r41,$r51,$r61,$req1,$req2,$req3,$req4 ]

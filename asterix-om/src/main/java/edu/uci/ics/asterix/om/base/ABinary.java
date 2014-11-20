@@ -14,27 +14,53 @@
  */
 package edu.uci.ics.asterix.om.base;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ABinary implements IAObject {
 
     private static final int HASH_PREFIX = 31;
 
-    private final byte[] bytes;
+    protected byte[] bytes;
+    protected int start;
+    protected int length;
 
     public ABinary(byte[] byteArray) {
         this.bytes = byteArray;
+        this.start = 0;
+        this.length = byteArray.length;
+    }
+
+    public ABinary(byte[] byteArray, int start, int length) {
+        this.bytes = byteArray;
+        this.start = start;
+        this.length = length;
     }
 
     public byte[] getBytes() {
         return bytes;
     }
+
+    public int getStart() {
+        return start;
+    }
+
+    public int getLength() {
+        return getByteArrayContentLength() + SIZE_OF_LEADING_LENGTH_FIELD;
+    }
+
+    public int getByteArrayContentLength() {
+        return ABinarySerializerDeserializer.getLength(bytes, start);
+    }
+
+    public static final int SIZE_OF_LEADING_LENGTH_FIELD = ByteArrayPointable.SIZE_OF_LENGTH;
 
     @Override
     public void accept(IOMVisitor visitor) throws AsterixException {
@@ -52,11 +78,14 @@ public class ABinary implements IAObject {
             return false;
         }
         byte[] x = ((ABinary) obj).getBytes();
-        if (bytes.length != x.length) {
+        int xStart = ((ABinary) obj).getStart();
+        int xLength = ((ABinary) obj).getLength();
+
+        if (getLength() != xLength) {
             return false;
         }
-        for (int k = 0; k < bytes.length; k++) {
-            if (bytes[k] != x[k]) {
+        for (int k = 0; k < xLength; k++) {
+            if (bytes[start + k] != x[xStart + k]) {
                 return false;
             }
         }
@@ -65,25 +94,44 @@ public class ABinary implements IAObject {
 
     @Override
     public int hash() {
-        int m = HASH_PREFIX <= bytes.length ? HASH_PREFIX : bytes.length;
+        int m = HASH_PREFIX <= getLength() ? HASH_PREFIX : getLength();
         int h = 0;
         for (int i = 0; i < m; i++) {
-            h += 31 * h + bytes[i];
+            h += 31 * h + bytes[start + i];
         }
         return h;
     }
 
     @Override
     public String toString() {
-        return "ABinary";
+        StringBuilder sb = new StringBuilder();
+        int validLength = getByteArrayContentLength();
+        int start = getStart() + SIZE_OF_LEADING_LENGTH_FIELD;
+        sb.append("ABinary: [ ");
+        for (int i = 0; i < validLength; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(bytes[start + i]);
+        }
+        sb.append(" ]");
+        return sb.toString();
+
     }
 
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
-        json.put("ABinary", bytes);
+        int validLength = getByteArrayContentLength();
+        int start = getStart() + SIZE_OF_LEADING_LENGTH_FIELD;
+        JSONArray byteArray = new JSONArray();
+        for (int i = 0; i < validLength; i++) {
+            byteArray.put(bytes[start + i]);
+        }
+        json.put("ABinary", byteArray);
 
         return json;
     }
+
 }

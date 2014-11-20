@@ -1,0 +1,6 @@
+use dataverse test;
+
+let $c1 := binary-length(hex("00AA"))
+let $c2 := binary-length(hex(""))
+let $c3 := binary-length(null)
+return {"result1": $c1, "result2": $c2, "result3": $c3}

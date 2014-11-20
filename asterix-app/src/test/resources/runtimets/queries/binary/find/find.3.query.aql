@@ -1,0 +1,15 @@
+use dataverse test;
+
+let $x := hex("aabbccddaa")
+let $r1 := find-binary($x, hex('')) = 1
+let $r2 := find-binary($x, hex('aa')) = 1
+let $r3 := find-binary($x, hex('aa'), 1) = 5
+let $r4 := find-binary($x, hex('aabb'), 0) = find-binary($x, hex('aabb'))
+let $r5 := find-binary($x, hex('11')) = 0
+let $r6 := find-binary($x, hex('ccddaa')) = 3
+let $r7 := find-binary($x, hex('ccddaabb')) = 0
+
+let $r8 := find-binary($x, null)
+let $r9 := find-binary(null, null)
+let $r0 := find-binary(null, $x)
+return [ $r1 and $r2 and $r3 and $r4 and $r5 and $r6 and $r7, $r8, $r9 , $r0]

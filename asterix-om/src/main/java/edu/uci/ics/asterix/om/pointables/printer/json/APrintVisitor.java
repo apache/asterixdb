@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABinaryHexPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinter;
@@ -175,6 +176,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case STRING: {
                     AStringPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case BINARY: {
+                    ABinaryHexPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 case YEARMONTHDURATION: {

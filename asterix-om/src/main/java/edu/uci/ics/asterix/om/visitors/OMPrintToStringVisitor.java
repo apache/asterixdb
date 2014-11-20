@@ -71,6 +71,7 @@ public class OMPrintToStringVisitor implements IOMVisitor {
 
     @Override
     public void visitABinary(ABinary obj) throws AsterixException {
+        // TODO Auto-generated method stub
         throw new NotImplementedException();
     }
 

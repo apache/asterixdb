@@ -1,0 +1,10 @@
+drop dataverse temp if exists;
+create dataverse temp
+use dataverse temp;
+
+create type test as open {
+  ba: binary
+};
+
+create dataset testds (test)
+primary key ba;

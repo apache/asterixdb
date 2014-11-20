@@ -19,6 +19,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers.AWrappedDescNo
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.normalizers.ByteArrayNormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.normalizers.DoubleNormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.normalizers.FloatNormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.normalizers.Integer64NormalizedKeyComputerFactory;
@@ -57,6 +58,9 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
                 case STRING: {
                     return new AWrappedAscNormalizedKeyComputerFactory(new UTF8StringNormalizedKeyComputerFactory());
                 }
+                case BINARY: {
+                    return new AWrappedAscNormalizedKeyComputerFactory(new ByteArrayNormalizedKeyComputerFactory());
+                }
                 default: {
                     return null;
                 }
@@ -82,6 +86,9 @@ public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyCo
                 }
                 case STRING: {
                     return new AWrappedDescNormalizedKeyComputerFactory(new UTF8StringNormalizedKeyComputerFactory());
+                }
+                case BINARY: {
+                    return new AWrappedDescNormalizedKeyComputerFactory(new ByteArrayNormalizedKeyComputerFactory());
                 }
                 default: {
                     return null;

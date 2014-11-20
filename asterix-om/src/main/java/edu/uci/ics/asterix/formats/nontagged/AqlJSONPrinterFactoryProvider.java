@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.formats.nontagged;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABinaryPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinterFactory;
@@ -110,6 +111,8 @@ public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return ARectanglePrinterFactory.INSTANCE;
                 case STRING:
                     return AStringPrinterFactory.INSTANCE;
+                case BINARY:
+                    return ABinaryPrinterFactory.INSTANCE;
                 case RECORD:
                     return new ARecordPrinterFactory((ARecordType) aqlType);
                 case ORDEREDLIST:

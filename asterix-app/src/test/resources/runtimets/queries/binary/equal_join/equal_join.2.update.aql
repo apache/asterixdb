@@ -1,0 +1,9 @@
+use dataverse test;
+
+load dataset User
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/adm-load/usermd5.adm"),("format"="adm")) ;
+
+load dataset UserCopy
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/adm-load/usermd5copy.adm"),("format"="adm")) ;

@@ -503,6 +503,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                                 lastDelimiterPosition = p;
                                 start = p + 1;
                                 state = State.CR;
+                                startedQuote = false;
                                 return true;
                             }
                         }

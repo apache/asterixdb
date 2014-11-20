@@ -67,6 +67,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(in.readByte());
             switch (typeTag) {
                 case STRING:
+                case BINARY:
                 case RECORD:
                 case ORDEREDLIST:
                 case UNORDEREDLIST:
@@ -136,6 +137,7 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
             switch (typeTag) {
                 case STRING:
+                case BINARY:
                 case RECORD:
                 case ORDEREDLIST:
                 case UNORDEREDLIST:

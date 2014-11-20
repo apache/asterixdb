@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.printers.json;
 
 import java.io.PrintStream;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABinaryHexPrinter;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -117,6 +118,10 @@ public class AObjectPrinter implements IPrinter {
             }
             case STRING: {
                 AStringPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
+            case BINARY: {
+                ABinaryHexPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
             case RECORD: {

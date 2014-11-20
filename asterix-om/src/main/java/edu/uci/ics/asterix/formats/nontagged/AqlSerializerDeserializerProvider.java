@@ -19,6 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
@@ -127,6 +128,9 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             }
             case STRING: {
                 return AStringSerializerDeserializer.INSTANCE;
+            }
+            case BINARY: {
+                return ABinarySerializerDeserializer.INSTANCE;
             }
             case TIME: {
                 return ATimeSerializerDeserializer.INSTANCE;

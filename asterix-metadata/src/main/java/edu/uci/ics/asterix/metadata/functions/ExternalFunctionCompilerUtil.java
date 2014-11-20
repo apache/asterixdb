@@ -31,6 +31,7 @@ import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
+import edu.uci.ics.asterix.om.typecomputer.impl.ABinaryTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ADoubleTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AFloatTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.AInt32TypeComputer;
@@ -142,6 +143,8 @@ public class ExternalFunctionCompilerUtil implements Serializable {
                 return AFloatTypeComputer.INSTANCE;
             case DOUBLE:
                 return ADoubleTypeComputer.INSTANCE;
+            case BINARY:
+                return ABinaryTypeComputer.INSTANCE;
             case STRING:
                 return AStringTypeComputer.INSTANCE;
             case ORDEREDLIST:

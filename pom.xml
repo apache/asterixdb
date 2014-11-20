@@ -33,8 +33,8 @@
     <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
     <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests}</global.test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <algebricks.version>0.2.14</algebricks.version>
-    <hyracks.version>0.2.14</hyracks.version>
+    <algebricks.version>0.2.15-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.2.15-SNAPSHOT</hyracks.version>
     <hadoop.version>2.2.0</hadoop.version>
     <junit.version>4.8.1</junit.version>
     <commons.io.version>2.4</commons.io.version>

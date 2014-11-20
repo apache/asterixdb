@@ -4,7 +4,7 @@ create dataverse test;
 use dataverse test;
 
 create type AddressType as open {
-  number: int32, 
+  number: int32,
   street: string,
   city: string
 }
@@ -26,9 +26,8 @@ create type AllType as open {
   location3d: point3d,
   line: line,
   polygon: polygon,
-  circle: circle
-
-  // binary
+  circle: circle,
+  binary: binary
   // union
 }
 

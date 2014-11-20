@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $c in dataset('User')
+for $o in dataset('UserCopy')
+where $c.md5 = $o.md5
+order by $c.id
+return {"cid":$c.id, "oid": $o.id}

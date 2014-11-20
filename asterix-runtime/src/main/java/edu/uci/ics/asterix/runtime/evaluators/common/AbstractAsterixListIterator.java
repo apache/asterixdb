@@ -124,6 +124,10 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
                 }
                 break;
             }
+            case BINARY: {
+                cmp = AqlBinaryComparatorFactoryProvider.BINARY_POINTABLE_INSTANCE.createBinaryComparator();
+                break;
+            }
             default: {
                 cmp = null;
                 break;

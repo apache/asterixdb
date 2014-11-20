@@ -123,6 +123,10 @@ public class AObjectPrinter implements IPrinter {
                 AStringPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case BINARY: {
+                ABinaryHexPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             case RECORD: {
                 this.recordPrinter.init();
                 recordPrinter.print(b, s, l, ps);

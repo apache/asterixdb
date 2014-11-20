@@ -19,10 +19,7 @@ import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
-import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.data.std.primitive.*;
 
 public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFactory {
 
@@ -41,6 +38,8 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     .createBinaryComparator();
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             final IBinaryComparator ascStrComp = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
+                    .createBinaryComparator();
+            final IBinaryComparator ascByteArrayComp = new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY)
                     .createBinaryComparator();
             final IBinaryComparator ascFloatComp = new PointableBinaryComparatorFactory(FloatPointable.FACTORY)
                     .createBinaryComparator();
@@ -132,6 +131,9 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                     }
                     case INTERVAL: {
                         return ascIntervalComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                    }
+                    case BINARY: {
+                        return ascByteArrayComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 -1);
                     }
                     default: {
                         return rawComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);

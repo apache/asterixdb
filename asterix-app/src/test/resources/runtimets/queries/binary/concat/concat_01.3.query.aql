@@ -1,0 +1,13 @@
+use dataverse test;
+
+let $x :=  [ hex("aa"), hex("259911"), hex("bb"), hex("31")]
+let $c := binary-concat($x)
+
+let $x1 :=  []
+let $c1 := binary-concat($x1)
+
+let $c2 := binary-concat([null])
+let $c3 := binary-concat([null, hex('55')])
+let $c4 := binary-concat([hex('aa'), null])
+let $c5 := binary-concat([hex('aa'), null, base64('asdf')])
+return [ $c = hex("AA259911bb31"), $c1 = hex(""), $c2 , $c3 , $c4 , $c5 ]

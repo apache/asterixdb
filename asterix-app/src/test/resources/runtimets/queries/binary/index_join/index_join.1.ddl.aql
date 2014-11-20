@@ -1,0 +1,16 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type UserType as closed {
+  id: int32,
+  name: string,
+  md5: binary
+}
+
+create dataset User(UserType)
+  primary key md5;
+
+create dataset UserCopy(UserType)
+  primary key md5;

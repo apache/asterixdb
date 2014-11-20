@@ -19,5 +19,6 @@ bin/
 *-coredump
 *.pyc
 *.iml
+.idea/
 asterix.ipr
 asterix.iws
