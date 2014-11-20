@@ -185,11 +185,16 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return new ARecordType(null, fieldNames, fieldTypes, true);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void serialize(ARecord instance, DataOutput out) throws HyracksDataException {
+        this.serialize(instance, out, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
         IARecordBuilder recordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+        
         recordBuilder.reset(recordType);
         recordBuilder.init();
         if (recordType != null) {
@@ -199,7 +204,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 recordBuilder.addField(i, fieldValue);
             }
             try {
-                recordBuilder.write(out, false);
+                recordBuilder.write(out, writeTypeTag);
             } catch (IOException | AsterixException e) {
                 throw new HyracksDataException(e);
             }
