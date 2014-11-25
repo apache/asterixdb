@@ -38,7 +38,7 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class AQLTestCase extends TestCase {
 
-    private File queryFile;
+    private final File queryFile;
 
     AQLTestCase(File queryFile) {
         super("testAQL");

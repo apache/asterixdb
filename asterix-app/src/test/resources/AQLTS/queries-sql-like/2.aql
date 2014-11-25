@@ -1,0 +1,12 @@
+from $event in dataset('Event')
+from $sponsor in $event.sponsoring_sigs
+with $es := { "event": $event, "sponsor": $sponsor }
+group by $sig_name := $sponsor.sig_name with $es
+with $sig_sponsorship_count := count($es)
+with $by_chapter :=
+   from $e in $es
+   group by $chapter_name := $e.sponsor.chapter_name with $es
+   select { "chapter_name": $chapter_name, "escount" : count($es) }
+order by $sig_sponsorship_count desc
+limit 5
+select { "sig_name": $sig_name, "total_count": $sig_sponsorship_count, "chapter_breakdown": $by_chapter }

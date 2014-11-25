@@ -1,0 +1,3 @@
+with $bla := { "name" : "value" }
+return
+  $bla."name" = $bla.name

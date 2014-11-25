@@ -751,7 +751,7 @@ DeleteStatement DeleteStatement() throws ParseException:
     {
       getCurrentScope().addNewVarSymbolToScope(var.getVar());
     }
-  "from" <DATASET> nameComponents  = QualifiedName() 
+  <FROM> <DATASET> nameComponents  = QualifiedName() 
   (<WHERE> condition = Expression())?
     {
       // First we get the dataverses and datasets that we want to lock
@@ -910,7 +910,7 @@ Statement FeedStatement() throws ParseException:
       {
         stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, policy, getVarCounter());
       }
-    | "disconnect" "feed" feedNameComponents = QualifiedName() "from" <DATASET> datasetNameComponents = QualifiedName()
+    | "disconnect" "feed" feedNameComponents = QualifiedName() <FROM> <DATASET> datasetNameComponents = QualifiedName()
       {
         stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
       }
@@ -1919,7 +1919,7 @@ Expression  FLWOGR() throws ParseException:
 }
 {
      (tmp = ForClause()  {clauseList.add(tmp);} | tmp = LetClause() {clauseList.add(tmp);})
-      (tmp = Clause() {clauseList.add(tmp);})* <RETURN> returnExpr = Expression()
+      (tmp = Clause() {clauseList.add(tmp);})* (<RETURN>|<SELECT>) returnExpr = Expression()
 
      {
        flworg.setClauseList(clauseList);
@@ -1957,7 +1957,7 @@ Clause ForClause()throws ParseException :
 	extendCurrentScope();
 }
 {
-    <FOR> varExp = Variable() (<AT> varPos = Variable())?  <IN> ( inExp = Expression() )
+    (<FOR>|<FROM>) varExp = Variable() (<AT> varPos = Variable())?  <IN> ( inExp = Expression() )
     {
       fc.setVarExpr(varExp);
       getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
@@ -1978,7 +1978,7 @@ Clause LetClause() throws ParseException:
 	extendCurrentScope();
 }
 {
-    <LET> varExp = Variable() <ASSIGN> beExp = Expression()
+    (<LET>|<WITH>) varExp = Variable() <ASSIGN> beExp = Expression()
     {
       getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       lc.setVarExpr(varExp);
@@ -2242,6 +2242,7 @@ TOKEN :
   | <ELSE : "else">
   | <EVERY : "every">
   | <FOR : "for">
+  | <FROM : "from">
   | <GROUP : "group">
   | <IF : "if">
   | <IN : "in">
@@ -2251,6 +2252,7 @@ TOKEN :
   | <ORDER : "order">
   | <RETURN : "return">
   | <SATISFIES : "satisfies">
+  | <SELECT : "select">
   | <SOME : "some">
   | <THEN : "then">
   | <UNION : "union">

@@ -1,17 +1,3 @@
-<!--
- ! Copyright 2009-2013 by The Regents of the University of California
- ! Licensed under the Apache License, Version 2.0 (the "License");
- ! you may not use this file except in compliance with the License.
- ! you may obtain a copy of the License from
- ! 
- !     http://www.apache.org/licenses/LICENSE-2.0
- ! 
- ! Unless required by applicable law or agreed to in writing, software
- ! distributed under the License is distributed on an "AS IS" BASIS,
- ! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- ! See the License for the specific language governing permissions and
- ! limitations under the License.
- !-->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
 <HEAD>
@@ -25,8 +11,79 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;ASC: "asc"&gt;
+| &lt;AT: "at"&gt;
+| &lt;BY: "by"&gt;
+| &lt;DATASET: "dataset"&gt;
+| &lt;DECOR: "decor"&gt;
+| &lt;DESC: "desc"&gt;
+| &lt;DISTINCT: "distinct"&gt;
+| &lt;ELSE: "else"&gt;
+| &lt;EVERY: "every"&gt;
+| &lt;FOR: "for"&gt;
+| &lt;FROM: "from"&gt;
+| &lt;GROUP: "group"&gt;
+| &lt;IF: "if"&gt;
+| &lt;IN: "in"&gt;
+| &lt;LET: "let"&gt;
+| &lt;LIMIT: "limit"&gt;
+| &lt;OFFSET: "offset"&gt;
+| &lt;ORDER: "order"&gt;
+| &lt;RETURN: "return"&gt;
+| &lt;SATISFIES: "satisfies"&gt;
+| &lt;SELECT: "select"&gt;
+| &lt;SOME: "some"&gt;
+| &lt;THEN: "then"&gt;
+| &lt;UNION: "union"&gt;
+| &lt;WHERE: "where"&gt;
+| &lt;WITH: "with"&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
 &lt;CARET: "^"&gt;
+| &lt;DIV: "/"&gt;
+| &lt;IDIV: "idiv"&gt;
+| &lt;MINUS: "-"&gt;
+| &lt;MOD: "%"&gt;
+| &lt;MUL: "*"&gt;
+| &lt;PLUS: "+"&gt;
+| &lt;LEFTPAREN: "("&gt;
+| &lt;RIGHTPAREN: ")"&gt;
+| &lt;LEFTBRACKET: "["&gt;
+| &lt;RIGHTBRACKET: "]"&gt;
+| &lt;COLON: ":"&gt;
+| &lt;COMMA: ","&gt;
+| &lt;DOT: "."&gt;
+| &lt;QUES: "?"&gt;
+| &lt;LT: "&lt;"&gt;
+| &lt;GT: "&gt;"&gt;
+| &lt;LE: "&lt;="&gt;
+| &lt;GE: "&gt;="&gt;
+| &lt;EQ: "="&gt;
+| &lt;NE: "!="&gt;
+| &lt;SIMILAR: "~="&gt;
+| &lt;ASSIGN: ":="&gt;
+| &lt;AND: "and"&gt;
+| &lt;OR: "or"&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;LEFTBRACE: "{"&gt; : DEFAULT
 }
 
    </PRE>
@@ -37,7 +94,7 @@
   <TD>
    <PRE>
 &lt;DEFAULT&gt; TOKEN : {
-&lt;DATASET: "dataset"&gt;
+&lt;RIGHTBRACE: "}"&gt; : {
 }
 
    </PRE>
@@ -47,8 +104,8 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;LEFTPAREN: "("&gt;
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;LEFTDBLBRACE: "{{"&gt; : IN_DBL_BRACE
 }
 
    </PRE>
@@ -58,8 +115,8 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;RIGHTPAREN: ")"&gt;
+&lt;IN_DBL_BRACE&gt; TOKEN : {
+&lt;RIGHTDBLBRACE: "}}"&gt; : {
 }
 
    </PRE>
@@ -69,7 +126,7 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
 &lt;INTEGER_LITERAL: (&lt;DIGIT&gt;)+&gt;
 }
 
@@ -80,8 +137,10 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
 &lt;NULL: "null"&gt;
+| &lt;TRUE: "true"&gt;
+| &lt;FALSE: "false"&gt;
 }
 
    </PRE>
@@ -91,29 +150,7 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;TRUE: "true"&gt;
-}
-
-   </PRE>
-  </TD>
- </TR>
- <!-- Token -->
- <TR>
-  <TD>
-   <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;FALSE: "false"&gt;
-}
-
-   </PRE>
-  </TD>
- </TR>
- <!-- Token -->
- <TR>
-  <TD>
-   <PRE>
-&lt;DEFAULT&gt; TOKEN : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
 &lt;#DIGIT: ["0"-"9"]&gt;
 }
 
@@ -124,10 +161,10 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;DOUBLE_LITERAL: &lt;INTEGER&gt; | &lt;INTEGER&gt; ("." &lt;INTEGER&gt;)? | "." &lt;INTEGER&gt;&gt;
-| &lt;FLOAT_LITERAL: &lt;INTEGER&gt; ("f" | "F") | &lt;INTEGER&gt; ("." &lt;INTEGER&gt; ("f" | "F"))? | "." &lt;INTEGER&gt; ("f" | "F")&gt;
-| &lt;INTEGER: (&lt;DIGIT&gt;)+&gt;
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;DOUBLE_LITERAL: &lt;DIGITS&gt; | &lt;DIGITS&gt; ("." &lt;DIGITS&gt;)? | "." &lt;DIGITS&gt;&gt;
+| &lt;FLOAT_LITERAL: &lt;DIGITS&gt; ("f" | "F") | &lt;DIGITS&gt; ("." &lt;DIGITS&gt; ("f" | "F"))? | "." &lt;DIGITS&gt; ("f" | "F")&gt;
+| &lt;DIGITS: (&lt;DIGIT&gt;)+&gt;
 }
 
    </PRE>
@@ -137,8 +174,9 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
 &lt;#LETTER: ["A"-"Z","a"-"z"]&gt;
+| &lt;SPECIALCHARS: ["$","_","-"]&gt;
 }
 
    </PRE>
@@ -148,21 +186,17 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;SPECIALCHARS: ["$","_","-"]&gt;
-}
-
-   </PRE>
-  </TD>
- </TR>
- <!-- Token -->
- <TR>
-  <TD>
-   <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;STRING_LITERAL: "\"" (&lt;EscapeQuot&gt; | ~["\""])* "\"" | "\'" (&lt;EscapeApos&gt; | ~["\'"])* "\'"&gt;
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;STRING_LITERAL: "\"" (&lt;EscapeQuot&gt; | &lt;EscapeBslash&gt; | &lt;EscapeSlash&gt; | &lt;EscapeBspace&gt; | &lt;EscapeFormf&gt; | &lt;EscapeNl&gt; | &lt;EscapeCr&gt; | &lt;EscapeTab&gt; | ~["\"","\\"])* "\"" | "\'" (&lt;EscapeApos&gt; | &lt;EscapeBslash&gt; | &lt;EscapeSlash&gt; | &lt;EscapeBspace&gt; | &lt;EscapeFormf&gt; | &lt;EscapeNl&gt; | &lt;EscapeCr&gt; | &lt;EscapeTab&gt; | ~["\'","\\"])* "\'"&gt;
 | &lt;#EscapeQuot: "\\\""&gt;
 | &lt;#EscapeApos: "\\\'"&gt;
+| &lt;#EscapeBslash: "\\\\"&gt;
+| &lt;#EscapeSlash: "\\/"&gt;
+| &lt;#EscapeBspace: "\\b"&gt;
+| &lt;#EscapeFormf: "\\f"&gt;
+| &lt;#EscapeNl: "\\n"&gt;
+| &lt;#EscapeCr: "\\r"&gt;
+| &lt;#EscapeTab: "\\t"&gt;
 }
 
    </PRE>
@@ -172,8 +206,8 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;IDENTIFIER: (&lt;LETTER&gt;)+ (&lt;LETTER&gt; | &lt;DIGIT&gt; | &lt;SPECIALCHARS&gt;)*&gt;
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;IDENTIFIER: &lt;LETTER&gt; (&lt;LETTER&gt; | &lt;DIGIT&gt; | &lt;SPECIALCHARS&gt;)*&gt;
 }
 
    </PRE>
@@ -183,8 +217,8 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; TOKEN : {
-&lt;VARIABLE: "$" &lt;IDENTIFIER&gt;&gt;
+&lt;DEFAULT,IN_DBL_BRACE&gt; TOKEN : {
+&lt;VARIABLE: "$" &lt;LETTER&gt; (&lt;LETTER&gt; | &lt;DIGIT&gt; | "_")*&gt;
 }
 
    </PRE>
@@ -194,7 +228,7 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; SKIP : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; SKIP : {
 " "
 | "\t"
 | "\r"
@@ -208,7 +242,7 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; SKIP : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; SKIP : {
 &lt;"//" (~["\n"])* "\n"&gt;
 }
 
@@ -219,7 +253,7 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; SKIP : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; SKIP : {
 &lt;"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")?&gt;
 }
 
@@ -230,7 +264,7 @@
  <TR>
   <TD>
    <PRE>
-&lt;DEFAULT&gt; SKIP : {
+&lt;DEFAULT,IN_DBL_BRACE&gt; SKIP : {
 "/*" : INSIDE_COMMENT
 }
 
@@ -277,342 +311,452 @@
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod1">Statement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( ( ( "use" | "declare" "function" | "create" ( "type" | "nodegroup" | "external" &lt;DATASET&gt; | &lt;DATASET&gt; | "index" | "dataverse" ) | "load" | "enlist" | "drop" ( &lt;DATASET&gt; | "index" | "nodegroup" | "type" | "dataverse" ) | "write" | "set" | "insert" | "delete" | "update" )* ( <A HREF="#prod2">Query</A> )? ) &lt;EOF&gt; )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod2">SingleStatement</A> ( ";" )? )* &lt;EOF&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod3">InsertStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod2">SingleStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"into" &lt;DATASET&gt; &lt;IDENTIFIER&gt; &lt;LEFTPAREN&gt; <A HREF="#prod2">Query</A> &lt;RIGHTPAREN&gt; ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod3">DataverseDeclaration</A> | <A HREF="#prod4">FunctionDeclaration</A> | <A HREF="#prod5">CreateStatement</A> | <A HREF="#prod6">LoadStatement</A> | <A HREF="#prod7">DropStatement</A> | <A HREF="#prod8">WriteStatement</A> | <A HREF="#prod9">SetStatement</A> | <A HREF="#prod10">InsertStatement</A> | <A HREF="#prod11">DeleteStatement</A> | <A HREF="#prod12">UpdateStatement</A> | <A HREF="#prod13">FeedStatement</A> | <A HREF="#prod14">CompactStatement</A> | <A HREF="#prod15">Query</A> | <A HREF="#prod16">RefreshExternalDatasetStatement</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod4">DeleteStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod3">DataverseDeclaration</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod5">Variable</A> "from" &lt;DATASET&gt; &lt;IDENTIFIER&gt; ( "where" <A HREF="#prod6">Expression</A> )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"use" "dataverse" <A HREF="#prod17">Identifier</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod7">UpdateStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod5">CreateStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod5">Variable</A> "in" <A HREF="#prod6">Expression</A> "where" <A HREF="#prod6">Expression</A> &lt;LEFTPAREN&gt; ( <A HREF="#prod8">UpdateClause</A> ( "," <A HREF="#prod8">UpdateClause</A> )* ) &lt;RIGHTPAREN&gt; ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"create" ( <A HREF="#prod18">TypeSpecification</A> | <A HREF="#prod19">NodegroupSpecification</A> | <A HREF="#prod20">DatasetSpecification</A> | <A HREF="#prod21">IndexSpecification</A> | <A HREF="#prod22">DataverseSpecification</A> | <A HREF="#prod23">FunctionSpecification</A> | <A HREF="#prod24">FeedSpecification</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod8">UpdateClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod18">TypeSpecification</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"set" <A HREF="#prod6">Expression</A> ":=" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"type" <A HREF="#prod25">TypeName</A> <A HREF="#prod26">IfNotExists</A> "as" <A HREF="#prod27">TypeExpr</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod19">NodegroupSpecification</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"nodegroup" <A HREF="#prod17">Identifier</A> <A HREF="#prod26">IfNotExists</A> "on" <A HREF="#prod17">Identifier</A> ( &lt;COMMA&gt; <A HREF="#prod17">Identifier</A> )*</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod20">DatasetSpecification</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "external" &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> &lt;LEFTPAREN&gt; <A HREF="#prod17">Identifier</A> &lt;RIGHTPAREN&gt; <A HREF="#prod26">IfNotExists</A> "using" <A HREF="#prod29">AdapterName</A> <A HREF="#prod30">Configuration</A> ( "on" <A HREF="#prod17">Identifier</A> )? ( "hints" <A HREF="#prod31">Properties</A> )? ( "using" "compaction" "policy" <A HREF="#prod32">CompactionPolicy</A> ( <A HREF="#prod30">Configuration</A> )? )? | ( "internal" )? &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> &lt;LEFTPAREN&gt; <A HREF="#prod17">Identifier</A> &lt;RIGHTPAREN&gt; <A HREF="#prod26">IfNotExists</A> <A HREF="#prod33">PrimaryKey</A> ( "autogenerated" )? ( "on" <A HREF="#prod17">Identifier</A> )? ( "hints" <A HREF="#prod31">Properties</A> )? ( "using" "compaction" "policy" <A HREF="#prod32">CompactionPolicy</A> ( <A HREF="#prod30">Configuration</A> )? )? ( "with filter on" <A HREF="#prod34">FilterField</A> )? )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod16">RefreshExternalDatasetStatement</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"refresh external" &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod21">IndexSpecification</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"index" <A HREF="#prod17">Identifier</A> <A HREF="#prod26">IfNotExists</A> "on" <A HREF="#prod28">QualifiedName</A> &lt;LEFTPAREN&gt; ( <A HREF="#prod17">Identifier</A> ) ( &lt;COMMA&gt; <A HREF="#prod17">Identifier</A> )* &lt;RIGHTPAREN&gt; ( "type" <A HREF="#prod35">IndexType</A> )?</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod32">CompactionPolicy</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod34">FilterField</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod35">IndexType</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "btree" | "rtree" | "keyword" | "ngram" &lt;LEFTPAREN&gt; &lt;INTEGER_LITERAL&gt; &lt;RIGHTPAREN&gt; )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod22">DataverseSpecification</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"dataverse" <A HREF="#prod17">Identifier</A> <A HREF="#prod26">IfNotExists</A> ( "with format" <A HREF="#prod36">StringLiteral</A> )?</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod23">FunctionSpecification</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"function" <A HREF="#prod37">FunctionName</A> <A HREF="#prod26">IfNotExists</A> <A HREF="#prod38">ParameterList</A> &lt;LEFTBRACE&gt; <A HREF="#prod39">Expression</A> &lt;RIGHTBRACE&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod24">FeedSpecification</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "feed" <A HREF="#prod28">QualifiedName</A> <A HREF="#prod26">IfNotExists</A> "using" <A HREF="#prod29">AdapterName</A> <A HREF="#prod30">Configuration</A> ( <A HREF="#prod40">ApplyFunction</A> )? )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod38">ParameterList</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTPAREN&gt; ( &lt;VARIABLE&gt; ( &lt;COMMA&gt; &lt;VARIABLE&gt; )* )? &lt;RIGHTPAREN&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod26">IfNotExists</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "if not exists" )?</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod40">ApplyFunction</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"apply" "function" <A HREF="#prod37">FunctionName</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod41">GetPolicy</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"using" "policy" <A HREF="#prod17">Identifier</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod42">FunctionSignature</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod37">FunctionName</A> "@" &lt;INTEGER_LITERAL&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod33">PrimaryKey</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"primary" "key" <A HREF="#prod17">Identifier</A> ( &lt;COMMA&gt; <A HREF="#prod17">Identifier</A> )*</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod7">DropStatement</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"drop" ( &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> <A HREF="#prod43">IfExists</A> | "index" <A HREF="#prod44">DoubleQualifiedName</A> <A HREF="#prod43">IfExists</A> | "nodegroup" <A HREF="#prod17">Identifier</A> <A HREF="#prod43">IfExists</A> | "type" <A HREF="#prod25">TypeName</A> <A HREF="#prod43">IfExists</A> | "dataverse" <A HREF="#prod17">Identifier</A> <A HREF="#prod43">IfExists</A> | "function" <A HREF="#prod42">FunctionSignature</A> <A HREF="#prod43">IfExists</A> | "feed" <A HREF="#prod28">QualifiedName</A> <A HREF="#prod43">IfExists</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod43">IfExists</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;IF&gt; "exists" )?</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod10">InsertStatement</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"insert" "into" &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> <A HREF="#prod15">Query</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod11">DeleteStatement</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"delete" <A HREF="#prod45">Variable</A> &lt;FROM&gt; &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> ( &lt;WHERE&gt; <A HREF="#prod39">Expression</A> )?</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod12">UpdateStatement</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"update" <A HREF="#prod45">Variable</A> &lt;IN&gt; <A HREF="#prod39">Expression</A> &lt;WHERE&gt; <A HREF="#prod39">Expression</A> &lt;LEFTPAREN&gt; ( <A HREF="#prod46">UpdateClause</A> ( &lt;COMMA&gt; <A HREF="#prod46">UpdateClause</A> )* ) &lt;RIGHTPAREN&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod46">UpdateClause</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"set" <A HREF="#prod39">Expression</A> &lt;ASSIGN&gt; <A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"insert" <A HREF="#prod3">InsertStatement</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod10">InsertStatement</A></TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"delete" <A HREF="#prod4">DeleteStatement</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod11">DeleteStatement</A></TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"update" <A HREF="#prod7">UpdateStatement</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod12">UpdateStatement</A></TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"if" &lt;LEFTPAREN&gt; <A HREF="#prod6">Expression</A> &lt;RIGHTPAREN&gt; "then" <A HREF="#prod8">UpdateClause</A> ( "else" <A HREF="#prod8">UpdateClause</A> )?</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IF&gt; &lt;LEFTPAREN&gt; <A HREF="#prod39">Expression</A> &lt;RIGHTPAREN&gt; &lt;THEN&gt; <A HREF="#prod46">UpdateClause</A> ( &lt;ELSE&gt; <A HREF="#prod46">UpdateClause</A> )?</TD>
 </TR>
 <TR>
 <TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod9">SetStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; &lt;STRING_LITERAL&gt; ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"set" <A HREF="#prod17">Identifier</A> <A HREF="#prod36">StringLiteral</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod10">WriteStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod8">WriteStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( ( "output" "to" &lt;IDENTIFIER&gt; ":" &lt;STRING_LITERAL&gt; ( "using" &lt;STRING_LITERAL&gt; )? ) | ( "into" &lt;DATASET&gt; &lt;IDENTIFIER&gt; &lt;LEFTPAREN&gt; <A HREF="#prod2">Query</A> &lt;RIGHTPAREN&gt; ) ) ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"write" "output" "to" <A HREF="#prod17">Identifier</A> &lt;COLON&gt; <A HREF="#prod36">StringLiteral</A> ( "using" <A HREF="#prod36">StringLiteral</A> )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod11">CreateIndexStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod6">LoadStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if not exists" )? "on" &lt;IDENTIFIER&gt; &lt;LEFTPAREN&gt; ( &lt;IDENTIFIER&gt; ) ( "," &lt;IDENTIFIER&gt; )* &lt;RIGHTPAREN&gt; ( "type" ( "btree" | "keyword" | "qgram" | "rtree" ) ";" | ";" )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"load" &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> "using" <A HREF="#prod29">AdapterName</A> <A HREF="#prod30">Configuration</A> ( "pre-sorted" )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod12">DataverseDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod29">AdapterName</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"dataverse" &lt;IDENTIFIER&gt; ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod13">DropStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod14">CompactStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if exists" )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"compact" &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod14">IndexDropStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod13">FeedStatement</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; "." &lt;IDENTIFIER&gt; ( "if exists" )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "connect" "feed" <A HREF="#prod28">QualifiedName</A> "to" &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> ( <A HREF="#prod41">GetPolicy</A> )? | "disconnect" "feed" <A HREF="#prod28">QualifiedName</A> &lt;FROM&gt; &lt;DATASET&gt; <A HREF="#prod28">QualifiedName</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod15">NodeGroupDropStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod30">Configuration</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if exists" )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTPAREN&gt; ( <A HREF="#prod47">KeyValuePair</A> ( &lt;COMMA&gt; <A HREF="#prod47">KeyValuePair</A> )* )? &lt;RIGHTPAREN&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod16">TypeDropStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod47">KeyValuePair</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if exists" )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTPAREN&gt; <A HREF="#prod36">StringLiteral</A> &lt;EQ&gt; <A HREF="#prod36">StringLiteral</A> &lt;RIGHTPAREN&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod17">DataverseDropStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod31">Properties</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if exists" )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;LEFTPAREN&gt; <A HREF="#prod48">Property</A> ( &lt;COMMA&gt; <A HREF="#prod48">Property</A> )* &lt;RIGHTPAREN&gt; )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod18">CreateDataverseStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod48">Property</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if not exists" )? ( "with format" &lt;STRING_LITERAL&gt; )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A> &lt;EQ&gt; ( <A HREF="#prod36">StringLiteral</A> | &lt;INTEGER_LITERAL&gt; )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod19">LoadStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod27">TypeExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;DATASET&gt; &lt;IDENTIFIER&gt; "from" ( &lt;IDENTIFIER&gt; ":" &lt;STRING_LITERAL&gt; ) ( "," &lt;IDENTIFIER&gt; ":" &lt;STRING_LITERAL&gt; )* ( "delimited" "by" &lt;STRING_LITERAL&gt; )? ( "pre-sorted" )? ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod49">RecordTypeDef</A> | <A HREF="#prod50">TypeReference</A> | <A HREF="#prod51">OrderedListTypeDef</A> | <A HREF="#prod52">UnorderedListTypeDef</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod20">EnlistStatement</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod49">RecordTypeDef</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;DATASET&gt; &lt;IDENTIFIER&gt; ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "closed" | "open" )? &lt;LEFTBRACE&gt; ( <A HREF="#prod53">RecordField</A> ( &lt;COMMA&gt; <A HREF="#prod53">RecordField</A> )* )? &lt;RIGHTBRACE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod21">DatasetDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod53">RecordField</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if not exists" )? ( &lt;LEFTPAREN&gt; &lt;IDENTIFIER&gt; &lt;RIGHTPAREN&gt; )?</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A> &lt;COLON&gt; <A HREF="#prod27">TypeExpr</A> ( &lt;QUES&gt; )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod22">InternalDatasetDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod50">TypeReference</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"partitioned" "by" "key" &lt;IDENTIFIER&gt; ( "," &lt;IDENTIFIER&gt; )* "on" &lt;IDENTIFIER&gt; ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod23">ExternalDatasetDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod51">OrderedListTypeDef</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( "hdfs" ( &lt;STRING_LITERAL&gt; ) | "splits" ( &lt;IDENTIFIER&gt; ":" &lt;STRING_LITERAL&gt; ) ( "," &lt;IDENTIFIER&gt; ":" &lt;STRING_LITERAL&gt; )* ) "using" ( &lt;STRING_LITERAL&gt; &lt;LEFTPAREN&gt; ( ( &lt;LEFTPAREN&gt; ( &lt;STRING_LITERAL&gt; ":" &lt;STRING_LITERAL&gt; ) &lt;RIGHTPAREN&gt; ) ( "," &lt;LEFTPAREN&gt; ( &lt;STRING_LITERAL&gt; ":" &lt;STRING_LITERAL&gt; ) &lt;RIGHTPAREN&gt; )* )? &lt;RIGHTPAREN&gt; ) ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTBRACKET&gt; ( <A HREF="#prod27">TypeExpr</A> ) &lt;RIGHTBRACKET&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod24">NodegroupDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod52">UnorderedListTypeDef</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if not exists" )? "on" &lt;IDENTIFIER&gt; ( "," &lt;IDENTIFIER&gt; )* ";"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTDBLBRACE&gt; ( <A HREF="#prod27">TypeExpr</A> ) &lt;RIGHTDBLBRACE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod25">TypeDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod37">FunctionName</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ( "if not exists" )? "as" ( <A HREF="#prod26">TypeExpr</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A> ( &lt;DOT&gt; <A HREF="#prod17">Identifier</A> ( "#" <A HREF="#prod17">Identifier</A> )? | "#" <A HREF="#prod17">Identifier</A> )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod26">TypeExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod25">TypeName</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod27">RecordTypeDef</A> | <A HREF="#prod28">TypeReference</A> | <A HREF="#prod29">OrderedListTypeDef</A> | <A HREF="#prod30">UnorderedListTypeDef</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod28">QualifiedName</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod27">RecordTypeDef</A></TD>
-<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( "closed" | "open" )? "{" ( <A HREF="#prod31">RecordField</A> ( "," <A HREF="#prod31">RecordField</A> )* )? "}"</TD>
-</TR>
-<TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod31">RecordField</A></TD>
-<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; ":" ( <A HREF="#prod26">TypeExpr</A> ) ( "?" )?</TD>
-</TR>
-<TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod28">TypeReference</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod17">Identifier</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
 <TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod29">OrderedListTypeDef</A></TD>
-<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"[" ( <A HREF="#prod26">TypeExpr</A> ) "]"</TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod36">StringLiteral</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod30">UnorderedListTypeDef</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod36">StringLiteral</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"&lt;" ( <A HREF="#prod26">TypeExpr</A> ) "&gt;"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;STRING_LITERAL&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod32">FunctionDeclaration</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod28">QualifiedName</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IDENTIFIER&gt; &lt;LEFTPAREN&gt; ( &lt;VARIABLE&gt; ( "," &lt;VARIABLE&gt; )* )? &lt;RIGHTPAREN&gt; "{" <A HREF="#prod6">Expression</A> "}"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A> ( &lt;DOT&gt; <A HREF="#prod17">Identifier</A> )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod2">Query</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod44">DoubleQualifiedName</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod17">Identifier</A> &lt;DOT&gt; <A HREF="#prod17">Identifier</A> ( &lt;DOT&gt; <A HREF="#prod17">Identifier</A> )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod6">Expression</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod4">FunctionDeclaration</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod33">OperatorExpr</A> | <A HREF="#prod34">IfThenElse</A> | <A HREF="#prod35">FLWOGR</A> | <A HREF="#prod36">QuantifiedExpression</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"declare" "function" <A HREF="#prod17">Identifier</A> <A HREF="#prod38">ParameterList</A> &lt;LEFTBRACE&gt; <A HREF="#prod39">Expression</A> &lt;RIGHTBRACE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod33">OperatorExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod15">Query</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod37">AndExpr</A> ( "or" <A HREF="#prod37">AndExpr</A> )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod37">AndExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod39">Expression</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod38">RelExpr</A> ( "and" <A HREF="#prod38">RelExpr</A> )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod54">OperatorExpr</A> | <A HREF="#prod55">IfThenElse</A> | <A HREF="#prod56">FLWOGR</A> | <A HREF="#prod57">QuantifiedExpression</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod38">RelExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod54">OperatorExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod39">AddExpr</A> ( ( "&lt;" | "&gt;" | "&lt;=" | "&gt;=" | "=" | "!=" | "~=" ) <A HREF="#prod39">AddExpr</A> )?</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod58">AndExpr</A> ( &lt;OR&gt; <A HREF="#prod58">AndExpr</A> )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod39">AddExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod58">AndExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod40">MultExpr</A> ( ( "+" | "-" ) <A HREF="#prod40">MultExpr</A> )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod59">RelExpr</A> ( &lt;AND&gt; <A HREF="#prod59">RelExpr</A> )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod40">MultExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod59">RelExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod41">UnionExpr</A> ( ( "*" | "/" | "%" | &lt;CARET&gt; | "idiv" ) <A HREF="#prod41">UnionExpr</A> )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod60">AddExpr</A> ( ( &lt;LT&gt; | &lt;GT&gt; | &lt;LE&gt; | &lt;GE&gt; | &lt;EQ&gt; | &lt;NE&gt; | &lt;SIMILAR&gt; ) <A HREF="#prod60">AddExpr</A> )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod41">UnionExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod60">AddExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod42">UnaryExpr</A> ( "union" ( <A HREF="#prod42">UnaryExpr</A> ) )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod61">MultExpr</A> ( ( &lt;PLUS&gt; | &lt;MINUS&gt; ) <A HREF="#prod61">MultExpr</A> )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod42">UnaryExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod61">MultExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( ( "+" | "-" ) )? <A HREF="#prod43">ValueExpr</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod62">UnionExpr</A> ( ( &lt;MUL&gt; | &lt;DIV&gt; | &lt;MOD&gt; | &lt;CARET&gt; | &lt;IDIV&gt; ) <A HREF="#prod62">UnionExpr</A> )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod43">ValueExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod62">UnionExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod44">FieldOrIndexAccessor</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod63">UnaryExpr</A> ( &lt;UNION&gt; ( <A HREF="#prod63">UnaryExpr</A> ) )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod44">FieldOrIndexAccessor</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod63">UnaryExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod45">PrimaryExpr</A> ) ( ( <A HREF="#prod46">Field</A> ) | ( <A HREF="#prod47">Index</A> ) )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( ( &lt;PLUS&gt; | &lt;MINUS&gt; ) )? <A HREF="#prod64">ValueExpr</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod46">Field</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod64">ValueExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"." &lt;IDENTIFIER&gt;</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod65">PrimaryExpr</A> ( <A HREF="#prod66">Field</A> | <A HREF="#prod67">Index</A> )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod47">Index</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod66">Field</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"[" ( <A HREF="#prod6">Expression</A> | "?" ) "]"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;DOT&gt; <A HREF="#prod17">Identifier</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod45">PrimaryExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod67">Index</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod48">Literal</A> | <A HREF="#prod49">FunctionCallExpr</A> | <A HREF="#prod50">VariableRef</A> | <A HREF="#prod51">ListConstructor</A> | <A HREF="#prod52">RecordConstructor</A> | <A HREF="#prod53">ParenthesizedExpression</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTBRACKET&gt; ( <A HREF="#prod39">Expression</A> | &lt;QUES&gt; ) &lt;RIGHTBRACKET&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod48">Literal</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod65">PrimaryExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;STRING_LITERAL&gt; | &lt;INTEGER_LITERAL&gt; | &lt;FLOAT_LITERAL&gt; | &lt;DOUBLE_LITERAL&gt; | &lt;NULL&gt; | &lt;TRUE&gt; | &lt;FALSE&gt; )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod68">FunctionCallExpr</A> | <A HREF="#prod69">Literal</A> | <A HREF="#prod70">DatasetAccessExpression</A> | <A HREF="#prod71">VariableRef</A> | <A HREF="#prod72">ListConstructor</A> | <A HREF="#prod73">RecordConstructor</A> | <A HREF="#prod74">ParenthesizedExpression</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod50">VariableRef</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod69">Literal</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod36">StringLiteral</A> | &lt;INTEGER_LITERAL&gt; | &lt;FLOAT_LITERAL&gt; | &lt;DOUBLE_LITERAL&gt; | &lt;NULL&gt; | &lt;TRUE&gt; | &lt;FALSE&gt; )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod71">VariableRef</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
 <TD ALIGN=LEFT VALIGN=BASELINE>&lt;VARIABLE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod5">Variable</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod45">Variable</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
 <TD ALIGN=LEFT VALIGN=BASELINE>&lt;VARIABLE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod51">ListConstructor</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod72">ListConstructor</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod54">OrderedListConstructor</A> | <A HREF="#prod55">UnorderedListConstructor</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod75">OrderedListConstructor</A> | <A HREF="#prod76">UnorderedListConstructor</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod54">OrderedListConstructor</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod75">OrderedListConstructor</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"[" ( <A HREF="#prod6">Expression</A> ( "," <A HREF="#prod6">Expression</A> )* )? "]"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTBRACKET&gt; ( <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; <A HREF="#prod39">Expression</A> )* )? &lt;RIGHTBRACKET&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod55">UnorderedListConstructor</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod76">UnorderedListConstructor</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"&lt;" ( <A HREF="#prod6">Expression</A> ( "," <A HREF="#prod6">Expression</A> )* )? "&gt;"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTDBLBRACE&gt; ( <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; <A HREF="#prod39">Expression</A> )* )? &lt;RIGHTDBLBRACE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod52">RecordConstructor</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod73">RecordConstructor</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"{" ( <A HREF="#prod56">FieldBinding</A> ( "," <A HREF="#prod56">FieldBinding</A> )* )? "}"</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTBRACE&gt; ( <A HREF="#prod77">FieldBinding</A> ( &lt;COMMA&gt; <A HREF="#prod77">FieldBinding</A> )* )? &lt;RIGHTBRACE&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod56">FieldBinding</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod77">FieldBinding</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod6">Expression</A> ":" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod39">Expression</A> &lt;COLON&gt; <A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod49">FunctionCallExpr</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod68">FunctionCallExpr</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;IDENTIFIER&gt; | &lt;DATASET&gt; ) &lt;LEFTPAREN&gt; ( <A HREF="#prod6">Expression</A> ( "," <A HREF="#prod6">Expression</A> )* )? &lt;RIGHTPAREN&gt;</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod37">FunctionName</A> &lt;LEFTPAREN&gt; ( <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; <A HREF="#prod39">Expression</A> )* )? &lt;RIGHTPAREN&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod53">ParenthesizedExpression</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod70">DatasetAccessExpression</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTPAREN&gt; <A HREF="#prod6">Expression</A> &lt;RIGHTPAREN&gt;</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;DATASET&gt; ( ( <A HREF="#prod17">Identifier</A> ( &lt;DOT&gt; <A HREF="#prod17">Identifier</A> )? ) | ( &lt;LEFTPAREN&gt; <A HREF="#prod39">Expression</A> &lt;RIGHTPAREN&gt; ) )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod34">IfThenElse</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod74">ParenthesizedExpression</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"if" &lt;LEFTPAREN&gt; <A HREF="#prod6">Expression</A> &lt;RIGHTPAREN&gt; "then" <A HREF="#prod6">Expression</A> "else" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LEFTPAREN&gt; <A HREF="#prod39">Expression</A> &lt;RIGHTPAREN&gt;</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod35">FLWOGR</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod55">IfThenElse</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod57">ForClause</A> | <A HREF="#prod58">LetClause</A> ) ( <A HREF="#prod59">Clause</A> )* "return" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;IF&gt; &lt;LEFTPAREN&gt; <A HREF="#prod39">Expression</A> &lt;RIGHTPAREN&gt; &lt;THEN&gt; <A HREF="#prod39">Expression</A> &lt;ELSE&gt; <A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod59">Clause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod56">FLWOGR</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod57">ForClause</A> | <A HREF="#prod58">LetClause</A> | <A HREF="#prod60">WhereClause</A> | <A HREF="#prod61">OrderbyClause</A> | <A HREF="#prod62">GroupClause</A> | <A HREF="#prod63">LimitClause</A> | <A HREF="#prod64">DistinctClause</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod78">ForClause</A> | <A HREF="#prod79">LetClause</A> ) ( <A HREF="#prod80">Clause</A> )* ( &lt;RETURN&gt; | &lt;SELECT&gt; ) <A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod57">ForClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod80">Clause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"for" <A HREF="#prod5">Variable</A> ( "at" <A HREF="#prod5">Variable</A> )? "in" ( <A HREF="#prod6">Expression</A> )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod78">ForClause</A> | <A HREF="#prod79">LetClause</A> | <A HREF="#prod81">WhereClause</A> | <A HREF="#prod82">OrderbyClause</A> | <A HREF="#prod83">GroupClause</A> | <A HREF="#prod84">LimitClause</A> | <A HREF="#prod85">DistinctClause</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod58">LetClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod78">ForClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"let" <A HREF="#prod5">Variable</A> ":=" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;FOR&gt; | &lt;FROM&gt; ) <A HREF="#prod45">Variable</A> ( &lt;AT&gt; <A HREF="#prod45">Variable</A> )? &lt;IN&gt; ( <A HREF="#prod39">Expression</A> )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod60">WhereClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod79">LetClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"where" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;LET&gt; | &lt;WITH&gt; ) <A HREF="#prod45">Variable</A> &lt;ASSIGN&gt; <A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod61">OrderbyClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod81">WhereClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( "order" "by" <A HREF="#prod6">Expression</A> ( ( "asc" ) | ( "desc" ) )? ( "," <A HREF="#prod6">Expression</A> ( ( "asc" ) | ( "desc" ) )? )* )</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;WHERE&gt; <A HREF="#prod39">Expression</A></TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod62">GroupClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod82">OrderbyClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"group" "by" ( <A HREF="#prod5">Variable</A> ":=" )? <A HREF="#prod6">Expression</A> ( "," ( <A HREF="#prod5">Variable</A> ":=" )? <A HREF="#prod6">Expression</A> )* ( "decor" <A HREF="#prod5">Variable</A> ":=" <A HREF="#prod6">Expression</A> ( "," "decor" <A HREF="#prod5">Variable</A> ":=" <A HREF="#prod6">Expression</A> )* )? "with" <A HREF="#prod50">VariableRef</A> ( "," <A HREF="#prod50">VariableRef</A> )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;ORDER&gt; &lt;BY&gt; <A HREF="#prod39">Expression</A> ( ( &lt;ASC&gt; ) | ( &lt;DESC&gt; ) )? ( &lt;COMMA&gt; <A HREF="#prod39">Expression</A> ( ( &lt;ASC&gt; ) | ( &lt;DESC&gt; ) )? )* )</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod63">LimitClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod83">GroupClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"limit" <A HREF="#prod6">Expression</A> ( "offset" <A HREF="#prod6">Expression</A> )?</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;GROUP&gt; &lt;BY&gt; ( <A HREF="#prod45">Variable</A> &lt;ASSIGN&gt; )? <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; ( <A HREF="#prod45">Variable</A> &lt;ASSIGN&gt; )? <A HREF="#prod39">Expression</A> )* ( &lt;DECOR&gt; <A HREF="#prod45">Variable</A> &lt;ASSIGN&gt; <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; &lt;DECOR&gt; <A HREF="#prod45">Variable</A> &lt;ASSIGN&gt; <A HREF="#prod39">Expression</A> )* )? &lt;WITH&gt; <A HREF="#prod71">VariableRef</A> ( &lt;COMMA&gt; <A HREF="#prod71">VariableRef</A> )*</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod64">DistinctClause</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod84">LimitClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>"distinct" "by" <A HREF="#prod6">Expression</A> ( "," <A HREF="#prod6">Expression</A> )*</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LIMIT&gt; <A HREF="#prod39">Expression</A> ( &lt;OFFSET&gt; <A HREF="#prod39">Expression</A> )?</TD>
 </TR>
 <TR>
-<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod36">QuantifiedExpression</A></TD>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod85">DistinctClause</A></TD>
 <TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
-<TD ALIGN=LEFT VALIGN=BASELINE>( ( "some" ) | ( "every" ) ) <A HREF="#prod5">Variable</A> "in" <A HREF="#prod6">Expression</A> ( "," <A HREF="#prod5">Variable</A> "in" <A HREF="#prod6">Expression</A> )* "satisfies" <A HREF="#prod6">Expression</A></TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;DISTINCT&gt; &lt;BY&gt; <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; <A HREF="#prod39">Expression</A> )*</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod57">QuantifiedExpression</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( ( &lt;SOME&gt; ) | ( &lt;EVERY&gt; ) ) <A HREF="#prod45">Variable</A> &lt;IN&gt; <A HREF="#prod39">Expression</A> ( &lt;COMMA&gt; <A HREF="#prod45">Variable</A> &lt;IN&gt; <A HREF="#prod39">Expression</A> )* &lt;SATISFIES&gt; <A HREF="#prod39">Expression</A></TD>
 </TR>
 </TABLE>
 </BODY>

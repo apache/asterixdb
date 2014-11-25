@@ -1,0 +1,3 @@
+from $user in dataset('User')
+where some $i in $user.interests satisfies $i = "movies"
+select { "name": $user.name }

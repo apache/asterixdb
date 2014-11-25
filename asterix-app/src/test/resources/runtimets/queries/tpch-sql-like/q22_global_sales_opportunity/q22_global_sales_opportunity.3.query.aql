@@ -1,0 +1,25 @@
+use dataverse tpch;
+
+declare function q22_customer_tmp() {
+  from $c in dataset('Customer')
+  select {
+    "c_acctbal": $c.c_acctbal,
+    "c_custkey": $c.c_custkey,
+    "cntrycode": substring($c.c_phone, 1, 2)
+  }
+}
+
+with $avg := avg(
+  from $c in dataset('Customer')
+  where $c.c_acctbal > 0.00
+  select $c.c_acctbal
+)
+from $ct in q22_customer_tmp()
+where $ct.c_acctbal > $avg
+group by $cntrycode := $ct.cntrycode with $ct
+order by $cntrycode
+select {
+  "cntrycode": $cntrycode,
+  "numcust": count($ct),
+  "totacctbal": sum(from $i in $ct select $i.c_acctbal)
+}

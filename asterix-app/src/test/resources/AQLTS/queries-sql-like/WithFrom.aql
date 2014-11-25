@@ -1,0 +1,4 @@
+with $users := dataset('User')
+from $user in $users
+where some $i in $user.interests satisfies $i = "movies"
+select { "name": $user.name }

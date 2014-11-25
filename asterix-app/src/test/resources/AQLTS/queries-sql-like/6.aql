@@ -1,0 +1,10 @@
+from $user in dataset('Users')
+with $similar_users :=
+   from $similar_user in dataset('Users')
+   with $similarity := jaccard_similarity($user.interests, $similar_user.interests)
+   where $user != $similar_user
+   and $similarity >= .75
+   order by $similarity desc
+   limit 10
+   select { "user_name" : $similar_user.name, "similarity" : $similarity }
+select { "user_name" : $user.name, "similar_users" : $similar_users }

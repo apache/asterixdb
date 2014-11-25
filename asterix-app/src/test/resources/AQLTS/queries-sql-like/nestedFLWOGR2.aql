@@ -1,0 +1,6 @@
+from $i in [1,2,30,from $tmp in dataset('number') select $tmp]
+from $j in {{4,5,6}}
+select
+    from $k in if ($i>$j) then $i else $j
+    where $k <10
+    select $k

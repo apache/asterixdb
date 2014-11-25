@@ -1,0 +1,4 @@
+from $user in dataset('User')
+from $mv in dataset('Movie')
+where some $i in $user.interests satisfies $i.movie = $mv.movie
+select { "name": $user.name, "movie": $mv.movie }

@@ -1,0 +1,76 @@
+use dataverse tpch;
+
+declare function tmp1() {
+  from $l2 in (
+    from $l in dataset('LineItem')
+    group by $l_orderkey1 := $l.l_orderkey, $l_suppkey1 := $l.l_suppkey with $l
+    select {
+      "l_orderkey": $l_orderkey1,
+      "l_suppkey": $l_suppkey1
+    }
+  )
+  group by $l_orderkey := $l2.l_orderkey with $l2
+  select {
+    "l_orderkey": $l_orderkey,
+    "count_suppkey": count(from $i in $l2 select $i.l_suppkey),
+    "max_suppkey": max(from $i in $l2 select $i.l_suppkey)
+  }
+}
+
+declare function tmp2() {
+  from $l2 in (
+    from $l in dataset('LineItem')
+    where $l.l_receiptdate > $l.l_commitdate
+    group by $l_orderkey1 := $l.l_orderkey, $l_suppkey1 := $l.l_suppkey with $l
+    select {
+      "l_orderkey": $l_orderkey1,
+      "l_suppkey": $l_suppkey1
+    }
+  )
+  group by $l_orderkey := $l2.l_orderkey with $l2
+  select {
+    "l_orderkey": $l_orderkey,
+    "count_suppkey": count(from $i in $l2 select $i.l_suppkey),
+    "max_suppkey": max(from $i in $l2 select $i.l_suppkey)
+  }
+}
+
+from $t4 in (
+  from $t3 in (
+    from $l in dataset('LineItem')
+    from $ns in (
+      from $n in dataset('Nation')
+      from $s in dataset('Supplier')
+      where $s.s_nationkey = $n.n_nationkey
+      select {
+        "s_name": $s.s_name,
+        "s_suppkey": $s.s_suppkey
+      }
+    )
+    where $ns.s_suppkey = $l.l_suppkey and $l.l_receiptdate > $l.l_commitdate
+    from $o in dataset('Orders')
+    where $o.o_orderkey = $l.l_orderkey
+    from $t1 in tmp1()
+    where $l.l_orderkey = $t1.l_orderkey
+    select {
+      "s_name": $ns.s_name,
+      "l_orderkey": $t1.l_orderkey,
+      "l_suppkey": $l.l_suppkey}
+  )
+  from $t2 in tmp2()
+  where $t2.count_suppkey >= 0 and $t3.l_orderkey = $t2.l_orderkey
+  select {
+    "s_name": $t3.s_name,
+    "l_suppkey": $t3.l_suppkey,
+    "l_orderkey": $t2.l_orderkey,
+    "count_suppkey": $t2.count_suppkey,
+    "max_suppkey": $t2.max_suppkey
+  }
+)
+group by $s_name := $t4.s_name with $t4
+with $numwait := count($t4)
+order by $numwait desc, $s_name
+select {
+  "s_name": $s_name,
+  "numwait": $numwait
+}

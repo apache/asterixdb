@@ -1,0 +1,8 @@
+from $sig in dataset('SIGroup')
+where $sig.name = "Movie-Watchers"
+with $similar_sigs :=
+   from $similar_sig in dataset('SIGroup')
+   where $similar_sig != $sig
+   and $similar_sig.interests ~= $sig.interests
+   select { "sig_name" : $similar_sig.name }
+select { "similar_sigs" : $similar_sigs }

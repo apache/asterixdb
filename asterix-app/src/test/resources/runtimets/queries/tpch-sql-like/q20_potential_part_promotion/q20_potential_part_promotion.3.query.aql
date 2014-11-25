@@ -1,0 +1,48 @@
+use dataverse tpch;
+
+from $t3 in (
+  from $t2 in (
+    from $l in dataset('LineItem')
+    group by $l_partkey:=$l.l_partkey, $l_suppkey:=$l.l_suppkey with $l
+    select {
+      "l_partkey": $l_partkey,
+      "l_suppkey": $l_suppkey,
+      "sum_quantity": 0.5 * sum(from $i in $l select $i.l_quantity)
+    }
+  )
+  from $pst1 in (
+    from $ps in dataset('Partsupp')
+    from $t1 in (
+      from $p in dataset('Part')
+      distinct by $p.p_partkey
+      select { "p_partkey": $p.p_partkey }
+    )
+    where $ps.ps_partkey = $t1.p_partkey
+    select {
+      "ps_suppkey": $ps.ps_suppkey,
+      "ps_partkey": $ps.ps_partkey,
+      "ps_availqty": $ps.ps_availqty
+    }
+  )
+  where $pst1.ps_partkey = $t2.l_partkey and $pst1.ps_suppkey = $t2.l_suppkey
+    and $pst1.ps_availqty > $t2.sum_quantity
+  distinct by $pst1.ps_suppkey
+  select { "ps_suppkey": $pst1.ps_suppkey }
+)
+from $t4 in (
+  from $n in dataset('Nation')
+  from $s in dataset('Supplier')
+  where  $s.s_nationkey = $n.n_nationkey
+  select {
+    "s_name": $s.s_name,
+    "s_address": $s.s_address,
+    "s_suppkey": $s.s_suppkey
+  }
+)
+where $t3.ps_suppkey = $t4.s_suppkey
+order by $t4.s_name
+select {
+  "s_name": $t4.s_name,
+  "s_address": $t4.s_address
+}
+

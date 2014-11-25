@@ -1,0 +1,67 @@
+use dataverse tpch;
+
+from $profit in (
+  from $o in dataset('Orders')
+  from $l3 in (
+    from $p in dataset('Part')
+    from $l2 in (
+      from $ps in dataset('Partsupp')
+      from $l1 in (
+        from $s1 in (
+          from $s in dataset('Supplier')
+          from $n in dataset('Nation')
+          where $n.n_nationkey = $s.s_nationkey
+          select {
+            "s_suppkey": $s.s_suppkey,
+            "n_name": $n.n_name
+          }
+        )
+        from $l in dataset('LineItem')
+        where $s1.s_suppkey = $l.l_suppkey
+        select  {
+          "l_suppkey": $l.l_suppkey,
+          "l_extendedprice": $l.l_extendedprice,
+          "l_discount": $l.l_discount,
+          "l_quantity": $l.l_quantity,
+          "l_partkey": $l.l_partkey,
+          "l_orderkey": $l.l_orderkey,
+          "n_name": $s1.n_name
+        }
+      )
+      where $ps.ps_suppkey = $l1.l_suppkey and $ps.ps_partkey = $l1.l_partkey
+      select {
+        "l_extendedprice": $l1.l_extendedprice,
+        "l_discount": $l1.l_discount,
+        "l_quantity": $l1.l_quantity,
+        "l_partkey": $l1.l_partkey,
+        "l_orderkey": $l1.l_orderkey,
+        "n_name": $l1.n_name,
+        "ps_supplycost": $ps.ps_supplycost
+      }
+    )
+    where contains($p.p_name, 'green') and $p.p_partkey = $l2.l_partkey
+    select {
+      "l_extendedprice": $l2.l_extendedprice,
+      "l_discount": $l2.l_discount,
+      "l_quantity": $l2.l_quantity,
+      "l_orderkey": $l2.l_orderkey,
+      "n_name": $l2.n_name,
+      "ps_supplycost": $l2.ps_supplycost
+    }
+  )
+  where $o.o_orderkey = $l3.l_orderkey
+  with $amount := $l3.l_extendedprice * (1 - $l3.l_discount) -  $l3.ps_supplycost * $l3.l_quantity
+  with $o_year := get-year($o.o_orderdate)
+  select {
+    "nation": $l3.n_name,
+    "o_year": $o_year,
+    "amount": $amount
+  }
+)
+group by $nation := $profit.nation, $o_year := $profit.o_year with $profit
+order by $nation, $o_year desc
+select {
+  "nation": $nation,
+  "o_year": $o_year,
+  "sum_profit": sum( from $pr in $profit select $pr.amount )
+}

@@ -1,0 +1,8 @@
+(from $l in foo1()
+select $l)
+union
+(from $l in foo2()
+select $l)
+union
+(from $l in foo3()
+select $l)

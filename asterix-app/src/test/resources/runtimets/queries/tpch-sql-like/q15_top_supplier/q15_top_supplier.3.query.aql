@@ -1,0 +1,27 @@
+use dataverse tpch;
+
+declare function revenue() {
+  from $l in dataset('LineItem')
+  where $l.l_shipdate >= '1996-01-01' and $l.l_shipdate < '1996-04-01'
+  group by $l_suppkey := $l.l_suppkey with $l
+  select {
+    "supplier_no": $l_suppkey,
+    "total_revenue": sum(from $i in $l select $i.l_extendedprice * (1 - $i.l_discount))
+  }
+}
+
+with $m := max(
+  from $r2 in revenue()
+  select $r2.total_revenue
+)
+
+from $s in dataset('Supplier')
+from $r in revenue()
+where $s.s_suppkey = $r.supplier_no and $r.total_revenue<$m+0.000000001 and $r.total_revenue>$m-0.000000001
+select {
+  "s_suppkey": $s.s_suppkey,
+  "s_name": $s.s_name,
+  "s_address": $s.s_address,
+  "s_phone": $s.s_phone,
+  "total_revenue": $r.total_revenue
+}
