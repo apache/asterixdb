@@ -21,6 +21,15 @@
   <packaging>pom</packaging>
   <name>hyracks-asterix</name>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
   <modules>
     <module>hyracks</module>
     <module>asterixdb</module>
