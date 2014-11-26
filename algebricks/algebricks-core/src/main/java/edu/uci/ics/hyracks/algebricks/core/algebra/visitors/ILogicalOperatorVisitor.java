@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
@@ -78,6 +79,8 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitPartitioningSplitOperator(PartitioningSplitOperator op, T arg) throws AlgebricksException;
 
     public R visitReplicateOperator(ReplicateOperator op, T arg) throws AlgebricksException;
+
+    public R visitMaterializeOperator(MaterializeOperator op, T arg) throws AlgebricksException;
 
     public R visitScriptOperator(ScriptOperator op, T arg) throws AlgebricksException;
 

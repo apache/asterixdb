@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -487,7 +486,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private boolean worthMaterialization(Mutable<ILogicalOperator> candidate) {
+    protected boolean worthMaterialization(Mutable<ILogicalOperator> candidate) {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) candidate.getValue();
         if (aop.getPhysicalOperator().expensiveThanMaterialization()) {
             return true;

@@ -33,6 +33,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -76,16 +77,20 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalOperator> tupleSourceOpRef = currentOpRef;
         currentOpRef = opRef;
         if (tupleSourceOpRef.getValue().getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
-            while (currentOpRef.getValue().getInputs().size() == 1
-                    && currentOpRef.getValue() instanceof AbstractScanOperator
-                    && descOrSelfIsSourceScan((AbstractLogicalOperator) currentOpRef.getValue())) {
-                if (opsAreIndependent(currentOpRef.getValue(), tupleSourceOpRef.getValue())) {
-                    /** move down the boundary if the operator is independent of the tuple source */
-                    boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
-                } else {
-                    break;
+            NestedTupleSourceOperator nts = (NestedTupleSourceOperator) tupleSourceOpRef.getValue();
+            // If the subplan input is a trivial plan, do not do the rewriting.
+            if (nts.getSourceOperator().getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                while (currentOpRef.getValue().getInputs().size() == 1
+                        && currentOpRef.getValue() instanceof AbstractScanOperator
+                        && descOrSelfIsSourceScan((AbstractLogicalOperator) currentOpRef.getValue())) {
+                    if (opsAreIndependent(currentOpRef.getValue(), tupleSourceOpRef.getValue())) {
+                        /** move down the boundary if the operator is independent of the tuple source */
+                        boundaryOpRef = currentOpRef.getValue().getInputs().get(0);
+                    } else {
+                        break;
+                    }
+                    currentOpRef = currentOpRef.getValue().getInputs().get(0);
                 }
-                currentOpRef = currentOpRef.getValue().getInputs().get(0);
             }
         }
 
