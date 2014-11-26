@@ -1,0 +1,27 @@
+/*
+ * Description     : This test case is to verify the fix for issue697
+ * https://code.google.com/p/asterixdb/issues/detail?id=697
+ * Expected Result : Success
+ * Date            : 16th Nov. 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type TestType as closed {
+  key1: int32,
+  value: int32
+}
+
+create dataset test(TestType)
+  primary key key1;
+
+
+for $i in dataset("test")
+group by $aid := $i.key1 with $i
+return {
+  "gid": $aid,
+  "avg": avg(for $j in $i where not(is-null($j.value)) return $j.value)
+}

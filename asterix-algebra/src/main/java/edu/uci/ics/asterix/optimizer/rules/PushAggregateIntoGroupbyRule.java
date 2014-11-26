@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -58,39 +59,52 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
-        HashMap<LogicalVariable, Integer> gbyAggVars = new HashMap<LogicalVariable, Integer>();
-        HashMap<LogicalVariable, GroupByOperator> gbyWithAgg = new HashMap<LogicalVariable, GroupByOperator>();
+        Map<LogicalVariable, Integer> gbyAggVars = new HashMap<LogicalVariable, Integer>();
+        Map<LogicalVariable, Integer> gbyAggVarToPlanIndex = new HashMap<LogicalVariable, Integer>();
+        Map<LogicalVariable, GroupByOperator> gbyWithAgg = new HashMap<LogicalVariable, GroupByOperator>();
+        Map<ILogicalExpression, ILogicalExpression> aggExprToVarExpr = new HashMap<ILogicalExpression, ILogicalExpression>();
         // first collect vars. referring to listified sequences
-        boolean changed = collectVarsBottomUp(opRef, context, gbyAggVars, gbyWithAgg);
+        boolean changed = collectVarsBottomUp(opRef, context, gbyAggVars, gbyWithAgg, gbyAggVarToPlanIndex,
+                aggExprToVarExpr);
         if (changed) {
-            removeRedundantListifies(opRef, context, gbyAggVars, gbyWithAgg);
+            removeRedundantListifies(opRef, context, gbyAggVars, gbyWithAgg, gbyAggVarToPlanIndex);
         }
         return changed;
     }
 
     private void removeRedundantListifies(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            HashMap<LogicalVariable, Integer> gbyAggVars, HashMap<LogicalVariable, GroupByOperator> gbyWithAgg) {
+            Map<LogicalVariable, Integer> gbyAggVars, Map<LogicalVariable, GroupByOperator> gbyWithAgg,
+            Map<LogicalVariable, Integer> gbyAggVarToPlanIndex) throws AlgebricksException {
         for (LogicalVariable aggVar : gbyAggVars.keySet()) {
             int occurs = gbyAggVars.get(aggVar);
             if (occurs == 0) {
                 GroupByOperator gbyOp = gbyWithAgg.get(aggVar);
-                AggregateOperator aggOp = (AggregateOperator) gbyOp.getNestedPlans().get(0).getRoots().get(0)
-                        .getValue();
+                AggregateOperator aggOp = (AggregateOperator) gbyOp.getNestedPlans()
+                        .get(gbyAggVarToPlanIndex.get(aggVar)).getRoots().get(0).getValue();
                 int pos = aggOp.getVariables().indexOf(aggVar);
-                aggOp.getVariables().remove(pos);
-                aggOp.getExpressions().remove(pos);
+                if (pos >= 0) {
+                    aggOp.getVariables().remove(pos);
+                    aggOp.getExpressions().remove(pos);
+                    List<LogicalVariable> producedVarsAtAgg = new ArrayList<LogicalVariable>();
+                    VariableUtilities.getProducedVariablesInDescendantsAndSelf(aggOp, producedVarsAtAgg);
+                    if (producedVarsAtAgg.isEmpty()) {
+                        gbyOp.getNestedPlans().remove(gbyAggVarToPlanIndex.get(aggVar));
+                    }
+                }
             }
         }
     }
 
     private boolean collectVarsBottomUp(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            HashMap<LogicalVariable, Integer> gbyListifyVarsCount, HashMap<LogicalVariable, GroupByOperator> gbyWithAgg)
-            throws AlgebricksException {
+            Map<LogicalVariable, Integer> gbyListifyVarsCount, Map<LogicalVariable, GroupByOperator> gbyWithAgg,
+            Map<LogicalVariable, Integer> gbyAggVarToPlanIndex,
+            Map<ILogicalExpression, ILogicalExpression> aggregateExprToVarExpr) throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         context.addToDontApplySet(this, op1);
         boolean change = false;
         for (Mutable<ILogicalOperator> child : op1.getInputs()) {
-            if (collectVarsBottomUp(child, context, gbyListifyVarsCount, gbyWithAgg)) {
+            if (collectVarsBottomUp(child, context, gbyListifyVarsCount, gbyWithAgg, gbyAggVarToPlanIndex,
+                    aggregateExprToVarExpr)) {
                 change = true;
             }
         }
@@ -112,7 +126,7 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                     AssignOperator assign = (AssignOperator) op1;
                     for (Mutable<ILogicalExpression> exprRef : assign.getExpressions()) {
                         Pair<Boolean, ILogicalExpression> p = extractAggFunctionsFromExpression(exprRef, gbyWithAgg,
-                                context);
+                                aggregateExprToVarExpr, context);
                         if (p.first) {
                             change = true;
                             exprRef.setValue(p.second);
@@ -135,7 +149,8 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                     Integer m = gbyListifyVarsCount.get(v);
                     if (m != null) {
                         GroupByOperator gbyOp = gbyWithAgg.get(v);
-                        if (pushSubplanAsAggIntoGby(opRef, gbyOp, v, gbyListifyVarsCount, gbyWithAgg, context)) {
+                        if (pushSubplanAsAggIntoGby(opRef, gbyOp, v, gbyListifyVarsCount, gbyWithAgg,
+                                gbyAggVarToPlanIndex, context)) {
                             change = true;
                         } else {
                             gbyListifyVarsCount.put(v, m + 1);
@@ -146,10 +161,16 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                 break;
             }
             case GROUP: {
-                LogicalVariable v1 = collectOneVarFromGroupOp((GroupByOperator) op1);
-                if (v1 != null) {
-                    gbyListifyVarsCount.put(v1, 0);
-                    gbyWithAgg.put(v1, (GroupByOperator) op1);
+                List<LogicalVariable> vars = collectOneVarPerAggFromGroupOp((GroupByOperator) op1);
+                if (vars != null) {
+                    for (int i = 0; i < vars.size(); i++) {
+                        LogicalVariable v = vars.get(i);
+                        if (v != null) {
+                            gbyListifyVarsCount.put(v, 0);
+                            gbyAggVarToPlanIndex.put(v, i);
+                            gbyWithAgg.put(v, (GroupByOperator) op1);
+                        }
+                    }
                 }
                 break;
             }
@@ -165,31 +186,34 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
         return change;
     }
 
-    private LogicalVariable collectOneVarFromGroupOp(GroupByOperator group) {
+    private List<LogicalVariable> collectOneVarPerAggFromGroupOp(GroupByOperator group) {
         List<ILogicalPlan> nPlans = group.getNestedPlans();
         if (nPlans == null || nPlans.size() < 1) {
             return null;
         }
 
+        List<LogicalVariable> aggVars = new ArrayList<LogicalVariable>();
         // test that the group-by computes a "listify" aggregate
-        AbstractLogicalOperator topOp = (AbstractLogicalOperator) nPlans.get(0).getRoots().get(0).getValue();
-        if (topOp.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
-            return null;
+        for (int i = 0; i < nPlans.size(); i++) {
+            AbstractLogicalOperator topOp = (AbstractLogicalOperator) nPlans.get(i).getRoots().get(0).getValue();
+            if (topOp.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+                continue;
+            }
+            AggregateOperator agg = (AggregateOperator) topOp;
+            if (agg.getVariables().size() != 1) {
+                continue;
+            }
+            ILogicalExpression expr = agg.getExpressions().get(0).getValue();
+            if (((AbstractLogicalExpression) expr).getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                continue;
+            }
+            AbstractFunctionCallExpression fceAgg = (AbstractFunctionCallExpression) expr;
+            if (fceAgg.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
+                continue;
+            }
+            aggVars.add(agg.getVariables().get(0));
         }
-        AggregateOperator agg = (AggregateOperator) topOp;
-        if (agg.getVariables().size() != 1) {
-            return null;
-        }
-        ILogicalExpression expr = agg.getExpressions().get(0).getValue();
-        if (((AbstractLogicalExpression) expr).getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return null;
-        }
-        AbstractFunctionCallExpression fceAgg = (AbstractFunctionCallExpression) expr;
-        if (fceAgg.getFunctionIdentifier() != AsterixBuiltinFunctions.LISTIFY) {
-            return null;
-        }
-
-        return agg.getVariables().get(0);
+        return aggVars;
     }
 
     /**
@@ -203,7 +227,8 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
      * @throws AlgebricksException
      */
     private Pair<Boolean, ILogicalExpression> extractAggFunctionsFromExpression(Mutable<ILogicalExpression> exprRef,
-            HashMap<LogicalVariable, GroupByOperator> gbyWithAgg, IOptimizationContext context)
+            Map<LogicalVariable, GroupByOperator> gbyWithAgg,
+            Map<ILogicalExpression, ILogicalExpression> aggregateExprToVarExpr, IOptimizationContext context)
             throws AlgebricksException {
         ILogicalExpression expr = exprRef.getValue();
         switch (expr.getExpressionTag()) {
@@ -217,19 +242,26 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                         GroupByOperator gbyOp = gbyWithAgg.get(argVar);
 
                         if (gbyOp != null) {
-                            LogicalVariable newVar = context.newVar();
-                            AggregateFunctionCallExpression aggFun = AsterixBuiltinFunctions
-                                    .makeAggregateFunctionExpression(fi, fce.getArguments());
-                            rewriteGroupByAggregate(argVar, gbyOp, aggFun, newVar, context);
-                            return new Pair<Boolean, ILogicalExpression>(Boolean.TRUE, new VariableReferenceExpression(
-                                    newVar));
+                            if (!aggregateExprToVarExpr.containsKey(expr)) {
+                                LogicalVariable newVar = context.newVar();
+                                AggregateFunctionCallExpression aggFun = AsterixBuiltinFunctions
+                                        .makeAggregateFunctionExpression(fi, fce.getArguments());
+                                rewriteGroupByAggregate(argVar, gbyOp, aggFun, newVar, context);
+                                ILogicalExpression newVarExpr = new VariableReferenceExpression(newVar);
+                                aggregateExprToVarExpr.put(expr, newVarExpr);
+                                return new Pair<Boolean, ILogicalExpression>(Boolean.TRUE, newVarExpr);
+                            } else {
+                                ILogicalExpression varExpr = aggregateExprToVarExpr.get(expr);
+                                return new Pair<Boolean, ILogicalExpression>(Boolean.TRUE, varExpr);
+                            }
                         }
                     }
                 }
 
                 boolean change = false;
                 for (Mutable<ILogicalExpression> a : fce.getArguments()) {
-                    Pair<Boolean, ILogicalExpression> aggArg = extractAggFunctionsFromExpression(a, gbyWithAgg, context);
+                    Pair<Boolean, ILogicalExpression> aggArg = extractAggFunctionsFromExpression(a, gbyWithAgg,
+                            aggregateExprToVarExpr, context);
                     if (aggArg.first.booleanValue()) {
                         a.setValue(aggArg.second);
                         change = true;
@@ -250,31 +282,34 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
     private void rewriteGroupByAggregate(LogicalVariable oldAggVar, GroupByOperator gbyOp,
             AggregateFunctionCallExpression aggFun, LogicalVariable newAggVar, IOptimizationContext context)
             throws AlgebricksException {
-        AggregateOperator aggOp = (AggregateOperator) gbyOp.getNestedPlans().get(0).getRoots().get(0).getValue();
-        int n = aggOp.getVariables().size();
-        for (int i = 0; i < n; i++) {
-            LogicalVariable v = aggOp.getVariables().get(i);
-            if (v.equals(oldAggVar)) {
-                AbstractFunctionCallExpression oldAggExpr = (AbstractFunctionCallExpression) aggOp.getExpressions()
-                        .get(i).getValue();
-                AggregateFunctionCallExpression newAggFun = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
-                        aggFun.getFunctionIdentifier(), new ArrayList<Mutable<ILogicalExpression>>());
-                for (Mutable<ILogicalExpression> arg : oldAggExpr.getArguments()) {
-                    ILogicalExpression cloned = ((AbstractLogicalExpression) arg.getValue()).cloneExpression();
-                    newAggFun.getArguments().add(new MutableObject<ILogicalExpression>(cloned));
+        for (int j = 0; j < gbyOp.getNestedPlans().size(); j++) {
+            AggregateOperator aggOp = (AggregateOperator) gbyOp.getNestedPlans().get(j).getRoots().get(0).getValue();
+            int n = aggOp.getVariables().size();
+            for (int i = 0; i < n; i++) {
+                LogicalVariable v = aggOp.getVariables().get(i);
+                if (v.equals(oldAggVar)) {
+                    AbstractFunctionCallExpression oldAggExpr = (AbstractFunctionCallExpression) aggOp.getExpressions()
+                            .get(i).getValue();
+                    AggregateFunctionCallExpression newAggFun = AsterixBuiltinFunctions
+                            .makeAggregateFunctionExpression(aggFun.getFunctionIdentifier(),
+                                    new ArrayList<Mutable<ILogicalExpression>>());
+                    for (Mutable<ILogicalExpression> arg : oldAggExpr.getArguments()) {
+                        ILogicalExpression cloned = ((AbstractLogicalExpression) arg.getValue()).cloneExpression();
+                        newAggFun.getArguments().add(new MutableObject<ILogicalExpression>(cloned));
+                    }
+                    aggOp.getVariables().add(newAggVar);
+                    aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(newAggFun));
+                    context.computeAndSetTypeEnvironmentForOperator(aggOp);
+                    break;
                 }
-                aggOp.getVariables().add(newAggVar);
-                aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(newAggFun));
-                context.computeAndSetTypeEnvironmentForOperator(aggOp);
-                break;
             }
         }
     }
 
     private boolean pushSubplanAsAggIntoGby(Mutable<ILogicalOperator> subplanOpRef, GroupByOperator gbyOp,
-            LogicalVariable varFromGroupAgg, HashMap<LogicalVariable, Integer> gbyAggVars,
-            HashMap<LogicalVariable, GroupByOperator> gbyWithAgg, IOptimizationContext context)
-            throws AlgebricksException {
+            LogicalVariable varFromGroupAgg, Map<LogicalVariable, Integer> gbyAggVars,
+            Map<LogicalVariable, GroupByOperator> gbyWithAgg, Map<LogicalVariable, Integer> gbyAggVarToPlanIndex,
+            IOptimizationContext context) throws AlgebricksException {
         SubplanOperator subplan = (SubplanOperator) subplanOpRef.getValue();
         // only free var can be varFromGroupAgg
         HashSet<LogicalVariable> freeVars = new HashSet<LogicalVariable>();
@@ -345,44 +380,47 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
             }
         }
         if (pushableNestedSubplan) {
-            Mutable<ILogicalOperator> gbyAggRef = gbyOp.getNestedPlans().get(0).getRoots().get(0);
-            AggregateOperator gbyAgg = (AggregateOperator) gbyAggRef.getValue();
-            Mutable<ILogicalOperator> gbyAggChildRef = gbyAgg.getInputs().get(0);
-            OperatorManipulationUtil.substituteVarRec(aggInSubplanOp, unnestVar,
-                    findListifiedVariable(gbyAgg, varFromGroupAgg), true, context);
-            gbyAgg.getVariables().addAll(aggInSubplanOp.getVariables());
-            gbyAgg.getExpressions().addAll(aggInSubplanOp.getExpressions());
-            for (LogicalVariable v : aggInSubplanOp.getVariables()) {
-                gbyWithAgg.put(v, gbyOp);
-                gbyAggVars.put(v, 0);
-            }
+            for (int i = 0; i < gbyOp.getNestedPlans().size(); i++) {
+                Mutable<ILogicalOperator> gbyAggRef = gbyOp.getNestedPlans().get(i).getRoots().get(0);
+                AggregateOperator gbyAgg = (AggregateOperator) gbyAggRef.getValue();
+                Mutable<ILogicalOperator> gbyAggChildRef = gbyAgg.getInputs().get(0);
+                OperatorManipulationUtil.substituteVarRec(aggInSubplanOp, unnestVar,
+                        findListifiedVariable(gbyAgg, varFromGroupAgg), true, context);
+                gbyAgg.getVariables().addAll(aggInSubplanOp.getVariables());
+                gbyAgg.getExpressions().addAll(aggInSubplanOp.getExpressions());
+                for (LogicalVariable v : aggInSubplanOp.getVariables()) {
+                    gbyWithAgg.put(v, gbyOp);
+                    gbyAggVars.put(v, 0);
+                    gbyAggVarToPlanIndex.put(v, i);
+                }
 
-            Mutable<ILogicalOperator> opRef1InSubplan = aggInSubplanOp.getInputs().get(0);
-            if (opRef1InSubplan.getValue().getInputs().size() > 0) {
-                Mutable<ILogicalOperator> opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
-                AbstractLogicalOperator op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
-                if (op2InSubplan.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
-                    List<Mutable<ILogicalOperator>> gbyInpList = gbyAgg.getInputs();
-                    gbyInpList.clear();
-                    gbyInpList.add(opRef1InSubplan);
-                    while (true) {
-                        opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
-                        op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
-                        if (op2InSubplan.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-                            List<Mutable<ILogicalOperator>> opInpList = opRef1InSubplan.getValue().getInputs();
-                            opInpList.clear();
-                            opInpList.add(gbyAggChildRef);
-                            break;
-                        }
-                        opRef1InSubplan = opRef2InSubplan;
-                        if (opRef1InSubplan.getValue().getInputs().size() == 0) {
-                            throw new IllegalStateException("PushAggregateIntoGroupbyRule: could not find UNNEST.");
+                Mutable<ILogicalOperator> opRef1InSubplan = aggInSubplanOp.getInputs().get(0);
+                if (opRef1InSubplan.getValue().getInputs().size() > 0) {
+                    Mutable<ILogicalOperator> opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
+                    AbstractLogicalOperator op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
+                    if (op2InSubplan.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                        List<Mutable<ILogicalOperator>> gbyInpList = gbyAgg.getInputs();
+                        gbyInpList.clear();
+                        gbyInpList.add(opRef1InSubplan);
+                        while (true) {
+                            opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
+                            op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
+                            if (op2InSubplan.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                                List<Mutable<ILogicalOperator>> opInpList = opRef1InSubplan.getValue().getInputs();
+                                opInpList.clear();
+                                opInpList.add(gbyAggChildRef);
+                                break;
+                            }
+                            opRef1InSubplan = opRef2InSubplan;
+                            if (opRef1InSubplan.getValue().getInputs().size() == 0) {
+                                throw new IllegalStateException("PushAggregateIntoGroupbyRule: could not find UNNEST.");
+                            }
                         }
                     }
                 }
+                subplanOpRef.setValue(subplan.getInputs().get(0).getValue());
+                OperatorPropertiesUtil.typeOpRec(gbyAggRef, context);
             }
-            subplanOpRef.setValue(subplan.getInputs().get(0).getValue());
-            OperatorPropertiesUtil.typeOpRec(gbyAggRef, context);
             return true;
         } else {
             return false;

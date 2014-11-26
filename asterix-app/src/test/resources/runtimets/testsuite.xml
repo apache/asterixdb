@@ -2078,153 +2078,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="tpch-sql-like">
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="query-issue638">
-        <output-dir compare="Text">query-issue638</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="query-issue785">
-        <output-dir compare="Text">query-issue785</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="query-issue785-2">
-        <output-dir compare="Text">query-issue785-2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="query-issue786">
-        <output-dir compare="Text">query-issue786</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="query-issue601">
-        <output-dir compare="Text">query-issue601</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q10_returned_item">
-        <output-dir compare="Text">q10_returned_item</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q10_returned_item_int64">
-       <output-dir compare="Text">q10_returned_item_int64</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q11_important_stock">
-        <output-dir compare="Text">q11_important_stock</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q12_shipping">
-        <output-dir compare="Text">q12_shipping</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q13_customer_distribution">
-        <output-dir compare="Text">q13_customer_distribution</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q14_promotion_effect">
-        <output-dir compare="Text">q14_promotion_effect</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q15_top_supplier">
-        <output-dir compare="Text">q15_top_supplier</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q16_parts_supplier_relationship">
-        <output-dir compare="Text">q16_parts_supplier_relationship</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q17_small_quantity_order_revenue">
-        <output-dir compare="Text">q17_small_quantity_order_revenue</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q17_large_gby_variant">
-        <output-dir compare="Text">q17_large_gby_variant</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q18_large_volume_customer">
-        <output-dir compare="Text">q18_large_volume_customer</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q19_discounted_revenue">
-        <output-dir compare="Text">q19_discounted_revenue</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q01_pricing_summary_report_nt">
-        <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q20_potential_part_promotion">
-        <output-dir compare="Text">q20_potential_part_promotion</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q21_suppliers_who_kept_orders_waiting">
-        <output-dir compare="Text">q21_suppliers_who_kept_orders_waiting</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q22_global_sales_opportunity">
-        <output-dir compare="Text">q22_global_sales_opportunity</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q02_minimum_cost_supplier">
-        <output-dir compare="Text">q02_minimum_cost_supplier</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q03_shipping_priority_nt">
-        <output-dir compare="Text">q03_shipping_priority_nt</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q04_order_priority">
-        <output-dir compare="Text">q04_order_priority</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q05_local_supplier_volume">
-        <output-dir compare="Text">q05_local_supplier_volume</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q06_forecast_revenue_change">
-        <output-dir compare="Text">q06_forecast_revenue_change</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q07_volume_shipping">
-        <output-dir compare="Text">q07_volume_shipping</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q08_national_market_share">
-        <output-dir compare="Text">q08_national_market_share</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="tpch-sql-like">
-      <compilation-unit name="q09_product_type_profit_nt">
-        <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
   <test-group name="writers">
     <test-case FilePath="writers">
       <compilation-unit name="print_01">
@@ -4685,6 +4538,168 @@
         </test-case>
         <test-case FilePath="tpch">
             <compilation-unit name="q09_product_type_profit_nt">
+                <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="query-issue810">
+                <output-dir compare="Text">query-issue810</output-dir>
+        </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="query-issue810-2">
+                <output-dir compare="Text">query-issue810-2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
+            <compilation-unit name="query-issue810-3">
+                <output-dir compare="Text">query-issue810-3</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="tpch-sql-like">
+        <test-case FilePath="tpch-sql-like">
+        <compilation-unit name="query-issue638">
+                <output-dir compare="Text">query-issue638</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="query-issue785">
+                <output-dir compare="Text">query-issue785</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="query-issue785-2">
+                <output-dir compare="Text">query-issue785-2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="query-issue786">
+                <output-dir compare="Text">query-issue786</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="query-issue601">
+                <output-dir compare="Text">query-issue601</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q10_returned_item">
+                <output-dir compare="Text">q10_returned_item</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q10_returned_item_int64">
+                <output-dir compare="Text">q10_returned_item_int64</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q11_important_stock">
+                <output-dir compare="Text">q11_important_stock</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q12_shipping">
+                <output-dir compare="Text">q12_shipping</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q13_customer_distribution">
+                <output-dir compare="Text">q13_customer_distribution</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q14_promotion_effect">
+                <output-dir compare="Text">q14_promotion_effect</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q15_top_supplier">
+                <output-dir compare="Text">q15_top_supplier</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q16_parts_supplier_relationship">
+                <output-dir compare="Text">q16_parts_supplier_relationship</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q17_small_quantity_order_revenue">
+                <output-dir compare="Text">q17_small_quantity_order_revenue</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q17_large_gby_variant">
+                <output-dir compare="Text">q17_large_gby_variant</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q18_large_volume_customer">
+                <output-dir compare="Text">q18_large_volume_customer</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q19_discounted_revenue">
+                <output-dir compare="Text">q19_discounted_revenue</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q01_pricing_summary_report_nt">
+                <output-dir compare="Text">q01_pricing_summary_report_nt</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q20_potential_part_promotion">
+                <output-dir compare="Text">q20_potential_part_promotion</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q21_suppliers_who_kept_orders_waiting">
+                <output-dir compare="Text">q21_suppliers_who_kept_orders_waiting</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+        <compilation-unit name="q22_global_sales_opportunity">
+            <output-dir compare="Text">q22_global_sales_opportunity</output-dir>
+        </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q02_minimum_cost_supplier">
+                <output-dir compare="Text">q02_minimum_cost_supplier</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q03_shipping_priority_nt">
+                <output-dir compare="Text">q03_shipping_priority_nt</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q04_order_priority">
+                <output-dir compare="Text">q04_order_priority</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q05_local_supplier_volume">
+                <output-dir compare="Text">q05_local_supplier_volume</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q06_forecast_revenue_change">
+                <output-dir compare="Text">q06_forecast_revenue_change</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q07_volume_shipping">
+                <output-dir compare="Text">q07_volume_shipping</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+            <compilation-unit name="q08_national_market_share">
+                <output-dir compare="Text">q08_national_market_share</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch-sql-like">
+        <compilation-unit name="q09_product_type_profit_nt">
                 <output-dir compare="Text">q09_product_type_profit_nt</output-dir>
             </compilation-unit>
         </test-case>

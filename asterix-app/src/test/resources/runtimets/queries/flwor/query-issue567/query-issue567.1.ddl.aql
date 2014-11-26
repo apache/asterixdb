@@ -1,0 +1,7 @@
+/*
+ * Description     : This test case is to verify the fix for issue567
+ * https://code.google.com/p/asterixdb/issues/detail?id=567
+ * Expected Result : Success
+ * Date            : 16th Nov. 2014
+ */
+

@@ -1,0 +1,15 @@
+/*
+ * Description  : This test case is to verify the fix for issue827
+ * https://code.google.com/p/asterixdb/issues/detail?id=827
+ * Expected Res : SUCCESS
+ * Date         : 16th Nov. 2014
+ */
+
+use dataverse tpch;
+
+let $quantities := for $l in dataset('LineItem') return $l.l_quantity
+//let $extendedprices := for $l in dataset('LineItem') return $l.l_extendedprice
+return {
+  "count_cheaps": count($quantities)
+  //"count_expensives": sum(for $e in $extendedprices return $e)
+}

@@ -1,0 +1,5 @@
+[ { "l_returnflag": "A", "l_linestatus": "F", "count_cheaps": 680i64, "count_expensives": 798i64 }
+, { "l_returnflag": "N", "l_linestatus": "F", "count_cheaps": 12i64, "count_expensives": 26i64 }
+, { "l_returnflag": "N", "l_linestatus": "O", "count_cheaps": 1345i64, "count_expensives": 1596i64 }
+, { "l_returnflag": "R", "l_linestatus": "F", "count_cheaps": 679i64, "count_expensives": 778i64 }
+ ]
