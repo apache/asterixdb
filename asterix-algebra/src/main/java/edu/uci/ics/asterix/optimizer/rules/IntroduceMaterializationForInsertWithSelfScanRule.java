@@ -17,8 +17,6 @@ package edu.uci.ics.asterix.optimizer.rules;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-import edu.uci.ics.asterix.algebra.operators.MaterializeOperator;
-import edu.uci.ics.asterix.algebra.operators.physical.MaterializePOperator;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
@@ -34,9 +32,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExtensionOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.MaterializePOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgebraicRewriteRule {
@@ -63,15 +62,12 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             MaterializePOperator materializePOperator = new MaterializePOperator(true);
             materializeOperator.setPhysicalOperator(materializePOperator);
 
-            ExtensionOperator extensionOperator = new ExtensionOperator(materializeOperator);
-            extensionOperator.setPhysicalOperator(materializePOperator);
-
-            extensionOperator.getInputs().add(
+            materializeOperator.getInputs().add(
                     new MutableObject<ILogicalOperator>(insertOp.getInputs().get(0).getValue()));
-            context.computeAndSetTypeEnvironmentForOperator(extensionOperator);
+            context.computeAndSetTypeEnvironmentForOperator(materializeOperator);
 
             insertOp.getInputs().clear();
-            insertOp.getInputs().add(new MutableObject<ILogicalOperator>(extensionOperator));
+            insertOp.getInputs().add(new MutableObject<ILogicalOperator>(materializeOperator));
             context.computeAndSetTypeEnvironmentForOperator(insertOp);
             return true;
         } else {
@@ -105,7 +101,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 AqlDataSource ds = (AqlDataSource) dataSourceScanOp.getDataSource();
-                if (ds.getDatasourceType() != AqlDataSourceType.FEED && ds.getDatasourceType() != AqlDataSourceType.ADAPTED_LOADABLE) {
+                if (ds.getDatasourceType() != AqlDataSourceType.FEED
+                        && ds.getDatasourceType() != AqlDataSourceType.ADAPTED_LOADABLE) {
                     if (((DatasetDataSource) ds).getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
                         return true;
                     }

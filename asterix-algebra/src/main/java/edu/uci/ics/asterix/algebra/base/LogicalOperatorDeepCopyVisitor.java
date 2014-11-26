@@ -46,6 +46,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
@@ -345,6 +346,12 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitReplicateOperator(ReplicateOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ILogicalOperator visitMaterializeOperator(MaterializeOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         throw new UnsupportedOperationException();
     }
