@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRe
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class NestedTupleSourceOperator extends AbstractLogicalOperator {
-    private final Mutable<ILogicalOperator> dataSourceReference;
+    private Mutable<ILogicalOperator> dataSourceReference;
 
     public NestedTupleSourceOperator(Mutable<ILogicalOperator> dataSourceReference) {
         this.dataSourceReference = dataSourceReference;
@@ -49,6 +49,10 @@ public class NestedTupleSourceOperator extends AbstractLogicalOperator {
 
     public Mutable<ILogicalOperator> getDataSourceReference() {
         return dataSourceReference;
+    }
+
+    public void setDataSourceReference(Mutable<ILogicalOperator> dataSourceReference) {
+        this.dataSourceReference = dataSourceReference;
     }
 
     @Override

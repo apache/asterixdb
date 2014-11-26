@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -23,6 +24,7 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -85,6 +87,26 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                 ILogicalPlan p = planIter.next();
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     removeUnusedAssigns(r, toRemove, context);
+                }
+            }
+
+            // Removes redundant nested plans that produces nothing
+            for (int i = opWithNest.getNestedPlans().size() - 1; i >= 0; i--) {
+                ILogicalPlan nestedPlan = opWithNest.getNestedPlans().get(i);
+                List<Mutable<ILogicalOperator>> rootsToBeRemoved = new ArrayList<Mutable<ILogicalOperator>>();
+                for (Mutable<ILogicalOperator> r : nestedPlan.getRoots()) {
+                    ILogicalOperator topOp = r.getValue();
+                    Set<LogicalVariable> producedVars = new ListSet<LogicalVariable>();
+                    VariableUtilities.getProducedVariablesInDescendantsAndSelf(topOp, producedVars);
+                    if (producedVars.size() == 0) {
+                        rootsToBeRemoved.add(r);
+                    }
+                }
+                // Makes sure the operator should have at least ONE nested plan even it is empty 
+                // (because a lot of places uses this assumption,  TODO(yingyib): clean them up).
+                if (nestedPlan.getRoots().size() == rootsToBeRemoved.size() && opWithNest.getNestedPlans().size() > 1) {
+                    nestedPlan.getRoots().removeAll(rootsToBeRemoved);
+                    opWithNest.getNestedPlans().remove(nestedPlan);
                 }
             }
         }

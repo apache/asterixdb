@@ -14,10 +14,14 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class IsomorphismUtilities {
@@ -31,6 +35,36 @@ public class IsomorphismUtilities {
     public static boolean isOperatorIsomorphic(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
         IsomorphismOperatorVisitor visitor = new IsomorphismOperatorVisitor();
         return op.accept(visitor, arg).booleanValue();
+    }
+
+    public static boolean isOperatorIsomorphicPlanSegment(ILogicalOperator op, ILogicalOperator arg)
+            throws AlgebricksException {
+        List<Mutable<ILogicalOperator>> inputs1 = op.getInputs();
+        List<Mutable<ILogicalOperator>> inputs2 = arg.getInputs();
+        if (inputs1.size() != inputs2.size())
+            return Boolean.FALSE;
+        for (int i = 0; i < inputs1.size(); i++) {
+            ILogicalOperator input1 = inputs1.get(i).getValue();
+            ILogicalOperator input2 = inputs2.get(i).getValue();
+            boolean isomorphic = isOperatorIsomorphicPlanSegment(input1, input2);
+            if (!isomorphic)
+                return Boolean.FALSE;
+        }
+        return IsomorphismUtilities.isOperatorIsomorphic(op, arg);
+    }
+
+    public static boolean isOperatorIsomorphicPlan(ILogicalPlan plan, ILogicalPlan arg) throws AlgebricksException {
+        if (plan.getRoots().size() != arg.getRoots().size()) {
+            return false;
+        }
+        for (int i = 0; i < plan.getRoots().size(); i++) {
+            ILogicalOperator topOp1 = plan.getRoots().get(i).getValue();
+            ILogicalOperator topOp2 = arg.getRoots().get(i).getValue();
+            if (!IsomorphismUtilities.isOperatorIsomorphicPlanSegment(topOp1, topOp2)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

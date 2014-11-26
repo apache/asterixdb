@@ -101,6 +101,14 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         return varList;
     }
 
+    public List<LogicalVariable> getProducedGbyVarList() {
+        List<LogicalVariable> varList = new ArrayList<LogicalVariable>(gByList.size());
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gByList) {
+            varList.add(ve.first);
+        }
+        return varList;
+    }
+
     public static String veListToString(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> vePairList) {
         StringBuilder sb = new StringBuilder();
         sb.append("[");

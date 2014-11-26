@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -32,7 +33,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleS
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.OperatorDeepCopyVisitor;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 
 public class OperatorManipulationUtil {
@@ -168,6 +171,55 @@ public class OperatorManipulationUtil {
                 }
             }
         }
+    }
+
+    public static ILogicalPlan deepCopy(ILogicalPlan plan) throws AlgebricksException {
+        List<Mutable<ILogicalOperator>> roots = plan.getRoots();
+        List<Mutable<ILogicalOperator>> newRoots = clonePipeline(roots);
+        return new ALogicalPlanImpl(newRoots);
+    }
+
+    public static ILogicalPlan deepCopy(ILogicalPlan plan, IOptimizationContext ctx) throws AlgebricksException {
+        List<Mutable<ILogicalOperator>> roots = plan.getRoots();
+        List<Mutable<ILogicalOperator>> newRoots = clonePipeline(roots);
+        cloneTypeEnvironments(ctx, roots, newRoots);
+        return new ALogicalPlanImpl(newRoots);
+    }
+
+    private static List<Mutable<ILogicalOperator>> clonePipeline(List<Mutable<ILogicalOperator>> roots)
+            throws AlgebricksException {
+        List<Mutable<ILogicalOperator>> newRoots = new ArrayList<Mutable<ILogicalOperator>>();
+        for (Mutable<ILogicalOperator> opRef : roots) {
+            newRoots.add(new MutableObject<ILogicalOperator>(bottomUpCopyOperators(opRef.getValue())));
+        }
+        return newRoots;
+    }
+
+    private static void cloneTypeEnvironments(IOptimizationContext ctx, List<Mutable<ILogicalOperator>> roots,
+            List<Mutable<ILogicalOperator>> newRoots) {
+        for (int i = 0; i < newRoots.size(); i++) {
+            Mutable<ILogicalOperator> opRef = newRoots.get(i);
+            Mutable<ILogicalOperator> oldOpRef = roots.get(i);
+            while (opRef.getValue().getInputs().size() > 0) {
+                ctx.setOutputTypeEnvironment(opRef.getValue(), ctx.getOutputTypeEnvironment(oldOpRef.getValue()));
+                opRef = opRef.getValue().getInputs().get(0);
+                oldOpRef = oldOpRef.getValue().getInputs().get(0);
+            }
+            ctx.setOutputTypeEnvironment(opRef.getValue(), ctx.getOutputTypeEnvironment(oldOpRef.getValue()));
+        }
+    }
+
+    public static ILogicalOperator bottomUpCopyOperators(ILogicalOperator op) throws AlgebricksException {
+        ILogicalOperator newOp = deepCopy(op);
+        newOp.getInputs().clear();
+        for (Mutable<ILogicalOperator> child : op.getInputs())
+            newOp.getInputs().add(new MutableObject<ILogicalOperator>(bottomUpCopyOperators(child.getValue())));
+        return newOp;
+    }
+
+    public static ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
+        OperatorDeepCopyVisitor visitor = new OperatorDeepCopyVisitor();
+        return op.accept(visitor, null);
     }
 
 }

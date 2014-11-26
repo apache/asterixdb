@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -39,6 +41,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
@@ -66,12 +69,18 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             return false;
         }
 
-        replaceOriginalAggFuncs(bi.toReplaceMap);
-
+        Set<LogicalVariable> newGbyLiveVars = new ListSet<LogicalVariable>();
+        VariableUtilities.getLiveVariables(newGbyOp, newGbyLiveVars);
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyOp.getDecorList()) {
-            LogicalVariable newDecorVar = context.newVar();
-            newGbyOp.addDecorExpression(newDecorVar, p.second.getValue());
-            p.second.setValue(new VariableReferenceExpression(newDecorVar));
+            List<LogicalVariable> usedDecorVars = new ArrayList<LogicalVariable>();
+            // p.second.getValue() should always return a VariableReferenceExpression, hence
+            // usedDecorVars should always contain only one variable.
+            p.second.getValue().getUsedVariables(usedDecorVars);
+            if (!newGbyLiveVars.contains(usedDecorVars.get(0))) {
+                LogicalVariable newDecorVar = context.newVar();
+                newGbyOp.addDecorExpression(newDecorVar, p.second.getValue());
+                p.second.setValue(new VariableReferenceExpression(newDecorVar));
+            }
         }
         newGbyOp.setExecutionMode(ExecutionMode.LOCAL);
         Object v = gbyOp.getAnnotations().get(OperatorAnnotations.USE_HASH_GROUP_BY);
@@ -175,8 +184,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             GroupByOperator newGbyOp, BookkeepingInfo bi, List<LogicalVariable> gbyVars, IOptimizationContext context)
             throws AlgebricksException {
         List<Mutable<ILogicalOperator>> pushedRoots = new ArrayList<Mutable<ILogicalOperator>>();
+        Set<SimilarAggregatesInfo> toReplaceSet = new HashSet<SimilarAggregatesInfo>();
         for (Mutable<ILogicalOperator> r : nestedPlan.getRoots()) {
-            if (!tryToPushRoot(r, oldGbyOp, newGbyOp, bi, gbyVars, context, pushedRoots)) {
+            if (!tryToPushRoot(r, oldGbyOp, newGbyOp, bi, gbyVars, context, pushedRoots, toReplaceSet)) {
                 // For now, if we cannot push everything, give up.
                 return new Pair<Boolean, ILogicalPlan>(false, null);
             }
@@ -184,21 +194,69 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         if (pushedRoots.isEmpty()) {
             return new Pair<Boolean, ILogicalPlan>(true, null);
         } else {
-            return new Pair<Boolean, ILogicalPlan>(true, new ALogicalPlanImpl(pushedRoots));
+            // Replaces the aggregation expressions in the original group-by op with new ones.
+            ILogicalPlan newPlan = new ALogicalPlanImpl(pushedRoots);
+            ILogicalPlan plan = fingIdenticalPlan(newGbyOp, newPlan);
+            replaceOriginalAggFuncs(toReplaceSet);
+            if (plan == null) {
+                return new Pair<Boolean, ILogicalPlan>(true, newPlan);
+            } else {
+                // Does not add a nested subplan to newGbyOp if there already exists an isomorphic plan.
+                Set<LogicalVariable> originalVars = new ListSet<LogicalVariable>();
+                Set<LogicalVariable> newVars = new ListSet<LogicalVariable>();
+                for (Mutable<ILogicalOperator> rootRef : pushedRoots) {
+                    VariableUtilities.getProducedVariables(rootRef.getValue(), originalVars);
+                }
+                for (Mutable<ILogicalOperator> rootRef : plan.getRoots()) {
+                    VariableUtilities.getProducedVariables(rootRef.getValue(), newVars);
+                }
+
+                // Replaces variable exprs referring to the variables produced by newPlan by 
+                // those produced by plan.
+                Iterator<LogicalVariable> originalVarIter = originalVars.iterator();
+                Iterator<LogicalVariable> newVarIter = newVars.iterator();
+                while (originalVarIter.hasNext()) {
+                    LogicalVariable originalVar = originalVarIter.next();
+                    LogicalVariable newVar = newVarIter.next();
+                    for (SimilarAggregatesInfo sai : toReplaceSet) {
+                        for (AggregateExprInfo aei : sai.simAggs) {
+                            ILogicalExpression afce = aei.aggExprRef.getValue();
+                            afce.substituteVar(originalVar, newVar);
+                        }
+                    }
+                }
+                return new Pair<Boolean, ILogicalPlan>(true, null);
+            }
         }
+    }
+
+    private ILogicalPlan fingIdenticalPlan(GroupByOperator newGbyOp, ILogicalPlan plan) throws AlgebricksException {
+        for (ILogicalPlan nestedPlan : newGbyOp.getNestedPlans()) {
+            if (IsomorphismUtilities.isOperatorIsomorphicPlan(plan, nestedPlan)) {
+                return nestedPlan;
+            }
+        }
+        return null;
     }
 
     private boolean tryToPushRoot(Mutable<ILogicalOperator> root, GroupByOperator oldGbyOp, GroupByOperator newGbyOp,
             BookkeepingInfo bi, List<LogicalVariable> gbyVars, IOptimizationContext context,
-            List<Mutable<ILogicalOperator>> toPushAccumulate) throws AlgebricksException {
+            List<Mutable<ILogicalOperator>> toPushAccumulate, Set<SimilarAggregatesInfo> toReplaceSet)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) root.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+        // Finds nested group-by if any.
+        AbstractLogicalOperator op3 = op2;
+        while (op3.getOperatorTag() != LogicalOperatorTag.GROUP && op3.getInputs().size() == 1) {
+            op3 = (AbstractLogicalOperator) op3.getInputs().get(0).getValue();
+        }
+
+        if (op3.getOperatorTag() != LogicalOperatorTag.GROUP) {
             AggregateOperator initAgg = (AggregateOperator) op1;
-            Pair<Boolean, Mutable<ILogicalOperator>> pOpRef = tryToPushAgg(initAgg, newGbyOp, bi.toReplaceMap, context);
+            Pair<Boolean, Mutable<ILogicalOperator>> pOpRef = tryToPushAgg(initAgg, newGbyOp, toReplaceSet, context);
             if (!pOpRef.first) {
                 return false;
             }
@@ -209,19 +267,14 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             bi.modifyGbyMap.put(oldGbyOp, gbyVars);
             return true;
         } else {
-            while (op2.getOperatorTag() != LogicalOperatorTag.GROUP && op2.getInputs().size() == 1) {
-                op2 = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
-            }
-            if (op2.getOperatorTag() != LogicalOperatorTag.GROUP) {
-                return false;
-            }
-            GroupByOperator nestedGby = (GroupByOperator) op2;
+            GroupByOperator nestedGby = (GroupByOperator) op3;
             List<LogicalVariable> gbyVars2 = nestedGby.getGbyVarList();
             List<LogicalVariable> concatGbyVars = new ArrayList<LogicalVariable>(gbyVars);
             concatGbyVars.addAll(gbyVars2);
             for (ILogicalPlan p : nestedGby.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r2 : p.getRoots()) {
-                    if (!tryToPushRoot(r2, nestedGby, newGbyOp, bi, concatGbyVars, context, toPushAccumulate)) {
+                    if (!tryToPushRoot(r2, nestedGby, newGbyOp, bi, concatGbyVars, context, toPushAccumulate,
+                            toReplaceSet)) {
                         return false;
                     }
                 }
