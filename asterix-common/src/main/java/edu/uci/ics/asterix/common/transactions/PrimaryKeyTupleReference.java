@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.transaction.management.service.logging;
+package edu.uci.ics.asterix.common.transactions;
 
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 

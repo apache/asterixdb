@@ -23,8 +23,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.LogRecord;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
@@ -34,6 +39,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -49,9 +55,12 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     private final int firstAvilableUserDatasetID;
     private final long capacity;
     private long used;
+    private final ILogManager logManager;
+    private LogRecord logRecord;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
-            ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID) {
+            ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID, ILogManager logManager) {
+        this.logManager = logManager;
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
         this.firstAvilableUserDatasetID = firstAvilableUserDatasetID;
@@ -60,6 +69,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         datasetInfos = new HashMap<Integer, DatasetInfo>();
         capacity = storageProperties.getMemoryComponentGlobalBudget();
         used = 0;
+        logRecord = new LogRecord();
     }
 
     @Override
@@ -80,7 +90,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         int did = getDIDfromRID(resourceID);
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
-            dsInfo = new DatasetInfo(did,!index.hasMemoryComponents());
+            dsInfo = new DatasetInfo(did, !index.hasMemoryComponents());
         } else if (dsInfo.indexes.containsKey(resourceID)) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " already exists.");
         }
@@ -286,7 +296,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         synchronized (datasetOpTrackers) {
             ILSMOperationTracker opTracker = datasetOpTrackers.get(datasetID);
             if (opTracker == null) {
-                opTracker = new PrimaryIndexOperationTracker(this, datasetID);
+                opTracker = new PrimaryIndexOperationTracker(this, datasetID, logManager);
                 datasetOpTrackers.put(datasetID, opTracker);
             }
             return opTracker;
@@ -338,7 +348,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         private final int datasetID;
         private long lastAccess;
         private int numActiveIOOps;
-        private final boolean isExternal; 
+        private final boolean isExternal;
 
         public DatasetInfo(int datasetID, boolean isExternal) {
             this.indexes = new HashMap<Long, IndexInfo>();
@@ -410,6 +420,81 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         used = 0;
     }
 
+    public synchronized void flushAllDatasets() throws HyracksDataException {
+        for (DatasetInfo dsInfo : datasetInfos.values()) {
+            flushDatasetOpenIndexes(dsInfo, false);
+        }
+    }
+
+    public synchronized void scheduleAsyncFlushForLaggingDatasets(long targetLSN) throws HyracksDataException {
+
+        List<DatasetInfo> laggingDatasets = new ArrayList<DatasetInfo>();
+        long firstLSN;
+        //find dataset with min lsn < targetLSN
+        for (DatasetInfo dsInfo : datasetInfos.values()) {
+            for (IndexInfo iInfo : dsInfo.indexes.values()) {
+                AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) ((ILSMIndex) iInfo.index)
+                        .getIOOperationCallback();
+                if (!((AbstractLSMIndex) iInfo.index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()) {
+                    firstLSN = ioCallback.getFirstLSN();
+
+                    if (firstLSN < targetLSN) {
+                        laggingDatasets.add(dsInfo);
+                        break;
+                    }
+                }
+            }
+        }
+
+        //schedule a sync flush
+        for (DatasetInfo dsInfo : laggingDatasets) {
+            flushDatasetOpenIndexes(dsInfo, true);
+        }
+
+    }
+
+    private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
+        if (!dsInfo.isExternal) {
+            synchronized (logRecord) {
+                logRecord.formFlushLogRecord(dsInfo.datasetID, null);
+                try {
+                    logManager.log(logRecord);
+                } catch (ACIDException e) {
+                    throw new HyracksDataException("could not write flush log while closing dataset", e);
+                }
+                try {
+                    logRecord.wait();
+                } catch (InterruptedException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            for (IndexInfo iInfo : dsInfo.indexes.values()) {
+                //update resource lsn
+                AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) iInfo.index
+                        .getIOOperationCallback();
+                ioOpCallback.updateLastLSN(logRecord.getLSN());
+            }
+        }
+
+        if (asyncFlush) {
+
+            for (IndexInfo iInfo : dsInfo.indexes.values()) {
+                ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(
+                        NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                accessor.scheduleFlush(iInfo.index.getIOOperationCallback());
+            }
+        } else {
+
+            for (IndexInfo iInfo : dsInfo.indexes.values()) {
+                // TODO: This is not efficient since we flush the indexes sequentially. 
+                // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
+                // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
+
+                flushAndWaitForIO(dsInfo, iInfo);
+            }
+        }
+    }
+
     private void closeDataset(DatasetInfo dsInfo) throws HyracksDataException {
         // First wait for any ongoing IO operations
         while (dsInfo.numActiveIOOps > 0) {
@@ -420,11 +505,10 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             }
         }
 
-        for (IndexInfo iInfo : dsInfo.indexes.values()) {
-            // TODO: This is not efficient since we flush the indexes sequentially. 
-            // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
-            // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
-            flushAndWaitForIO(dsInfo, iInfo);
+        try {
+            flushDatasetOpenIndexes(dsInfo, false);
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
         }
 
         for (IndexInfo iInfo : dsInfo.indexes.values()) {

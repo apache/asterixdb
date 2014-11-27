@@ -51,7 +51,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
     private SystemState systemState = SystemState.NEW_UNIVERSE;
-
+    private final long NON_SHARP_CHECKPOINT_TARGET_LSN = -1;
+    
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
         ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
@@ -101,7 +102,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             }
 
             IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-            recoveryMgr.checkpoint(true);
+            recoveryMgr.checkpoint(true, NON_SHARP_CHECKPOINT_TARGET_LSN);
 
             if (isMetadataNode) {
                 MetadataBootstrap.stopUniverse();
@@ -183,7 +184,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         lccm.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        recoveryMgr.checkpoint(true);
+        recoveryMgr.checkpoint(true, NON_SHARP_CHECKPOINT_TARGET_LSN);
 
         if (isMetadataNode) {
             IMetadataNode stub = null;

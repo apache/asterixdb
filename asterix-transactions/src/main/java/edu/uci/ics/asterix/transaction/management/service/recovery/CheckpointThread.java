@@ -14,49 +14,72 @@
  */
 package edu.uci.ics.asterix.transaction.management.service.recovery;
 
-import java.util.List;
-
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 public class CheckpointThread extends Thread {
 
     private long lsnThreshold;
     private long checkpointTermInSecs;
 
-    private long lastMinMCTFirstLSN = 0;
-
+    private final ILogManager logManager;
     private final IRecoveryManager recoveryMgr;
-    private final IIndexLifecycleManager indexLifecycleManager;
 
-    public CheckpointThread(IRecoveryManager recoveryMgr, IIndexLifecycleManager indexLifecycleManager,
+    public CheckpointThread(IRecoveryManager recoveryMgr, IIndexLifecycleManager indexLifecycleManager, ILogManager logManager,
             long lsnThreshold, long checkpointTermInSecs) {
         this.recoveryMgr = recoveryMgr;
-        this.indexLifecycleManager = indexLifecycleManager;
+        this.logManager = logManager;
         this.lsnThreshold = lsnThreshold;
         this.checkpointTermInSecs = checkpointTermInSecs;
     }
 
     @Override
     public void run() {
-        long currentMinMCTFirstLSN = 0;
+        long currentCheckpointAttemptMinLSN = -1;
+        long lastCheckpointLSN = -1;
+        long currentLogLSN = 0;
+        long targetCheckpointLSN = 0;
         while (true) {
             try {
                 sleep(checkpointTermInSecs * 1000);
             } catch (InterruptedException e) {
                 //ignore
             }
-
-            currentMinMCTFirstLSN = getMinMCTFirstLSN();
-            if (currentMinMCTFirstLSN - lastMinMCTFirstLSN > lsnThreshold) {
+            
+            
+            if(lastCheckpointLSN == -1)
+            {
                 try {
-                    recoveryMgr.checkpoint(false);
-                    lastMinMCTFirstLSN = currentMinMCTFirstLSN;
+                    //Since the system just started up after sharp checkpoint, last checkpoint LSN is considered as the min LSN of the current log partition
+                    lastCheckpointLSN = logManager.getReadableSmallestLSN();
+                } catch (Exception e) {
+                    lastCheckpointLSN = 0; 
+                }
+            }
+            
+            //1. get current log LSN
+            currentLogLSN = logManager.getAppendLSN();
+            
+            //2. if current log LSN - previous checkpoint > threshold, do checkpoint
+            if (currentLogLSN - lastCheckpointLSN > lsnThreshold) {
+                try {
+                    // in check point:
+                    //1. get minimum first LSN (MFL) from open indexes.
+                    //2. if current MinFirstLSN < targetCheckpointLSN, schedule async flush for any open index witch has first LSN < force flush delta
+                    //3. next time checkpoint comes, it will be able to remove log files which have end range less than current targetCheckpointLSN
+                   
+                    targetCheckpointLSN = lastCheckpointLSN + lsnThreshold;
+                    currentCheckpointAttemptMinLSN = recoveryMgr.checkpoint(false, targetCheckpointLSN);
+                    
+                    //checkpoint was completed at target LSN or above
+                    if(currentCheckpointAttemptMinLSN >= targetCheckpointLSN)
+                    {
+                        lastCheckpointLSN = currentCheckpointAttemptMinLSN; 
+                    }
+                    
                 } catch (ACIDException | HyracksDataException e) {
                     throw new Error("failed to checkpoint", e);
                 }
@@ -64,19 +87,4 @@ public class CheckpointThread extends Thread {
         }
     }
 
-    private long getMinMCTFirstLSN() {
-        List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
-        long minMCTFirstLSN = Long.MAX_VALUE;
-        long firstLSN;
-        if (openIndexList.size() > 0) {
-            for (IIndex index : openIndexList) {
-                firstLSN = ((AbstractLSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback())
-                        .getFirstLSN();
-                minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
-            }
-        } else {
-            minMCTFirstLSN = -1;
-        }
-        return minMCTFirstLSN;
-    }
 }

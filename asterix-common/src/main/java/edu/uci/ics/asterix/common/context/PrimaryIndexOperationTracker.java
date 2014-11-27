@@ -18,7 +18,11 @@ package edu.uci.ics.asterix.common.context;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
+import edu.uci.ics.asterix.common.transactions.LogRecord;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -32,9 +36,12 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
+    private final ILogManager logManager;
 
-    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID) {
+    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
+            ILogManager logManager) {
         super(datasetLifecycleManager, datasetID);
+        this.logManager = logManager;
         this.numActiveOperations = new AtomicInteger();
     }
 
@@ -62,7 +69,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
-            flushIfFull();
+            if (numActiveOperations.get() == 0) {
+                flushIfFull();
+            }
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
         }
@@ -71,6 +80,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     private void flushIfFull() throws HyracksDataException {
         // If we need a flush, and this is the last completing operation, then schedule the flush. 
         // TODO: Is there a better way to check if we need to flush instead of communicating with the datasetLifecycleManager each time?
+        // Maybe we could keep the set of indexes here instead of consulting the datasetLifecycleManager each time?
         Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
         boolean needsFlush = false;
         for (ILSMIndex lsmIndex : indexes) {
@@ -79,13 +89,34 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 break;
             }
         }
+
+        if (needsFlush) {
+
+            LogRecord logRecord = new LogRecord();
+            logRecord.formFlushLogRecord(datasetID, this);
+            try {
+                logManager.log(logRecord);
+            } catch (ACIDException e) {
+                throw new HyracksDataException("could not write flush log", e);
+            }
+        }
+    }
+
+    public void triggerScheduleFlush(LogRecord logRecord) throws HyracksDataException {
+        // why synchronized ??
         synchronized (this) {
-            if (needsFlush && numActiveOperations.get() == 0) {
-                for (ILSMIndex lsmIndex : indexes) {
-                    ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
-                            NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
-                    accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
-                }
+            for (ILSMIndex lsmIndex : datasetLifecycleManager.getDatasetIndexes(datasetID)) {
+                //get resource
+                ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
+                        NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+
+                //update resource lsn
+                AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) lsmIndex
+                        .getIOOperationCallback();
+                ioOpCallback.updateLastLSN(logRecord.getLSN());
+
+                //schedule flush after update
+                accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
             }
         }
     }

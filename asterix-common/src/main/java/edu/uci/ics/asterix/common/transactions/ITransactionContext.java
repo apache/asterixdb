@@ -35,7 +35,7 @@ public interface ITransactionContext {
 
     public long getLastLSN();
 
-    public void setLastLSN(long resourceId, long LSN);
+    public void setLastLSN(long LSN);
 
     public boolean isWriteTxn();
 

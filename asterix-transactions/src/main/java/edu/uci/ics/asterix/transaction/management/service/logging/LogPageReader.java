@@ -16,6 +16,8 @@ package edu.uci.ics.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.asterix.common.transactions.LogRecord;
+
 public class LogPageReader {
 
     private final ByteBuffer buffer;

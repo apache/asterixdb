@@ -52,8 +52,9 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.recoveryManager = new RecoveryManager(this);
         if (asterixAppRuntimeContextProvider != null) {
             this.checkpointThread = new CheckpointThread(recoveryManager,
-                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(),
+                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(),logManager,
                     this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
+            this.checkpointThread.start();
         } else {
             this.checkpointThread = null;
         }

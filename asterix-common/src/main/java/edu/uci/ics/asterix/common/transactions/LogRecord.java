@@ -12,18 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.logging;
+package edu.uci.ics.asterix.common.transactions;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CRC32;
 
-import edu.uci.ics.asterix.common.transactions.ILogRecord;
-import edu.uci.ics.asterix.common.transactions.IRecoveryManager.ResourceType;
-import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.context.PrimaryIndexOperationTracker;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleReference;
 import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 
@@ -59,6 +56,7 @@ import edu.uci.ics.hyracks.storage.am.common.tuples.SimpleTupleWriter;
  * 2) ENTITY_COMMIT: 25 + PKSize (5 + 12 + PKSize + 8)
  *    --> ENTITY_COMMIT_LOG_BASE_SIZE = 25
  * 3) UPDATE: 54 + PKValueSize + NewValueSize (5 + 12 + PKValueSize + 20 + 9 + NewValueSize + 8)
+ * 4) FLUSH: 5 + 8 + DatasetId(4)
  *    --> UPDATE_LOG_BASE_SIZE = 54
  */
 public class LogRecord implements ILogRecord {
@@ -90,6 +88,7 @@ public class LogRecord implements ILogRecord {
     private final SimpleTupleReference readNewValue;
     private final CRC32 checksumGen;
     private int[] PKFields;
+    private PrimaryIndexOperationTracker opTracker;
 
     public LogRecord() {
         isFlushed = new AtomicBoolean(false);
@@ -122,6 +121,11 @@ public class LogRecord implements ILogRecord {
             buffer.putInt(newValueSize);
             writeTuple(buffer, newValue, newValueSize);
         }
+        
+        if (logType == LogType.FLUSH) {
+            buffer.putInt(datasetId);
+        }
+        
         checksum = generateChecksum(buffer, beginOffset, logSize - CHECKSUM_SIZE);
         buffer.putLong(checksum);
     }
@@ -151,29 +155,38 @@ public class LogRecord implements ILogRecord {
         try {
             logType = buffer.get();
             jobId = buffer.getInt();
-            if (logType == LogType.JOB_COMMIT || logType == LogType.ABORT) {
-                datasetId = -1;
-                PKHashValue = -1;
-            } else {
-                datasetId = buffer.getInt();
-                PKHashValue = buffer.getInt();
-                PKValueSize = buffer.getInt();
-                if (PKValueSize <= 0) {
-                    throw new IllegalStateException("Primary Key Size is less than or equal to 0");
+            if(logType != LogType.FLUSH)
+            {
+                if (logType == LogType.JOB_COMMIT || logType == LogType.ABORT) {
+                    datasetId = -1;
+                    PKHashValue = -1;
+                } else {
+                    datasetId = buffer.getInt();
+                    PKHashValue = buffer.getInt();
+                    PKValueSize = buffer.getInt();
+                    if (PKValueSize <= 0) {
+                        throw new IllegalStateException("Primary Key Size is less than or equal to 0");
+                    }
+                    PKValue = readPKValue(buffer);
                 }
-                PKValue = readPKValue(buffer);
+                if (logType == LogType.UPDATE) {
+                    prevLSN = buffer.getLong();
+                    resourceId = buffer.getLong();
+                    logSize = buffer.getInt();
+                    fieldCnt = buffer.getInt();
+                    newOp = buffer.get();
+                    newValueSize = buffer.getInt();
+                    newValue = readTuple(buffer, readNewValue, fieldCnt, newValueSize);
+                } else {
+                    computeAndSetLogSize();
+                }
             }
-            if (logType == LogType.UPDATE) {
-                prevLSN = buffer.getLong();
-                resourceId = buffer.getLong();
-                logSize = buffer.getInt();
-                fieldCnt = buffer.getInt();
-                newOp = buffer.get();
-                newValueSize = buffer.getInt();
-                newValue = readTuple(buffer, readNewValue, fieldCnt, newValueSize);
-            } else {
+            else{
                 computeAndSetLogSize();
+                datasetId = buffer.getInt();
+                resourceId = 0l;
             }
+            
             checksum = buffer.getLong();
             if (checksum != generateChecksum(buffer, beginOffset, logSize - CHECKSUM_SIZE)) {
                 throw new IllegalStateException();
@@ -211,6 +224,14 @@ public class LogRecord implements ILogRecord {
         this.jobId = txnCtx.getJobId().getId();
         this.datasetId = -1;
         this.PKHashValue = -1;
+        computeAndSetLogSize();
+    }
+    
+    public void formFlushLogRecord(int datasetId, PrimaryIndexOperationTracker opTracker) {
+        this.logType = LogType.FLUSH;
+        this.jobId = -1;
+        this.datasetId = datasetId;
+        this.opTracker = opTracker;
         computeAndSetLogSize();
     }
 
@@ -254,6 +275,9 @@ public class LogRecord implements ILogRecord {
                 break;
             case LogType.ENTITY_COMMIT:
                 logSize = ENTITY_COMMIT_LOG_BASE_SIZE + PKValueSize;
+                break;
+            case LogType.FLUSH:
+                logSize = FLUSH_LOG_SIZE;
                 break;
             default:
                 throw new IllegalStateException("Unsupported Log Type");
@@ -444,5 +468,9 @@ public class LogRecord implements ILogRecord {
     @Override
     public void setPKValue(ITupleReference PKValue) {
         this.PKValue = PKValue;
+    }
+
+    public PrimaryIndexOperationTracker getOpTracker() {
+        return opTracker;
     }
 }

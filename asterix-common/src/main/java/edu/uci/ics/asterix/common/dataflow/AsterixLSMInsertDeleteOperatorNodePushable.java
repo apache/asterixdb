@@ -16,14 +16,23 @@ package edu.uci.ics.asterix.common.dataflow;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
+import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import edu.uci.ics.asterix.common.transactions.ILogManager;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.storage.am.common.api.ITupleFilterFactory;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
@@ -34,6 +43,43 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
             boolean isPrimary) {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, op);
         this.isPrimary = isPrimary;
+    }
+
+    @Override
+    public void open() throws HyracksDataException {
+        RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
+        accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
+        writeBuffer = ctx.allocateFrame();
+        writer.open();
+        indexHelper.open();
+        AbstractLSMIndex lsmIndex = (AbstractLSMIndex) indexHelper.getIndexInstance();
+        try {
+            modCallback = opDesc.getModificationOpCallbackFactory().createModificationOperationCallback(
+                    indexHelper.getResourceID(), lsmIndex, ctx);
+            indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+            ITupleFilterFactory tupleFilterFactory = opDesc.getTupleFilterFactory();
+            if (tupleFilterFactory != null) {
+                tupleFilter = tupleFilterFactory.createTupleFilter(indexHelper.getTaskContext());
+                frameTuple = new FrameTupleReference();
+            }
+            // If the index has an empty memory component, we need to set its first LSN (For soft checkpoint)
+            if (lsmIndex.isCurrentMutableComponentEmpty()) {
+                //prevent transactions from incorrectly setting the first LSN on a modified component
+                synchronized (lsmIndex.getOperationTracker()) {
+                    if (lsmIndex.isCurrentMutableComponentEmpty()) {
+                        AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) lsmIndex
+                                .getIOOperationCallback();
+                        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                                .getApplicationContext().getApplicationObject();
+                        ILogManager logManager = runtimeCtx.getTransactionSubsystem().getLogManager();
+                        ioOpCallback.setFirstLSN(logManager.getAppendLSN());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            indexHelper.close();
+            throw new HyracksDataException(e);
+        }
     }
 
     @Override

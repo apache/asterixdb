@@ -21,16 +21,19 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.context.PrimaryIndexOperationTracker;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.common.transactions.ILogPage;
 import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogRecord;
+import edu.uci.ics.asterix.common.transactions.LogType;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
-import edu.uci.ics.asterix.transaction.management.service.locking.LockManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class LogPage implements ILogPage {
 
@@ -48,6 +51,8 @@ public class LogPage implements ILogPage {
     private final ByteBuffer unlockBuffer;
     private boolean isLastPage;
     private final LinkedBlockingQueue<ILogRecord> syncCommitQ;
+    private final LinkedBlockingQueue<ILogRecord> flushQ;
+
     private FileChannel fileChannel;
     private boolean stop;
     private DatasetId reusableDsId;
@@ -66,6 +71,8 @@ public class LogPage implements ILogPage {
         flushOffset = 0;
         isLastPage = false;
         syncCommitQ = new LinkedBlockingQueue<ILogRecord>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
+        flushQ = new LinkedBlockingQueue<ILogRecord>();
+
         reusableDsId = new DatasetId(-1);
         reusableJobId = new JobId(-1);
     }
@@ -77,8 +84,10 @@ public class LogPage implements ILogPage {
     @Override
     public void append(ILogRecord logRecord, long appendLSN) {
         logRecord.writeLogRecord(appendBuffer);
-        logRecord.getTxnCtx().setLastLSN(logRecord.getLogType() == LogType.UPDATE ? logRecord.getResourceId() : -1,
-                appendLSN);
+        // mhubail Update impacted resource with the flushed lsn
+        if (logRecord.getLogType() != LogType.FLUSH) {
+            logRecord.getTxnCtx().setLastLSN(appendLSN);
+        }
         synchronized (this) {
             appendOffset += logRecord.getLogSize();
             if (IS_DEBUG_MODE) {
@@ -87,6 +96,10 @@ public class LogPage implements ILogPage {
             if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                 logRecord.isFlushed(false);
                 syncCommitQ.offer(logRecord);
+            }
+            if (logRecord.getLogType() == LogType.FLUSH) {
+                logRecord.isFlushed(false);
+                flushQ.offer(logRecord);
             }
             this.notify();
         }
@@ -205,14 +218,18 @@ public class LogPage implements ILogPage {
                     reusableJobId.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
                     reusableDsId.setId(logRecord.getDatasetId());
-                    txnSubsystem.getLockManager().unlock(reusableDsId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
+                    txnSubsystem.getLockManager()
+                            .unlock(reusableDsId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
                     txnCtx.notifyOptracker(false);
                 } else if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT) {
                     reusableJobId.setId(logRecord.getJobId());
                     txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableJobId, false);
                     txnCtx.notifyOptracker(true);
                     notifyJobTerminator();
+                } else if (logRecord.getLogType() == LogType.FLUSH) {
+                    notifyFlushTerminator();
                 }
+
                 logRecord = logPageReader.next();
             }
         }
@@ -230,6 +247,27 @@ public class LogPage implements ILogPage {
         synchronized (logRecord) {
             logRecord.isFlushed(true);
             logRecord.notifyAll();
+        }
+    }
+
+    public void notifyFlushTerminator() throws ACIDException {
+        LogRecord logRecord = null;
+        try {
+            logRecord = (LogRecord) flushQ.take();
+        } catch (InterruptedException e) {
+            //ignore
+        }
+        synchronized (logRecord) {
+            logRecord.isFlushed(true);
+            logRecord.notifyAll();
+        }
+        PrimaryIndexOperationTracker opTracker = logRecord.getOpTracker();
+        if (opTracker != null) {
+            try {
+                opTracker.triggerScheduleFlush(logRecord);
+            } catch (HyracksDataException e) {
+                throw new ACIDException(e);
+            }
         }
     }
 

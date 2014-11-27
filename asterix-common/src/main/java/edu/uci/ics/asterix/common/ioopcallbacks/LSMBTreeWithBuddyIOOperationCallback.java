@@ -36,10 +36,9 @@ public class LSMBTreeWithBuddyIOOperationCallback extends AbstractLSMIOOperation
     @Override
     public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
-            // Implies a flush IO operation.
+            // Implies a flush IO operation <Will never happen currently as Btree with buddy btree is only used with external datasets>
             synchronized (this) {
-                long lsn = immutableLastLSNs[readIndex];
-                readIndex = (readIndex + 1) % immutableLastLSNs.length;
+                long lsn = mutableLastLSNs[readIndex];
                 return lsn;
             }
         }

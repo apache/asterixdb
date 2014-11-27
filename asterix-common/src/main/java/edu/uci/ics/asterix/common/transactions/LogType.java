@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.logging;
+package edu.uci.ics.asterix.common.transactions;
 
 public class LogType {
 
@@ -20,10 +20,14 @@ public class LogType {
     public static final byte JOB_COMMIT = 1;
     public static final byte ENTITY_COMMIT = 2;
     public static final byte ABORT = 3;
+    public static final byte FLUSH = 4;
+
     private static final String STRING_UPDATE = "UPDATE";
     private static final String STRING_JOB_COMMIT = "JOB_COMMIT";
     private static final String STRING_ENTITY_COMMIT = "ENTITY_COMMIT";
     private static final String STRING_ABORT = "ABORT";
+    private static final String STRING_FLUSH = "FLUSH";
+
     private static final String STRING_INVALID_LOG_TYPE = "INVALID_LOG_TYPE";
 
     public static String toString(byte logType) {
@@ -36,6 +40,8 @@ public class LogType {
                 return STRING_ENTITY_COMMIT;
             case LogType.ABORT:
                 return STRING_ABORT;
+            case LogType.FLUSH:
+                return STRING_FLUSH;
             default:
                 return STRING_INVALID_LOG_TYPE;
         }

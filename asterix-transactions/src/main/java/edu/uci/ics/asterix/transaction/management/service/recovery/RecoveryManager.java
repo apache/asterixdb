@@ -38,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
@@ -45,8 +46,8 @@ import edu.uci.ics.asterix.common.transactions.ILogReader;
 import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.IRecoveryManager;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
+import edu.uci.ics.asterix.common.transactions.LogType;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogType;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManager;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
@@ -59,7 +60,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
 import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
@@ -213,6 +214,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 case LogType.ABORT:
                     abortLogCount++;
                     break;
+                case LogType.FLUSH:
+                    break;
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
             }
@@ -321,6 +324,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 case LogType.JOB_COMMIT:
                 case LogType.ENTITY_COMMIT:
                 case LogType.ABORT:
+                case LogType.FLUSH:
+
                     //do nothing
                     break;
 
@@ -347,9 +352,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     @Override
-    public synchronized void checkpoint(boolean isSharpCheckpoint) throws ACIDException, HyracksDataException {
+    public synchronized long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN) throws ACIDException, HyracksDataException {
 
         long minMCTFirstLSN;
+        boolean nonSharpCheckpointSucceeded = false;
+        
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting sharp checkpoint ... ");
         }
@@ -361,52 +368,26 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //   right after the new checkpoint file is written.
         File[] prevCheckpointFiles = getPreviousCheckpointFiles();
 
-        IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getIndexLifecycleManager();
-        List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
-
+        DatasetLifecycleManager datasetLifecycleManager = (DatasetLifecycleManager)txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager();
         //#. flush all in-memory components if it is the sharp checkpoint
         if (isSharpCheckpoint) {
-            ///////////////////////////////////////////////
-            //TODO : change the code inside the if statement into indexLifeCycleManager.flushAllDatasets()
-            //indexLifeCycleManager.flushAllDatasets();
-            ///////////////////////////////////////////////
-            List<BlockingIOOperationCallbackWrapper> callbackList = new LinkedList<BlockingIOOperationCallbackWrapper>();
-            for (IIndex index : openIndexList) {
-                ILSMIndex lsmIndex = (ILSMIndex) index;
-                ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE);
-                BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(
-                        lsmIndex.getIOOperationCallback());
-                callbackList.add(cb);
-                try {
-                    indexAccessor.scheduleFlush(cb);
-                } catch (HyracksDataException e) {
-                    throw new ACIDException(e);
-                }
-            }
 
-            for (BlockingIOOperationCallbackWrapper cb : callbackList) {
-                try {
-                    cb.waitForIO();
-                } catch (InterruptedException e) {
-                    throw new ACIDException(e);
-                }
-            }
+            datasetLifecycleManager.flushAllDatasets();
+
             minMCTFirstLSN = SHARP_CHECKPOINT_LSN;
         } else {
-            long firstLSN;
-            minMCTFirstLSN = Long.MAX_VALUE;
-            if (openIndexList.size() > 0) {
-                for (IIndex index : openIndexList) {
-                    firstLSN = ((AbstractLSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback())
-                            .getFirstLSN();
-                    minMCTFirstLSN = Math.min(minMCTFirstLSN, firstLSN);
-                }
-            } else {
-                minMCTFirstLSN = SHARP_CHECKPOINT_LSN;
+
+            minMCTFirstLSN = getMinFirstLSN();
+            
+            if(minMCTFirstLSN >= nonSharpCheckpointTargetLSN){
+                nonSharpCheckpointSucceeded = true;
+            }
+            else{
+                //flush datasets with indexes behind target checkpoint LSN
+                datasetLifecycleManager.scheduleAsyncFlushForLaggingDatasets(nonSharpCheckpointTargetLSN);
             }
         }
+
         CheckpointObject checkpointObject = new CheckpointObject(logMgr.getAppendLSN(), minMCTFirstLSN,
                 txnMgr.getMaxJobId(), System.currentTimeMillis());
 
@@ -454,9 +435,39 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
         }
 
+        if(nonSharpCheckpointSucceeded){
+            logMgr.deleteOldLogFiles(minMCTFirstLSN);
+        }
+        
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Completed sharp checkpoint.");
         }
+
+        //return the min LSN that was recorded in the checkpoint
+        return minMCTFirstLSN;
+    }
+
+    public long getMinFirstLSN() throws HyracksDataException
+    {
+        IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager();
+        List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
+        long firstLSN;
+        //the min first lsn can only be the current append or smaller
+        long minFirstLSN = logMgr.getAppendLSN();
+
+        if (openIndexList.size() > 0) {
+
+            for (IIndex index : openIndexList) {
+
+                AbstractLSMIOOperationCallback ioCallback =  (AbstractLSMIOOperationCallback)((ILSMIndex) index).getIOOperationCallback();
+                if(!((AbstractLSMIndex)index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()){
+                    firstLSN = ioCallback.getFirstLSN();
+                    minFirstLSN = Math.min(minFirstLSN, firstLSN);
+                }
+            }
+        }
+
+        return minFirstLSN;
     }
 
     private CheckpointObject readCheckpoint() throws ACIDException, FileNotFoundException {
@@ -628,6 +639,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     break;
 
                 case LogType.ABORT:
+                case LogType.FLUSH:
                     //ignore
                     break;
 
@@ -722,7 +734,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             } else {
                 throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }
-            ((AbstractLSMIOOperationCallback) index.getIOOperationCallback()).updateLastLSN(logRecord.getLSN());
         } catch (Exception e) {
             throw new IllegalStateException("Failed to redo", e);
         }

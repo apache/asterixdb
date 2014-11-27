@@ -41,10 +41,10 @@ public class LSMBTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
     @Override
     public long getComponentLSN(List<ILSMComponent> diskComponents) throws HyracksDataException {
         if (diskComponents == null) {
-            // Implies a flush IO operation.
+            // Implies a flush IO operation. --> moves the flush pointer
+            // Flush operation of an LSM index are executed sequentially.
             synchronized (this) {
-                long lsn = immutableLastLSNs[readIndex];
-                readIndex = (readIndex + 1) % immutableLastLSNs.length;
+                long lsn = mutableLastLSNs[readIndex];
                 return lsn;
             }
         }

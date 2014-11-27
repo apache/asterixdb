@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.transactions.ILogReader;
 import edu.uci.ics.asterix.common.transactions.ILogRecord;
+import edu.uci.ics.asterix.common.transactions.LogRecord;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 
 public class LogReader implements ILogReader {

@@ -18,8 +18,36 @@ import edu.uci.ics.asterix.common.exceptions.ACIDException;
 
 public interface ILogManager {
 
+    /**
+     * Submits a logRecord to log Manager which appends it to the log tail
+     * @param logRecord
+     * @throws ACIDException
+     */
     public void log(ILogRecord logRecord) throws ACIDException;
 
+    /**
+     * 
+     * @param isRecoveryMode
+     * @returnLogReader instance which enables reading the log files
+     */
     public ILogReader getLogReader(boolean isRecoveryMode);
+    
+    /**
+     * 
+     * @return the last LSN the log manager used
+     */
+    public long getAppendLSN(); 
+    
+    /**
+     * Deletes all log partitions which have a maximum LSN less than checkpointLSN
+     * @param checkpointLSN
+     */
+    public void deleteOldLogFiles(long checkpointLSN);
+    
+    /**
+     * 
+     * @return the smallest readable LSN on the current log partitions
+     */
+    public long getReadableSmallestLSN();
 
 }

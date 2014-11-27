@@ -42,8 +42,7 @@ public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationC
         if (diskComponents == null) {
             // Implies a flush IO operation.
             synchronized (this) {
-                long lsn = immutableLastLSNs[readIndex];
-                readIndex = (readIndex + 1) % immutableLastLSNs.length;
+                long lsn = mutableLastLSNs[readIndex];
                 return lsn;
             }
         }

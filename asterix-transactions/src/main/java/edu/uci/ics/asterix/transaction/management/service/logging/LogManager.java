@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +40,7 @@ import edu.uci.ics.asterix.common.transactions.ILogRecord;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.LogManagerProperties;
+import edu.uci.ics.asterix.common.transactions.LogType;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -58,7 +60,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final MutableLong flushLSN;
     private LinkedBlockingQueue<LogPage> emptyQ;
     private LinkedBlockingQueue<LogPage> flushQ;
-    private long appendLSN;
+    private final AtomicLong appendLSN;
     private FileChannel appendChannel;
     private LogPage appendPage;
     private LogFlusher logFlusher;
@@ -74,6 +76,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         logDir = logManagerProperties.getLogDir();
         logFilePrefix = logManagerProperties.getLogFilePrefix();
         flushLSN = new MutableLong();
+        appendLSN = new AtomicLong();
         initializeLogManager(0);
     }
 
@@ -83,23 +86,25 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         for (int i = 0; i < numLogPages; i++) {
             emptyQ.offer(new LogPage(txnSubsystem, logPageSize, flushLSN));
         }
-        appendLSN = initializeLogAnchor(nextLogFileId);
-        flushLSN.set(appendLSN);
+        appendLSN.set(initializeLogAnchor(nextLogFileId));
+        flushLSN.set(appendLSN.get());
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("LogManager starts logging in LSN: " + appendLSN);
         }
-        appendChannel = getFileChannel(appendLSN, false);
+        appendChannel = getFileChannel(appendLSN.get(), false);
         getAndInitNewPage();
         logFlusher = new LogFlusher(this, emptyQ, flushQ);
         futureLogFlusher = txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(logFlusher);
     }
-
+    
     @Override
     public void log(ILogRecord logRecord) throws ACIDException {
         if (logRecord.getLogSize() > logPageSize) {
             throw new IllegalStateException();
         }
+
         syncLog(logRecord);
+        
         if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)
                 && !logRecord.isFlushed()) {
             synchronized (logRecord) {
@@ -115,11 +120,17 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private synchronized void syncLog(ILogRecord logRecord) throws ACIDException {
-        ITransactionContext txnCtx = logRecord.getTxnCtx();
-        if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
-            throw new ACIDException("Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
+        ITransactionContext txnCtx = null;
+        
+        if(logRecord.getLogType() != LogType.FLUSH)
+        {       
+            txnCtx = logRecord.getTxnCtx();
+            if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
+                throw new ACIDException("Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
+            }
+
         }
-        if (getLogFileOffset(appendLSN) + logRecord.getLogSize() > logFileSize) {
+        if (getLogFileOffset(appendLSN.get()) + logRecord.getLogSize() > logFileSize) {
             prepareNextLogFile();
             appendPage.isFull(true);
             getAndInitNewPage();
@@ -130,8 +141,13 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         if (logRecord.getLogType() == LogType.UPDATE) {
             logRecord.setPrevLSN(txnCtx.getLastLSN());
         }
-        appendPage.append(logRecord, appendLSN);
-        appendLSN += logRecord.getLogSize();
+        appendPage.append(logRecord, appendLSN.get());
+        
+        if(logRecord.getLogType() == LogType.FLUSH)
+        {
+            logRecord.setLSN(appendLSN.get());
+        }
+        appendLSN.addAndGet(logRecord.getLogSize());
     }
 
     private void getAndInitNewPage() {
@@ -149,8 +165,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private void prepareNextLogFile() {
-        appendLSN += logFileSize - getLogFileOffset(appendLSN);
-        appendChannel = getFileChannel(appendLSN, true);
+        appendLSN.addAndGet(logFileSize - getLogFileOffset(appendLSN.get()));
+        appendChannel = getFileChannel(appendLSN.get(), true);
         appendPage.isLastPage(true);
         //[Notice]
         //the current log file channel is closed if 
@@ -170,8 +186,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return txnSubsystem;
     }
 
+    @Override
     public long getAppendLSN() {
-        return appendLSN;
+        return appendLSN.get();
     }
 
     @Override
@@ -275,6 +292,22 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         initializeLogManager(lastMaxLogFileId + 1);
     }
 
+    public void deleteOldLogFiles(long checkpointLSN){
+
+        Long checkpointLSNLogFileID = getLogFileId(checkpointLSN);
+        List<Long> logFileIds = getLogFileIds();
+        for (Long id : logFileIds) {
+
+            if(id < checkpointLSNLogFileID)
+            {
+                File file = new File(getLogFilePath(id));
+                if (!file.delete()) {
+                    throw new IllegalStateException("Failed to delete a file: " + file.getAbsolutePath());
+                }
+            }
+        }
+    }
+    
     private void terminateLogFlusher() {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Terminating LogFlusher thread ...");

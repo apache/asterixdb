@@ -28,9 +28,9 @@ import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
 import edu.uci.ics.asterix.common.transactions.ITransactionContext;
 import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.common.transactions.LogRecord;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
 import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
-import edu.uci.ics.asterix.transaction.management.service.logging.LogRecord;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
@@ -87,7 +87,6 @@ public class TransactionContext implements ITransactionContext, Serializable {
     // avoid object creations.
     // Those are used in synchronized methods.
     private MutableLong tempResourceIdForRegister;
-    private MutableLong tempResourceIdForSetLSN;
     private LogRecord logRecord;
 
     // TODO: implement transactionContext pool in order to avoid object
@@ -106,7 +105,6 @@ public class TransactionContext implements ITransactionContext, Serializable {
         indexMap = new HashMap<MutableLong, AbstractLSMIOOperationCallback>();
         primaryIndex = null;
         tempResourceIdForRegister = new MutableLong();
-        tempResourceIdForSetLSN = new MutableLong();
         logRecord = new LogRecord();
     }
 
@@ -128,20 +126,10 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     // [Notice]
     // This method is called sequentially by the LogAppender threads.
-    // However, the indexMap is concurrently read and modified through this
-    // method and registerIndexAndCallback()
     @Override
-    public void setLastLSN(long resourceId, long LSN) {
-        synchronized (indexMap) {
-            firstLSN.compareAndSet(-1, LSN);
-            lastLSN.set(Math.max(lastLSN.get(), LSN));
-            if (resourceId != -1) {
-                // Non-update log's resourceId is -1.
-                tempResourceIdForSetLSN.set(resourceId);
-                AbstractLSMIOOperationCallback ioOpCallback = indexMap.get(tempResourceIdForSetLSN);
-                ioOpCallback.updateLastLSN(LSN);
-            }
-        }
+    public void setLastLSN(long LSN) {
+        firstLSN.compareAndSet(-1, LSN);
+        lastLSN.set(Math.max(lastLSN.get(), LSN));
     }
 
     @Override

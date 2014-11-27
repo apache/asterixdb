@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.common.ioopcallbacks;
 
 import java.util.List;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
@@ -27,21 +28,26 @@ import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 
+// A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
 public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationCallback {
 
-    protected long firstLSN;
-    protected long lastLSN;
-    protected long[] immutableLastLSNs;
+    // First LSN per mutable component
+    protected long[] firstLSNs;
+    // A boolean array to keep track of flush operations
+    protected boolean[] flushRequested;
+    // I think this was meant to be mutableLastLSNs
+    // protected long[] immutableLastLSNs;
+    protected long[] mutableLastLSNs;
+    // Index of the currently flushing or next to be flushed component
     protected int readIndex;
+    // Index of the currently being written to component
     protected int writeIndex;
-
-    public AbstractLSMIOOperationCallback() {
-        resetLSNs();
-    }
 
     @Override
     public void setNumOfMutableComponents(int count) {
-        immutableLastLSNs = new long[count];
+        mutableLastLSNs = new long[count];
+        firstLSNs = new long[count];
+        flushRequested = new boolean[count];
         readIndex = 0;
         writeIndex = 0;
     }
@@ -49,17 +55,36 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     @Override
     public void beforeOperation(LSMOperationType opType) {
         if (opType == LSMOperationType.FLUSH) {
+            /*
+             * This method was called on the scheduleFlush operation.
+             * We set the lastLSN to the last LSN for the index (the LSN for the flush log)
+             * We mark the component flushing flag
+             * We then move the write pointer to the next component and sets its first LSN to the flush log LSN
+             */
             synchronized (this) {
-                immutableLastLSNs[writeIndex] = lastLSN;
-                writeIndex = (writeIndex + 1) % immutableLastLSNs.length;
-                resetLSNs();
+                flushRequested[writeIndex] = true;
+                writeIndex = (writeIndex + 1) % mutableLastLSNs.length;
+                // Set the firstLSN of the next component unless it is being flushed
+                if (writeIndex != readIndex) {
+                    firstLSNs[writeIndex] = mutableLastLSNs[writeIndex];
+                }
             }
         }
     }
 
     @Override
     public void afterFinalize(LSMOperationType opType, ILSMComponent newComponent) {
-        // Do nothing.
+        // The operation was complete and the next I/O operation for the LSM index didn't start yet
+        if (opType == LSMOperationType.FLUSH && newComponent != null) {
+            synchronized (this) {
+                flushRequested[readIndex] = false;
+                // if the component which just finished flushing is the component that will be modified next, we set its first LSN to its previous LSN
+                if (readIndex == writeIndex) {
+                    firstLSNs[writeIndex] = mutableLastLSNs[writeIndex];
+                }
+                readIndex = (readIndex + 1) % mutableLastLSNs.length;
+            }
+        }
     }
 
     public abstract long getComponentLSN(List<ILSMComponent> oldComponents) throws HyracksDataException;
@@ -98,24 +123,28 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         }
     }
 
-    protected void resetLSNs() {
-        firstLSN = -1;
-        lastLSN = -1;
-    }
-
     public void updateLastLSN(long lastLSN) {
-        if (firstLSN == -1) {
-            firstLSN = lastLSN;
+        mutableLastLSNs[writeIndex] = lastLSN;
+    }
+
+    public void setFirstLSN(long firstLSN) throws AsterixException {
+        // We make sure that this method is only called on an empty component so the first LSN is not set incorrectly
+          firstLSNs[writeIndex] = firstLSN;
+    }
+
+    public synchronized long getFirstLSN() {
+        // We make sure that this method is only called on a non-empty component so the returned LSN is meaningful
+        // The firstLSN is always the lsn of the currently being flushed component or the next to be flushed when no flush operation is on going
+        return firstLSNs[readIndex];
+    }
+
+    public synchronized boolean hasPendingFlush(){
+
+        for(int i=0; i<flushRequested.length; i++){
+            if(flushRequested[i]){
+                return true;
+            }
         }
-        this.lastLSN = Math.max(this.lastLSN, lastLSN);
+        return false;
     }
-
-    public long getFirstLSN() {
-        return firstLSN;
-    }
-
-    public long getLastLSN() {
-        return lastLSN;
-    }
-
 }
