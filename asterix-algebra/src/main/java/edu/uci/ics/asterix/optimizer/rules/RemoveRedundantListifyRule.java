@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -82,6 +83,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
     private boolean applyRuleDown(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> varSet,
             IOptimizationContext context) throws AlgebricksException {
         boolean changed = applies(opRef, varSet, context);
+        changed |= appliesForReverseCase(opRef, varSet, context);
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         VariableUtilities.getUsedVariables(op, varSet);
         if (op.hasNestedPlans()) {
@@ -195,4 +197,58 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         return true;
     }
 
+    private boolean appliesForReverseCase(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> varUsedAbove,
+            IOptimizationContext context) throws AlgebricksException {
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
+        if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+            return false;
+        }
+        AggregateOperator agg = (AggregateOperator) op1;
+        if (agg.getVariables().size() > 1 || agg.getVariables().size() <= 0) {
+            return false;
+        }
+        LogicalVariable aggVar = agg.getVariables().get(0);
+        ILogicalExpression aggFun = agg.getExpressions().get(0).getValue();
+        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) aggFun;
+        if (!AsterixBuiltinFunctions.LISTIFY.equals(f.getFunctionIdentifier())) {
+            return false;
+        }
+        if (f.getArguments().size() != 1) {
+            return false;
+        }
+        ILogicalExpression arg0 = f.getArguments().get(0).getValue();
+        if (((AbstractLogicalExpression) arg0).getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            return false;
+        }
+        LogicalVariable aggInputVar = ((VariableReferenceExpression) arg0).getVariableReference();
+
+        if (agg.getInputs().size() == 0) {
+            return false;
+        }
+        AbstractLogicalOperator op2 = (AbstractLogicalOperator) agg.getInputs().get(0).getValue();
+        if (op2.getOperatorTag() != LogicalOperatorTag.UNNEST) {
+            return false;
+        }
+        UnnestOperator unnest = (UnnestOperator) op2;
+        if (unnest.getPositionalVariable() != null) {
+            return false;
+        }
+        if (!unnest.getVariable().equals(aggInputVar)) {
+            return false;
+        }
+        List<LogicalVariable> unnestSource = new ArrayList<LogicalVariable>();
+        VariableUtilities.getUsedVariables(unnest, unnestSource);
+        if (unnestSource.size() > 1 || unnestSource.size() <= 0) {
+            return false;
+        }
+        ArrayList<LogicalVariable> assgnVars = new ArrayList<LogicalVariable>(1);
+        assgnVars.add(aggVar);
+        ArrayList<Mutable<ILogicalExpression>> assgnExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
+        assgnExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(unnestSource.get(0))));
+        AssignOperator assign = new AssignOperator(assgnVars, assgnExprs);
+        assign.getInputs().add(unnest.getInputs().get(0));
+        context.computeAndSetTypeEnvironmentForOperator(assign);
+        opRef.setValue(assign);
+        return true;
+    }
 }

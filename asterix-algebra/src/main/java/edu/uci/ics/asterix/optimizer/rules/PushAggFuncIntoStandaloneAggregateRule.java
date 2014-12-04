@@ -33,8 +33,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -59,26 +61,119 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
+        AssignOperator assignOp = (AssignOperator) op;
 
         Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
-            return false;
+        if (op2.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+            AggregateOperator aggOp = (AggregateOperator) op2;
+            // Make sure the agg expr is a listify.
+            return pushAggregateFunction(aggOp, assignOp, context);
+        } else if (op2.getOperatorTag() == LogicalOperatorTag.INNERJOIN
+                || op2.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+            AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op2;
+            // Tries to push aggregates through the join.
+            if (containsAggregate(assignOp.getExpressions()) && pushableThroughJoin(join)) {
+                pushAggregateFunctionThroughJoin(join, assignOp, context);
+                return true;
+            }
         }
-        // If there's a group by below the agg, then we want to have the agg pushed into the group by.
-        Mutable<ILogicalOperator> opRef3 = op2.getInputs().get(0);
+        return false;
+    }
+
+    /**
+     * Recursively check whether the list of expressions contains an aggregate function.
+     * 
+     * @param exprRefs
+     * @return true if the list contains an aggregate function and false otherwise.
+     */
+    private boolean containsAggregate(List<Mutable<ILogicalExpression>> exprRefs) {
+        for (Mutable<ILogicalExpression> exprRef : exprRefs) {
+            ILogicalExpression expr = exprRef.getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                continue;
+            }
+            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+            FunctionIdentifier funcIdent = AsterixBuiltinFunctions.getAggregateFunction(funcExpr
+                    .getFunctionIdentifier());
+            if (funcIdent == null) {
+                // Recursively look in func args.
+                if (containsAggregate(funcExpr.getArguments())) {
+                    return true;
+                }
+            } else {
+                // This is an aggregation function.
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check whether the join is aggregate-pushable, that is,
+     * 1) the join condition is true;
+     * 2) each join branch produces only one tuple.
+     * 
+     * @param join
+     * @return true if pushable
+     */
+    private boolean pushableThroughJoin(AbstractBinaryJoinOperator join) {
+        ILogicalExpression condition = join.getCondition().getValue();
+        if (condition.equals(ConstantExpression.TRUE)) {
+            // Checks if the aggregation functions are pushable through the join
+            boolean pushable = true;
+            for (Mutable<ILogicalOperator> branchRef : join.getInputs()) {
+                AbstractLogicalOperator branch = (AbstractLogicalOperator) branchRef.getValue();
+                if (branch.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                    pushable &= true;
+                } else if (branch.getOperatorTag() == LogicalOperatorTag.INNERJOIN
+                        || branch.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+                    AbstractBinaryJoinOperator childJoin = (AbstractBinaryJoinOperator) branch;
+                    pushable &= pushableThroughJoin(childJoin);
+                } else {
+                    pushable &= false;
+                }
+            }
+            return pushable;
+        }
+        return false;
+    }
+
+    /**
+     * Does the actual push of aggregates for qualified joins.
+     * 
+     * @param join
+     * @param assignOp
+     *            that contains aggregate function calls.
+     * @param context
+     * @throws AlgebricksException
+     */
+    private void pushAggregateFunctionThroughJoin(AbstractBinaryJoinOperator join, AssignOperator assignOp,
+            IOptimizationContext context) throws AlgebricksException {
+        for (Mutable<ILogicalOperator> branchRef : join.getInputs()) {
+            AbstractLogicalOperator branch = (AbstractLogicalOperator) branchRef.getValue();
+            if (branch.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                AggregateOperator aggOp = (AggregateOperator) branch;
+                pushAggregateFunction(aggOp, assignOp, context);
+            } else if (branch.getOperatorTag() == LogicalOperatorTag.INNERJOIN
+                    || branch.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+                AbstractBinaryJoinOperator childJoin = (AbstractBinaryJoinOperator) branch;
+                pushAggregateFunctionThroughJoin(childJoin, assignOp, context);
+            }
+        }
+    }
+
+    private boolean pushAggregateFunction(AggregateOperator aggOp, AssignOperator assignOp, IOptimizationContext context)
+            throws AlgebricksException {
+        Mutable<ILogicalOperator> opRef3 = aggOp.getInputs().get(0);
         AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
+        // If there's a group by below the agg, then we want to have the agg pushed into the group by.
         if (op3.getOperatorTag() == LogicalOperatorTag.GROUP) {
             return false;
         }
-
-        AssignOperator assignOp = (AssignOperator) op;
-        AggregateOperator aggOp = (AggregateOperator) op2;
         if (aggOp.getVariables().size() != 1) {
             return false;
         }
-
-        // Make sure the agg expr is a listify.
         ILogicalExpression aggExpr = aggOp.getExpressions().get(0).getValue();
         if (aggExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
@@ -128,7 +223,6 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
 
         context.computeAndSetTypeEnvironmentForOperator(aggOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
-
         return true;
     }
 
