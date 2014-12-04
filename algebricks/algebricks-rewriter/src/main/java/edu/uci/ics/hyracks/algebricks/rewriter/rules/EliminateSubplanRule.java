@@ -74,7 +74,8 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
         SubplanOperator subplan = (SubplanOperator) opRef.getValue();
         AbstractLogicalOperator rootOp = (AbstractLogicalOperator) subplan.getNestedPlans().get(0).getRoots().get(0)
                 .getValue();
-        if (rootOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+        if (rootOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE
+                || rootOp.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
             opRef.setValue(subplan.getInputs().get(0).getValue());
             return true;
         } else {
