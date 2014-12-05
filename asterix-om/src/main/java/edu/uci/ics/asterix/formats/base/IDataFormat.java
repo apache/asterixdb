@@ -54,9 +54,12 @@ public interface IDataFormat {
 
     public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory();
 
+    // QQQ Refactor: Make this accept an APIFramework.OutputFormat parameter
     public IPrinterFactoryProvider getPrinterFactoryProvider();
 
     public IPrinterFactoryProvider getJSONPrinterFactoryProvider();
+
+    public IPrinterFactoryProvider getCSVPrinterFactoryProvider();
 
     public INullWriterFactory getNullWriterFactory();
 

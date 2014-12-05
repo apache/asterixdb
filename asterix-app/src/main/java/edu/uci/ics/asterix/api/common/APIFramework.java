@@ -161,7 +161,8 @@ public class APIFramework {
     public enum OutputFormat {
         ADM,
         HTML,
-        JSON
+        JSON,
+        CSV
     }
 
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
@@ -361,6 +362,9 @@ public class APIFramework {
         switch (pdf) {
             case JSON:
                 builder.setPrinterProvider(format.getJSONPrinterFactoryProvider());
+                break;
+            case CSV:
+                builder.setPrinterProvider(format.getCSVPrinterFactoryProvider());
                 break;
             default:
                 builder.setPrinterProvider(format.getPrinterFactoryProvider());

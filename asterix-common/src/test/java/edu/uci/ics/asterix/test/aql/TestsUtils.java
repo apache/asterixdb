@@ -75,6 +75,7 @@ public class TestsUtils {
 
     private static void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile,
             File actualFile) throws Exception {
+        System.err.println("Expected results file: " + expectedFile.toString());
         BufferedReader readerExpected = new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile),
                 "UTF-8"));
         BufferedReader readerActual = new BufferedReader(
@@ -211,12 +212,7 @@ public class TestsUtils {
         // Create a method instance.
         GetMethod method = new GetMethod(url);
         method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
-
-        // For now, ADM means "default", which is what is returned when no
-        // explicit Accept: header is specified.
-        if (fmt == OutputFormat.JSON) {
-            method.setRequestHeader("Accept", "application/json");
-        }
+        method.setRequestHeader("Accept", fmt.mimeType());
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));

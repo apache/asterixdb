@@ -53,7 +53,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * cast of a open field and a matched closed field, and 3. put in null fields
  * when necessary.
  * Here is an example: A record { "hobby": {{"music", "coding"}}, "id": "001",
- * "name": "Person Three"} which confirms to closed type ( id: string, name:
+ * "name": "Person Three"} which conforms to closed type ( id: string, name:
  * string, hobby: {{string}}? ) can be cast to an open type (id: string ), or
  * vice versa.
  * However, if the input record is a variable, then we don't know its exact
@@ -78,29 +78,80 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        /**
-         * pattern match: sink insert assign
-         * resulting plan: sink-insert-project-assign
-         */
-        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
-        if (op1.getOperatorTag() != LogicalOperatorTag.SINK)
-            return false;
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
-        if (op2.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE)
-            return false;
-        InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
-        if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
-            return false;
+        // Depending on the operator type, we need to extract the following pieces of information.
+        AbstractLogicalOperator op;
+        ARecordType requiredRecordType;
+        LogicalVariable recordVar;
 
-        InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
-        AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
-        IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
-        ARecordType requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
-        ILogicalExpression expr = insertDeleteOperator.getPayloadExpression().getValue();
-        List<LogicalVariable> payloadVars = new ArrayList<LogicalVariable>();
-        expr.getUsedVariables(payloadVars);
-        LogicalVariable recordVar = payloadVars.get(0);
-        IVariableTypeEnvironment env = insertDeleteOperator.computeOutputTypeEnvironment(context);
+        // We identify INSERT and DISTRIBUTE_RESULT operators.
+        AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
+        switch (op1.getOperatorTag()) {
+            case SINK: {
+                /**
+                 * pattern match: sink insert assign
+                 * resulting plan: sink-insert-project-assign
+                 */
+
+                AbstractLogicalOperator op2 = (AbstractLogicalOperator) op1.getInputs().get(0).getValue();
+                if (op2.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE) {
+                    InsertDeleteOperator insertDeleteOp = (InsertDeleteOperator) op2;
+                    if (insertDeleteOp.getOperation() == InsertDeleteOperator.Kind.DELETE)
+                        return false;
+
+                    // Remember this is the operator we need to modify
+                    op = insertDeleteOp;
+
+                    // Derive the required ARecordType based on the schema of the AqlDataSource
+                    InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
+                    AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
+                    IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
+                    requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
+
+                    // Derive the Variable which we will potentially wrap with cast/null functions
+                    ILogicalExpression expr = insertDeleteOperator.getPayloadExpression().getValue();
+                    List<LogicalVariable> payloadVars = new ArrayList<LogicalVariable>();
+                    expr.getUsedVariables(payloadVars);
+                    recordVar = payloadVars.get(0);
+                }
+                else {
+                    return false;
+                }
+
+                break;
+            }
+            case DISTRIBUTE_RESULT: {
+                // First, see if there was an outputRecordType specified
+                requiredRecordType = (ARecordType) op1.getAnnotations().get("outputRecordType");
+                if (requiredRecordType == null) {
+                    return false;
+                }
+
+                // Remember this is the operator we need to modify
+                op = op1;
+
+                // The Variable we want is the (hopefully singular, hopefully record-typed) live variable
+                // of the singular input operator of the DISTRIBUTE_RESULT
+                if (op.getInputs().size() > 1) {
+                    // Hopefully not possible?
+                    throw new AlgebricksException("outputRecordType defined for expression with multiple input operators");
+                }
+                AbstractLogicalOperator input = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+                List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+                VariableUtilities.getLiveVariables(input, liveVars);
+                if (liveVars.size() > 1) {
+                    throw new AlgebricksException("Expression with multiple fields cannot be cast to outputRecordType!");
+                }
+                recordVar = liveVars.get(0);
+
+                break;
+            }
+            default: {
+                return false;
+            }
+        }
+
+        // Derive the statically-computed type of the record
+        IVariableTypeEnvironment env = op.computeOutputTypeEnvironment(context);
         IAType inputRecordType = (IAType) env.getVarType(recordVar);
 
         /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
@@ -116,11 +167,11 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         boolean cast = !compatible(requiredRecordType, inputRecordType);
 
         if (checkNull) {
-            recordVar = addWrapperFunction(requiredRecordType, recordVar, insertDeleteOp, context,
+            recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context,
                     AsterixBuiltinFunctions.NOT_NULL);
         }
         if (cast) {
-            addWrapperFunction(requiredRecordType, recordVar, insertDeleteOp, context,
+            addWrapperFunction(requiredRecordType, recordVar, op, context,
                     AsterixBuiltinFunctions.CAST_RECORD);
         }
         return cast || checkNull;

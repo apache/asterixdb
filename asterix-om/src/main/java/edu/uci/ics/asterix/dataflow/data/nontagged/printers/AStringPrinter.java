@@ -32,7 +32,8 @@ public class AStringPrinter implements IPrinter {
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         try {
-            PrintTools.writeUTF8StringWithEscapes(b, s + 1, l - 1, ps);
+            // ADM uses same escape semantics as JSON for strings
+            PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

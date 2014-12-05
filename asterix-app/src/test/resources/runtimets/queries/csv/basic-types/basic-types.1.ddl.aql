@@ -1,0 +1,10 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type "foo" as {
+  "id": int32,
+  "name": string,
+  "money": float
+};

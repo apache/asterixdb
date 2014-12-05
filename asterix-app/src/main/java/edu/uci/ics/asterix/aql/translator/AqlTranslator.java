@@ -496,19 +496,19 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             dataverseName, mdTxnCtx);
                     String filterField = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getFilterField();
                     if (compactionPolicy == null) {
-    					if (filterField != null) {
-    						// If the dataset has a filter and the user didn't specify a merge policy, then we will pick the
-    						// correlated-prefix as the default merge policy.
-    						compactionPolicy = GlobalConfig.DEFAULT_FILTERED_DATASET_COMPACTION_POLICY_NAME;
-    						compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
-    					} else {
-    						compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
-    						compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
-    					}
-    				} else {
-    					validateCompactionPolicy(compactionPolicy,
-    							compactionPolicyProperties, mdTxnCtx, false);
-    				}
+                        if (filterField != null) {
+                            // If the dataset has a filter and the user didn't specify a merge policy, then we will pick the
+                            // correlated-prefix as the default merge policy.
+                            compactionPolicy = GlobalConfig.DEFAULT_FILTERED_DATASET_COMPACTION_POLICY_NAME;
+                            compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+                        } else {
+                            compactionPolicy = GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME;
+                            compactionPolicyProperties = GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+                        }
+                    } else {
+                        validateCompactionPolicy(compactionPolicy,
+                                                 compactionPolicyProperties, mdTxnCtx, false);
+                    }
                     if (filterField != null) {
                         aRecordType.validateFilterField(filterField);
                     }
@@ -2058,6 +2058,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         // In this case (the normal case), we don't use the
                         // "response" JSONObject - just stream the results
                         // to the "out" PrintWriter
+                        if (pdf == OutputFormat.CSV) {
+                            ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), out);
+                        }
                         ResultUtils.displayResults(resultReader, out, pdf);
 
                         hcc.waitForCompletion(jobId);

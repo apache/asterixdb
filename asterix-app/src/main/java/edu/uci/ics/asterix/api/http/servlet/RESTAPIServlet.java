@@ -85,6 +85,9 @@ abstract class RESTAPIServlet extends HttpServlet {
         } else if (accept.contains("text/html")) {
             format = OutputFormat.HTML;
             response.setContentType("text/html");
+        } else if (accept.contains("text/csv")) {
+            format = OutputFormat.CSV;
+            response.setContentType("text/csv; header=present");
         } else {
             // JSON output is the default; most generally useful for a
             // programmatic HTTP API

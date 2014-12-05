@@ -26,11 +26,29 @@ public class PrintTools {
         UPPER_CASE,
     }
 
-    public static void writeUTF8StringWithEscapes(byte[] b, int s, int l, OutputStream os) throws IOException {
+
+    public static void writeUTF8StringAsCSV(byte[] b, int s, int l, OutputStream os) throws IOException {
         int stringLength = UTF8StringPointable.getUTFLength(b, s);
         int position = s + 2; // skip 2 bytes containing string size
         int maxPosition = position + stringLength;
-        os.write('\"');
+        os.write('"');
+        while (position < maxPosition) {
+            char c = UTF8StringPointable.charAt(b, position);
+            int sz = UTF8StringPointable.charSize(b, position);
+            if (c == '"') {
+                os.write('"');
+            }
+            os.write(c);
+            position += sz;
+        }
+        os.write('"');
+    }
+
+    public static void writeUTF8StringAsJSON(byte[] b, int s, int l, OutputStream os) throws IOException {
+        int stringLength = UTF8StringPointable.getUTFLength(b, s);
+        int position = s + 2; // skip 2 bytes containing string size
+        int maxPosition = position + stringLength;
+        os.write('"');
         while (position < maxPosition) {
             char c = UTF8StringPointable.charAt(b, position);
             int sz = UTF8StringPointable.charSize(b, position);

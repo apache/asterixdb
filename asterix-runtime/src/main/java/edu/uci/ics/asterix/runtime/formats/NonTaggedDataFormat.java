@@ -33,6 +33,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryIntegerInspector;
+import edu.uci.ics.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlJSONPrinterFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlNormalizedKeyComputerFactoryProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlPredicateEvaluatorFactoryProvider;
@@ -925,6 +926,11 @@ public class NonTaggedDataFormat implements IDataFormat {
     @Override
     public IPrinterFactoryProvider getJSONPrinterFactoryProvider() {
         return AqlJSONPrinterFactoryProvider.INSTANCE;
+    }
+
+    @Override
+    public IPrinterFactoryProvider getCSVPrinterFactoryProvider() {
+        return AqlCSVPrinterFactoryProvider.INSTANCE;
     }
 
     @SuppressWarnings("unchecked")

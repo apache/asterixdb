@@ -5523,6 +5523,13 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="csv">
+        <test-case FilePath="csv">
+            <compilation-unit name="basic-types">
+                <output-dir compare="CSV">basic-types</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="binary">
         <test-case FilePath="binary">
             <compilation-unit name="parse">

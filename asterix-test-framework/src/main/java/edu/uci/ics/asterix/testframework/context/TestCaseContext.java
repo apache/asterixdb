@@ -34,8 +34,9 @@ public class TestCaseContext {
      */
     public enum OutputFormat {
         NONE  ("", ""),
-        ADM   ("adm", "application/adm"),
-        JSON  ("json", "application/json");
+        ADM   ("adm", "application/x-adm"),
+        JSON  ("json", "application/json"),
+        CSV   ("csv", "text/csv");
 
         private final String extension;
         private final String mimetype;
@@ -59,6 +60,8 @@ public class TestCaseContext {
                 return OutputFormat.ADM;
             case JSON:
                 return OutputFormat.JSON;
+            case CSV:
+                return OutputFormat.CSV;
             case INSPECT:
             case IGNORE:
                 return OutputFormat.NONE;

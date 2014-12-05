@@ -56,7 +56,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
  * visit a given record, list or flat value of a given type, and print it to a
- * PrintStream in adm format.
+ * PrintStream in JSON format.
  */
 public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<PrintStream, ATypeTag>> {
 

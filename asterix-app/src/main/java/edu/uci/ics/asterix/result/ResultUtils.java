@@ -34,6 +34,7 @@ import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -60,21 +61,41 @@ public class ResultUtils {
         return s;
     }
 
+    public static void displayCSVHeader(ARecordType recordType, PrintWriter out) {
+        String[] fieldNames = recordType.getFieldNames();
+        boolean notfirst = false;
+        for (String name : fieldNames) {
+            if (notfirst) {
+                out.print(',');
+            }
+            notfirst = true;
+            out.print('"');
+            out.print(name.replace("\"", "\"\""));
+            out.print('"');
+        }
+        out.print("\r\n");
+    }
+
     public static void displayResults(ResultReader resultReader, PrintWriter out, APIFramework.OutputFormat pdf)
             throws HyracksDataException {
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
         ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
         buffer.clear();
-
         int bytesRead = resultReader.read(buffer);
         ByteBufferInputStream bbis = new ByteBufferInputStream();
+
+        // Whether we need to separate top-level ADM instances with commas
         boolean need_commas = true;
+        // Whether this is the first instance being output
         boolean notfirst = false;
+
         switch (pdf) {
             case HTML:
                 out.println("<h4>Results:</h4>");
                 out.println("<pre>");
+                // Fall through
+            case CSV:
                 need_commas = false;
                 break;
             case JSON:
@@ -85,6 +106,7 @@ public class ResultUtils {
                 out.print("[ ");
                 break;
         }
+
         if (bytesRead > 0) {
             do {
                 try {
@@ -96,13 +118,21 @@ public class ResultUtils {
                         int length = fta.getTupleEndOffset(tIndex) - start;
                         bbis.setByteBuffer(buffer, start);
                         byte[] recordBytes = new byte[length];
-                        bbis.read(recordBytes, 0, length);
-                        result = new String(recordBytes, 0, length, UTF_8);
+                        int numread = bbis.read(recordBytes, 0, length);
+                        if (pdf == APIFramework.OutputFormat.CSV) {
+                            if ( (numread > 0) && (recordBytes[numread-1] == '\n') ) {
+                                numread--;
+                            }
+                        }
+                        result = new String(recordBytes, 0, numread, UTF_8);
                         if (need_commas && notfirst) {
                             out.print(", ");
                         }
                         notfirst = true;
                         out.print(result);
+                        if (pdf == APIFramework.OutputFormat.CSV) {
+                            out.print("\r\n");
+                        }
                     }
                     buffer.clear();
                 } finally {
@@ -124,6 +154,9 @@ public class ResultUtils {
             case JSON:
             case ADM:
                 out.println(" ]");
+                break;
+            case CSV:
+                // Nothing to do
                 break;
         }
 

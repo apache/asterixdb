@@ -110,6 +110,7 @@ import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
@@ -290,6 +291,13 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
             topOp = new DistributeResultOperator(writeExprList, sink);
             topOp.getInputs().add(new MutableObject<ILogicalOperator>(project));
+
+            // Retrieve the Output RecordType (if any) and store it on
+            // the DistributeResultOperator
+            IAType outputRecordType = metadataProvider.findOutputRecordType();
+            if (outputRecordType != null) {
+                topOp.getAnnotations().put("outputRecordType", outputRecordType);
+            }
         } else {
             /** add the collection-to-sequence right before the final project, because dataset only accept non-collection records */
             LogicalVariable seqVar = context.newVar();
