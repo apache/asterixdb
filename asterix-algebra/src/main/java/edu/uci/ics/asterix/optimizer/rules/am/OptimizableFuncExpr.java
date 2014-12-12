@@ -95,6 +95,10 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         return fieldNames[index];
     }
 
+    public String[] getFieldNames() {
+        return fieldNames;
+    }
+
     @Override
     public IAlgebricksConstantValue getConstantVal(int index) {
         return constantVals[index];

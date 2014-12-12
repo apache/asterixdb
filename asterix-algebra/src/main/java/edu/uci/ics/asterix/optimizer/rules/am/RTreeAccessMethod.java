@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -167,8 +168,23 @@ public class RTreeAccessMethod implements IAccessMethod {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
 
+        Pair<IAType, Boolean> keyPairType = null;
+        //Get the type of the field from the optFuncExpr
+        for (String fieldName : ((OptimizableFuncExpr) optFuncExpr).getFieldNames()) {
+            try {
+                if (fieldName != null && recordType.getFieldType(fieldName) != null) {
+                    keyPairType = Index.getNonNullableKeyFieldType(fieldName, recordType);
+                    break;
+                }
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
+        }
+        if (keyPairType == null) {
+            return null;
+        }
+
         // Get the number of dimensions corresponding to the field indexed by chosenIndex.
-        Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(optFuncExpr.getFieldName(0), recordType);
         IAType spatialType = keyPairType.first;
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
