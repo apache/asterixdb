@@ -2145,7 +2145,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                                           "' in dataverse '" + dataverse + "'", e);
         }
         if (type == null) {
-            throw new AlgebricksException("Type name '" + typeName + " unknown in dataverse '" + dataverse +"'");
+            throw new AlgebricksException("Type name '" + typeName + "' unknown in dataverse '" + dataverse +"'");
         }
         return type.getDatatype();
     }

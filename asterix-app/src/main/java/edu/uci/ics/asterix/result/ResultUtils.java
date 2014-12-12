@@ -251,18 +251,15 @@ public class ResultUtils {
      */
     private static String extractErrorMessage(Throwable e) {
         Throwable cause = getRootCause(e);
-
-        String exceptionClassName = "";
-        String[] messageSplits = cause.toString().split(":");
-        if (messageSplits.length > 1) {
-            String fullyQualifiedExceptionClassName = messageSplits[0];
-            System.out.println(fullyQualifiedExceptionClassName);
-            String[] hierarchySplits = fullyQualifiedExceptionClassName.split("\\.");
-            if (hierarchySplits.length > 0) {
-                exceptionClassName = hierarchySplits[hierarchySplits.length - 1];
-            }
+        String fullyQualifiedExceptionClassName = cause.getClass().getName();
+        String[] hierarchySplits = fullyQualifiedExceptionClassName.split("\\.");
+        //try returning the class without package qualification
+        String exceptionClassName = hierarchySplits[hierarchySplits.length - 1];
+        String localizedMessage = cause.getLocalizedMessage();
+        if(localizedMessage == null){
+            localizedMessage = "Internal error. Please check instance logs for further details.";
         }
-        return cause.getLocalizedMessage() + " [" + exceptionClassName + "]";
+        return localizedMessage + " [" + exceptionClassName + "]";
     }
 
     /**
