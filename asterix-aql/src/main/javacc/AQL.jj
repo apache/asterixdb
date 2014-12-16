@@ -528,6 +528,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       // TODO use fctName.library
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
+      removeCurrentScope();
       return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
     }
 }
