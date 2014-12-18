@@ -61,6 +61,7 @@ import edu.uci.ics.asterix.aql.expression.OperatorType;
 import edu.uci.ics.asterix.aql.expression.OrderbyClause;
 import edu.uci.ics.asterix.aql.expression.OrderbyClause.OrderModifier;
 import edu.uci.ics.asterix.aql.expression.OrderedListTypeDefinition;
+import edu.uci.ics.asterix.aql.expression.RunStatement;
 import edu.uci.ics.asterix.aql.expression.QuantifiedExpression;
 import edu.uci.ics.asterix.aql.expression.QuantifiedPair;
 import edu.uci.ics.asterix.aql.expression.Query;
@@ -319,7 +320,7 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     public void visit(FieldAccessor fa, Integer step) throws AsterixException {
         out.println(skip(step) + "FieldAccessor [");
         fa.getExpr().accept(this, step + 1);
-        out.println(skip(step + 1) + "Field=" + ((FieldAccessor) fa).getIdent().getValue());
+        out.println(skip(step + 1) + "Field=" + fa.getIdent().getValue());
         out.println(skip(step) + "]");
 
     }
@@ -553,6 +554,12 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(CompactStatement fds, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(RunStatement stmt, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }

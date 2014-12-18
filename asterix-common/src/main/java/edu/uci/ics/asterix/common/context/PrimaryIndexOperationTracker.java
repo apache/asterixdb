@@ -91,7 +91,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
 
         if (needsFlush) {
-
             LogRecord logRecord = new LogRecord();
             logRecord.formFlushLogRecord(datasetID, this);
             try {
@@ -107,8 +106,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         synchronized (this) {
             for (ILSMIndex lsmIndex : datasetLifecycleManager.getDatasetIndexes(datasetID)) {
                 //get resource
-                ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
-                        NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
 
                 //update resource lsn
                 AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) lsmIndex
@@ -121,6 +120,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
     }
 
+    @Override
     public void exclusiveJobCommitted() throws HyracksDataException {
         numActiveOperations.set(0);
         flushIfFull();

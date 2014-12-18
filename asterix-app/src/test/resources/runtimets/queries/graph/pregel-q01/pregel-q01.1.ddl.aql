@@ -1,0 +1,47 @@
+drop dataverse Pregelix if exists;
+create dataverse Pregelix
+use dataverse Pregelix
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int32,
+        statuses_count: int32,
+        name: string,
+        followers_count: int32
+}
+
+create type TweetMessageType as open {
+       tweetid: int64,
+       user: TwitterUserType,
+       sender-location: point?,
+       send-time: datetime,
+       referred-topics: {{ string }},
+       message-text: string,
+       retweeted-from: int64, 
+       forwarded-from: int64
+}
+
+create dataset TwitterMsgs(TweetMessageType)
+    primary key tweetid;
+
+create dataset TwitterUsers(TwitterUserType)
+    primary key screen-name;
+
+    create type TMEdge as open {
+        tweetid: int64,
+        value: float?
+    }
+
+    create type TMGraph as open {
+        tweetid: int64,
+        rank-value: double?,
+        populated-by: {{TMEdge}}
+    }
+
+
+create dataset MyInputGraph(TMGraph)
+    primary key tweetid;
+
+create dataset MyOutputGraph(TMGraph)
+    primary key tweetid;

@@ -1,0 +1,16 @@
+drop dataverse Pregelix if exists;
+create dataverse Pregelix
+use dataverse Pregelix
+
+create type EdgeType as open {
+    destVertexId: int64,
+    value: float?
+}
+create type NodeType as open {
+   id: int64,
+   value: int64?,
+   edges: {{EdgeType}}
+}
+
+create dataset InputGraph(NodeType) primary key id;
+create dataset ResultGraph(NodeType) primary key id;

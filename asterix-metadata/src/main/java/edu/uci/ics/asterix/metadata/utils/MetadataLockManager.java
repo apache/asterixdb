@@ -10,13 +10,13 @@ import edu.uci.ics.asterix.metadata.entities.Dataverse;
 public class MetadataLockManager {
 
     public static MetadataLockManager INSTANCE = new MetadataLockManager();
-    private ConcurrentHashMap<String, ReentrantReadWriteLock> dataversesLocks;
-    private ConcurrentHashMap<String, DatasetLock> datasetsLocks;
-    private ConcurrentHashMap<String, ReentrantReadWriteLock> functionsLocks;
-    private ConcurrentHashMap<String, ReentrantReadWriteLock> nodeGroupsLocks;
-    private ConcurrentHashMap<String, ReentrantReadWriteLock> feedsLocks;
-    private ConcurrentHashMap<String, ReentrantReadWriteLock> compactionPolicyLocks;
-    private ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataversesLocks;
+    private final ConcurrentHashMap<String, DatasetLock> datasetsLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> functionsLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> nodeGroupsLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedsLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> compactionPolicyLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
 
     private MetadataLockManager() {
         dataversesLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
@@ -507,6 +507,27 @@ public class MetadataLockManager {
 
     public void refreshDatasetEnd(String dataverseName, String datasetFullyQualifiedName) {
         releaseExternalDatasetRefreshLock(datasetFullyQualifiedName);
+        releaseDataverseReadLock(dataverseName);
+    }
+
+    public void pregelixBegin(String dataverseName, String datasetFullyQualifiedNameFrom,
+            String datasetFullyQualifiedNameTo) {
+        acquireDataverseReadLock(dataverseName);
+
+        if (datasetFullyQualifiedNameFrom.compareTo(datasetFullyQualifiedNameTo) < 0) {
+            acquireDatasetReadLock(datasetFullyQualifiedNameFrom);
+            acquireDatasetWriteLock(datasetFullyQualifiedNameTo);
+        } else {
+            acquireDatasetWriteLock(datasetFullyQualifiedNameTo);
+            acquireDatasetReadLock(datasetFullyQualifiedNameFrom);
+        }
+    }
+
+    public void pregelixEnd(String dataverseName, String datasetFullyQualifiedNameFrom,
+            String datasetFullyQualifiedNameTo) {
+
+        releaseDatasetReadLock(datasetFullyQualifiedNameFrom);
+        releaseDatasetWriteLock(datasetFullyQualifiedNameTo);
         releaseDataverseReadLock(dataverseName);
     }
 }

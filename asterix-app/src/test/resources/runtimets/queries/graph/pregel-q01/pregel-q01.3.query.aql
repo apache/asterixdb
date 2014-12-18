@@ -1,0 +1,9 @@
+use dataverse Pregelix;
+
+run pregel("examples/pregelix-example-0.2.14-SNAPSHOT-jar-with-dependencies.jar"
+ "edu.uci.ics.pregelix.example.PageRankVertex"
+ "-ip 10.0.2.15 -port 3199 -vnum 17")
+from dataset MyInputGraph 
+to dataset MyOutputGraph;
+
+for $n in dataset MyOutputGraph return $n;

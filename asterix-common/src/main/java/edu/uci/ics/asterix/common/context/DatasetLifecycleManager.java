@@ -56,7 +56,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     private final long capacity;
     private long used;
     private final ILogManager logManager;
-    private LogRecord logRecord;
+    private final LogRecord logRecord;
 
     public DatasetLifecycleManager(AsterixStorageProperties storageProperties,
             ILocalResourceRepository resourceRepository, int firstAvilableUserDatasetID, ILogManager logManager) {
@@ -231,7 +231,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
     private void flushAndWaitForIO(DatasetInfo dsInfo, IndexInfo iInfo) throws HyracksDataException {
         if (iInfo.isOpen) {
-            ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
+            ILSMIndexAccessor accessor = iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             accessor.scheduleFlush(iInfo.index.getIOOperationCallback());
         }
@@ -336,7 +336,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     private static class IndexInfo extends Info {
-        private ILSMIndex index;
+        private final ILSMIndex index;
 
         public IndexInfo(ILSMIndex index) {
             this.index = index;
@@ -357,11 +357,13 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             this.isExternal = isExternal;
         }
 
+        @Override
         public void touch() {
             super.touch();
             lastAccess = System.currentTimeMillis();
         }
 
+        @Override
         public void untouch() {
             super.untouch();
             lastAccess = System.currentTimeMillis();
@@ -409,6 +411,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
         }
 
+        @Override
         public String toString() {
             return "DatasetID: " + datasetID + ", isOpen: " + isOpen + ", refCount: " + referenceCount
                     + ", lastAccess: " + lastAccess + "}";
@@ -426,6 +429,13 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
     }
 
+    public synchronized void flushDataset(int datasetId, boolean asyncFlush) throws HyracksDataException {
+        DatasetInfo datasetInfo = datasetInfos.get(datasetId);
+        if (datasetInfo != null) {
+            flushDatasetOpenIndexes(datasetInfo, asyncFlush);
+        }
+    }
+
     public synchronized void scheduleAsyncFlushForLaggingDatasets(long targetLSN) throws HyracksDataException {
 
         List<DatasetInfo> laggingDatasets = new ArrayList<DatasetInfo>();
@@ -433,7 +443,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         //find dataset with min lsn < targetLSN
         for (DatasetInfo dsInfo : datasetInfos.values()) {
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
-                AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) ((ILSMIndex) iInfo.index)
+                AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) iInfo.index
                         .getIOOperationCallback();
                 if (!((AbstractLSMIndex) iInfo.index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()) {
                     firstLSN = ioCallback.getFirstLSN();
@@ -479,8 +489,8 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         if (asyncFlush) {
 
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
-                ILSMIndexAccessor accessor = (ILSMIndexAccessor) iInfo.index.createAccessor(
-                        NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+                ILSMIndexAccessor accessor = iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
+                        NoOpOperationCallback.INSTANCE);
                 accessor.scheduleFlush(iInfo.index.getIOOperationCallback());
             }
         } else {
@@ -541,6 +551,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         datasetInfos.clear();
     }
 
+    @Override
     public void dumpState(OutputStream outputStream) throws IOException {
         StringBuilder sb = new StringBuilder();
 

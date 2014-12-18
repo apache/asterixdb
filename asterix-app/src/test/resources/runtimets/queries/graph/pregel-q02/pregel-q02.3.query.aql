@@ -1,0 +1,9 @@
+use dataverse Pregelix;
+
+run pregel("examples/pregelix-example-0.2.14-SNAPSHOT-jar-with-dependencies.jar"
+ "edu.uci.ics.pregelix.example.ConnectedComponentsVertex"
+ "-ip 10.0.2.15 -port 3199")
+from dataset InputGraph 
+to dataset ResultGraph;
+
+for $n in dataset ResultGraph return $n;

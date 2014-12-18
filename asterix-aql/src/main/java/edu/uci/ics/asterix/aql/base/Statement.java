@@ -44,7 +44,8 @@ public interface Statement extends IAqlExpression {
         CREATE_FUNCTION,
         FUNCTION_DROP,
         COMPACT, 
-        EXTERNAL_DATASET_REFRESH
+        EXTERNAL_DATASET_REFRESH,
+        RUN
     }
 
     public abstract Kind getKind();

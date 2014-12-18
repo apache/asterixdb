@@ -1,0 +1,16 @@
+use dataverse Pregelix;
+
+insert into dataset InputGraph (
+{{
+{"id":0,  "edges":{{ {"destVertexId":1, "cost":1.0f}}}},
+{"id":1,  "edges":{{ {"destVertexId":3, "cost":4.0f},{"destVertexId":2, "cost":3.0f}}}},
+{"id":2,  "edges":{{ {"destVertexId":4, "cost":5.0f},{"destVertexId":5, "cost":23.0f}}}},
+{"id":3,  "edges":{{ {"destVertexId":2, "cost":1.0f},{"destVertexId":8, "cost":13.0f}}}},
+{"id":4,  "edges":{{ {"destVertexId":1, "cost":5.0f},{"destVertexId":2, "cost":8.0f},{"destVertexId":3, "cost":23.0f},{"destVertexId":4, "cost":12.0f}}}},
+{"id":5,  "edges":{{ {"destVertexId":6, "cost":12.0f},{"destVertexId":7, "cost":17.0f}}}},
+{"id":6,  "edges":{{ {"destVertexId":1, "cost":12.0f},{"destVertexId":2, "cost":1.0f}}}},
+{"id":7,  "edges":{{ {"destVertexId":9, "cost":100.0f}}}},
+{"id":8,  "edges":{{ {"destVertexId":4, "cost":11.0f}}}},
+{"id":9,  "edges":{{ {"destVertexId":1, "cost":16.0f},{"destVertexId":2, "cost":9.0f}}}}
+}}
+)

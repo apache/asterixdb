@@ -213,6 +213,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = CompactStatement()
     | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
+    | stmt = RunStatement()
   )
   {
     return stmt;
@@ -396,6 +397,27 @@ RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseEx
 	redss.setDatasetName(nameComponents.second);
 	return redss;
 	}
+}
+
+RunStatement RunStatement() throws ParseException:
+{
+  String system = null;
+  String tmp;
+  ArrayList<String> parameters = new  ArrayList<String>();
+  Pair<Identifier,Identifier> nameComponentsFrom = null;
+  Pair<Identifier,Identifier> nameComponentsTo = null;
+}
+{
+  "run" system = Identifier()<LEFTPAREN> ( tmp = Identifier() [<COMMA>]
+    {
+      parameters.add(tmp);
+    }
+  )*<RIGHTPAREN>
+  <FROM> <DATASET> nameComponentsFrom  = QualifiedName()
+  "to" <DATASET> nameComponentsTo  = QualifiedName() 
+    {
+      return new RunStatement(system, parameters, nameComponentsFrom.first, nameComponentsFrom.second, nameComponentsTo.first, nameComponentsTo.second);
+    }
 }
 
 CreateIndexStatement IndexSpecification() throws ParseException:
