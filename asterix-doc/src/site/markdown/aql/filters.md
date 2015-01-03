@@ -1,13 +1,13 @@
-# Filter-Based LSM Index Acceleration #
+# Filter-Based LSM Index Acceleration
 
-## <a id="toc">Table of Contents</a> ##
+## <a id="toc">Table of Contents</a>
 
 * [Motivation](#Motivation)
 * [Filters in AsterixDB](#FiltersInAsterixDB)
 * [Filters and Merge Policies](#FiltersAndMergePolicies)
 
 ## <a id="Motivation">Motivation</a> <font size="4"><a
-   href="#toc">[Back to TOC]</a></font> ##
+   href="#toc">[Back to TOC]</a></font>
 
 Traditional relational databases usually employ conventional index
 structures such as B+ trees due to their low read latency.  However,
@@ -19,15 +19,14 @@ data. Consequently, popular NoSQL systems such as Cassandra, HBase,
 LevelDB, BigTable, etc. have adopted Log-Structured Merge (LSM) Trees
 as their storage structure. LSM-trees avoids the cost of random writes
 by batching updates into a component of the index that resides in main
-memory -- an \textit{in-memory component}. When the space occupancy of
+memory -- an *in-memory component*. When the space occupancy of
 the in-memory component exceeds a specified threshold, its entries are
-\textit{flushed} to disk forming a new component -- a \textit{disk
-component}. As disk components accumulate on disk, they are
-periodically merged together subject to a \textit{merge policy} that
-decides when and what to merge. The benefit of the LSM-trees comes at
-the cost of possibly sacrificing read efficiency, but, it has been
-shown in previous studies that these inefficiencies can be mostly
-mitigated.
+*flushed* to disk forming a new component -- a *disk component*. As
+disk components accumulate on disk, they are periodically merged
+together subject to a *merge policy* that decides when and what to
+merge. The benefit of the LSM-trees comes at the cost of possibly
+sacrificing read efficiency, but, it has been shown in previous
+studies that these inefficiencies can be mostly mitigated.
 
 AsterixDB has also embraced LSM-trees, not just by using them as
 primary indexes, but also by using the same LSM-ification technique
@@ -37,7 +36,7 @@ includes conventional B+ trees, R trees, and inverted indexes) into
 LSM-based secondary indexes, allowing higher data ingestion rates. In
 fact, for certain index structures, our results have shown that using
 an LSM-based version of an index can be made to significantly
-outperform its conventional counterpart for \textit{both} ingestion
+outperform its conventional counterpart for *both* ingestion
 and query speed (an example of such an index being the R-tree for
 spatial data).
 
@@ -69,7 +68,7 @@ same filtering technique can also be used with any secondary LSM index
 power.
 
 ## <a id="FiltersInAsterixDB">Filters in AsterixDB</a> <font
-   size="4"><a href="#toc">[Back to TOC]</a></font> ##
+   size="4"><a href="#toc">[Back to TOC]</a></font>
 
 
 We have added support for LSM-based filters to all of AsterixDB's
@@ -87,7 +86,7 @@ doubles, floats, UUIDs, datetimes, etc.
 
 
 When a dataset with a filter is created, the name of the filter's key
-field is persisted in the ``dataset'' dataset (which is the metadata
+field is persisted in the `Metadata.Dataset` dataset (which is the metadata
 dataset that stores the details of each dataset in an AsterixDB
 instance) so that DML operations against the dataset can recognize the
 existence of filters and can update them or utilize them
@@ -100,8 +99,8 @@ leverage them to efficiently answer queries whenever possible (i.e.,
 when a query has predicates on the filter's key).
 
 
-## <a id="FiltersAndMergePolicies">Filters and Merge Policies</a>
-   <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+## <a id="FiltersAndMergePolicies">Filters and Merge Policies</a> <font
+size="4"><a href="#toc">[Back to TOC]</a></font>
 
 
 The AsterixDB default merge policy, the prefix merge policy, relies on
