@@ -765,7 +765,7 @@ The following example illustrates a query-based insertion.
     
 ##### Example
 
-    insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user
+    insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user)
 
 #### Delete
 

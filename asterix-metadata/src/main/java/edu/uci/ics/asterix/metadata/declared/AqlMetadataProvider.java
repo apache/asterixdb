@@ -279,16 +279,16 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     }
 
     /**
-     * Retrieve the Output RecordType, as defined by "set outputRecordType".
+     * Retrieve the Output RecordType, as defined by "set output-record-type".
      */
     public ARecordType findOutputRecordType() throws AlgebricksException {
-        String outputRecordType = getPropertyValue("outputRecordType");
+        String outputRecordType = getPropertyValue("output-record-type");
         if (outputRecordType == null) {
             return null;
         }
         String dataverse = getDefaultDataverseName();
         if (dataverse == null) {
-            throw new AlgebricksException("Cannot declare outputRecordType with no dataverse!");
+            throw new AlgebricksException("Cannot declare output-record-type with no dataverse!");
         }
         IAType type = findType(dataverse, outputRecordType);
         if (!(type instanceof ARecordType)) {

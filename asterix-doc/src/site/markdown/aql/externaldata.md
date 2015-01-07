@@ -76,7 +76,7 @@ Above, the definition is not complete as we need to provide a set of parameters 
 </tr>
 <tr>
   <td> format </td>
-  <td> The format for the content. Use 'adm' for data in ADM (ASTERIX Data Model) or <a href="http://www.json.org/">JSON</a> format. Use 'delimited-text' if fields are separted by . </td></tr>
+  <td> The format for the content. Use 'adm' for data in ADM (ASTERIX Data Model) or <a href="http://www.json.org/">JSON</a> format. Use 'delimited-text' if fields are separated by a delimiting character (eg., CSV). </td></tr>
 <tr><td>delimiter</td><td>The delimiting character in the source file if format is 'delimited text'</td></tr>
 </table>
 

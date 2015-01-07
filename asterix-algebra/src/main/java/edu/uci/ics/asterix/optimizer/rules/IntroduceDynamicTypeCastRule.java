@@ -120,8 +120,8 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 break;
             }
             case DISTRIBUTE_RESULT: {
-                // First, see if there was an outputRecordType specified
-                requiredRecordType = (ARecordType) op1.getAnnotations().get("outputRecordType");
+                // First, see if there was an output-record-type specified
+                requiredRecordType = (ARecordType) op1.getAnnotations().get("output-record-type");
                 if (requiredRecordType == null) {
                     return false;
                 }
@@ -133,13 +133,13 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 // of the singular input operator of the DISTRIBUTE_RESULT
                 if (op.getInputs().size() > 1) {
                     // Hopefully not possible?
-                    throw new AlgebricksException("outputRecordType defined for expression with multiple input operators");
+                    throw new AlgebricksException("output-record-type defined for expression with multiple input operators");
                 }
                 AbstractLogicalOperator input = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
                 List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
                 VariableUtilities.getLiveVariables(input, liveVars);
                 if (liveVars.size() > 1) {
-                    throw new AlgebricksException("Expression with multiple fields cannot be cast to outputRecordType!");
+                    throw new AlgebricksException("Expression with multiple fields cannot be cast to output-record-type!");
                 }
                 recordVar = liveVars.get(0);
 

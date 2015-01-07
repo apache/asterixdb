@@ -296,7 +296,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             // the DistributeResultOperator
             IAType outputRecordType = metadataProvider.findOutputRecordType();
             if (outputRecordType != null) {
-                topOp.getAnnotations().put("outputRecordType", outputRecordType);
+                topOp.getAnnotations().put("output-record-type", outputRecordType);
             }
         } else {
             /** add the collection-to-sequence right before the final project, because dataset only accept non-collection records */
