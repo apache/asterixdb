@@ -4557,6 +4557,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">
+            <compilation-unit name="query-issue562">
+                <output-dir compare="Text">query-issue562</output-dir>
+        </compilation-unit>
+        </test-case>
+        <test-case FilePath="tpch">
             <compilation-unit name="query-issue810">
                 <output-dir compare="Text">query-issue810</output-dir>
         </compilation-unit>

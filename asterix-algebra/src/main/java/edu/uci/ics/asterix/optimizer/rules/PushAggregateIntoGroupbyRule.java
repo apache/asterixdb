@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -113,7 +114,8 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
         List<LogicalVariable> used = new LinkedList<LogicalVariable>();
         VariableUtilities.getUsedVariables(op1, used);
         switch (op1.getOperatorTag()) {
-            case ASSIGN: {
+            case ASSIGN:
+            case SELECT: {
                 boolean found = false;
                 // Do some prefiltering: check if the Assign uses any gby vars.
                 for (LogicalVariable v : used) {
@@ -123,8 +125,20 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                     }
                 }
                 if (found) {
-                    AssignOperator assign = (AssignOperator) op1;
-                    for (Mutable<ILogicalExpression> exprRef : assign.getExpressions()) {
+                    if (op1.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                        AssignOperator assign = (AssignOperator) op1;
+                        for (Mutable<ILogicalExpression> exprRef : assign.getExpressions()) {
+                            Pair<Boolean, ILogicalExpression> p = extractAggFunctionsFromExpression(exprRef,
+                                    gbyWithAgg, aggregateExprToVarExpr, context);
+                            if (p.first) {
+                                change = true;
+                                exprRef.setValue(p.second);
+                            }
+                        }
+                    }
+                    if (op1.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                        SelectOperator select = (SelectOperator) op1;
+                        Mutable<ILogicalExpression> exprRef = select.getCondition();
                         Pair<Boolean, ILogicalExpression> p = extractAggFunctionsFromExpression(exprRef, gbyWithAgg,
                                 aggregateExprToVarExpr, context);
                         if (p.first) {
@@ -133,7 +147,7 @@ public class PushAggregateIntoGroupbyRule implements IAlgebraicRewriteRule {
                         }
                     }
                     used.clear();
-                    VariableUtilities.getUsedVariables(assign, used);
+                    VariableUtilities.getUsedVariables(op1, used);
                     // increment the count for the ones which are still used
                     for (LogicalVariable v : used) {
                         Integer m = gbyListifyVarsCount.get(v);
