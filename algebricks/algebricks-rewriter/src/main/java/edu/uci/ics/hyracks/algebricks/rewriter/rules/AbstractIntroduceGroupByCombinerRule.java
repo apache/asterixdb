@@ -77,9 +77,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             // usedDecorVars should always contain only one variable.
             p.second.getValue().getUsedVariables(usedDecorVars);
             if (!newGbyLiveVars.contains(usedDecorVars.get(0))) {
-                LogicalVariable newDecorVar = context.newVar();
-                newGbyOp.addDecorExpression(newDecorVar, p.second.getValue());
-                p.second.setValue(new VariableReferenceExpression(newDecorVar));
+                // Let the left-hand side of gbyOp's decoration expressions populated through the combiner group-by without
+                // any intermediate assignment.
+                newGbyOp.addDecorExpression(null, p.second.getValue());
             }
         }
         newGbyOp.setExecutionMode(ExecutionMode.LOCAL);

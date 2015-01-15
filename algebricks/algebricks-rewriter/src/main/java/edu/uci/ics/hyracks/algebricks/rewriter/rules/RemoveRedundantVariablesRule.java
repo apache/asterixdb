@@ -68,24 +68,22 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
     private final VariableSubstitutionVisitor substVisitor = new VariableSubstitutionVisitor();
     private final Map<LogicalVariable, List<LogicalVariable>> equivalentVarsMap = new HashMap<LogicalVariable, List<LogicalVariable>>();
 
-    protected boolean hasRun = false;
-
     @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
-        return false;
-    }
-
-    @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
-        equivalentVarsMap.clear();
         boolean modified = removeRedundantVariables(opRef, context);
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(opRef.getValue());
         }
         return modified;
+    }
+
+    @Override
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+        return false;
     }
 
     private void updateEquivalenceClassMap(LogicalVariable lhs, LogicalVariable rhs) {
@@ -105,13 +103,6 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean modified = false;
-
-        // Recurse into children.
-        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            if (removeRedundantVariables(inputOpRef, context)) {
-                modified = true;
-            }
-        }
 
         // Update equivalence class map.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
