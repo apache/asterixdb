@@ -161,6 +161,10 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
     public ComponentState getState() {
         return state;
     }
+    
+    public void setState(ComponentState state) {
+        this.state = state;
+    }
 
     public void setActive() {
         requestedToBeActive = true;

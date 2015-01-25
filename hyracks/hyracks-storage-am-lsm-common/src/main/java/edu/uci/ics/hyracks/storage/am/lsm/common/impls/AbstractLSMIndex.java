@@ -25,6 +25,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -257,5 +258,9 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException {
         //check if the current memory component has been modified
         return !((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).isModified();
+    }
+    
+    public void makeCurrentMutableComponentUnWritable() throws HyracksDataException {
+        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setState(ComponentState.READABLE_UNWRITABLE);
     }
 }
