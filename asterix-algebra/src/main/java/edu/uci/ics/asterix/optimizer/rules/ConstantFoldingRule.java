@@ -75,8 +75,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
-    private ConstantFoldingVisitor cfv = new ConstantFoldingVisitor();
+    private final ConstantFoldingVisitor cfv = new ConstantFoldingVisitor();
 
+    /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
 
         @Override
@@ -90,8 +91,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         }
 
         @Override
-        public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables)
-                throws AlgebricksException {
+        public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
+                List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
             throw new IllegalStateException();
         }
 
@@ -135,9 +136,9 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     private class ConstantFoldingVisitor implements ILogicalExpressionVisitor<Pair<Boolean, ILogicalExpression>, Void>,
             ILogicalExpressionReferenceTransform {
 
-        private IPointable p = VoidPointable.FACTORY.createPointable();
-        private ByteBufferInputStream bbis = new ByteBufferInputStream();
-        private DataInputStream dis = new DataInputStream(bbis);
+        private final IPointable p = VoidPointable.FACTORY.createPointable();
+        private final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        private final DataInputStream dis = new DataInputStream(bbis);
 
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {

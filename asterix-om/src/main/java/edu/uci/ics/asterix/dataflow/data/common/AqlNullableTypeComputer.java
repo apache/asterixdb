@@ -37,4 +37,15 @@ public class AqlNullableTypeComputer implements INullableTypeComputer {
         }
     }
 
+    @Override
+    public boolean canBeNull(Object type) {
+        IAType t = (IAType) type;
+        return TypeHelper.canBeNull(t);
+    }
+
+    @Override
+    public Object getNonOptionalType(Object type) {
+        IAType t = (IAType) type;
+        return TypeHelper.getNonOptionalType(t);
+    }
 }
