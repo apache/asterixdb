@@ -1,7 +1,7 @@
 use dataverse tpch;
 
 from $l in dataset('LineItem')
-group by $l_partkey := $l.l_partkey with $l
+group by $l_partkey := $l.l_partkey keeping $l
 order by $l_partkey
 select {
     "t_partkey": $l_partkey,

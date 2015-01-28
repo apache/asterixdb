@@ -37,7 +37,7 @@ group by $c_custkey:=$locn.c_custkey,
     $c_name:=$locn.c_name,
     $c_acctbal:=$locn.c_acctbal, $c_phone:=$locn.c_phone,
     $n_name:=$locn.n_name, $c_address:=$locn.c_address, $c_comment:=$locn.c_comment
-    with $locn
+    keeping $locn
 with $revenue := sum(from $i in $locn select $i.l_extendedprice * (1 - $i.l_discount))
 order by $revenue desc
 limit 20

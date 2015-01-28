@@ -19,7 +19,7 @@ from $gco in (
     "c_count": sum(from $i in $co select $i.o_orderkey_count)
   }
 )
-group by $c_count := $gco.c_count with $gco
+group by $c_count := $gco.c_count keeping $gco
 with $custdist := count($gco)
 order by $custdist desc, $c_count desc
 select {

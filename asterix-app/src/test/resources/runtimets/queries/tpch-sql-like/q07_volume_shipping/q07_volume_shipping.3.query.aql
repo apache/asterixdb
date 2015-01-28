@@ -52,7 +52,7 @@ where $locs.c_nationkey = $t.c_nationkey
   and $locs.s_nationkey = $t.s_nationkey
 with $l_year0 := get-year($locs.l_shipdate)
 group by $supp_nation := $t.supp_nation, $cust_nation := $t.cust_nation, $l_year := $l_year0
-with $locs
+keeping $locs
 with $revenue := sum(from $i in $locs select $i.l_extendedprice * (1 - $i.l_discount))
 order by $supp_nation, $cust_nation, $l_year
 select {

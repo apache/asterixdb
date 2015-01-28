@@ -12,7 +12,7 @@ from $o in dataset('Orders')
 from $t in tmp()
 where $o.o_orderkey = $t.o_orderkey and
   $o.o_orderdate >= '1993-07-01' and $o.o_orderdate < '1993-10-01'
-group by $o_orderpriority := $o.o_orderpriority with $o
+group by $o_orderpriority := $o.o_orderpriority keeping $o
 order by $o_orderpriority
 select {
   "order_priority": $o_orderpriority,

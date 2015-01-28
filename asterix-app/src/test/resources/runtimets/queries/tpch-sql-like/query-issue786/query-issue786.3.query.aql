@@ -17,7 +17,7 @@ select {
                 from $customer in dataset Customer
                 where $order.o_custkey = $customer.c_custkey
                 and  $customer.c_nationkey = $nation.n_nationkey
-                group by $orderdate := $order.o_orderdate with $order
+                group by $orderdate := $order.o_orderdate keeping $order
                 with $sum := sum(from $o in $order select $o.o_totalprice)
                 order by $sum desc
                 limit 3

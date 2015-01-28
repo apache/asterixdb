@@ -21,7 +21,7 @@ from $customer in dataset Customer
 from $order in dataset Orders
 where $order.o_custkey = $customer.c_custkey
 and  $customer.c_nationkey = $n.n_nationkey
-group by $orderdate := $order.o_orderdate, $nation_key := $n.n_nationkey with $order
+group by $orderdate := $order.o_orderdate, $nation_key := $n.n_nationkey keeping $order
 with $sum := sum(from $o in $order select $o.o_totalprice)
 select {
     "nation_key": $nation_key,
@@ -30,7 +30,7 @@ select {
 })
 
 from $x in $X
-group by $nation_key := $x.nation_key with $x
+group by $nation_key := $x.nation_key keeping $x
 select {
     "nation_key": $nation_key,
     "sum_price": from $y in $x

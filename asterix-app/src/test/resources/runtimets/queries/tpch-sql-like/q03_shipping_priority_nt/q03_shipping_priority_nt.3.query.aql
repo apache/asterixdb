@@ -10,7 +10,7 @@ where
   $o.o_orderdate < '1995-03-15' and $l.l_shipdate > '1995-03-15'
 /*+ hash*/
 group by $l_orderkey := $l.l_orderkey, $o_orderdate := $o.o_orderdate, $o_shippriority := $o.o_shippriority
-  with $l
+  keeping $l
 with $revenue := sum (
   from $i in $l
   select

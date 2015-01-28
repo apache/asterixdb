@@ -43,7 +43,7 @@ from $o1 in (
 )
 where $c.c_nationkey = $o1.s_nationkey and $c.c_custkey = $o1.o_custkey
 /*+ hash*/
-group by $n_name := $o1.n_name with $o1
+group by $n_name := $o1.n_name keeping $o1
 with $revenue := sum (
   from $i in $o1
   select

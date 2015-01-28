@@ -92,7 +92,7 @@ declare function tmp2(){
   )
   where $p.p_partkey = $pssrn.p_partkey and like($p.p_type, '%BRASS')
   /*+ hash*/
-  group by $p_partkey := $pssrn.p_partkey with $pssrn
+  group by $p_partkey := $pssrn.p_partkey keeping $pssrn
   select {
     "p_partkey": $p_partkey,
     "ps_min_supplycost": min(from $i in $pssrn select $i.ps_supplycost)

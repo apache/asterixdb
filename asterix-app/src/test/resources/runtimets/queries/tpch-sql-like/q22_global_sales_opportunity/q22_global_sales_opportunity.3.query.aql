@@ -14,9 +14,10 @@ with $avg := avg(
   where $c.c_acctbal > 0.00
   select $c.c_acctbal
 )
+
 from $ct in q22_customer_tmp()
 where $ct.c_acctbal > $avg
-group by $cntrycode := $ct.cntrycode with $ct
+group by $cntrycode := $ct.cntrycode keeping $ct
 order by $cntrycode
 select {
   "cntrycode": $cntrycode,

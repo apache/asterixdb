@@ -8,7 +8,7 @@
 use dataverse tpch;
 
 from $l in dataset('LineItem')
-group by $l_linenumber := $l.l_linenumber with $l
+group by $l_linenumber := $l.l_linenumber keeping $l
 select {
   "l_linenumber": $l_linenumber,
   "count_order": count($l)

@@ -2,7 +2,7 @@ use dataverse tpch;
 
 declare function tmp(){
   from $l in dataset('LineItem')
-  group by $l_partkey := $l.l_partkey with $l
+  group by $l_partkey := $l.l_partkey keeping $l
   select {
     "t_partkey": $l_partkey,
     "t_avg_quantity": 0.2 * avg(from $i in $l select $i.l_quantity)

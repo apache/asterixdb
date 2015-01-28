@@ -29,7 +29,7 @@ from $t2 in (
     or $t.p_size = 45 or $t.p_size = 19 or $t.p_size = 3
     or $t.p_size = 36 or $t.p_size = 9
   group by $p_brand1:= $t.p_brand, $p_type1 := $t.p_type,
-    $p_size1:= $t.p_size, $ps_suppkey1:=$t.ps_suppkey with $t
+    $p_size1:= $t.p_size, $ps_suppkey1:=$t.ps_suppkey keeping $t
   select {
     "p_brand": $p_brand1,
     "p_type": $p_type1,
@@ -37,7 +37,7 @@ from $t2 in (
     "ps_suppkey": $ps_suppkey1
   }
 )
-group by $p_brand := $t2.p_brand, $p_type := $t2.p_type, $p_size := $t2.p_size with $t2
+group by $p_brand := $t2.p_brand, $p_type := $t2.p_type, $p_size := $t2.p_size keeping $t2
 with $supplier_cnt := count(from $i in $t2 select $i.ps_suppkey)
 order by $supplier_cnt desc, $p_brand, $p_type, $p_size
 select {

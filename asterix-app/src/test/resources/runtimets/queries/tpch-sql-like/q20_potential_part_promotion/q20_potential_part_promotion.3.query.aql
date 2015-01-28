@@ -3,7 +3,7 @@ use dataverse tpch;
 from $t3 in (
   from $t2 in (
     from $l in dataset('LineItem')
-    group by $l_partkey:=$l.l_partkey, $l_suppkey:=$l.l_suppkey with $l
+    group by $l_partkey:=$l.l_partkey, $l_suppkey:=$l.l_suppkey keeping $l
     select {
       "l_partkey": $l_partkey,
       "l_suppkey": $l_suppkey,

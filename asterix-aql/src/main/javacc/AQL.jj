@@ -2131,7 +2131,7 @@ Clause GroupClause()throws ParseException :
            }
        )*            
     )?	
-    <WITH> withVar = VariableRef()
+    (<WITH>|<KEEPING>) withVar = VariableRef()
     {
       if(withVar.getIsNewVar()==true)
       	throw new ParseException("can't find variable " + withVar.getVar());
@@ -2281,6 +2281,7 @@ TOKEN :
   | <UNION : "union">
   | <WHERE : "where">
   | <WITH : "with">
+  | <KEEPING : "keeping">
 }
 
 <DEFAULT,IN_DBL_BRACE>

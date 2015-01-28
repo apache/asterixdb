@@ -3,13 +3,13 @@ use dataverse tpch;
 declare function tmp1() {
   from $l2 in (
     from $l in dataset('LineItem')
-    group by $l_orderkey1 := $l.l_orderkey, $l_suppkey1 := $l.l_suppkey with $l
+    group by $l_orderkey1 := $l.l_orderkey, $l_suppkey1 := $l.l_suppkey keeping $l
     select {
       "l_orderkey": $l_orderkey1,
       "l_suppkey": $l_suppkey1
     }
   )
-  group by $l_orderkey := $l2.l_orderkey with $l2
+  group by $l_orderkey := $l2.l_orderkey keeping $l2
   select {
     "l_orderkey": $l_orderkey,
     "count_suppkey": count(from $i in $l2 select $i.l_suppkey),
@@ -67,7 +67,7 @@ from $t4 in (
     "max_suppkey": $t2.max_suppkey
   }
 )
-group by $s_name := $t4.s_name with $t4
+group by $s_name := $t4.s_name keeping $t4
 with $numwait := count($t4)
 order by $numwait desc, $s_name
 select {

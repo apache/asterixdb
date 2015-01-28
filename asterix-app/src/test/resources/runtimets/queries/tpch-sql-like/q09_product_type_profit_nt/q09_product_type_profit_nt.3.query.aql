@@ -58,7 +58,7 @@ from $profit in (
     "amount": $amount
   }
 )
-group by $nation := $profit.nation, $o_year := $profit.o_year with $profit
+group by $nation := $profit.nation, $o_year := $profit.o_year keeping $profit
 order by $nation, $o_year desc
 select {
   "nation": $nation,

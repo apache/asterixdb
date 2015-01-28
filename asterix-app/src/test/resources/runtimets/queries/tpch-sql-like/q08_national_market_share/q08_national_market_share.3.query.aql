@@ -63,7 +63,7 @@ from $t in (
     "s_name": $n2.n_name
   }
 )
-group by $year := $t.year with $t
+group by $year := $t.year keeping $t
 order by $year
 select {
   "year": $year,
