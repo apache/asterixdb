@@ -20,11 +20,14 @@ import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import edu.uci.ics.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
@@ -78,13 +81,22 @@ public class AssignOperator extends AbstractAssignOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
+        PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
         int n = variables.size();
         for (int i = 0; i < n; i++) {
             env.setVarType(
                     variables.get(i),
                     ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(), ctx.getMetadataProvider(),
                             env));
+            if (expressions.get(i).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                LogicalVariable var = ((VariableReferenceExpression) expressions.get(i).getValue())
+                        .getVariableReference();
+                for (List<LogicalVariable> list : env.getCorrelatedNullableVariableLists()) {
+                    if (list.contains(var)) {
+                        list.add(variables.get(i));
+                    }
+                }
+            }
         }
         return env;
     }

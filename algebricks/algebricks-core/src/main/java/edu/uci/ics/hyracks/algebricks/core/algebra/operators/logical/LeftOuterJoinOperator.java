@@ -14,13 +14,18 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -56,8 +61,12 @@ public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
         for (int i = 0; i < n; i++) {
             envPointers[i] = new OpRefTypeEnvPointer(inputs.get(i), ctx);
         }
-        return new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getNullableTypeComputer(),
-                ctx.getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
+        PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
+                ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
+        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars); // live variables from outer branch can be null together
+        env.getCorrelatedNullableVariableLists().add(liveVars);
+        return env;
     }
 
 }

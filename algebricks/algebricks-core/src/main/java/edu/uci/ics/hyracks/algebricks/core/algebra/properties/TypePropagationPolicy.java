@@ -27,14 +27,26 @@ public abstract class TypePropagationPolicy {
 
         @Override
         public Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
-                List<LogicalVariable> nonNullVariableList, ITypeEnvPointer... typeEnvs) throws AlgebricksException {
+                List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
+                ITypeEnvPointer... typeEnvs) throws AlgebricksException {
             for (ITypeEnvPointer p : typeEnvs) {
                 IVariableTypeEnvironment env = p.getTypeEnv();
                 if (env == null) {
                     throw new AlgebricksException("Null environment for pointer " + p + " in getVarType for var=" + var);
                 }
-                Object t = env.getVarType(var, nonNullVariableList);
+                Object t = env.getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
                 if (t != null) {
+                    if (ntc != null && ntc.canBeNull(t)) {
+                        for (List<LogicalVariable> list : correlatedNullableVariableLists) {
+                            if (list.contains(var)) {
+                                for (LogicalVariable v : list) {
+                                    if (nonNullVariableList.contains(v)) {
+                                        return ntc.getNonOptionalType(t);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     return t;
                 }
             }
@@ -46,10 +58,12 @@ public abstract class TypePropagationPolicy {
 
         @Override
         public Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
-                List<LogicalVariable> nonNullVariableList, ITypeEnvPointer... typeEnvs) throws AlgebricksException {
+                List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
+                ITypeEnvPointer... typeEnvs) throws AlgebricksException {
             int n = typeEnvs.length;
             for (int i = 0; i < n; i++) {
-                Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList);
+                Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList,
+                        correlatedNullableVariableLists);
                 if (t != null) {
                     if (i == 0) { // inner branch
                         return t;
@@ -78,5 +92,5 @@ public abstract class TypePropagationPolicy {
     };
 
     public abstract Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
-            List<LogicalVariable> nonNullVariableList, ITypeEnvPointer... typeEnvs) throws AlgebricksException;
+            List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists, ITypeEnvPointer... typeEnvs) throws AlgebricksException;
 }

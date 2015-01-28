@@ -34,6 +34,8 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
     private final List<LogicalVariable> nonNullVariables = new ArrayList<LogicalVariable>();
 
+    private final List<List<LogicalVariable>> correlatedNullableVariableLists = new ArrayList<List<LogicalVariable>>();
+
     public PropagatingTypeEnvironment(IExpressionTypeComputer expressionTypeComputer,
             INullableTypeComputer nullableTypeComputer, IMetadataProvider<?, ?> metadataProvider,
             TypePropagationPolicy policy, ITypeEnvPointer[] envPointers) {
@@ -45,25 +47,41 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
     @Override
     public Object getVarType(LogicalVariable var) throws AlgebricksException {
-        return getVarTypeFullList(var, nonNullVariables);
+        return getVarTypeFullList(var, nonNullVariables, correlatedNullableVariableLists);
     }
 
     public List<LogicalVariable> getNonNullVariables() {
         return nonNullVariables;
     }
 
-    @Override
-    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariableList) throws AlgebricksException {
-        nonNullVariableList.addAll(nonNullVariables);
-        return getVarTypeFullList(var, nonNullVariableList);
+    public List<List<LogicalVariable>> getCorrelatedNullableVariableLists() {
+        return correlatedNullableVariableLists;
     }
 
-    private Object getVarTypeFullList(LogicalVariable var, List<LogicalVariable> nonNullVariableList)
-            throws AlgebricksException {
+    @Override
+    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariableList,
+            List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
+        for (LogicalVariable v : nonNullVariables) {
+            if (!nonNullVariableList.contains(v)) {
+                nonNullVariableList.add(v);
+            }
+        }
+        Object t = getVarTypeFullList(var, nonNullVariableList, correlatedNullableVariableLists);
+        for (List<LogicalVariable> list : this.correlatedNullableVariableLists) {
+            if (!correlatedNullableVariableLists.contains(list)) {
+                correlatedNullableVariableLists.add(list);
+            }
+        }
+        return t;
+    }
+
+    private Object getVarTypeFullList(LogicalVariable var, List<LogicalVariable> nonNullVariableList,
+            List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
         Object t = varTypeMap.get(var);
         if (t != null) {
             return t;
         }
-        return policy.getVarType(var, nullableTypeComputer, nonNullVariableList, envPointers);
+        return policy.getVarType(var, nullableTypeComputer, nonNullVariableList, correlatedNullableVariableLists,
+                envPointers);
     }
 }

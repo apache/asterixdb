@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 public class PropagateOperatorInputsTypeEnvironment extends AbstractTypeEnvironment {
 
     private final List<LogicalVariable> nonNullVariables = new ArrayList<LogicalVariable>();
+    private final List<List<LogicalVariable>> correlatedNullableVariableLists = new ArrayList<List<LogicalVariable>>();
     private final ILogicalOperator op;
     private final ITypingContext ctx;
 
@@ -44,13 +45,14 @@ public class PropagateOperatorInputsTypeEnvironment extends AbstractTypeEnvironm
     }
 
     @Override
-    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariableList) throws AlgebricksException {
+    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariableList,
+            List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
         nonNullVariableList.addAll(nonNullVariables);
-        return getVarTypeFullList(var, nonNullVariableList);
+        return getVarTypeFullList(var, nonNullVariableList, correlatedNullableVariableLists);
     }
 
-    private Object getVarTypeFullList(LogicalVariable var, List<LogicalVariable> nonNullVariableList)
-            throws AlgebricksException {
+    private Object getVarTypeFullList(LogicalVariable var, List<LogicalVariable> nonNullVariableList,
+            List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
         Object t = varTypeMap.get(var);
         if (t != null) {
             return t;
@@ -58,7 +60,7 @@ public class PropagateOperatorInputsTypeEnvironment extends AbstractTypeEnvironm
         for (Mutable<ILogicalOperator> r : op.getInputs()) {
             ILogicalOperator c = r.getValue();
             IVariableTypeEnvironment env = ctx.getOutputTypeEnvironment(c);
-            Object t2 = env.getVarType(var, nonNullVariableList);
+            Object t2 = env.getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
             if (t2 != null) {
                 return t2;
             }
@@ -68,7 +70,7 @@ public class PropagateOperatorInputsTypeEnvironment extends AbstractTypeEnvironm
 
     @Override
     public Object getVarType(LogicalVariable var) throws AlgebricksException {
-        return getVarTypeFullList(var, nonNullVariables);
+        return getVarTypeFullList(var, nonNullVariables, correlatedNullableVariableLists);
     }
 
 }

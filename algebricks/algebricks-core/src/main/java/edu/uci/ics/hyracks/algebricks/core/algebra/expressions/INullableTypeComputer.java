@@ -18,4 +18,8 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface INullableTypeComputer {
     public Object makeNullableType(Object type) throws AlgebricksException;
+
+    public boolean canBeNull(Object type);
+
+    public Object getNonOptionalType(Object type);
 }

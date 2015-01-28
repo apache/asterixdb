@@ -137,6 +137,16 @@ public class OperatorPropertiesUtil {
             return true;
         }
         boolean onPath = false;
+        if (((AbstractLogicalOperator) op).hasNestedPlans()) {
+            AbstractOperatorWithNestedPlans a = (AbstractOperatorWithNestedPlans) op;
+            for (ILogicalPlan p : a.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    if (isDestInNestedPath((AbstractLogicalOperator) r.getValue(), dest)) {
+                        onPath = true;
+                    }
+                }
+            }
+        }
         for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
             if (collectUsedAndProducedVariablesInPath(childRef.getValue(), dest, usedVars, producedVars)) {
                 onPath = true;
@@ -147,6 +157,35 @@ public class OperatorPropertiesUtil {
             VariableUtilities.getProducedVariables(op, producedVars);
         }
         return onPath;
+    }
+
+    /***
+     * Recursively checks if the dest operator is in the path of a nested plan
+     * 
+     * @param op
+     * @param dest
+     * @return
+     */
+    private static boolean isDestInNestedPath(AbstractLogicalOperator op, ILogicalOperator dest) {
+        if (op == dest) {
+            return true;
+        }
+        for (Mutable<ILogicalOperator> i : op.getInputs()) {
+            if (isDestInNestedPath((AbstractLogicalOperator) i.getValue(), dest)) {
+                return true;
+            }
+        }
+        if (op.hasNestedPlans()) {
+            AbstractOperatorWithNestedPlans a = (AbstractOperatorWithNestedPlans) op;
+            for (ILogicalPlan p : a.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    if (isDestInNestedPath((AbstractLogicalOperator) r.getValue(), dest)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static void getFreeVariablesInSubplans(AbstractOperatorWithNestedPlans op, Set<LogicalVariable> freeVars)

@@ -173,8 +173,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
-    protected IVariableTypeEnvironment createPropagatingAllInputsTypeEnvironment(ITypingContext ctx) {
-        //        return createPropagatingAllInputsTypeEnvironment(ctx);
+    protected PropagatingTypeEnvironment createPropagatingAllInputsTypeEnvironment(ITypingContext ctx) {
         int n = inputs.size();
         ITypeEnvPointer[] envPointers = new ITypeEnvPointer[n];
         for (int i = 0; i < n; i++) {
