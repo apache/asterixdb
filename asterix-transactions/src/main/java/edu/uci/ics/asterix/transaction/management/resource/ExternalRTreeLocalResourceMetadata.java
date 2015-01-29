@@ -59,7 +59,7 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
                     valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getIndexLifecycleManager()), new BaseOperationTracker(
-                            (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
+                            (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)),
                     runtimeContextProvider.getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
                             .createIOOperationCallback(), linearizeCmpFactory, btreeFields, -1);
         } catch (TreeIndexException e) {

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -39,7 +40,7 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
 
     private final DatasetLifecycleManager datasetLifecycleManager;
     private final int datasetID;
-
+    
     public CorrelatedPrefixMergePolicy(IIndexLifecycleManager datasetLifecycleManager, int datasetID) {
         this.datasetLifecycleManager = (DatasetLifecycleManager) datasetLifecycleManager;
         this.datasetID = datasetID;
@@ -77,7 +78,7 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
         int startIndex = -1;
         int minNumComponents = Integer.MAX_VALUE;
 
-        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
+        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetInfo(datasetID).getDatasetIndexes();
         for (ILSMIndex lsmIndex : indexes) {
             minNumComponents = Math.min(minNumComponents, lsmIndex.getImmutableComponents().size());
         }

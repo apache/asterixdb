@@ -61,7 +61,7 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLoca
                 runtimeContextProvider.getFileMapManager(), typeTraits, btreeCmpFactories, runtimeContextProvider
                         .getBloomFilterFalsePositiveRate(), mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getIndexLifecycleManager()), new BaseOperationTracker(
-                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID),
+                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)),
                 runtimeContextProvider.getLSMIOScheduler(), LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE
                         .createIOOperationCallback(), buddyBtreeFields, -1);
     }

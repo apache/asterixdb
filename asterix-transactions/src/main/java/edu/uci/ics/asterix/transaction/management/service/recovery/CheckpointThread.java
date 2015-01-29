@@ -38,6 +38,9 @@ public class CheckpointThread extends Thread {
 
     @Override
     public void run() {
+        
+        Thread.currentThread().setName("Checkpoint Thread");
+
         long currentCheckpointAttemptMinLSN = -1;
         long lastCheckpointLSN = -1;
         long currentLogLSN = 0;

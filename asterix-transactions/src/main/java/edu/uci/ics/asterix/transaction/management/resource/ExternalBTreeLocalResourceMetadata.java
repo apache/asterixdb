@@ -49,7 +49,7 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(), mergePolicyFactory.createMergePolicy(
                         mergePolicyProperties, runtimeContextProvider.getIndexLifecycleManager()),
                 new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                        datasetID), runtimeContextProvider.getLSMIOScheduler(),
+                        datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1);
         return lsmBTree;
     }

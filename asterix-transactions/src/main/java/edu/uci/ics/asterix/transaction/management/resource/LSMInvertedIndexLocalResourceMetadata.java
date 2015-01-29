@@ -88,7 +88,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getIndexLifecycleManager()),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                                .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
+                                .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                         filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
@@ -107,7 +107,7 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getIndexLifecycleManager()),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                                .getIndexLifecycleManager(), datasetID), runtimeContextProvider.getLSMIOScheduler(),
+                                .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                         filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);

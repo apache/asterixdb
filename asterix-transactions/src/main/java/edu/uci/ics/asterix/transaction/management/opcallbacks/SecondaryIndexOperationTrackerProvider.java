@@ -35,7 +35,7 @@ public class SecondaryIndexOperationTrackerProvider implements ILSMOperationTrac
     public ILSMOperationTracker getOperationTracker(IHyracksTaskContext ctx) {
         DatasetLifecycleManager dslcManager = (DatasetLifecycleManager) ((IAsterixAppRuntimeContext) ctx
                 .getJobletContext().getApplicationContext().getApplicationObject()).getIndexLifecycleManager();
-        return new BaseOperationTracker(dslcManager, datasetID);
+        return new BaseOperationTracker(dslcManager, datasetID, dslcManager.getDatasetInfo(datasetID));
     }
 
 }

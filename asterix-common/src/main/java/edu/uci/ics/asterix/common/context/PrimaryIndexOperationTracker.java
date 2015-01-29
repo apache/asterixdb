@@ -18,6 +18,7 @@ package edu.uci.ics.asterix.common.context;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.uci.ics.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import edu.uci.ics.asterix.common.transactions.AbstractOperationCallback;
@@ -30,6 +31,7 @@ import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public class PrimaryIndexOperationTracker extends BaseOperationTracker {
@@ -37,10 +39,12 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
     private final ILogManager logManager;
+    private boolean flushOnExit = false;
+    private boolean flushLogCreated = false;
 
     public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
-            ILogManager logManager) {
-        super(datasetLifecycleManager, datasetID);
+            ILogManager logManager, DatasetInfo dsInfo) {
+        super(datasetLifecycleManager, datasetID, dsInfo);
         this.logManager = logManager;
         this.numActiveOperations = new AtomicInteger();
     }
@@ -51,7 +55,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             incrementNumActiveOperations(modificationCallback);
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
-            datasetLifecycleManager.declareActiveIOOperation(datasetID);
+            dsInfo.declareActiveIOOperation();
         }
     }
 
@@ -70,27 +74,30 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             if (numActiveOperations.get() == 0) {
-                flushIfFull();
+                flushIfRequested();
             }
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
-            datasetLifecycleManager.undeclareActiveIOOperation(datasetID);
+            dsInfo.undeclareActiveIOOperation();
         }
     }
 
-    private void flushIfFull() throws HyracksDataException {
-        // If we need a flush, and this is the last completing operation, then schedule the flush. 
-        // TODO: Is there a better way to check if we need to flush instead of communicating with the datasetLifecycleManager each time?
-        // Maybe we could keep the set of indexes here instead of consulting the datasetLifecycleManager each time?
-        Set<ILSMIndex> indexes = datasetLifecycleManager.getDatasetIndexes(datasetID);
+    public void flushIfRequested() throws HyracksDataException {
+        // If we need a flush, and this is the last completing operation, then schedule the flush,  
+        // or if there is a flush scheduled by the checkpoint (flushOnExit), then schedule it
+
         boolean needsFlush = false;
-        for (ILSMIndex lsmIndex : indexes) {
-            if (((ILSMIndexInternal) lsmIndex).hasFlushRequestForCurrentMutableComponent()) {
-                needsFlush = true;
-                break;
+        Set<ILSMIndex> indexes = dsInfo.getDatasetIndexes();
+
+        if (!flushOnExit) {
+            for (ILSMIndex lsmIndex : indexes) {
+                if (((ILSMIndexInternal) lsmIndex).hasFlushRequestForCurrentMutableComponent()) {
+                    needsFlush = true;
+                    break;
+                }
             }
         }
 
-        if (needsFlush) {
+        if (needsFlush || flushOnExit) {
             LogRecord logRecord = new LogRecord();
             logRecord.formFlushLogRecord(datasetID, this);
             try {
@@ -98,13 +105,25 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             } catch (ACIDException e) {
                 throw new HyracksDataException("could not write flush log", e);
             }
+            flushLogCreated = true;
+        }
+        
+        if (flushOnExit) {
+            //Make the current mutable components (if have been modified) UnWritable to stop coming modify operations from entering them
+            for (ILSMIndex lsmIndex : indexes) {
+                if (!((AbstractLSMIndex) lsmIndex).isCurrentMutableComponentEmpty()) {
+                    ((AbstractLSMIndex) lsmIndex).makeCurrentMutableComponentUnWritable();
+                }
+            }
+            flushOnExit = false;
         }
     }
 
     public void triggerScheduleFlush(LogRecord logRecord) throws HyracksDataException {
         // why synchronized ??
         synchronized (this) {
-            for (ILSMIndex lsmIndex : datasetLifecycleManager.getDatasetIndexes(datasetID)) {
+            for (ILSMIndex lsmIndex : dsInfo.getDatasetIndexes()) {
+
                 //get resource
                 ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
@@ -117,13 +136,15 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 //schedule flush after update
                 accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
             }
+            
+            flushLogCreated = false;
         }
     }
 
     @Override
     public void exclusiveJobCommitted() throws HyracksDataException {
         numActiveOperations.set(0);
-        flushIfFull();
+        flushIfRequested();
     }
 
     public int getNumActiveOperations() {
@@ -150,6 +171,18 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         int delta = callback.getLocalNumActiveOperations() * -1;
         numActiveOperations.getAndAdd(delta);
         callback.resetLocalNumActiveOperations();
+    }
+
+    public boolean isFlushOnExit() {
+        return flushOnExit;
+    }
+
+    public void setFlushOnExit(boolean flushOnExit) {
+        this.flushOnExit = flushOnExit;
+    }
+
+    public boolean isFlushLogCreated() {
+        return flushLogCreated;
     }
 
 }
