@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -507,8 +508,9 @@ public class AsterixEventServiceUtil {
             if (existing.getState().equals(State.INACTIVE)) {
                 continue;
             }
-            conflictFound = existing.getCluster().getMasterNode().getClusterIp().equals(masterIp);
-            if (conflictFound) {
+            InetAddress extantAddress = InetAddress.getByName(existing.getCluster().getMasterNode().getClusterIp());
+            InetAddress masterAddress = InetAddress.getByName(masterIp);
+            if (extantAddress.equals(masterAddress)) {
                 conflictingInstance = existing;
                 break;
             }

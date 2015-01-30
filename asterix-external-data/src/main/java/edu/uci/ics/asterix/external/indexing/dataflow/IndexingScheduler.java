@@ -322,7 +322,7 @@ public class IndexingScheduler {
              * build the IP address to NC map
              */
             for (Map.Entry<String, NodeControllerInfo> entry : ncNameToNcInfos.entrySet()) {
-                String ipAddr = InetAddress.getByAddress(entry.getValue().getNetworkAddress().getIpAddress())
+                String ipAddr = InetAddress.getByAddress(entry.getValue().getNetworkAddress().lookupIpAddress())
                         .getHostAddress();
                 List<String> matchedNCs = ipToNcMapping.get(ipAddr);
                 if (matchedNCs == null) {

@@ -29,8 +29,8 @@ import java.util.Set;
  */
 public class AsterixRuntimeUtil {
 
-    public static Set<String> getNodeControllersOnIP(String ipAddress) throws Exception {
-        Map<String, Set<String>> nodeControllerInfo = getNodeControllerMap();
+    public static Set<String> getNodeControllersOnIP(InetAddress ipAddress) throws Exception {
+        Map<InetAddress, Set<String>> nodeControllerInfo = getNodeControllerMap();
         Set<String> nodeControllersAtLocation = nodeControllerInfo.get(ipAddress);
         return nodeControllersAtLocation;
     }
@@ -44,17 +44,9 @@ public class AsterixRuntimeUtil {
         return nodeControllers;
     }
 
-    public static Map<String, Set<String>> getNodeControllerMap() throws Exception {
-        Map<String, Set<String>> map = new HashMap<String, Set<String>>();
+    public static Map<InetAddress, Set<String>> getNodeControllerMap() throws Exception {
+        Map<InetAddress, Set<String>> map = new HashMap<InetAddress, Set<String>>();
         AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext().getIPAddressNodeMap(map);
         return map;
-    }
-
-    public static String getIPAddress(String hostname) throws UnknownHostException {
-        String address = InetAddress.getByName(hostname).getHostAddress();
-        if (address.equals("127.0.1.1")) {
-            address = "127.0.0.1";
-        }
-        return address;
     }
 }

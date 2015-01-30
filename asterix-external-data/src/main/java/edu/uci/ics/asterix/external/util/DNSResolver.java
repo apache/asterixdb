@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.external.util;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Set;
 
@@ -30,13 +32,15 @@ public class DNSResolver implements INodeResolver {
     @Override
     public String resolveNode(String value) throws AsterixException {
         try {
-            String ipAddress = AsterixRuntimeUtil.getIPAddress(value);
+            InetAddress ipAddress = InetAddress.getByName(value);
             Set<String> nodeControllers = AsterixRuntimeUtil.getNodeControllersOnIP(ipAddress);
             if (nodeControllers == null || nodeControllers.isEmpty()) {
                 throw new AsterixException(" No node controllers found at the address: " + value);
             }
             String chosenNCId = nodeControllers.toArray(new String[] {})[random.nextInt(nodeControllers.size())];
             return chosenNCId;
+        }catch (UnknownHostException e){
+            throw new AsterixException("Unable to resolve hostname '"+ value + "' to an IP address");
         } catch (AsterixException ae) {
             throw ae;
         } catch (Exception e) {

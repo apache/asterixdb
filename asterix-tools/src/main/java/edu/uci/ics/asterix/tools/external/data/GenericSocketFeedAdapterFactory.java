@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.tools.external.data;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
         if (socketsValue == null) {
             throw new IllegalArgumentException("\'sockets\' parameter not specified as part of adapter configuration");
         }
-        Map<String, Set<String>> ncMap = AsterixRuntimeUtil.getNodeControllerMap();
+        Map<InetAddress, Set<String>> ncMap = AsterixRuntimeUtil.getNodeControllerMap();
         List<String> ncs = AsterixRuntimeUtil.getAllNodeControllers();
         String[] socketsArray = socketsValue.split(",");
         Random random = new Random();
@@ -121,7 +122,7 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
             Pair<String, Integer> p = null;
             switch (mode) {
                 case IP:
-                    Set<String> ncsOnIp = ncMap.get(host);
+                    Set<String> ncsOnIp = ncMap.get(InetAddress.getByName(host));
                     if (ncsOnIp == null || ncsOnIp.isEmpty()) {
                         throw new IllegalArgumentException("Invalid host " + host
                                 + " as it is not part of the AsterixDB cluster. Valid choices are "
