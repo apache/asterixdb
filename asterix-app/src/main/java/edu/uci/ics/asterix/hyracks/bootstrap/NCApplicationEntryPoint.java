@@ -42,8 +42,16 @@ import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
 
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
+
+    @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)", required = false)
+    public int metadataRmiPort = 0;
 
     private INCApplicationContext ncApplicationContext = null;
     private IAsterixAppRuntimeContext runtimeContext;
@@ -55,6 +63,18 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
+        CmdLineParser parser = new CmdLineParser(this);
+
+        try {
+            parser.parseArgument(args);
+        }
+        catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            System.err.println("Usage:");
+            parser.printUsage(System.err);
+            throw e;
+        }
+
         ncAppCtx.setThreadFactory(new AsterixThreadFactory(ncAppCtx.getLifeCycleComponentManager()));
         ncApplicationContext = ncAppCtx;
         nodeId = ncApplicationContext.getNodeId();
@@ -188,7 +208,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         if (isMetadataNode) {
             IMetadataNode stub = null;
-            stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, 0);
+            stub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE, metadataRmiPort);
             proxy.setMetadataNode(stub);
         }
 
