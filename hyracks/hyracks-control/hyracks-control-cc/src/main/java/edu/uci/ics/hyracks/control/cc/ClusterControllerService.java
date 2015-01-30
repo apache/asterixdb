@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.cc;
 
 import java.io.File;
 import java.io.FileReader;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -113,7 +114,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private final Map<String, NodeControllerState> nodeRegistry;
 
-    private final Map<String, Set<String>> ipAddressNodeNameMap;
+    private final Map<InetAddress, Set<String>> ipAddressNodeNameMap;
 
     private final ServerContext serverCtx;
 
@@ -154,7 +155,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         File jobLogFolder = new File(ccConfig.ccRoot, "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
         nodeRegistry = new LinkedHashMap<String, NodeControllerState>();
-        ipAddressNodeNameMap = new HashMap<String, Set<String>>();
+        ipAddressNodeNameMap = new HashMap<InetAddress, Set<String>>();
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.ccRoot));
         IIPCI ccIPCI = new ClusterControllerIPCI();
         clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.clusterNetPort), ccIPCI,
@@ -185,7 +186,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ICCContext() {
             @Override
-            public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception {
+            public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws Exception {
                 GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(ClusterControllerService.this, map);
                 workQueue.scheduleAndSync(ginmw);
             }
@@ -286,7 +287,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         return runMapHistory;
     }
 
-    public Map<String, Set<String>> getIpAddressNodeNameMap() {
+    public Map<InetAddress, Set<String>> getIpAddressNodeNameMap() {
         return ipAddressNodeNameMap;
     }
 
@@ -331,7 +332,7 @@ public class ClusterControllerService extends AbstractRemoteService {
     }
 
     public NetworkAddress getDatasetDirectoryServiceInfo() {
-        return new NetworkAddress(ccConfig.clientNetIpAddress.getBytes(), ccConfig.clientNetPort);
+        return new NetworkAddress(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
     }
 
     private class DeadNodeSweeper extends TimerTask {

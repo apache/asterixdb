@@ -1296,18 +1296,14 @@ public class CCNCFunctions {
     }
 
     private static NetworkAddress readNetworkAddress(DataInputStream dis) throws IOException {
-        int bLen = dis.readInt();
-        byte[] ipAddress = new byte[bLen];
-        dis.read(ipAddress);
+        String address = dis.readUTF();
         int port = dis.readInt();
-        NetworkAddress networkAddress = new NetworkAddress(ipAddress, port);
+        NetworkAddress networkAddress = new NetworkAddress(address, port);
         return networkAddress;
     }
 
     private static void writeNetworkAddress(DataOutputStream dos, NetworkAddress networkAddress) throws IOException {
-        byte[] ipAddress = networkAddress.getIpAddress();
-        dos.writeInt(ipAddress.length);
-        dos.write(ipAddress);
+        dos.writeUTF(networkAddress.getAddress());
         dos.writeInt(networkAddress.getPort());
     }
 }

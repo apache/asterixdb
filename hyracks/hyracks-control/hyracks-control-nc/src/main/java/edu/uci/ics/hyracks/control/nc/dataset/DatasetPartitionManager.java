@@ -97,8 +97,9 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, int partition, int nPartitions,
             boolean orderedResult, boolean emptyResult) throws HyracksException {
         try {
+            // Be sure to send the *public* network address to the CC
             ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult,
-                    partition, nPartitions, ncs.getDatasetNetworkManager().getNetworkAddress());
+                    partition, nPartitions, ncs.getDatasetNetworkManager().getPublicNetworkAddress());
         } catch (Exception e) {
             throw new HyracksException(e);
         }

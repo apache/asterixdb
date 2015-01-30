@@ -34,7 +34,7 @@ public class CCConfig {
     @Option(name = "-cluster-net-port", usage = "Sets the port to listen for connections from node controllers (default 1099)")
     public int clusterNetPort = 1099;
 
-    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 19001)")
+    @Option(name = "-http-port", usage = "Sets the http port for the Cluster Controller (default: 16001)")
     public int httpPort = 16001;
 
     @Option(name = "-heartbeat-period", usage = "Sets the time duration between two heartbeats from each node controller in milliseconds (default: 10000)")

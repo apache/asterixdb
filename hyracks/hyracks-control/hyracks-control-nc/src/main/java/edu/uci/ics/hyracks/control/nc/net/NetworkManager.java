@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.control.nc.net;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -51,24 +50,46 @@ public class NetworkManager implements IChannelConnectionFactory {
 
     private final MuxDemux md;
 
-    private NetworkAddress networkAddress;
+    private NetworkAddress localNetworkAddress;
 
-    public NetworkManager(InetAddress inetAddress, PartitionManager partitionManager, int nThreads, int nBuffers)
+    private NetworkAddress publicNetworkAddress;
+
+    public NetworkManager(String inetAddress, int inetPort, PartitionManager partitionManager, int nThreads, int nBuffers,
+                          String publicInetAddress, int publicInetPort)
             throws IOException {
         this.partitionManager = partitionManager;
         this.nBuffers = nBuffers;
-        md = new MuxDemux(new InetSocketAddress(inetAddress, 0), new ChannelOpenListener(), nThreads,
+        md = new MuxDemux(new InetSocketAddress(inetAddress, inetPort), new ChannelOpenListener(), nThreads,
                 MAX_CONNECTION_ATTEMPTS);
+        // Just save these values for the moment; may be reset in start()
+        publicNetworkAddress = new NetworkAddress(publicInetAddress, publicInetPort);
     }
 
     public void start() throws IOException {
         md.start();
         InetSocketAddress sockAddr = md.getLocalAddress();
-        networkAddress = new NetworkAddress(sockAddr.getAddress().getAddress(), sockAddr.getPort());
+        localNetworkAddress = new NetworkAddress(sockAddr.getHostString(), sockAddr.getPort());
+
+        // See if the public address was explicitly specified, and if not,
+        // make it a copy of localNetworkAddress
+        if (publicNetworkAddress.getAddress() == null) {
+            publicNetworkAddress = localNetworkAddress;
+        }
+        else {
+            // Likewise for public port
+            if (publicNetworkAddress.getPort() == 0) {
+                publicNetworkAddress = new NetworkAddress
+                    (publicNetworkAddress.getAddress(), sockAddr.getPort());
+            }
+        }
     }
 
-    public NetworkAddress getNetworkAddress() {
-        return networkAddress;
+    public NetworkAddress getLocalNetworkAddress() {
+        return localNetworkAddress;
+    }
+
+    public NetworkAddress getPublicNetworkAddress() {
+        return publicNetworkAddress;
     }
 
     public void stop() {

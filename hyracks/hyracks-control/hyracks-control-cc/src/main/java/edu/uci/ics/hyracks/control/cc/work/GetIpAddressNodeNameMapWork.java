@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,9 +23,9 @@ import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class GetIpAddressNodeNameMapWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
-    private Map<String, Set<String>> map;
+    private Map<InetAddress, Set<String>> map;
 
-    public GetIpAddressNodeNameMapWork(ClusterControllerService ccs, Map<String, Set<String>> map) {
+    public GetIpAddressNodeNameMapWork(ClusterControllerService ccs, Map<InetAddress, Set<String>> map) {
         this.ccs = ccs;
         this.map = map;
     }

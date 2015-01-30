@@ -28,11 +28,20 @@ public class NCConfig implements Serializable {
     @Option(name = "-cc-host", usage = "Cluster Controller host name", required = true)
     public String ccHost;
 
-    @Option(name = "-cc-port", usage = "Cluster Controller port (default: 1099)")
+    @Option(name = "-cc-port", usage = "Cluster Controller port (default: 1099)", required = false)
     public int ccPort = 1099;
 
     @Option(name = "-cluster-net-ip-address", usage = "IP Address to bind cluster listener", required = true)
     public String clusterNetIPAddress;
+
+    @Option(name = "-cluster-net-port", usage = "IP port to bind cluster listener (default: random port)", required = false)
+    public int clusterNetPort = 0;
+
+    @Option(name = "-cluster-net-public-ip-address", usage = "Public IP Address to announce cluster listener (default: same as -cluster-net-ip-address)", required = false)
+    public String clusterNetPublicIPAddress;
+
+    @Option(name = "-cluster-net-public-port", usage = "Public IP port to announce cluster listener (default: same as -cluster-net-port; must set -cluser-net-public-ip-address also)", required = false)
+    public int clusterNetPublicPort = 0;
 
     @Option(name = "-node-id", usage = "Logical name of node controller unique within the cluster", required = true)
     public String nodeId;
@@ -40,8 +49,26 @@ public class NCConfig implements Serializable {
     @Option(name = "-data-ip-address", usage = "IP Address to bind data listener", required = true)
     public String dataIPAddress;
 
+    @Option(name = "-data-port", usage = "IP port to bind data listener (default: random port)", required = false)
+    public int dataPort = 0;
+
+    @Option(name = "-data-public-ip-address", usage = "Public IP Address to announce data listener (default: same as -data-ip-address)", required = false)
+    public String dataPublicIPAddress;
+
+    @Option(name = "-data-public-port", usage = "Public IP port to announce data listener (default: same as -data-port; must set -data-public-ip-address also)", required = false)
+    public int dataPublicPort = 0;
+
     @Option(name = "-result-ip-address", usage = "IP Address to bind dataset result distribution listener", required = true)
-    public String datasetIPAddress;
+    public String resultIPAddress;
+
+    @Option(name = "-result-port", usage = "IP port to bind dataset result distribution listener (default: random port)", required = false)
+    public int resultPort = 0;
+
+    @Option(name = "-result-public-ip-address", usage = "Public IP Address to announce dataset result distribution listener (default: same as -result-ip-address)", required = false)
+    public String resultPublicIPAddress;
+
+    @Option(name = "-result-public-port", usage = "Public IP port to announce dataset result distribution listener (default: same as -result-port; must set -result-public-ip-address also)", required = false)
+    public int resultPublicPort = 0;
 
     @Option(name = "-iodevices", usage = "Comma separated list of IO Device mount points (default: One device in default temp folder)", required = false)
     public String ioDevices = System.getProperty("java.io.tmpdir");
@@ -78,11 +105,30 @@ public class NCConfig implements Serializable {
         cList.add(String.valueOf(ccPort));
         cList.add("-cluster-net-ip-address");
         cList.add(clusterNetIPAddress);
+        cList.add("-cluster-net-port");
+        cList.add(String.valueOf(clusterNetPort));
+        cList.add("-cluster-net-public-ip-address");
+        cList.add(clusterNetPublicIPAddress);
+        cList.add("-cluster-net-public-port");
+        cList.add(String.valueOf(clusterNetPublicPort));
         cList.add("-node-id");
         cList.add(nodeId);
         cList.add("-data-ip-address");
         cList.add(dataIPAddress);
-        cList.add(datasetIPAddress);
+        cList.add("-data-port");
+        cList.add(String.valueOf(dataPort));
+        cList.add("-data-public-ip-address");
+        cList.add(dataPublicIPAddress);
+        cList.add("-data-public-port");
+        cList.add(String.valueOf(dataPublicPort));
+        cList.add("-result-ip-address");
+        cList.add(resultIPAddress);
+        cList.add("-result-port");
+        cList.add(String.valueOf(resultPort));
+        cList.add("-result-public-ip-address");
+        cList.add(resultPublicIPAddress);
+        cList.add("-result-public-port");
+        cList.add(String.valueOf(resultPublicPort));
         cList.add("-iodevices");
         cList.add(ioDevices);
         cList.add("-net-thread-count");
@@ -114,8 +160,18 @@ public class NCConfig implements Serializable {
         configuration.put("cc-host", ccHost);
         configuration.put("cc-port", (String.valueOf(ccPort)));
         configuration.put("cluster-net-ip-address", clusterNetIPAddress);
+        configuration.put("cluster-net-port", String.valueOf(clusterNetPort));
+        configuration.put("cluster-net-public-ip-address", clusterNetPublicIPAddress);
+        configuration.put("cluster-net-public-port", String.valueOf(clusterNetPublicPort));
         configuration.put("node-id", nodeId);
         configuration.put("data-ip-address", dataIPAddress);
+        configuration.put("data-port", String.valueOf(dataPort));
+        configuration.put("data-public-ip-address", dataPublicIPAddress);
+        configuration.put("data-public-port", String.valueOf(dataPublicPort));
+        configuration.put("result-ip-address", resultIPAddress);
+        configuration.put("result-port", String.valueOf(resultPort));
+        configuration.put("result-public-ip-address", resultPublicIPAddress);
+        configuration.put("result-public-port", String.valueOf(resultPublicPort));
         configuration.put("iodevices", ioDevices);
         configuration.put("net-thread-count", String.valueOf(nNetThreads));
         configuration.put("net-buffer-count", String.valueOf(nNetBuffers));

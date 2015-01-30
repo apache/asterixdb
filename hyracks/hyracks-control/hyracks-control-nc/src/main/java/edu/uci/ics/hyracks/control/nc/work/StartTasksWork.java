@@ -264,7 +264,7 @@ public class StartTasksWork extends AbstractWork {
                                 .getTaskAttemptId().getTaskId().getPartition());
                         PartitionChannel channel = new PartitionChannel(pid, new NetworkInputChannel(
                                 ncs.getNetworkManager(), new InetSocketAddress(InetAddress.getByAddress(networkAddress
-                                        .getIpAddress()), networkAddress.getPort()), pid, 5));
+                                        .lookupIpAddress()), networkAddress.getPort()), pid, 5));
                         channels.add(channel);
                     }
                 }

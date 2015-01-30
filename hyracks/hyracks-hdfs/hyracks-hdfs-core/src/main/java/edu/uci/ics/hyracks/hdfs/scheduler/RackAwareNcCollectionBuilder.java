@@ -50,7 +50,7 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
             for (int i = 0; i < NCs.length; i++) {
                 List<Integer> path = new ArrayList<Integer>();
                 String ipAddress = InetAddress.getByAddress(
-                        ncNameToNcInfos.get(NCs[i]).getNetworkAddress().getIpAddress()).getHostAddress();
+                        ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress()).getHostAddress();
                 topology.lookupNetworkTerminal(ipAddress, path);
                 if (path.size() <= 0) {
                     // if the hyracks nc is not in the defined cluster
@@ -87,7 +87,7 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                 if (workloads[i] < slotLimit) {
                     List<Integer> path = new ArrayList<Integer>();
                     String ipAddress = InetAddress.getByAddress(
-                            ncNameToNcInfos.get(NCs[i]).getNetworkAddress().getIpAddress()).getHostAddress();
+                            ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress()).getHostAddress();
                     topology.lookupNetworkTerminal(ipAddress, path);
                     if (path.size() <= 0) {
                         // if the hyracks nc is not in the defined cluster

@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -58,14 +59,19 @@ public class RegisterNodeWork extends SynchronizableWork {
                 throw new Exception("Node with this name already registered.");
             }
             nodeMap.put(id, state);
-            Map<String, Set<String>> ipAddressNodeNameMap = ccs.getIpAddressNodeNameMap();
+            Map<InetAddress, Set<String>> ipAddressNodeNameMap = ccs.getIpAddressNodeNameMap();
+            // QQQ Breach of encapsulation here - way too much duplicated data
+            // in NodeRegistration
             String ipAddress = state.getNCConfig().dataIPAddress;
+            if (state.getNCConfig().dataPublicIPAddress != null) {
+                ipAddress = state.getNCConfig().dataPublicIPAddress;
+            }
             ncConfiguration = new HashMap<String, String>();
             state.getNCConfig().toMap(ncConfiguration);
             Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
             if (nodes == null) {
                 nodes = new HashSet<String>();
-                ipAddressNodeNameMap.put(ipAddress, nodes);
+                ipAddressNodeNameMap.put(InetAddress.getByName(ipAddress), nodes);
             }
             nodes.add(id);
             LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);

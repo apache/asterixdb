@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.hdfs.scheduler;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,7 +39,15 @@ public class IPProximityNcCollectionBuilder implements INcCollectionBuilder {
         final TreeMap<BytesWritable, IntWritable> availableIpsToSlots = new TreeMap<BytesWritable, IntWritable>();
         for (int i = 0; i < workloads.length; i++) {
             if (workloads[i] < slotLimit) {
-                BytesWritable ip = new BytesWritable(ncNameToNcInfos.get(NCs[i]).getNetworkAddress().getIpAddress());
+                byte[] rawip;
+                try {
+                    rawip = ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress();
+                }
+                catch (UnknownHostException e) {
+                    // QQQ Should probably have a neater solution than this
+                    throw new RuntimeException(e);
+                }
+                BytesWritable ip = new BytesWritable(rawip);
                 IntWritable availableSlot = availableIpsToSlots.get(ip);
                 if (availableSlot == null) {
                     availableSlot = new IntWritable(slotLimit - workloads[i]);

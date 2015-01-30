@@ -174,7 +174,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
 
     private SocketAddress getSocketAddress(DatasetDirectoryRecord addr) throws UnknownHostException {
         NetworkAddress netAddr = addr.getNetworkAddress();
-        return new InetSocketAddress(InetAddress.getByAddress(netAddr.getIpAddress()), netAddr.getPort());
+        return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
     }
 
     private IDatasetInputChannelMonitor getMonitor(int partition) throws HyracksException {

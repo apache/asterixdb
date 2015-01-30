@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ import edu.uci.ics.hyracks.api.topology.ClusterTopology;
 public interface ICCContext {
     public ClusterControllerInfo getClusterControllerInfo();
 
-    public void getIPAddressNodeMap(Map<String, Set<String>> map) throws Exception;
+    public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws Exception;
 
     public ClusterTopology getClusterTopology();
 }
