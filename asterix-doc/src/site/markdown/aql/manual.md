@@ -276,16 +276,16 @@ The example below evaluates to 25.
 
 ###  FLWOR Expression
 
-    FLWOR         ::= ( ForClause | LetClause ) ( Clause )* "return" Expression
+    FLWOR         ::= ( ForClause | LetClause ) ( Clause )* ("return"|"select") Expression
     Clause         ::= ForClause | LetClause | WhereClause | OrderbyClause
                      | GroupClause | LimitClause | DistinctClause
-    ForClause      ::= "for" Variable ( "at" Variable )? "in" ( Expression )
-    LetClause      ::= "let" Variable ":=" Expression
+    ForClause      ::= ("for"|"from") Variable ( "at" Variable )? "in" ( Expression )
+    LetClause      ::= ("let"|"with") Variable ":=" Expression
     WhereClause    ::= "where" Expression
     OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? 
                        ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
     GroupClause    ::= "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )*
-                       "with" VariableRef ( "," VariableRef )*
+                       ("with"|"keeping") VariableRef ( "," VariableRef )*
     LimitClause    ::= "limit" Expression ( "offset" Expression )?
     DistinctClause ::= "distinct" "by" Expression ( "," Expression )*
     Variable       ::= <VARIABLE>
@@ -401,6 +401,21 @@ Nulls are treated as a single value when they occur in a grouping field.
         {
           "location" : $x.sender-location,
           "message" : $x.message
+        }
+
+In order to allow SQL fans to write queries in their favored ways,
+AQL provides synonyms:  _from_ for _for_, _select_ for _return_,  _with_ for _let_, and
+_keeping_ for _with_ in the group by clause. The following query
+is such an example.
+
+##### Example
+      from $x in dataset FacebookMessages
+      with $messages := $x.message
+      group by $loc := $x.sender-location keeping $messages
+      select
+        {
+          "location" : $loc,
+          "message" : $messages
         }
 
 ### Conditional Expression
