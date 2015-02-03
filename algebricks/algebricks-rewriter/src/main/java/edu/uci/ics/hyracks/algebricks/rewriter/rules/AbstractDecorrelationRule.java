@@ -47,8 +47,7 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
 
     protected boolean descOrSelfIsScanOrJoin(AbstractLogicalOperator op2) {
         LogicalOperatorTag t = op2.getOperatorTag();
-        if (t == LogicalOperatorTag.DATASOURCESCAN || t == LogicalOperatorTag.INNERJOIN
-                || t == LogicalOperatorTag.LEFTOUTERJOIN) {
+        if (isScanOrJoin(t)) {
             return true;
         }
         if (op2.getInputs().size() != 1) {
@@ -56,6 +55,14 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
         }
         AbstractLogicalOperator alo = (AbstractLogicalOperator) op2.getInputs().get(0).getValue();
         if (descOrSelfIsScanOrJoin(alo)) {
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isScanOrJoin(LogicalOperatorTag t) {
+        if (t == LogicalOperatorTag.DATASOURCESCAN || t == LogicalOperatorTag.INNERJOIN
+                || t == LogicalOperatorTag.LEFTOUTERJOIN) {
             return true;
         }
         return false;
