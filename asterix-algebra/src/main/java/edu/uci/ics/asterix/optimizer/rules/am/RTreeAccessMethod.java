@@ -108,8 +108,8 @@ public class RTreeAccessMethod implements IAccessMethod {
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin)
-            throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
+            boolean hasGroupBy) throws AlgebricksException {
         // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
@@ -144,7 +144,7 @@ public class RTreeAccessMethod implements IAccessMethod {
             return false;
         }
 
-        if (isLeftOuterJoin) {
+        if (isLeftOuterJoin && hasGroupBy) {
             //reset the null place holder variable
             AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
         }

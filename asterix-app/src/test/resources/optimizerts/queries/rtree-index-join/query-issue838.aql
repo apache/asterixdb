@@ -1,0 +1,45 @@
+/*
+ * Description  : This test case is to verify the fix for issue838
+ * https://code.google.com/p/asterixdb/issues/detail?id=838
+ * Expected Res : SUCCESS
+ * Date         : 18 Dec. 2014
+ */
+drop dataverse twitter if exists;
+create dataverse twitter;
+use dataverse twitter;
+
+create type TweetMessageType as closed {
+  tweetid: int64,
+  sender-location: point,
+  text: string
+}
+
+create type TweetHistorySubscription as open{
+  subscription-id: int32,
+  location: point
+}
+
+create dataset TweetHistorySubscriptions(TweetHistorySubscription)
+primary key subscription-id;
+create index testa on TweetHistorySubscriptions(location) type rtree;
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+create index locationIdx on TweetMessages(sender-location) type rtree;
+
+write output to nc1:"rttest/query-issue838.adm";
+
+for $sub in dataset TweetHistorySubscriptions
+let $location := $sub.location
+for $text in (
+  for $tweet in dataset TweetMessages
+    let $circle := create-circle($location,30.0)
+    where spatial-intersect($tweet.sender-location, $circle)
+    return $tweet
+)
+return {
+    "subscription-id":$sub.subscription-id,
+    "changeSet":1,
+    "execution-time":current-datetime(),
+    "message-text":$text
+}

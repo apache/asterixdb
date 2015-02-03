@@ -79,11 +79,13 @@ public interface IAccessMethod {
 
     /**
      * Applies the plan transformation to use chosenIndex to optimize a join query.
+     * In the case of a LeftOuterJoin, there may or may not be a needed groupby operation
+     * If there is, we will need to include it in the transformation
      */
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin)
-            throws AlgebricksException;
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
+            boolean hasGroupBy) throws AlgebricksException;
 
     /**
      * Analyzes expr to see whether it is optimizable by the given concrete index.

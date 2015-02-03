@@ -180,6 +180,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         if (gby.getNestedPlans().get(0).getRoots().size() != 1) {
             return false;
         }
+
         AbstractLogicalOperator nestedPlanRoot = (AbstractLogicalOperator) gby.getNestedPlans().get(0).getRoots()
                 .get(0).getValue();
         if (nestedPlanRoot.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
@@ -190,6 +191,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         if (agg.getVariables().size() > 1) {
             return false;
         }
+
         LogicalVariable aggVar = agg.getVariables().get(0);
         ILogicalExpression aggFun = agg.getExpressions().get(0).getValue();
         if (!aggVar.equals(unnestedVar)
@@ -217,6 +219,11 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
 
         LogicalVariable posVar = unnest1.getPositionalVariable();
         if (posVar == null) {
+            ArrayList<ILogicalOperator> neededAssigns = new ArrayList<ILogicalOperator>();
+
+            if (agg.getInputs().get(0).getValue().getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                getNeededAssigns(agg.getInputs().get(0).getValue(), neededAssigns);
+            }
 
             // create assignment for group-by keys
             ArrayList<LogicalVariable> gbyKeyAssgnVars = new ArrayList<LogicalVariable>();
@@ -238,7 +245,15 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             }
 
             OrderOperator order = new OrderOperator(orderExprs);
-            order.getInputs().add(new MutableObject<ILogicalOperator>(gbyKeyAssign));
+
+            if (neededAssigns.size() < 1) {
+                order.getInputs().add(new MutableObject<ILogicalOperator>(gbyKeyAssign));
+            } else {
+                order.getInputs().add(new MutableObject<ILogicalOperator>(neededAssigns.get(0)));
+                neededAssigns.get(neededAssigns.size() - 1).getInputs().clear();
+                neededAssigns.get(neededAssigns.size() - 1).getInputs()
+                        .add(new MutableObject<ILogicalOperator>(gbyKeyAssign));
+            }
 
             opRef.setValue(assign);
             assign.getInputs().add(new MutableObject<ILogicalOperator>(order));
@@ -281,5 +296,12 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         }
 
         return true;
+    }
+
+    private void getNeededAssigns(ILogicalOperator assign, ArrayList<ILogicalOperator> assigns) {
+        assigns.add(assign);
+        if (assign.getInputs().get(0).getValue().getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            getNeededAssigns(assign.getInputs().get(0).getValue(), assigns);
+        }
     }
 }

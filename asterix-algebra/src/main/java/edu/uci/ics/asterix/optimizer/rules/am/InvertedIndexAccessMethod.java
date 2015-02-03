@@ -120,7 +120,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
-        
+
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
             boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
             if (!matches) {
@@ -418,8 +418,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin)
-            throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
+            boolean hasGroupBy) throws AlgebricksException {
         // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
         Dataset dataset = analysisCtx.indexDatasetMap.get(chosenIndex);
         // Determine probe and index subtrees based on chosen index.
@@ -451,7 +451,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         //if LOJ, reset null place holder variable
         LogicalVariable newNullPlaceHolderVar = null;
-        if (isLeftOuterJoin) {
+        if (isLeftOuterJoin && hasGroupBy) {
             //get a new null place holder variable that is the first field variable of the primary key 
             //from the indexSubTree's datasourceScanOp
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);

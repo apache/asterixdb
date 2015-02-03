@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -58,11 +59,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * 4. Choose an index to apply (for now only a single index will be chosen).
  * 5. Rewrite plan using index (delegated to IAccessMethods).
  * For left-outer-join, additional patterns are checked and additional treatment is needed as follows:
- * 1. Since left-outer-join operators always have groupby operator on top of it,
- * first it checks a pattern: (groupby) <-- (leftouterjoin)
+ * 1. First it checks if there is a groupByOp above the join: (groupby) <-- (leftouterjoin)
  * 2. Inherently, only the right-subtree of the lojOp can be used as indexSubtree.
  * So, the right-subtree must have at least one applicable index on join field(s)
- * 3. The null placeholder variable introduced in groupByOp should be taken care of correctly.
+ * 3. If there is a groupByOp, the null placeholder variable introduced in groupByOp should be taken care of correctly.
  * Here, the primary key variable from datasourceScanOp replaces the introduced null placeholder variable.
  * If the primary key is composite key, then the first variable of the primary key variables becomes the
  * null place holder variable. This null placeholder variable works for all three types of indexes.
@@ -75,6 +75,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
     protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
     protected boolean isLeftOuterJoin = false;
+    protected boolean hasGroupBy = true;
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
@@ -129,6 +130,25 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         pruneIndexCandidates(analyzedAMs);
 
+        //Remove possibly chosen indexes from left Tree
+        if (isLeftOuterJoin) {
+            Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
+            // Check applicability of indexes by access method type.
+            while (amIt.hasNext()) {
+                Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
+                AccessMethodAnalysisContext amCtx = entry.getValue();
+                Iterator<Map.Entry<Index, List<Integer>>> indexIt = amCtx.indexExprs.entrySet().iterator();
+                while (indexIt.hasNext()) {
+                    Map.Entry<Index, List<Integer>> indexEntry = indexIt.next();
+
+                    Index chosenIndex = indexEntry.getKey();
+                    if (!chosenIndex.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
+                        indexIt.remove();
+                    }
+                }
+            }
+        }
+
         // Choose index to be applied.
         Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
@@ -139,16 +159,15 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         // Apply plan transformation using chosen index.
         AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
 
-        //For LOJ, prepare objects to reset LOJ nullPlaceHolderVariable in GroupByOp 
-        if (isLeftOuterJoin) {
+        //For LOJ with GroupBy, prepare objects to reset LOJ nullPlaceHolderVariable in GroupByOp
+        if (isLeftOuterJoin && hasGroupBy) {
             analysisCtx.setLOJGroupbyOpRef(opRef);
             ScalarFunctionCallExpression isNullFuncExpr = AccessMethodUtils
                     .findLOJIsNullFuncInGroupBy((GroupByOperator) opRef.getValue());
             analysisCtx.setLOJIsNullFuncInGroupBy(isNullFuncExpr);
         }
-
         boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
-                chosenIndex.second, analysisCtx, context, isLeftOuterJoin);
+                chosenIndex.second, analysisCtx, context, isLeftOuterJoin, hasGroupBy);
         if (res) {
             OperatorPropertiesUtil.typeOpRec(opRef, context);
         }
@@ -195,8 +214,17 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     private boolean isLeftOuterJoin(AbstractLogicalOperator op1) {
-        return (op1.getOperatorTag() == LogicalOperatorTag.GROUP && ((AbstractLogicalOperator) op1.getInputs().get(0)
-                .getValue()).getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN);
+        if (op1.getInputs().size() != 1) {
+            return false;
+        }
+        if (((AbstractLogicalOperator) op1.getInputs().get(0).getValue()).getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
+            return false;
+        }
+        if (op1.getOperatorTag() == LogicalOperatorTag.GROUP) {
+            return true;
+        }
+        hasGroupBy = false;
+        return true;
     }
 
     private boolean isInnerJoin(AbstractLogicalOperator op1) {

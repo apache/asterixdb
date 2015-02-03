@@ -149,8 +149,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     @Override
     public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
             OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin)
-            throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
+            boolean hasGroupBy) throws AlgebricksException {
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
         // Determine if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
@@ -185,7 +185,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             return false;
         }
 
-        if (isLeftOuterJoin) {
+        if (isLeftOuterJoin && hasGroupBy) {
             //reset the null place holder variable
             AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
         }
