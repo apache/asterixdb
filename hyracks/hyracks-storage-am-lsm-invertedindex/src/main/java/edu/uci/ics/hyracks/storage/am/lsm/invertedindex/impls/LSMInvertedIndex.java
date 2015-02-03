@@ -432,7 +432,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             ArrayList<IIndexAccessor> deletedKeysBTreeAccessors, List<ILSMComponent> operationalComponents) {
         ICursorInitialState initState = null;
         PermutingTupleReference keysOnlyTuple = createKeysOnlyTupleReference();
-        MultiComparator keyCmp = MultiComparator.createIgnoreFieldLength(invListCmpFactories);
+        MultiComparator keyCmp = MultiComparator.create(invListCmpFactories);
 
         // TODO: This check is not pretty, but it does the job. Come up with something more OO in the future.
         // Distinguish between regular searches and range searches (mostly used in merges).

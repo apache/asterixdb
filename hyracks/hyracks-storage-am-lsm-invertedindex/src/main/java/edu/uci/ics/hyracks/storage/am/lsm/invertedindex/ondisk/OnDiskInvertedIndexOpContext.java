@@ -37,7 +37,7 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
         // TODO: Ignore opcallbacks for now.
         btreeAccessor = btree.createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
         btreeCursor = btreeAccessor.createSearchCursor(false);
-        searchCmp = MultiComparator.createIgnoreFieldLength(btree.getComparatorFactories());
+        searchCmp = MultiComparator.create(btree.getComparatorFactories());
         if (btree.getComparatorFactories().length > 1) {
             prefixSearchCmp = MultiComparator.create(btree.getComparatorFactories(), 0, 1);
         }

@@ -369,8 +369,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     private boolean insert(ITupleReference tuple, LSMBTreeOpContext ctx) throws HyracksDataException, IndexException {
         ILSMComponent c = ctx.getComponentHolder().get(0);
         LSMBTreeMemoryComponent mutableComponent = (LSMBTreeMemoryComponent) c;
-        MultiComparator comparator = MultiComparator.createIgnoreFieldLength(mutableComponent.getBTree()
-                .getComparatorFactories());
+        MultiComparator comparator = MultiComparator.create(mutableComponent.getBTree().getComparatorFactories());
         LSMBTreePointSearchCursor searchCursor = new LSMBTreePointSearchCursor(ctx);
         IIndexCursor memCursor = new BTreeRangeSearchCursor(ctx.currentMutableBTreeOpCtx.leafFrame, false);
         RangePredicate predicate = new RangePredicate(tuple, tuple, true, true, comparator, comparator);

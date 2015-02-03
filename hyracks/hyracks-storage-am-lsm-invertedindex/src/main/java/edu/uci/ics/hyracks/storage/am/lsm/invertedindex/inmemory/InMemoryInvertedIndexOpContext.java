@@ -64,8 +64,8 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
                     btreePred = new RangePredicate(null, null, true, true, null, null);
                     btreeAccessor = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
                             NoOpOperationCallback.INSTANCE);
-                    btreeCmp = MultiComparator.createIgnoreFieldLength(btree.getComparatorFactories());
-                    tokenFieldsCmp = MultiComparator.createIgnoreFieldLength(tokenCmpFactories);
+                    btreeCmp = MultiComparator.create(btree.getComparatorFactories());
+                    tokenFieldsCmp = MultiComparator.create(tokenCmpFactories);
                 }
                 break;
             }
