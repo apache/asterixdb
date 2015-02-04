@@ -62,6 +62,7 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
 
     protected boolean isScanOrJoin(LogicalOperatorTag t) {
         if (t == LogicalOperatorTag.DATASOURCESCAN || t == LogicalOperatorTag.INNERJOIN
+                || t == LogicalOperatorTag.UNNEST || t == LogicalOperatorTag.UNNEST_MAP
                 || t == LogicalOperatorTag.LEFTOUTERJOIN) {
             return true;
         }
@@ -97,8 +98,6 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
                             context);
                 }
             }
-            // g.substituteVarInNestedPlans(ov, newVar);
-            // OperatorManipulationUtil.substituteVarRec(lojoin, ov, newVar);
         }
     }
 

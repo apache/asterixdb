@@ -37,6 +37,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCal
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
@@ -151,20 +152,36 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             addCondToJoin(select, join, context);
         } else { // push down
             Iterator<Mutable<ILogicalOperator>> branchIter = join.getInputs().iterator();
-
+            ILogicalExpression selectCondition = select.getCondition().getValue();
+            boolean lojToInner = false;
             for (int j = 0; j < intersectsBranch.length; j++) {
                 Mutable<ILogicalOperator> branch = branchIter.next();
                 boolean inter = intersectsBranch[j];
                 if (inter) {
-                    copySelectToBranch(select, branch, context);
+                    if (j > 0 && isLoj) {
+                        // if a left outer join, if the select condition is not-null filtering,
+                        // we rewrite left outer join
+                        // to inner join for this case.
+                        if (containsNotNullFiltering(selectCondition)) {
+                            lojToInner = true;
+                        }
+                    }
+                    if ((j > 0 && isLoj) && containsNullFiltering(selectCondition)) {
+                        // Select is-null($$var) cannot be pushed in the right branch of a LOJ;
+                        notPushedStack.addFirst(select);
+                    } else {
+                        // Conditions for the left branch can always be pushed.
+                        // Other conditions can be pushed to the right branch of a LOJ.
+                        copySelectToBranch(select, branch, context);
+                    }
                 }
-
-                // if a left outer join, we can only push conditions into the
-                // outer branch.
-                if (j == 0 && isLoj) {
-                    // stop at this branch
-                    break;
-                }
+            }
+            if (lojToInner) {
+                // Rewrites left outer join  to inner join.
+                InnerJoinOperator innerJoin = new InnerJoinOperator(join.getCondition());
+                innerJoin.getInputs().addAll(join.getInputs());
+                join = innerJoin;
+                context.computeAndSetTypeEnvironmentForOperator(join);
             }
         }
         ILogicalOperator top = join;
@@ -230,5 +247,63 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
         newSelect.getInputs().add(newRef);
         branch.setValue(newSelect);
         context.computeAndSetTypeEnvironmentForOperator(newSelect);
+    }
+
+    /**
+     * Whether the expression contains a not-null filtering
+     * 
+     * @param expr
+     * @return true if the expression contains a not-null filtering function call; false otherwise.
+     */
+    private boolean containsNotNullFiltering(ILogicalExpression expr) {
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) expr;
+        if (func.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND) {
+            for (Mutable<ILogicalExpression> argumentRef : func.getArguments()) {
+                if (containsNotNullFiltering(argumentRef.getValue())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (func.getFunctionIdentifier() != AlgebricksBuiltinFunctions.NOT) {
+            return false;
+        }
+        ILogicalExpression arg = func.getArguments().get(0).getValue();
+        if (arg.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        ScalarFunctionCallExpression func2 = (ScalarFunctionCallExpression) arg;
+        if (func2.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_NULL) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Whether the expression contains a null filtering
+     * 
+     * @param expr
+     * @return true if the expression contains a null filtering function call; false otherwise.
+     */
+    private boolean containsNullFiltering(ILogicalExpression expr) {
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) expr;
+        if (func.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND) {
+            for (Mutable<ILogicalExpression> argumentRef : func.getArguments()) {
+                if (containsNullFiltering(argumentRef.getValue())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (func.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_NULL) {
+            return false;
+        }
+        return true;
     }
 }
