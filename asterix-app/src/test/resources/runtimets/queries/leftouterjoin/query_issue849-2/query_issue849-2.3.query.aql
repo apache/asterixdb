@@ -1,0 +1,15 @@
+/*
+ * Description  : This test case is to verify the fix for issue827
+ * https://code.google.com/p/asterixdb/issues/detail?id=849
+ * Expected Res : SUCCESS
+ * Date         : 2nd Feb. 2015
+ */
+
+use dataverse test;
+
+for $x in dataset s
+for $y in (
+ for $z in {{ {"a":1, "c":1},{"a":2, "c":2},{"a":1, "c":null} }} where $x.b=$z.a
+    return $z.c
+)
+return {"x":$x,"y":$y}

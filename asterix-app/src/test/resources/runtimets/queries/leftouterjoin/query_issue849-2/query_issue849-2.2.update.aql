@@ -1,0 +1,12 @@
+/*
+ * Description  : This test case is to verify the fix for issue827
+ * https://code.google.com/p/asterixdb/issues/detail?id=849
+ * Expected Res : SUCCESS
+ * Date         : 2nd Feb. 2015
+ */
+
+use dataverse test;
+
+insert into dataset s ({ "b" : 1});
+insert into dataset s ({ "b" : 3});
+

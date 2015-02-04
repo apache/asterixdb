@@ -5403,6 +5403,16 @@
                 <output-dir compare="Text">query_issue285-2</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="leftouterjoin">
+            <compilation-unit name="query_issue849">
+                <output-dir compare="Text">query_issue849</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="leftouterjoin">
+            <compilation-unit name="query_issue849-2">
+                <output-dir compare="Text">query_issue849-2</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="index-leftouterjoin">
         <test-case FilePath="index-leftouterjoin">

@@ -1,0 +1,24 @@
+/*
+ * Description  : This test case is to verify the fix for issue827
+ * https://code.google.com/p/asterixdb/issues/detail?id=849
+ * Expected Res : SUCCESS
+ * Date         : 2nd Feb. 2015
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type sType as closed{b : int32};
+create dataset s(sType) primary key b;
+
+insert into dataset s ({ "b" : 1});
+insert into dataset s ({ "b" : 3});
+
+for $x in {{ {"a":1},{"a":2} }}
+for $y in (
+ for $z in dataset s where $x.a=$z.b
+    return $z.b
+)
+return {"x":$x,"y":$y}

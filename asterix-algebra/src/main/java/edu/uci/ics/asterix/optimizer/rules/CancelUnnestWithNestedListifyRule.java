@@ -25,7 +25,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -42,8 +41,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOpe
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -187,6 +184,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             return false;
         }
         AggregateOperator agg = (AggregateOperator) nestedPlanRoot;
+        Mutable<ILogicalOperator> aggInputOpRef = agg.getInputs().get(0);
 
         if (agg.getVariables().size() > 1) {
             return false;
@@ -219,13 +217,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
 
         LogicalVariable posVar = unnest1.getPositionalVariable();
         if (posVar == null) {
-            ArrayList<ILogicalOperator> neededAssigns = new ArrayList<ILogicalOperator>();
-
-            if (agg.getInputs().get(0).getValue().getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                getNeededAssigns(agg.getInputs().get(0).getValue(), neededAssigns);
-            }
-
-            // create assignment for group-by keys
+            // Creates assignment for group-by keys.
             ArrayList<LogicalVariable> gbyKeyAssgnVars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> gbyKeyAssgnExprs = new ArrayList<Mutable<ILogicalExpression>>();
             for (int i = 0; i < gby.getGroupByList().size(); i++) {
@@ -235,33 +227,23 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
                 }
             }
 
+            // Moves the nested pipeline before aggregation out of the group-by op.
+            Mutable<ILogicalOperator> bottomOpRef = aggInputOpRef;
+            AbstractLogicalOperator bottomOp = (AbstractLogicalOperator) bottomOpRef.getValue();
+            while (bottomOp.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                bottomOpRef = bottomOp.getInputs().get(0);
+                bottomOp = (AbstractLogicalOperator) bottomOpRef.getValue();
+            }
+
+            // Removes the group-by operator.
+            opRef.setValue(assign);
+            assign.getInputs().add(aggInputOpRef);
             AssignOperator gbyKeyAssign = new AssignOperator(gbyKeyAssgnVars, gbyKeyAssgnExprs);
             gbyKeyAssign.getInputs().add(gby.getInputs().get(0));
-
-            // add sort to replace group-by
-            List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
-            for (Pair<LogicalVariable, Mutable<ILogicalExpression>> k : gby.getGroupByList()) {
-                orderExprs.add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, k.second));
-            }
-
-            OrderOperator order = new OrderOperator(orderExprs);
-
-            if (neededAssigns.size() < 1) {
-                order.getInputs().add(new MutableObject<ILogicalOperator>(gbyKeyAssign));
-            } else {
-                order.getInputs().add(new MutableObject<ILogicalOperator>(neededAssigns.get(0)));
-                neededAssigns.get(neededAssigns.size() - 1).getInputs().clear();
-                neededAssigns.get(neededAssigns.size() - 1).getInputs()
-                        .add(new MutableObject<ILogicalOperator>(gbyKeyAssign));
-            }
-
-            opRef.setValue(assign);
-            assign.getInputs().add(new MutableObject<ILogicalOperator>(order));
+            bottomOpRef.setValue(gbyKeyAssign);
 
             context.computeAndSetTypeEnvironmentForOperator(gbyKeyAssign);
-            context.computeAndSetTypeEnvironmentForOperator(order);
             context.computeAndSetTypeEnvironmentForOperator(assign);
-
         } else {
             // if positional variable is used in unnest, the unnest will be pushed into the group-by as a running-aggregate
 
@@ -296,12 +278,5 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         }
 
         return true;
-    }
-
-    private void getNeededAssigns(ILogicalOperator assign, ArrayList<ILogicalOperator> assigns) {
-        assigns.add(assign);
-        if (assign.getInputs().get(0).getValue().getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            getNeededAssigns(assign.getInputs().get(0).getValue(), assigns);
-        }
     }
 }
