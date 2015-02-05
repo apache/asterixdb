@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -68,7 +69,7 @@ public class OptimizedHybridHashJoin {
 
     private RunFileWriter[] buildRFWriters; //writing spilled build partitions
     private RunFileWriter[] probeRFWriters; //writing spilled probe partitions
-    
+
     private final IPredicateEvaluator predEvaluator;
     private final boolean isLeftOuter;
     private final INullWriter[] nullWriters1;
@@ -91,19 +92,22 @@ public class OptimizedHybridHashJoin {
     private FrameTupleAppender probeTupAppenderToSpilled;
 
     private int numOfSpilledParts;
-    private ByteBuffer[] sPartBuffs;    //Buffers for probe spilled partitions (one buffer per spilled partition)
-    private ByteBuffer probeResBuff;    //Buffer for probe resident partition tuples
-    private ByteBuffer reloadBuffer;    //Buffer for reloading spilled partitions during partition tuning 
-    
+    private ByteBuffer[] sPartBuffs; //Buffers for probe spilled partitions (one buffer per spilled partition)
+    private ByteBuffer probeResBuff; //Buffer for probe resident partition tuples
+    private ByteBuffer reloadBuffer; //Buffer for reloading spilled partitions during partition tuning 
+
     private int[] buildPSizeInFrames; //Used for partition tuning
     private int freeFramesCounter; //Used for partition tuning
-    
-    private boolean isTableEmpty;	//Added for handling the case, where build side is empty (tableSize is 0)
-    private boolean isReversed;		//Added for handling correct calling for predicate-evaluator upon recursive calls that cause role-reversal
-    
+
+    private boolean isTableEmpty; //Added for handling the case, where build side is empty (tableSize is 0)
+    private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls that cause role-reversal
+
+    private static final Logger LOGGER = Logger.getLogger(OptimizedHybridHashJoin.class.getName());
+
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memForJoin, int numOfPartitions, String rel0Name,
             String rel1Name, int[] keys0, int[] keys1, IBinaryComparator[] comparators, RecordDescriptor buildRd,
-            RecordDescriptor probeRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator predEval) {
+            RecordDescriptor probeRd, ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc,
+            IPredicateEvaluator predEval) {
         this.ctx = ctx;
         this.memForJoin = memForJoin;
         this.buildRd = buildRd;
@@ -152,11 +156,11 @@ public class OptimizedHybridHashJoin {
 
         this.accessorBuild = new FrameTupleAccessor(ctx.getFrameSize(), buildRd);
         this.accessorProbe = new FrameTupleAccessor(ctx.getFrameSize(), probeRd);
-        
+
         this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
         this.isReversed = false;
-        
+
         this.nullWriters1 = isLeftOuter ? new INullWriter[nullWriterFactories1.length] : null;
         if (isLeftOuter) {
             for (int i = 0; i < nullWriterFactories1.length; i++) {
@@ -292,6 +296,9 @@ public class OptimizedHybridHashJoin {
     }
 
     private void spillPartition(int pid) throws HyracksDataException {
+        LOGGER.fine("OptimizedHybridHashJoin is spilling partition:" + pid + " with " + buildPSizeInFrames[pid]
+                + " frames for Thread ID " + Thread.currentThread().getId() + " (free frames: " + freeFramesCounter
+                + ").");
         int curBuffIx = curPBuff[pid];
         ByteBuffer buff = null;
         while (curBuffIx != END_OF_PARTITION) {
@@ -310,12 +317,16 @@ public class OptimizedHybridHashJoin {
         }
         curPBuff[pid] = pid;
         pStatus.set(pid);
+        LOGGER.fine("OptimizedHybridHashJoin has freed " + freeFramesCounter + " frames by spilling partition:" + pid
+                + " for Thread ID " + Thread.currentThread().getId() + ".");
     }
 
     private void buildWrite(int pid, ByteBuffer buff) throws HyracksDataException {
         RunFileWriter writer = buildRFWriters[pid];
         if (writer == null) {
             FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(rel0Name);
+            LOGGER.fine("OptimizedHybridHashJoin is creating a run file (" + file.getFile().getAbsolutePath()
+                    + ") for partition:" + pid + " for Thread ID " + Thread.currentThread().getId() + ".");
             writer = new RunFileWriter(file, ctx.getIOManager());
             writer.open();
             buildRFWriters[pid] = writer;
@@ -355,16 +366,23 @@ public class OptimizedHybridHashJoin {
         partitionTune(); //Trying to bring back as many spilled partitions as possible, making them resident
 
         int inMemTupCount = 0;
+        int inMemFrameCount = 0;
+        int spilledFrameCount = 0;
         numOfSpilledParts = 0;
 
         for (int i = 0; i < numOfPartitions; i++) {
             if (!pStatus.get(i)) {
                 inMemTupCount += buildPSizeInTups[i];
+                inMemFrameCount += buildPSizeInFrames[i];
             } else {
+                spilledFrameCount += buildPSizeInFrames[i];
                 numOfSpilledParts++;
             }
         }
 
+        LOGGER.fine("OptimizedHybridHashJoin build phase has spilled " + numOfSpilledParts + " of " + numOfPartitions
+                + " partitions for Thread ID " + Thread.currentThread().getId() + ". (" + inMemFrameCount
+                + " in-memory frames, " + spilledFrameCount + " spilled frames)");
         createInMemoryJoiner(inMemTupCount);
         cacheInMemJoin();
         this.isTableEmpty = (inMemTupCount == 0);
@@ -499,14 +517,14 @@ public class OptimizedHybridHashJoin {
             inMemJoiner.join(buffer, writer);
             return;
         }
-
+        ByteBuffer buff = null;
         for (int i = 0; i < tupleCount; ++i) {
             int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
 
             if (buildPSizeInTups[pid] > 0) { //Tuple has potential match from previous phase
                 if (pStatus.get(pid)) { //pid is Spilled
                     boolean needToClear = false;
-                    ByteBuffer buff = sPartBuffs[curPBuff[pid]];
+                    buff = sPartBuffs[curPBuff[pid]];
                     while (true) {
                         probeTupAppenderToSpilled.reset(buff, needToClear);
                         if (probeTupAppenderToSpilled.append(accessorProbe, i)) {
@@ -537,8 +555,9 @@ public class OptimizedHybridHashJoin {
         inMemJoiner.join(probeResBuff, writer);
         inMemJoiner.closeJoin(writer);
 
+        ByteBuffer buff = null;
         for (int pid = pStatus.nextSetBit(0); pid >= 0; pid = pStatus.nextSetBit(pid + 1)) {
-            ByteBuffer buff = sPartBuffs[curPBuff[pid]];
+            buff = sPartBuffs[curPBuff[pid]];
             accessorProbe.reset(buff);
             if (accessorProbe.getTupleCount() > 0) {
                 probeWrite(pid, buff);
@@ -609,7 +628,7 @@ public class OptimizedHybridHashJoin {
         return max;
     }
 
-    public BitSet getPartitinStatus() {
+    public BitSet getPartitionStatus() {
         return pStatus;
     }
 
@@ -642,8 +661,8 @@ public class OptimizedHybridHashJoin {
     public boolean isTableEmpty() {
         return this.isTableEmpty;
     }
-    
-    public void setIsReversed(boolean b){
-    	this.isReversed = b;
+
+    public void setIsReversed(boolean b) {
+        this.isReversed = b;
     }
 }

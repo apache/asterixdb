@@ -501,13 +501,14 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         } else {
                             tableSize = (int) (memsize * recordsPerFrame * factor);
                         }
+                        ISerializableTable table = new SerializableHashTable(tableSize, ctx);
                         for (int partitionid = 0; partitionid < state.nPartitions; partitionid++) {
                             RunFileWriter buildWriter = buildWriters[partitionid];
                             RunFileWriter probeWriter = probeWriters[partitionid];
                             if ((buildWriter == null && !isLeftOuter) || probeWriter == null) {
                                 continue;
                             }
-                            ISerializableTable table = new SerializableHashTable(tableSize, ctx);
+                            table.reset();
                             InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(
                                     ctx.getFrameSize(), rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1),
                                     hpcRep1, new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,

@@ -439,7 +439,8 @@ public class ClusterControllerService extends AbstractRemoteService {
                     return;
                 }
                 case CLUSTER_SHUTDOWN: {
-                    workQueue.schedule(new ClusterShutdownWork(ClusterControllerService.this, new IPCResponder<Boolean>(handle,mid)));
+                    workQueue.schedule(new ClusterShutdownWork(ClusterControllerService.this,
+                            new IPCResponder<Boolean>(handle, mid)));
                     return;
                 }
             }
@@ -625,10 +626,11 @@ public class ClusterControllerService extends AbstractRemoteService {
         deploymentRunMap.remove(deploymentKey);
     }
 
-    public synchronized void setShutdownRun(ShutdownRun sRun){
+    public synchronized void setShutdownRun(ShutdownRun sRun) {
         shutdownCallback = sRun;
     }
-    public synchronized ShutdownRun getShutdownRun(){
+
+    public synchronized ShutdownRun getShutdownRun() {
         return shutdownCallback;
     }
 

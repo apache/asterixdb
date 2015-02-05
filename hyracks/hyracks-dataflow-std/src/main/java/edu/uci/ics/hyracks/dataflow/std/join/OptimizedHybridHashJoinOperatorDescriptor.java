@@ -298,6 +298,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
 
                     state.hybridHJ.initBuild();
+                    LOGGER.fine("OptimizedHybridHashJoin is starting the build phase with " + state.numOfPartitions
+                            + " partitions using " + state.memForJoin + " frames for memory.");
                 }
 
                 @Override
@@ -384,6 +386,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     writer.open();
                     state.hybridHJ.initProbe();
 
+                    LOGGER.fine("OptimizedHybridHashJoin is starting the probe phase.");
                 }
 
                 @Override
@@ -398,10 +401,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void close() throws HyracksDataException {
-
                     state.hybridHJ.closeProbe(writer);
 
-                    BitSet partitionStatus = state.hybridHJ.getPartitinStatus();
+                    BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
                     hpcRep0 = new RepartitionComputerGeneratorFactory(state.numOfPartitions, hpcf0)
                             .createPartitioner(0);
                     hpcRep1 = new RepartitionComputerGeneratorFactory(state.numOfPartitions, hpcf1)
@@ -422,6 +424,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         joinPartitionPair(state.hybridHJ, bReader, pReader, pid, beforeMax, 1, false);
                     }
                     writer.close();
+                    LOGGER.fine("OptimizedHybridHashJoin closed its probe phase");
                 }
 
                 private void joinPartitionPair(OptimizedHybridHashJoin ohhj, RunFileReader buildSideReader,
@@ -437,9 +440,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     long probePartSize = wasReversed ? (ohhj.getBuildPartitionSize(pid) / ctx.getFrameSize()) : (ohhj
                             .getProbePartitionSize(pid) / ctx.getFrameSize());
 
-                    LOGGER.fine("\n>>>Joining Partition Pairs (pid " + pid + ") - (level " + level + ") - wasReversed "
-                            + wasReversed + " - BuildSize:\t" + buildPartSize + "\tProbeSize:\t" + probePartSize
-                            + " - MemForJoin " + (state.memForJoin) + "  - LeftOuter is " + isLeftOuter);
+                    LOGGER.fine("\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId()
+                            + ") (pid " + pid + ") - (level " + level + ") - wasReversed " + wasReversed
+                            + " - BuildSize:\t" + buildPartSize + "\tProbeSize:\t" + probePartSize + " - MemForJoin "
+                            + (state.memForJoin) + "  - LeftOuter is " + isLeftOuter);
 
                     //Apply in-Mem HJ if possible
                     if (!skipInMemoryHJ && (buildPartSize < state.memForJoin)
@@ -506,7 +510,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             int afterMax = (maxAfterBuildSize > maxAfterProbeSize) ? maxAfterBuildSize
                                     : maxAfterProbeSize;
 
-                            BitSet rPStatus = rHHj.getPartitinStatus();
+                            BitSet rPStatus = rHHj.getPartitionStatus();
                             if (!forceNLJ && (afterMax < (NLJ_SWITCH_THRESHOLD * beforeMax))) { //Case 2.1.1 - Keep applying HHJ
                                 LOGGER.fine("\t\t>>>Case 2.1.1 - KEEP APPLYING RecursiveHHJ WITH (isLeftOuter || build<probe) - [Level "
                                         + level + "]");
@@ -571,7 +575,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             int maxAfterProbeSize = rHHj.getMaxProbePartitionSize();
                             int afterMax = (maxAfterBuildSize > maxAfterProbeSize) ? maxAfterBuildSize
                                     : maxAfterProbeSize;
-                            BitSet rPStatus = rHHj.getPartitinStatus();
+                            BitSet rPStatus = rHHj.getPartitionStatus();
 
                             if (!forceNLJ && (afterMax < (NLJ_SWITCH_THRESHOLD * beforeMax))) { //Case 2.2.1 - Keep applying HHJ
                                 LOGGER.fine("\t\t>>>Case 2.2.1 - KEEP APPLYING RecursiveHHJ WITH RoleReversal - [Level "
