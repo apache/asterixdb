@@ -14,19 +14,24 @@
  */
 package edu.uci.ics.asterix.lexergenerator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.lexergenerator.rules.*;
+import edu.uci.ics.asterix.lexergenerator.rules.Rule;
+import edu.uci.ics.asterix.lexergenerator.rules.RuleChar;
+import edu.uci.ics.asterix.lexergenerator.rules.RuleEpsilon;
+import edu.uci.ics.asterix.lexergenerator.rules.RulePartial;
 
 public class LexerNode {
     private static String TOKEN_PREFIX = "TOKEN_";
     private LinkedHashMap<Rule, LexerNode> actions = new LinkedHashMap<Rule, LexerNode>();
     private String finalTokenName;
-    private Set<String> ongoingParsing = new HashSet<String>();
+    private List<String> ongoingParsing = new ArrayList<String>();
 
     public LexerNode clone() {
         LexerNode node = new LexerNode();

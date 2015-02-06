@@ -14,13 +14,13 @@ This is a quickstart guide for getting AsterixDB running in a distributed enviro
 ## <a id="PrerequisitesForInstallingAsterixDB">Prerequisites for Installing AsterixDB</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 Prerequisite:
 
- * [JDK7](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (Otherwise known as JDK 1.7).
+ * [JDK>=7](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (Otherwise known as JDK>=1.7).
 
 To know the version of Java installed on your system, execute the following:
 
         $ java -version
 
-If you have version as 1.7.0_x, similar to the output shown below, you are good to proceed.
+If your version is at least 1.7.0_x, similar to the output shown below, you are good to proceed.
 
 
         java version "1.7.0_13"
@@ -35,7 +35,7 @@ JDK would be installed at a path under /usr/lib/jvm/jdk-version .
  * For Mac: [JDK 7 Mac Install](http://docs.oracle.com/javase/7/docs/webnotes/install/mac/mac-jdk.html)
 JDK would be installed at /Library/Java/JavaVirtualMachines/jdk-version/Contents/Home .
 
-The java installation directory is referred as JAVA_HOME. Since we upgraded/installed Java, we need to ensure JAVA_HOME points to the installation directory of JDK 7. Modify your ~/.bash_profile (or ~/.bashrc) and define JAVA_HOME accordingly.  After the modification, execute the following:
+The java installation directory is referred as JAVA_HOME. Since we upgraded/installed Java, we need to ensure JAVA_HOME points to the installation directory of JDK. Modify your ~/.bash_profile (or ~/.bashrc) and define JAVA_HOME accordingly.  After the modification, execute the following:
 
 
         $ java -version
