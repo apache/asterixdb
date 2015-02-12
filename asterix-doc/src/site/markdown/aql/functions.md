@@ -14,10 +14,10 @@
 Asterix provides various classes of functions to support operations on numeric, string, spatial, and temporal data. This document explains how to use these functions.
 
 ## <a id="NumericFunctions">Numeric Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
-### numeric-abs ###
+### abs ###
  * Syntax:
 
-        numeric-abs(numeric_expression)
+        abs(numeric_expression)
 
  * Computes the absolute value of the argument.
  * Arguments:
@@ -27,11 +27,11 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Example:
 
-        let $v1 := numeric-abs(2013)
-        let $v2 := numeric-abs(-4036)
-        let $v3 := numeric-abs(0)
-        let $v4 := numeric-abs(float("-2013.5"))
-        let $v5 := numeric-abs(double("-2013.593823748327284"))
+        let $v1 := abs(2013)
+        let $v2 := abs(-4036)
+        let $v3 := abs(0)
+        let $v4 := abs(float("-2013.5"))
+        let $v5 := abs(double("-2013.593823748327284"))
         return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
 
 
@@ -40,10 +40,10 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": 4036, "v3": 0, "v4": 2013.5f, "v5": 2013.5938237483274d }
 
 
-### numeric-ceiling ###
+### ceiling ###
  * Syntax:
 
-        numeric-ceiling(numeric_expression)
+        ceiling(numeric_expression)
 
  * Computes the smallest (closest to negative infinity) number with no fractional part that is not less than the value of the argument. If the argument is already equal to mathematical integer, then the result is the same as the argument.
  * Arguments:
@@ -53,11 +53,11 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Example:
 
-        let $v1 := numeric-ceiling(2013)
-        let $v2 := numeric-ceiling(-4036)
-        let $v3 := numeric-ceiling(0.3)
-        let $v4 := numeric-ceiling(float("-2013.2"))
-        let $v5 := numeric-ceiling(double("-2013.893823748327284"))
+        let $v1 := ceiling(2013)
+        let $v2 := ceiling(-4036)
+        let $v3 := ceiling(0.3)
+        let $v4 := ceiling(float("-2013.2"))
+        let $v5 := ceiling(double("-2013.893823748327284"))
         return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
 
 
@@ -66,10 +66,10 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2013.0d }
 
 
-### numeric-floor ###
+### floor ###
  * Syntax:
 
-        numeric-floor(numeric_expression)
+        floor(numeric_expression)
 
  * Computes the largest (closest to positive infinity) number with no fractional part that is not greater than the value. If the argument is already equal to mathematical integer, then the result is the same as the argument.
  * Arguments:
@@ -79,11 +79,11 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Example:
 
-        let $v1 := numeric-floor(2013)
-        let $v2 := numeric-floor(-4036)
-        let $v3 := numeric-floor(0.8)
-        let $v4 := numeric-floor(float("-2013.2"))
-        let $v5 := numeric-floor(double("-2013.893823748327284"))
+        let $v1 := floor(2013)
+        let $v2 := floor(-4036)
+        let $v3 := floor(0.8)
+        let $v4 := floor(float("-2013.2"))
+        let $v5 := floor(double("-2013.893823748327284"))
         return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
 
 
@@ -92,10 +92,10 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": -4036, "v3": 0.0d, "v4": -2014.0f, "v5": -2014.0d }
 
 
-### numeric-round ###
+### round ###
  * Syntax:
 
-        numeric-round(numeric_expression)
+        round(numeric_expression)
 
  * Computes the number with no fractional part that is closest (and also closest to positive infinity) to the argument.
  * Arguments:
@@ -105,11 +105,11 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Example:
 
-        let $v1 := numeric-round(2013)
-        let $v2 := numeric-round(-4036)
-        let $v3 := numeric-round(0.8)
-        let $v4 := numeric-round(float("-2013.256"))
-        let $v5 := numeric-round(double("-2013.893823748327284"))
+        let $v1 := round(2013)
+        let $v2 := round(-4036)
+        let $v3 := round(0.8)
+        let $v4 := round(float("-2013.256"))
+        let $v5 := round(double("-2013.893823748327284"))
         return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5 }
 
 
@@ -118,10 +118,10 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "v1": 2013, "v2": -4036, "v3": 1.0d, "v4": -2013.0f, "v5": -2014.0d }
 
 
-### numeric-round-half-to-even ###
+### round-half-to-even ###
  * Syntax:
 
-        numeric-round-half-to-even(numeric_expression, [precision])
+        round-half-to-even(numeric_expression, [precision])
 
  * Computes the closest numeric value to `numeric_expression` that is a multiple of ten to the power of minus `precision`. `precision` is optional and by default value `0` is used.
  * Arguments:
@@ -132,14 +132,14 @@ Asterix provides various classes of functions to support operations on numeric, 
 
  * Example:
 
-        let $v1 := numeric-round-half-to-even(2013)
-        let $v2 := numeric-round-half-to-even(-4036)
-        let $v3 := numeric-round-half-to-even(0.8)
-        let $v4 := numeric-round-half-to-even(float("-2013.256"))
-        let $v5 := numeric-round-half-to-even(double("-2013.893823748327284"))
-        let $v6 := numeric-round-half-to-even(double("-2013.893823748327284"), 2)
-        let $v7 := numeric-round-half-to-even(2013, 4)
-        let $v8 := numeric-round-half-to-even(float("-2013.256"), 5)
+        let $v1 := round-half-to-even(2013)
+        let $v2 := round-half-to-even(-4036)
+        let $v3 := round-half-to-even(0.8)
+        let $v4 := round-half-to-even(float("-2013.256"))
+        let $v5 := round-half-to-even(double("-2013.893823748327284"))
+        let $v6 := round-half-to-even(double("-2013.893823748327284"), 2)
+        let $v7 := round-half-to-even(2013, 4)
+        let $v8 := round-half-to-even(float("-2013.256"), 5)
         return { "v1": $v1, "v2": $v2, "v3": $v3, "v4": $v4, "v5": $v5, "v6": $v6, "v7": $v7, "v8": $v8 }
 
 
@@ -371,6 +371,29 @@ Asterix provides various classes of functions to support operations on numeric, 
 
         asterix
 
+### uppercase ###
+ * Syntax:
+
+ uppercase(string_expression)
+
+ * Converts a given string `string_expression` to its uppercase form.
+ * Arguments:
+    * `string_expression` : A `string` to be converted.
+ * Return Value:
+    * Returns a `string` as the uppercase form of the given `string_expression`.
+
+ * Example:
+
+        use dataverse TinySocial;
+
+        let $i := "asterix"
+        return uppercase($i)
+
+
+ * The expected result is:
+
+        ASTERIX
+
 
 ### uppercase ###
  * Syntax:
@@ -401,7 +424,7 @@ Asterix provides various classes of functions to support operations on numeric, 
 
         matches(string_expression, string_pattern)
 
- * Checks whether the strings `string_expression` matches the given pattern `string_pattern`.
+ * Checks whether the strings `string_expression` matches the given pattern `string_pattern` (A Java regular expression pattern).
  * Arguments:
     * `string_expression` : A `string` that might contain the pattern.
     * `string_pattern` : A pattern `string` to be matched.
@@ -871,126 +894,6 @@ Asterix provides various classes of functions to support operations on numeric, 
         { "polygon": polygon("1.0,1.0 2.0,2.0 3.0,3.0 4.0,4.0") }
 
 
-### point ###
- * Syntax:
-
-        point(string_expression)
-
- * Constructor function for the `point` type by parsing a point string `string_expression`
- * Arguments:
-    * `string_expression` : The `string` value representing a point value.
- * Return Value:
-    * A `point` value represented by the given string.
-
- * Example:
-
-        use dataverse TinySocial;
-
-        let $c := point("55.05,-138.04")
-        return {"point": $c}
-
-
- * The expected result is:
-
-        { "point": point("55.05,-138.04") }
-
-
-### line ###
- * Syntax:
-
-        line(string_expression)
-
- * Constructor function for `line` type by parsing a line string `string_expression`
- * Arguments:
-    * `string_expression` : The `string` value representing a line value.
- * Return Value:
-    * A `line` value represented by the given string.
-
- * Example:
-
-        use dataverse TinySocial;
-
-        let $c := line("55.05,-138.04 13.54,-138.04")
-        return {"line": $c}
-
-
- * The expected result is:
-
-        { "line": line("55.05,-138.04 13.54,-138.04") }
-
-
-### rectangle ###
- * Syntax:
-
-        rectangle(string_expression)
-
- * Constructor function for `rectangle` type by parsing a rectangle string `string_expression`
- * Arguments:
-    * `string_expression` : The `string` value representing a rectangle value.
- * Return Value:
-    * A `rectangle` value represented by the given string.
-
- * Example:
-
-        use dataverse TinySocial;
-
-        let $c := rectangle("20.05,-125.0 40.67,-100.87")
-        return {"rectangle": $c}
-
-
- * The expected result is:
-
-        { "rectangle": rectangle("20.05,-125.0 40.67,-100.87") }
-
-
-### circle ###
- * Syntax:
-
-        circle(string_expression)
-
- * Constructor function for `circle` type by parsing a circle string `string_expression`
- * Arguments:
-    * `string_expression` : The `string` value representing a circle value.
- * Return Value:
-   * A `circle` value represented by the given string.
-
- * Example:
-
-        use dataverse TinySocial;
-
-        let $c := circle("55.05,-138.04 10.0")
-        return {"circle": $c}
-
-
- * The expected result is:
-
-        { "circle": circle("55.05,-138.04 10.0") }
-
-
-### polygon ###
- * Syntax:
-
-        polygon(string_expression)
-
- * Constructor function for `polygon` type by parsing a polygon string `string_expression`
- * Arguments:
-    * `string_expression` : The `string` value representing a polygon value.
- * Return Value:
-    * A `polygon` value represented by the given string.
-
- * Example:
-
-        use dataverse TinySocial;
-
-        let $c := polygon("55.05,-138.04 13.54,-138.04 13.54,-53.31 55.05,-53.31")
-        return {"polygon": $c}
-
-
- * The expected result is:
-
-        { "polygon": polygon("55.05,-138.04 13.54,-138.04 13.54,-53.31 55.05,-53.31") }
-
-
 ### get-x/get-y ###
  * Syntax:
 
@@ -1264,6 +1167,32 @@ AsterixDB supports queries with different similarity functions, including edit d
  * The expected result is:
 
         2
+
+### edit-distance-contains ###
+* Syntax:
+
+edit-distance-contains(expression1, expression2, threshold)
+
+* Checks whether `expression1` contains `expression2` with an [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) within a given threshold.
+
+* Arguments:
+    * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
+    * `expression2` : The same type as `expression1`.
+    * `threshold` : An `int32` that represents the distance threshold.
+* Return Value:
+    * An `OrderedList` with two items:
+        * The first item contains a `boolean` value representing whether `expression1` can contain `expression2`.
+        * The second item contains an `int32` that represents the required edit distance for `expression1` to contain `expression2` if the first item is true.
+
+* Example:
+        let $i := edit-distance-contains("happy","hapr",2)
+        return $i;
+
+
+* The expected result is:
+
+        [ true, 1 ]
+
 
 
 ### similarity-jaccard ###
@@ -1579,86 +1508,6 @@ AsterixDB supports queries with different similarity functions, including edit d
 
 ## <a id="TemporalFunctions">Temporal Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
-### date ###
- * Syntax:
-
-        date(string_expression)
-
- * Constructor function for `date` type by parsing a date string `string_expression`.
- * Arguments:
-    * `string_expression` : The `string` value representing a date value.
- * Return Value:
-    * A `date` value represented by the given string.
-
- * Example:
-
-        {
-        "date-extended": date("2013-04-01"),
-        "date-basic": date("20130401")
-        }
-
-
- * The expected result is:
-
-        {
-        "date-extended": date("2013-04-01"),
-        "date-basic": date("2013-04-01")
-        }
-
-
-### time ###
- * Syntax:
-
-        time(string_expression)
-
- * Constructor function for `time` type by parsing a time string `string_expression`.
- * Arguments:
-    * `string_expression` : The `string` value representing a time value.
- * Return Value:
-    * A `time` value represented by the given string.
-
- * Example:
-
-        {
-        "time-extended": time("12:30:45.678+08:00"),
-        "time-basic": time("123045678+0800")
-        }
-
-
- * The expected result is:
-
-        {
-        "time-extended": time("04:30:45.678Z"),
-        "time-basic": time("04:30:45.678Z")
-        }
-
-
-### datetime ###
- * Syntax:
-
-        datetime(string_expression)
-
- * Constructor function for the `datetime` type by parsing a datetime string `string_expression`.
- * Arguments:
-    * `string_expression` : The `string` value representing a datetime value.
- * Return Value:
-    * A `datetime` value represented by the given string.
-
- * Example:
-
-        {
-        "datetime-extended": datetime("2013-04-01T12:30:45.678+08:00"),
-        "datetime-basic": datetime("20130401T123045678+0800")
-        }
-
-
- * The expected result is:
-
-        {
-        "datetime-extended": datetime("2013-04-01T04:30:45.678Z"),
-        "datetime-basic": datetime("2013-04-01T04:30:45.678Z")
-        }
-
 
 ### interval-from-date ###
  * Syntax:
@@ -1726,10 +1575,10 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "datetime-interval": interval-datetime("2012-01-01T04:23:34.456Z, 2013-04-01T15:34:45.567Z") }
 
 
-### year/month/day/hour/minute/second/millisecond ###
+### get-year/get-month/get-day/get-hour/get-minute/get-second/get-millisecond ###
  * Syntax:
 
-        year/month/day/hour/minute/second/millisecond(temporal_expression)
+        get-year/get-month/get-day/get-hour/get-minute/get-second/get-millisecond(temporal_expression)
 
  * Accessors for accessing fields in a temporal value
  * Arguments:
@@ -1744,7 +1593,7 @@ AsterixDB supports queries with different similarity functions, including edit d
         let $c3 := time("12:23:34.930+07:00")
         let $c4 := duration("P3Y73M632DT49H743M3948.94S")
 
-        return {"year": year($c1), "month": month($c2), "day": day($c1), "hour": hour($c3), "min": minute($c4), "second": second($c2), "ms": millisecond($c4)}
+        return {"year": get-year($c1), "month": get-month($c2), "day": get-day($c1), "hour": get-hour($c3), "min": get-minute($c4), "second": get-second($c2), "ms": get-millisecond($c4)}
 
 
  * The expected result is:
@@ -1852,33 +1701,69 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "since-2011": duration("P567DT10H10M"), "since-2011-user-friendly": duration("P1Y6M18DT10H10M") }
 
 
-### calendar-duration-from-date ###
+### get-year-month-duration/get-day-time-duration ###
  * Syntax:
 
-        calendar-duration-from-date(date_expression, duration_expression)
+        get-year-month-duration/get-day-time-duration(duration_expression)
 
- * Gets a user-friendly representation of the duration `duration_expression` based on the given date `date_expression`.
+ * Extracts the correct `duration` subtype from `duration_expression`.
  * Arguments:
-    * `date_expression` : A `date` value to be used as the reference time point.
     * `duration_expression` : A `duration` value to be converted.
  * Return Value:
-    * A `duration` value with the duration as `duration_expression` but with a user-friendly representation.
+    * A `year-month-duration` value or a `day-time-duration` value.
 
  * Example:
 
-        use dataverse TinySocial;
-
-        for $i in dataset('TweetMessages')
-        where $i.send-time > datetime("2011-01-01T00:00:00")
-        return {"since-2011": subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")),
-        "since-2011-user-friendly": calendar-duration-from-date(date-from-datetime($i.send-time), subtract-datetime($i.send-time, datetime("2011-01-01T00:00:00")))}
+        let $i := get-year-month-duration(duration("P12M50DT10H"))
+        return $i;
 
 
  * The expected result is:
 
-        { "since-2011": duration("P359DT10H10M"), "since-2011-user-friendly": duration("P11M23DT10H10M") }
-        { "since-2011": duration("P236DT10H10M"), "since-2011-user-friendly": duration("P7M23DT10H10M") }
-        { "since-2011": duration("P567DT10H10M"), "since-2011-user-friendly": duration("P1Y6M18DT10H10M") }
+        year-month-duration("P1Y")
+
+### months-from-year-month-duration/milliseconds-from-day-time-duration ###
+* Syntax:
+
+        months-from-year-month-duration/milliseconds-from-day-time-duration(duration_expression)
+
+* Extracts the number of months or the number of milliseconds from the `duration` subtype.
+* Arguments:
+    * `duration_expression` : A `duration` of the correct subtype.
+* Return Value:
+    * An `int64` representing the number or months/milliseconds.
+
+* Example:
+
+        let $i := months-from-year-month-duration(get-year-month-duration(duration("P5Y7MT50M")))
+        return $i;
+
+
+* The expected result is:
+
+        67
+
+
+### duration-from-months/duration-from-milliseconds ###
+* Syntax:
+
+        duration-from-months/duration-from-milliseconds(number_expression)
+
+* Creates a `duration` from `number_expression`.
+* Arguments:
+    * `number_expression` : An `int64` representing the number of months/milliseconds
+* Return Value:
+    * A `duration` containing `number_expression` value for months/milliseconds
+
+* Example:
+
+        let $i := duration-from-months(8)
+        return $i;
+
+
+* The expected result is:
+
+        duration("P8M")
 
 
 ### current-date ###
@@ -1927,10 +1812,10 @@ AsterixDB supports queries with different similarity functions, including edit d
         "current-datetime": datetime("2013-04-06T00:48:44.093Z") }
 
 
-### date-from-datetime ###
+### get-date-from-datetime ###
  * Syntax:
 
-        date-from-datetime(datetime_expression)
+        get-date-from-datetime(datetime_expression)
 
  * Gets the date value from the given datetime value `datetime_expression`.
  * Arguments:
@@ -1938,10 +1823,10 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Return Value:
     * A `date` value from the datetime.
 
-### time-from-datetime ###
+### get-time-from-datetime ###
  * Syntax:
 
-        time-from-datetime(datetime_expression)
+        get-time-from-datetime(datetime_expression)
 
  * Get the time value from the given datetime value `datetime_expression`
  * Arguments:
@@ -1955,7 +1840,7 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         for $i in dataset('TweetMessages')
         where $i.send-time > datetime("2011-01-01T00:00:00")
-        return {"send-date": date-from-datetime($i.send-time), "send-time": time-from-datetime($i.send-time)}
+        return {"send-date": get-date-from-datetime($i.send-time), "send-time": get-time-from-datetime($i.send-time)}
 
 
  * The expected result is:
@@ -1963,6 +1848,28 @@ AsterixDB supports queries with different similarity functions, including edit d
         { "send-date": date("2011-12-26"), "send-time": time("10:10:00.000Z") }
         { "send-date": date("2011-08-25"), "send-time": time("10:10:00.000Z") }
         { "send-date": date("2012-07-21"), "send-time": time("10:10:00.000Z") }
+
+
+### day-of-week ###
+* Syntax:
+
+        day-of-week(date_expression)
+
+* Finds the day of the week for a given date (1-7)
+* Arguments:
+    * `date_expression`: A `date` value (Can also be a `datetime`)
+* Return Value:
+    * An `int8` representing the day of the week (1-7)
+
+* Example:
+
+        let $i := day-of-week( datetime("2012-12-30T12:12:12.039Z"))
+        return $i;
+
+
+* The expected result is:
+
+        7
 
 
 ### date-from-unix-time-in-days ###
@@ -1986,6 +1893,19 @@ AsterixDB supports queries with different similarity functions, including edit d
     * `numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the number of milliseconds.
  * Return Value:
     * A `datetime` value as the time after `numeric_expression` milliseconds since 1970-01-01T00:00:00Z.
+
+
+### datetime-from-date-time ###
+* Syntax:
+
+datetime-from-date-time(date_expression,time_expression)
+
+* Gets a datetime representing the combination of `date_expression` and `time_expression`
+    * Arguments:
+    * `date_expression`: A `date` value
+    * `time_expression` A `time` value
+* Return Value:
+    * A `datetime` value by combining `date_expression` and `time_expression`
 
 ### time-from-unix-time-in-ms ###
  * Syntax:
@@ -2012,94 +1932,30 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         { "date": date("2013-04-05"), "datetime": datetime("2013-04-05T05:28:20.000Z"), "time": time("00:00:03.748Z") }
 
-### subtract-date ###
- * Syntax:
 
-        subtract-date(date_start, date_end)
+### parse-date/parse-time/parse-datetime ###
+* Syntax:
 
- * Get the duration between two dates `date_start` and `date_end`
- * Arguments:
-    * `date_start`: the starting `date`
-    * `date_end`: the ending `date`
- * Return Value:
-    * A `duration` value between `date_start` and `date_end`
+parse-date/parse-time/parse-datetime(date_expression,formatting_expression)
 
- * Example:
+* Creates a `date/time/date-time` value by treating `date_expression` with formatting `formatting_expression`
+* Arguments:
+    * `date_expression`: A `string` value representing the `date/time/datetime`
+    * `formatting_expression` A `string` value providing the formatting for `date_expression`
+* Return Value:
+    * A `date/time/date-time` value corresponding to `date_expression`
 
-        use dataverse TinySocial;
+* Example:
 
-        for $i in dataset('FacebookUser')
-        for $j in dataset('FacebookUser')
-        where $i.user-since < $j.user-since and $i.user-since > datetime("2012-01-01T00:00:00")
-        return {"id1": $i.id, "id2": $j.id, "diff": subtract-date(date-from-datetime($j.user-since), date-from-datetime($i.user-since))}
+        let $i := parse-time("30:30","m:s")
+        return $i;
 
 
- * The expected result is:
+* The expected result is:
 
-        { "id1": 3, "id2": 1, "diff": duration("P41D") }
-        { "id1": 3, "id2": 7, "diff": duration("P28D") }
-        { "id1": 7, "id2": 1, "diff": duration("P13D") }
+        time("00:30:30.000Z")
 
 
-### subtract-time ###
- * Syntax:
-
-        subtract-time(time_start, time_end)
-
- * Get the duration between two times `time_start` and `time_end`
- * Arguments:
-    * `time_start`: the starting `time`
-    * `time_end`: the ending `time`
- * Return Value:
-    * A `duration` value between `time_start` and `time_end`
-
- * Example:
-
-        use dataverse TinySocial;
-
-        for $i in dataset('FacebookUser')
-        for $j in dataset('FacebookUser')
-        where $i.user-since < $j.user-since and $i.user-since > datetime("2012-01-01T00:00:00")
-        return {"id1": $i.id, "id2": $j.id, "diff": subtract-time(time-from-datetime($j.user-since), time("02:50:48.938"))}
-
-
- * The expected result is:
-
-        { "id1": 3, "id2": 1, "diff": duration("PT7H19M11.62S") }
-        { "id1": 3, "id2": 7, "diff": duration("PT7H19M11.62S") }
-        { "id1": 7, "id2": 1, "diff": duration("PT7H19M11.62S") }
-
-
-### subtract-datetime ###
- * Syntax:
-
-        subtract-datetime(datetime_start, datetime_end)
-
- * Get the duration between two datetimes `datetime_start` and `datetime_end`
- * Arguments:
-    * `datetime_start`: the starting `datetime`
-    * `datetime_end`: the ending `datetime`
- * Return Value:
-    * A `duration` value between `datetime_start` and `datetime_end`
-
- * Example:
-
-        use dataverse TinySocial;
-
-        for $i in dataset('FacebookUser')
-        for $j in dataset('FacebookUser')
-        where $i.user-since < $j.user-since and $i.user-since > datetime("2011-01-01T00:00:00")
-        return {"id1": $i.id, "id2": $j.id, "diff": subtract-datetime($j.user-since, $i.user-since)}
-
-
- * The expected result is:
-
-        { "id1": 2, "id2": 1, "diff": duration("P576D") }
-        { "id1": 2, "id2": 3, "diff": duration("P535D") }
-        { "id1": 2, "id2": 7, "diff": duration("P563D") }
-        { "id1": 3, "id2": 1, "diff": duration("P41D") }
-        { "id1": 3, "id2": 7, "diff": duration("P28D") }
-        { "id1": 7, "id2": 1, "diff": duration("P13D") }
 
 ### interval-start-from-date/time/datetime ###
  * Syntax:
@@ -2182,7 +2038,62 @@ AsterixDB supports queries with different similarity functions, including edit d
           "bin3": interval-time("05:23:00.000Z, 05:24:00.000Z"),
           "bin4": interval-datetime("-1987-11-19T00:00:00.000Z, -1987-11-20T00:00:00.000Z")}
 
+### interval-before/interval-after/interval-meets/interval-met-by/interval-overlaps/interval-overlapped-by/interval-overlapping/interval-starts/interval-started-by/interval-covers/interval-covered-by/interval-ends/interval-ended-by ###
+* Syntax:
+
+        interval-before/interval-after/interval-meets/interval-met-by/interval-overlaps/interval-overlapped-by/interval-overlapping/interval-starts/interval-started-by/interval-covers/interval-covered-by/interval-ends/interval-ended-by(interval_expression_1, interval_expression_2)
+
+* Determines whether two `interval` values have a specific relationship
+* Arguments:
+    * `interval_expression_1`: an `interval` value
+    * `interval_expression_2`: an `interval` value
+* Return Value:
+    * An `boolean` value representing whether the relationship holds.
+* Possible Relationships:
+    * `before/after`: The two `interval` values never meet, and the first `interval` `preceeds/follows` the second
+    * `meets/met-by`: The `first/second` `interval` ends precisely where the `second/first` `interval` starts
+    * `overlaps/overlapped-by`: The `first/second` `interval` ends in a sub-interval that begins the `second/first`
+    * `overlapping`: The two `interval` values share a common sub-interval
+    * `starts/started-by`: The `first/second` `interval` is precisely the beginning of the `second/first` `interval`
+    * `ends/ended-by`: The `first/second` `interval` is precisely the end of the `second/first` `interval`
+    * `covers/covered-by`: The `first/second` `interval` completely contains the `second/first` `interval`
+
+* Example:
+
+        let $i := interval-starts(interval-from-date(date("2013-01-01"), date("20130505")),interval-from-date(date("2013-01-01"), date("20130705")))
+        return $i;
+
+* The expectecd result is:
+
+        true
+
+
 ## <a id="OtherFunctions">Other Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+
+### len ###
+ * Syntax:
+
+    len(list_expression)
+
+ * Returns the length of the list list_expression.
+ * Arguments:
+    * `list_expression` : An `OrderedList`, `UnorderedList` or `null`, represents the list need to be checked.
+ * Return Value:
+    * An `Int32` that represents the length of list_expression.
+
+ * Example:
+
+        use dataverse TinySocial;
+
+        let $l := ["ASTERIX", "Hyracks"]
+        return len($l)
+
+
+ * The expected result is:
+
+        2
+
+
 
 ### is-null ###
  * Syntax:
@@ -2206,6 +2117,52 @@ AsterixDB supports queries with different similarity functions, including edit d
 
         "hello"
         "world"
+
+### is-system-null ###
+ * Syntax:
+
+        is-system-null(var)
+
+ * Checks whether the given variable is a `system null` value.
+ * Arguments:
+    * `var` : A variable (any type is allowed).
+ * Return Value:
+    * A `boolean` on whether the variable is a `system null` or not.
+
+### not ###
+ * Syntax:
+
+        not(var)
+
+ * Inverts a `boolean` value
+ * Arguments:
+    * `var` : A `boolean` (or `null`)
+ * Return Value:
+    * A `boolean`, the inverse of `var`. returns `null` if `var` is null
+ * Example:
+
+        for $m in ['hello', 'world', null]
+        where not(is-null($m))
+        return $m
+
+ * The expected result is:
+
+        "hello"
+        "world"
+
+
+
+### create-uuid ###
+ * Syntax:
+
+        create-uuid()
+
+* Generates a `uuid`.
+* Arguments:
+    * none
+* Return Value:
+    * A generated `uuid`.
+
 
 ### switch-case ###
  * Syntax:

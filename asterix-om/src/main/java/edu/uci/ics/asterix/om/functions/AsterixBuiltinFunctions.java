@@ -768,7 +768,6 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(GET_DATA, null, true); // TODO
         addPrivateFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
-        addFunction(GLOBAL_AVG, OptionalADoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(INDEX_SEARCH, new IResultTypeComputer() {
@@ -950,9 +949,9 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(LOCAL_SUM, NonTaggedNumericAggTypeComputer.INSTANCE, true);
         addFunction(SWITCH_CASE, NonTaggedSwitchCaseComputer.INSTANCE, true);
         addPrivateFunction(REG_EXP, ABooleanTypeComputer.INSTANCE, true);
-        addFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);
+        addPrivateFunction(INJECT_FAILURE, InjectFailureTypeComputer.INSTANCE, true);
         addPrivateFunction(CAST_RECORD, CastRecordResultTypeComputer.INSTANCE, true);
-        addFunction(CAST_LIST, CastListResultTypeComputer.INSTANCE, true);
+        addPrivateFunction(CAST_LIST, CastListResultTypeComputer.INSTANCE, true);
 
         addFunction(TID, AInt32TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, OptionalATimeTypeComputer.INSTANCE, true);
@@ -1004,7 +1003,7 @@ public class AsterixBuiltinFunctions {
         addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE, true);
         addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE, true);
         addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, true);
-        addFunction(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
+        addPrivateFunction(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(YEAR_MONTH_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
