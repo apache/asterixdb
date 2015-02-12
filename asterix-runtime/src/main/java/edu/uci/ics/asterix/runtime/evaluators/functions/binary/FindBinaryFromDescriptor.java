@@ -25,8 +25,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor{
 
@@ -50,7 +50,7 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
                         if (offsetTag != ATypeTag.INT32){
                             throw new AlgebricksException(functionName + ":expects INT32 at 3rd arguments, but got " + offsetTag);
                         }
-                        return IntegerSerializerDeserializer.getInt(storages[2].getByteArray(), 1);
+                        return IntegerPointable.getInteger(storages[2].getByteArray(), 1);
                     }
                 };
             }

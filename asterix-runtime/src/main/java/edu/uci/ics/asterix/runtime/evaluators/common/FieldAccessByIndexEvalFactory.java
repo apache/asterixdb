@@ -34,9 +34,9 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
 
@@ -96,7 +96,7 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
                                 + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[0]));
                     }
 
-                    fieldIndex = IntegerSerializerDeserializer.getInt(outInput1.getByteArray(), 1);
+                    fieldIndex = IntegerPointable.getInteger(outInput1.getByteArray(), 1);
                     fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetById(serRecord, fieldIndex,
                             nullBitmapSize, recordType.isOpen());
 

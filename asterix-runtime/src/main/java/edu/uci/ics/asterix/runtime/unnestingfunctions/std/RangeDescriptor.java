@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,9 +32,9 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
 
@@ -78,10 +78,10 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                     public void init(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
                         eval0.evaluate(tuple);
-                        current = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                        current = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
                         inputVal.reset();
                         eval1.evaluate(tuple);
-                        max = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+                        max = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
                     }
 
                     @SuppressWarnings("unchecked")

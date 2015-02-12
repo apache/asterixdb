@@ -15,6 +15,8 @@
 
 package edu.uci.ics.asterix.runtime.evaluators.functions.binary;
 
+import java.io.IOException;
+
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -27,10 +29,8 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-
-import java.io.IOException;
 
 public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -56,7 +56,7 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
                             throw new AlgebricksException(
                                     functionName + ":expects INT32 at 3rd arguments, but got " + tagSubLength);
                         }
-                        return IntegerSerializerDeserializer.getInt(storages[2].getByteArray(), 1);
+                        return IntegerPointable.getInteger(storages[2].getByteArray(), 1);
                     }
                 };
             }
@@ -90,7 +90,7 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
                 byte[] binaryBytes = storages[0].getByteArray();
                 byte[] startBytes = storages[1].getByteArray();
 
-                int start = IntegerSerializerDeserializer.getInt(startBytes, 1) - 1; // strange SQL index convention
+                int start = IntegerPointable.getInteger(startBytes, 1) - 1; // strange SQL index convention
                 int totalLength = ByteArrayPointable.getLength(binaryBytes, 1);
                 int subLength = getSubLength(tuple);
 

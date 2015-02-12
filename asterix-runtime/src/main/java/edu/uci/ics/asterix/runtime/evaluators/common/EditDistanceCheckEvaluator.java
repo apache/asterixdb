@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,9 +29,9 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
 
@@ -43,7 +43,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
     protected final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
-    
+
     public EditDistanceCheckEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
             throws AlgebricksException {
         super(args, output);
@@ -61,7 +61,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             throw new AlgebricksException("Invalid threshold type, expected INT32 but got "
                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[edThreshStart]) + ".");
         }
-        edThresh = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), edThreshStart + typeIndicatorSize);
+        edThresh = IntegerPointable.getInteger(argOut.getByteArray(), edThreshStart + typeIndicatorSize);
     }
 
     @Override

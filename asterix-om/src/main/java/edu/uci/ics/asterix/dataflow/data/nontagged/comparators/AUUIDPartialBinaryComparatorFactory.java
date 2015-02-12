@@ -17,7 +17,7 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
+import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
 
 public class AUUIDPartialBinaryComparatorFactory implements IBinaryComparatorFactory {
 
@@ -31,11 +31,11 @@ public class AUUIDPartialBinaryComparatorFactory implements IBinaryComparatorFac
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int msbCompare = Long.compare(Integer64SerializerDeserializer.getLong(b1, s1),
-                        Integer64SerializerDeserializer.getLong(b2, s2));
+                int msbCompare = Long.compare(LongPointable.getLong(b1, s1),
+                        LongPointable.getLong(b2, s2));
                 if (msbCompare == 0) {
-                    return Long.compare(Integer64SerializerDeserializer.getLong(b1, s1 + 8),
-                            Integer64SerializerDeserializer.getLong(b2, s2 + 8));
+                    return Long.compare(LongPointable.getLong(b1, s1 + 8),
+                            LongPointable.getLong(b2, s2 + 8));
                 } else {
                     return msbCompare;
                 }

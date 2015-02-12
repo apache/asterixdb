@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
+import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
 
 public class AUUIDPrinter implements IPrinter {
 
@@ -33,8 +33,8 @@ public class AUUIDPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long msb = Integer64SerializerDeserializer.getLong(b, s + 1);
-        long lsb = Integer64SerializerDeserializer.getLong(b, s + 9);
+        long msb = LongPointable.getLong(b, s + 1);
+        long lsb = LongPointable.getLong(b, s + 9);
         UUID uuid = new UUID(msb, lsb);
         ps.print("\"" + uuid.toString() + "\"");
     }

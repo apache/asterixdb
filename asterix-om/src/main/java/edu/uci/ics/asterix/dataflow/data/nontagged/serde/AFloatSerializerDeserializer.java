@@ -21,6 +21,7 @@ import java.io.IOException;
 import edu.uci.ics.asterix.om.base.AFloat;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
 public class AFloatSerializerDeserializer implements ISerializerDeserializer<AFloat> {
@@ -47,7 +48,7 @@ public class AFloatSerializerDeserializer implements ISerializerDeserializer<AFl
     }
 
     public static float getFloat(byte[] bytes, int offset) {
-        return FloatSerializerDeserializer.getFloat(bytes, offset);
+        return FloatPointable.getFloat(bytes, offset);
     }
 
 }

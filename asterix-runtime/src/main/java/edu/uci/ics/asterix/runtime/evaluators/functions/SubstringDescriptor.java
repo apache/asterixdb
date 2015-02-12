@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -72,7 +73,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                     + ": expects type INT32 for the second argument but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                         }
-                        int start = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1) - 1;
+                        int start = IntegerPointable.getInteger(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalLen.evaluate(tuple);
                         if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
@@ -80,7 +81,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                     + ": expects type INT32 for the third argument but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                         }
-                        int len = IntegerSerializerDeserializer.getInt(argOut.getByteArray(), 1);
+                        int len = IntegerPointable.getInteger(argOut.getByteArray(), 1);
 
                         argOut.reset();
                         evalString.evaluate(tuple);

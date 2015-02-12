@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,10 +44,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
 
@@ -310,7 +310,7 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
     }
 
     private ComparisonResult compareFloatWithArg(ATypeTag typeTag2) throws AlgebricksException {
-        float s = FloatSerializerDeserializer.getFloat(outLeft.getByteArray(), 1);
+        float s = FloatPointable.getFloat(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
                 byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);
@@ -376,7 +376,7 @@ public abstract class AbstractComparisonEvaluator implements ICopyEvaluator {
     }
 
     private ComparisonResult compareInt32WithArg(ATypeTag typeTag2) throws AlgebricksException {
-        int s = IntegerSerializerDeserializer.getInt(outLeft.getByteArray(), 1);
+        int s = IntegerPointable.getInteger(outLeft.getByteArray(), 1);
         switch (typeTag2) {
             case INT8: {
                 byte v2 = AInt8SerializerDeserializer.getByte(outRight.getByteArray(), 1);

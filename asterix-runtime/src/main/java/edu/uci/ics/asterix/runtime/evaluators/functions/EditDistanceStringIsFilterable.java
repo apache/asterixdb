@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,11 +31,11 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.BooleanPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.BooleanSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 /**
  * Checks whether a string with an edit distance threshold can be filtered with a lower bounding on number of common grams.
@@ -122,7 +122,7 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
                         + ": expects input type INT32 as second argument, but got " + typeTag + ".");
             }
-            int edThresh = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
+            int edThresh = IntegerPointable.getInteger(argBuf.getByteArray(), 1);
 
             // Check type and extract gram length.
             argBuf.reset();
@@ -132,7 +132,7 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
                         + ": expects input type INT32 as third argument, but got " + typeTag + ".");
             }
-            int gramLen = IntegerSerializerDeserializer.getInt(argBuf.getByteArray(), 1);
+            int gramLen = IntegerPointable.getInteger(argBuf.getByteArray(), 1);
 
             // Check type and extract usePrePost flag.
             argBuf.reset();
@@ -142,7 +142,7 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
                         + ": expects input type BOOLEAN as fourth argument, but got " + typeTag + ".");
             }
-            boolean usePrePost = BooleanSerializerDeserializer.getBoolean(argBuf.getByteArray(), 1);
+            boolean usePrePost = BooleanPointable.getBoolean(argBuf.getByteArray(), 1);
 
             // Compute result.
             int numGrams = (usePrePost) ? strLen + gramLen - 1 : strLen - gramLen + 1;

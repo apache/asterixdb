@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,9 +35,9 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -116,7 +116,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                     + ").");
                         }
 
-                        itemIndex = IntegerSerializerDeserializer.getInt(outInputIdx.getByteArray(), 1);
+                        itemIndex = IntegerPointable.getInteger(outInputIdx.getByteArray(), 1);
                         if (itemIndex >= AOrderedListSerializerDeserializer.getNumberOfItems(serOrderedList)) {
                             out.writeByte(SER_NULL_TYPE_TAG);
                             return;

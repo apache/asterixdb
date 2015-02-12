@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,23 +22,23 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeseria
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import edu.uci.ics.asterix.fuzzyjoin.IntArray;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.PartialIntersect;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityMetric;
 import edu.uci.ics.asterix.om.base.AFloat;
 import edu.uci.ics.asterix.om.base.AMutableFloat;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.fuzzyjoin.IntArray;
-import edu.uci.ics.asterix.fuzzyjoin.similarity.PartialIntersect;
-import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
-import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityMetric;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
     // assuming type indicator in serde format
@@ -97,11 +97,11 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
 
         inputVal.reset();
         evalLen1.evaluate(tuple);
-        int length1 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+        int length1 = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
 
         inputVal.reset();
         evalLen2.evaluate(tuple);
-        int length2 = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+        int length2 = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
 
         //
         // -- - length filter - --
@@ -131,7 +131,7 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens1.add(IntegerSerializerDeserializer.getInt(serList, itemOffset));
+                    tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
                 }
             } else {
                 lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
@@ -143,7 +143,7 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens1.add(IntegerSerializerDeserializer.getInt(serList, itemOffset));
+                    tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
                 }
             }
             // pad tokens
@@ -173,7 +173,7 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens2.add(IntegerSerializerDeserializer.getInt(serList, itemOffset));
+                    tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
                 }
             } else {
                 lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
@@ -185,7 +185,7 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens2.add(IntegerSerializerDeserializer.getInt(serList, itemOffset));
+                    tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
                 }
             }
             // pad tokens
@@ -196,7 +196,7 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
             // -- - token prefix - --
             inputVal.reset();
             evalTokenPrefix.evaluate(tuple);
-            int tokenPrefix = IntegerSerializerDeserializer.getInt(inputVal.getByteArray(), 1);
+            int tokenPrefix = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
 
             //
             // -- - position filter - --

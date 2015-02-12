@@ -20,7 +20,7 @@ import java.io.PrintStream;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 
 public class ShortWithoutTypeInfoPrinter implements IPrinter {
 
@@ -33,7 +33,7 @@ public class ShortWithoutTypeInfoPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        short d = ShortSerializerDeserializer.getShort(b, s);
+        short d = ShortPointable.getShort(b, s);
         try {
             WriteValueTools.writeInt((int)d, ps);
         } catch (IOException e) {
