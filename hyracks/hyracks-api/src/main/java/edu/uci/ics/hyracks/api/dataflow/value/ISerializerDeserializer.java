@@ -39,4 +39,10 @@ public interface ISerializerDeserializer<T> extends Serializable {
      *            - Stream to write data to.
      */
     public void serialize(T instance, DataOutput out) throws HyracksDataException;
+    
+    /*
+     * TODO: Add a new method:
+     * T deserialize(DataInput in, T mutable)
+     * to provide deserialization without creating objects
+     */
 }

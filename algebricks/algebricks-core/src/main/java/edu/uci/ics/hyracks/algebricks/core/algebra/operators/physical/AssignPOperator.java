@@ -47,8 +47,12 @@ public class AssignPOperator extends AbstractPhysicalOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
+        AssignOperator assignOp = (AssignOperator) op;
         ILogicalOperator op2 = op.getInputs().get(0).getValue();
         deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
+        if (assignOp.getExplicitOrderingProperty() != null) {
+            deliveredProperties.getLocalProperties().add(assignOp.getExplicitOrderingProperty());
+        }
     }
 
     @Override

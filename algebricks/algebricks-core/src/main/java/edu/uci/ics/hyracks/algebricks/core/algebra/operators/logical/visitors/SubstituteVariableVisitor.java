@@ -61,6 +61,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOp
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -101,6 +102,16 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
                 variables.set(i, pair.second);
             } else {
                 op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
+            }
+        }
+        // Substitute variables stored in ordering property
+        if (op.getExplicitOrderingProperty() != null) {
+            List<OrderColumn> orderColumns = op.getExplicitOrderingProperty().getOrderColumns();
+            for (int i = 0; i < orderColumns.size(); i++) {
+                OrderColumn oc = orderColumns.get(i);
+                if (oc.getColumn().equals(pair.first)) {
+                    orderColumns.set(i, new OrderColumn(pair.second, oc.getOrder()));
+                }
             }
         }
         substVarTypes(op, pair);
