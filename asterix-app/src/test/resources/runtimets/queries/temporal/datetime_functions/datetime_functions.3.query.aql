@@ -3,6 +3,8 @@ set import-private-functions 'true';
 
 let $dt1 := datetime-from-unix-time-in-ms(956007429)
 let $null1 := datetime-from-unix-time-in-ms(null)
+let $dtsecs := datetime-from-unix-time-in-secs(1356048000)
+let $nullsecs := datetime-from-unix-time-in-secs(null)
 let $d1 := date("1327-12-02")
 let $t1 := time("15:35:49.938-0800")
 let $dt2 := datetime-from-date-time($d1, $t1)
@@ -16,4 +18,4 @@ let $null6 := null + $dr1
 let $null7 := $dt1 + null
 let $c1 := $dt1 = ($dt1 - $dt3) + $dt3
 
-return { "datetime1" : $dt1, "datetime2" : $dt2, "datetime3" : $dt3, "duration1" : $dr1, "c1" : $c1, "null1" : $null1, "null2" : $null2, "null3" : $null3, "null4" : $null4, "null5" : $null5, "null6" : $null6, "null7" : $null7 }
+return { "datetime1" : $dt1, "datetime1secs": $dtsecs, "datetime2" : $dt2, "datetime3" : $dt3, "duration1" : $dr1, "c1" : $c1, "null1" : $null1, "null1secs": $nullsecs, "null2" : $null2, "null3" : $null3, "null4" : $null4, "null5" : $null5, "null6" : $null6, "null7" : $null7 }

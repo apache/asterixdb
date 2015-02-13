@@ -1894,6 +1894,17 @@ edit-distance-contains(expression1, expression2, threshold)
  * Return Value:
     * A `datetime` value as the time after `numeric_expression` milliseconds since 1970-01-01T00:00:00Z.
 
+### datetime-from-unix-time-in-secs ###
+ * Syntax:
+
+        datetime-from-unix-time-in-secs(numeric_expression)
+
+ * Gets a datetime representing the time after `numeric_expression` seconds since 1970-01-01T00:00:00Z.
+ * Arguments:
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the number of seconds.
+ * Return Value:
+    * A `datetime` value as the time after `numeric_expression` seconds since 1970-01-01T00:00:00Z.
+
 
 ### datetime-from-date-time ###
 * Syntax:
