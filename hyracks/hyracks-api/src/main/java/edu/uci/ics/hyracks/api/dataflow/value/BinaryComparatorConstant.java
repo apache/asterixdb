@@ -12,10 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.data;
+package edu.uci.ics.hyracks.api.dataflow.value;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+public final class BinaryComparatorConstant {
 
-public interface IBinaryIntegerInspector {
-    public int getIntegerValue(byte[] bytes, int offset, int length) throws HyracksDataException;
+    // Result code for isComparable()
+    // TRUE: can be comparable
+    // FALSE: can not be comparable
+    // UNKNOWN: can not be decided whether two arguments are comparable or not - usually NULL
+
+    public static enum ComparableResultCode {
+        TRUE,
+        FALSE,
+        UNKNOWN
+    }
+
 }

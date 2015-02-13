@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
@@ -52,7 +53,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     }
 
     // returns prefix slot number, or TUPLE_UNCOMPRESSED of no match was found
-    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple) {
+    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple) throws HyracksDataException {
         int prefixMid;
         int prefixBegin = 0;
         int prefixEnd = frame.getPrefixTupleCount() - 1;
@@ -77,7 +78,7 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     @Override
     public int findSlot(ITupleReference searchKey, ITreeIndexTupleReference frameTuple,
             ITreeIndexTupleReference framePrefixTuple, MultiComparator multiCmp, FindTupleMode mode,
-            FindTupleNoExactMatchPolicy matchPolicy) {
+            FindTupleNoExactMatchPolicy matchPolicy) throws HyracksDataException {
         if (frame.getTupleCount() <= 0)
             encodeSlotFields(TUPLE_UNCOMPRESSED, GREATEST_KEY_INDICATOR);
 

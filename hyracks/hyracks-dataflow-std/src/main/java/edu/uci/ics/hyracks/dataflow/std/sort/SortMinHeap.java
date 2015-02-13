@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
@@ -76,7 +77,7 @@ public class SortMinHeap implements ISelectionTree {
      * Assumption (element structure): [RunId][FrameIx][Offset][Poorman NK]
      */
     @Override
-    public void getMin(int[] result) {
+    public void getMin(int[] result) throws HyracksDataException {
         if (nextIx == 0) {
             result[0] = result[1] = result[2] = result[3] = -1;
             return;
@@ -100,7 +101,7 @@ public class SortMinHeap implements ISelectionTree {
     }
 
     @Override
-    public void insert(int[] e) {
+    public void insert(int[] e) throws HyracksDataException {
         if (nextIx >= elements.length) {
             elements = Arrays.copyOf(elements, elements.length * 2);
         }
@@ -127,7 +128,7 @@ public class SortMinHeap implements ISelectionTree {
         return (nextIx > 0 ? (nextIx - 1) / 4 : 0);
     }
 
-    private int[] delete(int nix) {
+    private int[] delete(int nix) throws HyracksDataException {
         int[] nv = Arrays.copyOfRange(elements, nix, nix + ELEMENT_SIZE);
         int[] lastElem = removeLast();
 
@@ -157,7 +158,7 @@ public class SortMinHeap implements ISelectionTree {
         return l;
     }
 
-    private void siftUp(int nodeIx) {
+    private void siftUp(int nodeIx) throws HyracksDataException {
         int p = getParent(nodeIx);
         if (p < 0) {
             return;
@@ -172,7 +173,7 @@ public class SortMinHeap implements ISelectionTree {
         }
     }
 
-    private void siftDown(int nodeIx) {
+    private void siftDown(int nodeIx) throws HyracksDataException {
         int mix = getMinOfChildren(nodeIx);
         if (mix < 0) {
             return;
@@ -188,14 +189,14 @@ public class SortMinHeap implements ISelectionTree {
     }
 
     // first < sec : -1
-    private int compare(int nodeSIx1, int nodeSIx2) {
+    private int compare(int nodeSIx1, int nodeSIx2) throws HyracksDataException {
         int[] n1 = Arrays.copyOfRange(elements, nodeSIx1, nodeSIx1 + ELEMENT_SIZE);
         int[] n2 = Arrays.copyOfRange(elements, nodeSIx2, nodeSIx2 + ELEMENT_SIZE);
         return (compare(n1, n2));
     }
 
     // first < sec : -1
-    private int compare(int[] n1, int[] n2) {
+    private int compare(int[] n1, int[] n2) throws HyracksDataException {
         // Compare Run Numbers
         if (n1[RUN_ID_IX] != n2[RUN_ID_IX]) {
             return (n1[RUN_ID_IX] < n2[RUN_ID_IX] ? -1 : 1);
@@ -209,7 +210,8 @@ public class SortMinHeap implements ISelectionTree {
         return compare(getFrame(n1[FRAME_IX]), getFrame(n2[FRAME_IX]), n1[OFFSET_IX], n2[OFFSET_IX]);
     }
 
-    private int compare(ByteBuffer fr1, ByteBuffer fr2, int r1StartOffset, int r2StartOffset) {
+    private int compare(ByteBuffer fr1, ByteBuffer fr2, int r1StartOffset, int r2StartOffset)
+            throws HyracksDataException {
         byte[] b1 = fr1.array();
         byte[] b2 = fr2.array();
         fta1.reset(fr1);
@@ -237,7 +239,7 @@ public class SortMinHeap implements ISelectionTree {
         return 0;
     }
 
-    private int getMinOfChildren(int nix) { // returns index of min child
+    private int getMinOfChildren(int nix) throws HyracksDataException { // returns index of min child
         int lix = getLeftChild(nix);
         if (lix < 0) {
             return -1;

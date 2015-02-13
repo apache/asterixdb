@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -211,19 +211,8 @@ public class OptimizedExternalSortRunGenerator implements IRunGenerator {
 
     }
 
-    private int getPNK(FrameTupleAccessor fta, int tIx, byte[] buffInArray) { // Moved
-                                                                              // buffInArray
-                                                                              // out
-                                                                              // for
-                                                                              // better
-                                                                              // performance
-                                                                              // (not
-                                                                              // converting
-                                                                              // for
-                                                                              // each
-                                                                              // and
-                                                                              // every
-                                                                              // tuple)
+    private int getPNK(FrameTupleAccessor fta, int tIx, byte[] buffInArray) {
+        // Moved buffInArray out for better performance (not converting for each and every tuple)
         int sfIdx = sortFields[0];
         int tStart = fta.getTupleStartOffset(tIx);
         int f0StartRel = fta.getFieldStartOffset(tIx, sfIdx);
@@ -232,15 +221,8 @@ public class OptimizedExternalSortRunGenerator implements IRunGenerator {
         return (nkc == null ? 0 : nkc.normalize(buffInArray, f0Start, f0EndRel - f0StartRel));
     }
 
-    private int getRunId(FrameTupleAccessor fta, int tupIx) { // Comparing
-                                                              // current
-                                                              // record to
-                                                              // last output
-                                                              // record, it
-                                                              // decides about
-                                                              // current
-                                                              // record's
-                                                              // runId
+    private int getRunId(FrameTupleAccessor fta, int tupIx) throws HyracksDataException {
+        // Comparing current record to last output record, it decides about current record's runId
         if (newRun) { // Very first record for a new run
             return curRunId;
         }

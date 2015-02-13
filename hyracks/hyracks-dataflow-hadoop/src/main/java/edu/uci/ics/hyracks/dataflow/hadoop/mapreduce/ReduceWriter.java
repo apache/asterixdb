@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -146,10 +146,10 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
     private void reduce() throws HyracksDataException {
         kvi.reset(group, bPtr + 1);
         try {
-            Reducer<K2, V2, K3, V3>.Context rCtx = new MRContextUtil().createReduceContext(helper.getConfiguration(), taId, kvi,
-                    keyCounter, valueCounter, recordWriter, null, null,
-                    (RawComparator<K2>) helper.getRawGroupingComparator(), (Class<K2>) helper.getJob()
-                            .getMapOutputKeyClass(), (Class<V2>) helper.getJob().getMapOutputValueClass());
+            Reducer<K2, V2, K3, V3>.Context rCtx = new MRContextUtil().createReduceContext(helper.getConfiguration(),
+                    taId, kvi, keyCounter, valueCounter, recordWriter, null, null, (RawComparator<K2>) helper
+                            .getRawGroupingComparator(), (Class<K2>) helper.getJob().getMapOutputKeyClass(),
+                    (Class<V2>) helper.getJob().getMapOutputValueClass());
             reducer.run(rCtx);
         } catch (Exception e) {
             throw new HyracksDataException(e);
@@ -157,7 +157,8 @@ public class ReduceWriter<K2, V2, K3, V3> implements IFrameWriter {
         groupStarted = false;
     }
 
-    private boolean sameGroup(FrameTupleAccessor a1, int t1Idx, FrameTupleAccessor a2, int t2Idx) {
+    private boolean sameGroup(FrameTupleAccessor a1, int t1Idx, FrameTupleAccessor a2, int t2Idx)
+            throws HyracksDataException {
         for (int i = 0; i < comparators.length; ++i) {
             int fIdx = groupFields[i];
             int s1 = a1.getTupleStartOffset(t1Idx) + a1.getFieldSlotsLength() + a1.getFieldStartOffset(t1Idx, fIdx);

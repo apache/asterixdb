@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -213,7 +213,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) {
+    public FrameOpSpaceStatus hasSpaceInsert(ITupleReference tuple) throws HyracksDataException {
         int freeContiguous = buf.capacity() - buf.getInt(freeSpaceOff)
                 - ((buf.getInt(tupleCountOff) + buf.getInt(prefixTupleCountOff)) * slotManager.getSlotSize());
 
@@ -365,8 +365,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findInsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp,
-                FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS, FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int slot;
+        try {
+            slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp,
+                    FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS, FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is an exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
@@ -377,8 +382,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.INCLUSIVE,
-                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int slot;
+        try {
+            slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.INCLUSIVE,
+                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is an exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
@@ -388,7 +398,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex) {
+    public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex)
+            throws HyracksDataException {
         int tupleIndex = slotManager.decodeSecondSlotField(targetTupleIndex);
         // Examine the tuple index to determine whether it is valid or not.
         if (tupleIndex != slotManager.getGreatestKeyIndicator()) {
@@ -406,8 +417,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findUpdateTupleIndex(ITupleReference tuple) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
-                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int slot;
+        try {
+            slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
+                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
@@ -418,8 +434,13 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findDeleteTupleIndex(ITupleReference tuple) throws TreeIndexException {
-        int slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
-                FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        int slot;
+        try {
+            slot = slotManager.findSlot(tuple, frameTuple, framePrefixTuple, cmp, FindTupleMode.EXACT,
+                    FindTupleNoExactMatchPolicy.HIGHER_KEY);
+        } catch (HyracksDataException e) {
+            throw new TreeIndexException(e);
+        }
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // Error indicator is set if there is no exact match.
         if (tupleIndex == slotManager.getErrorIndicator()) {
@@ -516,7 +537,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void insertSorted(ITupleReference tuple) {
+    public void insertSorted(ITupleReference tuple) throws HyracksDataException {
         int freeSpace = buf.getInt(freeSpaceOff);
         int fieldsToTruncate = 0;
 
@@ -547,7 +568,8 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey) {
+    public void split(ITreeIndexFrame rightFrame, ITupleReference tuple, ISplitKey splitKey)
+            throws HyracksDataException {
 
         BTreeFieldPrefixNSMLeafFrame rf = (BTreeFieldPrefixNSMLeafFrame) rightFrame;
 
@@ -726,7 +748,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
     @Override
     public int findTupleIndex(ITupleReference searchKey, ITreeIndexTupleReference pageTuple, MultiComparator cmp,
-            FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) {
+            FindTupleMode ftm, FindTupleNoExactMatchPolicy ftp) throws HyracksDataException {
         int slot = slotManager.findSlot(searchKey, pageTuple, framePrefixTuple, cmp, ftm, ftp);
         int tupleIndex = slotManager.decodeSecondSlotField(slot);
         // TODO: Revisit this one. Maybe there is a cleaner way to solve this in the RangeSearchCursor.

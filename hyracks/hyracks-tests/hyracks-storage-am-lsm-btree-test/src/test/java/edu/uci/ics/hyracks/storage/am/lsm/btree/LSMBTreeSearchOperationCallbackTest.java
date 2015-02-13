@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -165,7 +165,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         private class SynchronizingSearchOperationCallback implements ISearchOperationCallback {
 
             @Override
-            public boolean proceed(ITupleReference tuple) {
+            public boolean proceed(ITupleReference tuple) throws HyracksDataException {
                 Assert.assertEquals(0, cmp.compare(SearchTask.this.expectedTupleToBeLocked, tuple));
                 return false;
             }
@@ -222,7 +222,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
             try {
                 insertTaskStarted = true;
 
-                // bulkload [101, 150] and then insert [151, 200] and make sure it reaches disk, thus we will have two separate disk components 
+                // bulkload [101, 150] and then insert [151, 200] and make sure it reaches disk, thus we will have two separate disk components
                 // insert [50, 100] & [301, 350] to the in-memory component
                 // delete tuple 151
                 bulkloadIntTupleRange(101, 150);

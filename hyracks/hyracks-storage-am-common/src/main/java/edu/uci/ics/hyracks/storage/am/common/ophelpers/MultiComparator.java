@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.storage.am.common.ophelpers;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class MultiComparator {
@@ -27,7 +28,7 @@ public class MultiComparator {
         this.cmps = cmps;
     }
 
-    public int compare(ITupleReference tupleA, ITupleReference tupleB) {
+    public int compare(ITupleReference tupleA, ITupleReference tupleB) throws HyracksDataException {
         for (int i = 0; i < cmps.length; i++) {
             int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
                     tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));
@@ -38,7 +39,8 @@ public class MultiComparator {
         return 0;
     }
 
-    public int selectiveFieldCompare(ITupleReference tupleA, ITupleReference tupleB, int[] fields) {
+    public int selectiveFieldCompare(ITupleReference tupleA, ITupleReference tupleB, int[] fields)
+            throws HyracksDataException {
         for (int j = 0; j < cmps.length; j++) {
             int i = fields[j];
             int cmp = cmps[j].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
@@ -50,7 +52,7 @@ public class MultiComparator {
         return 0;
     }
 
-    public int compare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex) {
+    public int compare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex) throws HyracksDataException {
         for (int i = 0; i < cmps.length; i++) {
             int ix = startFieldIndex + i;
             int cmp = cmps[i].compare(tupleA.getFieldData(ix), tupleA.getFieldStart(ix), tupleA.getFieldLength(ix),
@@ -62,7 +64,8 @@ public class MultiComparator {
         return 0;
     }
 
-    public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields) {
+    public int fieldRangeCompare(ITupleReference tupleA, ITupleReference tupleB, int startFieldIndex, int numFields)
+            throws HyracksDataException {
         for (int i = startFieldIndex; i < startFieldIndex + numFields; i++) {
             int cmp = cmps[i].compare(tupleA.getFieldData(i), tupleA.getFieldStart(i), tupleA.getFieldLength(i),
                     tupleB.getFieldData(i), tupleB.getFieldStart(i), tupleB.getFieldLength(i));

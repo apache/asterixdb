@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -279,7 +279,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     }
 
     @Override
-    public void getOperationalComponents(ILSMIndexOperationContext ctx) {
+    public void getOperationalComponents(ILSMIndexOperationContext ctx) throws HyracksDataException {
         List<ILSMComponent> immutableComponents = diskComponents;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
         int cmc = currentMutableComponentId.get();
@@ -347,10 +347,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     public void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException, IndexException {
         LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
         // TODO: This is a hack to support logging properly in ASTERIX.
-        // The proper undo operations are only dependent on the after image so 
-        // it is correct to say we found nothing (null) as the before image (at least 
-        // in the perspective of ASTERIX). The semantics for the operation callbacks 
-        // are violated here (and they are somewhat unclear in the first place as to 
+        // The proper undo operations are only dependent on the after image so
+        // it is correct to say we found nothing (null) as the before image (at least
+        // in the perspective of ASTERIX). The semantics for the operation callbacks
+        // are violated here (and they are somewhat unclear in the first place as to
         // what they should be for an inverted index).
 
         ITupleReference indexTuple;
@@ -365,7 +365,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         ctx.modificationCallback.found(null, indexTuple);
         switch (ctx.getOperation()) {
             case INSERT: {
-                // Insert into the in-memory inverted index.                
+                // Insert into the in-memory inverted index.
                 ctx.currentMutableInvIndexAccessors.insert(indexTuple);
                 break;
             }

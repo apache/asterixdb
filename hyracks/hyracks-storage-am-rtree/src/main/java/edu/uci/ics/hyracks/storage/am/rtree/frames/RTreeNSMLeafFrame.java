@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
@@ -40,12 +41,12 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
     }
 
     @Override
-    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) {
+    public int findTupleIndex(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
         return slotManager.findTupleIndex(tuple, frameTuple, cmp, null, null);
     }
 
     @Override
-    public boolean intersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
+    public boolean intersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws HyracksDataException {
         frameTuple.resetByTupleIndex(this, tupleIndex);
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
@@ -103,7 +104,8 @@ public class RTreeNSMLeafFrame extends RTreeNSMFrame implements IRTreeLeafFrame 
         return frameTuple.getFieldCount();
     }
 
-    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex, MultiComparator cmp) {
+    public ITupleReference getBeforeTuple(ITupleReference tuple, int targetTupleIndex, MultiComparator cmp)
+            throws HyracksDataException {
         // Examine the tuple index to determine whether it is valid or not.
         if (targetTupleIndex != slotManager.getGreatestKeyIndicator()) {
             // We need to check the key to determine whether it's an insert or an update.

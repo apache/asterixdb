@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,7 +92,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
     }
 
     @Override
-    public void sortFrames() {
+    public void sortFrames() throws HyracksDataException {
         int nBuffers = dataFrameCount;
         tupleCount = 0;
         for (int i = 0; i < nBuffers; ++i) {
@@ -147,7 +147,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
         }
     }
 
-    private void sort(int[] tPointers, int offset, int length) {
+    private void sort(int[] tPointers, int offset, int length) throws HyracksDataException {
         int m = offset + (length >> 1);
         int mi = tPointers[m * 4];
         int mj = tPointers[m * 4 + 1];
@@ -212,7 +212,7 @@ public class FrameSorterQuickSort implements IFrameSorter {
         }
     }
 
-    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) {
+    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) throws HyracksDataException {
         int i1 = tPointers[tp1 * 4];
         int j1 = tPointers[tp1 * 4 + 1];
         int v1 = tPointers[tp1 * 4 + 3];

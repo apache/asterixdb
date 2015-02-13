@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -79,12 +80,12 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
     private class VeriyfingModificationCallback implements IModificationOperationCallback {
 
         @Override
-        public void before(ITupleReference tuple) {
+        public void before(ITupleReference tuple) throws HyracksDataException {
             Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, tuple));
         }
 
         @Override
-        public void found(ITupleReference before, ITupleReference after) {
+        public void found(ITupleReference before, ITupleReference after) throws HyracksDataException {
             if (isFoundNull) {
                 Assert.assertEquals(null, before);
             } else {

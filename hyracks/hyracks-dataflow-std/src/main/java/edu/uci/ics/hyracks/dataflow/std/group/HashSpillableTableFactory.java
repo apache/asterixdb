@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * edu.uci.ics.hyracks.dataflow.std.aggregations.ISpillableTableFactory#
      * buildSpillableTable(edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
@@ -135,7 +135,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             private int[] tPointers;
 
             @Override
-            public void sortFrames() {
+            public void sortFrames() throws HyracksDataException {
                 int sfIdx = storedKeys[0];
                 int totalTCount = table.getTupleCount();
                 tPointers = new int[totalTCount * 3];
@@ -361,7 +361,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
              * list. There are two cases:<br>
              * 1) If the next frame is not initialized, allocate a new frame. 2)
              * When frames are already created, they are recycled.
-             * 
+             *
              * @return Whether a new frame is added successfully.
              * @throws HyracksDataException
              */
@@ -389,7 +389,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 return true;
             }
 
-            private void sort(int[] tPointers, int offset, int length) {
+            private void sort(int[] tPointers, int offset, int length) throws HyracksDataException {
                 int m = offset + (length >> 1);
                 int mTable = tPointers[m * 3];
                 int mRow = tPointers[m * 3 + 1];

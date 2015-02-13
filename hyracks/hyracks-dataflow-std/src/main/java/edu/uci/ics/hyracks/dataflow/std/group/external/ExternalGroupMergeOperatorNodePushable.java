@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -397,7 +397,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
     /**
      * Close the run file, and also the corresponding readers and
      * input frame.
-     * 
+     *
      * @param index
      * @param runCursors
      * @param tupleAccessor
@@ -415,7 +415,8 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
         }
     }
 
-    private int compareFrameTuples(IFrameTupleAccessor fta1, int j1, IFrameTupleAccessor fta2, int j2) {
+    private int compareFrameTuples(IFrameTupleAccessor fta1, int j1, IFrameTupleAccessor fta2, int j2)
+            throws HyracksDataException {
         byte[] b1 = fta1.getBuffer().array();
         byte[] b2 = fta2.getBuffer().array();
         for (int f = 0; f < keyFields.length; ++f) {
@@ -434,7 +435,8 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
         return 0;
     }
 
-    private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators) {
+    private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators)
+            throws HyracksDataException {
         return new Comparator<ReferenceEntry>() {
 
             @Override
@@ -453,10 +455,16 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     int s2 = fta2.getTupleStartOffset(j2) + fta2.getFieldSlotsLength()
                             + fta2.getFieldStartOffset(j2, fIdx);
                     int l2 = fta2.getFieldEndOffset(j2, fIdx) - fta2.getFieldStartOffset(j2, fIdx);
-                    int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
-                    if (c != 0) {
-                        return c;
+                    int c;
+                    try {
+                        c = comparators[f].compare(b1, s1, l1, b2, s2, l2);
+                        if (c != 0) {
+                            return c;
+                        }
+                    } catch (HyracksDataException e) {
+                        throw new IllegalArgumentException(e);
                     }
+
                 }
                 return 0;
             }

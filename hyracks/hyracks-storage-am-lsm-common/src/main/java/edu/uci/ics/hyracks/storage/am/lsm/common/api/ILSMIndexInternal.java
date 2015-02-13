@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,8 @@ public interface ILSMIndexInternal extends ILSMIndex {
 
     public void addComponent(ILSMComponent index) throws HyracksDataException;
 
-    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents) throws HyracksDataException;
+    public void subsumeMergedComponents(ILSMComponent newComponent, List<ILSMComponent> mergedComponents)
+            throws HyracksDataException;
 
     public void changeMutableComponent();
 
@@ -57,14 +58,15 @@ public interface ILSMIndexInternal extends ILSMIndex {
 
     /**
      * Populates the context's component holder with a snapshot of the components involved in the operation.
-     * 
+     *
      * @param ctx
      *            - the operation's context
+     * @throws HyracksDataException
      */
-    public void getOperationalComponents(ILSMIndexOperationContext ctx);
+    public void getOperationalComponents(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
-    
+
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
 
 }

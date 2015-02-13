@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,11 +32,15 @@ public interface IBTreeLeafFrame extends IBTreeFrame {
     public int findUpsertTupleIndex(ITupleReference tuple) throws TreeIndexException;
 
     /**
-     * @param searchTuple the tuple to match 
-     * @param targetTupleIndex the index of the tuple to check
-     * @return the tuple at targetTupleIndex if its keys match searchTuple's keys, otherwise null 
+     * @param searchTuple
+     *            the tuple to match
+     * @param targetTupleIndex
+     *            the index of the tuple to check
+     * @return the tuple at targetTupleIndex if its keys match searchTuple's keys, otherwise null
+     * @throws HyracksDataException
      */
-    public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex);
+    public ITupleReference getMatchingKeyTuple(ITupleReference searchTuple, int targetTupleIndex)
+            throws HyracksDataException;
 
     public void setNextLeaf(int nextPage);
 

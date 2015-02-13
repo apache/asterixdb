@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -53,7 +54,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public int findBestChild(ITupleReference tuple, MultiComparator cmp) {
+    public int findBestChild(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
         int bestChild = rtreePolicy.findBestChildPosition(this, tuple, frameTuple, cmp);
         frameTuple.resetByTupleIndex(this, bestChild);
         return buf.getInt(getChildPointerOff(frameTuple));
@@ -61,7 +62,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
     // frameTuple is assumed to have the tuple to be tested against.
     @Override
-    public boolean checkIfEnlarementIsNeeded(ITupleReference tuple, MultiComparator cmp) {
+    public boolean checkIfEnlarementIsNeeded(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
         return !RTreeComputationUtils.containsRegion(frameTuple, tuple, cmp, keyValueProviders);
     }
 
@@ -73,7 +74,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp) {
+    public int findTupleByPointer(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         for (int i = 0; i < getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(this, i);
@@ -92,7 +93,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp) {
+    public int getChildPageIdIfIntersect(ITupleReference tuple, int tupleIndex, MultiComparator cmp)
+            throws HyracksDataException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         frameTuple.resetByTupleIndex(this, tupleIndex);
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
@@ -114,7 +116,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public int findTupleByPointer(ITupleReference tuple, PathList traverseList, int parentIndex, MultiComparator cmp) {
+    public int findTupleByPointer(ITupleReference tuple, PathList traverseList, int parentIndex, MultiComparator cmp)
+            throws HyracksDataException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         for (int i = 0; i < getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(this, i);
@@ -181,7 +184,11 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws TreeIndexException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
         if (tupleIndex == -1) {
-            tupleIndex = findTupleByPointer(tuple, cmp);
+            try {
+                tupleIndex = findTupleByPointer(tuple, cmp);
+            } catch (HyracksDataException e) {
+                throw new TreeIndexException(e);
+            }
         }
         if (tupleIndex != -1) {
             tupleWriter.writeTuple(tuple, buf.array(), getTupleOffset(tupleIndex));
@@ -192,7 +199,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
 
     }
 
-    protected int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp) {
+    protected int pointerCmp(ITupleReference tupleA, ITupleReference tupleB, MultiComparator cmp)
+            throws HyracksDataException {
         return childPtrCmp
                 .compare(tupleA.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleA), childPtrSize,
                         tupleB.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(tupleB), childPtrSize);
@@ -243,7 +251,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public void enlarge(ITupleReference tuple, MultiComparator cmp) {
+    public void enlarge(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;

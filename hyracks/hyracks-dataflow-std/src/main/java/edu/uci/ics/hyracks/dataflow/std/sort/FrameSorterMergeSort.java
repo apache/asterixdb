@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -94,7 +94,7 @@ public class FrameSorterMergeSort implements IFrameSorter {
     }
 
     @Override
-    public void sortFrames() {
+    public void sortFrames() throws HyracksDataException {
         int nBuffers = dataFrameCount;
         tupleCount = 0;
         for (int i = 0; i < nBuffers; ++i) {
@@ -150,7 +150,7 @@ public class FrameSorterMergeSort implements IFrameSorter {
         }
     }
 
-    private void sort(int offset, int length) {
+    private void sort(int offset, int length) throws HyracksDataException {
         int step = 1;
         int len = length;
         int end = offset + len;
@@ -173,8 +173,12 @@ public class FrameSorterMergeSort implements IFrameSorter {
         }
     }
 
-    /** Merge two subarrays into one */
-    private void merge(int start1, int start2, int len1, int len2) {
+    /**
+     * Merge two subarrays into one
+     *
+     * @throws HyracksDataException
+     */
+    private void merge(int start1, int start2, int len1, int len2) throws HyracksDataException {
         int targetPos = start1;
         int pos1 = start1;
         int pos2 = start2;
@@ -208,7 +212,7 @@ public class FrameSorterMergeSort implements IFrameSorter {
         tPointersTemp[dest * 4 + 3] = tPointers[src * 4 + 3];
     }
 
-    private int compare(int tp1, int tp2) {
+    private int compare(int tp1, int tp2) throws HyracksDataException {
         int i1 = tPointers[tp1 * 4];
         int j1 = tPointers[tp1 * 4 + 1];
         int v1 = tPointers[tp1 * 4 + 3];

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.rtree.frames;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
@@ -22,7 +23,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 public class RTreeComputationUtils {
 
     public static double enlargedArea(ITupleReference tuple, ITupleReference tupleToBeInserted, MultiComparator cmp,
-            IPrimitiveValueProvider[] keyValueProviders) {
+            IPrimitiveValueProvider[] keyValueProviders) throws HyracksDataException {
         double areaBeforeEnlarge = RTreeComputationUtils.area(tuple, cmp, keyValueProviders);
         double areaAfterEnlarge = 1.0;
 
@@ -55,7 +56,8 @@ public class RTreeComputationUtils {
     }
 
     public static double overlappedArea(ITupleReference tuple1, ITupleReference tupleToBeInserted,
-            ITupleReference tuple2, MultiComparator cmp, IPrimitiveValueProvider[] keyValueProviders) {
+            ITupleReference tuple2, MultiComparator cmp, IPrimitiveValueProvider[] keyValueProviders)
+            throws HyracksDataException {
         double area = 1.0;
         double f1, f2;
 
@@ -114,7 +116,7 @@ public class RTreeComputationUtils {
     }
 
     public static boolean containsRegion(ITupleReference tuple1, ITupleReference tuple2, MultiComparator cmp,
-            IPrimitiveValueProvider[] keyValueProviders) {
+            IPrimitiveValueProvider[] keyValueProviders) throws HyracksDataException {
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;

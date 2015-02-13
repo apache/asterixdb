@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 package edu.uci.ics.hyracks.dataflow.std.sort;
+
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * @author pouria
@@ -27,30 +29,33 @@ public interface ISelectionTree {
 
     /**
      * Inserts a new element into the selectionTree
-     * 
+     *
      * @param element
      *            contains the pointer to the memory slot, containing the tuple,
      *            along with its run number
+     * @throws HyracksDataException
      */
-    void insert(int[] element);
+    void insert(int[] element) throws HyracksDataException;
 
     /**
      * Removes and returns the smallest element in the tree
-     * 
+     *
      * @param result
      *            is the array that will eventually contain minimum entry
      *            pointer
+     * @throws HyracksDataException
      */
-    void getMin(int[] result);
+    void getMin(int[] result) throws HyracksDataException;
 
     /**
      * Removes and returns the largest element in the tree
-     * 
+     *
      * @param result
      *            is the array that will eventually contain maximum entry
      *            pointer
+     * @throws HyracksDataException
      */
-    void getMax(int[] result);
+    void getMax(int[] result) throws HyracksDataException;
 
     /**
      * @return True of the selection tree does not have any element, false
@@ -65,7 +70,7 @@ public interface ISelectionTree {
 
     /**
      * Returns (and does NOT remove) the smallest element in the tree
-     * 
+     *
      * @param result
      *            is the array that will eventually contain minimum entry
      *            pointer
@@ -74,11 +79,12 @@ public interface ISelectionTree {
 
     /**
      * Returns (and does NOT remove) the largest element in the tree
-     * 
+     *
      * @param result
      *            is the array that will eventually contain maximum entry
      *            pointer
+     * @throws HyracksDataException
      */
-    void peekMax(int[] result);
+    void peekMax(int[] result) throws HyracksDataException;
 
 }

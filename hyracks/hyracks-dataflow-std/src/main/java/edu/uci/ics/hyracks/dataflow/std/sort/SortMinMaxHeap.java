@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
@@ -66,7 +67,7 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     @Override
-    public void insert(int[] element) {
+    public void insert(int[] element) throws HyracksDataException {
         if (nextIx >= elements.length) {
             elements = Arrays.copyOf(elements, elements.length * 2);
         }
@@ -78,7 +79,7 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     @Override
-    public void getMin(int[] result) {
+    public void getMin(int[] result) throws HyracksDataException {
         if (nextIx == 0) {
             result[0] = result[1] = result[2] = result[3] = -1;
             return;
@@ -114,7 +115,7 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     @Override
-    public void getMax(int[] result) {
+    public void getMax(int[] result) throws HyracksDataException {
         if (nextIx == ELEMENT_SIZE) {
             int[] topElement = removeLast();
             for (int x = 0; x < ELEMENT_SIZE; x++) {
@@ -144,7 +145,7 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     @Override
-    public void peekMax(int[] result) {
+    public void peekMax(int[] result) throws HyracksDataException {
         if (nextIx == ELEMENT_SIZE) {
             for (int i = 0; i < ELEMENT_SIZE; i++) {
                 result[i] = elements[i];
@@ -169,7 +170,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         result[0] = result[1] = result[2] = result[3] = -1;
     }
 
-    private int[] delete(int delIx) {
+    private int[] delete(int delIx) throws HyracksDataException {
         int s = nextIx;
         if (nextIx > ELEMENT_SIZE) {
             int[] delEntry = Arrays.copyOfRange(elements, delIx, delIx + ELEMENT_SIZE);
@@ -197,7 +198,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         return l;
     }
 
-    private void bubbleUp(int ix) {
+    private void bubbleUp(int ix) throws HyracksDataException {
         int p = getParentIx(ix);
         if (isAtMinLevel(ix)) {
             if (p != NOT_EXIST && compare(p, ix) < 0) {
@@ -216,7 +217,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         }
     }
 
-    private void bubbleUpMax(int ix) {
+    private void bubbleUpMax(int ix) throws HyracksDataException {
         int gp = getGrandParent(ix);
         if (gp != NOT_EXIST && compare(gp, ix) < 0) {
             swap(ix, gp);
@@ -224,7 +225,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         }
     }
 
-    private void bubbleUpMin(int ix) {
+    private void bubbleUpMin(int ix) throws HyracksDataException {
         int gp = getGrandParent(ix);
         if (gp != NOT_EXIST && compare(ix, gp) < 0) {
             swap(ix, gp);
@@ -232,7 +233,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         }
     }
 
-    private void trickleDown(int ix) {
+    private void trickleDown(int ix) throws HyracksDataException {
         if (isAtMinLevel(ix)) {
             trickleDownMin(ix);
         } else {
@@ -240,7 +241,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         }
     }
 
-    private void trickleDownMax(int ix) {
+    private void trickleDownMax(int ix) throws HyracksDataException {
         int maxIx = getMaxOfDescendents(ix);
         if (maxIx == NOT_EXIST) {
             return;
@@ -262,7 +263,7 @@ public class SortMinMaxHeap implements ISelectionTree {
         }
     }
 
-    private void trickleDownMin(int ix) {
+    private void trickleDownMin(int ix) throws HyracksDataException {
         int minIx = getMinOfDescendents(ix);
         if (minIx == NOT_EXIST) {
             return;
@@ -285,7 +286,7 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     // Min among children and grand children
-    private int getMinOfDescendents(int ix) {
+    private int getMinOfDescendents(int ix) throws HyracksDataException {
         int lc = getLeftChild(ix);
         if (lc == NOT_EXIST) {
             return NOT_EXIST;
@@ -309,7 +310,7 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     // Max among children and grand children
-    private int getMaxOfDescendents(int ix) {
+    private int getMaxOfDescendents(int ix) throws HyracksDataException {
         int lc = getLeftChild(ix);
         if (lc == NOT_EXIST) {
             return NOT_EXIST;
@@ -395,14 +396,14 @@ public class SortMinMaxHeap implements ISelectionTree {
     }
 
     // first < sec : -1
-    private int compare(int nodeSIx1, int nodeSIx2) {
+    private int compare(int nodeSIx1, int nodeSIx2) throws HyracksDataException {
         int[] n1 = Arrays.copyOfRange(elements, nodeSIx1, nodeSIx1 + ELEMENT_SIZE); //tree.get(nodeSIx1);
         int[] n2 = Arrays.copyOfRange(elements, nodeSIx2, nodeSIx2 + ELEMENT_SIZE); //tree.get(nodeSIx2);
         return (compare(n1, n2));
     }
 
     // first < sec : -1
-    private int compare(int[] n1, int[] n2) {
+    private int compare(int[] n1, int[] n2) throws HyracksDataException {
         // Compare Run Numbers
         if (n1[RUN_ID_IX] != n2[RUN_ID_IX]) {
             return (n1[RUN_ID_IX] < n2[RUN_ID_IX] ? -1 : 1);
@@ -416,7 +417,8 @@ public class SortMinMaxHeap implements ISelectionTree {
         return compare(getFrame(n1[FRAME_IX]), getFrame(n2[FRAME_IX]), n1[OFFSET_IX], n2[OFFSET_IX]);
     }
 
-    private int compare(ByteBuffer fr1, ByteBuffer fr2, int r1StartOffset, int r2StartOffset) {
+    private int compare(ByteBuffer fr1, ByteBuffer fr2, int r1StartOffset, int r2StartOffset)
+            throws HyracksDataException {
         byte[] b1 = fr1.array();
         byte[] b2 = fr2.array();
         fta1.reset(fr1);
