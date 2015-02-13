@@ -71,7 +71,7 @@ public interface IDataFormat {
 
     public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl);
 
-    public ITupleParserFactory createTupleParser(ARecordType recType, boolean isDelimited, char delimiter, char quote);
+    public ITupleParserFactory createTupleParser(ARecordType recType, boolean isDelimited, char delimiter, char quote, boolean hasHeader);
 
     public IFunctionDescriptor resolveFunction(ILogicalExpression expr, IVariableTypeEnvironment typeEnvironment)
             throws AlgebricksException;

@@ -23,5 +23,7 @@ public interface IParseFileSplitsDecl {
 
     public char getQuote();
 
+    public boolean getHasHeader();
+
     public FileSplit[] getSplits();
 }

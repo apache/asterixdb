@@ -100,9 +100,10 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
             // create a delimited text parser
             char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
             char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
+            boolean hasHeader = StreamBasedAdapterFactory.getHasHeader(configuration);
 
-            DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDilimitedDataParser((ARecordType) atype,
-                    delimiter, quote);
+            DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser((ARecordType) atype,
+                    delimiter, quote, hasHeader);
             if (configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT)) {
                 // Text input format
                 TextFileLookupInputStream in = new TextFileLookupInputStream(fileIndexAccessor, jobConf);

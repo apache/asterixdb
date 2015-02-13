@@ -136,11 +136,12 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
 
         char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
         char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
+        boolean hasHeader = StreamBasedAdapterFactory.getHasHeader(configuration);
 
         parserFactory = new HDFSIndexingParserFactory((ARecordType) atype,
-                (String) configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT),
-                (String) configuration.get(KEY_FORMAT), delimiter, quote,
-                (String) configuration.get(HDFSAdapterFactory.KEY_PARSER));
+                                                      configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT),
+                                                      configuration.get(KEY_FORMAT), delimiter, quote, hasHeader,
+                                                      configuration.get(HDFSAdapterFactory.KEY_PARSER));
     }
 
     /**
@@ -153,7 +154,7 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
      * @return
      */
     @SuppressWarnings("null")
-    public static DelimitedDataParser getDilimitedDataParser(ARecordType recordType, char delimiter, char quote) {
+    public static DelimitedDataParser getDelimitedDataParser(ARecordType recordType, char delimiter, char quote, boolean hasHeader) {
         int n = recordType.getFieldTypes().length;
         IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
         for (int i = 0; i < n; i++) {
@@ -176,7 +177,7 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
             }
             fieldParserFactories[i] = vpf;
         }
-        return new DelimitedDataParser(recordType, fieldParserFactories, delimiter, quote, false, -1, null);
+        return new DelimitedDataParser(recordType, fieldParserFactories, delimiter, quote, hasHeader, false, -1, null);
     }
 
     public static AlgebricksPartitionConstraint getClusterLocations() {

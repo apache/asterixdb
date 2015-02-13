@@ -38,29 +38,32 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
 
     private static final long serialVersionUID = 1L;
     // file input-format <text, seq, rc>
-    private String inputFormat;
+    private final String inputFormat;
     // content format <adm, delimited-text, binary>
-    private String format;
+    private final String format;
     // delimiter in case of delimited text
-    private char delimiter;
+    private final char delimiter;
     // quote in case of delimited text
-    private char quote;
+    private final char quote;
+    // whether delimited text file has a header (which should be ignored)
+    private final boolean hasHeader;
     // parser class name in case of binary format
-    private String parserClassName;
+    private final String parserClassName;
     // the expected data type
-    private ARecordType atype;
+    private final ARecordType atype;
     // the hadoop job conf
     private transient JobConf jobConf;
     // adapter arguments
     private Map<String, String> arguments;
 
     public HDFSIndexingParserFactory(ARecordType atype, String inputFormat, String format, char delimiter,
-            char quote, String parserClassName) {
+                                     char quote, boolean hasHeader, String parserClassName) {
         this.inputFormat = inputFormat;
         this.format = format;
         this.parserClassName = parserClassName;
         this.delimiter = delimiter;
         this.quote = quote;
+        this.hasHeader = hasHeader;
         this.atype = atype;
     }
 
@@ -90,8 +93,8 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
             return new AdmOrDelimitedIndexingTupleParser(ctx, atype, dataParser);
         } else if (format.equalsIgnoreCase(StreamBasedAdapterFactory.FORMAT_DELIMITED_TEXT)) {
             // choice 3 with delimited data parser
-            DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDilimitedDataParser(atype,
-                    delimiter, quote);
+            DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser(atype,
+                delimiter, quote, hasHeader);
             return new AdmOrDelimitedIndexingTupleParser(ctx, atype, dataParser);
         }
 

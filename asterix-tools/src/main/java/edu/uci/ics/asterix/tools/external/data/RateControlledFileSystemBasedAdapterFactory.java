@@ -137,9 +137,10 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
             case FORMAT_DELIMITED_TEXT:
                 char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
                 char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
+                boolean hasHeader = StreamBasedAdapterFactory.getHasHeader(configuration);
                 IValueParserFactory[] valueParserFactories = getValueParserFactories(atype);
                 parserFactory = new RateControlledTupleParserFactory(atype, valueParserFactories, delimiter, quote,
-                        configuration);
+                                                                     hasHeader, configuration);
                 break;
         }
     }
@@ -175,6 +176,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     private IValueParserFactory[] valueParserFactories;
     private char delimiter;
     private char quote;
+    private boolean hasHeader;
     private final ParserType parserType;
 
     public enum ParserType {
@@ -183,17 +185,12 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     }
 
     public RateControlledTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, Map<String, String> configuration) throws AsterixException {
-        this(recordType, valueParserFactories, fieldDelimiter, StreamBasedAdapterFactory.getQuote(configuration,
-                fieldDelimiter), configuration);
-    }
-
-    public RateControlledTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, char quote, Map<String, String> configuration) {
+            char fieldDelimiter, char quote, boolean hasHeader,  Map<String, String> configuration) {
         this.recordType = recordType;
         this.valueParserFactories = valueParserFactories;
         this.delimiter = fieldDelimiter;
         this.quote = quote;
+        this.hasHeader = hasHeader;
         this.configuration = configuration;
         this.parserType = ParserType.DELIMITED_DATA;
     }
@@ -212,7 +209,8 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
                 dataParser = new ADMDataParser();
                 break;
             case DELIMITED_DATA:
-                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, quote, false, -1,
+                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter,
+                                                     quote, hasHeader, false, -1,
                         null);
                 break;
         }

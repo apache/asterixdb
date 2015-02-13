@@ -964,12 +964,12 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl) {
-        return createTupleParser(recType, decl.isDelimitedFileFormat(), decl.getDelimChar(), decl.getQuote());
+        return createTupleParser(recType, decl.isDelimitedFileFormat(), decl.getDelimChar(), decl.getQuote(), decl.getHasHeader());
     }
 
     @Override
     public ITupleParserFactory createTupleParser(ARecordType recType, boolean delimitedFormat, char delimiter,
-            char quote) {
+                                                 char quote, boolean hasHeader) {
         if (delimitedFormat) {
             int n = recType.getFieldTypes().length;
             IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
@@ -981,8 +981,8 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
                 fieldParserFactories[i] = vpf;
             }
-            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, false, -1,
-                    null);
+            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, hasHeader,
+                                                         false, -1, null);
         } else {
             return new AdmSchemafullRecordParserFactory(recType, false, -1, null);
         }
