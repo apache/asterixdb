@@ -22,6 +22,7 @@ import java.util.List;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
@@ -460,8 +461,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             while (countingCursor.hasNext()) {
                 countingCursor.next();
                 ITupleReference countTuple = countingCursor.getTuple();
-                numElements = IntegerSerializerDeserializer.getInt(countTuple.getFieldData(0),
-                        countTuple.getFieldStart(0));
+                numElements = IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
             }
         } finally {
             countingCursor.close();

@@ -20,6 +20,7 @@ import java.io.DataInputStream;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -146,8 +147,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
                 while (countingCursor.hasNext()) {
                     countingCursor.next();
                     ITupleReference countTuple = countingCursor.getTuple();
-                    numElements = IntegerSerializerDeserializer.getInt(countTuple.getFieldData(0),
-                            countTuple.getFieldStart(0));
+                    numElements = IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
                 }
             } catch (HyracksDataException e) {
                 e.printStackTrace();

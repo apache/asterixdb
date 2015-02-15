@@ -33,6 +33,7 @@ import java.util.TreeSet;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
@@ -527,8 +528,7 @@ public class LSMInvertedIndexTestUtils {
                         while (resultCursor.hasNext()) {
                             resultCursor.next();
                             ITupleReference resultTuple = resultCursor.getTuple();
-                            int actual = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                                    resultTuple.getFieldStart(0));
+                            int actual = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(0));
                             actualResults.add(Integer.valueOf(actual));
                         }
                     } catch (OccurrenceThresholdPanicException e) {

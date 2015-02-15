@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
@@ -67,8 +68,8 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                     throws HyracksDataException {
                 int sum, count;
                 if (!useObjectState) {
-                    sum = IntegerSerializerDeserializer.getInt(data, offset);
-                    count = IntegerSerializerDeserializer.getInt(data, offset + 4);
+                    sum = IntegerPointable.getInteger(data, offset);
+                    count = IntegerPointable.getInteger(data, offset + 4);
                 } else {
                     Integer[] fields = (Integer[]) state.state;
                     sum = fields[0];
@@ -87,8 +88,8 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                     throws HyracksDataException {
                 int sum, count;
                 if (!useObjectState) {
-                    sum = IntegerSerializerDeserializer.getInt(data, offset);
-                    count = IntegerSerializerDeserializer.getInt(data, offset + 4);
+                    sum = IntegerPointable.getInteger(data, offset);
+                    count = IntegerPointable.getInteger(data, offset + 4);
                 } else {
                     Integer[] fields = (Integer[]) state.state;
                     sum = fields[0];
@@ -113,8 +114,7 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                 int sum = 0, count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
                 count += 1;
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
@@ -152,10 +152,8 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                 int count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
-                count += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart + 4);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                count += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart + 4);
                 if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);

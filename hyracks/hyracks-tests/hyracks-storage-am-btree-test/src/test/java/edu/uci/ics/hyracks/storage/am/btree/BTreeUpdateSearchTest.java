@@ -135,7 +135,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
                 updateScanCursor.next();
                 ITupleReference tuple = updateScanCursor.getTuple();
                 // Change the value field.
-                IntegerSerializerDeserializer.putInt(10, tuple.getFieldData(1), tuple.getFieldStart(1));
+                IntegerPointable.setInteger(tuple.getFieldData(1), tuple.getFieldStart(1), 10);
             }
         } catch (Exception e) {
             e.printStackTrace();

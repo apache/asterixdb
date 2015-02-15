@@ -14,26 +14,25 @@
  */
 package edu.uci.ics.hyracks.storage.am.rtree.impls;
 
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 
-public class IntegerPrimitiveValueProviderFactory implements
-		IPrimitiveValueProviderFactory {
-	private static final long serialVersionUID = 1L;
+public class IntegerPrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
+    private static final long serialVersionUID = 1L;
 
-	public static final IntegerPrimitiveValueProviderFactory INSTANCE = new IntegerPrimitiveValueProviderFactory();
+    public static final IntegerPrimitiveValueProviderFactory INSTANCE = new IntegerPrimitiveValueProviderFactory();
 
-	private IntegerPrimitiveValueProviderFactory() {
-	}
+    private IntegerPrimitiveValueProviderFactory() {
+    }
 
-	@Override
-	public IPrimitiveValueProvider createPrimitiveValueProvider() {
-		return new IPrimitiveValueProvider() {
-			@Override
-			public double getValue(byte[] bytes, int offset) {
-				return IntegerSerializerDeserializer.getInt(bytes, offset);
-			}
-		};
-	}
+    @Override
+    public IPrimitiveValueProvider createPrimitiveValueProvider() {
+        return new IPrimitiveValueProvider() {
+            @Override
+            public double getValue(byte[] bytes, int offset) {
+                return IntegerPointable.getInteger(bytes, offset);
+            }
+        };
+    }
 }

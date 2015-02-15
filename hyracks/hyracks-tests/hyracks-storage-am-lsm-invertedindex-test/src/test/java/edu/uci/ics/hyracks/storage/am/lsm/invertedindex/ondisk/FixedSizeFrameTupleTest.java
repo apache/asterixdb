@@ -68,7 +68,7 @@ public class FixedSizeFrameTupleTest {
 
         ftacc.reset(buffer);
         for (int i = 0; i < ftacc.getTupleCount(); i++) {
-            int val = IntegerSerializerDeserializer.getInt(ftacc.getBuffer().array(), ftacc.getTupleStartOffset(i));
+            int val = IntegerPointable.getInteger(ftacc.getBuffer().array(), ftacc.getTupleStartOffset(i));
             Assert.assertEquals(check.get(i).intValue(), val);
         }
     }

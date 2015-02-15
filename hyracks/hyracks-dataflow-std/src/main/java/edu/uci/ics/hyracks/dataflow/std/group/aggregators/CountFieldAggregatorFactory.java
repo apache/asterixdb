@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
@@ -63,7 +64,7 @@ public class CountFieldAggregatorFactory implements IFieldAggregateDescriptorFac
                     throws HyracksDataException {
                 int count;
                 if (!useObjectState) {
-                    count = IntegerSerializerDeserializer.getInt(data, offset);
+                    count = IntegerPointable.getInteger(data, offset);
                 } else {
                     count = (Integer) state.state;
                 }
@@ -79,7 +80,7 @@ public class CountFieldAggregatorFactory implements IFieldAggregateDescriptorFac
                     throws HyracksDataException {
                 int count;
                 if (!useObjectState) {
-                    count = IntegerSerializerDeserializer.getInt(data, offset);
+                    count = IntegerPointable.getInteger(data, offset);
                 } else {
                     count = (Integer) state.state;
                 }

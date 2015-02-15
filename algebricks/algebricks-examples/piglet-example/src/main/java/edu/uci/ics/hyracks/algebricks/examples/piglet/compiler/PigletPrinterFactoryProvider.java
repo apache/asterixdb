@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.impl.IntegerPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
 import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Type;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
 public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
@@ -95,7 +96,7 @@ public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
 
                 @Override
                 public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-                    ps.print(FloatSerializerDeserializer.getFloat(b, s));
+                    ps.print(FloatPointable.getFloat(b, s));
                 }
             };
         }

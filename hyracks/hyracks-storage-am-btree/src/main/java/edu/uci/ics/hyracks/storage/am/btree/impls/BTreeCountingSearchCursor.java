@@ -16,6 +16,7 @@
 package edu.uci.ics.hyracks.storage.am.btree.impls;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -193,7 +194,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     @Override
     public void next() throws HyracksDataException {
         // Do nothing. Count is performed just once!
-        IntegerSerializerDeserializer.putInt(count, countBuf, 0);
+        IntegerPointable.setInteger(countBuf, 0, count);
         tupleBuilder.addField(countBuf, 0, 4);
         countTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
     }

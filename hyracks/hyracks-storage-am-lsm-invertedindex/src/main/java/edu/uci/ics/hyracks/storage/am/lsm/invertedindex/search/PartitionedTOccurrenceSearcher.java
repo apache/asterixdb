@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -166,10 +167,8 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
     }
 
     public void setNumTokensBoundsInSearchKeys(short numTokensLowerBound, short numTokensUpperBound) {
-        ShortSerializerDeserializer.putShort(numTokensLowerBound, lowerBoundTuple.getFieldData(0),
-                lowerBoundTuple.getFieldStart(0));
-        ShortSerializerDeserializer.putShort(numTokensUpperBound, upperBoundTuple.getFieldData(0),
-                upperBoundTuple.getFieldStart(0));
+        ShortPointable.setShort(lowerBoundTuple.getFieldData(0), lowerBoundTuple.getFieldStart(0), numTokensLowerBound);
+        ShortPointable.setShort(upperBoundTuple.getFieldData(0), upperBoundTuple.getFieldStart(0), numTokensUpperBound);
     }
 
     public ITupleReference getPrefixSearchKey() {

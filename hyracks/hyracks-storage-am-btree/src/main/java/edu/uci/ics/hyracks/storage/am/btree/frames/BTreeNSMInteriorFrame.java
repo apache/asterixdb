@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -420,10 +421,8 @@ public class BTreeNSMInteriorFrame extends TreeIndexNSMFrame implements IBTreeIn
         for (int i = 0; i < tupleCount; i++) {
             int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
             frameTuple.resetByTupleOffset(buf, tupleOff);
-            int intVal = IntegerSerializerDeserializer.getInt(
-                    buf.array(),
-                    frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
-                            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
+            int intVal = IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
+            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
             ret.add(intVal);
         }
         if (!isLeaf()) {

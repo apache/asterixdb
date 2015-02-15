@@ -273,14 +273,10 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     }
 
     public void resetInvertedListCursor(ITupleReference btreeTuple, IInvertedListCursor listCursor) {
-        int startPageId = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListStartPageIdField),
-                btreeTuple.getFieldStart(invListStartPageIdField));
-        int endPageId = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListEndPageIdField),
-                btreeTuple.getFieldStart(invListEndPageIdField));
-        int startOff = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListStartOffField),
-                btreeTuple.getFieldStart(invListStartOffField));
-        int numElements = IntegerSerializerDeserializer.getInt(btreeTuple.getFieldData(invListNumElementsField),
-                btreeTuple.getFieldStart(invListNumElementsField));
+        int startPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartPageIdField), btreeTuple.getFieldStart(invListStartPageIdField));
+        int endPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListEndPageIdField), btreeTuple.getFieldStart(invListEndPageIdField));
+        int startOff = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartOffField), btreeTuple.getFieldStart(invListStartOffField));
+        int numElements = IntegerPointable.getInteger(btreeTuple.getFieldData(invListNumElementsField), btreeTuple.getFieldStart(invListNumElementsField));
         listCursor.reset(startPageId, endPageId, startOff, numElements);
     }
 

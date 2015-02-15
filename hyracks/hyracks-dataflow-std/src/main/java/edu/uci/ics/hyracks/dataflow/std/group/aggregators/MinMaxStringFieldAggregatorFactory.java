@@ -24,6 +24,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
@@ -72,7 +73,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                     throws HyracksDataException {
                 try {
                     if (hasBinaryState) {
-                        int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
+                        int stateIdx = IntegerPointable.getInteger(data, offset);
                         Object[] storedState = (Object[]) state.state;
                         fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
@@ -89,7 +90,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                     throws HyracksDataException {
                 try {
                     if (hasBinaryState) {
-                        int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
+                        int stateIdx = IntegerPointable.getInteger(data, offset);
                         Object[] storedState = (Object[]) state.state;
                         fieldOutput.writeUTF((String) storedState[stateIdx]);
                     } else {
@@ -156,7 +157,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                         new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
                                 + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {
-                    int stateIdx = IntegerSerializerDeserializer.getInt(data, offset);
+                    int stateIdx = IntegerPointable.getInteger(data, offset);
 
                     Object[] storedState = (Object[]) state.state;
 

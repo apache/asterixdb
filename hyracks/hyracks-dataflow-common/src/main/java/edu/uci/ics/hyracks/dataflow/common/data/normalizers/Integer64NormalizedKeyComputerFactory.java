@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.common.data.normalizers;
 
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 
 public class Integer64NormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
@@ -31,7 +32,7 @@ public class Integer64NormalizedKeyComputerFactory implements INormalizedKeyComp
 
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                long value = Integer64SerializerDeserializer.getLong(bytes, start);
+                long value = LongPointable.getLong(bytes, start);
                 int highValue = (int) (value >> 32);
                 if (highValue > 0) {
                     /**

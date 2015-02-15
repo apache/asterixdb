@@ -30,6 +30,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -74,8 +75,7 @@ public class ShuffleFrameReader implements IFrameReader {
             accessor.reset(netBuffer);
             int nTuples = accessor.getTupleCount();
             for (int i = 0; i < nTuples; ++i) {
-                int tBlockId = IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        FrameUtils.getAbsoluteFieldStartOffset(accessor, i, HadoopHelper.BLOCKID_FIELD_INDEX));
+                int tBlockId = IntegerPointable.getInteger(accessor.getBuffer().array(), FrameUtils.getAbsoluteFieldStartOffset(accessor, i, HadoopHelper.BLOCKID_FIELD_INDEX));
                 if (info == null) {
                     info = new RunInfo();
                     info.reset(tBlockId);

@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
@@ -67,7 +68,7 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                     throws HyracksDataException {
                 int sum;
                 if (!useObjectState) {
-                    sum = IntegerSerializerDeserializer.getInt(data, offset);
+                    sum = IntegerPointable.getInteger(data, offset);
                 } else {
                     sum = (Integer) state.state;
                 }
@@ -83,7 +84,7 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                     throws HyracksDataException {
                 int sum;
                 if (!useObjectState) {
-                    sum = IntegerSerializerDeserializer.getInt(data, offset);
+                    sum = IntegerPointable.getInteger(data, offset);
                 } else {
                     sum = (Integer) state.state;
                 }
@@ -102,8 +103,7 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
 
-                sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     try {
@@ -139,8 +139,7 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);

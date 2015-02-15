@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.storage.am.rtree.linearize;
 
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparator;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.DoubleArrayList;
 
@@ -129,8 +130,8 @@ public class ZCurveIntComparator implements ILinearizeComparator {
     @Override
     public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
         for (int i = 0; i < dim; i++) {
-            a[i] = IntegerSerializerDeserializer.getInt(b1, s1 + (i * l1));
-            b[i] = IntegerSerializerDeserializer.getInt(b2, s2 + (i * l2));
+            a[i] = IntegerPointable.getInteger(b1, s1 + (i * l1));
+            b[i] = IntegerPointable.getInteger(b2, s2 + (i * l2));
         }
 
         return compare();

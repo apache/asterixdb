@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
@@ -63,7 +64,7 @@ public class FloatSumFieldAggregatorFactory implements
                     int offset, AggregateState state) throws HyracksDataException {
                 float sum;
                 if (!useObjectState) {
-                    sum = FloatSerializerDeserializer.getFloat(data, offset);
+                    sum = FloatPointable.getFloat(data, offset);
                 } else {
                     sum = (Float) state.state;
                 }
@@ -79,7 +80,7 @@ public class FloatSumFieldAggregatorFactory implements
                     int offset, AggregateState state) throws HyracksDataException {
                 float sum;
                 if (!useObjectState) {
-                    sum = FloatSerializerDeserializer.getFloat(data, offset);
+                    sum = FloatPointable.getFloat(data, offset);
                 } else {
                     sum = (Float) state.state;
                 }
@@ -108,8 +109,7 @@ public class FloatSumFieldAggregatorFactory implements
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
 
-                sum += FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += FloatPointable.getFloat(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     try {
@@ -140,8 +140,7 @@ public class FloatSumFieldAggregatorFactory implements
                 float sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += FloatSerializerDeserializer.getFloat(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += FloatPointable.getFloat(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);

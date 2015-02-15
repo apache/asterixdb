@@ -46,13 +46,4 @@ public class ShortSerializerDeserializer implements ISerializerDeserializer<Shor
             throw new HyracksDataException(e);
         }
     }
-
-    public static short getShort(byte[] bytes, int offset) {
-        return (short) (((bytes[offset] & 0xff) << 8) + ((bytes[offset + 1] & 0xff)));
-    }
-
-    public static void putShort(int val, byte[] bytes, int offset) {
-        bytes[offset] = (byte) ((val >>> 8) & 0xFF);
-        bytes[offset + 1] = (byte) ((val >>> 0) & 0xFF);
-    }
 }

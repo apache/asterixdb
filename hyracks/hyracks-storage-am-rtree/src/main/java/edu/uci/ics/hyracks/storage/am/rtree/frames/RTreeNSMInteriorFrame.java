@@ -123,8 +123,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             if (c == 0) {
                 return i;
             } else {
-                int pageId = IntegerSerializerDeserializer.getInt(frameTuple.getFieldData(cmp.getKeyFieldCount() - 1),
-                        getChildPointerOff(frameTuple));
+                int pageId = IntegerPointable.getInteger(frameTuple.getFieldData(cmp.getKeyFieldCount() - 1), getChildPointerOff(frameTuple));
                 traverseList.add(pageId, -1, parentIndex);
             }
         }
@@ -273,10 +272,8 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
         for (int i = 0; i < tupleCount; i++) {
             int tupleOff = slotManager.getTupleOff(slotManager.getSlotOff(i));
             frameTuple.resetByTupleOffset(buf, tupleOff);
-            int intVal = IntegerSerializerDeserializer.getInt(
-                    buf.array(),
-                    frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
-                            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
+            int intVal = IntegerPointable.getInteger(buf.array(), frameTuple.getFieldStart(frameTuple.getFieldCount() - 1)
+            + frameTuple.getFieldLength(frameTuple.getFieldCount() - 1));
             ret.add(intVal);
         }
         return ret;

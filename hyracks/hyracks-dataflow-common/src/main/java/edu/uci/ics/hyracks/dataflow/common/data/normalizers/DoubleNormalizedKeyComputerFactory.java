@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.common.data.normalizers;
 
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class DoubleNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
@@ -28,7 +29,7 @@ public class DoubleNormalizedKeyComputerFactory implements INormalizedKeyCompute
 
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                int prefix = IntegerSerializerDeserializer.getInt(bytes, start);
+                int prefix = IntegerPointable.getInteger(bytes, start);
                 if (prefix >= 0) {
                     return prefix ^ Integer.MIN_VALUE;
                 } else {

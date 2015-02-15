@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -51,9 +52,9 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
             @Override
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                 evalLeft.evaluate(tuple, p);
-                int v1 = IntegerSerializerDeserializer.INSTANCE.getInt(p.getByteArray(), p.getStartOffset());
+                int v1 = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                 evalRight.evaluate(tuple, p);
-                int v2 = IntegerSerializerDeserializer.INSTANCE.getInt(p.getByteArray(), p.getStartOffset());
+                int v2 = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                 try {
                     argOut.reset();
                     argOut.getDataOutput().writeInt(v1 + v2);

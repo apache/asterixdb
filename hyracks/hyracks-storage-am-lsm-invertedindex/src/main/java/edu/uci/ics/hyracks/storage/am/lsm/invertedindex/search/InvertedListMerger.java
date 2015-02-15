@@ -21,6 +21,7 @@ import java.util.Collections;
 
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -99,8 +100,7 @@ public class InvertedListMerger {
         while (resultTidx < resultFrameTupleAcc.getTupleCount()) {
 
             resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
-            int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                    resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
+            int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
 
             if (invListCursor.containsKey(resultTuple, invListCmp)) {
                 count++;
@@ -154,8 +154,7 @@ public class InvertedListMerger {
 
             int cmp = invListCmp.compare(invListTuple, resultTuple);
             if (cmp == 0) {
-                int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                        resultTuple.getFieldStart(resultTuple.getFieldCount() - 1)) + 1;
+                int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1)) + 1;
                 newSearchResult.append(resultTuple, count);
                 advanceCursor = true;
                 advancePrevResult = true;
@@ -164,8 +163,7 @@ public class InvertedListMerger {
                     advanceCursor = true;
                     advancePrevResult = false;
                 } else {
-                    int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                            resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
+                    int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
                     if (count + numInvLists - invListIx > occurrenceThreshold) {
                         newSearchResult.append(resultTuple, count);
                     }
@@ -199,8 +197,7 @@ public class InvertedListMerger {
 
             resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
 
-            int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                    resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
+            int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
             if (count + numInvLists - invListIx > occurrenceThreshold) {
                 newSearchResult.append(resultTuple, count);
             }
@@ -246,8 +243,7 @@ public class InvertedListMerger {
 
             int cmp = invListCmp.compare(invListTuple, resultTuple);
             if (cmp == 0) {
-                int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                        resultTuple.getFieldStart(resultTuple.getFieldCount() - 1)) + 1;
+                int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1)) + 1;
                 newSearchResult.append(resultTuple, count);
                 advanceCursor = true;
                 advancePrevResult = true;
@@ -258,8 +254,7 @@ public class InvertedListMerger {
                     advanceCursor = true;
                     advancePrevResult = false;
                 } else {
-                    int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                            resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
+                    int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
                     newSearchResult.append(resultTuple, count);
                     advanceCursor = false;
                     advancePrevResult = true;
@@ -301,8 +296,7 @@ public class InvertedListMerger {
 
             resultTuple.reset(prevCurrentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(resultTidx));
 
-            int count = IntegerSerializerDeserializer.getInt(resultTuple.getFieldData(0),
-                    resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
+            int count = IntegerPointable.getInteger(resultTuple.getFieldData(0), resultTuple.getFieldStart(resultTuple.getFieldCount() - 1));
             newSearchResult.append(resultTuple, count);
 
             resultTidx++;

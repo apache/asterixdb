@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.BooleanPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -46,9 +47,9 @@ public class IntegerGreaterThanEvalFactory implements IScalarEvaluatorFactory {
             @Override
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws AlgebricksException {
                 eval1.evaluate(tuple, p);
-                int v1 = IntegerSerializerDeserializer.getInt(p.getByteArray(), p.getStartOffset());
+                int v1 = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                 eval2.evaluate(tuple, p);
-                int v2 = IntegerSerializerDeserializer.getInt(p.getByteArray(), p.getStartOffset());
+                int v2 = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
                 BooleanPointable.setBoolean(rBytes, 0, v1 > v2);
                 result.set(rBytes, 0, 1);
             }

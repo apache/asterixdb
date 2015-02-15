@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
@@ -93,9 +94,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
             while (ctx.btreeCursor.hasNext()) {
                 ctx.btreeCursor.next();
                 ITupleReference btreeTuple = ctx.btreeCursor.getTuple();
-                short numTokens = ShortSerializerDeserializer.getShort(
-                        btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
-                        btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
+                short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD), btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
                 IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
                 resetInvertedListCursor(btreeTuple, invListCursor);
                 cursorsOrderedByTokens.add(invListCursor);

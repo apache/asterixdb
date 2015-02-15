@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOne
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -115,7 +116,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     }
 
                     @SuppressWarnings("static-access")
-                    int offset = IntegerSerializerDeserializer.INSTANCE.getInt(p.getByteArray(), p.getStartOffset());
+                    int offset = IntegerPointable.getInteger(p.getByteArray(), p.getStartOffset());
 
                     try {
                         agg.init(tRef);
