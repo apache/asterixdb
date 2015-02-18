@@ -22,7 +22,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.2.15</version>
+    <version>0.2.16-SNAPSHOT</version>
   </parent>
 
   <modules>
@@ -42,7 +42,7 @@
       <dependency>
          <groupId>edu.uci.ics.hyracks</groupId>
          <artifactId>hyracks-hadoop-compat</artifactId>
-         <version>0.2.15</version>
+         <version>0.2.16-SNAPSHOT</version>
          <type>jar</type>
          <scope>compile</scope>
       </dependency>
