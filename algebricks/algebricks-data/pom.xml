@@ -20,7 +20,7 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>algebricks</artifactId>
-    <version>0.2.15-SNAPSHOT</version>
+    <version>0.2.15</version>
   </parent>
 
   <licenses>
@@ -51,12 +51,12 @@
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>algebricks-common</artifactId>
-  	<version>0.2.15-SNAPSHOT</version>
+  	<version>0.2.15</version>
   </dependency>
   <dependency>
   	<groupId>edu.uci.ics.hyracks</groupId>
   	<artifactId>hyracks-data-std</artifactId>
-  	<version>0.2.15-SNAPSHOT</version>
+  	<version>0.2.15</version>
   </dependency>
   </dependencies>
 </project>
