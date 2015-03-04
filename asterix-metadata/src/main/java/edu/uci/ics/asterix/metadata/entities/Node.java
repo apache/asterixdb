@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,20 +25,20 @@ public class Node implements Serializable {
     private static final long serialVersionUID = 1L;
     // Enforced to be unique within a Hyracks cluster.
     private final String nodeName;
-    private final int numberOfCores;
-    private final int workingMemorySize;
+    private final long numberOfCores;
+    private final long workingMemorySize;
 
-    public Node(String nodeName, int noOfCores, int workingMemorySize) {
+    public Node(String nodeName, long noOfCores, long workingMemorySize) {
         this.nodeName = nodeName;
         this.numberOfCores = noOfCores;
         this.workingMemorySize = workingMemorySize;
     }
 
-    public int getWorkingMemorySize() {
+    public long getWorkingMemorySize() {
         return workingMemorySize;
     }
 
-    public int getNumberOfCores() {
+    public long getNumberOfCores() {
         return numberOfCores;
     }
 

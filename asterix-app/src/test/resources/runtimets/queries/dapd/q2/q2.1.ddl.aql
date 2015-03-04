@@ -1,5 +1,5 @@
 drop dataverse test if exists;
-  
+
 create dataverse test;
 use dataverse test;
 
@@ -11,17 +11,17 @@ create type AddressType as closed {
 }
 
 create type EventType as closed {
-  event_id: int32, 
+  event_id: int64,
   name: string,
   location: AddressType	?,
-  organizers: {{ 
+  organizers: {{
    {
      name: string
    }
   }},
   sponsoring_sigs: [
     {
-      sig_id: int32,
+      sig_id: int64,
       chapter_name: string
     }
   ],
@@ -31,7 +31,7 @@ create type EventType as closed {
   end_time: datetime
 }
 
-create external dataset Event(EventType) 
+create external dataset Event(EventType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/events/tiny/event.adm"),("format"="adm"));
 

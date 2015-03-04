@@ -3,16 +3,16 @@
  * Expected Res : Success
  * Date         : 25th Jun 2014
  */
- 
+
 drop dataverse test if exists;
 create dataverse test;
 
 use dataverse test;
 
 create type FacebookMessageType as closed {
-        message-id: int32,
-        author-id: int32,
-        in-response-to: int32?,
+        message-id: int64,
+        author-id: int64,
+        in-response-to: int64?,
         sender-location: point?,
         message: string,
         send-time: datetime

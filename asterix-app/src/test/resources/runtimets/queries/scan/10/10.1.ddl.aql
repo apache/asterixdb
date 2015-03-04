@@ -5,13 +5,13 @@ create dataverse test;
 use dataverse test;
 
 create type DBLPType as open {
-  id: int32, 
+  id: int64,
   dblpid: string,
   title: string,
   authors: string,
   misc: string
 }
 
-create dataset DBLP1(DBLPType) 
+create dataset DBLP1(DBLPType)
   primary key id;
 

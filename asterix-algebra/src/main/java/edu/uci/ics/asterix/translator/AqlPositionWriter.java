@@ -11,9 +11,9 @@ public class AqlPositionWriter implements IUnnestingPositionWriter, Serializable
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void write(DataOutput dataOutput, int position) throws IOException {
-        dataOutput.writeByte(BuiltinType.AINT32.getTypeTag().serialize());
-        dataOutput.writeInt(position);
+    public void write(DataOutput dataOutput, long position) throws IOException {
+        dataOutput.writeByte(BuiltinType.AINT64.getTypeTag().serialize());
+        dataOutput.writeLong(position);
     }
 
 }

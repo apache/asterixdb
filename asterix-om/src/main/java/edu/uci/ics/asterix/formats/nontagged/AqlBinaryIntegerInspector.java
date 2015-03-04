@@ -14,12 +14,14 @@
  */
 package edu.uci.ics.asterix.formats.nontagged;
 
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class AqlBinaryIntegerInspector implements IBinaryIntegerInspector {
+
     public static final IBinaryIntegerInspectorFactory FACTORY = new IBinaryIntegerInspectorFactory() {
         private static final long serialVersionUID = 1L;
 
@@ -33,7 +35,7 @@ public class AqlBinaryIntegerInspector implements IBinaryIntegerInspector {
     }
 
     @Override
-    public int getIntegerValue(byte[] bytes, int offset, int length) {
-        return IntegerPointable.getInteger(bytes, offset + 1);
+    public int getIntegerValue(byte[] bytes, int offset, int length) throws HyracksDataException {
+        return ATypeHierarchy.getIntegerValue(bytes, offset);
     }
 }

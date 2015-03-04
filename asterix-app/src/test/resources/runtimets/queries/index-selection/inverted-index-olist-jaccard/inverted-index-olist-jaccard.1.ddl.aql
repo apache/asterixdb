@@ -3,22 +3,22 @@ create dataverse test;
 use dataverse test;
 
 create type AddressType as closed {
-  number: int32, 
+  number: int64,
   street: string,
   city: string
 }
 
 create type CustomerType as closed {
-  cid: int32, 
+  cid: int64,
   name: string,
-  age: int32?,
+  age: int64?,
   address: AddressType?,
   interests: [string],
-  children: [ { name: string, age: int32? } ]
+  children: [ { name: string, age: int64? } ]
 }
 
 create nodegroup group1 if not exists on nc1;
 
-create dataset Customers(CustomerType) 
+create dataset Customers(CustomerType)
   primary key cid on group1;
 

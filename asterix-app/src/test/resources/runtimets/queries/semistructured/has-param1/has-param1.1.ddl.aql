@@ -3,8 +3,8 @@ create dataverse test;
 use dataverse test;
 
 create type OrderType as open {
-  oid: int32,
-  cid: int32,
+  oid: int64,
+  cid: int64,
   orderstatus: string,
   orderpriority: string,
   clerk: string,

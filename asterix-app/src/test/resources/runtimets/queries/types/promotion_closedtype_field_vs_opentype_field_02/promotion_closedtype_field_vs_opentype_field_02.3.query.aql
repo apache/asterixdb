@@ -1,0 +1,12 @@
+/*
+* Type Promotion Test
+*
+*/
+use dataverse test;
+
+// supvrid: an open type field, floor: an indexed closed-type field
+for $emp in dataset empDataset
+for $dept in dataset deptDataset
+where $emp.supvrid = $dept.floor
+order by $emp.id, $emp.supvrid, $dept.floor, $dept.did
+return {"emp.id":$emp.id, "dept.did": $dept.did, "emp.supvrid":$emp.supvrid, "dept.floor":$dept.floor}

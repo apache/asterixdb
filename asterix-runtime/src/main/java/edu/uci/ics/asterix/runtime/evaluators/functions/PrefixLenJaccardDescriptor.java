@@ -28,14 +28,15 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -43,8 +44,6 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
 
     private static final long serialVersionUID = 1L;
 
-    // allowed input types
-    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
     private final static byte SER_FLOAT_TYPE_TAG = ATypeTag.FLOAT.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -68,6 +67,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                     private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private final ICopyEvaluator evalLen = args[0].createEvaluator(inputVal);
                     private final ICopyEvaluator evalThreshold = args[1].createEvaluator(inputVal);
+                    private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
                     private float similarityThresholdCache;
                     private SimilarityFiltersJaccard similarityFilters;
@@ -83,12 +83,12 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         // length
                         inputVal.reset();
                         evalLen.evaluate(tuple);
-                        if (inputVal.getByteArray()[0] != SER_INT32_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.PREFIX_LEN_JACCARD.getName()
-                                    + ": expects type Int32 the first argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[0]));
+                        int length = 0;
+                        try {
+                            length = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
+                        } catch (HyracksDataException e1) {
+                            throw new AlgebricksException(e1);
                         }
-                        int length = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
 
                         // similarity threshold
                         inputVal.reset();

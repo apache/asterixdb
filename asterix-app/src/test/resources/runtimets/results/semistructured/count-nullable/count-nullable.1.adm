@@ -1,4 +1,4 @@
-[ { "custage": null, "count": 2i64 }
-, { "custage": 10, "count": 1i64 }
-, { "custage": 15, "count": 1i64 }
+[ { "custage": null, "count": 2 }
+, { "custage": 10, "count": 1 }
+, { "custage": 15, "count": 1 }
  ]

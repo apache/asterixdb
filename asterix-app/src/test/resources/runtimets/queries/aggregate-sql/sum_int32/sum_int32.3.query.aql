@@ -1,7 +1,7 @@
 use dataverse test;
 
-sql-sum( 
- for $x in [1, 2, int32("3")] 
+sql-sum(
+ for $x in [int32("1"), int32("2"), int32("3")]
  return $x
 )
 

@@ -1,0 +1,12 @@
+/*
+* Type Promotion Test
+*
+*/
+use dataverse test;
+
+// supvrid:open-type field, dmgrid2:open-type field
+for $emp in dataset empDataset
+for $dept in dataset deptDataset
+where $dept.dmgrid2 = $emp.supvrid
+order by $emp.id
+return {"emp.id":$emp.id, "emp.suprvrid":$emp.supvrid, "dept.dmgrid2":$dept.dmgrid2};

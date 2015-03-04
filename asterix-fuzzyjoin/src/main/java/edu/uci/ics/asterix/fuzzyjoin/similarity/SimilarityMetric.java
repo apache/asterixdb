@@ -13,17 +13,18 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * Author: Rares Vernica <rares (at) ics.uci.edu>
  */
 
 package edu.uci.ics.asterix.fuzzyjoin.similarity;
 
 import edu.uci.ics.asterix.fuzzyjoin.tokenizer.Tokenizer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class SimilarityMetric {
 
-    public static int getIntersectSize(IListIterator tokensX, IListIterator tokensY) {
+    public static int getIntersectSize(IListIterator tokensX, IListIterator tokensY) throws HyracksDataException {
         int intersectSize = 0;
         while (tokensX.hasNext() && tokensY.hasNext()) {
             int cmp = tokensX.compare(tokensY);
@@ -169,7 +170,7 @@ public abstract class SimilarityMetric {
     // public abstract float getSimilarity(DataBag tokensX, int lengthX,
     // DataBag tokensY, int lengthY);
 
-    public float getSimilarity(IListIterator tokensX, IListIterator tokensY) {
+    public float getSimilarity(IListIterator tokensX, IListIterator tokensY) throws HyracksDataException {
         int intersectionSize = SimilarityMetric.getIntersectSize(tokensX, tokensY);
         int totalSize = tokensX.size() + tokensY.size();
 

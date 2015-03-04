@@ -16,10 +16,10 @@ tweetid : string,
 user : {
          screen-name: string,
          lang: string,
-         friends_count: int32,
-         statuses_count: int32,
+         friends_count: int64,
+         statuses_count: int64,
          name: string,
-         followers_count: int32
+         followers_count: int64
 },    sender-location: point?,
       send-time: datetime,
       referred-topics: {{ string }},

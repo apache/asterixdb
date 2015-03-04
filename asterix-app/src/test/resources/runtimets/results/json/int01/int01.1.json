@@ -1,7 +1,7 @@
-[ { "orderedlist": [ { "int32":
+[ { "orderedlist": [ { "int64":
 1
 }
-, { "int32":
+, { "int64":
 2
 }
  ] }

@@ -12,7 +12,7 @@ create dataverse fuzzyjoin;
 use dataverse fuzzyjoin;
 
 create type DBLPType as open {
-  id: int32
+  id: int64
 }
 
 create dataset DBLP(DBLPType) primary key id;

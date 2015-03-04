@@ -2,4 +2,4 @@ use dataverse test;
 set import-private-functions 'true';
 
 let $x := { "foo1": 10, "bar1": 20, "foo2": 30, "bar2": 40 }
-return field-access-by-index($x,2)
+return field-access-by-index($x,int32("2"))

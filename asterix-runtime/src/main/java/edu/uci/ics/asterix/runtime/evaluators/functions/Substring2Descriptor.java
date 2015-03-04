@@ -22,13 +22,14 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -38,7 +39,6 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
     private static final long serialVersionUID = 1L;
 
     // allowed input types
-    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
     private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -66,12 +66,13 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
-                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING2.getName()
-                                    + ": expects type INT32 for the second argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                        int start = 0;
+
+                        try {
+                            start = ATypeHierarchy.getIntegerValue(argOut.getByteArray(), 0) - 1;
+                        } catch (HyracksDataException e1) {
+                            throw new AlgebricksException(e1);
                         }
-                        int start = IntegerPointable.getInteger(argOut.getByteArray(), 1) - 1;
                         argOut.reset();
                         evalString.evaluate(tuple);
 
@@ -85,6 +86,7 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                         int sStart = 3;
                         int c = 0;
                         int idxPos1 = 0;
+
                         // skip to start
                         while (idxPos1 < start && c < utflen) {
                             c += UTF8StringPointable.charSize(bytes, sStart + c);

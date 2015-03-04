@@ -11,22 +11,22 @@ create dataverse tpch;
 use dataverse tpch;
 
 create type OrderType as closed {
-  o_orderkey: int32,
-  o_custkey: int32,
+  o_orderkey: int64,
+  o_custkey: int64,
   o_orderstatus: string,
   o_totalprice: double,
   o_orderdate: string,
   o_orderpriority: string,
   o_clerk: string,
-  o_shippriority: int32,
+  o_shippriority: int64,
   o_comment: string
 }
 
 create type CustomerType as closed {
-  c_custkey: int32,
+  c_custkey: int64,
   c_name: string,
   c_address: string,
-  c_nationkey: int32,
+  c_nationkey: int64,
   c_phone: string,
   c_acctbal: double,
   c_mktsegment: string,
@@ -34,24 +34,24 @@ create type CustomerType as closed {
 }
 
 create type SupplierType as closed {
-  s_suppkey: int32,
+  s_suppkey: int64,
   s_name: string,
   s_address: string,
-  s_nationkey: int32,
+  s_nationkey: int64,
   s_phone: string,
   s_acctbal: double,
   s_comment: string
 }
 
 create type NationType as closed {
-  n_nationkey: int32,
+  n_nationkey: int64,
   n_name: string,
-  n_regionkey: int32,
+  n_regionkey: int64,
   n_comment: string
 }
 
 create type RegionType as closed {
-  r_regionkey: int32,
+  r_regionkey: int64,
   r_name: string,
   r_comment: string
 }

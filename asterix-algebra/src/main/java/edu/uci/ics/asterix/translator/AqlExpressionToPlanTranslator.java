@@ -446,8 +446,9 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
         } else {
             LogicalVariable pVar = context.newVar(fc.getPosVarExpr());
+            // We set the positional variable type as INT64 type.
             returnedOp = new UnnestOperator(v, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
-                    pVar, BuiltinType.AINT32, new AqlPositionWriter());
+                    pVar, BuiltinType.AINT64, new AqlPositionWriter());
         }
         returnedOp.getInputs().add(eo.second);
 

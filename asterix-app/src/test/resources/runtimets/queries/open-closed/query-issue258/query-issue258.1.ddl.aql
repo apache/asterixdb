@@ -1,6 +1,6 @@
 /*
  * Description  : This test case is to verify the fix for issue258
- 				: https://code.google.com/p/asterixdb/issues/detail?id=258
+                 : https://code.google.com/p/asterixdb/issues/detail?id=258
  * Expected Res : Success
  * Date         : 21 May 2013
  */
@@ -10,7 +10,7 @@ create dataverse test if not exists;
 use dataverse test;
 
 create type t1 as closed {
-id:int32
+id:int64
 };
 
 

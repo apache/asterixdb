@@ -1,0 +1,13 @@
+/*
+* Type Promotion Test
+*
+*/
+
+use dataverse test;
+
+//age: an indexed closed-type field (INT64), bossid: a non-indexed closed-type field (INT64)
+for $emp in dataset empDataset
+for $dept in dataset deptDataset
+where $emp.age = $dept.bossid
+order by $emp.id, $dept.did, $emp.age, $dept.bossid
+return {"emp.id":$emp.id, "dept.did": $dept.did, "emp.age":$emp.age, "dept.bossid":$dept.bossid}

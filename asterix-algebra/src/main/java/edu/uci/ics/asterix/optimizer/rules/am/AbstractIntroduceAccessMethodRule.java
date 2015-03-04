@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -98,7 +98,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
     }
 
-    protected void pruneIndexCandidates(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected void pruneIndexCandidates(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
+            throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
@@ -160,8 +161,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * only require a match on a prefix of fields to be applicable. This methods
      * removes all index candidates indexExprs that are definitely not
      * applicable according to the expressions involved.
+     *
+     * @throws AlgebricksException
      */
-    public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx) {
+    public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx)
+            throws AlgebricksException {
         Iterator<Map.Entry<Index, List<Integer>>> it = analysisCtx.indexExprs.entrySet().iterator();
         // Used to keep track of matched expressions (added for prefix search)
         int numMatchedKeys = 0;
@@ -307,7 +311,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Finds secondary indexes whose keys include fieldName, and adds a mapping
      * in analysisCtx.indexEsprs from that index to the a corresponding
      * optimizable function expression.
-     * 
+     *
      * @return true if a candidate index was added to foundIndexExprs, false
      *         otherwise
      * @throws AlgebricksException

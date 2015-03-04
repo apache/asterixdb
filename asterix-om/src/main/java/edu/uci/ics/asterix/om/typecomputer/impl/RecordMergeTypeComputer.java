@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
     private static final long serialVersionUID = 1L;
@@ -107,7 +108,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         try {
             resultType = new ARecordType(resultTypeName, resultFieldNames.toArray(new String[] {}),
                     resultFieldTypes.toArray(new IAType[] {}), isOpen);
-        } catch (AsterixException e) {
+        } catch (AsterixException | HyracksDataException e) {
             throw new AlgebricksException(e);
         };
 

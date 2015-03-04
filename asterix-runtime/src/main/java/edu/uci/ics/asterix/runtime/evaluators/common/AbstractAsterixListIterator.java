@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +17,11 @@ package edu.uci.ics.asterix.runtime.evaluators.common;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.IListIterator;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.fuzzyjoin.similarity.IListIterator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractAsterixListIterator implements IListIterator {
 
@@ -38,7 +39,7 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
     protected final boolean ignoreCase = true;
 
     @Override
-    public int compare(IListIterator cmpIter) {
+    public int compare(IListIterator cmpIter) throws HyracksDataException {
         return cmp.compare(data, pos, -1, cmpIter.getData(), cmpIter.getPos(), -1);
     }
 
@@ -103,8 +104,20 @@ public abstract class AbstractAsterixListIterator implements IListIterator {
         this.listLength = getListLength(data, startOff);
         ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[startOff + 1]);
         switch (tag) {
+            case INT64: {
+                cmp = AqlBinaryComparatorFactoryProvider.LONG_POINTABLE_INSTANCE.createBinaryComparator();
+                break;
+            }
             case INT32: {
                 cmp = AqlBinaryComparatorFactoryProvider.INTEGER_POINTABLE_INSTANCE.createBinaryComparator();
+                break;
+            }
+            case INT16: {
+                cmp = AqlBinaryComparatorFactoryProvider.SHORT_POINTABLE_INSTANCE.createBinaryComparator();
+                break;
+            }
+            case INT8: {
+                cmp = AqlBinaryComparatorFactoryProvider.BYTE_POINTABLE_INSTANCE.createBinaryComparator();
                 break;
             }
             case FLOAT: {

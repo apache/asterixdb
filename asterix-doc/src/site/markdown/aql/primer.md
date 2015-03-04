@@ -11,7 +11,7 @@ and the expected results for each query, are included.
 This document assumes that you are at least vaguely familiar with AsterixDB and why you might want to use it.
 Most importantly, it assumes you already have a running instance of AsterixDB and that you know how to query
 it using AsterixDB's basic web interface.
-For more information on these topics, you should go through the steps in 
+For more information on these topics, you should go through the steps in
 [Installing Asterix Using Managix](../install.html)
 before reading this document and make sure that you have a running AsterixDB instance ready to go.
 To get your feet wet, you should probably start with a simple local installation of AsterixDB on your favorite
@@ -69,48 +69,48 @@ some of the key features of AsterixDB. :-))
         drop dataverse TinySocial if exists;
         create dataverse TinySocial;
         use dataverse TinySocial;
-        
+
         create type TwitterUserType as open {
-        	screen-name: string,
-        	lang: string,
-        	friends_count: int32,
-        	statuses_count: int32,
-        	name: string,
-        	followers_count: int32
+            screen-name: string,
+            lang: string,
+            friends_count: int64,
+            statuses_count: int64,
+            name: string,
+            followers_count: int64
         }
-        
+
         create type TweetMessageType as closed {
-        	tweetid: string,
-        	user: TwitterUserType,
-        	sender-location: point?,
-        	send-time: datetime,
-        	referred-topics: {{ string }},
-        	message-text: string
+            tweetid: string,
+            user: TwitterUserType,
+            sender-location: point?,
+            send-time: datetime,
+            referred-topics: {{ string }},
+            message-text: string
         }
-        
+
         create type EmploymentType as open {
-        	organization-name: string,
-        	start-date: date,
-        	end-date: date?
+            organization-name: string,
+            start-date: date,
+            end-date: date?
         }
-        
+
         create type FacebookUserType as closed {
-        	id: int32,
-        	alias: string,
-        	name: string,
-        	user-since: datetime,
-        	friend-ids: {{ int32 }},
-        	employment: [EmploymentType]
+            id: int64,
+            alias: string,
+            name: string,
+            user-since: datetime,
+            friend-ids: {{ int64 }},
+            employment: [EmploymentType]
         }
-        
+
         create type FacebookMessageType as closed {
-        	message-id: int32,
-        	author-id: int32,
-        	in-response-to: int32?,
-        	sender-location: point?,
-        	message: string
+            message-id: int64,
+            author-id: int64,
+            in-response-to: int64?,
+            sender-location: point?,
+            message: string
         }
-        
+
 
 
 The first three lines above tell AsterixDB to drop the old TinySocial dataverse, if one already
@@ -159,30 +159,30 @@ Now that we have defined our datatypes, we can move on and create datasets to st
 We can do this as follows, utilizing the DDL capabilities of AsterixDB.
 
 
-        
+
         use dataverse TinySocial;
-        
+
         create dataset FacebookUsers(FacebookUserType)
         primary key id;
-        
+
         create dataset FacebookMessages(FacebookMessageType)
         primary key message-id;
-        
+
         create dataset TwitterUsers(TwitterUserType)
         primary key screen-name;
-        
+
         create dataset TweetMessages(TweetMessageType)
         primary key tweetid
         hints(cardinality=100);
-        
+
         create index fbUserSinceIdx on FacebookUsers(user-since);
         create index fbAuthorIdx on FacebookMessages(author-id) type btree;
         create index fbSenderLocIndex on FacebookMessages(sender-location) type rtree;
         create index fbMessageIdx on FacebookMessages(message) type keyword;
-        
+
         for $ds in dataset Metadata.Dataset return $ds;
         for $ix in dataset Metadata.Index return $ix;
-        
+
 
 
 The ADM DDL statements above create four datasets for holding our social data in the TinySocial
@@ -310,16 +310,16 @@ input path specification.)
 
 
         use dataverse TinySocial;
-        
+
         load dataset FacebookUsers using localfs
         (("path"="<Host Name>://<Absolute File Path>/fbu.adm"),("format"="adm"));
-        
+
         load dataset FacebookMessages using localfs
         (("path"="<Host Name>://<Absolute File Path>/fbm.adm"),("format"="adm"));
-        
+
         load dataset TwitterUsers using localfs
         (("path"="<Host Name>://<Absolute File Path>/twu.adm"),("format"="adm"));
-        
+
         load dataset TweetMessages using localfs
         (("path"="<Host Name>://<Absolute File Path>/twm.adm"),("format"="adm"));
 
@@ -376,7 +376,7 @@ Suppose the user we want is the user whose id is 8:
 
 
         use dataverse TinySocial;
-        
+
         for $user in dataset FacebookUsers
         where $user.id = 8
         return $user;
@@ -397,7 +397,7 @@ AQL, like SQL, supports a variety of different predicates.
 For example, for our next query, let's find the Facebook users whose ids are in the range between 2 and 4:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset FacebookUsers
         where $user.id >= 2 and $user.id <= 4
         return $user;
@@ -414,7 +414,7 @@ AQL can do range queries on any data type that supports the appropriate set of c
 As an example, this next query retrieves the Facebook users who joined between July 22, 2010 and July 29, 2012:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset FacebookUsers
         where $user.user-since >= datetime('2010-07-22T00:00:00')
           and $user.user-since <= datetime('2012-07-29T23:59:59')
@@ -437,7 +437,7 @@ with the list enumerating the author name and the message text associated with e
 We could do this as follows in AQL:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset FacebookUsers
         for $message in dataset FacebookMessages
         where $message.author-id = $user.id
@@ -488,7 +488,7 @@ The following query is similar to Query 2-A but includes a suggestion to Asterix
 should consider employing an index-based nested-loop join technique to process the query:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset FacebookUsers
         for $message in dataset FacebookMessages
         where $message.author-id /*+ indexnl */  = $user.id
@@ -496,7 +496,7 @@ should consider employing an index-based nested-loop join technique to process t
         "uname": $user.name,
         "message": $message.message
         };
-        
+
 
 The expected result is (of course) the same as before, modulo the order of the instances.
 Result ordering is (intentionally) undefined in AQL in the absence of an _order by_ clause.
@@ -539,13 +539,13 @@ the user name repeated along side each message.
 In AQL, this sort of use case can be handled (more naturally) as follows:
 
         use dataverse TinySocial;
-        
+
         for $user in dataset FacebookUsers
         return {
         "uname": $user.name,
         "messages": for $message in dataset FacebookMessages
-        		where $message.author-id = $user.id
-        		return $message.message
+                where $message.author-id = $user.id
+                return $message.message
         };
 
 This AQL query binds the variable `$user` to the data instances in FacebookUsers;
@@ -582,13 +582,13 @@ In AQL, this can be specified in a manner similar to the previous query using on
 functions on the spatial data type instead of id equality in the correlated query's _where_ clause:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset TweetMessages
         return {
         "message": $t.message-text,
         "nearby-messages": for $t2 in dataset TweetMessages
-        			where spatial-distance($t.sender-location, $t2.sender-location) <= 1
-        			return { "msgtxt":$t2.message-text}
+                    where spatial-distance($t.sender-location, $t2.sender-location) <= 1
+                    return { "msgtxt":$t2.message-text}
         };
 
 Here is the expected result for this query:
@@ -616,21 +616,21 @@ similarity, in which case we could write the following query using AQL's operato
 for testing whether or not two values are similar:
 
         use dataverse TinySocial;
-        
+
         set simfunction "edit-distance";
         set simthreshold "3";
-        
+
         for $fbu in dataset FacebookUsers
         return {
             "id": $fbu.id,
             "name": $fbu.name,
             "similar-users": for $t in dataset TweetMessages
-        			let $tu := $t.user
-        			where $tu.name ~= $fbu.name
-        			return {
-        			"twitter-screenname": $tu.screen-name,
-        			"twitter-name": $tu.name
-        			}
+                    let $tu := $t.user
+                    where $tu.name ~= $fbu.name
+                    return {
+                    "twitter-screenname": $tu.screen-name,
+                    "twitter-name": $tu.name
+                    }
         };
 
 The expected result for this query against our sample data is:
@@ -655,7 +655,7 @@ Such employees will have an employment history containing a record with a null e
 following AQL query:
 
         use dataverse TinySocial;
-        
+
         for $fbu in dataset FacebookUsers
         where (some $e in $fbu.employment satisfies is-null($e.end-date))
         return $fbu;
@@ -677,7 +677,7 @@ Such employees will have an employment history containing no records with null e
 following AQL query:
 
         use dataverse TinySocial;
-        
+
         for $fbu in dataset FacebookUsers
         where (every $e in $fbu.employment satisfies not(is-null($e.end-date)))
         return $fbu;
@@ -694,7 +694,7 @@ Like SQL, the AQL language of AsterixDB provides support for computing aggregate
 As a very simple example, the following AQL query computes the total number of Facebook users:
 
         use dataverse TinySocial;
-        
+
         count(for $fbu in dataset FacebookUsers return $fbu);
 
 In AQL, aggregate functions can be applied to arbitrary subquery results; in this case, the count function
@@ -709,7 +709,7 @@ Also like SQL, AQL supports grouped aggregation.
 For every Twitter user, the following group-by/aggregate query counts the number of tweets sent by that user:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset TweetMessages
         group by $uid := $t.user.screen-name with $t
         return {
@@ -749,7 +749,7 @@ be used in processing a particular AQL query.
 The following query is similar to Query 9-A, but adds a hash-based aggregation hint:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset TweetMessages
         /*+ hash*/
         group by $uid := $t.user.screen-name with $t
@@ -776,15 +776,15 @@ This is expressible in AQL using the _limit_ clause combined with the _order by_
 The following AQL  query returns the top 3 Twitter users based on who has issued the most tweets:
 
         use dataverse TinySocial;
-        
+
         for $t in dataset TweetMessages
         group by $uid := $t.user.screen-name with $t
         let $c := count($t)
         order by $c desc
         limit 3
         return {
-        	"user": $uid,
-        	"count": $c
+            "user": $uid,
+            "count": $c
         };
 
 The expected result for this query is:
@@ -799,17 +799,17 @@ As a last example of AQL and its query power, the following query, for each twee
 finds all of the tweets that are similar based on the topics that they refer to:
 
         use dataverse TinySocial;
-        
+
         set simfunction "jaccard";
         set simthreshold "0.3";
-        
+
         for $t in dataset TweetMessages
         return {
             "tweet": $t,
             "similar-tweets": for $t2 in dataset TweetMessages
-        			where  $t2.referred-topics ~= $t.referred-topics
-        			and $t2.tweetid != $t.tweetid
-        			return $t2.referred-topics
+                    where  $t2.referred-topics ~= $t.referred-topics
+                    and $t2.tweetid != $t.tweetid
+                    return $t2.referred-topics
         };
 
 This query illustrates several things worth knowing in order to write fuzzy queries in AQL.
@@ -843,7 +843,7 @@ The following example adds a new tweet by user "NathanGiesen@211" to the TweetMe
 have all gone up in the interim, although he appears not to have moved in the last half hour.)
 
         use dataverse TinySocial;
-        
+
         insert into dataset TweetMessages
         (
            {"tweetid":"13",
@@ -874,7 +874,7 @@ _where_ clause can involve any valid XQuery expression.
 The following example deletes the tweet that we just added from user "NathanGiesen@211".  (Easy come, easy go. :-))
 
         use dataverse TinySocial;
-        
+
         delete $tm from dataset TweetMessages where $tm.tweetid = "13";
 
 It should be noted that one form of data change not yet supported by AsterixDB is in-place data modification (_update_).

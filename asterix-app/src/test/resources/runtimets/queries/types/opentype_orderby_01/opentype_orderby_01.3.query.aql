@@ -1,0 +1,11 @@
+/*
+* Type Promotion Test
+*
+*/
+
+use dataverse test;
+
+// supvrid: open type field
+for $emp in dataset empDataset
+order by $emp.supvrid, $emp.id
+return {"emp.id":$emp.id, "emp.supvrid":$emp.supvrid};

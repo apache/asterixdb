@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -174,7 +175,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         LogicalVariable newNullPlaceHolderVar = null;
         if (isLeftOuterJoin) {
-            //get a new null place holder variable that is the first field variable of the primary key 
+            //get a new null place holder variable that is the first field variable of the primary key
             //from the indexSubTree's datasourceScanOp
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
         }
@@ -237,8 +238,13 @@ public class BTreeAccessMethod implements IAccessMethod {
         // TODO: For now don't consider prefix searches.
         BitSet setLowKeys = new BitSet(numSecondaryKeys);
         BitSet setHighKeys = new BitSet(numSecondaryKeys);
-        // Go through the func exprs listed as optimizable by the chosen index, 
+        // Go through the func exprs listed as optimizable by the chosen index,
         // and formulate a range predicate on the secondary-index keys.
+
+        // checks whether a type casting happened from a real (FLOAT, DOUBLE) value to an INT value
+        // since we have a round issues when dealing with LT(<) OR GT(>) operator.
+        boolean realTypeConvertedToIntegerType = false;
+
         for (Integer exprIndex : exprList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
             IOptimizableFuncExpr optFuncExpr = matchedFuncExprs.get(exprIndex);
@@ -253,9 +259,37 @@ public class BTreeAccessMethod implements IAccessMethod {
                 throw new AlgebricksException(
                         "Could not match optimizable function expression to any index field name.");
             }
-            ILogicalExpression searchKeyExpr = AccessMethodUtils.createSearchKeyExpr(optFuncExpr, indexSubTree,
-                    probeSubTree);
+            Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(
+                    optFuncExpr, indexSubTree, probeSubTree);
+            ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
+            realTypeConvertedToIntegerType = returnedSearchKeyExpr.second;
+
             LimitType limit = getLimitType(optFuncExpr, probeSubTree);
+
+            // If a DOUBLE or FLOAT constant is converted to an INT type value,
+            // we need to check a corner case where two real values are located between an INT value.
+            // For example, for the following query,
+            //
+            // for $emp in dataset empDataset
+            // where $emp.age > double("2.3") and $emp.age < double("3.3")
+            // return $emp.id;
+            //
+            // It should generate a result if there is a tuple that satisfies the condition, which is 3,
+            // however, it does not generate the desired result since finding candidates
+            // fail after truncating the fraction part (there is no INT whose value is greater than 2 and less than 3.)
+            //
+            // Therefore, we convert LT(<) to LE(<=) and GT(>) to GE(>=) to find candidates.
+            // This does not change the result of an actual comparison since this conversion is only applied
+            // for finding candidates from an index.
+            //
+            if (realTypeConvertedToIntegerType) {
+                if (limit == LimitType.HIGH_EXCLUSIVE) {
+                    limit = LimitType.HIGH_INCLUSIVE;
+                } else if (limit == LimitType.LOW_EXCLUSIVE) {
+                    limit = LimitType.LOW_INCLUSIVE;
+                }
+            }
+
             switch (limit) {
                 case EQUAL: {
                     if (lowKeyLimits[keyPos] == null && highKeyLimits[keyPos] == null) {
@@ -435,7 +469,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         UnnestMapOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 chosenIndex, inputOp, jobGenParams, context, false, retainInput);
 
-        // Generate the rest of the upstream plan which feeds the search results into the primary index.        
+        // Generate the rest of the upstream plan which feeds the search results into the primary index.
         UnnestMapOperator primaryIndexUnnestOp = null;
         boolean isPrimaryIndex = chosenIndex.isPrimaryIndex();
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
@@ -587,7 +621,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             // We are optimizing a selection query. Search key is a constant. Return true if constant is on lhs.
             return optFuncExpr.getFuncExpr().getArguments().get(0) == optFuncExpr.getConstantVal(0);
         } else {
-            // We are optimizing a join query. Determine whether the feeding variable is on the lhs. 
+            // We are optimizing a join query. Determine whether the feeding variable is on the lhs.
             return (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree);
         }
     }

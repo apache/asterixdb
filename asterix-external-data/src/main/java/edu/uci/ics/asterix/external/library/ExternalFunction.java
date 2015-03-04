@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,9 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
 import edu.uci.ics.asterix.om.functions.IExternalFunctionInfo;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
@@ -36,6 +39,7 @@ public abstract class ExternalFunction implements IExternalFunction {
     protected final ICopyEvaluatorFactory[] evaluatorFactories;
     protected final IDataOutputProvider out;
     protected final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
+    protected final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
     protected final ICopyEvaluator[] argumentEvaluators;
     protected final JavaFunctionHelper functionHelper;
 
@@ -77,7 +81,19 @@ public abstract class ExternalFunction implements IExternalFunction {
         for (int i = 0; i < evaluatorFactories.length; i++) {
             inputVal.reset();
             argumentEvaluators[i].evaluate(tuple);
-            functionHelper.setArgument(i, inputVal.getByteArray());
+
+            // Type-cast the source array based on the input type that this function wants to receive.
+            ATypeTag targetTypeTag = finfo.getParamList().get(i).getTypeTag();
+            ATypeTag sourceTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal
+                    .getStartOffset()]);
+            if (sourceTypeTag != targetTypeTag) {
+                castBuffer.reset();
+                ATypeHierarchy.convertNumericTypeByteArray(inputVal.getByteArray(), inputVal.getStartOffset(),
+                        inputVal.getLength(), targetTypeTag, castBuffer.getDataOutput());
+                functionHelper.setArgument(i, castBuffer.getByteArray());
+            } else {
+                functionHelper.setArgument(i, inputVal.getByteArray());
+            }
         }
     }
 

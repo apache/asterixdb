@@ -10,17 +10,17 @@ create dataverse test;
 use dataverse test;
 
 create type EmploymentType as open {
-        organization-name: string,      
+        organization-name: string,
         start-date: date,
         end-date: date?
 }
 
 create type FacebookUserType as closed {
-        id: int32,
+        id: int64,
         alias: string,
         name: string,
         user-since: datetime,
-        friend-ids: {{ int32 }},
+        friend-ids: {{ int64 }},
         employment: [EmploymentType]
 }
 

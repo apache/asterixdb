@@ -17,11 +17,12 @@ package edu.uci.ics.asterix.runtime.unnestingfunctions.std;
 import java.io.DataOutput;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -32,7 +33,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -66,22 +66,30 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                     private DataOutput out = provider.getDataOutput();
                     @SuppressWarnings("rawtypes")
                     private ISerializerDeserializer serde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                            .getSerializerDeserializer(BuiltinType.AINT64);
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval0 = args[0].createEvaluator(inputVal);
                     private ICopyEvaluator eval1 = args[1].createEvaluator(inputVal);
-                    private AMutableInt32 aInt32 = new AMutableInt32(0);
-                    private int current;
-                    private int max;
+                    private AMutableInt64 aInt64 = new AMutableInt64(0);
+                    private long current;
+                    private long max;
 
                     @Override
                     public void init(IFrameTupleReference tuple) throws AlgebricksException {
                         inputVal.reset();
                         eval0.evaluate(tuple);
-                        current = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+                        try {
+                            current = ATypeHierarchy.getLongValue(inputVal.getByteArray(), 0);
+                        } catch (HyracksDataException e) {
+                            throw new AlgebricksException(e);
+                        }
                         inputVal.reset();
                         eval1.evaluate(tuple);
-                        max = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+                        try {
+                            max = ATypeHierarchy.getLongValue(inputVal.getByteArray(), 0);
+                        } catch (HyracksDataException e) {
+                            throw new AlgebricksException(e);
+                        }
                     }
 
                     @SuppressWarnings("unchecked")
@@ -90,9 +98,9 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                         if (current > max) {
                             return false;
                         }
-                        aInt32.setValue(current);
+                        aInt64.setValue(current);
                         try {
-                            serde.serialize(aInt32, out);
+                            serde.serialize(aInt64, out);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }

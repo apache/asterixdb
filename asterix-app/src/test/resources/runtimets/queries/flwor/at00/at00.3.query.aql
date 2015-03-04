@@ -11,4 +11,4 @@ order by $i.l_partkey, $i.l_shipdate
 group by $partkey := $i.l_partkey with $i
 for $j at $p in $i
 where $p < 4
-return { "partkey": $partkey, "pid": $p, "shipdate": $j.l_shipdate }
+return { "partkey": $partkey, "pid": $p, "shipdate": $j.l_shipdate } 

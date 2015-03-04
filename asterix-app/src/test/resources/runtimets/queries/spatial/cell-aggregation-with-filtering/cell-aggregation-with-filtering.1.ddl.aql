@@ -3,11 +3,11 @@ create dataverse test;
 use dataverse test;
 
 create type Tweet as closed {
-	id: int32,
-	tweetid: int64,
-	loc: point,
-	time: datetime,
-	text: string
+    id: int64,
+    tweetid: int64,
+    loc: point,
+    time: datetime,
+    text: string
 }
 
 create nodegroup group1 if not exists on nc1, nc2;

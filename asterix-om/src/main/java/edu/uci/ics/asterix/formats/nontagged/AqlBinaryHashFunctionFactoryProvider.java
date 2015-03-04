@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,10 +16,10 @@ package edu.uci.ics.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.hash.AMurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
 import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
@@ -38,7 +38,7 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
             DoublePointable.FACTORY);
     public static final PointableBinaryHashFunctionFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
             RawUTF8StringPointable.FACTORY);
-    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive hashing.    
+    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive hashing.
     public static final PointableBinaryHashFunctionFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryHashFunctionFactory(
             UTF8StringLowercasePointable.FACTORY);
 
@@ -53,7 +53,8 @@ public class AqlBinaryHashFunctionFactoryProvider implements IBinaryHashFunction
 
             @Override
             public IBinaryHashFunction createBinaryHashFunction() {
-                return MurmurHash3BinaryHashFunctionFamily.INSTANCE.createBinaryHashFunction(0);
+                // Actual numeric type promotion happens in the createBinaryHashFunction()
+                return AMurmurHash3BinaryHashFunctionFamily.INSTANCE.createBinaryHashFunction(0);
             }
         };
     }

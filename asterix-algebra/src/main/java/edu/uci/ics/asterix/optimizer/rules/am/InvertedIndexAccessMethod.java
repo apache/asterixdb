@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.algebra.base.LogicalOperatorDeepCopyVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -41,6 +42,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
@@ -97,11 +99,11 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     static {
         funcIdents.add(AsterixBuiltinFunctions.CONTAINS);
         // For matching similarity-check functions. For example, similarity-jaccard-check returns a list of two items,
-        // and the select condition will get the first list-item and check whether it evaluates to true. 
+        // and the select condition will get the first list-item and check whether it evaluates to true.
         funcIdents.add(AsterixBuiltinFunctions.GET_ITEM);
     }
 
-    // These function identifiers are matched in this AM's analyzeFuncExprArgs(), 
+    // These function identifiers are matched in this AM's analyzeFuncExprArgs(),
     // and are not visible to the outside driver.
     private static HashSet<FunctionIdentifier> secondLevelFuncIdents = new HashSet<FunctionIdentifier>();
     static {
@@ -440,8 +442,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
-        // The arguments of edit-distance-contains() function are asymmetrical, we can only use index 
-        // if the dataset of index subtree and the dataset of first argument's subtree is the same     
+        // The arguments of edit-distance-contains() function are asymmetrical, we can only use index
+        // if the dataset of index subtree and the dataset of first argument's subtree is the same
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS
                 && optFuncExpr.getOperatorSubTree(0).dataset != null
                 && !optFuncExpr.getOperatorSubTree(0).dataset.getDatasetName().equals(
@@ -452,7 +454,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         //if LOJ, reset null place holder variable
         LogicalVariable newNullPlaceHolderVar = null;
         if (isLeftOuterJoin && hasGroupBy) {
-            //get a new null place holder variable that is the first field variable of the primary key 
+            //get a new null place holder variable that is the first field variable of the primary key
             //from the indexSubTree's datasourceScanOp
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
 
@@ -477,7 +479,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         List<LogicalVariable> indexSubTreeLiveVars = new ArrayList<LogicalVariable>();
         VariableUtilities.getLiveVariables(indexSubTree.root, indexSubTreeLiveVars);
 
-        // Clone the original join condition because we may have to modify it (and we also need the original).        
+        // Clone the original join condition because we may have to modify it (and we also need the original).
         ILogicalExpression joinCond = join.getCondition().getValue().cloneExpression();
         // Create "panic" (non indexed) nested-loop join path if necessary.
         Mutable<ILogicalOperator> panicJoinRef = null;
@@ -558,7 +560,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Create two copies of the original probe subtree.
         // The first copy, which becomes the new probe subtree, will retain the primary-key and secondary-search key variables,
         // but have all other variables replaced with new ones.
-        // The second copy, which will become an input to the top-level equi-join to resolve the surrogates, 
+        // The second copy, which will become an input to the top-level equi-join to resolve the surrogates,
         // will have all primary-key and secondary-search keys replaced, but retains all other original variables.
 
         // Variable replacement map for the first copy.
@@ -678,14 +680,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Replace the inputs of the given join op, and replace variables in its
         // condition since we deep-copied one of the scanner subtrees which
-        // changed variables. 
+        // changed variables.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         for (Map.Entry<LogicalVariable, LogicalVariable> entry : copyVarMap.entrySet()) {
             joinOp.getCondition().getValue().substituteVar(entry.getKey(), entry.getValue());
         }
         joinOp.getInputs().clear();
         joinOp.getInputs().add(new MutableObject<ILogicalOperator>(scanSubTree));
-        // Make sure that the build input (which may be materialized causing blocking) comes from 
+        // Make sure that the build input (which may be materialized causing blocking) comes from
         // the split+select, otherwise the plan will have a deadlock.
         joinOp.getInputs().add(isNotFilterableSelectOpRef);
         context.computeAndSetTypeEnvironmentForOperator(joinOp);
@@ -820,7 +822,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException {
         if (optFuncExpr.getFuncExpr().getAnnotations()
                 .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
             return false;
@@ -842,7 +844,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return false;
     }
 
-    private boolean isEditDistanceFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+    private boolean isEditDistanceFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr)
+            throws AlgebricksException {
         if (optFuncExpr.getNumConstantVals() == 1) {
             return isEditDistanceFuncJoinOptimizable(index, optFuncExpr);
         } else {
@@ -868,7 +871,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         return false;
     }
 
-    private boolean isEditDistanceFuncSelectOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+    private boolean isEditDistanceFuncSelectOptimizable(Index index, IOptimizableFuncExpr optFuncExpr)
+            throws AlgebricksException {
 
         // Check for panic in selection query.
         // TODO: Panic also depends on prePost which is currently hardcoded to be true.
@@ -882,7 +886,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         AsterixConstantValue intConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(1);
         IAObject intObj = intConstVal.getObject();
-        AInt32 edThresh = (AInt32) intObj;
+
+        AInt32 edThresh = null;
+        // Apply type casting based on numeric types of the input to INT32 type.
+        try {
+            edThresh = (AInt32) ATypeHierarchy.convertNumericTypeObject(intObj, ATypeTag.INT32);
+        } catch (AsterixException e) {
+            throw new AlgebricksException(e);
+        }
         int mergeThreshold = 0;
 
         if (typeTag == ATypeTag.STRING) {
@@ -1005,7 +1016,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                     && (indexType == IndexType.SINGLE_PARTITION_WORD_INVIX || indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX)) {
                 return true;
             }
-            // We assume that the given list variable doesn't have ngram list in it since it is unrealistic.  
+            // We assume that the given list variable doesn't have ngram list in it since it is unrealistic.
         }
         return false;
     }
@@ -1083,7 +1094,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             case EDIT_DISTANCE:
             case CONJUNCTIVE_EDIT_DISTANCE: {
-                int edThresh = ((AInt32) simThresh).getIntegerValue();
+                int edThresh = 0;
+                try {
+                    edThresh = ((AInt32) ATypeHierarchy.convertNumericTypeObject(simThresh, ATypeTag.INT32))
+                            .getIntegerValue();
+                } catch (AsterixException e) {
+                    throw new AlgebricksException(e);
+                }
+
                 switch (index.getIndexType()) {
                     case SINGLE_PARTITION_NGRAM_INVIX:
                     case LENGTH_PARTITIONED_NGRAM_INVIX: {

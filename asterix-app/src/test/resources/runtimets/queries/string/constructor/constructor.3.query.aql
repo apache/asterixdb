@@ -1,0 +1,7 @@
+use dataverse test;
+
+let $a:=1
+let $b:=2
+let $c:="c"
+let $d:=[$a,$b,$c]
+for $x in $d return string($x)

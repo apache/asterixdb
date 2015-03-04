@@ -1,2 +1,2 @@
-[ { "sum_qty_partial": 150194.0d, "sum_base_price": 1.5277439838000003E8d, "sum_disc_price": 1.4517182996390015E8d, "sum_charge": 1.5100895558728895E8d, "ave_qty": 25.39634764964491d, "ave_price": 25441.198731057455d, "ave_disc": 0.050031640299750366d, "count_order": 6005i64 }
+[ { "sum_qty_partial": 150194.0d, "sum_base_price": 1.5277439838000005E8d, "sum_disc_price": 1.4517182996390012E8d, "sum_charge": 1.51008955587289E8d, "ave_qty": 25.39634764964491d, "ave_price": 25441.198731057462d, "ave_disc": 0.05003164029975036d, "count_order": 6005 }
  ]

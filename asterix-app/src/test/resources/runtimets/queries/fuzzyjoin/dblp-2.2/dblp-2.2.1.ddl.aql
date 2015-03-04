@@ -5,7 +5,7 @@ create dataverse fuzzyjoin;
 use dataverse fuzzyjoin;
 
 create type DBLPType as closed {
-  id: int32, 
+  id: int64,
   dblpid: string,
   title: string,
   authors: string,
@@ -13,8 +13,8 @@ create type DBLPType as closed {
 }
 
 create type TOKENSRANKEDADMType as closed {
-  token: int32,
-  rank: int32
+  token: int64,
+  rank: int64
 }
 
 create dataset DBLP(DBLPType) primary key id;

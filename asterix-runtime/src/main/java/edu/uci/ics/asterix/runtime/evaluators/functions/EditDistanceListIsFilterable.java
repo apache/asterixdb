@@ -26,14 +26,15 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -47,6 +48,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
             return new EditDistanceListIsFilterable();
@@ -97,7 +99,7 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
             argBuf.reset();
             listEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-            int listLen = 0;
+            long listLen = 0;
             switch (typeTag) {
                 case UNORDEREDLIST: {
                     listLen = AUnorderedListSerializerDeserializer.getNumberOfItems(argBuf.getByteArray(), 0);
@@ -118,14 +120,16 @@ public class EditDistanceListIsFilterable extends AbstractScalarFunctionDynamicD
             argBuf.reset();
             edThreshEval.evaluate(tuple);
             typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argBuf.getByteArray()[0]);
-            if (!typeTag.equals(ATypeTag.INT32)) {
-                throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName()
-                        + ": expected type INT32 as the second argument, but got " + typeTag + ".");
+            long edThresh;
+
+            try {
+                edThresh = ATypeHierarchy.getIntegerValue(argBuf.getByteArray(), 0);
+            } catch (HyracksDataException e1) {
+                throw new AlgebricksException(e1);
             }
-            int edThresh = IntegerPointable.getInteger(argBuf.getByteArray(), 1);
 
             // Compute result.
-            int lowerBound = listLen - edThresh;
+            long lowerBound = listLen - edThresh;
             try {
                 if (lowerBound <= 0) {
                     booleanSerde.serialize(ABoolean.FALSE, output.getDataOutput());

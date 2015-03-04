@@ -10,5 +10,5 @@ create dataverse test;
 
 use dataverse test;
 
-create type sType as closed{b : int32};
+create type sType as closed{b : int64};
 create dataset s(sType) primary key b;

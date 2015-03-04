@@ -19,6 +19,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
@@ -92,8 +93,11 @@ public abstract class AbstractCopyEvaluator implements ICopyEvaluator {
             throws AlgebricksException {
         for (int i = 0; i < expected.length; i++) {
             if (expected[i] != actual[i]) {
-                throw new AlgebricksException(title +
-                        ": expects " + expected[i] + " at " + idToString(i + 1) + " argument, but got " + actual[i]);
+                if (!ATypeHierarchy.canPromote(actual[i], expected[i])
+                        && !ATypeHierarchy.canPromote(expected[i], actual[i])) {
+                    throw new AlgebricksException(title + ": expects " + expected[i] + " at " + idToString(i + 1)
+                            + " argument, but got " + actual[i]);
+                }
             }
         }
     }

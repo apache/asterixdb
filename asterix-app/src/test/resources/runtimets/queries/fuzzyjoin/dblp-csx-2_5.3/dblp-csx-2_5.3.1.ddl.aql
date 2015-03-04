@@ -5,7 +5,7 @@ create dataverse fuzzyjoin;
 use dataverse fuzzyjoin;
 
 create type DBLPType as open {
-  id: int32, 
+  id: int64,
   dblpid: string,
   title: string,
   authors: string,
@@ -13,7 +13,7 @@ create type DBLPType as open {
 }
 
 create type CSXType as open {
-  id: int32, 
+  id: int64,
   csxid: string,
   title: string,
   authors: string,

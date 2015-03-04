@@ -4,7 +4,7 @@ create dataverse test;
 use dataverse test;
 
 create type SpatialType as open {
-  id: int32,
+  id: int64,
   point: point,
   point3d: point3d,
   line: line,

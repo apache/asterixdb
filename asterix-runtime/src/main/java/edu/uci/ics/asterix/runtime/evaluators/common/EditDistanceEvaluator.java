@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,17 +18,18 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityMetricEditDistance;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -46,10 +47,10 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
     protected final AsterixOrderedListIterator firstOrdListIter = new AsterixOrderedListIterator();
     protected final AsterixOrderedListIterator secondOrdListIter = new AsterixOrderedListIterator();
     protected int editDistance = 0;
-    protected final AMutableInt32 aInt32 = new AMutableInt32(-1);
+    protected final AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    protected final ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -82,7 +83,11 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         if (itemTypeTag == ATypeTag.ANY)
             throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
 
-        editDistance = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
+        try {
+            editDistance = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
+        } catch (HyracksDataException e1) {
+            throw new AlgebricksException(e1);
+        }
 
         try {
             writeResult(editDistance);
@@ -104,7 +109,7 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
     }
 
     protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
-            throws AlgebricksException {
+            throws AlgebricksException, HyracksDataException {
         switch (argType) {
 
             case STRING: {
@@ -115,7 +120,11 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
             case ORDEREDLIST: {
                 firstOrdListIter.reset(bytes, firstStart);
                 secondOrdListIter.reset(bytes, secondStart);
-                return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
+                try {
+                    return (int) ed.getSimilarity(firstOrdListIter, secondOrdListIter);
+                } catch (HyracksDataException e) {
+                    throw new AlgebricksException(e);
+                }
             }
 
             default: {
@@ -130,7 +139,7 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         // edit distance between null and anything else is undefined
         if (typeTag1 == ATypeTag.NULL || typeTag2 == ATypeTag.NULL) {
             try {
-               nullSerde.serialize(ANull.NULL, out);
+                nullSerde.serialize(ANull.NULL, out);
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
@@ -146,7 +155,7 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
     }
 
     protected void writeResult(int ed) throws IOException {
-        aInt32.setValue(ed);
-        int32Serde.serialize(aInt32, out);
+        aInt64.setValue(ed);
+        int64Serde.serialize(aInt64, out);
     }
 }

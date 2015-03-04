@@ -5,7 +5,7 @@ create dataverse test;
 use dataverse test;
 
 create type NumericType as open {
-  id: int32,
+  id: int64,
   int8Field: int8?,
   int16Field: int16?,
   int32Field: int32?,

@@ -10,7 +10,7 @@ create dataverse temp
 use dataverse temp;
 
 create type test as closed {
-  id: int32,
+  id: int64,
   float: float,
   floatq: float?,
   double: double,

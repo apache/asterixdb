@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.asterix.om.pointables.cast;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
-import edu.uci.ics.asterix.om.types.hierachy.ITypePromoteComputer;
+import edu.uci.ics.asterix.om.types.hierachy.ITypeConvertComputer;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -106,20 +107,16 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             arg.first.set(accessor);
         } else {
             ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
-            ITypePromoteComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(inputTypeTag, reqTypeTag);
-            if (promoteComputer != null) {
 
-                try {
-                    // do the promotion; note that the type tag field should be skipped
-                    promoteComputer.promote(accessor.getByteArray(), accessor.getStartOffset() + 1,
-                            accessor.getLength() - 1, castBuffer.getDataOutput());
-                    arg.first.set(castBuffer);
-                } catch (IOException e) {
-                    throw new AsterixException(e);
-                }
-            } else {
-                throw new AsterixException("Type mismatch: cannot cast type " + inputTypeTag + " to " + reqTypeTag);
+            try {
+                ATypeHierarchy.convertNumericTypeByteArray(accessor.getByteArray(), accessor.getStartOffset(),
+                        accessor.getLength(), reqTypeTag, castBuffer.getDataOutput());
+                arg.first.set(castBuffer);
+            } catch (IOException e1) {
+                throw new AsterixException("Type mismatch: cannot cast the " + inputTypeTag + " type to the "
+                        + reqTypeTag + " type.");
             }
+
         }
 
         return null;

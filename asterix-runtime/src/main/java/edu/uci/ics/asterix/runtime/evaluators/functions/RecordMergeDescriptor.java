@@ -68,7 +68,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                 try {
                     recType = new ARecordType(outRecType.getTypeName(), outRecType.getFieldNames(),
                             outRecType.getFieldTypes(), outRecType.isOpen());
-                } catch (AsterixException e) {
+                } catch (AsterixException | HyracksDataException e) {
                     throw new IllegalStateException();
                 }
 

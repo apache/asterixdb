@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Factory class for creating @see{TwitterFirehoseFeedAdapter}.
@@ -125,7 +126,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
                     BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
             outputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
 
-        } catch (AsterixException e) {
+        } catch (AsterixException | HyracksDataException e) {
             throw new IllegalStateException("Unable to initialize output type");
         }
         return outputType;

@@ -8,7 +8,7 @@ create dataverse test;
 use dataverse test;
 
 create type Schema as closed{
-id: int32,
+id: int64,
 timestamp: datetime
 }
 

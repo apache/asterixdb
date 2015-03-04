@@ -9,10 +9,10 @@ drop dataverse test if exists;
 create dataverse test;
 
 create type test.Emp as closed {
-id:int32,
+id:int64,
 fname:string,
 lname:string,
-age:int32,
+age:int64,
 dept:string
 }
 

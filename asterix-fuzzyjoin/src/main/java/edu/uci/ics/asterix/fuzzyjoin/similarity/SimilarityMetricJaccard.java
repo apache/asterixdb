@@ -13,7 +13,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * Author: Rares Vernica <rares (at) ics.uci.edu>
  */
 
@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.uci.ics.asterix.fuzzyjoin.tokenizer.Tokenizer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class SimilarityMetricJaccard extends SimilarityMetric implements IGenericSimilarityMetric {
 
@@ -60,7 +61,7 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
     // }
 
     @Override
-    public float getSimilarity(IListIterator tokensX, IListIterator tokensY) {
+    public float getSimilarity(IListIterator tokensX, IListIterator tokensY) throws HyracksDataException {
         int intersectionSize = SimilarityMetric.getIntersectSize(tokensX, tokensY);
         int totalSize = tokensX.size() + tokensY.size();
 
@@ -68,7 +69,8 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
     }
 
     @Override
-    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh) {
+    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh)
+            throws HyracksDataException {
 
         // apply length filter
         int lengthLowerBound = (int) Math.ceil(simThresh * firstList.size());

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,26 +21,24 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-
-    // allowed input types
-    private static final byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
-    private static final byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -68,30 +66,75 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
                         evalStart.evaluate(tuple);
-                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
-                                    + ": expects type INT32 for the second argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                        int start = 0;
+
+                        ATypeTag argOutTypeTag = ATypeTag.VALUE_TYPE_MAPPING[argOut.getByteArray()[0]];
+
+                        switch (argOutTypeTag) {
+                            case INT64:
+                                start = (int) LongPointable.getLong(argOut.getByteArray(), 1) - 1;
+                                break;
+                            case INT32:
+                                start = IntegerPointable.getInteger(argOut.getByteArray(), 1) - 1;
+                                break;
+                            case INT8:
+                                start = argOut.getByteArray()[1] - 1;
+                                break;
+                            case INT16:
+                                start = (int) ShortPointable.getShort(argOut.getByteArray(), 1) - 1;
+                                break;
+                            case FLOAT:
+                                start = (int) FloatPointable.getFloat(argOut.getByteArray(), 1) - 1;
+                                break;
+                            case DOUBLE:
+                                start = (int) DoublePointable.getDouble(argOut.getByteArray(), 1) - 1;
+                                break;
+                            default:
+                                throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
+                                        + ": expects type INT8/16/32/64/FLOAT/DOUBLE for the second argument but got "
+                                        + argOutTypeTag);
                         }
-                        int start = IntegerPointable.getInteger(argOut.getByteArray(), 1) - 1;
+
                         argOut.reset();
                         evalLen.evaluate(tuple);
-                        if (argOut.getByteArray()[0] != SER_INT32_TYPE_TAG) {
-                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
-                                    + ": expects type INT32 for the third argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                        int len = 0;
+
+                        argOutTypeTag = ATypeTag.VALUE_TYPE_MAPPING[argOut.getByteArray()[0]];
+
+                        switch (argOutTypeTag) {
+                            case INT64:
+                                len = (int) LongPointable.getLong(argOut.getByteArray(), 1);
+                                break;
+                            case INT32:
+                                len = IntegerPointable.getInteger(argOut.getByteArray(), 1);
+                                break;
+                            case INT8:
+                                len = argOut.getByteArray()[1];
+                                break;
+                            case INT16:
+                                len = (int) ShortPointable.getShort(argOut.getByteArray(), 1);
+                                break;
+                            case FLOAT:
+                                len = (int) FloatPointable.getFloat(argOut.getByteArray(), 1);
+                                break;
+                            case DOUBLE:
+                                len = (int) DoublePointable.getDouble(argOut.getByteArray(), 1);
+                                break;
+                            default:
+                                throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
+                                        + ": expects type INT8/16/32/64/FLOAT/DOUBLE for the third argument but got "
+                                        + argOutTypeTag);
                         }
-                        int len = IntegerPointable.getInteger(argOut.getByteArray(), 1);
 
                         argOut.reset();
                         evalString.evaluate(tuple);
 
                         byte[] bytes = argOut.getByteArray();
+                        argOutTypeTag = ATypeTag.VALUE_TYPE_MAPPING[bytes[0]];
 
-                        if (bytes[0] != SER_STRING_TYPE_TAG) {
+                        if (argOutTypeTag != ATypeTag.STRING) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
-                                    + ": expects type STRING for the first argument but got "
-                                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
+                                    + ": expects type STRING for the first argument but got " + argOutTypeTag);
                         }
                         int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
                         int sStart = 3;

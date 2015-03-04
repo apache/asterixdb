@@ -1,6 +1,6 @@
 /*
  * Test case Name : heterog-list01.aql
- * Description    : To test insertion of an array of objects into internal dataset. 
+ * Description    : To test insertion of an array of objects into internal dataset.
  *                : Heterogenous list construction.
  * Success        : Yes
  * Date           : 14th April 2012
@@ -11,15 +11,15 @@ create dataverse test;
 use dataverse test;
 
 create type BatterType as {
-id:int32,
-descrpt:string
+id: int64,
+descrpt: string
 }
 
 create type TestType as closed {
-id:int32,
-description:string,
-name:string,
-batters:{{BatterType}}
+id: int64,
+description: string,
+name: string,
+batters: {{BatterType}}
 }
 
 create dataset T1(TestType) primary key id;

@@ -13,7 +13,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * Author: Alexander Behm <abehm (at) ics.uci.edu>
  */
 
@@ -22,6 +22,7 @@ package edu.uci.ics.asterix.fuzzyjoin.similarity;
 import java.util.Arrays;
 
 import edu.uci.ics.asterix.fuzzyjoin.tokenizer.StringUtils;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
@@ -42,7 +43,7 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
     }
 
     @Override
-    public float getSimilarity(IListIterator firstList, IListIterator secondList) {
+    public float getSimilarity(IListIterator firstList, IListIterator secondList) throws HyracksDataException {
         int flLen = firstList.size();
         int slLen = secondList.size();
 
@@ -84,7 +85,8 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
     }
 
     @Override
-    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh) {
+    public float getSimilarity(IListIterator firstList, IListIterator secondList, float simThresh)
+            throws HyracksDataException {
 
         int edThresh = (int) simThresh;
 
@@ -104,7 +106,8 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         }
     }
 
-    public int getSimilarityContains(IListIterator exprList, IListIterator patternList, int simThresh) {
+    public int getSimilarityContains(IListIterator exprList, IListIterator patternList, int simThresh)
+            throws HyracksDataException {
         int exprLen = exprList.size();
         int patternLen = patternList.size();
 

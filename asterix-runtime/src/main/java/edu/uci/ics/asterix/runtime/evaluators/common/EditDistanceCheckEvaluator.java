@@ -23,20 +23,20 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
 
     protected final ICopyEvaluator edThreshEval;
-    protected int edThresh = -1;
+    protected long edThresh = -1;
     protected final OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage listItemVal;
     @SuppressWarnings("unchecked")
@@ -57,21 +57,21 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
         super.runArgEvals(tuple);
         int edThreshStart = argOut.getLength();
         edThreshEval.evaluate(tuple);
-        if (argOut.getByteArray()[edThreshStart] != SER_INT32_TYPE_TAG) {
-            throw new AlgebricksException("Invalid threshold type, expected INT32 but got "
-                    + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[edThreshStart]) + ".");
+        try {
+            edThresh = ATypeHierarchy.getIntegerValue(argOut.getByteArray(), edThreshStart);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
         }
-        edThresh = IntegerPointable.getInteger(argOut.getByteArray(), edThreshStart + typeIndicatorSize);
     }
 
     @Override
     protected int computeResult(byte[] bytes, int firstStart, int secondStart, ATypeTag argType)
-            throws AlgebricksException {
+            throws AlgebricksException, HyracksDataException {
         switch (argType) {
 
             case STRING: {
-                return ed.UTF8StringEditDistance(bytes, firstStart + typeIndicatorSize, secondStart
-                        + typeIndicatorSize, edThresh);
+                return ed.UTF8StringEditDistance(bytes, firstStart + typeIndicatorSize,
+                        secondStart + typeIndicatorSize, (int) edThresh);
             }
 
             case ORDEREDLIST: {
@@ -98,8 +98,8 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
         listBuilder.addItem(listItemVal);
 
         listItemVal.reset();
-        aInt32.setValue((matches) ? ed : Integer.MAX_VALUE);
-        int32Serde.serialize(aInt32, listItemVal.getDataOutput());
+        aInt64.setValue((matches) ? ed : Integer.MAX_VALUE);
+        int64Serde.serialize(aInt64, listItemVal.getDataOutput());
         listBuilder.addItem(listItemVal);
 
         listBuilder.write(out, true);

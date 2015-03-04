@@ -1,6 +1,6 @@
-/* 
+/*
  * Test case Name  : scan-delete-rtree-secondary-index-nullable.aql
- * Description     : This test is intended to test deletion from secondary rtree indexes that are built on nullable fields 
+ * Description     : This test is intended to test deletion from secondary rtree indexes that are built on nullable fields
  * Expected Result : Success
  * Date            : May 12 2012
  */
@@ -11,7 +11,7 @@ create dataverse test;
 use dataverse test;
 
 create type MyRecord as closed {
-  id: int32,
+  id: int64,
   point: point?,
   kwds: string,
   line1: line,

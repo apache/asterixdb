@@ -5,10 +5,10 @@ use dataverse TinySocial;
 create type TwitterUserType as open {
         screen-name: string,
         lang: string,
-        friends_count: int32,
-        statuses_count: int32,
+        friends_count: int64,
+        statuses_count: int64,
         name: string,
-        followers_count: int32
+        followers_count: int64
 }
 
 create type TweetMessageType as closed {
@@ -21,24 +21,24 @@ create type TweetMessageType as closed {
 }
 
 create type EmploymentType as open {
-        organization-name: string,      
+        organization-name: string,
         start-date: date,
         end-date: date?
 }
 
 create type FacebookUserType as closed {
-        id: int32,
+        id: int64,
         alias: string,
         name: string,
         user-since: datetime,
-        friend-ids: {{ int32 }},
+        friend-ids: {{ int64 }},
         employment: [EmploymentType]
 }
 
 create type FacebookMessageType as closed {
-        message-id: int32,
-        author-id: int32,
-        in-response-to: int32?,
+        message-id: int64,
+        author-id: int64,
+        in-response-to: int64?,
         sender-location: point?,
         message: string
 }

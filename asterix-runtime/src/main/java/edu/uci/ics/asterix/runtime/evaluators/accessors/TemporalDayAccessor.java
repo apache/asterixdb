@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDese
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -83,9 +83,9 @@ public class TemporalDayAccessor extends AbstractScalarFunctionDynamicDescriptor
 
                     // for output: type integer
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
-                    private AMutableInt32 aMutableInt32 = new AMutableInt32(0);
+                    private ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private AMutableInt64 aMutableInt64 = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
@@ -99,9 +99,9 @@ public class TemporalDayAccessor extends AbstractScalarFunctionDynamicDescriptor
                         try {
 
                             if (bytes[0] == SER_DURATION_TYPE_TAG) {
-                                aMutableInt32.setValue(calSystem.getDurationDay(ADurationSerializerDeserializer
+                                aMutableInt64.setValue(calSystem.getDurationDay(ADurationSerializerDeserializer
                                         .getDayTime(bytes, 1)));
-                                intSerde.serialize(aMutableInt32, out);
+                                intSerde.serialize(aMutableInt64, out);
                                 return;
                             }
 
@@ -122,8 +122,8 @@ public class TemporalDayAccessor extends AbstractScalarFunctionDynamicDescriptor
                             int month = calSystem.getMonthOfYear(chrononTimeInMs, year);
                             int day = calSystem.getDayOfMonthYear(chrononTimeInMs, year, month);
 
-                            aMutableInt32.setValue(day);
-                            intSerde.serialize(aMutableInt32, out);
+                            aMutableInt64.setValue(day);
+                            intSerde.serialize(aMutableInt64, out);
 
                         } catch (IOException e) {
                             throw new AlgebricksException(e);

@@ -6,7 +6,7 @@
  */
 
 let $sample :=
-{{ 
+{{
    {"r": 1, "uid": "1a2b", "t": datetime("2000-01-01T01:00:00"), "event": "e1"},
    {"r": 2, "uid": "1a2b", "t": datetime("2000-01-01T01:01:00"), "event": "e2"},
    {"r": 3, "uid": "3c4d", "t": datetime("2000-01-01T01:02:00"), "event": "e1"},

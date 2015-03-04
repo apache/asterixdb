@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ public interface IAccessMethod {
      * optimizable by this access method based on its function identifier. If
      * funcExpr has been found to be optimizable, this method adds an
      * OptimizableFunction to analysisCtx.matchedFuncExprs for further analysis.
-     * 
+     *
      * @return true if funcExpr is optimizable by this access method, false
      *         otherwise
      */
@@ -57,7 +57,7 @@ public interface IAccessMethod {
     /**
      * Indicates whether all index expressions must be matched in order for this
      * index to be applicable.
-     * 
+     *
      * @return boolean
      */
     public boolean matchAllIndexExprs();
@@ -65,7 +65,7 @@ public interface IAccessMethod {
     /**
      * Indicates whether this index is applicable if only a prefix of the index
      * expressions are matched.
-     * 
+     *
      * @return boolean
      */
     public boolean matchPrefixIndexExprs();
@@ -89,6 +89,8 @@ public interface IAccessMethod {
 
     /**
      * Analyzes expr to see whether it is optimizable by the given concrete index.
+     * 
+     * @throws AlgebricksException
      */
-    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr);
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException;
 }

@@ -182,7 +182,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             fieldNames[i] = recType2.getFieldNames()[j];
             fieldTypes[i] = recType2.getFieldTypes()[j];
         }
-        return new ARecordType(null, fieldNames, fieldTypes, true);
+        try {
+            return new ARecordType(null, fieldNames, fieldTypes, true);
+        } catch (HyracksDataException e) {
+            throw new AsterixException(e);
+        }
     }
 
     @Override
@@ -194,7 +198,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     public void serialize(ARecord instance, DataOutput out, boolean writeTypeTag) throws HyracksDataException {
         IARecordBuilder recordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-        
+
         recordBuilder.reset(recordType);
         recordBuilder.init();
         if (recordType != null) {
@@ -265,7 +269,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return getFieldOffsetById(serRecord, 0, fieldId, nullBitmapSize, isOpen);
     }
 
-    public static final int getFieldOffsetByName(byte[] serRecord, byte[] fieldName) {
+    public static final int getFieldOffsetByName(byte[] serRecord, byte[] fieldName) throws HyracksDataException {
 
         int openPartOffset = 0;
         if (serRecord[0] == ATypeTag.RECORD.serialize())

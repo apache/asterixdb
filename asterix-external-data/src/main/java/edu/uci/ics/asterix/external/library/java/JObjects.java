@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,6 +50,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class JObjects {
 
@@ -708,7 +709,12 @@ public class JObjects {
             for (IJObject jObj : fields) {
                 fieldTypes[index++] = jObj.getIAObject().getType();
             }
-            ARecordType recordType = new ARecordType(null, fieldNames, fieldTypes, false);
+            ARecordType recordType;
+            try {
+                recordType = new ARecordType(null, fieldNames, fieldTypes, false);
+            } catch (HyracksDataException e) {
+                throw new AsterixException(e);
+            }
             return recordType;
         }
 

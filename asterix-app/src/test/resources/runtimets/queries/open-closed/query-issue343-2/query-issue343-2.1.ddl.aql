@@ -1,6 +1,6 @@
 /*
  * Description  : This test case is to verify the fix for issue343.  It is a more general case.
- 				: https://code.google.com/p/asterixdb/issues/detail?id=343
+                 : https://code.google.com/p/asterixdb/issues/detail?id=343
  * Expected Res : Success
  * Date         : 30th April 2013
  */
@@ -10,13 +10,13 @@ create dataverse test;
 use dataverse test;
 
 create type AddressType as open {
-  number: int32,
+  number: int64,
   street: string,
   city: string
 }
 
 create type AllType as open {
-  id: int32,
+  id: int64,
   name: string,
   age: float,
   salary: double,
@@ -36,12 +36,12 @@ create type AllType as open {
 }
 
 create type MyListType as open{
-	id: int32,
-	mylist: [string]
+    id: int64,
+    mylist: [string]
 }
 
 create dataset All(AllType)
   primary key id;
-  
+
 create dataset MyList(MyListType)
   primary key id;

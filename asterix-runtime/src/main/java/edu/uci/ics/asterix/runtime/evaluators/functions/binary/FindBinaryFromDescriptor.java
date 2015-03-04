@@ -19,38 +19,48 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor{
+public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override public IFunctionDescriptor createFunctionDescriptor() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
             return new FindBinaryFromDescriptor();
         }
     };
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.FIND_BINARY_FROM;
     }
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
-            throws AlgebricksException {
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new FindBinaryDescriptor.AbstractFindBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
-                    @Override protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
+                    @Override
+                    protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
                         ATypeTag offsetTag = evaluateTuple(tuple, 2);
-                        if (offsetTag != ATypeTag.INT32){
-                            throw new AlgebricksException(functionName + ":expects INT32 at 3rd arguments, but got " + offsetTag);
+
+                        int getFrom = 0;
+                        try {
+                            getFrom = ATypeHierarchy.getIntegerValue(storages[2].getByteArray(), 0);
+                        } catch (HyracksDataException e) {
+                            throw new AlgebricksException(e);
                         }
-                        return IntegerPointable.getInteger(storages[2].getByteArray(), 1);
+
+                        return getFrom;
                     }
                 };
             }

@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -179,7 +179,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
     /**
      * Inject a function to wrap a variable when necessary
-     * 
+     *
      * @param requiredRecordType
      *            the required record type
      * @param recordVar
@@ -193,7 +193,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
      * @return true if cast is injected; false otherwise.
      * @throws AlgebricksException
      */
-    public LogicalVariable addWrapperFunction(ARecordType requiredRecordType, LogicalVariable recordVar,
+    public static LogicalVariable addWrapperFunction(ARecordType requiredRecordType, LogicalVariable recordVar,
             ILogicalOperator parent, IOptimizationContext context, FunctionIdentifier fd) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> opRefs = parent.getInputs();
         for (int index = 0; index < opRefs.size(); index++) {
@@ -239,13 +239,13 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
     /**
      * Check whether the required record type and the input type is compatible
-     * 
+     *
      * @param reqType
      * @param inputType
      * @return true if compatible; false otherwise
      * @throws AlgebricksException
      */
-    private boolean compatible(ARecordType reqType, IAType inputType) throws AlgebricksException {
+    public static boolean compatible(ARecordType reqType, IAType inputType) throws AlgebricksException {
         if (inputType.getTypeTag() == ATypeTag.ANY) {
             return false;
         }
@@ -292,11 +292,11 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
     /**
      * Decide whether a type is an optional type
-     * 
+     *
      * @param type
      * @return true if it is optional; false otherwise
      */
-    private boolean isOptional(IAType type) {
+    public static boolean isOptional(IAType type) {
         return type.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) type);
     }
 }

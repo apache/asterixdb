@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,9 @@ import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -289,18 +291,67 @@ public class AccessMethodUtils {
      * Returns the search key expression which feeds a secondary-index search. If we are optimizing a selection query then this method returns
      * the a ConstantExpression from the first constant value in the optimizable function expression.
      * If we are optimizing a join, then this method returns the VariableReferenceExpression that should feed the secondary index probe.
+     *
+     * @throws AlgebricksException
      */
-    public static ILogicalExpression createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree) {
+    public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
+            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree)
+            throws AlgebricksException {
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
-            return new ConstantExpression(optFuncExpr.getConstantVal(0));
-        } else {
-            // We are optimizing a join query. Determine which variable feeds the secondary index. 
-            if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
-                return new VariableReferenceExpression(optFuncExpr.getLogicalVar(0));
+            // Type Checking and type promotion is done here
+            ATypeTag fieldType = optFuncExpr.getTypeTag(0);
+            IAObject constantObj = ((AsterixConstantValue) optFuncExpr.getConstantVal(0)).getObject();
+            ATypeTag constantValueTag = constantObj.getType().getTypeTag();
+            // type casting applied?
+            boolean typeCastingApplied = false;
+            // type casting happened from real (FLOAT, DOUBLE) value -> INT value?
+            boolean realTypeConvertedToIntegerType = false;
+            AsterixConstantValue replacedConstantValue = null;
+
+            // if the constant type and target type does not match, we do a type conversion
+            if (constantValueTag != fieldType) {
+                replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(constantObj,
+                        fieldType);
+                if (replacedConstantValue != null) {
+                    typeCastingApplied = true;
+                }
+
+                // To check whether the constant is REAL values, and target field is an INT type field.
+                // In this case, we need to change the search parameter. Refer to the caller section for the detail.
+                switch (constantValueTag) {
+                    case DOUBLE:
+                    case FLOAT:
+                        switch (fieldType) {
+                            case INT8:
+                            case INT16:
+                            case INT32:
+                            case INT64:
+                                realTypeConvertedToIntegerType = true;
+                                break;
+                            default:
+                                break;
+                        }
+                    default:
+                        break;
+                }
+            }
+
+            if (typeCastingApplied) {
+                return new Pair<ILogicalExpression, Boolean>(new ConstantExpression(replacedConstantValue),
+                        realTypeConvertedToIntegerType);
             } else {
-                return new VariableReferenceExpression(optFuncExpr.getLogicalVar(1));
+                return new Pair<ILogicalExpression, Boolean>(new ConstantExpression(optFuncExpr.getConstantVal(0)),
+                        false);
+            }
+        } else {
+            // We are optimizing a join query. Determine which variable feeds the secondary index.
+            if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
+                return new Pair<ILogicalExpression, Boolean>(new VariableReferenceExpression(
+                        optFuncExpr.getLogicalVar(0)), false);
+            } else {
+                return new Pair<ILogicalExpression, Boolean>(new VariableReferenceExpression(
+                        optFuncExpr.getLogicalVar(1)), false);
             }
         }
     }
@@ -320,7 +371,7 @@ public class AccessMethodUtils {
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
         ArrayList<Mutable<ILogicalExpression>> secondaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
         jobGenParams.writeToFuncArgs(secondaryIndexFuncArgs);
-        // Variables and types coming out of the secondary-index search. 
+        // Variables and types coming out of the secondary-index search.
         List<LogicalVariable> secondaryIndexUnnestVars = new ArrayList<LogicalVariable>();
         List<Object> secondaryIndexOutputTypes = new ArrayList<Object>();
         // Append output variables/types generated by the secondary-index search (not forwarded from input).
@@ -362,7 +413,7 @@ public class AccessMethodUtils {
             order.setExecutionMode(ExecutionMode.LOCAL);
             context.computeAndSetTypeEnvironmentForOperator(order);
         }
-        // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments. 
+        // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
         List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<Mutable<ILogicalExpression>>();
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(dataset.getDatasetName(), IndexType.BTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
@@ -404,7 +455,7 @@ public class AccessMethodUtils {
 
     public static ScalarFunctionCallExpression findLOJIsNullFuncInGroupBy(GroupByOperator lojGroupbyOp)
             throws AlgebricksException {
-        //find IS_NULL function of which argument has the nullPlaceholder variable in the nested plan of groupby. 
+        //find IS_NULL function of which argument has the nullPlaceholder variable in the nested plan of groupby.
         ALogicalPlanImpl subPlan = (ALogicalPlanImpl) lojGroupbyOp.getNestedPlans().get(0);
         Mutable<ILogicalOperator> subPlanRootOpRef = subPlan.getRoots().get(0);
         AbstractLogicalOperator subPlanRootOp = (AbstractLogicalOperator) subPlanRootOpRef.getValue();

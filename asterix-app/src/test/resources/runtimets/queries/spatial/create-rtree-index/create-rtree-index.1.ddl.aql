@@ -8,7 +8,7 @@ create dataverse test;
 use dataverse test;
 
 create type SpatialType as open {
-  id: int32,
+  id: int64,
   point: point,
   line1: line,
   poly1: polygon,

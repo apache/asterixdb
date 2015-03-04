@@ -1,0 +1,12 @@
+/*
+* Type Promotion Test
+*
+*/
+use dataverse test;
+
+// worksince: a non-indexed closed-type field (INT64), dsince: a non-indexed closed-type field (INT32)
+for $emp in dataset empDataset
+for $dept in dataset deptDataset
+where $emp.worksince = ($dept.bossidint32 + 2000)
+order by $emp.id, $emp.worksince, $dept.bossidint32, $dept.did
+return {"emp.id":$emp.id, "dept.did": $dept.did, "emp.worksince":$emp.worksince, "dept.bossidint32 + 2000":($dept.bossidint32+2000)}

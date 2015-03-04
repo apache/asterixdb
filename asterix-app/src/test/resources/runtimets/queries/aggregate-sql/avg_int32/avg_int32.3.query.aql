@@ -1,7 +1,7 @@
 use dataverse test;
 
-sql-avg( 
- for $x in [1, 2, 3] 
+sql-avg(
+ for $x in [int32("1"), int32("2"), int32("3")]
  return $x
 )
 

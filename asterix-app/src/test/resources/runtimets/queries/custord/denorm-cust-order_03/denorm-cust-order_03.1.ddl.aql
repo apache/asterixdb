@@ -5,25 +5,25 @@ create dataverse test;
 use dataverse test;
 
 create type AddressType as open {
-  number: int32, 
+  number: int64,
   street: string,
   city: string
 }
 
 create type CustomerType as open {
-  cid: int32, 
+  cid: int64,
   name: string,
-  age: int32?,
+  age: int64?,
   address: AddressType?,
   lastorder: {
-    oid: int32,
+    oid: int64,
     total: float
   }
 }
 
 create type OrderType as open {
-  oid: int32,
-  cid: int32,
+  oid: int64,
+  cid: int64,
   orderstatus: string,
   orderpriority: string,
   clerk: string,
@@ -31,12 +31,12 @@ create type OrderType as open {
 }
 
 create type CustomerOrdersType as open {
-  cid: int32,
+  cid: int64,
   cust: CustomerType,
   orders: [OrderType]
 }
 
-create dataset Customers3(CustomerType) 
+create dataset Customers3(CustomerType)
   primary key cid;
 create dataset Orders3(OrderType)
   primary key oid;

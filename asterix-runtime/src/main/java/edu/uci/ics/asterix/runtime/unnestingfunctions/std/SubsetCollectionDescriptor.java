@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -38,7 +39,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -88,11 +88,13 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
                         try {
                             inputVal.reset();
                             evalStart.evaluate(tuple);
-                            posStart = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+
+                            posStart = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
 
                             inputVal.reset();
                             evalLen.evaluate(tuple);
-                            numItems = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+
+                            numItems = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
 
                             inputVal.reset();
                             evalList.evaluate(tuple);

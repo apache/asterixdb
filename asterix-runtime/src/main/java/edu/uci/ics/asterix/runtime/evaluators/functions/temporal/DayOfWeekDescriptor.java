@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ import java.io.DataOutput;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -78,9 +78,9 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
-                    private AMutableInt32 aInt32 = new AMutableInt32(0);
+                    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -116,7 +116,7 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                     daysSinceAnchor -= 1;
                                 }
 
-                                // compute the weekday (0-based, and 0 = Sunday). Adjustment is needed as the anchor day is Thursday 
+                                // compute the weekday (0-based, and 0 = Sunday). Adjustment is needed as the anchor day is Thursday
                                 int weekday = (daysSinceAnchor + ANCHOR_WEEKDAY) % 7;
 
                                 // handle the negative weekday
@@ -129,9 +129,9 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                     weekday = 7;
                                 }
 
-                                aInt32.setValue(weekday);
+                                aInt64.setValue(weekday);
 
-                                int32Serde.serialize(aInt32, out);
+                                int64Serde.serialize(aInt64, out);
                             }
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);

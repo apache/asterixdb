@@ -4,12 +4,12 @@ create dataverse test;
 use dataverse test;
 
 create type UserTypeOpen as open{
-  id: int32
+  id: int64
 }
 
 
 create type UserTypeClose as closed {
-  id: int32,
+  id: int64,
   name: string,
   md5: binary
 }

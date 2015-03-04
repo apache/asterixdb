@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class SocketClientAdapterFactory implements ITypedAdapterFactory {
 
@@ -62,7 +63,7 @@ public class SocketClientAdapterFactory implements ITypedAdapterFactory {
                     BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
             outputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
 
-        } catch (AsterixException e) {
+        } catch (AsterixException | HyracksDataException e) {
             throw new IllegalStateException("Unable to initialize output type");
         }
         return outputType;

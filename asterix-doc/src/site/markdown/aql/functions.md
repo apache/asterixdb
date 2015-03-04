@@ -197,7 +197,7 @@ Asterix provides various classes of functions to support operations on numeric, 
     * `substring_to_contain` : A target `string` that might be contained.
  * Return Value:
     * A `boolean` value, `true` if `string_expression` contains `substring_to_contain`, and `false` otherwise.
-
+ * Note: An n-gram index can be utilized for this function.
  * Example:
 
         use dataverse TinySocial;
@@ -417,7 +417,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * The expected result is:
 
         ASTERIX
-        
+
 
 ### matches ###
  * Syntax:
@@ -482,7 +482,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Arguments:
     * `string_expression` : A `string` or `null` that represents the string to be checked.
  * Return Value:
-    * An `int32` that represents the length of `string_expression`.
+    * An `int64` that represents the length of `string_expression`.
 
  * Example:
 
@@ -519,8 +519,8 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Returns the substring from the given string `string_expression` based on the given start offset `offset` with the optional `length`.
  * Arguments:
     * `string_expression` : A `string` to be extracted.
-    * `offset` : An `int32` as the starting offset of the substring in `string_expression`.
-    * `length` : (Optional) An `int32` as the length of the substring.
+    * `offset` : An `int64` as the starting offset of the substring in `string_expression`.
+    * `length` : (Optional) An `int64` as the length of the substring.
  * Return Value:
     * A `string` that represents the substring.
 
@@ -592,7 +592,7 @@ Asterix provides various classes of functions to support operations on numeric, 
         " its touch-screen is horrible"
         " the voice-command is bad:("
         " the voicemail-service is awesome"
-        
+
 ## <a id="AggregateFunctions">Aggregate Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 ### count ###
  * Syntax:
@@ -648,7 +648,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
  * Return Value:
-    * The sum of the numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    * The sum of the numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`int64`->`float`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
 
  * Example:
 
@@ -670,7 +670,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
  * Return Value:
-    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
+    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`int64`->`float`->`double`) among items. `null` is returned if the input is `null`, or the input list contains `null`. Non-numeric types in the input list will cause an error.
 
  * Example:
 
@@ -737,7 +737,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing numeric or null values, or a `null` value.
  * Return Value:
-    * The sum of the non-null numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+    * The sum of the non-null numbers in the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`int64`->`float`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
 
  * Example:
 
@@ -758,7 +758,7 @@ Asterix provides various classes of functions to support operations on numeric, 
  * Arguments:
     * `num_list`: An `orderedList` or `unorderedList` containing the items to be compared, or a `null` value.
  * Return Value:
-    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`float`->`double`, `int32`->`int64`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
+    * The min/max value of the given list. The returning type is decided by the item type with the highest order in the numeric type promotion order (`int8`-> `int16`->`int32`->`int64`->`float`->`double`) among items. The value `null` is returned if the input is `null`. Non-numeric types in the input list will cause an error.
 
  * Example:
 
@@ -1118,8 +1118,8 @@ AsterixDB supports queries with different similarity functions, including edit d
     * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
     * `expression2` : The same type as `expression1`.
  * Return Value:
-    * An `int32` that represents the edit distance between `expression1` and `expression2`.
-
+    * An `int64` that represents the edit distance between `expression1` and `expression2`.
+ * Note: An n-gram index can be utilized for this function.
  * Example:
 
         use dataverse TinySocial;
@@ -1148,12 +1148,12 @@ AsterixDB supports queries with different similarity functions, including edit d
  * Arguments:
     * `expression1` : A `string` or a homogeneous `OrderedList` of a comparable item type.
     * `expression2` : The same type as `expression1`.
-    * `threshold` : An `int32` that represents the distance threshold.
+    * `threshold` : An `int64` that represents the distance threshold.
  * Return Value:
     * An `OrderedList` with two items:
         * The first item contains a `boolean` value representing whether `expression1` and `expression2` are similar.
-        * The second item contains an `int32` that represents the edit distance of `expression1` and `expression2` if it is within the threshold, or 0 otherwise.
-
+        * The second item contains an `int64` that represents the edit distance of `expression1` and `expression2` if it is within the threshold, or 0 otherwise.
+ * Note: An n-gram index can be utilized for this function.
  * Example:
 
         use dataverse TinySocial;
@@ -1183,7 +1183,7 @@ edit-distance-contains(expression1, expression2, threshold)
     * An `OrderedList` with two items:
         * The first item contains a `boolean` value representing whether `expression1` can contain `expression2`.
         * The second item contains an `int32` that represents the required edit distance for `expression1` to contain `expression2` if the first item is true.
-
+* Note: An n-gram index can be utilized for this function.
 * Example:
         let $i := edit-distance-contains("happy","hapr",2)
         return $i;
@@ -1206,7 +1206,7 @@ edit-distance-contains(expression1, expression2, threshold)
     * `list_expression2` : An `UnorderedList` or `OrderedList`.
  * Return Value:
     * A `float` that represents the Jaccard similarity of `list_expression1` and `list_expression2`.
-
+ * Note: A keyword index can be utilized for this function.
  * Example:
 
         use dataverse TinySocial;
@@ -1244,7 +1244,7 @@ edit-distance-contains(expression1, expression2, threshold)
     * An `OrderedList` with two items:
      * The first item contains a `boolean` value representing whether `list_expression1` and `list_expression2` are similar.
      * The second item contains a `float` that represents the Jaccard similarity of `list_expression1` and `list_expression2` if it is greater than or equal to the threshold, or 0 otherwise.
-
+ * Note: A keyword index can be utilized for this function.
  * Example:
 
         use dataverse TinySocial;
@@ -1584,7 +1584,7 @@ edit-distance-contains(expression1, expression2, threshold)
  * Arguments:
     * `temporal_expression` : a temporal value represented as one of the following types: `date`, `datetime`, `time`, and `duration`.
  * Return Value:
-    * An `int32` value representing the field to be extracted.
+    * An `int64` value representing the field to be extracted.
 
  * Example:
 
@@ -1879,7 +1879,7 @@ edit-distance-contains(expression1, expression2, threshold)
 
  * Gets a date representing the time after `numeric_expression` days since 1970-01-01.
  * Arguments:
-    * `numeric_expression`: A `int8`/`int16`/`int32` value representing the number of days.
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the number of days.
  * Return Value:
     * A `date` value as the time after `numeric_expression` days since 1970-01-01.
 
@@ -1925,7 +1925,7 @@ datetime-from-date-time(date_expression,time_expression)
 
  * Gets a time representing the time after `numeric_expression` milliseconds since 00:00:00.000Z.
  * Arguments:
-    * `numeric_expression`: A `int8`/`int16`/`int32` value representing the number of milliseconds.
+    * `numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the number of milliseconds.
  * Return Value:
     * A `time` value as the time after `numeric_expression` milliseconds since 00:00:00.000Z.
 

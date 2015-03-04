@@ -89,6 +89,7 @@ import edu.uci.ics.asterix.file.DataverseOperations;
 import edu.uci.ics.asterix.file.ExternalIndexingOperations;
 import edu.uci.ics.asterix.file.FeedOperations;
 import edu.uci.ics.asterix.file.IndexOperations;
+import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -113,6 +114,7 @@ import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
 import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
+import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.metadata.utils.ExternalDatasetsRegistry;
 import edu.uci.ics.asterix.metadata.utils.MetadataLockManager;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -150,6 +152,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRunt
 import edu.uci.ics.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
@@ -211,7 +214,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     /**
      * Compiles and submits for execution a list of AQL statements.
-     * 
+     *
      * @param hcc
      *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
      * @param hdc
@@ -718,6 +721,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
@@ -758,6 +762,27 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     return;
                 } else {
                     throw new AlgebricksException("An index with this name " + indexName + " already exists.");
+                }
+            }
+
+            // Checks whether a user is trying to create an inverted secondary index on a dataset with a variable-length primary key.
+            // Currently, we do not support this. Therefore, as a temporary solution, we print an error message and stop.
+            if (stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_WORD_INVIX
+                    || stmtCreateIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX
+                    || stmtCreateIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                    || stmtCreateIndex.getIndexType() == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
+                List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(ds);
+                for (String partitioningKey : partitioningKeys) {
+                    IAType keyType = aRecordType.getFieldType(partitioningKey);
+                    ITypeTraits typeTrait = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+
+                    // If it is not a fixed length
+                    if (typeTrait.getFixedLength() < 0) {
+                        throw new AlgebricksException("The keyword or ngram index -" + indexName
+                                + " cannot be created on the dataset -" + datasetName
+                                + " due to its variable-length primary key field - " + partitioningKey);
+                    }
+
                 }
             }
 
@@ -2370,7 +2395,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataLockManager.INSTANCE.refreshDatasetEnd(dataverseName, dataverseName + "." + datasetName);
         }
     }
-    
+
     private void handleRunStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws AsterixException, Exception {
         RunStatement runStmt = (RunStatement) stmt;
@@ -2382,7 +2407,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             default:
                 throw new AlgebricksException("The system \""+runStmt.getSystem()+"\" specified in your run statement is not supported.");
         }
-        
+
     }
 
     private void handlePregelixStatement(AqlMetadataProvider metadataProvider, Statement stmt,
@@ -2395,7 +2420,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String dataverseNameTo = getActiveDataverseName(pregelixStmt.getDataverseNameTo());
         String datasetNameFrom = pregelixStmt.getDatasetNameFrom().getValue();
         String datasetNameTo = pregelixStmt.getDatasetNameTo().getValue();
-        
+
         if(dataverseNameFrom != dataverseNameTo) {
             throw new AlgebricksException("Pregelix statements across different dataverses are not supported.");
         }

@@ -4,7 +4,7 @@ create dataverse test;
 use dataverse test;
 
 create type "foo" as {
-  "id": int32,
+  "id": int64,
   "name": string,
   "money": float
 };

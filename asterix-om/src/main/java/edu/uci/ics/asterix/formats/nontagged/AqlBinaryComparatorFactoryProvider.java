@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ABinaryComparator;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ACirclePartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.ADurationPartialBinaryComparatorFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.comparators.AIntervalPartialBinaryComparatorFactory;
@@ -34,6 +35,7 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
 import edu.uci.ics.hyracks.data.std.primitive.BytePointable;
@@ -62,7 +64,7 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             DoublePointable.FACTORY);
     public static final PointableBinaryComparatorFactory UTF8STRING_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             RawUTF8StringPointable.FACTORY);
-    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive comparisons.    
+    // Equivalent to UTF8STRING_POINTABLE_INSTANCE but all characters are considered lower case to implement case-insensitive comparisons.
     public static final PointableBinaryComparatorFactory UTF8STRING_LOWERCASE_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
             UTF8StringLowercasePointable.FACTORY);
     public static final PointableBinaryComparatorFactory BINARY_POINTABLE_INSTANCE = new PointableBinaryComparatorFactory(
@@ -86,11 +88,9 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
 
     @Override
     public IBinaryComparatorFactory getBinaryComparatorFactory(Object type, boolean ascending) {
-        if (type == null) {
-            return anyBinaryComparatorFactory(ascending);
-        }
-        IAType aqlType = (IAType) type;
-        return getBinaryComparatorFactory(aqlType.getTypeTag(), ascending);
+        // During a comparison, since proper type promotion among several numeric types are required,
+        // we will use AObjectAscBinaryComparatorFactory, instead of using a specific comparator
+        return anyBinaryComparatorFactory(ascending);
     }
 
     public IBinaryComparatorFactory getBinaryComparatorFactory(ATypeTag type, boolean ascending) {
@@ -190,17 +190,19 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             public IBinaryComparator createBinaryComparator() {
                 final IBinaryComparator bc = inst.createBinaryComparator();
                 if (ascending) {
-                    return new IBinaryComparator() {
+                    return new ABinaryComparator() {
 
                         @Override
-                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
+                                throws HyracksDataException {
                             return bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                         }
                     };
                 } else {
-                    return new IBinaryComparator() {
+                    return new ABinaryComparator() {
                         @Override
-                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
+                                throws HyracksDataException {
                             return -bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                         }
                     };
@@ -216,4 +218,5 @@ public class AqlBinaryComparatorFactoryProvider implements IBinaryComparatorFact
             return AObjectDescBinaryComparatorFactory.INSTANCE;
         }
     }
+
 }

@@ -1,0 +1,56 @@
+{"did":1, "dname":"dept1", "floor":1, "dsince":2001, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":1}
+{"did":2, "dname":"dept2", "floor":2, "dsince":2002, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("1")}
+{"did":3, "dname":"dept3", "floor":3, "dsince":2003, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":1}
+{"did":4, "dname":"dept4", "floor":4, "dsince":2004, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"1"}
+{"did":5, "dname":"dept5", "floor":5, "dsince":2005, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":1.0}
+{"did":6, "dname":"dept6", "floor":6, "dsince":2006, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":2}
+{"did":7, "dname":"dept7", "floor":7, "dsince":2007, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("2")}
+{"did":8, "dname":"dept8", "floor":8, "dsince":2008, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":2}
+{"did":9, "dname":"dept9", "floor":9, "dsince":2009, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"2"}
+{"did":10, "dname":"dept10", "floor":10, "dsince":2010, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":2.0}
+{"did":11, "dname":"dept11", "floor":11, "dsince":2011, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":3}
+{"did":12, "dname":"dept12", "floor":12, "dsince":2012, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("3")}
+{"did":13, "dname":"dept13", "floor":13, "dsince":2013, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":3}
+{"did":14, "dname":"dept14", "floor":14, "dsince":2014, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"3"}
+{"did":15, "dname":"dept15", "floor":15, "dsince":2015, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":3.0}
+{"did":16, "dname":"dept16", "floor":16, "dsince":2016, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":4}
+{"did":17, "dname":"dept17", "floor":17, "dsince":2017, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("4")}
+{"did":18, "dname":"dept18", "floor":18, "dsince":2018, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":4}
+{"did":19, "dname":"dept19", "floor":19, "dsince":2019, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"4"}
+{"did":20, "dname":"dept20", "floor":20, "dsince":2020, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":4.0}
+{"did":21, "dname":"dept21", "floor":21, "dsince":2021, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":5}
+{"did":22, "dname":"dept22", "floor":22, "dsince":2022, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("5")}
+{"did":23, "dname":"dept23", "floor":23, "dsince":2023, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":5}
+{"did":24, "dname":"dept24", "floor":24, "dsince":2024, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"5"}
+{"did":25, "dname":"dept25", "floor":25, "dsince":2025, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":5.0}
+{"did":26, "dname":"dept26", "floor":26, "dsince":2026, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":6}
+{"did":27, "dname":"dept27", "floor":27, "dsince":2027, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("6")}
+{"did":28, "dname":"dept28", "floor":28, "dsince":2028, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":6}
+{"did":29, "dname":"dept29", "floor":29, "dsince":2029, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"6"}
+{"did":30, "dname":"dept20", "floor":30, "dsince":2030, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":6.0}
+{"did":31, "dname":"dept31", "floor":31, "dsince":2031, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":7}
+{"did":32, "dname":"dept32", "floor":32, "dsince":2032, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("7")}
+{"did":33, "dname":"dept33", "floor":33, "dsince":2033, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":7}
+{"did":34, "dname":"dept34", "floor":34, "dsince":2034, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"7"}
+{"did":35, "dname":"dept35", "floor":35, "dsince":2035, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":7.0}
+{"did":36, "dname":"dept36", "floor":36, "dsince":2036, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":8}
+{"did":37, "dname":"dept37", "floor":37, "dsince":2037, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("8")}
+{"did":38, "dname":"dept38", "floor":38, "dsince":2038, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":8}
+{"did":39, "dname":"dept39", "floor":39, "dsince":2039, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"8"}
+{"did":40, "dname":"dept40", "floor":40, "dsince":2040, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":8.0}
+{"did":41, "dname":"dept41", "floor":41, "dsince":2041, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":9}
+{"did":42, "dname":"dept42", "floor":42, "dsince":2042, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("9")}
+{"did":43, "dname":"dept43", "floor":43, "dsince":2043, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":9}
+{"did":44, "dname":"dept44", "floor":44, "dsince":2044, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"9"}
+{"did":45, "dname":"dept45", "floor":45, "dsince":2045, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":9.0}
+{"did":46, "dname":"dept46", "floor":46, "dsince":2046, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":10}
+{"did":47, "dname":"dept47", "floor":47, "dsince":2047, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":int64("10")}
+{"did":48, "dname":"dept48", "floor":48, "dsince":2048, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":10}
+{"did":49, "dname":"dept49", "floor":49, "dsince":2049, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":"10"}
+{"did":50, "dname":"dept50", "floor":50, "dsince":2050, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":10.0}
+{"did":51, "dname":"dept51", "floor":51, "dsince":2051, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid2":circle("10.1234,11.1e-1 +10.2E-2")}
+{"did":52, "dname":"dept52", "floor":52, "dsince":2052, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":point("5.10E-10d, -10E5")}
+{"did":53, "dname":"dept53", "floor":53, "dsince":2053, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":point("80.10d, -10E5")}
+{"did":54, "dname":"dept54", "floor":54, "dsince":2054, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":point("80.10d, -10E5")}
+{"did":55, "dname":"dept55", "floor":55, "dsince":2055, "bossid":int64("1"), "bossidint32":int32("1"), "dmgrid":time("12:54:54.039Z")}
+{"did":56, "dname":"dept56", "floor":56, "dsince":2056, "bossid":int64("1"), "bossidint32":int32("1"),  "dmgrid":duration("P100Y12MT12M")}

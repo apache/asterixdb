@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -91,27 +91,29 @@ public class BinaryHashMap {
     /**
      * Inserts key, value into the hash map. If key already exists, returns
      * existing entry. Otherwise, returns null.
-     * 
+     *
      * @param key
      * @param value
      * @return
+     * @throws HyracksDataException
      */
-    public BinaryEntry put(BinaryEntry key, BinaryEntry value) {
+    public BinaryEntry put(BinaryEntry key, BinaryEntry value) throws HyracksDataException {
         return getPutInternal(key, value, true);
     }
 
     /**
      * Retrieves value for given key. Returns null if key doesn't exist.
-     * 
+     *
      * @param key
      * @param value
      * @return
+     * @throws HyracksDataException
      */
-    public BinaryEntry get(BinaryEntry key) {
+    public BinaryEntry get(BinaryEntry key) throws HyracksDataException {
         return getPutInternal(key, null, false);
     }
 
-    private BinaryEntry getPutInternal(BinaryEntry key, BinaryEntry value, boolean put) {
+    private BinaryEntry getPutInternal(BinaryEntry key, BinaryEntry value, boolean put) throws HyracksDataException {
         int bucket;
         if (put) {
             bucket = Math.abs(putHashFunc.hash(key.buf, key.off, key.len) % listHeads.length);

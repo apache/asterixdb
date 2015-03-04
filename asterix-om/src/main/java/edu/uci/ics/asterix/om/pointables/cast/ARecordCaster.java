@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
@@ -189,7 +190,7 @@ class ARecordCaster {
     }
 
     private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
-            List<IVisitablePointable> fieldValues) throws AsterixException {
+            List<IVisitablePointable> fieldValues) throws AsterixException, HyracksDataException {
         // sort-merge based match
         quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
@@ -213,7 +214,8 @@ class ARecordCaster {
                     ATypeTag requiredTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(reqFieldTypeTag
                             .getByteArray()[reqFieldTypeTag.getStartOffset()]);
 
-                    if (ATypeHierarchy.canPromote(inputTypeTag, requiredTypeTag)) {
+                    if (ATypeHierarchy.canPromote(inputTypeTag, requiredTypeTag)
+                            || ATypeHierarchy.canDemote(inputTypeTag, requiredTypeTag)) {
                         fieldPermutation[reqFnPos] = fnPos;
                         openFields[fnPos] = false;
                     }
@@ -319,7 +321,8 @@ class ARecordCaster {
         recBuilder.write(output, true);
     }
 
-    private void quickSort(int[] index, List<IVisitablePointable> names, int start, int end) {
+    private void quickSort(int[] index, List<IVisitablePointable> names, int start, int end)
+            throws HyracksDataException {
         if (end <= start)
             return;
         int i = partition(index, names, start, end);
@@ -327,7 +330,8 @@ class ARecordCaster {
         quickSort(index, names, i + 1, end);
     }
 
-    private int partition(int[] index, List<IVisitablePointable> names, int left, int right) {
+    private int partition(int[] index, List<IVisitablePointable> names, int left, int right)
+            throws HyracksDataException {
         int i = left - 1;
         int j = right;
         while (true) {
@@ -353,7 +357,7 @@ class ARecordCaster {
         array[j] = temp;
     }
 
-    private int compare(IValueReference a, IValueReference b) {
+    private int compare(IValueReference a, IValueReference b) throws HyracksDataException {
         // start+1 and len-1 due to the type tag
         return fieldNameComparator.compare(a.getByteArray(), a.getStartOffset() + 1, a.getLength() - 1,
                 b.getByteArray(), b.getStartOffset() + 1, b.getLength() - 1);

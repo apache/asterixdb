@@ -1,6 +1,6 @@
 /*
  * Description  : This test case is to verify the fix for issue288
- 				: https://code.google.com/p/asterixdb/issues/detail?id=288
+                 : https://code.google.com/p/asterixdb/issues/detail?id=288
  * Expected Res : Success
  * Date         : 3th April 2013
  */
@@ -11,9 +11,9 @@ create dataverse test;
 use dataverse test;
 
 create type LineIDType as closed {
-  l_orderkey: int32, 
-  l_linenumber: int32, 
-  l_suppkey: int32
+  l_orderkey: int64,
+  l_linenumber: int64,
+  l_suppkey: int64
 }
 
 create dataset LineID(LineIDType)

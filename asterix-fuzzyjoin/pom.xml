@@ -21,28 +21,28 @@
   <build>
     <plugins>
       <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-compiler-plugin</artifactId>
-	<version>2.3.2</version>
-	<configuration>
-	  <source>1.7</source>
-	  <target>1.7</target>
-	  <compilerArguments>
-	    <encoding>utf8</encoding>
-	  </compilerArguments>
-	</configuration>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>2.3.2</version>
+    <configuration>
+      <source>1.7</source>
+      <target>1.7</target>
+      <compilerArguments>
+        <encoding>utf8</encoding>
+      </compilerArguments>
+    </configuration>
       </plugin>
       <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-jar-plugin</artifactId>
-	<version>2.4</version>
-	<executions>
-	  <execution>
-	    <goals>
-	      <goal>test-jar</goal>
-	    </goals>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-jar-plugin</artifactId>
+    <version>2.4</version>
+    <executions>
+      <execution>
+        <goals>
+          <goal>test-jar</goal>
+        </goals>
             <phase>test-compile</phase>
-          </execution>  
+          </execution>
         </executions>
         <configuration>
           <outputDirectory>${basedir}/target</outputDirectory>
@@ -56,6 +56,10 @@
       <!-- Dependency management inherited from top-level asterixdb -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>edu.uci.ics.hyracks</groupId>
+        <artifactId>hyracks-api</artifactId>
     </dependency>
   </dependencies>
 

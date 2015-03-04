@@ -11,13 +11,13 @@ create dataverse test;
 use dataverse test;
 
 create type AddressType as open {
-  number: int32,
+  number: int64,
   street: string,
   city: string
 }
 
 create type AllType as open {
-  id: int32,
+  id: int64,
   name: string,
   age: float,
   salary: double,

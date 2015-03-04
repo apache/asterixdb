@@ -5,16 +5,16 @@ create dataverse fuzzyjoin;
 use dataverse fuzzyjoin;
 
 create type UserType as open {
-  uid: int32, 
+  uid: int64,
   name: string,
-  lottery_numbers: [int32],
+  lottery_numbers: [int64],
   interests: {{string}}
 }
 
 create type VisitorType as open {
-  vid: int32, 
+  vid: int64,
   name: string,
-  lottery_numbers: [int32],
+  lottery_numbers: [int64],
   interests: {{string}}
 }
 

@@ -1,0 +1,13 @@
+/*
+* Type Promotion Test
+*
+*/
+
+use dataverse test;
+
+load dataset empDataset using localfs
+(("path"="nc1://data/types/empDataset.adm"),("format"="adm"));
+
+load dataset deptDataset using localfs
+(("path"="nc1://data/types/deptDataset.adm"),("format"="adm"));
+

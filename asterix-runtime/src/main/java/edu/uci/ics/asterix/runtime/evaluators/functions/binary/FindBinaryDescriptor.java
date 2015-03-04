@@ -16,8 +16,8 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions.binary;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -71,11 +71,11 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
         }
 
         protected String functionName;
-        protected AMutableInt32 result = new AMutableInt32(-1);
+        protected AMutableInt64 result = new AMutableInt64(-1);
 
         @SuppressWarnings("unchecked")
-        protected ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.AINT32);
+        protected ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.AINT64);
 
         @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
             ATypeTag textTag = evaluateTuple(tuple, 0);

@@ -18,17 +18,17 @@ use dataverse student;
 use dataverse teacher;
 
 create type student.stdType as open {
-id : int32,
+id : int64,
 name : string,
-age : int32,
+age : int64,
 sex : string,
 dept : string
 }
 
 create type teacher.tchrType as open {
-id : int32,
+id : int64,
 name : string,
-age : int32,
+age : int64,
 sex : string,
 dept : string
 }

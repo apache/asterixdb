@@ -1,2 +1,2 @@
-[ { "result1": 4, "result2": 5, "result3": 6, "result4": -1i64, "result5": -2.5f, "result6": -3.5d, "result7": null }
+[ { "result1": 4i32, "result2": 5i32, "result3": 6i32, "result4": -1, "result5": -2.5f, "result6": -3.5d, "result7": null }
  ]

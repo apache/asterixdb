@@ -4,7 +4,7 @@ create dataverse test;
 use dataverse test;
 
 create type TempType as open {
-  id: int32,
+  id: int64,
   date: date,
   time: time,
   datetime: datetime,

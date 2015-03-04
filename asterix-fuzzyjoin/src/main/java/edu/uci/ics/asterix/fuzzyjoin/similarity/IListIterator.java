@@ -13,14 +13,16 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * Author: Alexander Behm <abehm (at) ics.uci.edu>
  */
 
 package edu.uci.ics.asterix.fuzzyjoin.similarity;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+
 public interface IListIterator {
-    public int compare(IListIterator cmpIter);
+    public int compare(IListIterator cmpIter) throws HyracksDataException;
 
     public byte[] getData();
 

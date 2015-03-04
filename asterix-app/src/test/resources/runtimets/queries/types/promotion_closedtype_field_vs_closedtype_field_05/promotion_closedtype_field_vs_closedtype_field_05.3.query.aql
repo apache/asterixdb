@@ -1,0 +1,12 @@
+/*
+* Type Promotion Test
+*
+*/
+
+use dataverse test;
+
+for $emp in dataset empDataset
+for $dept in dataset deptDataset
+where $emp.empno = $dept.dno
+order by $emp.id, $dept.did, $emp.empno, $dept.dno
+return {"emp.id":$emp.id, "dept.did": $dept.did, "emp.empno":$emp.empno, "dept.dno":$dept.dno}

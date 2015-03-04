@@ -14,7 +14,7 @@ use dataverse test;
 create type TestType1 as{
 fname:string,
 lname:string,
-id:int32
+id:int64
 }
 
 create dataset testds1(TestType1) primary key id;

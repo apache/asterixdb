@@ -16,8 +16,8 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions.binary;
 
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -51,10 +51,10 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                     throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
-                    private AMutableInt32 result = new AMutableInt32(0);
+                    private AMutableInt64 result = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt32> intSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
+                            .getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         ATypeTag tag = evaluateTuple(tuple, 0);

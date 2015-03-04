@@ -1,0 +1,24 @@
+/*
+* Type Promotion Test
+* - Comparison between an indexed closed-type field and a non-indexed closed-type field: different types
+* - Expected Result: Success
+*/
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type empInfoType as open {
+id:int64,
+empno:int64, // same as "id". to check non-indexed functionality
+name:string
+}
+
+create type deptInfoType as open {
+did:int64,
+dno:int32, // same as "did". to check non-indexed functionality
+dname:string
+}
+
+create dataset empDataset(empInfoType) primary key id;
+create dataset deptDataset(deptInfoType) primary key did;

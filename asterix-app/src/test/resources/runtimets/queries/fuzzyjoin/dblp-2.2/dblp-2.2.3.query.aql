@@ -15,7 +15,7 @@ set import-private-functions 'true';
         order by $tokenRanked.rank
         return $tokenRanked.rank
     for $prefixTokenDBLP in subset-collection(
-                                $tokensDBLP, 
+                                $tokensDBLP,
                                 0,
                                 prefix-len-jaccard(len($tokensDBLP), .5f))
     order by $idDBLP, $prefixTokenDBLP

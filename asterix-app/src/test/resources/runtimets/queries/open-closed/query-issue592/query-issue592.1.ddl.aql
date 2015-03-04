@@ -10,12 +10,12 @@ create dataverse fooverse;
 use dataverse fooverse;
 
 create type bartype as open {
-    "baz": int32
+    "baz": int64
 }
 
 create type footype as open {
-    "id": int32,
-    "bars": [ bartype ]?   
+    "id": int64,
+    "bars": [ bartype ]?
 };
 
 create dataset fooset(footype) primary key id;

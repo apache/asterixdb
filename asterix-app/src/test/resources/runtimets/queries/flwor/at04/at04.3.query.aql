@@ -12,7 +12,7 @@ order by $ckey
 limit 3
 return {
    "o_custkey": $ckey,
-   "users": 
+   "users":
      ( for $f at $ip in (for $i1 in $i order by $i1.o_orderkey return $i1)
        return {
          "num": $ip,

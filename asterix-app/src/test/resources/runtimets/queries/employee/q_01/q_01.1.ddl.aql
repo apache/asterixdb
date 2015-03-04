@@ -5,19 +5,19 @@ create dataverse test;
 use dataverse test;
 
 create type EmpType as open {
-  id: int32, 
+  id: int64,
   name: string,
   address: {
-  number: int32, 
+  number: int64,
   street: string,
   city: string
    },
-  age: int32?,
+  age: int64?,
   interests: {{string}}?,
   children: [string]?
 }
 
-create external dataset Emp(EmpType) 
+create external dataset Emp(EmpType)
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/employee.json"),("format"="adm"));
-      
+

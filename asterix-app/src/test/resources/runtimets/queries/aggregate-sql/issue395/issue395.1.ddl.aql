@@ -3,7 +3,7 @@ create dataverse test;
 use dataverse test;
 
 create type Emp as open {
-id:int32,
+id:int64,
 name:string ?
 }
 

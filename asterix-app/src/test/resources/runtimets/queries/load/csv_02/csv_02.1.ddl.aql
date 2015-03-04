@@ -4,13 +4,13 @@
  * Expected result: success
  *
  */
- 
+
 drop dataverse temp if exists;
 create dataverse temp
 use dataverse temp;
 
 create type test as closed {
-    id: int32,
+    id: int64,
     float: float?,
     double: double?,
     date: string,

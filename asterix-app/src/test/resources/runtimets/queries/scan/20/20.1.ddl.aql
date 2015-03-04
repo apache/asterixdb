@@ -6,13 +6,13 @@ create dataverse test;
 use dataverse test;
 
 create type DBLPType as closed {
-  id: int32, 
+  id: int64,
   dblpid: string,
   title: string,
   authors: string,
   misc: string
 }
 
-create dataset DBLPadm(DBLPType) 
+create dataset DBLPadm(DBLPType)
   primary key id;
 

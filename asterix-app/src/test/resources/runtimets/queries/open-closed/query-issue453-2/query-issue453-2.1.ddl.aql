@@ -1,6 +1,6 @@
 /*
  * Description  : This test case is to verify the fix for issue453
- 				: https://code.google.com/p/asterixdb/issues/detail?id=453
+                 : https://code.google.com/p/asterixdb/issues/detail?id=453
  * Expected Res : SUCCESS
  * Date         : 18th May 2013
  */
@@ -10,9 +10,9 @@ create dataverse test;
 use dataverse test;
 
 create type TypeOpen as open {
-    id : int32,
-    int_m : int32,
-    int_o : int32?,
+    id : int64,
+    int_m : int64,
+    int_o : int64?,
     string_m : string,
     string_o : string?
 };

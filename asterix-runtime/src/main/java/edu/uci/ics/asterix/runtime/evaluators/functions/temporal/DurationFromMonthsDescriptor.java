@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ADuration;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
@@ -28,7 +25,7 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -47,9 +44,6 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
 
     // allowed input types
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_INT8_TYPE_TAG = ATypeTag.INT8.serialize();
-    private final static byte SER_INT16_TYPE_TAG = ATypeTag.INT16.serialize();
-    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -94,18 +88,7 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                                 return;
                             }
 
-                            if (argOut0.getByteArray()[0] == SER_INT8_TYPE_TAG) {
-                                aDuration.setValue(AInt8SerializerDeserializer.getByte(argOut0.getByteArray(), 1), 0);
-                            } else if (argOut0.getByteArray()[0] == SER_INT16_TYPE_TAG) {
-                                aDuration.setValue(AInt16SerializerDeserializer.getShort(argOut0.getByteArray(), 1), 0);
-                            } else if (argOut0.getByteArray()[0] == SER_INT32_TYPE_TAG) {
-                                aDuration.setValue(AInt32SerializerDeserializer.getInt(argOut0.getByteArray(), 1), 0);
-                            } else {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects NULL/INT8/INT16/INT32, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
-                            }
-
+                            aDuration.setValue(ATypeHierarchy.getIntegerValue(argOut0.getByteArray(), 0), 0);
                             durationSerde.serialize(aDuration, out);
 
                         } catch (HyracksDataException hex) {

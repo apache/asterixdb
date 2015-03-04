@@ -5,20 +5,20 @@
  * Expected Result : Success
  * Issue           : Issue 204
  */
- 
+
 drop dataverse tpch if exists;
 create dataverse tpch;
 use dataverse tpch;
 
 create type OrderType as open {
-  o_orderkey: int32, 
-  o_custkey: int32, 
-  o_orderstatus: string, 
-  o_totalprice: double, 
-  o_orderdate: string, 
+  o_orderkey: int64,
+  o_custkey: int64,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
   o_orderpriority: string,
-  o_clerk: string, 
-  o_shippriority: int32, 
+  o_clerk: string,
+  o_shippriority: int64,
   o_comment: string
 }
 

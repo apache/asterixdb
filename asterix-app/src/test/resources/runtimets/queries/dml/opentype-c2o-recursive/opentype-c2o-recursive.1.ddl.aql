@@ -1,6 +1,6 @@
-/* 
+/*
  * Test case Name  : opentype-o2c-recursive.aql
- * Description     : verify the static casting of nest record constants 
+ * Description     : verify the static casting of nest record constants
  * Expected Result : Success
  */
 
@@ -14,8 +14,8 @@ create type AddressType as open{
   city: string
 }
 create type Dept as open{
-	name: string,
-	id: int32
+    name: string,
+    id: int64
 }
 
 create type testtype as closed {

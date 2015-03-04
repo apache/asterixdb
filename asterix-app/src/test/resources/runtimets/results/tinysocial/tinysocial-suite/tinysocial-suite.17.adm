@@ -1,4 +1,4 @@
-[ { "user": "OliJackson_512", "count": 1i64 }
-, { "user": "NilaMilliron_tw", "count": 1i64 }
-, { "user": "ChangEwing_573", "count": 1i64 }
+[ { "user": "OliJackson_512", "count": 1 }
+, { "user": "NilaMilliron_tw", "count": 1 }
+, { "user": "ChangEwing_573", "count": 1 }
  ]

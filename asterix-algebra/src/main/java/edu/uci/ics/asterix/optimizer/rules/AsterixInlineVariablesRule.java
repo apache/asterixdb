@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,11 +22,12 @@ public class AsterixInlineVariablesRule extends InlineVariablesRule {
     public AsterixInlineVariablesRule() {
         // Do not inline field accesses and spatial functions because doing so would interfere with our access method rewrites.
         // TODO: For now we must also exclude record constructor functions to avoid breaking our type casting rules
-        // IntroduceStaticTypeCastRule and IntroduceDynamicTypeCastRule. 
+        // IntroduceStaticTypeCastRule and IntroduceDynamicTypeCastRule.
         doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR);
+        doNotInlineFuncs.add(AsterixBuiltinFunctions.CAST_RECORD);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_CIRCLE);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_LINE);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_MBR);

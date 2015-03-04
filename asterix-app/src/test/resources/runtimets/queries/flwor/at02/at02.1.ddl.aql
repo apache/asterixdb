@@ -10,30 +10,30 @@ create dataverse test;
 use dataverse test;
 
 create type EmploymentType as open {
-        organization-name: string,      
+        organization-name: string,
         start-date: date,
         end-date: date?
 }
 
 create type FacebookUserType as closed {
-        id: int32,
+        id: int64,
         alias: string,
         name: string,
         user-since: datetime,
-        friend-ids: {{ int32 }},
+        friend-ids: {{ int64 }},
         employment: [EmploymentType]
 }
 
 create type FacebookMessageType as closed {
-        message-id: int32,
-        author-id: int32,
-        in-response-to: int32?,
+        message-id: int64,
+        author-id: int64,
+        in-response-to: int64?,
         sender-location: point?,
         message: string
 }
 
 create dataset FacebookUsers(FacebookUserType)
     primary key id;
-    
+
 create dataset FacebookMessages(FacebookMessageType)
 primary key message-id;

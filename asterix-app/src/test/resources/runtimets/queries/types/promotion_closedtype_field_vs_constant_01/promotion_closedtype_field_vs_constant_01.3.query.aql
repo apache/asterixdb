@@ -1,0 +1,11 @@
+/*
+* Type Promotion Test
+*
+*/
+use dataverse test;
+
+// age: a closed field with an index
+for $emp in dataset empDataset
+where $emp.age = int8("1")
+order by $emp.id, $emp.age
+return {"emp.id":$emp.id, "emp.age":$emp.age}

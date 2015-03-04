@@ -48,7 +48,7 @@ asks for all the Facebook users whose name is similar to
 `Suzanna Tilson`, i.e., their edit distance is at most 2.
 
         use dataverse TinySocial;
-        
+
         for $user in dataset('FacebookUsers')
         let $ed := edit-distance($user.name, "Suzanna Tilson")
         where $ed <= 2
@@ -60,7 +60,7 @@ asks for all the Facebook users whose set of friend ids is
 similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
 
         use dataverse TinySocial;
-        
+
         for $user in dataset('FacebookUsers')
         let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
         where $sim >= 0.6f
@@ -73,10 +73,10 @@ using "set" statements earlier. For instance, the above query can be
 equivalently written as:
 
         use dataverse TinySocial;
-        
+
         set simfunction "jaccard";
         set simthreshold "0.6f";
-        
+
         for $user in dataset('FacebookUsers')
         where $user.friend-ids ~= [1,5,9]
         return $user
@@ -94,10 +94,10 @@ finds, for each Facebook user, all Twitter users with names
 similar to their name based on the edit distance.
 
         use dataverse TinySocial;
-        
+
         set simfunction "edit-distance";
         set simthreshold "3";
-	
+
         for $fbu in dataset FacebookUsers
         return {
             "id": $fbu.id,
@@ -131,25 +131,70 @@ For instance, the following DDL statements create an ngram index on the
 `FacebookUsers.name` attribute using an inverted index of 3-grams.
 
         use dataverse TinySocial;
-        
+
         create index fbUserIdx on FacebookUsers(name) type ngram(3);
 
 The number "3" in "ngram(3)" is the length "n" in the grams. This
 index can be used to optimize similarity queries on this attribute
-using 
-[edit-distance](functions.html#edit-distance), 
-[edit-distance-check](functions.html#edit-distance-check), 
-[jaccard](functions.html#similarity-jaccard),
-or [jaccard-check](functions.html#similarity-jaccard-check) 
+using
+[edit-distance](functions.html#edit-distance),
+[edit-distance-check](functions.html#edit-distance-check),
+[similarity-jaccard](functions.html#similarity-jaccard),
+or [similarity-jaccard-check](functions.html#similarity-jaccard-check)
 queries on this attribute where the
 similarity is defined on sets of 3-grams.  This index can also be used
 to optimize queries with the "[contains()]((functions.html#contains))" predicate (i.e., substring
 matching) since it can be also be solved by counting on the inverted
 lists of the grams in the query string.
 
+#### NGram Index usage case - [edit-distance](functions.html#edit-distance) ####
+
+        use dataverse TinySocial;
+
+        for $user in dataset('FacebookUsers')
+        let $ed := edit-distance($user.name, "Suzanna Tilson")
+        where $ed <= 2
+        return $user
+
+#### NGram Index usage case - [edit-distance-check](functions.html#edit-distance-check) ####
+
+        use dataverse TinySocial;
+
+        for $user in dataset('FacebookUsers')
+        let $ed := edit-distance-check($user.name, "Suzanna Tilson", 2)
+        where $ed[0]
+        return $ed[1]
+
+#### NGram Index usage case - [similarity-jaccard](functions.html#similarity-jaccard) ####
+
+        use dataverse TinySocial;
+
+        for $user in dataset('FacebookUsers')
+        let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
+        where $sim >= 0.6f
+        return $user
+
+#### NGram Index usage case - [similarity-jaccard-check](functions.html#similarity-jaccard-check) ####
+
+        use dataverse TinySocial;
+
+        for $user in dataset('FacebookUsers')
+        let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
+        where $sim >= 0.6f
+        return $user
+
+#### NGram Index usage case - [contains()]((functions.html#contains)) ####
+
+        use dataverse TinySocial;
+
+        for $i in dataset('FacebookMessages')
+        where contains($i.message, "phone")
+        return {"mid": $i.message-id, "message": $i.message}
+
+
 ### Keyword Index ###
 
-A "keyword index" is constructed on a set of strings or sets (e.g., OrderedList, UnorderedList). Instead of 
+A "keyword index" is constructed on a set of strings or sets (e.g., OrderedList, UnorderedList). Instead of
 generating grams as in an ngram index, we generate tokens (e.g., words) and for each token, construct an inverted list that includes the ids of the
 records with this token.  The following two examples show how to create keyword index on two different types:
 
@@ -164,9 +209,9 @@ records with this token.  The following two examples show how to create keyword 
         let $jacc := similarity-jaccard-check(word-tokens($o.message), word-tokens("love like verizon"), 0.2f)
         where $jacc[0]
         return $o
-        
+
 #### Keyword Index on UnorderedList Type ####
-        
+
         use dataverse TinySocial;
 
         create index fbUserIdx_fids on FacebookUsers(friend-ids) type keyword;
@@ -175,7 +220,7 @@ records with this token.  The following two examples show how to create keyword 
         let $jacc := similarity-jaccard-check($c.friend-ids, {{3,10}}, 0.5f)
         where $jacc[0]
         return $c
-        
+
 As shown above, keyword index can be used to optimize queries with token-based similarity predicates, including
 [similarity-jaccard](functions.html#similarity-jaccard) and
 [similarity-jaccard-check](functions.html#similarity-jaccard-check).

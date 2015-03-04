@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,6 @@ import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -45,13 +44,6 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = AsterixBuiltinFunctions.DURATION_FROM_MILLISECONDS;
-
-    // allowed input types
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
-    private final static byte SER_INT8_TYPE_TAG = ATypeTag.INT8.serialize();
-    private final static byte SER_INT16_TYPE_TAG = ATypeTag.INT16.serialize();
-    private final static byte SER_INT32_TYPE_TAG = ATypeTag.INT32.serialize();
-    private final static byte SER_INT64_TYPE_TAG = ATypeTag.INT64.serialize();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -91,30 +83,40 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
                         eval0.evaluate(tuple);
 
                         try {
-                            if (argOut0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+
+                            ATypeTag argOutTypeTag = ATypeTag.VALUE_TYPE_MAPPING[argOut0.getByteArray()[0]];
+
+                            if (argOutTypeTag == ATypeTag.NULL) {
                                 nullSerde.serialize(ANull.NULL, out);
-                                return;
-                            }
-
-                            if (argOut0.getByteArray()[0] == SER_INT8_TYPE_TAG) {
-                                aDuration.setValue(0, AInt8SerializerDeserializer.getByte(argOut0.getByteArray(), 1));
-                            } else if (argOut0.getByteArray()[0] == SER_INT16_TYPE_TAG) {
-                                aDuration.setValue(0, AInt16SerializerDeserializer.getShort(argOut0.getByteArray(), 1));
-                            } else if (argOut0.getByteArray()[0] == SER_INT32_TYPE_TAG) {
-                                aDuration.setValue(0, AInt32SerializerDeserializer.getInt(argOut0.getByteArray(), 1));
-                            } else if (argOut0.getByteArray()[0] == SER_INT64_TYPE_TAG) {
-                                aDuration.setValue(0, AInt64SerializerDeserializer.getLong(argOut0.getByteArray(), 1));
                             } else {
-                                throw new AlgebricksException(FID.getName()
-                                        + ": expects NULL/INT8/INT16/INT32/INT64, but got "
-                                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut0.getByteArray()[0]));
+                                switch (argOutTypeTag) {
+                                    case INT8:
+                                        aDuration.setValue(0,
+                                                AInt8SerializerDeserializer.getByte(argOut0.getByteArray(), 1));
+                                        break;
+                                    case INT16:
+                                        aDuration.setValue(0,
+                                                AInt16SerializerDeserializer.getShort(argOut0.getByteArray(), 1));
+                                        break;
+                                    case INT32:
+                                        aDuration.setValue(0,
+                                                AInt32SerializerDeserializer.getInt(argOut0.getByteArray(), 1));
+                                        break;
+                                    case INT64:
+                                        aDuration.setValue(0,
+                                                AInt64SerializerDeserializer.getLong(argOut0.getByteArray(), 1));
+                                        break;
+                                    default:
+                                        throw new AlgebricksException(FID.getName()
+                                                + ": expects type INT8/INT16/INT32/INT64/NULL but got " + argOutTypeTag);
+                                }
+                                durationSerde.serialize(aDuration, out);
                             }
-
-                            durationSerde.serialize(aDuration, out);
 
                         } catch (HyracksDataException hex) {
                             throw new AlgebricksException(hex);
                         }
+
                     }
                 };
             }

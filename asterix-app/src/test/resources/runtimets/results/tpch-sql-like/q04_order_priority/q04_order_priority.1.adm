@@ -1,6 +1,6 @@
-[ { "order_priority": "1-URGENT", "count": 9i64 }
-, { "order_priority": "2-HIGH", "count": 7i64 }
-, { "order_priority": "3-MEDIUM", "count": 9i64 }
-, { "order_priority": "4-NOT SPECIFIED", "count": 8i64 }
-, { "order_priority": "5-LOW", "count": 12i64 }
+[ { "order_priority": "1-URGENT", "count": 9 }
+, { "order_priority": "2-HIGH", "count": 7 }
+, { "order_priority": "3-MEDIUM", "count": 9 }
+, { "order_priority": "4-NOT SPECIFIED", "count": 8 }
+, { "order_priority": "5-LOW", "count": 12 }
  ]

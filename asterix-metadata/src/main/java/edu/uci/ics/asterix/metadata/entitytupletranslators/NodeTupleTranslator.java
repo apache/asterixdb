@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,8 @@ import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
 import edu.uci.ics.asterix.metadata.entities.Node;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -41,10 +41,10 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
     // Payload field containing serialized Node.
     public static final int NODE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
-    private AMutableInt32 aInt32 = new AMutableInt32(-1);
+    private AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt32> int32Serde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    private ISerializerDeserializer<AInt64> int64Serde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.AINT64);
 
     // @SuppressWarnings("unchecked")
     // private ISerializerDeserializer<ARecord> recordSerDes =
@@ -99,14 +99,14 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
 
         // write field 1
         fieldValue.reset();
-        aInt32.setValue(instance.getNumberOfCores());
-        int32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        aInt64.setValue(instance.getNumberOfCores());
+        int64Serde.serialize(aInt64, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.NODE_ARECORD_NUMBEROFCORES_FIELD_INDEX, fieldValue);
 
         // write field 2
         fieldValue.reset();
-        aInt32.setValue(instance.getWorkingMemorySize());
-        int32Serde.serialize(aInt32, fieldValue.getDataOutput());
+        aInt64.setValue(instance.getWorkingMemorySize());
+        int64Serde.serialize(aInt64, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.NODE_ARECORD_WORKINGMEMORYSIZE_FIELD_INDEX, fieldValue);
 
         // write field 3

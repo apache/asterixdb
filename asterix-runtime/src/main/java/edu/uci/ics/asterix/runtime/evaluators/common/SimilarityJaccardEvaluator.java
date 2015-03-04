@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -157,17 +158,21 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
         ATypeTag probeItemTypeTag = (probeList == firstListIter) ? firstItemTypeTag : secondItemTypeTag;
 
         setHashMap(bytes, buildItemTypeTag, probeItemTypeTag);
-        buildHashMap(buildList);
-        int intersectionSize = probeHashMap(probeList, buildListSize, probeListSize);
-        // Special indicator for the "check" version of jaccard.
-        if (intersectionSize < 0) {
-            return -1;
+        try {
+            buildHashMap(buildList);
+            int intersectionSize = probeHashMap(probeList, buildListSize, probeListSize);
+            // Special indicator for the "check" version of jaccard.
+            if (intersectionSize < 0) {
+                return -1;
+            }
+            unionSize -= intersectionSize;
+            return (float) intersectionSize / (float) unionSize;
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
         }
-        unionSize -= intersectionSize;
-        return (float) intersectionSize / (float) unionSize;
     }
 
-    protected void buildHashMap(AbstractAsterixListIterator buildIter) {
+    protected void buildHashMap(AbstractAsterixListIterator buildIter) throws HyracksDataException {
         // Build phase: Add items into hash map, starting with first list.
         // Value in map is a pair of integers. Set first integer to 1.
         IntegerPointable.setInteger(valEntry.buf, 0, 1);
@@ -186,7 +191,8 @@ public class SimilarityJaccardEvaluator implements ICopyEvaluator {
         }
     }
 
-    protected int probeHashMap(AbstractAsterixListIterator probeIter, int probeListSize, int buildListSize) {
+    protected int probeHashMap(AbstractAsterixListIterator probeIter, int probeListSize, int buildListSize)
+            throws HyracksDataException {
         // Probe phase: Probe items from second list, and compute intersection size.
         int intersectionSize = 0;
         while (probeIter.hasNext()) {

@@ -1,0 +1,13 @@
+/*
+* Type Promotion Test
+*
+*/
+
+use dataverse test;
+
+// id: an indexed closed-type field, dmgrid: an open type field,
+for $emp in dataset empDataset
+for $dept in dataset deptDataset
+where $emp.id = $dept.dmgrid
+order by $emp.id, $dept.did, $dept.dmgrid, $dept.did
+return {"emp.id":$emp.id, "dept.did": $dept.did, "dept.dmgrid":$dept.dmgrid}

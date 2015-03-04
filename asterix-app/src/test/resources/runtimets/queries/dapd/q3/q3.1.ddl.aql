@@ -15,7 +15,7 @@ create type UserType as open{
  address: AddressType,
  member_of: {{
   {
-    sig_id: int32,
+    sig_id: int64,
     chapter_name: string,
     member_since: date
   }

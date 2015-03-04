@@ -1,0 +1,55 @@
+{"id":1, "empno":int64("1"), "name": "emp1", "height":1.1f, "age":1, "worksince":2001}
+{"id":2, "empno":int64("2"), "name": "emp2", "height":2.2f, "age":2, "worksince":2002, "supvrid":int64("1")}
+{"id":3, "empno":int64("3"), "name": "emp3", "height":3.3f, "age":3, "worksince":2003, "supvrid":1}
+{"id":4, "empno":int64("4"), "name": "emp4", "height":4.4f, "age":4, "worksince":2004, "supvrid":"1"}
+{"id":5, "empno":int64("5"), "name": "emp5", "height":5.5f, "age":5, "worksince":2005, "supvrid":1.0}
+{"id":6, "empno":int64("6"), "name": "emp6", "height":6.6f, "age":6, "worksince":2006}
+{"id":7, "empno":int64("7"), "name": "emp7", "height":7.7f, "age":7, "worksince":2007, "supvrid":int64("2")}
+{"id":8, "empno":int64("8"), "name": "emp8", "height":8.8f, "age":8, "worksince":2008, "supvrid":2}
+{"id":9, "empno":int64("9"), "name": "emp9", "height":9.9f, "age":9, "worksince":2009, "supvrid":"2"}
+{"id":10, "empno":int64("10"), "name": "emp10", "height":0.0f, "age":10, "worksince":2010, "supvrid":2.0}
+{"id":11, "empno":int64("11"), "name": "emp11", "height":1.1f, "age":11, "worksince":2011}
+{"id":12, "empno":int64("12"), "name": "emp12", "height":2.2f, "age":12, "worksince":2012, "supvrid":int64("3")}
+{"id":13, "empno":int64("13"), "name": "emp13", "height":3.3f, "age":13, "worksince":2013, "supvrid":3}
+{"id":14, "empno":int64("14"), "name": "emp14", "height":4.4f, "age":14, "worksince":2014, "supvrid":"3"}
+{"id":15, "empno":int64("15"), "name": "emp15", "height":5.5f, "age":15, "worksince":2015, "supvrid":3.0}
+{"id":16, "empno":int64("16"), "name": "emp16", "height":6.6f, "age":16, "worksince":2016}
+{"id":17, "empno":int64("17"), "name": "emp17", "height":7.7f, "age":17, "worksince":2017, "supvrid":int64("4")}
+{"id":18, "empno":int64("18"), "name": "emp18", "height":8.8f, "age":18, "worksince":2018, "supvrid":4}
+{"id":19, "empno":int64("19"), "name": "emp19", "height":9.9f, "age":19, "worksince":2019, "supvrid":"4"}
+{"id":20, "empno":int64("20"), "name": "emp20", "height":0.0f, "age":20, "worksince":2020, "supvrid":4.0}
+{"id":21, "empno":int64("21"), "name": "emp21", "height":1.1f, "age":21, "worksince":2021}
+{"id":22, "empno":int64("22"), "name": "emp22", "height":2.2f, "age":22, "worksince":2022, "supvrid":int64("5")}
+{"id":23, "empno":int64("23"), "name": "emp23", "height":3.3f, "age":23, "worksince":2023, "supvrid":5}
+{"id":24, "empno":int64("24"), "name": "emp24", "height":4.4f, "age":24, "worksince":2024, "supvrid":"5"}
+{"id":25, "empno":int64("25"), "name": "emp25", "height":5.5f, "age":25, "worksince":2025, "supvrid":5.0}
+{"id":26, "empno":int64("26"), "name": "emp26", "height":6.6f, "age":26, "worksince":2026}
+{"id":27, "empno":int64("27"), "name": "emp27", "height":7.7f, "age":27, "worksince":2027, "supvrid":int64("6")}
+{"id":28, "empno":int64("28"), "name": "emp28", "height":8.8f, "age":28, "worksince":2028, "supvrid":6}
+{"id":29, "empno":int64("29"), "name": "emp29", "height":9.9f, "age":29, "worksince":2029, "supvrid":"6"}
+{"id":30, "empno":int64("30"), "name": "emp30", "height":0.0f, "age":30, "worksince":2030, "supvrid":6.0}
+{"id":31, "empno":int64("31"), "name": "emp31", "height":1.1f, "age":31, "worksince":2031}
+{"id":32, "empno":int64("32"), "name": "emp32", "height":2.2f, "age":32, "worksince":2032, "supvrid":int64("7")}
+{"id":33, "empno":int64("33"), "name": "emp33", "height":3.3f, "age":33, "worksince":2033, "supvrid":7}
+{"id":34, "empno":int64("34"), "name": "emp34", "height":4.4f, "age":34, "worksince":2034, "supvrid":"7"}
+{"id":35, "empno":int64("35"), "name": "emp35", "height":5.5f, "age":35, "worksince":2035, "supvrid":7.0}
+{"id":36, "empno":int64("36"), "name": "emp36", "height":6.6f, "age":36, "worksince":2036}
+{"id":37, "empno":int64("37"), "name": "emp37", "height":7.7f, "age":37, "worksince":2037, "supvrid":int64("8")}
+{"id":38, "empno":int64("38"), "name": "emp38", "height":8.8f, "age":38, "worksince":2038, "supvrid":8}
+{"id":39, "empno":int64("39"), "name": "emp39", "height":9.9f, "age":39, "worksince":2039, "supvrid":"8"}
+{"id":40, "empno":int64("40"), "name": "emp40", "height":0.0f, "age":40, "worksince":2040, "supvrid":8.0}
+{"id":41, "empno":int64("41"), "name": "emp41", "height":1.1f, "age":41, "worksince":2041}
+{"id":42, "empno":int64("42"), "name": "emp42", "height":2.2f, "age":42, "worksince":2042, "supvrid":int64("9")}
+{"id":43, "empno":int64("43"), "name": "emp43", "height":3.3f, "age":43, "worksince":2043, "supvrid":9}
+{"id":44, "empno":int64("44"), "name": "emp44", "height":4.4f, "age":44, "worksince":2044, "supvrid":"9"}
+{"id":45, "empno":int64("45"), "name": "emp45", "height":5.5f, "age":45, "worksince":2045, "supvrid":9.0}
+{"id":46, "empno":int64("46"), "name": "emp46", "height":6.6f, "age":46, "worksince":2046}
+{"id":47, "empno":int64("47"), "name": "emp47", "height":7.7f, "age":47, "worksince":2047, "supvrid":int64("10")}
+{"id":48, "empno":int64("48"), "name": "emp48", "height":8.8f, "age":48, "worksince":2048, "supvrid":10}
+{"id":49, "empno":int64("49"), "name": "emp49", "height":9.9f, "age":49, "worksince":2049, "supvrid":"10"}
+{"id":50, "empno":int64("50"), "name": "emp50", "height":0.0f, "age":50, "worksince":2050, "supvrid":10.0}
+{"id":51, "empno":int64("51"), "name": "emp51", "height":1.1f, "age":51, "worksince":2051, "supvrid":point("80.10d, -10E5")}
+{"id":52, "empno":int64("52"), "name": "emp52", "height":2.2f, "age":52, "worksince":2052, "supvrid":point("5.10E-10d, -10E5")}
+{"id":53, "empno":int64("53"), "name": "emp53", "height":3.3f, "age":53, "worksince":2053, "supvrid":circle("10.1234,11.1e-1 +10.2E-2")}
+{"id":54, "empno":int64("54"), "name": "emp54", "height":4.4f, "age":54, "worksince":2054, "supvrid":time("12:54:54.039Z")}
+{"id":55, "empno":int64("55"), "name": "emp55", "height":5.5f, "age":55, "worksince":2055, "supvrid":duration("P100Y12MT12M")}

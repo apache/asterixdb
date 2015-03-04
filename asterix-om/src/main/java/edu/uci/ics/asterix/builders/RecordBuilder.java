@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.api.IValueReference;
@@ -162,10 +163,21 @@ public class RecordBuilder implements IARecordBuilder {
             openFieldNameLengths = Arrays.copyOf(openFieldNameLengths, openFieldNameLengths.length
                     + DEFAULT_NUM_OPEN_FIELDS);
         }
-        int fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1, name.getLength() - 1);
-        if (recType != null) {
-            int cFieldPos = recType.findFieldPosition(name.getByteArray(), name.getStartOffset() + 1,
+        int fieldNameHashCode;
+        try {
+            fieldNameHashCode = utf8HashFunction.hash(name.getByteArray(), name.getStartOffset() + 1,
                     name.getLength() - 1);
+        } catch (HyracksDataException e1) {
+            throw new AsterixException(e1);
+        }
+        if (recType != null) {
+            int cFieldPos;
+            try {
+                cFieldPos = recType.findFieldPosition(name.getByteArray(), name.getStartOffset() + 1,
+                        name.getLength() - 1);
+            } catch (HyracksDataException e) {
+                throw new AsterixException(e);
+            }
             if (cFieldPos >= 0) {
                 throw new AsterixException("Open field \"" + recType.getFieldNames()[cFieldPos]
                         + "\" has the same field name as closed field at index " + cFieldPos);

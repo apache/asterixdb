@@ -1,0 +1,11 @@
+/*
+* Type Promotion Test
+*
+*/
+use dataverse test;
+
+// supvrid: an open field
+for $emp in dataset empDataset
+where $emp.supvrid = "1"
+order by $emp.id, $emp.supvrid
+return {"emp.id":$emp.id, "emp.supvrid":$emp.supvrid}

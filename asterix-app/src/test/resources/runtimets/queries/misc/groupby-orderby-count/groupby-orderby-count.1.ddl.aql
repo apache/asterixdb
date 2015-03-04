@@ -4,7 +4,7 @@ create dataverse twitter;
 use dataverse twitter;
 
 create type Tweet as open {
-  id: int32,
+  id: int64,
   tweetid: int64,
   loc: point,
   time: datetime,

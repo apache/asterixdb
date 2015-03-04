@@ -1,17 +1,17 @@
 /**
  * issue531_string_sql-min_sql-max
- * 
+ *
  * Purpose: test the support of string values for sql-min and sql-max aggregation function
  * Result: success
- * 
+ *
  */
- 
+
 drop dataverse test if exists;
 create dataverse test;
 use dataverse test;
 
 create type TestType as open{
-id:int32,
+id:int64,
 name:string
 }
 

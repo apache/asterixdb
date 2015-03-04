@@ -3,7 +3,7 @@ create dataverse test;
 use dataverse test;
 
 create type MyRecord as open {
-  id: int32,
+  id: int64,
   loc: point
 }
 

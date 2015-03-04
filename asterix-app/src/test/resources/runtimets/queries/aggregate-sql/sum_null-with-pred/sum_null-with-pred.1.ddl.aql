@@ -11,8 +11,8 @@ create dataverse test;
 use dataverse test;
 
 create type TestType as open {
-id:int32,
-sal:int32?
+id:int64,
+sal:int64?
 }
 
 create dataset tdst(TestType) primary key id;

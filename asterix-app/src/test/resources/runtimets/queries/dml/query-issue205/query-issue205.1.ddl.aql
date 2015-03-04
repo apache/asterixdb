@@ -1,6 +1,6 @@
 /*
  * Description  : This test case is to verify the fix for issue205
- 				: https://code.google.com/p/asterixdb/issues/detail?id=205
+                 : https://code.google.com/p/asterixdb/issues/detail?id=205
  * Expected Res : Success
  * Date         : 26th November 2012
  */
@@ -11,14 +11,14 @@ create dataverse test;
 use dataverse test;
 
 create type EmployeeStat as open {
-  age: int32,
-  salary:int32
+  age: int64,
+  salary: int64
 }
 
 create type EmployeeType as closed {
-  id:string,
-  stat:EmployeeStat,
-  deptCode:int32
+  id: string,
+  stat: EmployeeStat,
+  deptCode: int64
 }
 
 create dataset Employees(EmployeeType)

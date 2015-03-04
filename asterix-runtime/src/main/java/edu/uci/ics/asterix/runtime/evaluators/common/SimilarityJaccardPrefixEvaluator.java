@@ -31,12 +31,13 @@ import edu.uci.ics.asterix.om.base.AMutableFloat;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -97,11 +98,23 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
 
         inputVal.reset();
         evalLen1.evaluate(tuple);
-        int length1 = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+        int length1 = 0;
+
+        try {
+            length1 = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
+        } catch (HyracksDataException e1) {
+            throw new AlgebricksException(e1);
+        }
 
         inputVal.reset();
         evalLen2.evaluate(tuple);
-        int length2 = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+        int length2 = 0;
+
+        try {
+            length2 = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
+        } catch (HyracksDataException e1) {
+            throw new AlgebricksException(e1);
+        }
 
         //
         // -- - length filter - --
@@ -126,24 +139,39 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
                 // read tokens
                 for (i = 0; i < lengthTokens1; i++) {
                     int itemOffset;
+                    int token;
                     try {
                         itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, i);
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
+
+                    try {
+                        token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(serList, itemOffset, 1);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    tokens1.add(token);
                 }
             } else {
                 lengthTokens1 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                 // read tokens
                 for (i = 0; i < lengthTokens1; i++) {
                     int itemOffset;
+                    int token;
+
                     try {
                         itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, i);
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens1.add(IntegerPointable.getInteger(serList, itemOffset));
+
+                    try {
+                        token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(serList, itemOffset, 1);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    tokens1.add(token);
                 }
             }
             // pad tokens
@@ -168,24 +196,40 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
                 // read tokens
                 for (i = 0; i < lengthTokens2; i++) {
                     int itemOffset;
+                    int token;
+
                     try {
                         itemOffset = AOrderedListSerializerDeserializer.getItemOffset(serList, i);
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
+
+                    try {
+                        token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(serList, itemOffset, 1);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    tokens2.add(token);
                 }
             } else {
                 lengthTokens2 = AUnorderedListSerializerDeserializer.getNumberOfItems(inputVal.getByteArray());
                 // read tokens
                 for (i = 0; i < lengthTokens2; i++) {
                     int itemOffset;
+                    int token;
+
                     try {
                         itemOffset = AUnorderedListSerializerDeserializer.getItemOffset(serList, i);
                     } catch (AsterixException e) {
                         throw new AlgebricksException(e);
                     }
-                    tokens2.add(IntegerPointable.getInteger(serList, itemOffset));
+
+                    try {
+                        token = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(serList, itemOffset, 1);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    tokens2.add(token);
                 }
             }
             // pad tokens
@@ -196,7 +240,14 @@ public class SimilarityJaccardPrefixEvaluator implements ICopyEvaluator {
             // -- - token prefix - --
             inputVal.reset();
             evalTokenPrefix.evaluate(tuple);
-            int tokenPrefix = IntegerPointable.getInteger(inputVal.getByteArray(), 1);
+
+            int tokenPrefix = 0;
+
+            try {
+                tokenPrefix = ATypeHierarchy.getIntegerValue(inputVal.getByteArray(), 0);
+            } catch (HyracksDataException e) {
+                throw new AlgebricksException(e);
+            }
 
             //
             // -- - position filter - --

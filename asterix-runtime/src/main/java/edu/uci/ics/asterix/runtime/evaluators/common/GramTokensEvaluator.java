@@ -20,12 +20,13 @@ import java.io.IOException;
 import edu.uci.ics.asterix.builders.OrderedListBuilder;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.primitive.BooleanPointable;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
@@ -66,7 +67,14 @@ public class GramTokensEvaluator implements ICopyEvaluator {
         prePostEval.evaluate(tuple);
 
         byte[] bytes = argOut.getByteArray();
-        int gramLength = IntegerPointable.getInteger(bytes, gramLengthOff + typeIndicatorSize);
+        int gramLength = 0;
+
+        try {
+            gramLength = ATypeHierarchy.getIntegerValue(bytes, gramLengthOff);
+        } catch (HyracksDataException e1) {
+            throw new AlgebricksException(e1);
+        }
+
         tokenizer.setGramlength(gramLength);
         boolean prePost = BooleanPointable.getBoolean(bytes, prePostOff + typeIndicatorSize);
         tokenizer.setPrePost(prePost);

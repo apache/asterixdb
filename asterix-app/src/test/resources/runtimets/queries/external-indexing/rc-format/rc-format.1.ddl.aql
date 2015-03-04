@@ -11,9 +11,9 @@ create dataverse test;
 use dataverse test;
 
 create type EmployeeType as closed {
- id: int32,
+ id: int64,
  name: string,
- age: int32
+ age: int64
 };
 
 create external dataset EmployeeDataset(EmployeeType)

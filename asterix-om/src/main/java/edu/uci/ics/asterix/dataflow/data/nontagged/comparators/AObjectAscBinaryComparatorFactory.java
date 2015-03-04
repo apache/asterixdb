@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,24 @@
  */
 package edu.uci.ics.asterix.dataflow.data.nontagged.comparators;
 
+import java.io.IOException;
+
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
+import edu.uci.ics.asterix.om.types.hierachy.ITypeConvertComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import edu.uci.ics.hyracks.data.std.primitive.*;
+import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import edu.uci.ics.hyracks.data.std.primitive.BytePointable;
+import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
+import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
+import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFactory {
 
@@ -32,40 +44,71 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
 
     @Override
     public IBinaryComparator createBinaryComparator() {
-        return new IBinaryComparator() {
+        return new ABinaryComparator() {
+
+            // a storage to promote a value
+            private ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
+            private ITypeConvertComputer promoteComputer;
+
+            // BOOLEAN
             final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            // INT8
+            final IBinaryComparator ascByteComp = new PointableBinaryComparatorFactory(BytePointable.FACTORY)
+                    .createBinaryComparator();
+            // INT16
+            final IBinaryComparator ascShortComp = new PointableBinaryComparatorFactory(ShortPointable.FACTORY)
+                    .createBinaryComparator();
+            // INT32
             final IBinaryComparator ascIntComp = new PointableBinaryComparatorFactory(IntegerPointable.FACTORY)
                     .createBinaryComparator();
+            // INT64
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            // STRING
             final IBinaryComparator ascStrComp = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
                     .createBinaryComparator();
+            // BINARY
             final IBinaryComparator ascByteArrayComp = new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY)
                     .createBinaryComparator();
+            // FLOAT
             final IBinaryComparator ascFloatComp = new PointableBinaryComparatorFactory(FloatPointable.FACTORY)
                     .createBinaryComparator();
+            // DOUBLE
             final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY)
                     .createBinaryComparator();
+            // RECTANGLE
             final IBinaryComparator ascRectangleComp = ARectanglePartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // CIRCLE
             final IBinaryComparator ascCircleComp = ACirclePartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // DURATION
             final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // INTERVAL
             final IBinaryComparator ascIntervalComp = AIntervalPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // LINE
             final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            // POINT
             final IBinaryComparator ascPointComp = APointPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // POINT3D
             final IBinaryComparator ascPoint3DComp = APoint3DPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // POLYGON
             final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
                     .createBinaryComparator();
+            // UUID
             final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            // RAW
             final IBinaryComparator rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override
-            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {
 
+                // Normally, comparing between NULL and non-NULL values should return UNKNOWN as the result.
+                // However, at this point, we assume that NULL check between two types is already done.
+                // Therefore, inside this method, we return an order between two values even if one value is NULL.
                 if (b1[s1] == ATypeTag.NULL.serialize()) {
                     if (b2[s2] == ATypeTag.NULL.serialize())
                         return 0;
@@ -78,32 +121,156 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
 
                 ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b1[s1]);
                 ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b2[s2]);
-                if (tag1 != tag2) {
-                    throw new IllegalStateException("The values of two inconsistent types (" + tag1 + " and " + tag2
-                            + ") cannot be compared!");
+
+                // If one of tag is null, that means we are dealing with an empty byte array in one side.
+                // And, we don't need to continue. We just compare raw byte by byte.
+                if (tag1 == null || tag2 == null) {
+                    return rawComp.compare(b1, s1, l1, b2, s2, l2);
                 }
-                switch (tag1) {
+
+                // If two type does not match, we identify the source and the target and
+                // promote the source to the target type if they are compatible.
+                ATypeTag sourceTypeTag = null;
+                ATypeTag targetTypeTag = null;
+                boolean areTwoTagsEqual = false;
+                boolean typePromotionApplied = false;
+                boolean leftValueChanged = false;
+
+                if (tag1 != tag2) {
+                    // tag1 can be promoted to tag2 (e.g. tag1: INT16, tag2: INT32)
+                    if (ATypeHierarchy.canPromote(tag1, tag2)) {
+                        sourceTypeTag = tag1;
+                        targetTypeTag = tag2;
+                        typePromotionApplied = true;
+                        leftValueChanged = true;
+                        // or tag2 can be promoted to tag1 (e.g. tag2: INT32, tag1: DOUBLE)
+                    } else if (ATypeHierarchy.canPromote(tag2, tag1)) {
+                        sourceTypeTag = tag2;
+                        targetTypeTag = tag1;
+                        typePromotionApplied = true;
+                    }
+
+                    // we promote the source to the target by using a promoteComputer
+                    if (typePromotionApplied) {
+                        castBuffer.reset();
+                        promoteComputer = ATypeHierarchy.getTypePromoteComputer(sourceTypeTag, targetTypeTag);
+                        if (promoteComputer != null) {
+                            try {
+                                if (leftValueChanged) {
+                                    // left side is the source
+                                    promoteComputer.convertType(b1, s1 + 1, l1 - 1, castBuffer.getDataOutput());
+                                } else {
+                                    // right side is the source
+                                    promoteComputer.convertType(b2, s2 + 1, l2 - 1, castBuffer.getDataOutput());
+                                }
+                            } catch (IOException e) {
+                                throw new HyracksDataException("ComparatorFactory - failed to promote the type:"
+                                        + sourceTypeTag + " to the type:" + targetTypeTag);
+                            }
+                        } else {
+                            // No appropriate typePromoteComputer.
+                            throw new HyracksDataException("No appropriate typePromoteComputer exists for "
+                                    + sourceTypeTag + " to the " + targetTypeTag + " type. Please check the code.");
+                        }
+                    }
+                } else {
+                    // tag1 == tag2.
+                    sourceTypeTag = tag1;
+                    targetTypeTag = tag1;
+                    areTwoTagsEqual = true;
+                }
+
+                // If two tags are not compatible, then we compare raw byte by byte, including the type tag.
+                // This is especially useful when we need to generate some order between any two types.
+                if ((!areTwoTagsEqual && !typePromotionApplied)) {
+                    return rawComp.compare(b1, s1, l1, b2, s2, l2);
+                }
+
+                // Conduct actual compare()
+                switch (targetTypeTag) {
                     case UUID:
                         return ascUUIDComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     case BOOLEAN: {
                         return ascBoolComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
+                    case INT8: {
+                        // No type promotion from another type to the INT8 can happen
+                        return ascByteComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                    }
+                    case INT16: {
+                        if (!typePromotionApplied) {
+                            // No type promotion case
+                            return ascShortComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        } else if (leftValueChanged) {
+                            // Type promotion happened. Left side was the source
+                            return ascShortComp.compare(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                                    castBuffer.getLength() - 1, b2, s2 + 1, l2 - 1);
+                        } else {
+                            // Type promotion happened. Right side was the source
+                            return ascShortComp.compare(b1, s1 + 1, l1 - 1, castBuffer.getByteArray(),
+                                    castBuffer.getStartOffset() + 1, castBuffer.getLength() - 1);
+                        }
+                    }
                     case TIME:
                     case DATE:
                     case YEARMONTHDURATION:
                     case INT32: {
-                        return ascIntComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        if (!typePromotionApplied) {
+                            // No type promotion case
+                            return ascIntComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        } else if (leftValueChanged) {
+                            // Type promotion happened. Left side was the source
+                            return ascIntComp.compare(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                                    castBuffer.getLength() - 1, b2, s2 + 1, l2 - 1);
+                        } else {
+                            // Type promotion happened. Right side was the source
+                            return ascIntComp.compare(b1, s1 + 1, l1 - 1, castBuffer.getByteArray(),
+                                    castBuffer.getStartOffset() + 1, castBuffer.getLength() - 1);
+                        }
                     }
                     case DATETIME:
                     case DAYTIMEDURATION:
                     case INT64: {
-                        return ascLongComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        if (!typePromotionApplied) {
+                            // No type promotion case
+                            return ascLongComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        } else if (leftValueChanged) {
+                            // Type promotion happened. Left side was the source
+                            return ascLongComp.compare(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                                    castBuffer.getLength() - 1, b2, s2 + 1, l2 - 1);
+                        } else {
+                            // Type promotion happened. Right side was the source
+                            return ascLongComp.compare(b1, s1 + 1, l1 - 1, castBuffer.getByteArray(),
+                                    castBuffer.getStartOffset() + 1, castBuffer.getLength() - 1);
+                        }
                     }
                     case FLOAT: {
-                        return ascFloatComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        if (!typePromotionApplied) {
+                            // No type promotion case
+                            return ascFloatComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        } else if (leftValueChanged) {
+                            // Type promotion happened. Left side was the source
+                            return ascFloatComp.compare(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                                    castBuffer.getLength() - 1, b2, s2 + 1, l2 - 1);
+                        } else {
+                            // Type promotion happened. Right side was the source
+                            return ascFloatComp.compare(b1, s1 + 1, l1 - 1, castBuffer.getByteArray(),
+                                    castBuffer.getStartOffset() + 1, castBuffer.getLength() - 1);
+                        }
                     }
                     case DOUBLE: {
-                        return ascDoubleComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        if (!typePromotionApplied) {
+                            // No type promotion case
+                            return ascDoubleComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        } else if (leftValueChanged) {
+                            // Type promotion happened. Left side was the source
+                            return ascDoubleComp.compare(castBuffer.getByteArray(), castBuffer.getStartOffset() + 1,
+                                    castBuffer.getLength() - 1, b2, s2 + 1, l2 - 1);
+                        } else {
+                            // Type promotion happened. Right side was the source
+                            return ascDoubleComp.compare(b1, s1 + 1, l1 - 1, castBuffer.getByteArray(),
+                                    castBuffer.getStartOffset() + 1, castBuffer.getLength() - 1);
+                        }
                     }
                     case STRING: {
                         return ascStrComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
@@ -133,10 +300,11 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
                         return ascIntervalComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
                     case BINARY: {
-                        return ascByteArrayComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 -1);
+                        return ascByteArrayComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
                     }
                     default: {
-                        return rawComp.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
+                        // We include typeTag in comparison to compare between two type to enforce some ordering
+                        return rawComp.compare(b1, s1, l1, b2, s2, l2);
                     }
                 }
             }

@@ -10,8 +10,8 @@ create dataverse fooverse;
 use dataverse fooverse;
 
 create type FooType as open {
-    id: int32,
-    numbers: [int32]
+    id: int64,
+    numbers: [int64]
 }
 
 create dataset Foo(FooType) primary key id;

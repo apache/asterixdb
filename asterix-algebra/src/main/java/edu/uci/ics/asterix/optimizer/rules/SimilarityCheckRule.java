@@ -21,12 +21,15 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.ADouble;
 import edu.uci.ics.asterix.om.base.AFloat;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -217,7 +220,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
     }
 
     private boolean replaceWithFunctionCallArg(Mutable<ILogicalExpression> expRef, FunctionIdentifier normFuncIdent,
-            AsterixConstantValue constVal, AbstractFunctionCallExpression funcExpr) {
+            AsterixConstantValue constVal, AbstractFunctionCallExpression funcExpr) throws AlgebricksException {
         // Analyze func expr to see if it is an optimizable similarity function.
         ScalarFunctionCallExpression simCheckFuncExpr = getSimilarityCheckExpr(normFuncIdent, constVal, funcExpr);
 
@@ -241,7 +244,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
     }
 
     private ScalarFunctionCallExpression getSimilarityCheckExpr(FunctionIdentifier normFuncIdent,
-            AsterixConstantValue constVal, AbstractFunctionCallExpression funcExpr) {
+            AsterixConstantValue constVal, AbstractFunctionCallExpression funcExpr) throws AlgebricksException {
         // Remember args from original similarity function to add them to the similarity-check function later.
         ArrayList<Mutable<ILogicalExpression>> similarityArgs = null;
         ScalarFunctionCallExpression simCheckFuncExpr = null;
@@ -278,7 +281,13 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
 
         // Look for edit-distance function call, and LE or LT.
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE) {
-            AInt32 aInt = (AInt32) constVal.getObject();
+            AInt32 aInt = new AInt32(0);
+            try {
+                aInt = (AInt32) ATypeHierarchy.convertNumericTypeObject(constVal.getObject(), ATypeTag.INT32);
+            } catch (AsterixException e) {
+                throw new AlgebricksException(e);
+            }
+
             AInt32 edThresh;
             if (normFuncIdent == AlgebricksBuiltinFunctions.LE) {
                 edThresh = aInt;

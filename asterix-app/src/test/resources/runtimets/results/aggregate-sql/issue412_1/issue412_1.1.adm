@@ -1,2 +1,2 @@
-[ { "sql-count": 2i64, "average": 30.5d, "sql-sum": 61, "sql-min": 1, "sql-max": 60 }
+[ { "sql-count": 2, "average": 30.5d, "sql-sum": 61, "sql-min": 1, "sql-max": 60 }
  ]

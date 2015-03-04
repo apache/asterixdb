@@ -1,6 +1,6 @@
 /*
  * Description  : This test case is to verify the fix for issue377
- 				: https://code.google.com/p/asterixdb/issues/detail?id=377
+                 : https://code.google.com/p/asterixdb/issues/detail?id=377
  * Expected Res : Success
  * Date         : 11th May 2013
  */
@@ -18,11 +18,11 @@ create type TweetMessageType as open {
 }
 
 create type FacebookUserType as open {
-        id: int32
+        id: int64
 }
 
 create type FacebookMessageType as open {
-        message-id: int32
+        message-id: int64
 }
 
 create dataset FacebookUsers(FacebookUserType)
@@ -36,4 +36,4 @@ primary key screen-name;
 
 create dataset TweetMessages(TweetMessageType)
 primary key tweetid
-hints(cardinality=100); 
+hints(cardinality=100);

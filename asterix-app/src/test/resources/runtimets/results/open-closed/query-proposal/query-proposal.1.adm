@@ -1,6 +1,6 @@
-[ { "topic": "at&t", "count": 1i64 }
-, { "topic": "att", "count": 1i64 }
-, { "topic": "commercials", "count": 1i64 }
-, { "topic": "iphone", "count": 1i64 }
-, { "topic": "verizon", "count": 3i64 }
+[ { "topic": "at&t", "count": 1 }
+, { "topic": "att", "count": 1 }
+, { "topic": "commercials", "count": 1 }
+, { "topic": "iphone", "count": 1 }
+, { "topic": "verizon", "count": 3 }
  ]
