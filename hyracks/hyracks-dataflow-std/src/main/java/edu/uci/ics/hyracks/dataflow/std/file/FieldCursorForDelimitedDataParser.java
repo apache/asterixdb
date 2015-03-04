@@ -119,6 +119,7 @@ public class FieldCursorForDelimitedDataParser {
                         } else if (ch == '\n' && !startedQuote) {
                             start = p + 1;
                             state = State.EOR;
+                            lineCount++;
                             lastDelimiterPosition = p;
                             break;
                         } else if (ch == '\r' && !startedQuote) {
@@ -142,6 +143,7 @@ public class FieldCursorForDelimitedDataParser {
                     if (ch == '\n' && !startedQuote) {
                         ++start;
                         state = State.EOR;
+                        lineCount++;
                     } else {
                         state = State.IN_RECORD;
                         return true;
