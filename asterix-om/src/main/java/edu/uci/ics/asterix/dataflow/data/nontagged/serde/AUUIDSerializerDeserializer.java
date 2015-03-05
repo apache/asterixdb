@@ -34,6 +34,7 @@ public class AUUIDSerializerDeserializer implements ISerializerDeserializer<AUUI
     public AUUID deserialize(DataInput in) throws HyracksDataException {
         long msb = Integer64SerializerDeserializer.INSTANCE.deserialize(in);
         long lsb = Integer64SerializerDeserializer.INSTANCE.deserialize(in);
+        // for each deserialization, a new object is created. maybe we should change this.
         return new AUUID(msb, lsb);
     }
 

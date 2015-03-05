@@ -983,10 +983,9 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
                 fieldParserFactories[i] = vpf;
             }
-            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, hasHeader,
-                                                         false, -1, null);
+            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, hasHeader);
         } else {
-            return new AdmSchemafullRecordParserFactory(recType, false, -1, null);
+            return new AdmSchemafullRecordParserFactory(recType);
         }
     }
 

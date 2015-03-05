@@ -54,7 +54,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
         INTERNAL_DATASET,
         EXTERNAL_DATASET,
         FEED,
-        ADAPTED_LOADABLE
+        LOADABLE
     }
 
     public AqlDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName,
@@ -128,7 +128,7 @@ public abstract class AqlDataSource implements IDataSource<AqlSourceId> {
             List<ILocalStructuralProperty> propsLocal;
             int n;
             switch (ds.getDatasourceType()) {
-                case ADAPTED_LOADABLE:
+                case LOADABLE:
                 case EXTERNAL_DATASET:
                     pp = new RandomPartitioningProperty(domain);
                     propsLocal = new ArrayList<ILocalStructuralProperty>();

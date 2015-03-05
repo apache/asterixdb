@@ -73,7 +73,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     public void configure(Map<String, String> configuration) throws Exception {
         configuration.put(KEY_FORMAT, FORMAT_ADM);
         this.configuration = configuration;
-        this.configureFormat(initOutputType(), false, -1, null);
+        this.configureFormat(initOutputType());
     }
 
     @Override

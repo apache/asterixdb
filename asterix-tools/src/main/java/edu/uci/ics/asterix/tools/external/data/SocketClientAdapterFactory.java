@@ -104,6 +104,6 @@ public class SocketClientAdapterFactory implements ITypedAdapterFactory {
         }
         fileSplits = fileSplitsValue.trim().split(",");
         genericSocketAdapterFactory = new GenericSocketFeedAdapterFactory();
-        genericSocketAdapterFactory.configure(configuration, outputType, false, null);
+        genericSocketAdapterFactory.configure(configuration, outputType);
     }
 }

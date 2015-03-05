@@ -293,13 +293,14 @@ public class FeedUtil {
                                 "You must specify the datatype associated with the incoming data. Datatype is specified by the "
                                         + IGenericAdapterFactory.KEY_TYPE_NAME + " configuration parameter");
                     }
-                    Datatype datatype = MetadataManager.INSTANCE.getDatatype(mdTxnCtx,
-                            feed.getDataverseName(), outputTypeName);
+                    Datatype datatype = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, feed.getDataverseName(),
+                            outputTypeName);
                     if (datatype == null) {
-                        throw new Exception("no datatype \"" + outputTypeName + "\" in dataverse \"" + feed.getDataverseName() + "\"");
+                        throw new Exception("no datatype \"" + outputTypeName + "\" in dataverse \""
+                                + feed.getDataverseName() + "\"");
                     }
                     adapterOutputType = (ARecordType) datatype.getDatatype();
-                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType, false, null);
+                    ((IGenericAdapterFactory) adapterFactory).configure(configuration, (ARecordType) adapterOutputType);
                     break;
                 default:
                     throw new IllegalStateException(" Unknown factory type for " + adapterFactoryClassname);

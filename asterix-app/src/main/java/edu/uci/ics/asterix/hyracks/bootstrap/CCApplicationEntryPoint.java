@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.component.AbstractLifeCycle;
 
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.api.http.servlet.AQLAPIServlet;
@@ -87,12 +88,25 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         setupFeedServer(externalProperties);
         feedServer.start();
+        
+        waitUntilServerStart(webServer);
+        waitUntilServerStart(jsonAPIServer);
+        waitUntilServerStart(feedServer);
 
         AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager(
                 (HyracksConnection) getNewHyracksClientConnection());
         ClusterManager.INSTANCE.registerSubscriber(AsterixGlobalRecoveryManager.INSTANCE);
 
         ccAppCtx.addClusterLifecycleListener(ClusterLifecycleListener.INSTANCE);
+    }
+
+    private void waitUntilServerStart(AbstractLifeCycle webServer) throws Exception{
+        while(!webServer.isStarted()){
+            if(webServer.isFailed()){
+                throw new Exception("Server failed to start");
+            }
+            wait(1000);
+        }
     }
 
     @Override

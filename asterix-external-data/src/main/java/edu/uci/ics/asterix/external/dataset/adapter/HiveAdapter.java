@@ -33,7 +33,7 @@ public class HiveAdapter extends FileSystemBasedAdapter {
 
     public HiveAdapter(IAType atype, HDFSAdapter hdfsAdapter, ITupleParserFactory parserFactory, IHyracksTaskContext ctx)
             throws HyracksDataException {
-        super(parserFactory, atype, ctx, false, -1);
+        super(parserFactory, atype, ctx);
         this.hdfsAdapter = hdfsAdapter;
     }
 

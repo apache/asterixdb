@@ -174,7 +174,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
                                             + IGenericAdapterFactory.KEY_TYPE_NAME + " configuration parameter");
                         }
                         ((IGenericAdapterFactory) adapterFactory).configure(adapterConfiguration,
-                                (ARecordType) adapterOutputType, false, null);
+                                (ARecordType) adapterOutputType);
                         ((IGenericAdapterFactory) adapterFactory).createAdapter(ctx, partition);
                     }
                         break;

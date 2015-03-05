@@ -721,7 +721,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
@@ -1657,13 +1656,14 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     private void handleLoadStatement(AqlMetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
             throws Exception {
+        LoadStatement loadStmt = (LoadStatement) stmt;
+        String dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
+        String datasetName = loadStmt.getDatasetName().getValue();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        acquireReadLatch();
+        MetadataLockManager.INSTANCE.modifyDatasetBegin(dataverseName, dataverseName + "." + datasetName);
         try {
-            LoadStatement loadStmt = (LoadStatement) stmt;
-            String dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
                     .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
                     loadStmt.dataIsAlreadySorted());
@@ -1680,7 +1680,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             throw e;
         } finally {
-            releaseReadLatch();
+            MetadataLockManager.INSTANCE.modifyDatasetEnd(dataverseName, dataverseName + "." + datasetName);
         }
     }
 
@@ -2399,13 +2399,14 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private void handleRunStatement(AqlMetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc) throws AsterixException, Exception {
         RunStatement runStmt = (RunStatement) stmt;
-        switch(runStmt.getSystem()) {
+        switch (runStmt.getSystem()) {
             case "pregel":
             case "pregelix":
                 handlePregelixStatement(metadataProvider, runStmt, hcc);
                 break;
             default:
-                throw new AlgebricksException("The system \""+runStmt.getSystem()+"\" specified in your run statement is not supported.");
+                throw new AlgebricksException("The system \"" + runStmt.getSystem()
+                        + "\" specified in your run statement is not supported.");
         }
 
     }
@@ -2588,8 +2589,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             throw e;
         } finally {
-            MetadataLockManager.INSTANCE
-                    .pregelixEnd(dataverseNameFrom, datasetNameFrom, datasetNameTo);
+            MetadataLockManager.INSTANCE.pregelixEnd(dataverseNameFrom, datasetNameFrom, datasetNameTo);
         }
     }
 
@@ -2655,14 +2655,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     private String getActiveDataverseName(Identifier dataverse) throws AlgebricksException {
         return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
-    }
-
-    private void acquireReadLatch() {
-        MetadataManager.INSTANCE.acquireReadLatch();
-    }
-
-    private void releaseReadLatch() {
-        MetadataManager.INSTANCE.releaseReadLatch();
     }
 
     private void abort(Exception rootE, Exception parentE, MetadataTransactionContext mdTxnCtx) {

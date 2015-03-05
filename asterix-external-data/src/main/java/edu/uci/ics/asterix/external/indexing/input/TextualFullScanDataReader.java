@@ -28,9 +28,8 @@ import org.apache.hadoop.mapred.Counters.Counter;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 
-@SuppressWarnings("deprecation")
-public class TextualFullScanDataReader extends InputStream{
-    
+public class TextualFullScanDataReader extends InputStream {
+
     private RecordReader<Object, Text> reader;
     private Object key;
     private Text value;
@@ -43,12 +42,13 @@ public class TextualFullScanDataReader extends InputStream{
     private String[] readSchedule;
     private String nodeName;
     private JobConf conf;
-    
-    public TextualFullScanDataReader(boolean executed[], InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf){
+
+    public TextualFullScanDataReader(boolean executed[], InputSplit[] inputSplits, String[] readSchedule,
+            String nodeName, JobConf conf) {
         this.executed = executed;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;
-        this.nodeName  = nodeName;
+        this.nodeName = nodeName;
         this.conf = conf;
     }
 
@@ -89,8 +89,7 @@ public class TextualFullScanDataReader extends InputStream{
     }
 
     @Override
-    public int read(byte[] buffer, int offset, int len)
-            throws IOException {
+    public int read(byte[] buffer, int offset, int len) throws IOException {
         if (reader == null) {
             if (!moveToNext()) {
                 // nothing to read
@@ -104,8 +103,7 @@ public class TextualFullScanDataReader extends InputStream{
             if (sizeOfNextTuple > len) {
                 return 0;
             }
-            System.arraycopy(pendingValue.getBytes(), 0, buffer,
-                    offset + numBytes, pendingValue.getLength());
+            System.arraycopy(pendingValue.getBytes(), 0, buffer, offset + numBytes, pendingValue.getLength());
             buffer[offset + numBytes + pendingValue.getLength()] = (byte) EOL;
             numBytes += pendingValue.getLength() + 1;
             pendingValue = null;
@@ -134,8 +132,7 @@ public class TextualFullScanDataReader extends InputStream{
                 pendingValue = value;
                 break;
             } else {
-                System.arraycopy(value.getBytes(), 0, buffer,
-                        offset + numBytes, value.getLength());
+                System.arraycopy(value.getBytes(), 0, buffer, offset + numBytes, value.getLength());
                 buffer[offset + numBytes + value.getLength()] = (byte) EOL;
                 numBytes += sizeOfNextTuple;
             }
@@ -145,28 +142,20 @@ public class TextualFullScanDataReader extends InputStream{
 
     @Override
     public int read() throws IOException {
-        throw new NotImplementedException(
-                "Use read(byte[], int, int");
+        throw new NotImplementedException("Use read(byte[], int, int");
     }
 
     @SuppressWarnings("rawtypes")
-    private RecordReader getRecordReader(int splitIndex)
-            throws IOException {
+    private RecordReader getRecordReader(int splitIndex) throws IOException {
         if (conf.getInputFormat() instanceof SequenceFileInputFormat) {
-            SequenceFileInputFormat format = (SequenceFileInputFormat) conf
-                    .getInputFormat();
-            RecordReader reader = format
-                    .getRecordReader(
-                            (org.apache.hadoop.mapred.FileSplit) inputSplits[splitIndex],
-                            conf, getReporter());
+            SequenceFileInputFormat format = (SequenceFileInputFormat) conf.getInputFormat();
+            RecordReader reader = format.getRecordReader((org.apache.hadoop.mapred.FileSplit) inputSplits[splitIndex],
+                    conf, getReporter());
             return reader;
         } else {
-            TextInputFormat format = (TextInputFormat) conf
-                    .getInputFormat();
-            RecordReader reader = format
-                    .getRecordReader(
-                            (org.apache.hadoop.mapred.FileSplit) inputSplits[splitIndex],
-                            conf, getReporter());
+            TextInputFormat format = (TextInputFormat) conf.getInputFormat();
+            RecordReader reader = format.getRecordReader((org.apache.hadoop.mapred.FileSplit) inputSplits[splitIndex],
+                    conf, getReporter());
             return reader;
         }
     }

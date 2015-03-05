@@ -165,7 +165,7 @@ public class ExternalIndexingOperations {
                 FileStatus[] fileStatuses = fs.listStatus(new Path(aPath));
                 for (int i = 0; i < fileStatuses.length; i++) {
                     int nextFileNumber = files.size();
-                    if (fileStatuses[i].isDir()) {
+                    if (fileStatuses[i].isDirectory()) {
                         listSubFiles(dataset, fs, fileStatuses[i], files);
                     } else {
                         files.add(new ExternalFile(dataset.getDataverseName(), dataset.getDatasetName(),
@@ -196,7 +196,7 @@ public class ExternalIndexingOperations {
         FileStatus[] fileStatuses = srcFs.listStatus(path);
         for (int i = 0; i < fileStatuses.length; i++) {
             int nextFileNumber = files.size();
-            if (fileStatuses[i].isDir()) {
+            if (fileStatuses[i].isDirectory()) {
                 listSubFiles(dataset, srcFs, fileStatuses[i], files);
             } else {
                 files.add(new ExternalFile(dataset.getDataverseName(), dataset.getDatasetName(), nextFileNumber,
@@ -267,7 +267,7 @@ public class ExternalIndexingOperations {
         HDFSIndexingAdapterFactory adapterFactory = new HDFSIndexingAdapterFactory();
         adapterFactory.setFiles(files);
         adapterFactory.configure(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties(),
-                (ARecordType) itemType, false, null);
+                (ARecordType) itemType);
         return new Pair<ExternalDataScanOperatorDescriptor, AlgebricksPartitionConstraint>(
                 new ExternalDataScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
                 adapterFactory.getPartitionConstraint());

@@ -45,8 +45,6 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
     private final char delimiter;
     // quote in case of delimited text
     private final char quote;
-    // whether delimited text file has a header (which should be ignored)
-    private final boolean hasHeader;
     // parser class name in case of binary format
     private final String parserClassName;
     // the expected data type
@@ -57,13 +55,12 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
     private Map<String, String> arguments;
 
     public HDFSIndexingParserFactory(ARecordType atype, String inputFormat, String format, char delimiter,
-                                     char quote, boolean hasHeader, String parserClassName) {
+                                     char quote, String parserClassName) {
         this.inputFormat = inputFormat;
         this.format = format;
         this.parserClassName = parserClassName;
         this.delimiter = delimiter;
         this.quote = quote;
-        this.hasHeader = hasHeader;
         this.atype = atype;
     }
 
@@ -94,7 +91,7 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
         } else if (format.equalsIgnoreCase(StreamBasedAdapterFactory.FORMAT_DELIMITED_TEXT)) {
             // choice 3 with delimited data parser
             DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser(atype,
-                delimiter, quote, hasHeader);
+                delimiter, quote); 
             return new AdmOrDelimitedIndexingTupleParser(ctx, atype, dataParser);
         }
 

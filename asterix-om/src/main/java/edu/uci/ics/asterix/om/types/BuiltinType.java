@@ -738,9 +738,10 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
-    // AUUID_STRING is used when converting between the string representation of
-    // UUID and corresponding a UUID instance
+    // AUUID_STRING is used when converting between the string representation of        
+    // UUID and corresponding a UUID instance       
     public static final BuiltinType AUUID_STRING = new LowerCaseConstructorType() {
+        private static final long serialVersionUID = 1L;
 
         @Override
         public ATypeTag getTypeTag() {

@@ -31,6 +31,11 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public class TestTypedAdapterFactory implements ITypedAdapterFactory {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public static final String NAME = "test_typed_adapter";
 
     private static ARecordType adapterOutputType = initOutputType();
@@ -73,8 +78,7 @@ public class TestTypedAdapterFactory implements ITypedAdapterFactory {
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        ITupleParserFactory tupleParserFactory = new AdmSchemafullRecordParserFactory(adapterOutputType, false, -1,
-                null);
+        ITupleParserFactory tupleParserFactory = new AdmSchemafullRecordParserFactory(adapterOutputType);
         return new TestTypedAdapter(tupleParserFactory, adapterOutputType, ctx, configuration);
     }
 

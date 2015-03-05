@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -23,7 +21,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /*
  * A single activity operator that provides the functionality of scanning data using an
@@ -34,10 +32,11 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
     private static final long serialVersionUID = 1L;
 
     private IAdapterFactory adapterFactory;
+    
 
     public ExternalDataScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
             IAdapterFactory dataSourceAdapterFactory) {
-        super(spec, 1, 1);
+        super(spec, 0, 1);
         recordDescriptors[0] = rDesc;
         this.adapterFactory = dataSourceAdapterFactory;
     }
@@ -47,32 +46,20 @@ public class ExternalDataScanOperatorDescriptor extends AbstractSingleActivityOp
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
 
-        return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
+        return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
             @Override
-            public void open() throws HyracksDataException {
+            public void initialize() throws HyracksDataException {
                 writer.open();
-            }
-
-            @Override
-            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 IDatasourceAdapter adapter = null;
                 try {
                     adapter = adapterFactory.createAdapter(ctx, partition);
                     adapter.start(partition, writer);
                 } catch (Exception e) {
                     throw new HyracksDataException("exception during reading from external data source", e);
+                } finally {
+                    writer.close();
                 }
-
-            }
-
-            @Override
-            public void fail() throws HyracksDataException {
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
-                writer.close();
             }
         };
 

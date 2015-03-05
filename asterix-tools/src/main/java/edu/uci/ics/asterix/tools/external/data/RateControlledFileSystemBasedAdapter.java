@@ -38,7 +38,7 @@ public class RateControlledFileSystemBasedAdapter extends FileSystemBasedAdapter
     public RateControlledFileSystemBasedAdapter(ARecordType atype, Map<String, String> configuration,
             FileSystemBasedAdapter coreAdapter, String format, ITupleParserFactory parserFactory,
             IHyracksTaskContext ctx) throws Exception {
-        super(parserFactory, atype, ctx, false, -1);
+        super(parserFactory, atype, ctx);
         this.coreAdapter = coreAdapter;
     }
 

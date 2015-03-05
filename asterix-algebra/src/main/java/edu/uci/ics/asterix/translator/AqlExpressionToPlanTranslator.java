@@ -95,7 +95,7 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.declared.AdaptedLoadableDataSource;
+import edu.uci.ics.asterix.metadata.declared.LoadableDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
@@ -110,7 +110,6 @@ import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.AsterixFunctionInfo;
-import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
@@ -154,6 +153,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.LimitOperat
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
@@ -161,6 +161,8 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOper
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
+import edu.uci.ics.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 
@@ -201,6 +203,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         CompiledLoadFromFileStatement clffs = (CompiledLoadFromFileStatement) stmt;
         Dataset dataset = metadataProvider.findDataset(clffs.getDataverseName(), clffs.getDatasetName());
         if (dataset == null) {
+            // This would never happen since we check for this in AqlTranslator
             throw new AlgebricksException("Unable to load dataset " + clffs.getDatasetName()
                     + " since it does not exist");
         }
@@ -208,35 +211,51 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                 stmt.getDatasetName());
         List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
-        AdaptedLoadableDataSource lds;
+
+        LoadableDataSource lds;
         try {
-            lds = new AdaptedLoadableDataSource(dataset, itemType, clffs.getAdapter(), clffs.getProperties(),
-                    clffs.alreadySorted());
+            lds = new LoadableDataSource(dataset, itemType, clffs.getAdapter(), clffs.getProperties());
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
+
+        // etsOp is a dummy input operator used to keep the compiler happy. it
+        // could be removed but would result in
+        // the need to fix many rewrite rules that assume that datasourcescan
+        // operators always have input.
         ILogicalOperator etsOp = new EmptyTupleSourceOperator();
-        List<LogicalVariable> loadVars = new ArrayList<>();
-        // Add a logical variable for PK.
-        for (int i = 0; i < partitionKeys.size(); ++i) {
-            loadVars.add(context.newVar());
-        }
+
         // Add a logical variable for the record.
-        loadVars.add(context.newVar());
-        DataSourceScanOperator dssOp = new DataSourceScanOperator(loadVars, lds);
-        dssOp.getInputs().add(new MutableObject<ILogicalOperator>(etsOp));
+        List<LogicalVariable> payloadVars = new ArrayList<LogicalVariable>();
+        payloadVars.add(context.newVar());
 
-        ILogicalExpression payloadExpr = new VariableReferenceExpression(loadVars.get(loadVars.size() - 1));
+        // Create a scan operator and make the empty tuple source its input
+        DataSourceScanOperator dssOp = new DataSourceScanOperator(payloadVars, lds);
+        dssOp.getInputs().add(new MutableObject<ILogicalOperator>(etsOp));
+        ILogicalExpression payloadExpr = new VariableReferenceExpression(payloadVars.get(0));
         Mutable<ILogicalExpression> payloadRef = new MutableObject<ILogicalExpression>(payloadExpr);
-        // Set the expression for PK
-        List<Mutable<ILogicalExpression>> pkRefs = new ArrayList<>();
-        for (int i = 0; i < loadVars.size() - 1; ++i) {
-            ILogicalExpression pkExpr = new VariableReferenceExpression(loadVars.get(i));
-            Mutable<ILogicalExpression> pkRef = new MutableObject<ILogicalExpression>(pkExpr);
-            pkRefs.add(pkRef);
+
+        // Creating the assign to extract the PK out of the record
+        ArrayList<LogicalVariable> pkVars = new ArrayList<LogicalVariable>();
+        ArrayList<Mutable<ILogicalExpression>> pkExprs = new ArrayList<Mutable<ILogicalExpression>>();
+        List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
+        LogicalVariable payloadVar = payloadVars.get(0);
+        for (String keyFieldName : partitionKeys) {
+            prepareVarAndExpression(keyFieldName, payloadVar, pkVars, pkExprs, varRefsForLoading);
         }
 
-        // Set the Filter variable if it was specified
+        AssignOperator assign = new AssignOperator(pkVars, pkExprs);
+        assign.getInputs().add(new MutableObject<ILogicalOperator>(dssOp));
+
+        // If the input is pre-sorted, we set the ordering property explicitly in the assign
+        if (clffs.alreadySorted()) {
+            List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
+            for (int i = 0; i < pkVars.size(); ++i) {
+                orderColumns.add(new OrderColumn(pkVars.get(i), OrderKind.ASC));
+            }
+            assign.setExplicitOrderingProperty(new LocalOrderProperty(orderColumns));
+        }
+
         String additionalFilteringField = DatasetUtils.getFilterField(targetDatasource.getDataset());
         List<LogicalVariable> additionalFilteringVars = null;
         List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions = null;
@@ -247,22 +266,22 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             additionalFilteringAssignExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();
 
-            prepareVarAndExpression(additionalFilteringField, loadVars.get(loadVars.size() - 1), additionalFilteringVars,
+            prepareVarAndExpression(additionalFilteringField, payloadVar, additionalFilteringVars,
                     additionalFilteringAssignExpressions, additionalFilteringExpressions);
 
             additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
                     additionalFilteringAssignExpressions);
         }
 
-        InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, payloadRef, pkRefs,
+        InsertDeleteOperator insertOp = new InsertDeleteOperator(targetDatasource, payloadRef, varRefsForLoading,
                 InsertDeleteOperator.Kind.INSERT, true);
         insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
 
         if (additionalFilteringAssign != null) {
-            additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(dssOp));
+            additionalFilteringAssign.getInputs().add(new MutableObject<ILogicalOperator>(assign));
             insertOp.getInputs().add(new MutableObject<ILogicalOperator>(additionalFilteringAssign));
         } else {
-            insertOp.getInputs().add(new MutableObject<ILogicalOperator>(dssOp));
+            insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
         }
 
         ILogicalOperator leafOperator = new SinkOperator();
@@ -299,7 +318,10 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                 topOp.getAnnotations().put("output-record-type", outputRecordType);
             }
         } else {
-            /** add the collection-to-sequence right before the final project, because dataset only accept non-collection records */
+            /**
+             * add the collection-to-sequence right before the final project,
+             * because dataset only accept non-collection records
+             */
             LogicalVariable seqVar = context.newVar();
             @SuppressWarnings("unchecked")
             /** This assign adds a marker function collection-to-sequence: if the input is a singleton collection, unnest it; otherwise do nothing. */
@@ -338,7 +360,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
 
                 additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
                         additionalFilteringAssignExpressions);
-
             }
 
             AssignOperator assign = new AssignOperator(vars, exprs);

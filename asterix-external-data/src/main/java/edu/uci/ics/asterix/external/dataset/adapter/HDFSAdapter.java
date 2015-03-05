@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 /**
  * Provides functionality for fetching external data stored in an HDFS instance.
  */
-@SuppressWarnings({ "deprecation" })
+
 public class HDFSAdapter extends FileSystemBasedAdapter {
 
     private static final long serialVersionUID = 1L;
@@ -53,7 +53,7 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
     public HDFSAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits, JobConf conf,
             String nodeName, ITupleParserFactory parserFactory, IHyracksTaskContext ctx,
             Map<String, String> configuration, List<ExternalFile> files) throws HyracksDataException {
-        super(parserFactory, atype, ctx, false, -1);
+        super(parserFactory, atype, ctx);
         this.readSchedule = readSchedule;
         this.executed = executed;
         this.inputSplits = inputSplits;

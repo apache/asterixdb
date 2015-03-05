@@ -155,6 +155,16 @@ public class RecordBuilder implements IARecordBuilder {
             nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
         }
     }
+    
+    public void addField(int id, byte[] value) {
+        closedPartOffsets[id] = closedPartOutputStream.size();
+        // We assume the tag is not included (closed field)
+        closedPartOutputStream.write(value, 0, value.length);
+        numberOfClosedFields++;
+        if (isNullable && value[0] != SER_NULL_TYPE_TAG) {
+            nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
+        }
+    }
 
     @Override
     public void addField(IValueReference name, IValueReference value) throws AsterixException {

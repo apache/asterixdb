@@ -47,8 +47,7 @@ public class ConditionalPushTupleParserFactory implements ITupleParserFactory {
                 dataParser = new ADMDataParser();
                 break;
             case DELIMITED_DATA:
-                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, quote, hasHeader,
-                                                     false, -1, null);
+                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, quote, hasHeader);
                 break;
         }
         return new ConditionalPushTupleParser(ctx, recordType, dataParser, configuration);
@@ -102,7 +101,7 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
 
     public ConditionalPushTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
             Map<String, String> configuration) throws HyracksDataException {
-        super(ctx, recType, false, -1, null);
+        super(ctx, recType);
         this.dataParser = dataParser;
         String propValue = (String) configuration.get(BATCH_SIZE);
         batchSize = propValue != null ? Integer.parseInt(propValue) : Integer.MAX_VALUE;

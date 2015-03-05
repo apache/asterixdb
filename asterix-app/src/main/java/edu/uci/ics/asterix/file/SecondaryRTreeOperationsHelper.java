@@ -50,7 +50,6 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationCon
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
-import edu.uci.ics.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -281,9 +280,6 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
              * In case of external data, this method is used to build loading jobs for both initial load on index creation
              * and transaction load on dataset referesh
              */
-            RecordDescriptor[] rDescs = new RecordDescriptor[] { new RecordDescriptor(new ISerializerDeserializer[] {}) };
-            AlgebricksMetaOperatorDescriptor etsOp = new AlgebricksMetaOperatorDescriptor(spec, 0, 1,
-                    new IPushRuntimeFactory[] { new EmptyTupleSourceRuntimeFactory() }, rDescs);
             // Create external indexing scan operator
             ExternalDataScanOperatorDescriptor primaryScanOp = createExternalIndexingOp(spec);
             // Assign op.
@@ -327,10 +323,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
                 root = metaOp;
             }
-            AlgebricksPartitionConstraintHelper
-                    .setPartitionConstraintInJobSpec(spec, etsOp, primaryPartitionConstraint);
-            // Connect the operators.
-            spec.connect(new OneToOneConnectorDescriptor(spec), etsOp, 0, primaryScanOp, 0);
+
             spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
             if (anySecondaryKeyIsNullable) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);

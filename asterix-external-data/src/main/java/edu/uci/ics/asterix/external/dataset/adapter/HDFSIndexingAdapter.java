@@ -31,8 +31,7 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionCons
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
-@SuppressWarnings("deprecation")
-public class HDFSIndexingAdapter extends FileSystemBasedAdapter{
+public class HDFSIndexingAdapter extends FileSystemBasedAdapter {
 
     private static final long serialVersionUID = 1L;
     private transient String[] readSchedule;
@@ -48,9 +47,9 @@ public class HDFSIndexingAdapter extends FileSystemBasedAdapter{
 
     public HDFSIndexingAdapter(IAType atype, String[] readSchedule, boolean[] executed, InputSplit[] inputSplits,
             JobConf conf, AlgebricksPartitionConstraint clusterLocations, List<ExternalFile> files,
-            ITupleParserFactory parserFactory, IHyracksTaskContext ctx, String nodeName,
-            String inputFormat, String format) throws IOException {
-        super(parserFactory, atype, ctx, false, -1);
+            ITupleParserFactory parserFactory, IHyracksTaskContext ctx, String nodeName, String inputFormat,
+            String format) throws IOException {
+        super(parserFactory, atype, ctx);
         this.nodeName = nodeName;
         this.readSchedule = readSchedule;
         this.executed = executed;
@@ -63,11 +62,12 @@ public class HDFSIndexingAdapter extends FileSystemBasedAdapter{
 
     @Override
     public InputStream getInputStream(int partition) throws IOException {
-        if(inputFormat.equals(HDFSAdapterFactory.INPUT_FORMAT_RC)){
+        if (inputFormat.equals(HDFSAdapterFactory.INPUT_FORMAT_RC)) {
             return new RCFileDataReader(inputSplits, readSchedule, nodeName, conf, executed, files);
-        } else if(format.equals(HDFSAdapterFactory.FORMAT_ADM) || format.equals(HDFSAdapterFactory.FORMAT_DELIMITED_TEXT)){
-            return new TextualDataReader(inputSplits,readSchedule,nodeName,conf,executed,files);
-        } else{
+        } else if (format.equals(HDFSAdapterFactory.FORMAT_ADM)
+                || format.equals(HDFSAdapterFactory.FORMAT_DELIMITED_TEXT)) {
+            return new TextualDataReader(inputSplits, readSchedule, nodeName, conf, executed, files);
+        } else {
             return new GenericFileAwareRecordReader(inputSplits, readSchedule, nodeName, conf, executed, files);
         }
     }
