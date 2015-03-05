@@ -77,8 +77,11 @@ This is useful when the CSV file was produced from an earlier
 AsterixDB operation, as AsterixDB's CSV output always has a header
 line.
 
-CSV data may also be loaded from HDFS; see
-[Accessing External Data](aql/externaldata.html) for details.
+CSV data may also be loaded from HDFS; see [Accessing External
+Data](aql/externaldata.html) for details.  However please note that
+CSV files on HDFS cannot have headers; attempting to specify
+"header"="true" when reading from HDFS could result in non-header
+lines of data being skipped as well.
 
 ## CSV Output
 
