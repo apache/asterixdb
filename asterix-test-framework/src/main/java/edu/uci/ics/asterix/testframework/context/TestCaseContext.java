@@ -202,7 +202,7 @@ public class TestCaseContext {
                         // Check all compilation units for matching
                         // name. If ANY match, add the test.
                         for (TestCase.CompilationUnit cu : tc.getCompilationUnit()) {
-                            if (m_re.matcher(cu.getName()).matches()) {
+                            if (m_re.matcher(cu.getName()).find()) {
                                 matches = true;
                                 break;
                             }
