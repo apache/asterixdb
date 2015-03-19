@@ -153,43 +153,26 @@ public class APIFramework {
 
     }
 
-    /**
-     * Used to select the output from the various servlets. Note: "HTML" is
-     * primarily intended for use by the built-in web interface. It produces
-     * ADM output with various HTML wrappers.
-     */
-    public enum OutputFormat {
-        ADM,
-        HTML,
-        JSON,
-        CSV
-    }
-
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            AqlMetadataProvider metadataProvider, Query q, SessionConfig pc, PrintWriter out, OutputFormat pdf)
+            AqlMetadataProvider metadataProvider, Query q, SessionConfig conf)
             throws AsterixException {
 
-        if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintExprParam()) {
-            out.println();
-            switch (pdf) {
-                case HTML: {
-                    out.println("<h4>Expression tree:</h4>");
-                    out.println("<pre>");
-                    break;
-                }
-                default: {
-                    out.println("----------Expression tree:");
-                    break;
-                }
+        if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
+            conf.out().println();
+
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("<h4>Expression tree:</h4>");
+                conf.out().println("<pre>");
+            } else {
+                conf.out().println("----------Expression tree:");
             }
+
             if (q != null) {
-                q.accept(new AQLPrintVisitor(out), 0);
+                q.accept(new AQLPrintVisitor(conf.out()), 0);
             }
-            switch (pdf) {
-                case HTML: {
-                    out.println("</pre>");
-                    break;
-                }
+
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("</pre>");
             }
         }
         AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider);
@@ -200,35 +183,26 @@ public class APIFramework {
 
     public static JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
-            SessionConfig pc, PrintWriter out, OutputFormat pdf, ICompiledDmlStatement statement)
+            SessionConfig conf, ICompiledDmlStatement statement)
             throws AsterixException, AlgebricksException, JSONException, RemoteException, ACIDException {
 
-        if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintRewrittenExprParam()) {
-            out.println();
+        if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
+            conf.out().println();
 
-            switch (pdf) {
-                case HTML: {
-                    out.println("<h4>Rewritten expression tree:</h4>");
-                    out.println("<pre>");
-                    break;
-                }
-                default: {
-                    out.println("----------Rewritten expression:");
-                    break;
-                }
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("<h4>Rewritten expression tree:</h4>");
+                conf.out().println("<pre>");
+            } else {
+                conf.out().println("----------Rewritten expression:");
             }
 
             if (rwQ != null) {
-                rwQ.accept(new AQLPrintVisitor(out), 0);
+                rwQ.accept(new AQLPrintVisitor(conf.out()), 0);
             }
 
-            switch (pdf) {
-                case HTML: {
-                    out.println("</pre>");
-                    break;
-                }
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("</pre>");
             }
-
         }
 
         edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
@@ -246,31 +220,24 @@ public class APIFramework {
         boolean isWriteTransaction = queryMetadataProvider.isWriteTransaction();
 
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-        if (!pc.isPrintPhysicalOpsOnly() && pc.isPrintLogicalPlanParam()) {
+        if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
+            conf.out().println();
 
-            switch (pdf) {
-                case HTML: {
-                    out.println("<h4>Logical plan:</h4>");
-                    out.println("<pre>");
-                    break;
-                }
-                default: {
-                    out.println("----------Logical plan:");
-                    break;
-                }
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("<h4>Logical plan:</h4>");
+                conf.out().println("<pre>");
+            } else {
+                conf.out().println("----------Logical plan:");
             }
 
             if (rwQ != null || statement.getKind() == Kind.LOAD) {
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-                out.print(buffer);
+                conf.out().print(buffer);
             }
 
-            switch (pdf) {
-                case HTML: {
-                    out.println("</pre>");
-                    break;
-                }
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("</pre>");
             }
         }
 
@@ -305,45 +272,39 @@ public class APIFramework {
         builder.setNullableTypeComputer(AqlNullableTypeComputer.INSTANCE);
 
         ICompiler compiler = compilerFactory.createCompiler(plan, queryMetadataProvider, t.getVarCounter());
-        if (pc.isOptimize()) {
+        if (conf.isOptimize()) {
             compiler.optimize();
             //plot optimized logical plan
             if (plot)
                 PlanPlotter.printOptimizedLogicalPlan(plan);
-            if (pc.isPrintOptimizedLogicalPlanParam()) {
-                if (pc.isPrintPhysicalOpsOnly()) {
+            if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
+                if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                     // For Optimizer tests.
                     StringBuilder buffer = new StringBuilder();
                     PlanPrettyPrinter.printPhysicalOps(plan, buffer, 0);
-                    out.print(buffer);
+                    conf.out().print(buffer);
                 } else {
-                    switch (pdf) {
-                        case HTML: {
-                            out.println("<h4>Optimized logical plan:</h4>");
-                            out.println("<pre>");
-                            break;
-                        }
-                        default: {
-                            out.println("----------Optimized logical plan:");
-                            break;
-                        }
+                    if (conf.is(SessionConfig.FORMAT_HTML)) {
+                        conf.out().println("<h4>Optimized logical plan:</h4>");
+                        conf.out().println("<pre>");
+                    } else {
+                        conf.out().println("----------Optimized logical plan:");
                     }
+
                     if (rwQ != null || statement.getKind() == Kind.LOAD) {
                         StringBuilder buffer = new StringBuilder();
                         PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
-                        out.print(buffer);
+                        conf.out().print(buffer);
                     }
-                    switch (pdf) {
-                        case HTML: {
-                            out.println("</pre>");
-                            break;
-                        }
+
+                    if (conf.is(SessionConfig.FORMAT_HTML)) {
+                        conf.out().println("</pre>");
                     }
                 }
             }
         }
 
-        if (!pc.isGenerateJobSpec()) {
+        if (!conf.isGenerateJobSpec()) {
             return null;
         }
 
@@ -359,16 +320,18 @@ public class APIFramework {
         builder.setNullWriterFactory(format.getNullWriterFactory());
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
-        switch (pdf) {
+        switch (conf.fmt()) {
             case JSON:
                 builder.setPrinterProvider(format.getJSONPrinterFactoryProvider());
                 break;
             case CSV:
                 builder.setPrinterProvider(format.getCSVPrinterFactoryProvider());
                 break;
-            default:
+            case ADM:
                 builder.setPrinterProvider(format.getPrinterFactoryProvider());
                 break;
+            default:
+                throw new RuntimeException("Unexpected OutputFormat!");
         }
 
         builder.setSerializerDeserializerProvider(format.getSerdeProvider());
@@ -379,34 +342,28 @@ public class APIFramework {
                 isWriteTransaction);
         JobSpecification spec = compiler.createJob(AsterixAppContextInfo.getInstance(), jobEventListenerFactory);
 
-        if (pc.isPrintJob()) {
-            switch (pdf) {
-                case HTML: {
-                    out.println("<h4>Hyracks job:</h4>");
-                    out.println("<pre>");
-                    break;
-                }
-                default: {
-                    out.println("----------Hyracks job:");
-                    break;
-                }
+        if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("<h4>Hyracks job:</h4>");
+                conf.out().println("<pre>");
+            } else {
+                conf.out().println("----------Hyracks job:");
             }
+
             if (rwQ != null) {
-                out.println(spec.toJSON().toString(1));
-                out.println(spec.getUserConstraints());
+                conf.out().println(spec.toJSON().toString(1));
+                conf.out().println(spec.getUserConstraints());
             }
-            switch (pdf) {
-                case HTML: {
-                    out.println("</pre>");
-                    break;
-                }
+
+            if (conf.is(SessionConfig.FORMAT_HTML)) {
+                conf.out().println("</pre>");
             }
         }
         return spec;
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out,
-            OutputFormat pdf) throws Exception {
+    public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)
+        throws Exception {
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
             JobId jobId = hcc.startJob(specs[i]);
@@ -419,7 +376,7 @@ public class APIFramework {
 
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out, OutputFormat pdf)
+    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out)
             throws Exception {
         for (int i = 0; i < jobs.length; i++) {
             jobs[i].getJobSpec().setMaxReattempts(0);

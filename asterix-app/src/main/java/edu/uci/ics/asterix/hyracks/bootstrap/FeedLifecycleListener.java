@@ -1104,7 +1104,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
 
         public void reviveFeed(String dataverse, String feedName, String dataset, String feedPolicy) {
             PrintWriter writer = new PrintWriter(System.out, true);
-            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, true, false);
+            SessionConfig conf = new SessionConfig(writer, SessionConfig.OutputFormat.ADM);
             try {
                 DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(dataverse));
                 ConnectFeedStatement stmt = new ConnectFeedStatement(new Identifier(dataverse),
@@ -1113,7 +1113,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                 List<Statement> statements = new ArrayList<Statement>();
                 statements.add(dataverseDecl);
                 statements.add(stmt);
-                AqlTranslator translator = new AqlTranslator(statements, writer, pc, APIFramework.OutputFormat.ADM);
+                AqlTranslator translator = new AqlTranslator(statements, conf);
                 translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                         AqlTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {
@@ -1147,7 +1147,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
         private void endFeed(FeedInfo feedInfo) {
             MetadataTransactionContext ctx = null;
             PrintWriter writer = new PrintWriter(System.out, true);
-            SessionConfig pc = new SessionConfig(true, false, false, false, false, false, true, true, false);
+            SessionConfig conf = new SessionConfig(writer, SessionConfig.OutputFormat.ADM);
             try {
                 ctx = MetadataManager.INSTANCE.beginTransaction();
                 DisconnectFeedStatement stmt = new DisconnectFeedStatement(new Identifier(
@@ -1159,7 +1159,7 @@ public class FeedLifecycleListener implements IJobLifecycleListener, IClusterEve
                         new Identifier(feedInfo.feedConnectionId.getDataverse()));
                 statements.add(dataverseDecl);
                 statements.add(stmt);
-                AqlTranslator translator = new AqlTranslator(statements, writer, pc, APIFramework.OutputFormat.ADM);
+                AqlTranslator translator = new AqlTranslator(statements, conf);
                 translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
                         AqlTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {

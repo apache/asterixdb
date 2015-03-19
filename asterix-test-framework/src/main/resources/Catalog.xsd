@@ -188,6 +188,7 @@
          <xs:enumeration value="Ignore"/>
          <xs:enumeration value="JSON"/>
          <xs:enumeration value="CSV"/>
+         <xs:enumeration value="CSV_Header"/>
       </xs:restriction>
    </xs:simpleType>
 

@@ -245,7 +245,7 @@ public class TestsUtils {
     }
 
     //Executes AQL in either async or async-defer mode.
-    public static InputStream executeAnyAQLAsync(String str, boolean defer) throws Exception {
+    public static InputStream executeAnyAQLAsync(String str, boolean defer, OutputFormat fmt) throws Exception {
         final String url = "http://localhost:19002/aql";
 
         // Create a method instance.
@@ -256,6 +256,7 @@ public class TestsUtils {
             method.setQueryString(new NameValuePair[] { new NameValuePair("mode", "asynchronous") });
         }
         method.setRequestEntity(new StringRequestEntity(str));
+        method.setRequestHeader("Accept", fmt.mimeType());
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -265,16 +266,17 @@ public class TestsUtils {
         String theHandle = IOUtils.toString(resultStream, "UTF-8");
 
         //take the handle and parse it so results can be retrieved 
-        InputStream handleResult = getHandleResult(theHandle);
+        InputStream handleResult = getHandleResult(theHandle, fmt);
         return handleResult;
     }
 
-    private static InputStream getHandleResult(String handle) throws Exception {
+    private static InputStream getHandleResult(String handle, OutputFormat fmt) throws Exception {
         final String url = "http://localhost:19002/query/result";
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
         method.setQueryString(new NameValuePair[] { new NameValuePair("handle", handle) });
+        method.setRequestHeader("Accept", fmt.mimeType());
 
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -417,9 +419,9 @@ public class TestsUtils {
                             if (ctx.getType().equalsIgnoreCase("query"))
                                 resultStream = executeQuery(statement, fmt);
                             else if (ctx.getType().equalsIgnoreCase("async"))
-                                resultStream = executeAnyAQLAsync(statement, false);
+                                resultStream = executeAnyAQLAsync(statement, false, fmt);
                             else if (ctx.getType().equalsIgnoreCase("asyncdefer"))
-                                resultStream = executeAnyAQLAsync(statement, true);
+                                resultStream = executeAnyAQLAsync(statement, true, fmt);
 
                             if (queryCount >= expectedResultFileCtxs.size()) {
                                 throw new IllegalStateException("no result file for " + testFile.toString());

@@ -37,9 +37,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
-import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
@@ -188,18 +188,14 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     public static final boolean IS_DEBUG_MODE = false;//true
     private final List<Statement> aqlStatements;
-    private final PrintWriter out;
     private final SessionConfig sessionConfig;
-    private final OutputFormat pdf;
     private Dataverse activeDefaultDataverse;
     private final List<FunctionDecl> declaredFunctions;
 
-    public AqlTranslator(List<Statement> aqlStatements, PrintWriter out, SessionConfig pc, APIFramework.OutputFormat pdf)
+    public AqlTranslator(List<Statement> aqlStatements, SessionConfig conf)
             throws MetadataException, AsterixException {
         this.aqlStatements = aqlStatements;
-        this.out = out;
-        this.sessionConfig = pc;
-        this.pdf = pdf;
+        this.sessionConfig = conf;
         declaredFunctions = getDeclaredFunctions(aqlStatements);
     }
 
@@ -1740,8 +1736,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
                     .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
                     loadStmt.dataIsAlreadySorted());
-            JobSpecification spec = APIFramework.compileQuery(null, metadataProvider, null, 0, null, sessionConfig,
-                    out, pdf, cls);
+            JobSpecification spec = APIFramework.compileQuery(null, metadataProvider, null, 0, null, sessionConfig, cls);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             if (spec != null) {
@@ -1837,12 +1832,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<Query, Integer> reWrittenQuery = APIFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
-                sessionConfig, out, pdf);
+                sessionConfig);
 
         // Query Compilation (happens under the same ongoing metadata
         // transaction)
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, reWrittenQuery.first,
-                reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, out, pdf, stmt);
+                reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, stmt);
 
         return spec;
 
@@ -2187,8 +2182,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         handle.put(jobId.getId());
                         handle.put(metadataProvider.getResultSetId().getId());
                         response.put("handle", handle);
-                        out.print(response);
-                        out.flush();
+                        sessionConfig.out().print(response);
+                        sessionConfig.out().flush();
                         hcc.waitForCompletion(jobId);
                         break;
                     case SYNC:
@@ -2198,10 +2193,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         // In this case (the normal case), we don't use the
                         // "response" JSONObject - just stream the results
                         // to the "out" PrintWriter
-                        if (pdf == OutputFormat.CSV) {
-                            ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), out);
+                        if (sessionConfig.fmt() == OutputFormat.CSV &&
+                            sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
+                            ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
                         }
-                        ResultUtils.displayResults(resultReader, out, pdf);
+                        ResultUtils.displayResults(resultReader, sessionConfig);
 
                         hcc.waitForCompletion(jobId);
                         break;
@@ -2211,8 +2207,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         handle.put(metadataProvider.getResultSetId().getId());
                         response.put("handle", handle);
                         hcc.waitForCompletion(jobId);
-                        out.print(response);
-                        out.flush();
+                        sessionConfig.out().print(response);
+                        sessionConfig.out().flush();
                         break;
                     default:
                         break;
@@ -2715,7 +2711,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
     private JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
             throws Exception {
-        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, out, waitForCompletion);
+        JobId[] jobIds = executeJobArray(hcc, new Job[] { new Job(spec) }, sessionConfig.out(), waitForCompletion);
         return jobIds[0];
     }
 

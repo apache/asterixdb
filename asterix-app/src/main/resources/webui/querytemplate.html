@@ -186,15 +186,23 @@ $(document).ready(function() {
               <textarea rows="10" id="qry" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
             </div>
             
-          <div class="btn-group">
-            <button id="checkboxes-on" class="btn">
-                <i id="opts" class="icon-ok" style="display:none;"></i>Select Options</button>
-            <button id="clear-query-button" class="btn">Clear Query</button>
-            <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
-            <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
-          </div>
+            <div class="btn-group">
+              <button id="checkboxes-on" class="btn">
+                  <i id="opts" class="icon-ok" style="display:none;"></i>Select Options</button>
+              <button id="clear-query-button" class="btn">Clear Query</button>
+              <!-- <button id="checkboxes-off" class="btn">Clear All Options</button> -->
+              <button type="submit" id="run-btn" class="btn btn-custom-darken">Run</button>
+            </div>
 
             <div>
+              <label class="checkbox optlabel"> Output Format:<br/>
+                <select name="output-format" class="btn">
+                  <option selected value="JSON">JSON</option>
+                  <option value="ADM">ADM</option>
+                  <option value="CSV">CSV (no header)</option>
+                  <option value="CSV-Header">CSV (with header)</option>
+                </select>
+              </label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-logical-plan" value="true" /> Print logical plan</label>

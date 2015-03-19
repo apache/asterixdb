@@ -36,7 +36,8 @@ public class TestCaseContext {
         NONE  ("", ""),
         ADM   ("adm", "application/x-adm"),
         JSON  ("json", "application/json"),
-        CSV   ("csv", "text/csv");
+        CSV   ("csv", "text/csv"),
+        CSV_HEADER ("csv-header", "text/csv; header=present");
 
         private final String extension;
         private final String mimetype;
@@ -62,6 +63,8 @@ public class TestCaseContext {
                 return OutputFormat.JSON;
             case CSV:
                 return OutputFormat.CSV;
+            case CSV_HEADER:
+                return OutputFormat.CSV_HEADER;
             case INSPECT:
             case IGNORE:
                 return OutputFormat.NONE;

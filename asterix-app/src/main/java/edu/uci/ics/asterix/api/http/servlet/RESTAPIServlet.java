@@ -31,8 +31,8 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
-import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.base.Statement.Kind;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
@@ -55,6 +55,67 @@ abstract class RESTAPIServlet extends HttpServlet {
 
     private static final String HYRACKS_DATASET_ATTR = "edu.uci.ics.asterix.HYRACKS_DATASET";
 
+    /**
+     * Initialize the Content-Type of the response, and construct a
+     * SessionConfig with the appropriate output writer and output-format
+     * based on the Accept: header and other servlet parameters.
+     */
+    static SessionConfig initResponse(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
+        response.setCharacterEncoding("utf-8");
+
+        // JSON output is the default; most generally useful for a
+        // programmatic HTTP API
+        OutputFormat format = OutputFormat.JSON;
+
+        // First check the "output" servlet parameter.
+        String output = request.getParameter("output");
+        String accept = request.getHeader("Accept");
+        if (output != null) {
+            if (output.equals("CSV")) {
+                format = OutputFormat.CSV;
+            }
+            else if (output.equals("ADM")) {
+                format = OutputFormat.ADM;
+            }
+        }
+        else {
+            // Second check the Accept: HTTP header.
+            if (accept != null) {
+                if (accept.contains("application/x-adm")) {
+                    format = OutputFormat.ADM;
+                } else if (accept.contains("text/csv")) {
+                    format = OutputFormat.CSV;
+                }
+            }
+        }
+
+        SessionConfig sessionConfig = new SessionConfig(response.getWriter(), format);
+
+        // Now that format is set, output the content-type
+        switch (format) {
+            case ADM:
+                response.setContentType("application/x-adm");
+                break;
+            case JSON:
+                response.setContentType("application/json");
+                break;
+            case CSV: {
+                // Check for header parameter or in Accept:.
+                if ("present".equals(request.getParameter("header")) ||
+                    (accept != null && accept.contains("header=present"))) {
+                    response.setContentType("text/csv; header=present");
+                    sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, true);
+                }
+                else {
+                    response.setContentType("text/csv; header=absent");
+                }
+            }
+        };
+
+        return sessionConfig;
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
             IOException {
@@ -72,28 +133,7 @@ abstract class RESTAPIServlet extends HttpServlet {
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
             throws IOException {
-        response.setCharacterEncoding("utf-8");
-
-        PrintWriter out = response.getWriter();
-        APIFramework.OutputFormat format;
-        // QQQ For now switch solely based on Accept header. Later will add
-        // an "output" query parameter.
-        String accept = request.getHeader("Accept");
-        if ((accept == null) || (accept.contains("application/x-adm"))) {
-            format = OutputFormat.ADM;
-            response.setContentType("application/x-adm");
-        } else if (accept.contains("text/html")) {
-            format = OutputFormat.HTML;
-            response.setContentType("text/html");
-        } else if (accept.contains("text/csv")) {
-            format = OutputFormat.CSV;
-            response.setContentType("text/csv; header=present");
-        } else {
-            // JSON output is the default; most generally useful for a
-            // programmatic HTTP API
-            format = APIFramework.OutputFormat.JSON;
-            response.setContentType("application/json");
-        }
+        SessionConfig sessionConfig = initResponse(request, response);
         AqlTranslator.ResultDelivery resultDelivery = whichResultDelivery(request);
 
         ServletContext context = getServletContext();
@@ -113,21 +153,19 @@ abstract class RESTAPIServlet extends HttpServlet {
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.parse();
             if (!containsForbiddenStatements(aqlStatements)) {
-                SessionConfig sessionConfig = new SessionConfig(true, false, false, false, false, false, true, true,
-                        false);
                 MetadataManager.INSTANCE.init();
-                AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
+                AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, sessionConfig);
                 aqlTranslator.compileAndExecute(hcc, hds, resultDelivery);
             }
         } catch (ParseException | TokenMgrError | edu.uci.ics.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
             JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage, "", "");
-            out.write(errorResp.toString());
+            sessionConfig.out().write(errorResp.toString());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            ResultUtils.apiErrorHandler(out, e);
+            ResultUtils.apiErrorHandler(sessionConfig.out(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }

@@ -26,6 +26,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
+import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.result.ResultReader;
 import edu.uci.ics.asterix.result.ResultUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -78,30 +80,14 @@ public class QueryResultAPIServlet extends HttpServlet {
             ResultReader resultReader = new ResultReader(hcc, hds);
             resultReader.open(jobId, rsId);
 
-            APIFramework.OutputFormat format;
-            // QQQ This code is duplicated from RESTAPIServlet, and is
-            // erroneous anyway. The output format is determined by
-            // the initial query and cannot be modified here, so we need
-            // to find a way to send the same OutputFormat value here as
-            // was originally determined there. Need to save this value on
+            // QQQ The output format is determined by the initial
+            // query and cannot be modified here, so calling back to
+            // initResponse() is really an error. We need to find a
+            // way to send the same OutputFormat value here as was
+            // originally determined there. Need to save this value on
             // some object that we can obtain here.
-            String accept = request.getHeader("Accept");
-            if ((accept == null) || (accept.contains("application/x-adm"))) {
-                format = APIFramework.OutputFormat.ADM;
-                response.setContentType("application/x-adm");
-            } else if (accept.contains("text/html")) {
-                format = APIFramework.OutputFormat.HTML;
-                response.setContentType("text/html");
-            } else if (accept.contains("text/csv")) {
-                format = APIFramework.OutputFormat.CSV;
-                response.setContentType("text/csv; header=present");
-            } else {
-                // JSON output is the default; most generally useful for a
-                // programmatic HTTP API
-                format = APIFramework.OutputFormat.JSON;
-                response.setContentType("application/json");
-            }
-            ResultUtils.displayResults(resultReader, out, format);
+            SessionConfig sessionConfig = RESTAPIServlet.initResponse(request, response);
+            ResultUtils.displayResults(resultReader, sessionConfig);
 
         } catch (Exception e) {
             out.println(e.getMessage());

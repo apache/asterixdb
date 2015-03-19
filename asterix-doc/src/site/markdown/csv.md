@@ -73,13 +73,9 @@ ignore this header by adding the parameter `"header"="true"`, eg.
      ("format"="delimited-text"),
      ("header"="true"));
 
-This is useful when the CSV file was produced from an earlier
-AsterixDB operation, as AsterixDB's CSV output always has a header
-line.
-
 CSV data may also be loaded from HDFS; see [Accessing External
 Data](aql/externaldata.html) for details.  However please note that
-CSV files on HDFS cannot have headers; attempting to specify
+CSV files on HDFS cannot have headers. Attempting to specify
 "header"="true" when reading from HDFS could result in non-header
 lines of data being skipped as well.
 
@@ -139,22 +135,35 @@ vital for the CSV to make any sense).
 #### Request the CSV Output Format
 
 When sending requests to the Asterix HTTP API, Asterix decides what
-format to use for rendering the results based on the `Accept` HTTP
-header. By default, Asterix will produce JSON output, and this can be
-requested explicitly by specifying the MIME type `application/json`.
-To select CSV output, set the `Accept` header on your request to the
-MIME type `text/csv`. The details of how to accomplish this will of
-course depend on what tools you are using to contact the HTTP API.
-Here is an example from a Unix shell prompt using the command-line
-utility "curl":
+format to use for rendering the results in one of two ways:
 
-    curl -G -H "Accept: text/csv" "http://localhost:19002/query" --data-urlencode '
-        query=use dataverse csv;
+* A HTTP query parameter named "output", which must be set to one of
+  the following values: `JSON`, `CSV`, or `ADM`.
+
+* Based on the [`Accept` HTTP header](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.1)
+
+By default, Asterix will produce JSON output.  To select CSV output,
+pass the parameter `output=CSV`, or set the `Accept` header on your
+request to the MIME type `text/csv`. The details of how to accomplish
+this will of course depend on what tools you are using to contact the
+HTTP API.  Here is an example from a Unix shell prompt using the
+command-line utility "curl" and specifying the "output query parameter:
+
+    curl -G "http://localhost:19002/query" \
+        --data-urlencode 'output=CSV' \
+        --data-urlencode 'query=use dataverse csv;
+              set output-record-type "csv_type";
+              for $n in dataset csv_set return $n;'
+
+Alternately, the same query using the `Accept` header:
+
+    curl -G -H "Accept: text/csv" "http://localhost:19002/query" \
+        --data-urlencode 'query=use dataverse csv;
               set output-record-type "csv_type";
               for $n in dataset csv_set return $n;'
 
 Similarly, a trivial Java program to execute the above sample query
-would be:
+and selecting CSV output via the `Accept` header would be:
 
     import java.net.HttpURLConnection;
     import java.net.URL;
@@ -184,12 +193,21 @@ would be:
 
 For either of the above examples, the output would be:
 
-    "id","money","name"
     1,18.5,"Peter Krabnitz"
     2,74.5,"Jesse Stevens"
 
 assuming you had already run the previous examples to create the
 dataverse and populate the dataset.
+
+#### Outputting CSV with a Header
+
+By default, AsterixDB will produce CSV results with no header line.
+If you want a header, you may explicitly request it in one of two ways:
+
+* By passing the HTTP query parameter "header" with the value "present"
+
+* By specifying the MIME type {{text/csv; header=present}} in your
+HTTP Accept: header.  This is consistent with RFC 4180.
 
 #### Issues with open datatypes and optional fields
 

@@ -19,9 +19,9 @@ import java.io.Reader;
 import java.util.List;
 
 import edu.uci.ics.asterix.api.common.APIFramework;
-import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.Job;
 import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
@@ -76,20 +76,24 @@ public class AsterixJavaClient {
         }
         MetadataManager.INSTANCE.init();
 
-        SessionConfig pc = new SessionConfig(optimize, false, printRewrittenExpressions, printLogicalPlan,
-                printOptimizedPlan, printPhysicalOpsOnly, true, generateBinaryRuntime, printJob);
+        SessionConfig conf = new SessionConfig(writer, OutputFormat.ADM, optimize, true, generateBinaryRuntime);
+        conf.setOOBData(false, printRewrittenExpressions, printLogicalPlan,
+                        printOptimizedPlan, printJob);
+        if (printPhysicalOpsOnly) {
+            conf.set(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS, true);
+        }
 
-        AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, writer, pc, OutputFormat.ADM);
+        AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, conf);
         aqlTranslator.compileAndExecute(hcc, null, AqlTranslator.ResultDelivery.SYNC);
         writer.flush();
     }
 
     public void execute() throws Exception {
         if (dmlJobs != null) {
-            APIFramework.executeJobArray(hcc, dmlJobs, writer, OutputFormat.ADM);
+            APIFramework.executeJobArray(hcc, dmlJobs, writer);
         }
         if (queryJobSpec != null) {
-            APIFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer, OutputFormat.ADM);
+            APIFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer);
         }
     }
 

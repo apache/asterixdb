@@ -32,7 +32,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.api.common.APIFramework;
+import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -61,22 +62,29 @@ public class ResultUtils {
         return s;
     }
 
-    public static void displayCSVHeader(ARecordType recordType, PrintWriter out) {
+    public static void displayCSVHeader(ARecordType recordType, SessionConfig conf) {
+        // If HTML-ifying, we have to output this here before the header -
+        // pretty ugly
+        if (conf.is(SessionConfig.FORMAT_HTML)) {
+            conf.out().println("<h4>Results:</h4>");
+            conf.out().println("<pre>");
+        }
+
         String[] fieldNames = recordType.getFieldNames();
         boolean notfirst = false;
         for (String name : fieldNames) {
             if (notfirst) {
-                out.print(',');
+                conf.out().print(',');
             }
             notfirst = true;
-            out.print('"');
-            out.print(name.replace("\"", "\"\""));
-            out.print('"');
+            conf.out().print('"');
+            conf.out().print(name.replace("\"", "\"\""));
+            conf.out().print('"');
         }
-        out.print("\r\n");
+        conf.out().print("\r\n");
     }
 
-    public static void displayResults(ResultReader resultReader, PrintWriter out, APIFramework.OutputFormat pdf)
+    public static void displayResults(ResultReader resultReader, SessionConfig conf)
             throws HyracksDataException {
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
@@ -90,11 +98,15 @@ public class ResultUtils {
         // Whether this is the first instance being output
         boolean notfirst = false;
 
-        switch (pdf) {
-            case HTML:
-                out.println("<h4>Results:</h4>");
-                out.println("<pre>");
-                // Fall through
+        // If we're outputting CSV with a header, the HTML header was already
+        // output by displayCSVHeader(), so skip it here
+        if (conf.is(SessionConfig.FORMAT_HTML) &&
+            ! (conf.fmt() == OutputFormat.CSV && conf.is(SessionConfig.FORMAT_CSV_HEADER))) {
+            conf.out().println("<h4>Results:</h4>");
+            conf.out().println("<pre>");
+        }
+
+        switch (conf.fmt()) {
             case CSV:
                 need_commas = false;
                 break;
@@ -103,7 +115,7 @@ public class ResultUtils {
                 // Conveniently, JSON and ADM have the same syntax for an
                 // "ordered list", and our representation of the result of a
                 // statement is an ordered list of instances.
-                out.print("[ ");
+                conf.out().print("[ ");
                 break;
         }
 
@@ -119,19 +131,19 @@ public class ResultUtils {
                         bbis.setByteBuffer(buffer, start);
                         byte[] recordBytes = new byte[length];
                         int numread = bbis.read(recordBytes, 0, length);
-                        if (pdf == APIFramework.OutputFormat.CSV) {
+                        if (conf.fmt() == OutputFormat.CSV) {
                             if ( (numread > 0) && (recordBytes[numread-1] == '\n') ) {
                                 numread--;
                             }
                         }
                         result = new String(recordBytes, 0, numread, UTF_8);
                         if (need_commas && notfirst) {
-                            out.print(", ");
+                            conf.out().print(", ");
                         }
                         notfirst = true;
-                        out.print(result);
-                        if (pdf == APIFramework.OutputFormat.CSV) {
-                            out.print("\r\n");
+                        conf.out().print(result);
+                        if (conf.fmt() == OutputFormat.CSV) {
+                            conf.out().print("\r\n");
                         }
                     }
                     buffer.clear();
@@ -145,21 +157,21 @@ public class ResultUtils {
             } while (resultReader.read(buffer) > 0);
         }
 
-        out.flush();
+        conf.out().flush();
 
-        switch (pdf) {
-            case HTML:
-                out.println("</pre>");
-                break;
+        switch (conf.fmt()) {
             case JSON:
             case ADM:
-                out.println(" ]");
+                conf.out().println(" ]");
                 break;
             case CSV:
                 // Nothing to do
                 break;
         }
 
+        if (conf.is(SessionConfig.FORMAT_HTML)) {
+            conf.out().println("</pre>");
+        }
     }
 
     public static JSONObject getErrorResponse(int errorCode, String errorMessage, String errorSummary,

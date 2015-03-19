@@ -30,8 +30,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.asterix.api.common.APIFramework.OutputFormat;
 import edu.uci.ics.asterix.api.common.SessionConfig;
+import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.parser.AQLParser;
 import edu.uci.ics.asterix.aql.parser.ParseException;
@@ -54,11 +54,22 @@ public class APIServlet extends HttpServlet {
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        OutputFormat format = OutputFormat.HTML;
-        if (request.getContentType().equals("application/json")) {
-            format = OutputFormat.JSON;
-        } else if (request.getContentType().equals("text/plain")) {
+        OutputFormat format;
+        boolean csv_and_header = false;
+        String output = request.getParameter("output-format");
+        if (output.equals("ADM")) {
             format = OutputFormat.ADM;
+        }
+        else if (output.equals("CSV")) {
+            format = OutputFormat.CSV;
+        }
+        else if (output.equals("CSV-Header")) {
+            format = OutputFormat.CSV;
+            csv_and_header = true;
+        }
+        else {
+            // Default output format
+            format = OutputFormat.JSON;
         }
 
         String query = request.getParameter("query");
@@ -87,11 +98,14 @@ public class APIServlet extends HttpServlet {
             }
             AQLParser parser = new AQLParser(query);
             List<Statement> aqlStatements = parser.parse();
-            SessionConfig sessionConfig = new SessionConfig(true, isSet(printExprParam),
-                    isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
-                    isSet(printOptimizedLogicalPlanParam), false, isSet(executeQuery), true, isSet(printJob));
+            SessionConfig sessionConfig = new SessionConfig(out, format, true, isSet(executeQuery), true);
+            sessionConfig.set(SessionConfig.FORMAT_HTML, true);
+            sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csv_and_header);
+            sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
+                                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam),
+                                     isSet(printJob));
             MetadataManager.INSTANCE.init();
-            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, out, sessionConfig, format);
+            AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, sessionConfig);
             double duration = 0;
             long startTime = System.currentTimeMillis();
             aqlTranslator.compileAndExecute(hcc, hds, AqlTranslator.ResultDelivery.SYNC);
