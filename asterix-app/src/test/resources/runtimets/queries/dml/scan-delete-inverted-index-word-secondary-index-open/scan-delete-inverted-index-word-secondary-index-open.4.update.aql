@@ -1,0 +1,10 @@
+/*
+ * Test case Name  : scan-delete-inverted-index-word-secondary-index-open.aql
+ * Description     : This test is intended to test deletion from secondary keyword inverted index that is built on open field.
+ * Expected Result : Success
+ * Date            : March 13 2014
+ */
+
+use dataverse test;
+
+delete $o from dataset DBLPOpen where $o.id<50;

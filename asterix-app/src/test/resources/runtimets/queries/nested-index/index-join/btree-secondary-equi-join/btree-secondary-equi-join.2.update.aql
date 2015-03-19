@@ -1,0 +1,33 @@
+/*
+ * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
+ *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+load dataset DBLPtmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000"));
+
+load dataset CSXtmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000"));
+
+
+insert into dataset DBLP
+(
+	for $c in dataset('DBLPtmp')
+	return {
+		"nested" : $c
+	}	
+);
+
+insert into dataset CSX
+(
+	for $c in dataset('CSXtmp')
+	return {
+		"nested" : $c
+	}	
+);

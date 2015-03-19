@@ -1,0 +1,54 @@
+/*
+ * Description    : Equi joins two datasets, Customers and Orders, based on the customer id.
+ *                  Given the 'indexnl' hint we expect the join to be transformed
+ *                  into an indexed nested-loop join using Customers' primary index.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  number: int32,
+  street: string,
+  city: string
+}
+
+create type CustomerTypetmp as closed {
+  cid: int32,
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  lastorder: {
+    oid: int32,
+    total: float
+  }
+}
+
+create type OrderTypetmp as closed {
+  oid: int32,
+  cid: int32,
+  orderstatus: string,
+  orderpriority: string,
+  clerk: string,
+  total: float
+}
+
+create type CustomerType as closed {
+  nested : CustomerTypetmp
+}
+
+create type OrderType as closed {
+  nested : OrderTypetmp
+}
+
+create dataset Customers(CustomerType) primary key nested.cid;
+create dataset Orders(OrderType) primary key nested.oid;
+
+write output to nc1:"rttest/btree-index-join_primary-equi-join_04.adm";
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.nested.cid /*+ indexnl */ = $o.nested.cid
+return {"customer":$c.nested, "order": $o.nested}

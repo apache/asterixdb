@@ -280,6 +280,8 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             // int fldIdx = ((IntegerLiteral) ce.getValue()).getValue();
             // TODO
             return false;
+        } else if (f.getFunctionIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
+            return false;
         } else {
             throw new IllegalStateException();
         }

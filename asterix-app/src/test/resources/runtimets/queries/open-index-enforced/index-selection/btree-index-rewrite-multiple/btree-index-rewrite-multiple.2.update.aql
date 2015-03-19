@@ -1,0 +1,34 @@
+/*
+ * Description     : Test that multiple subtrees in the same query
+ *                   can be rewritten with secondary BTree indexes.
+ *                   Guards against regression to issue 204.
+ * Expected Result : Success
+ * Issue           : Issue 204
+ */
+
+use dataverse tpch;
+
+load dataset Orders
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+insert into dataset OrdersOpen (
+	for $x in dataset Orders
+	where $x.o_orderkey <= 4000
+	return $x
+);
+
+insert into dataset OrdersOpen (
+	for $x in dataset Orders
+	where $x.o_orderkey > 4000
+	return {
+	  "o_orderkey": $x.o_orderkey,
+	  "o_orderstatus": $x.o_orderstatus,
+	  "o_totalprice": $x.o_totalprice,
+	  "o_orderdate": $x.o_orderdate,
+	  "o_orderpriority": $x.o_orderpriority,
+	  "o_clerk": $x.o_clerk,
+	  "o_shippriority": $x.o_shippriority,
+	  "o_comment": $x.o_comment
+	}
+);

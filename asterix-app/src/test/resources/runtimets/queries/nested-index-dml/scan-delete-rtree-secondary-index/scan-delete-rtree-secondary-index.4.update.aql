@@ -1,0 +1,6 @@
+use dataverse test;
+
+
+delete $m from dataset MyData where $m.nested.id>10;
+
+

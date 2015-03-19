@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.file;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -64,6 +65,7 @@ import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.metadata.utils.ExternalDatasetsRegistry;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
@@ -99,9 +101,11 @@ import edu.uci.ics.hyracks.storage.common.file.LocalResource;
 
 public class ExternalIndexingOperations {
 
-    public static final ArrayList<String> FILE_INDEX_FIELDS = new ArrayList<String>();
+    public static final List<List<String>> FILE_INDEX_FIELD_NAMES = new ArrayList<List<String>>();
+    public static final ArrayList<IAType> FILE_INDEX_FIELD_TYPES = new ArrayList<IAType>();
     static {
-        FILE_INDEX_FIELDS.add("");
+        FILE_INDEX_FIELD_NAMES.add(new ArrayList<String>(Arrays.asList("")));
+        FILE_INDEX_FIELD_TYPES.add(BuiltinType.ASTRING);
     }
 
     public static boolean isIndexible(ExternalDatasetDetails ds) {
@@ -472,9 +476,9 @@ public class ExternalIndexingOperations {
         }
 
         CompiledCreateIndexStatement ccis = new CompiledCreateIndexStatement(index.getIndexName(),
-                index.getDataverseName(), index.getDatasetName(), index.getKeyFieldNames(), index.getGramLength(),
-                index.getIndexType());
-        return IndexOperations.buildSecondaryIndexLoadingJobSpec(ccis, metadataProvider, files);
+                index.getDataverseName(), index.getDatasetName(), index.getKeyFieldNames(), index.getKeyFieldTypes(),
+                index.isEnforcingKeyFileds(), index.getGramLength(), index.getIndexType());
+        return IndexOperations.buildSecondaryIndexLoadingJobSpec(ccis, null, null, metadataProvider, files);
     }
 
     public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, AqlMetadataProvider metadataProvider)
@@ -559,7 +563,7 @@ public class ExternalIndexingOperations {
             AsterixStorageProperties storageProperties, AqlMetadataProvider metadataProvider, JobSpecification spec)
             throws AlgebricksException, AsterixException {
         int numPrimaryKeys = getRIDSize(ds);
-        List<String> secondaryKeyFields = index.getKeyFieldNames();
+        List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
         secondaryKeyFields.size();
         ARecordType itemType = (ARecordType) metadataProvider.findType(ds.getDataverseName(), ds.getItemTypeName());
         Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), itemType);

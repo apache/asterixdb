@@ -1,0 +1,24 @@
+/*
+ * Test case Name  : scan-delete-btree-secondary-index-open.aql
+ * Description     : This test is intended to test deletion from secondary btree indexes that are built on open fields
+ * Expected Result : Success
+ * Date            : Feb 13 2014
+ */
+
+use dataverse test;
+
+load dataset Customers
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/semistructured/co1k/customer.adm"),("format"="adm"));
+
+insert into dataset test.CustomersOpen (
+	for $x in dataset test.Customers
+		return {
+			"cid": $x.cid,
+			"name": $x.name,
+			"age": $x.age,
+			"address": $x.address,
+			"interests": $x.interests,
+			"children": $x.children
+		}
+);

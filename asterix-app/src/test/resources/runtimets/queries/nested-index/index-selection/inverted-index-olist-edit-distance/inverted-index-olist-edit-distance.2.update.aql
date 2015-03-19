@@ -1,0 +1,14 @@
+use dataverse test;
+
+load dataset Customerstmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
+
+
+insert into dataset Customers
+(
+	for $c in dataset('Customerstmp')
+	return {
+		"nested" : $c
+	}	
+);

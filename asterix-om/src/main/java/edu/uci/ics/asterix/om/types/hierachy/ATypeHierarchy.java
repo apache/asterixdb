@@ -18,6 +18,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.base.ADouble;
@@ -40,10 +41,18 @@ import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
 
 public class ATypeHierarchy {
 
+    public static enum Domain {
+        SPATIAL,
+        NUMERIC,
+        LIST,
+        ANY
+    }
+
     private static BitSet typePromotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
     private static BitSet typeDemotionHierachyMap = new BitSet(ATypeTag.TYPE_COUNT * ATypeTag.TYPE_COUNT);
     private static HashMap<Integer, ITypeConvertComputer> promoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
     private static HashMap<Integer, ITypeConvertComputer> demoteComputerMap = new HashMap<Integer, ITypeConvertComputer>();
+    private static Map<ATypeTag, Domain> hierarchyDomains = new HashMap<ATypeTag, Domain>();
     private static ITypeConvertComputer convertComputer;
 
     // allow type promotion or demotion to the type itself
@@ -94,6 +103,32 @@ public class ATypeHierarchy {
         addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INT32, DoubleToInt32TypeConvertComputer.INSTANCE);
         addDemotionRule(ATypeTag.DOUBLE, ATypeTag.INT64, DoubleToInt64TypeConvertComputer.INSTANCE);
         addDemotionRule(ATypeTag.DOUBLE, ATypeTag.FLOAT, DoubleToFloatTypeConvertComputer.INSTANCE);
+    }
+
+    static {
+        hierarchyDomains.put(ATypeTag.POINT, Domain.SPATIAL);
+        hierarchyDomains.put(ATypeTag.LINE, Domain.SPATIAL);
+        hierarchyDomains.put(ATypeTag.CIRCLE, Domain.SPATIAL);
+        hierarchyDomains.put(ATypeTag.POLYGON, Domain.SPATIAL);
+        hierarchyDomains.put(ATypeTag.RECTANGLE, Domain.SPATIAL);
+        hierarchyDomains.put(ATypeTag.INT8, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.INT16, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.INT32, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.INT64, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.FLOAT, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.DOUBLE, Domain.NUMERIC);
+        hierarchyDomains.put(ATypeTag.ORDEREDLIST, Domain.LIST);
+        hierarchyDomains.put(ATypeTag.UNORDEREDLIST, Domain.LIST);
+    }
+
+    public static boolean isSameTypeDomain(ATypeTag tag1, ATypeTag tag2, boolean useListDomain) {
+        Domain tagHierarchy1 = hierarchyDomains.get(tag1);
+        Domain tagHierarchy2 = hierarchyDomains.get(tag2);
+        if (tagHierarchy1 == null || tagHierarchy2 == null)
+            return false;
+        if (useListDomain && tagHierarchy1 == Domain.LIST && tagHierarchy2 == Domain.LIST)
+            return true;
+        return tagHierarchy1.equals(tagHierarchy2) && !useListDomain;
     }
 
     public static void addPromotionRule(ATypeTag type1, ATypeTag type2, ITypeConvertComputer promoteComputer) {

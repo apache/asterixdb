@@ -1,0 +1,21 @@
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary btree index in index subtree.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+use dataverse test;
+
+for $t1 in dataset('TweetMessages')
+where $t1.tweetid < int64("10")
+order by $t1.tweetid
+return {
+"tweetid1": $t1.tweetid,
+"count1":$t1.countA,
+"t2info": for $t2 in dataset('TweetMessages')
+          where $t1.countA /* +indexnl */= $t2.countB
+          order by $t2.tweetid
+          return {"tweetid2": $t2.tweetid,
+                  "count2":$t2.countB}
+};

@@ -1,0 +1,31 @@
+/*
+ * Description    : Self joins dataset DBLP, based on the edit-distance function of their authors.
+ *                  DBLP has a 3-gram index on authors, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPTypetmp as open {
+  id: int32,
+  dblpid: string,
+  title: string,
+  misc: string
+}
+
+create type DBLPType as closed {
+  nested : DBLPTypetmp
+}
+
+create dataset DBLP(DBLPType) primary key nested.id;
+
+create index ngram_index on DBLP(nested.authors: string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-join_ngram-edit-distance_01.adm";
+
+for $a in dataset('DBLP')
+for $b in dataset('DBLP')
+where edit-distance($a.nested.authors, $b.nested.authors) < 3 and $a.nested.id < $b.nested.id
+return {"arec": $a, "brec": $b }

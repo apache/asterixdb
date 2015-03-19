@@ -1,0 +1,6 @@
+
+
+use dataverse twitter;
+
+for $test in dataset doublenests
+return $test.nested.nested.message-text;

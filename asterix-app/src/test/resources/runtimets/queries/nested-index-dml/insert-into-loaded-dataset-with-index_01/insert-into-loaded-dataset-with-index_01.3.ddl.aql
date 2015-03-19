@@ -1,0 +1,7 @@
+
+use dataverse TinySocial;
+
+create index idx_LineID_partkey on TweetMessages(user.name);
+create index idx_LineID_suppkey on TweetMessages(user.statuses_count);
+
+

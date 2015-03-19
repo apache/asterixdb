@@ -1,0 +1,14 @@
+/*
+ * Test case Name  : insert-into-empty-dataset-with-index.aql
+ * Description     : Check that we can insert into an empty dataset and its empty secondary indexes
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+
+use dataverse TinySocial;
+
+for $c in dataset('TweetMessages')
+where $c.user.name >= "Nathan Giesen" and $c.user.statuses_count>164
+
+return $c

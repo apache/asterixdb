@@ -1,0 +1,38 @@
+/*
+ * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
+ *                  DBLP has a secondary btree open index on title, and given the 'indexnl' hint
+ *                  we *do not* expect the join to be transformed into an indexed nested-loop join,
+ *                  because CSX does not declare an enforced open index on field title.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as open {
+  id: int32,
+  dblpid: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as open {
+  id: int32,
+  csxid: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create dataset CSX(CSXType) primary key id;
+
+create index title_index on DBLP(title:string) enforced;
+
+write output to nc1:"rttest/btree-index-join_title-secondary-equi-join_02.adm";
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+where $a.title /*+ indexnl */ = $b.title
+return {"arec": $a, "brec": $b}

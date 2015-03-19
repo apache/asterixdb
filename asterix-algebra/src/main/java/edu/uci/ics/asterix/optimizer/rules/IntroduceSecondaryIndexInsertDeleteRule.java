@@ -14,14 +14,17 @@
  */
 package edu.uci.ics.asterix.optimizer.rules;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Stack;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.hadoop.mapred.lib.TotalOrderPartitioner;
 
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
@@ -30,12 +33,17 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlIndex;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AOrderedList;
+import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
+import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -44,7 +52,6 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -60,17 +67,13 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOp;
 
 public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewriteRule {
 
@@ -142,8 +145,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             return false;
         }
 
-        List<LogicalVariable> projectVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(op1, projectVars);
         // Create operators for secondary index insert/delete.
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType = mp.findType(dataset.getDataverseName(), itemTypeName);
@@ -191,7 +192,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
 
         // Prepare filtering field information
-        String additionalFilteringField = ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterField();
+        List<String> additionalFilteringField = ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterField();
         List<LogicalVariable> additionalFilteringVars = null;
         List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions = null;
         List<Mutable<ILogicalExpression>> additionalFilteringExpressions = null;
@@ -201,7 +202,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             additionalFilteringVars = new ArrayList<LogicalVariable>();
             additionalFilteringAssignExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();
-            prepareVarAndExpression(additionalFilteringField, recType.getFieldNames(), recordVar,
+            prepareVarAndExpression(additionalFilteringField, recType.getFieldNames(), recordVar.get(0),
                     additionalFilteringAssignExpressions, additionalFilteringVars, context);
             additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
                     additionalFilteringAssignExpressions);
@@ -213,18 +214,50 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         // Iterate each secondary index and applying Index Update operations.
         for (Index index : indexes) {
+            List<LogicalVariable> projectVars = new ArrayList<LogicalVariable>();
+            VariableUtilities.getUsedVariables(op1, projectVars);
             if (!index.isSecondaryIndex()) {
                 continue;
             }
-
+            LogicalVariable enforcedRecordVar = recordVar.get(0);
             hasSecondaryIndex = true;
-            List<String> secondaryKeyFields = index.getKeyFieldNames();
+            //if the index is enforcing field types
+            if (index.isEnforcingKeyFileds()) {
+                try {
+                    DatasetDataSource ds = (DatasetDataSource) (insertOp.getDataSource());
+                    ARecordType insertRecType = (ARecordType) ds.getSchemaTypes()[ds.getSchemaTypes().length - 1];
+                    LogicalVariable castVar = context.newVar();
+                    ARecordType enforcedType = createEnforcedType(insertRecType, index);
+                    //introduce casting to enforced type
+                    AbstractFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
+                            FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CAST_RECORD));
+
+                    castFunc.getArguments().add(
+                            new MutableObject<ILogicalExpression>(insertOp.getPayloadExpression().getValue()));
+                    TypeComputerUtilities.setRequiredAndInputTypes(castFunc, enforcedType, insertRecType);
+                    AssignOperator newAssignOperator = new AssignOperator(castVar,
+                            new MutableObject<ILogicalExpression>(castFunc));
+                    newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+                    currentTop = newAssignOperator;
+                    //project out casted record
+                    projectVars.add(castVar);
+                    enforcedRecordVar = castVar;
+                    context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);
+                    context.computeAndSetTypeEnvironmentForOperator(currentTop);
+                    recType = enforcedType;
+                } catch (AsterixException e) {
+                    throw new AlgebricksException(e);
+                }
+            }
+
+            List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
+            List<IAType> secondaryKeyTypes = index.getKeyFieldTypes();
             List<LogicalVariable> secondaryKeyVars = new ArrayList<LogicalVariable>();
             List<Mutable<ILogicalExpression>> expressions = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> secondaryExpressions = new ArrayList<Mutable<ILogicalExpression>>();
 
-            for (String secondaryKey : secondaryKeyFields) {
-                prepareVarAndExpression(secondaryKey, recType.getFieldNames(), recordVar, expressions,
+            for (List<String> secondaryKey : secondaryKeyFields) {
+                prepareVarAndExpression(secondaryKey, recType.getFieldNames(), enforcedRecordVar, expressions,
                         secondaryKeyVars, context);
             }
 
@@ -251,6 +284,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             }
 
             context.computeAndSetTypeEnvironmentForOperator(assign);
+            currentTop = assign;
 
             // BTree, Keyword, or n-gram index case
             if (index.getIndexType() == IndexType.BTREE
@@ -263,7 +297,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             secondaryKeyVar)));
                 }
                 Mutable<ILogicalExpression> filterExpression = createFilterExpression(secondaryKeyVars,
-                        context.getOutputTypeEnvironment(assign), false);
+                        context.getOutputTypeEnvironment(currentTop), false);
                 AqlIndex dataSourceIndex = new AqlIndex(index, dataverseName, datasetName, mp);
 
                 // Introduce the TokenizeOperator only when doing bulk-load,
@@ -293,8 +327,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                     // Check the field type of the secondary key.
                     IAType secondaryKeyType = null;
-                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0)
-                            .toString(), recType);
+                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0),
+                            recType);
                     secondaryKeyType = keyPairType.first;
 
                     List<Object> varTypes = new ArrayList<Object>();
@@ -336,7 +370,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             insertOp.getPrimaryKeyExpressions(), secondaryExpressions, filterExpression,
                             insertOp.getOperation(), insertOp.isBulkload());
                     indexUpdate.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-                    indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                    indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
 
                     currentTop = indexUpdate;
                     context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
@@ -347,8 +381,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 }
 
             } else if (index.getIndexType() == IndexType.RTREE) {
-                Pair<IAType, Boolean> keyPairType = Index
-                        .getNonNullableKeyFieldType(secondaryKeyFields.get(0), recType);
+                Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
+                        secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
                 int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
                 int numKeys = dimension * 2;
@@ -375,7 +409,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             secondaryKeyVar)));
                 }
                 AssignOperator assignCoordinates = new AssignOperator(keyVarList, keyExprList);
-                assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
                 context.computeAndSetTypeEnvironmentForOperator(assignCoordinates);
                 // We must enforce the filter if the originating spatial type is
                 // nullable.
@@ -408,29 +442,124 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return true;
     }
 
+    public static ARecordType createEnforcedType(ARecordType initialType, Index index) throws AsterixException,
+            AlgebricksException {
+        ARecordType enforcedType = initialType;
+        for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
+            try {
+                Stack<Pair<ARecordType, String>> nestedTypeStack = new Stack<Pair<ARecordType, String>>();
+                List<String> splits = index.getKeyFieldNames().get(i);
+                ARecordType nestedFieldType = enforcedType;
+                boolean openRecords = false;
+                String bridgeName = nestedFieldType.getTypeName();
+                int j;
+                //Build the stack for the enforced type
+                for (j = 1; j < splits.size(); j++) {
+                    nestedTypeStack.push(new Pair<ARecordType, String>(nestedFieldType, splits.get(j - 1)));
+                    bridgeName = nestedFieldType.getTypeName();
+                    nestedFieldType = (ARecordType) enforcedType.getSubFieldType(splits.subList(0, j));
+                    if (nestedFieldType == null) {
+                        openRecords = true;
+                        break;
+                    }
+                }
+                if (openRecords == true) {
+                    //create the smallest record
+                    enforcedType = new ARecordType(splits.get(splits.size() - 2), new String[] { splits.get(splits
+                            .size() - 1) }, new IAType[] { AUnionType.createNullableType(index.getKeyFieldTypes()
+                            .get(i)) }, true);
+                    //create the open part of the nested field
+                    for (int k = splits.size() - 3; k > (j - 2); k--) {
+                        enforcedType = new ARecordType(splits.get(k), new String[] { splits.get(k + 1) },
+                                new IAType[] { AUnionType.createNullableType(enforcedType) }, true);
+                    }
+                    //Bridge the gap
+                    Pair<ARecordType, String> gapPair = nestedTypeStack.pop();
+                    ARecordType parent = gapPair.first;
+
+                    IAType[] parentFieldTypes = ArrayUtils.addAll(parent.getFieldTypes().clone(),
+                            new IAType[] { AUnionType.createNullableType(enforcedType) });
+                    enforcedType = new ARecordType(bridgeName, ArrayUtils.addAll(parent.getFieldNames(),
+                            enforcedType.getTypeName()), parentFieldTypes, true);
+
+                } else {
+                    //Schema is closed all the way to the field
+                    //enforced fields are either null or strongly typed
+                    enforcedType = new ARecordType(nestedFieldType.getTypeName(), ArrayUtils.addAll(
+                            nestedFieldType.getFieldNames(), splits.get(splits.size() - 1)), ArrayUtils.addAll(
+                            nestedFieldType.getFieldTypes(),
+                            AUnionType.createNullableType(index.getKeyFieldTypes().get(i))), nestedFieldType.isOpen());
+                }
+
+                //Create the enforcedtype for the nested fields in the schema, from the ground up
+                if (nestedTypeStack.size() > 0) {
+                    while (!nestedTypeStack.isEmpty()) {
+                        Pair<ARecordType, String> nestedTypePair = nestedTypeStack.pop();
+                        ARecordType nestedRecType = nestedTypePair.first;
+                        IAType[] nestedRecTypeFieldTypes = nestedRecType.getFieldTypes().clone();
+                        nestedRecTypeFieldTypes[nestedRecType.findFieldPosition(nestedTypePair.second)] = enforcedType;
+                        enforcedType = new ARecordType(nestedRecType.getTypeName(), nestedRecType.getFieldNames(),
+                                nestedRecTypeFieldTypes, nestedRecType.isOpen());
+                    }
+                }
+
+            } catch (AsterixException e) {
+                throw new AlgebricksException("Cannot enforce typed fields "
+                        + StringUtils.join(index.getKeyFieldNames()), e);
+            } catch (IOException e) {
+                throw new AsterixException(e);
+            }
+        }
+        return enforcedType;
+    }
+
     @SuppressWarnings("unchecked")
-    private void prepareVarAndExpression(String field, String[] fieldNames, List<LogicalVariable> recordVar,
-            List<Mutable<ILogicalExpression>> expressions, List<LogicalVariable> vars, IOptimizationContext context) throws AlgebricksException {
+    private void prepareVarAndExpression(List<String> field, String[] fieldNames, LogicalVariable recordVar,
+            List<Mutable<ILogicalExpression>> expressions, List<LogicalVariable> vars, IOptimizationContext context)
+            throws AlgebricksException {
         Mutable<ILogicalExpression> varRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                recordVar.get(0)));
+                recordVar));
         int pos = -1;
-        for (int j = 0; j < fieldNames.length; j++) {
-            if (fieldNames[j].equals(field)) {
-                pos = j;
-                break;
+        if (field.size() == 1) {
+            for (int j = 0; j < fieldNames.length; j++) {
+                if (fieldNames[j].equals(field.get(0))) {
+                    pos = j;
+                    break;
+                }
             }
         }
         if (pos == -1) {
-            throw new AlgebricksException("An exception occurred when finding the position of the indexed field -" + field);
+            AbstractFunctionCallExpression func;
+            if (field.size() > 1) {
+                AOrderedList fieldList = new AOrderedList(new AOrderedListType(BuiltinType.ASTRING, null));
+                for (int i = 0; i < field.size(); i++) {
+                    fieldList.add(new AString(field.get(i)));
+                }
+                Mutable<ILogicalExpression> fieldRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
+                        new AsterixConstantValue(fieldList)));
+                //Create an expression for the nested case
+                func = new ScalarFunctionCallExpression(
+                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED), varRef, fieldRef);
+            } else {
+                Mutable<ILogicalExpression> fieldRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
+                        new AsterixConstantValue(new AString(field.get(0)))));
+                //Create an expression for the open field case (By name)
+                func = new ScalarFunctionCallExpression(
+                        FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME), varRef, fieldRef);
+            }
+            expressions.add(new MutableObject<ILogicalExpression>(func));
+            LogicalVariable newVar = context.newVar();
+            vars.add(newVar);
+        } else {
+            // Assumes the indexed field is in the closed portion of the type.
+            Mutable<ILogicalExpression> indexRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
+                    new AsterixConstantValue(new AInt32(pos))));
+            AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
+                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), varRef, indexRef);
+            expressions.add(new MutableObject<ILogicalExpression>(func));
+            LogicalVariable newVar = context.newVar();
+            vars.add(newVar);
         }
-        // Assumes the indexed field is in the closed portion of the type.
-        Mutable<ILogicalExpression> indexRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
-                new AsterixConstantValue(new AInt32(pos))));
-        AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), varRef, indexRef);
-        expressions.add(new MutableObject<ILogicalExpression>(func));
-        LogicalVariable newVar = context.newVar();
-        vars.add(newVar);
     }
 
     @SuppressWarnings("unchecked")

@@ -1,0 +1,7 @@
+use dataverse test;
+
+
+delete $l from dataset LineItem where $l.nested.l_suppkey>=2 or $l.nested.l_linenumber>1;
+
+
+compact dataset LineItem;

@@ -24,7 +24,6 @@ import java.util.Map;
 import edu.uci.ics.asterix.aql.expression.OrderedListTypeDefinition;
 import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition;
 import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition.RecordKind;
-import edu.uci.ics.asterix.aql.expression.TypeDecl;
 import edu.uci.ics.asterix.aql.expression.TypeExpression;
 import edu.uci.ics.asterix.aql.expression.TypeReferenceExpression;
 import edu.uci.ics.asterix.aql.expression.UnorderedListTypeDefinition;
@@ -49,29 +48,20 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class TypeTranslator {
 
-    public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeDecl tDec,
-            String defaultDataverse) throws AlgebricksException, MetadataException {
+    public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeExpression typeExpr,
+            String typeName, String typeDataverse) throws AlgebricksException, MetadataException {
         Map<TypeSignature, IAType> typeMap = new HashMap<TypeSignature, IAType>();
-        Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes = new HashMap<String, Map<ARecordType, List<Integer>>>();
-        Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes = new HashMap<TypeSignature, List<AbstractCollectionType>>();
-        Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences = new HashMap<TypeSignature, List<TypeSignature>>();
-        String typeDataverse = tDec.getDataverseName() == null ? defaultDataverse : tDec.getDataverseName().getValue();
-        firstPass(tDec, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
-                typeDataverse);
-        secondPass(mdTxnCtx, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
-                typeDataverse);
-
-        return typeMap;
+        return computeTypes(mdTxnCtx, typeExpr, typeName, typeDataverse, typeMap);
     }
 
-    public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeDecl tDec,
-            String defaultDataverse, Map<TypeSignature, IAType> typeMap) throws AlgebricksException, MetadataException {
+    public static Map<TypeSignature, IAType> computeTypes(MetadataTransactionContext mdTxnCtx, TypeExpression typeExpr,
+            String typeName, String typeDataverse, Map<TypeSignature, IAType> typeMap) throws AlgebricksException,
+            MetadataException {
         Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes = new HashMap<String, Map<ARecordType, List<Integer>>>();
         Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes = new HashMap<TypeSignature, List<AbstractCollectionType>>();
         Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences = new HashMap<TypeSignature, List<TypeSignature>>();
-        String typeDataverse = tDec.getDataverseName() == null ? defaultDataverse : tDec.getDataverseName().getValue();
-        firstPass(tDec, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
-                typeDataverse);
+        firstPass(typeExpr, typeName, typeMap, incompleteFieldTypes, incompleteItemTypes,
+                incompleteTopLevelTypeReferences, typeDataverse);
         secondPass(mdTxnCtx, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
                 typeDataverse);
 
@@ -80,46 +70,45 @@ public class TypeTranslator {
 
     private static Map<String, BuiltinType> builtinTypeMap = AsterixBuiltinTypeMap.getBuiltinTypes();
 
-    private static void firstPass(TypeDecl td, Map<TypeSignature, IAType> typeMap,
+    private static void firstPass(TypeExpression typeExpr, String typeName, Map<TypeSignature, IAType> typeMap,
             Map<String, Map<ARecordType, List<Integer>>> incompleteFieldTypes,
             Map<TypeSignature, List<AbstractCollectionType>> incompleteItemTypes,
             Map<TypeSignature, List<TypeSignature>> incompleteTopLevelTypeReferences, String typeDataverse)
             throws AlgebricksException {
 
-        TypeExpression texpr = td.getTypeDef();
-        String tdname = td.getIdent().getValue();
-        if (builtinTypeMap.get(tdname) != null) {
-            throw new AlgebricksException("Cannot redefine builtin type " + tdname + " .");
+        if (builtinTypeMap.get(typeName) != null) {
+            throw new AlgebricksException("Cannot redefine builtin type " + typeName + " .");
         }
-        TypeSignature typeSignature = new TypeSignature(typeDataverse, tdname);
+        TypeSignature typeSignature = new TypeSignature(typeDataverse, typeName);
         try {
-            switch (texpr.getTypeKind()) {
+            switch (typeExpr.getTypeKind()) {
                 case TYPEREFERENCE: {
-                    TypeReferenceExpression tre = (TypeReferenceExpression) texpr;
-                    IAType t = solveTypeReference(typeSignature, typeMap);
+                    TypeReferenceExpression tre = (TypeReferenceExpression) typeExpr;
+                    IAType t = solveTypeReference(new TypeSignature(typeDataverse, tre.getIdent().getValue()), typeMap);
                     if (t != null) {
                         typeMap.put(typeSignature, t);
                     } else {
-                        addIncompleteTopLevelTypeReference(tdname, tre, incompleteTopLevelTypeReferences, typeDataverse);
+                        addIncompleteTopLevelTypeReference(typeName, tre, incompleteTopLevelTypeReferences,
+                                typeDataverse);
                     }
                     break;
                 }
                 case RECORD: {
-                    RecordTypeDefinition rtd = (RecordTypeDefinition) texpr;
+                    RecordTypeDefinition rtd = (RecordTypeDefinition) typeExpr;
                     ARecordType recType = computeRecordType(typeSignature, rtd, typeMap, incompleteFieldTypes,
                             incompleteItemTypes, typeDataverse);
                     typeMap.put(typeSignature, recType);
                     break;
                 }
                 case ORDEREDLIST: {
-                    OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) texpr;
+                    OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) typeExpr;
                     AOrderedListType olType = computeOrderedListType(typeSignature, oltd, typeMap, incompleteItemTypes,
                             incompleteFieldTypes, typeDataverse);
                     typeMap.put(typeSignature, olType);
                     break;
                 }
                 case UNORDEREDLIST: {
-                    UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) texpr;
+                    UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) typeExpr;
                     AUnorderedListType ulType = computeUnorderedListType(typeSignature, ultd, typeMap,
                             incompleteItemTypes, incompleteFieldTypes, typeDataverse);
                     typeMap.put(typeSignature, ulType);

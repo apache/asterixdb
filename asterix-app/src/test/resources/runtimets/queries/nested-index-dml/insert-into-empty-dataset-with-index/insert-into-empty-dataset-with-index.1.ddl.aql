@@ -1,0 +1,38 @@
+/*
+ * Test case Name  : insert-into-empty-dataset-with-index.aql
+ * Description     : Check that we can insert into an empty dataset and its empty secondary indexes
+ * Expected Result : Success
+ * Date            : May 2 2012
+ */
+
+
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int64,
+        statuses_count: int64,
+        name: string,
+        followers_count: int64
+}
+
+create type TweetMessageType as closed {
+        tweetid: string,
+        user: TwitterUserType,
+        sender-location: point?,
+        send-time: datetime,
+        referred-topics: {{ string }},
+        message-text: string
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+create index idx_LineID_partkey on TweetMessages(user.name);
+create index idx_LineID_suppkey on TweetMessages(user.statuses_count);
+
+

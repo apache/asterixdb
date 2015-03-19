@@ -159,7 +159,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         while (isOptional(inputRecordType)) {
             /** while-loop for the case there is a nested multi-level union */
             inputRecordType = ((AUnionType) inputRecordType).getUnionList().get(
-                    NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                    AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
             checkNull = true;
         }
 
@@ -272,7 +272,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
             IAType reqTypeInside = reqTypes[i];
             if (isOptional(reqTypes[i])) {
                 reqTypeInside = ((AUnionType) reqTypes[i]).getUnionList().get(
-                        NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                        AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
             }
             IAType inputTypeInside = inputTypes[i];
             if (isOptional(inputTypes[i])) {
@@ -281,7 +281,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     return false;
                 }
                 inputTypeInside = ((AUnionType) inputTypes[i]).getUnionList().get(
-                        NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                        AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
             }
             if (inputTypeInside.getTypeTag() != ATypeTag.NULL && !reqTypeInside.equals(inputTypeInside)) {
                 return false;

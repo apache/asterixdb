@@ -1,0 +1,12 @@
+use dataverse test;
+
+load dataset FacebookMessagesTmp using localfs
+(("path"="nc1://data/fbm-with-send-time.adm"),("format"="adm"));
+
+insert into dataset FacebookMessages
+(
+	for $c in dataset('FacebookMessagesTmp')
+	return {
+		"nested" : $c
+	}	
+);

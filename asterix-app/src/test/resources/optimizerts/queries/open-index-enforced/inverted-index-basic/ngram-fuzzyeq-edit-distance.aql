@@ -1,0 +1,29 @@
+/*
+ * Description    : Tests whether an ngram_index is applied to optimize a selection query with ~= using edit-distance on strings.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as open {
+  id: int32,
+  dblpid: string,
+  title: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index ngram_index on DBLP(authors:string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-basic_ngram-fuzzyeq-edit-distance.adm";
+
+set simfunction 'edit-distance';
+set simthreshold '1';
+
+for $o in dataset('DBLP')
+where $o.authors ~= "Amihay Motro"
+return $o

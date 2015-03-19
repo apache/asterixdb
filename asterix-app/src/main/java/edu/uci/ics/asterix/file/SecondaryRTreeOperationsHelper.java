@@ -151,8 +151,9 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
     }
 
     @Override
-    protected void setSecondaryRecDescAndComparators(IndexType indexType, List<String> secondaryKeyFields,
-            int gramLength, AqlMetadataProvider metadata) throws AlgebricksException, AsterixException {
+    protected void setSecondaryRecDescAndComparators(IndexType indexType, List<List<String>> secondaryKeyFields,
+            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadata) throws AlgebricksException,
+            AsterixException {
         int numSecondaryKeys = secondaryKeyFields.size();
         if (numSecondaryKeys != 1) {
             throw new AsterixException(
@@ -160,7 +161,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                             + numSecondaryKeys
                             + " fields as a key for the R-tree index. There can be only one field as a key for the R-tree index.");
         }
-        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), itemType);
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
+                secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         anySecondaryKeyIsNullable = spatialTypePair.second;
         if (spatialType == null) {
@@ -169,14 +171,16 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         numNestedSecondaryKeyFields = numDimensions * 2;
         int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
-        secondaryFieldAccessEvalFactories = metadata.getFormat().createMBRFactory(itemType, secondaryKeyFields.get(0),
-                recordColumn, numDimensions, filterFieldName);
-
+        secondaryFieldAccessEvalFactories = metadata.getFormat().createMBRFactory(
+                isEnforcingKeyTypes ? enforcedItemType : itemType, secondaryKeyFields.get(0), recordColumn,
+                numDimensions, filterFieldName);
         secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
         valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys
                 + numNestedSecondaryKeyFields + numFilterFields];
+        ISerializerDeserializer[] enforcedRecFields = new ISerializerDeserializer[1 + numPrimaryKeys + numFilterFields];
         secondaryTypeTraits = new ITypeTraits[numNestedSecondaryKeyFields + numPrimaryKeys];
+        ITypeTraits[] enforcedTypeTraits = new ITypeTraits[1 + numPrimaryKeys];
         IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(spatialType.getTypeTag());
         keyType = nestedKeyType.getTypeTag();
         for (int i = 0; i < numNestedSecondaryKeyFields; i++) {
@@ -194,13 +198,20 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             for (int i = 0; i < numPrimaryKeys; i++) {
                 secondaryRecFields[numNestedSecondaryKeyFields + i] = primaryRecDesc.getFields()[i];
                 secondaryTypeTraits[numNestedSecondaryKeyFields + i] = primaryRecDesc.getTypeTraits()[i];
+                enforcedRecFields[i] = primaryRecDesc.getFields()[i];
+                enforcedTypeTraits[i] = primaryRecDesc.getTypeTraits()[i];
             }
         } else {
             for (int i = 0; i < numPrimaryKeys; i++) {
                 secondaryRecFields[numNestedSecondaryKeyFields + i] = IndexingConstants.getSerializerDeserializer(i);
                 secondaryTypeTraits[numNestedSecondaryKeyFields + i] = IndexingConstants.getTypeTraits(i);
+                enforcedRecFields[i] = IndexingConstants.getSerializerDeserializer(i);
+                enforcedTypeTraits[i] = IndexingConstants.getTypeTraits(i);
             }
         }
+        enforcedRecFields[numPrimaryKeys] = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(itemType);
+        enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);
         if (numFilterFields > 0) {
             rtreeFields = new int[numNestedSecondaryKeyFields + numPrimaryKeys];
             for (int i = 0; i < rtreeFields.length; i++) {
@@ -230,12 +241,17 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
             BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
 
             // Assign op.
-            AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp,
+            AbstractOperatorDescriptor sourceOp = primaryScanOp;
+            if (isEnforcingKeyTypes) {
+                sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
+                spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
+            }
+            AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp,
                     numNestedSecondaryKeyFields);
 
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable) {
+            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
                 selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeyFields);
             }
 
@@ -263,8 +279,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                     new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
             // Connect the operators.
             spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable) {
+            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
+            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
             } else {
@@ -282,12 +298,17 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
              */
             // Create external indexing scan operator
             ExternalDataScanOperatorDescriptor primaryScanOp = createExternalIndexingOp(spec);
+            AbstractOperatorDescriptor sourceOp = primaryScanOp;
+            if (isEnforcingKeyTypes) {
+                sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
+                spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
+            }
             // Assign op.
             AlgebricksMetaOperatorDescriptor asterixAssignOp = createExternalAssignOp(spec, numNestedSecondaryKeyFields);
 
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable) {
+            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
                 selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
             }
 
@@ -324,8 +345,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryIndexOperationsHelp
                 root = metaOp;
             }
 
-            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable) {
+            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
+            if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
             } else {

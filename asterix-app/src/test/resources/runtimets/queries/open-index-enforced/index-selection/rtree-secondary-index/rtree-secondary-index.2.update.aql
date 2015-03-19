@@ -1,0 +1,28 @@
+use dataverse test;
+
+load dataset MyData
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
+
+insert into dataset MyDataOpen
+(
+	for $c in dataset('MyData')
+	where $c.id < 15
+	return $c
+);
+
+insert into dataset MyDataOpen
+(
+	for $c in dataset('MyData')
+	where $c.id >= 15
+	return {
+		"id": $c.id,
+		"kwds": $c.kwds,
+		"line1": $c.line1,
+		"line2": $c.line2,
+		"poly1": $c.poly1,
+		"poly2": $c.poly2,
+		"rec": $c.rec,
+		"circle": $c.circle
+	}	
+);

@@ -30,6 +30,7 @@ public class AUnionType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
     private List<IAType> unionList;
+    public static final int OPTIONAL_TYPE_INDEX_IN_UNION_LIST = 1;
 
     public AUnionType(List<IAType> unionList, String typeName) {
         super(typeName);

@@ -1,0 +1,29 @@
+/*
+ * Description    : Tests whether an ngram_index is applied to optimize a selection query using the similarity-jaccard-check function on 3-gram tokens.
+ *                  Tests that the optimizer rule correctly drills through the let clauses.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+set import-private-functions 'true';
+
+create type DBLPType as open {
+  id: int32,
+  dblpid: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index ngram_index on DBLP(title:string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-complex_ngram-jaccard-check-let.adm";
+
+for $o in dataset('DBLP')
+let $jacc := similarity-jaccard-check(gram-tokens($o.title, 3, false), gram-tokens("Transactions for Cooperative Environments", 3, false), 0.5f)
+where $jacc[0]
+return $o

@@ -1,0 +1,37 @@
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary btree index in index subtree.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TwitterUserType as closed {
+	screen-name: string,
+	lang: string,
+	friends-count: int64,
+	statuses-count: int64,
+	name: string,
+	followers-count: int64
+}
+
+create type TweetMessageType as open {
+	tweetid: int64,
+        user: TwitterUserType,
+        sender-location: point,
+	send-time: datetime,
+        referred-topics: {{ string }},
+	message-text: string,
+	countA: int64
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+create dataset TweetMessagesTmp(TweetMessageType)
+primary key tweetid;
+
+create index msgCountBIx on TweetMessages(countB: int64) type btree enforced;

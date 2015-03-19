@@ -1,0 +1,7 @@
+
+
+use dataverse twitter;
+
+for $test in dataset TweetMessages
+order by $test.tweetid
+return { "tweetid": $test.tweetid, "screen-name": $test.user.screen-name };

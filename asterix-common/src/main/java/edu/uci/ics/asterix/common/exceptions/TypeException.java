@@ -25,6 +25,14 @@ public class TypeException extends AsterixException {
         super(s);
     }
 
+    public TypeException(Exception e) {
+        super(e);
+    }
+
+    public TypeException(String s, Exception e) {
+        super(s, e);
+    }
+
     public TypeException() {
         super();
     }

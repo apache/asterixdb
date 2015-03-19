@@ -1,0 +1,5 @@
+use dataverse test;
+
+for $m in dataset('FacebookMessages')
+where $m.nested.send-time = datetime("2014-01-20T10:10:00")
+return $m.nested

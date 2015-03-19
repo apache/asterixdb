@@ -1,0 +1,10 @@
+
+
+use dataverse TinySocial;
+
+for $c in dataset('TweetMessages')
+let $jacc := similarity-jaccard-check(word-tokens($c.user.name), word-tokens("Nathan Giesen"), 0.5f)
+where $jacc[0]
+order by $c.tweetid
+return $c
+

@@ -1,0 +1,4 @@
+use dataverse test;
+
+delete $c from dataset CustomersOpen where $c.cid>=200;
+

@@ -50,10 +50,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFu
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -214,8 +214,8 @@ public class BTreeAccessMethod implements IAccessMethod {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
         // we made sure indexSubTree has datasource scan
-        DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.dataSourceRef.getValue();
-        List<Integer> exprList = analysisCtx.indexExprs.get(chosenIndex);
+        AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.dataSourceRef.getValue();
+        List<Pair<Integer, Integer>> exprAndVarList = analysisCtx.indexExprsAndVars.get(chosenIndex);
         List<IOptimizableFuncExpr> matchedFuncExprs = analysisCtx.matchedFuncExprs;
         int numSecondaryKeys = analysisCtx.indexNumMatchedKeys.get(chosenIndex);
         // List of function expressions that will be replaced by the secondary-index search.
@@ -245,9 +245,9 @@ public class BTreeAccessMethod implements IAccessMethod {
         // since we have a round issues when dealing with LT(<) OR GT(>) operator.
         boolean realTypeConvertedToIntegerType = false;
 
-        for (Integer exprIndex : exprList) {
+        for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
-            IOptimizableFuncExpr optFuncExpr = matchedFuncExprs.get(exprIndex);
+            IOptimizableFuncExpr optFuncExpr = matchedFuncExprs.get(exprIndex.first);
             int keyPos = indexOf(optFuncExpr.getFieldName(0), chosenIndex.getKeyFieldNames());
             if (keyPos < 0) {
                 if (optFuncExpr.getNumLogicalVars() > 1) {
@@ -391,7 +391,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             }
             if (!couldntFigureOut) {
                 // Remember to remove this funcExpr later.
-                replacedFuncExprs.add(matchedFuncExprs.get(exprIndex).getFuncExpr());
+                replacedFuncExprs.add(matchedFuncExprs.get(exprIndex.first).getFuncExpr());
             }
             if (doneWithExprs) {
                 break;
@@ -458,8 +458,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             // Assign operator that sets the constant secondary-index search-key fields if necessary.
             AssignOperator assignConstantSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignConstantSearchKeys.getInputs().add(dataSourceScan.getInputs().get(0));
-            assignConstantSearchKeys.setExecutionMode(dataSourceScan.getExecutionMode());
+            assignConstantSearchKeys.getInputs().add(dataSourceOp.getInputs().get(0));
+            assignConstantSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
             inputOp = assignConstantSearchKeys;
         } else {
             // All index search keys are variables.
@@ -475,12 +475,12 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             // External dataset
             ExternalDataLookupOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(
-                    dataSourceScan, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput,
+                    dataSourceOp, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput,
                     retainNull);
             indexSubTree.dataSourceRef.setValue(externalDataAccessOp);
             return externalDataAccessOp;
         } else if (!isPrimaryIndex) {
-            primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset, recordType,
+            primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp, dataset, recordType,
                     secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
 
             // Replace the datasource scan with the new plan rooted at
@@ -493,7 +493,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
-            primaryIndexUnnestOp = new UnnestMapOperator(dataSourceScan.getVariables(),
+            primaryIndexUnnestOp = new UnnestMapOperator(dataSourceOp.getVariables(),
                     secondaryIndexUnnestOp.getExpressionRef(), primaryIndexOutputTypes, retainInput);
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
 

@@ -1,0 +1,3 @@
+use dataverse test;
+
+create index idx_LineItem_suppkey on LineItem(nested.l_suppkey: int32) enforced;

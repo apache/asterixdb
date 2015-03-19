@@ -30,6 +30,10 @@ public abstract class AbstractComplexType implements IAType {
         return typeName;
     }
 
+    public void setTypeName(String typeName) {
+        this.typeName = typeName;
+    }
+
     @Override
     public boolean equals(Object object) {
         return this.deepEqual((IAObject) object);

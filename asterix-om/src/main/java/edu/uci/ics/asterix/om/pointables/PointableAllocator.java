@@ -15,10 +15,15 @@
 
 package edu.uci.ics.asterix.om.pointables;
 
+import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
+import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.TypeTagUtil;
+import edu.uci.ics.asterix.om.util.container.IObjectFactory;
 import edu.uci.ics.asterix.om.util.container.IObjectPool;
 import edu.uci.ics.asterix.om.util.container.ListObjectPool;
 
@@ -34,6 +39,20 @@ public class PointableAllocator {
             ARecordPointable.FACTORY);
     private IObjectPool<IVisitablePointable, IAType> listValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
             AListPointable.FACTORY);
+    private IObjectPool<AOrderedListType, IAType> orederedListTypeAllocator = new ListObjectPool<AOrderedListType, IAType>(
+            new IObjectFactory<AOrderedListType, IAType>() {
+                @Override
+                public AOrderedListType create(IAType type) {
+                    return new AOrderedListType(type, type.getTypeName() + "OrderedList");
+                }
+            });
+    private IObjectPool<AOrderedListType, IAType> unorederedListTypeAllocator = new ListObjectPool<AOrderedListType, IAType>(
+            new IObjectFactory<AOrderedListType, IAType>() {
+                @Override
+                public AOrderedListType create(IAType type) {
+                    return new AOrderedListType(type, type.getTypeName() + "UnorderedList");
+                }
+            });
 
     public IVisitablePointable allocateEmpty() {
         return flatValueAllocator.allocate(null);
@@ -62,16 +81,34 @@ public class PointableAllocator {
      * @param typeTag
      * @return the pointable object
      */
-    public IVisitablePointable allocateFieldValue(ATypeTag typeTag) {
+    public IVisitablePointable allocateFieldValue(ATypeTag typeTag, byte[] b, int offset) throws AsterixException {
         if (typeTag == null)
             return flatValueAllocator.allocate(null);
         else if (typeTag.equals(ATypeTag.RECORD))
             return recordValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        else if (typeTag.equals(ATypeTag.UNORDEREDLIST))
-            return listValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
-        else if (typeTag.equals(ATypeTag.ORDEREDLIST))
-            return listValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
-        else
+        else if (typeTag.equals(ATypeTag.UNORDEREDLIST)) {
+            ATypeTag listItemType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[offset]);
+            if (listItemType == ATypeTag.ANY)
+                return listValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
+            else {
+                if (listItemType.isDerivedType())
+                    return allocateFieldValue(listItemType, b, offset + 1);
+                else
+                    return listValueAllocator.allocate(unorederedListTypeAllocator.allocate(TypeTagUtil
+                            .getBuiltinTypeByTag(listItemType)));
+            }
+        } else if (typeTag.equals(ATypeTag.ORDEREDLIST)) {
+            ATypeTag listItemType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[offset]);
+            if (listItemType == ATypeTag.ANY)
+                return listValueAllocator.allocate(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
+            else {
+                if (listItemType.isDerivedType())
+                    return allocateFieldValue(listItemType, b, offset + 1);
+                else
+                    return listValueAllocator.allocate(orederedListTypeAllocator.allocate(TypeTagUtil
+                            .getBuiltinTypeByTag(listItemType)));
+            }
+        } else
             return flatValueAllocator.allocate(null);
     }
 

@@ -1,0 +1,11 @@
+drop dataverse TestDataverse if exists;
+create dataverse TestDataverse;
+use dataverse TestDataverse;
+
+create type TestType as {
+  id: int64,
+  sec_id: int64
+}
+
+create dataset TestSet(TestType)
+primary key id;

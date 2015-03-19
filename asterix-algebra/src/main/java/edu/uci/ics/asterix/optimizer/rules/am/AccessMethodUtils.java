@@ -59,9 +59,9 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.UnnestingFunction
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -77,11 +77,11 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 public class AccessMethodUtils {
 
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, List<Object> target)
-            throws IOException {
+            throws IOException, AlgebricksException {
         ARecordType recordType = (ARecordType) itemType;
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-        for (String partitioningKey : partitioningKeys) {
-            target.add(recordType.getFieldType(partitioningKey));
+        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        for (List<String> partitioningKey : partitioningKeys) {
+            target.add(recordType.getSubFieldType(partitioningKey));
         }
         target.add(itemType);
     }
@@ -143,7 +143,13 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        analysisCtx.matchedFuncExprs.add(new OptimizableFuncExpr(funcExpr, fieldVar, constFilterVal));
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, constFilterVal);
+        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
+            //avoid additional optFuncExpressions in case of a join
+            if (optFuncExpr.getFuncExpr().equals(funcExpr))
+                return true;
+        }
+        analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
         return true;
     }
 
@@ -160,8 +166,14 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        analysisCtx.matchedFuncExprs.add(new OptimizableFuncExpr(funcExpr,
-                new LogicalVariable[] { fieldVar1, fieldVar2 }, null));
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVar1,
+                fieldVar2 }, null);
+        for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
+            //avoid additional optFuncExpressions in case of a join
+            if (optFuncExpr.getFuncExpr().equals(funcExpr))
+                return true;
+        }
+        analysisCtx.matchedFuncExprs.add(newOptFuncExpr);
         return true;
     }
 
@@ -175,8 +187,8 @@ public class AccessMethodUtils {
                 return index.getKeyFieldNames().size();
             }
             case RTREE: {
-                Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(index.getKeyFieldNames().get(0),
-                        recordType);
+                Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
+                        index.getKeyFieldNames().get(0), recordType);
                 IAType keyType = keyPairType.first;
                 int numDimensions = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
                 return numDimensions * 2;
@@ -197,15 +209,16 @@ public class AccessMethodUtils {
                 case BTREE:
                 case SINGLE_PARTITION_WORD_INVIX:
                 case SINGLE_PARTITION_NGRAM_INVIX: {
-                    for (String sk : index.getKeyFieldNames()) {
-                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(sk, recordType);
+                    for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
+                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes()
+                                .get(i), index.getKeyFieldNames().get(i), recordType);
                         dest.add(keyPairType.first);
                     }
                     break;
                 }
                 case RTREE: {
-                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(index.getKeyFieldNames()
-                            .get(0), recordType);
+                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(
+                            index.getKeyFieldTypes().get(0), index.getKeyFieldNames().get(0), recordType);
                     IAType keyType = keyPairType.first;
                     IAType nestedKeyType = NonTaggedFormatUtil.getNestedSpatialType(keyType.getTypeTag());
                     int numKeys = getNumSecondaryKeys(index, recordType);
@@ -229,10 +242,10 @@ public class AccessMethodUtils {
                 throw new AlgebricksException(e);
             }
         } else {
-            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
-            for (String partitioningKey : partitioningKeys) {
+            List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            for (List<String> partitioningKey : partitioningKeys) {
                 try {
-                    dest.add(recordType.getFieldType(partitioningKey));
+                    dest.add(recordType.getSubFieldType(partitioningKey));
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }
@@ -300,7 +313,7 @@ public class AccessMethodUtils {
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
             // Type Checking and type promotion is done here
-            ATypeTag fieldType = optFuncExpr.getTypeTag(0);
+            IAType fieldType = optFuncExpr.getFieldType(0);
             IAObject constantObj = ((AsterixConstantValue) optFuncExpr.getConstantVal(0)).getObject();
             ATypeTag constantValueTag = constantObj.getType().getTypeTag();
             // type casting applied?
@@ -310,9 +323,9 @@ public class AccessMethodUtils {
             AsterixConstantValue replacedConstantValue = null;
 
             // if the constant type and target type does not match, we do a type conversion
-            if (constantValueTag != fieldType) {
+            if (constantValueTag != fieldType.getTypeTag()) {
                 replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(constantObj,
-                        fieldType);
+                        fieldType.getTypeTag());
                 if (replacedConstantValue != null) {
                     typeCastingApplied = true;
                 }
@@ -322,7 +335,7 @@ public class AccessMethodUtils {
                 switch (constantValueTag) {
                     case DOUBLE:
                     case FLOAT:
-                        switch (fieldType) {
+                        switch (fieldType.getTypeTag()) {
                             case INT8:
                             case INT16:
                             case INT32:
@@ -360,9 +373,14 @@ public class AccessMethodUtils {
      * Returns the first expr optimizable by this index.
      */
     public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
-        List<Integer> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
-        int firstExprIndex = indexExprs.get(0);
+        List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
+        int firstExprIndex = indexExprs.get(0).first;
         return analysisCtx.matchedFuncExprs.get(firstExprIndex);
+    }
+
+    public static int chooseFirstOptFuncVar(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
+        List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
+        return indexExprs.get(0).second;
     }
 
     public static UnnestMapOperator createSecondaryIndexUnnestMap(Dataset dataset, ARecordType recordType, Index index,
@@ -393,9 +411,10 @@ public class AccessMethodUtils {
         return secondaryIndexUnnestOp;
     }
 
-    public static UnnestMapOperator createPrimaryIndexUnnestMap(DataSourceScanOperator dataSourceScan, Dataset dataset,
-            ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context, boolean sortPrimaryKeys,
-            boolean retainInput, boolean retainNull, boolean requiresBroadcast) throws AlgebricksException {
+    public static UnnestMapOperator createPrimaryIndexUnnestMap(AbstractDataSourceOperator dataSourceOp,
+            Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
+            boolean sortPrimaryKeys, boolean retainInput, boolean retainNull, boolean requiresBroadcast)
+            throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
                 inputOp);
         // Optionally add a sort on the primary-index keys before searching the primary index.
@@ -428,7 +447,7 @@ public class AccessMethodUtils {
         List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<LogicalVariable>();
         List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
         // Append output variables/types generated by the primary-index search (not forwarded from input).
-        primaryIndexUnnestVars.addAll(dataSourceScan.getVariables());
+        primaryIndexUnnestVars.addAll(dataSourceOp.getVariables());
         try {
             appendPrimaryIndexTypes(dataset, recordType, primaryIndexOutputTypes);
         } catch (IOException e) {
@@ -537,7 +556,7 @@ public class AccessMethodUtils {
         funcArgs.add(stringRef);
     }
 
-    public static ExternalDataLookupOperator createExternalDataLookupUnnestMap(DataSourceScanOperator dataSourceScan,
+    public static ExternalDataLookupOperator createExternalDataLookupUnnestMap(AbstractDataSourceOperator dataSourceOp,
             Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
             Index secondaryIndex, boolean retainInput, boolean retainNull) throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
@@ -565,7 +584,7 @@ public class AccessMethodUtils {
         List<LogicalVariable> externalAccessByRIDVars = new ArrayList<LogicalVariable>();
         List<Object> externalAccessOutputTypes = new ArrayList<Object>();
         // Append output variables/types generated by the data scan (not forwarded from input).
-        externalAccessByRIDVars.addAll(dataSourceScan.getVariables());
+        externalAccessByRIDVars.addAll(dataSourceOp.getVariables());
         appendExternalRecTypes(dataset, recordType, externalAccessOutputTypes);
 
         IFunctionInfo externalAccessByRID = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EXTERNAL_LOOKUP);
@@ -573,7 +592,8 @@ public class AccessMethodUtils {
                 externalRIDAccessFuncArgs);
 
         ExternalDataLookupOperator externalLookupOp = new ExternalDataLookupOperator(externalAccessByRIDVars,
-                new MutableObject<ILogicalExpression>(externalAccessFunc), externalAccessOutputTypes, retainInput);
+                new MutableObject<ILogicalExpression>(externalAccessFunc), externalAccessOutputTypes, retainInput,
+                dataSourceOp.getDataSource());
         // Fed by the order operator or the secondaryIndexUnnestOp.
         externalLookupOp.getInputs().add(new MutableObject<ILogicalOperator>(order));
 

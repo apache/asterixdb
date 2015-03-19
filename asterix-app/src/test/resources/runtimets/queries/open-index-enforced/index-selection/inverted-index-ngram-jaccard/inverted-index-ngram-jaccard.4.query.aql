@@ -1,0 +1,13 @@
+use dataverse test;
+set import-private-functions 'true';
+
+for $o in dataset('DBLPOpen')
+let $jacc := similarity-jaccard-check(gram-tokens($o.title, 3, false), gram-tokens("Transactions for Cooperative Environments", 3, false), 0.5f)
+where $jacc[0]
+return {
+  "id": $o.id,
+  "dblpid": $o.dblpid,
+  "title": $o.title,
+  "authors": $o.authors,
+  "misc": $o.misc
+}

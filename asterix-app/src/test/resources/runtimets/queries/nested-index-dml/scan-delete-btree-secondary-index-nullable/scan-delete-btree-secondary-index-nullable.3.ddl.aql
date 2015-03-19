@@ -1,0 +1,6 @@
+use dataverse test;
+
+
+create index age_index on Customers(nested.age);
+
+

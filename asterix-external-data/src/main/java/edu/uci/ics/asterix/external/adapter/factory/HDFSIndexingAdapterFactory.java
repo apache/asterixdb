@@ -22,7 +22,6 @@ import java.util.Map;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSIndexingAdapter;
 import edu.uci.ics.asterix.external.indexing.dataflow.HDFSIndexingParserFactory;
 import edu.uci.ics.asterix.external.indexing.dataflow.IndexingScheduler;
@@ -136,11 +135,10 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
 
         parserFactory = new HDFSIndexingParserFactory((ARecordType) atype,
-                                                      configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT),
-                                                      configuration.get(KEY_FORMAT), delimiter, quote,
-                                                      configuration.get(HDFSAdapterFactory.KEY_PARSER));
+                configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT), configuration.get(KEY_FORMAT), delimiter,
+                quote, configuration.get(HDFSAdapterFactory.KEY_PARSER));
     }
-    
+
     /**
      * A static function that creates and return delimited text data parser
      *

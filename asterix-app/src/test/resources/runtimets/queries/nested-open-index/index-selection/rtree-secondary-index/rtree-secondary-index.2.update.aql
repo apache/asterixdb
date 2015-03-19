@@ -1,0 +1,32 @@
+use dataverse test;
+
+load dataset MyDatatmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));
+
+insert into dataset MyData
+(
+	for $c in dataset('MyDatatmp')
+	where $c.id < 15
+	return {
+		"nested" : $c
+	}	
+);
+
+insert into dataset MyData
+(
+	for $c in dataset('MyDatatmp')
+	where $c.id >= 15
+	return {
+		"nested" : {
+			"id": $c.id,
+			"kwds": $c.kwds,
+			"line1": $c.line1,
+			"line2": $c.line2,
+			"poly1": $c.poly1,
+			"poly2": $c.poly2,
+			"rec": $c.rec,
+			"circle": $c.circle
+		}
+	}	
+);

@@ -1,0 +1,34 @@
+/*
+ * Test case Name  : scan-insert-rtree-secondary-index-open.aql
+ * Description     : This test is intended to test insertion from secondary rtree index that is built on open field.
+ * Expected Result : Success
+ * Date            : Feb 13 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int64,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create type MyOpenRecord as open {
+  id: int64
+}
+
+create dataset MyData(MyRecord)
+  primary key id;
+
+create dataset MyOpenData(MyOpenRecord)
+  primary key id;
+

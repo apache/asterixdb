@@ -1,0 +1,32 @@
+/*
+ * Test case Name  : scan-insert-inverted-index-word-secondary-index-open.aql
+ * Description     : This test is intended to test insertion from secondary keyword inverted index that is built on open field.
+ * Expected Result : Success
+ * Date            : Feb 13 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type DBLPType as closed {
+  id: int64,
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type DBLPOpenType as open {
+  id: int64,
+  dblpid: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+create dataset DBLPOpen(DBLPOpenType) primary key id;
+
+
+

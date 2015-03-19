@@ -197,19 +197,23 @@ public class CompiledStatements {
         private final String indexName;
         private final String dataverseName;
         private final String datasetName;
-        private final List<String> keyFields;
+        private final List<List<String>> keyFields;
+        private final List<IAType> keyTypes;
+        private final boolean isEnforced;
         private final IndexType indexType;
 
         // Specific to NGram index.
         private final int gramLength;
 
         public CompiledCreateIndexStatement(String indexName, String dataverseName, String datasetName,
-                List<String> keyFields, int gramLength, IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
             this.indexName = indexName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.keyFields = keyFields;
+            this.keyTypes = keyTypes;
             this.gramLength = gramLength;
+            this.isEnforced = isEnforced;
             this.indexType = indexType;
         }
 
@@ -225,8 +229,12 @@ public class CompiledStatements {
             return indexName;
         }
 
-        public List<String> getKeyFields() {
+        public List<List<String>> getKeyFields() {
             return keyFields;
+        }
+
+        public List<IAType> getKeyFieldTypes() {
+            return keyTypes;
         }
 
         public IndexType getIndexType() {
@@ -235,6 +243,10 @@ public class CompiledStatements {
 
         public int getGramLength() {
             return gramLength;
+        }
+
+        public boolean isEnforced() {
+            return isEnforced;
         }
 
         @Override
@@ -524,27 +536,35 @@ public class CompiledStatements {
 
     public static class CompiledIndexCompactStatement extends CompiledCompactStatement {
         private final String indexName;
-        private final List<String> keyFields;
+        private final List<List<String>> keyFields;
+        private final List<IAType> keyTypes;
         private final IndexType indexType;
+        private final boolean isEnforced;
 
         // Specific to NGram index.
         private final int gramLength;
 
         public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
-                List<String> keyFields, int gramLength, IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
             super(dataverseName, datasetName);
             this.indexName = indexName;
             this.keyFields = keyFields;
+            this.keyTypes = keyTypes;
             this.gramLength = gramLength;
             this.indexType = indexType;
+            this.isEnforced = isEnforced;
         }
 
         public String getIndexName() {
             return indexName;
         }
 
-        public List<String> getKeyFields() {
+        public List<List<String>> getKeyFields() {
             return keyFields;
+        }
+
+        public List<IAType> getKeyTypes() {
+            return keyTypes;
         }
 
         public IndexType getIndexType() {
@@ -554,6 +574,9 @@ public class CompiledStatements {
         public int getGramLength() {
             return gramLength;
         }
-    }
 
+        public boolean isEnforced() {
+            return isEnforced;
+        }
+    }
 }

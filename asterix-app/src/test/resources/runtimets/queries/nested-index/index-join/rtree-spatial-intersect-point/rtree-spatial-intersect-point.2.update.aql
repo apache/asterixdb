@@ -1,0 +1,32 @@
+/*
+ * Description    : Joins two datasets on the intersection of their point attributes.
+ *                  The dataset 'MyData1' has an RTree index, and we expect the
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+load dataset MyData1tmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+
+load dataset MyData2tmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+
+insert into dataset MyData1
+(
+	for $c in dataset('MyData1tmp')
+	return {
+		"nested" : $c
+	}	
+);
+
+insert into dataset MyData2
+(
+	for $c in dataset('MyData2tmp')
+	return {
+		"nested" : $c
+	}	
+);

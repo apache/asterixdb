@@ -1,0 +1,4 @@
+
+use dataverse test;
+
+create index ngram_index on DBLPOpen(authors:string) type ngram(3) enforced;

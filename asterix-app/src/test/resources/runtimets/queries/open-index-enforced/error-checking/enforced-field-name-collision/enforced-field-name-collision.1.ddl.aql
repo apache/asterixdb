@@ -1,0 +1,11 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type testType as open {
+   "id": int32,
+   "value": string
+}
+
+create dataset testDS(testType) primary key id;
+create index testIdx on testDS(value: string) enforced;

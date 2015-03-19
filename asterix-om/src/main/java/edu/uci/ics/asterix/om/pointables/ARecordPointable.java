@@ -98,7 +98,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                         && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i]))
                     // optional field: add the embedded non-null type tag
                     ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
-                            .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                            .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
 
                 // add type tag Reference
                 int tagStart = typeBos.size();
@@ -206,7 +206,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                     if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
                         if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[fieldNumber])) {
                             fieldType = ((AUnionType) fieldTypes[fieldNumber]).getUnionList().get(
-                                    NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                                    AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                             typeTag = fieldType.getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
                                     typeTag, false);
@@ -253,7 +253,7 @@ public class ARecordPointable extends AbstractVisitablePointable {
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
 
                     // allocate
-                    IVisitablePointable fieldValueAccessor = allocator.allocateFieldValue(typeTag);
+                    IVisitablePointable fieldValueAccessor = allocator.allocateFieldValue(typeTag, b, fieldOffset + 1);
                     fieldValueAccessor.set(b, fieldOffset, fieldValueLength);
                     fieldValues.add(fieldValueAccessor);
                     fieldOffset += fieldValueLength;

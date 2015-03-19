@@ -50,7 +50,7 @@ public class NonTaggedMinMaxAggTypeComputer implements IResultTypeComputer {
 
         ATypeTag tag1;
         if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1)) {
-            tag1 = ((AUnionType) t1).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
+            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
                     .getTypeTag();
         } else {
             tag1 = t1.getTypeTag();

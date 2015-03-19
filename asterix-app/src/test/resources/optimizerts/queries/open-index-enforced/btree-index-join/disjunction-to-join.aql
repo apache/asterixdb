@@ -1,0 +1,21 @@
+/*
+ * Description    : Disjunctive predicate should be transformed into collection scan.
+ *                  Secondary index should be used to probe the values retrieved from collection.
+ * Success        : Yes
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TestType as open {
+  "id" : string,
+  "no-idx" : string
+};
+
+create dataset TestSet(TestType) primary key "id";
+create index TestSetIndex on TestSet(idx: string) enforced;
+
+for $x in dataset TestSet 
+where $x.idx = "one" or $x.idx = "two"
+return $x

@@ -1,0 +1,32 @@
+/*
+ * Description    : Equi joins two datasets, Customers and Orders, based on the customer id.
+ *                  Given the 'indexnl' hint we expect the join to be transformed
+ *                  into an indexed nested-loop join using Customers' primary index.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+load dataset Customerstmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/customerData.json"),("format"="adm"));
+
+load dataset Orderstmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/nontagged/orderData.json"),("format"="adm"));
+
+insert into dataset Orders
+(
+	for $c in dataset('Orderstmp')
+	return {
+		"nested" : $c
+	}	
+);
+
+insert into dataset Customers
+(
+	for $c in dataset('Customerstmp')
+	return {
+		"nested" : $c
+	}	
+);

@@ -60,13 +60,13 @@ public class NonTaggedNumericRoundHalfToEven2TypeComputer implements IResultType
 
         ATypeTag tag1, tag2;
         if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1))
-            tag1 = ((AUnionType) t1).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
+            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
                     .getTypeTag();
         else
             tag1 = t1.getTypeTag();
 
         if (t2.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t2))
-            tag2 = ((AUnionType) t2).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
+            tag2 = ((AUnionType) t2).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
                     .getTypeTag();
         else
             tag2 = t2.getTypeTag();

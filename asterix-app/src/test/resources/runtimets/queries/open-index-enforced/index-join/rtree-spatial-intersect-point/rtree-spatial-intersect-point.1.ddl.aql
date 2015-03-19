@@ -1,0 +1,39 @@
+/*
+ * Description    : Joins two datasets on the intersection of their point attributes.
+ *                  The dataset 'MyData1' has an open enforced RTree index, and we expect the
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int64,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create type MyRecordOpen as open {
+  id: int64,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create dataset MyData1tmp(MyRecord) primary key id;
+create dataset MyData1(MyRecordOpen) primary key id;
+create dataset MyData2(MyRecord) primary key id;
+

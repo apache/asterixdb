@@ -139,7 +139,7 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
                 boolean hasHeader = StreamBasedAdapterFactory.getHasHeader(configuration);
                 IValueParserFactory[] valueParserFactories = getValueParserFactories(atype);
                 parserFactory = new RateControlledTupleParserFactory(atype, valueParserFactories, delimiter, quote,
-                                                                     hasHeader, configuration);
+                        hasHeader, configuration);
                 break;
         }
     }
@@ -184,7 +184,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
     }
 
     public RateControlledTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, char quote, boolean hasHeader,  Map<String, String> configuration) {
+            char fieldDelimiter, char quote, boolean hasHeader, Map<String, String> configuration) {
         this.recordType = recordType;
         this.valueParserFactories = valueParserFactories;
         this.delimiter = fieldDelimiter;
@@ -208,8 +208,7 @@ class RateControlledTupleParserFactory implements ITupleParserFactory {
                 dataParser = new ADMDataParser();
                 break;
             case DELIMITED_DATA:
-                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter,
-                                                     quote, hasHeader);
+                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, quote, hasHeader);
                 break;
         }
         return new RateControlledTupleParser(ctx, recordType, dataParser, configuration);

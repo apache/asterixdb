@@ -47,6 +47,7 @@ import edu.uci.ics.asterix.om.typecomputer.impl.ClosedRecordConstructorResultTyp
 import edu.uci.ics.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
+import edu.uci.ics.asterix.om.typecomputer.impl.FieldAccessNestedResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedCollectionMemberResultType;
 import edu.uci.ics.asterix.om.typecomputer.impl.NonTaggedFieldAccessByNameResultType;
@@ -108,6 +109,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -125,6 +127,8 @@ public class AsterixBuiltinFunctions {
     }
 
     private static final FunctionInfoRepository registeredFunctions = new FunctionInfoRepository();
+
+    private static final Map<IFunctionInfo, ATypeHierarchy.Domain> registeredFunctionsDomain = new HashMap<IFunctionInfo, ATypeHierarchy.Domain>();
 
     // it is supposed to be an identity mapping
     private final static Map<IFunctionInfo, IFunctionInfo> builtinPublicFunctionsSet = new HashMap<IFunctionInfo, IFunctionInfo>();
@@ -183,6 +187,8 @@ public class AsterixBuiltinFunctions {
             "field-access-by-index", 2);
     public final static FunctionIdentifier FIELD_ACCESS_BY_NAME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "field-access-by-name", 2);
+    public final static FunctionIdentifier FIELD_ACCESS_NESTED = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "field-access-nested", 2);
 
     public final static FunctionIdentifier NUMERIC_UNARY_MINUS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "numeric-unary-minus", 1);
@@ -275,6 +281,8 @@ public class AsterixBuiltinFunctions {
 
     public final static FunctionIdentifier MAKE_FIELD_INDEX_HANDLE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "make-field-index-handle", 2);
+    public final static FunctionIdentifier MAKE_FIELD_NESTED_HANDLE = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "make-field-nested-handle", 3);
     public final static FunctionIdentifier MAKE_FIELD_NAME_HANDLE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "make-field-name-handle", 1);
 
@@ -763,6 +771,7 @@ public class AsterixBuiltinFunctions {
         addFunction(ENDS_WITH, ABooleanTypeComputer.INSTANCE, true);
         // add(FIELD_ACCESS, NonTaggedFieldAccessByNameResultType.INSTANCE);
         addPrivateFunction(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE, true);
+        addPrivateFunction(FIELD_ACCESS_NESTED, FieldAccessNestedResultType.INSTANCE, true);
         addPrivateFunction(FIELD_ACCESS_BY_NAME, NonTaggedFieldAccessByNameResultType.INSTANCE, true);
         addFunction(FLOAT_CONSTRUCTOR, OptionalAFloatTypeComputer.INSTANCE, true);
         addPrivateFunction(FUZZY_EQ, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
@@ -900,7 +909,7 @@ public class AsterixBuiltinFunctions {
         addFunction(SPATIAL_AREA, ADoubleTypeComputer.INSTANCE, true);
         addFunction(SPATIAL_CELL, ARectangleTypeComputer.INSTANCE, true);
         addFunction(SPATIAL_DISTANCE, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(SPATIAL_INTERSECT, ABooleanTypeComputer.INSTANCE, true);
+        addFunctionWithDomain(SPATIAL_INTERSECT, ATypeHierarchy.Domain.SPATIAL, ABooleanTypeComputer.INSTANCE, true);
         addFunction(GET_POINT_X_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_POINT_Y_COORDINATE_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
@@ -1350,10 +1359,16 @@ public class AsterixBuiltinFunctions {
     }
 
     public static void addFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer, boolean isFunctional) {
+        addFunctionWithDomain(fi, ATypeHierarchy.Domain.ANY, typeComputer, isFunctional);
+    }
+
+    public static void addFunctionWithDomain(FunctionIdentifier fi, ATypeHierarchy.Domain funcDomain,
+            IResultTypeComputer typeComputer, boolean isFunctional) {
         IFunctionInfo functionInfo = new AsterixFunctionInfo(fi, isFunctional);
         builtinPublicFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);
         registeredFunctions.put(fi, functionInfo);
+        registeredFunctionsDomain.put(functionInfo, funcDomain);
     }
 
     public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer,

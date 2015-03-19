@@ -14,7 +14,10 @@
  */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
+import java.util.List;
+
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -33,9 +36,17 @@ public interface IOptimizableFuncExpr {
 
     public LogicalVariable getLogicalVar(int index);
 
-    public void setFieldName(int index, String fieldName);
+    public void setLogicalExpr(int index, ILogicalExpression logExpr);
 
-    public String getFieldName(int index);
+    public ILogicalExpression getLogicalExpr(int index);
+
+    public void setFieldName(int index, List<String> fieldName);
+
+    public List<String> getFieldName(int index);
+
+    public void setFieldType(int index, IAType fieldName);
+
+    public IAType getFieldType(int index);
 
     public void setOptimizableSubTree(int index, OptimizableOperatorSubTree subTree);
 
@@ -45,7 +56,7 @@ public interface IOptimizableFuncExpr {
 
     public int findLogicalVar(LogicalVariable var);
 
-    public int findFieldName(String fieldName);
+    public int findFieldName(List<String> fieldName);
 
     public void substituteVar(LogicalVariable original, LogicalVariable substitution);
 
@@ -53,7 +64,7 @@ public interface IOptimizableFuncExpr {
 
     public boolean containsPartialField();
 
-    public void setTypeTag(int index, ATypeTag typeTag);
+    public void setSourceVar(int index, LogicalVariable var);
 
-    public ATypeTag getTypeTag(int index);
+    public LogicalVariable getSourceVar(int index);
 }

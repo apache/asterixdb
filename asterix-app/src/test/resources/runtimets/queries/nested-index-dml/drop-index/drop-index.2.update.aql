@@ -1,0 +1,22 @@
+/*
+ * Description     : Drop secondary index.
+ * Expected Result : Success
+ * Date            : 12th July 2012
+ *
+ */
+
+use dataverse test;
+
+// Load data
+load dataset t1tmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+insert into dataset t1
+(
+	for $c in dataset('t1tmp')
+	return {
+		"nested" : $c
+	}	
+);
+

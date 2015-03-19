@@ -1,0 +1,22 @@
+use dataverse test;
+
+load dataset DBLP
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
+
+insert into dataset test.DBLPOpen (
+	for $x in dataset test.DBLP
+	where $x.id <= 50
+	return $x
+);
+
+insert into dataset test.DBLPOpen (
+	for $c in dataset test.DBLP
+	where $c.id > 50
+	return {
+		"id": $c.id,
+		"dblpid": $c.dblpid,
+		"title": $c.title,
+		"misc": $c.misc
+	}
+);

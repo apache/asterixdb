@@ -766,7 +766,7 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
-    public static final IAType ANY = new BuiltinType() {
+    public static final BuiltinType ANY = new BuiltinType() {
 
         private static final long serialVersionUID = 1L;
 
@@ -882,6 +882,8 @@ public abstract class BuiltinType implements IAType {
             return BuiltinType.ADOUBLE;
         } else if (str.equals(BuiltinType.AFLOAT.getTypeName())) {
             return BuiltinType.AFLOAT;
+        } else if (str.equals(BuiltinType.ANY.getTypeName())) {
+            return BuiltinType.ANY;
         }
         throw new AsterixException("No string translation for type: " + str + " .");
     }

@@ -1,0 +1,36 @@
+/*
+ * Description    : Joins two datasets on the intersection of their point attributes.
+ *                  Only dataset 'MyData1' has an enforced open RTree index, hence we
+ *                  *do not* expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecordNestedOpen as open {
+  id: int32,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle
+}
+
+create type MyRecordOpen as closed {
+  nested: MyRecordNestedOpen
+}
+
+create dataset MyData1(MyRecordOpen) primary key nested.id;
+create dataset MyData2(MyRecordOpen) primary key nested.id;
+
+create index rtree_index on MyData1(nested.point:point) type rtree enforced;
+
+write output to nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm";
+
+for $a in dataset('MyData1')
+for $b in dataset('MyData2')
+where spatial-intersect($a.nested.point, $b.nested.point)
+return {"a": $a, "b": $b}

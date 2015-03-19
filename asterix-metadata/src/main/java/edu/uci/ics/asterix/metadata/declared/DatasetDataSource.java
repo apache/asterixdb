@@ -58,13 +58,13 @@ public class DatasetDataSource extends AqlDataSource {
         return dataset;
     }
 
-    private void initInternalDataset(IAType itemType) throws IOException {
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+    private void initInternalDataset(IAType itemType) throws IOException, AlgebricksException {
+        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         ARecordType recordType = (ARecordType) itemType;
         int n = partitioningKeys.size();
         schemaTypes = new IAType[n + 1];
         for (int i = 0; i < n; i++) {
-            schemaTypes[i] = recordType.getFieldType(partitioningKeys.get(i));
+            schemaTypes[i] = recordType.getSubFieldType(partitioningKeys.get(i));
         }
         schemaTypes[n] = itemType;
         domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));

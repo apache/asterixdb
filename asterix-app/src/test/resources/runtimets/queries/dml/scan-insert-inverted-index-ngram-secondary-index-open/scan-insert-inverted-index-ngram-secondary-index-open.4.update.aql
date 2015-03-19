@@ -1,0 +1,21 @@
+/*
+ * Test case Name  : scan-insert-inverted-index-ngram-secondary-index-open.aql
+ * Description     : This test is intended to test insertion from secondary ngram inverted index that is built on open field.
+ * Expected Result : Success
+ * Date            : Feb 13 2014
+ */
+
+use dataverse test;
+
+insert into dataset DBLPOpen (
+for $o in dataset('DBLP')
+where contains($o.title, "Multimedia")
+order by $o.id
+return {
+		"id": $o.id,
+		"dblpid": $o.dblpid,
+		"title": $o.title,
+		"authors": $o.authors,
+		"misc": $o.misc
+	}
+);

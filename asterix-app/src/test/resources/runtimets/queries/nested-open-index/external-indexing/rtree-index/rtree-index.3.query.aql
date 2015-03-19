@@ -1,0 +1,6 @@
+use dataverse test;
+
+for $o in dataset('MyData')
+where spatial-intersect($o.nested.point, create-polygon([4.0,1.0,4.0,4.0,12.0,4.0,12.0,1.0]))
+order by $o.nested.id
+return {"id":$o.nested.id}

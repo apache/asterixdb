@@ -1,0 +1,13 @@
+use dataverse test;
+
+load dataset LineItemtmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+insert into dataset LineItem
+(
+	for $c in dataset('LineItemtmp')
+	return {
+		"nested" : $c
+	}	
+);

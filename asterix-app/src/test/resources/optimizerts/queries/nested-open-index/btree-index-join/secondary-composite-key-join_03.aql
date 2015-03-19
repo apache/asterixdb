@@ -1,0 +1,28 @@
+/*
+ * Description  : Notice the query hint to use an indexed nested-loops join plan in both predicates.
+ *              : We expect a plan to have a self-join, which probes dataset Names’s secondary index.
+ * Expected Res : Success
+ * Date         : 11th November 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Nametmp as open {
+    id : int32
+}
+
+create type NameType as open {
+    nested : Nametmp
+}
+
+create dataset Names(NameType) primary key nested.id;
+create index Name_idx on Names(nested.fname: string,lnested.name: string) enforced;
+
+write output to nc1:"rttest/btree-index-join_secondary-composite-key-prefix-join_03.adm";
+
+for $emp1 in dataset('Names') 
+for $emp2 in dataset('Names') 
+where $emp1.nested.fname /*+ indexnl*/= $emp2.nested.fname and $emp1.nested.lname /*+ indexnl*/= $emp2.nested.lname
+return {"emp1": $emp1, "emp2": $emp2 }

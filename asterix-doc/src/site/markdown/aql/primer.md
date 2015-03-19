@@ -147,10 +147,11 @@ AsterixDB stores its information about the fields defined a priori as separate m
 the information about other fields that are "just there" in instances of open datatypes is stored
 with each instance---making for more bits on disk and longer times for operations affected by
 data size (e.g., dataset scans).
-The only fields that _must_ be specified a priori are the primary key and any fields that you
-would like to build indexes on.
-(AsterixDB does not yet support auto-generated keys or indexes on the unspecified "open" fields
-of its data instances).
+The only fields that _must_ be specified a priori are the primary key.
+(AsterixDB does not yet support auto-generated keys).
+Indexes could be build on fields, which don't belong to fixed part of datatype's schema, as long as field's type is 
+specified and _enforced_ keyword is provided in the end of index definition.
+Index fields could also be nested arbitrarily deep in datatype definition.
 
 ### Creating Datasets and Indexes ###
 

@@ -90,8 +90,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
 
     @Override
     @SuppressWarnings("rawtypes")
-    protected void setSecondaryRecDescAndComparators(IndexType indexType, List<String> secondaryKeyFields,
-            int gramLength, AqlMetadataProvider metadata) throws AlgebricksException, AsterixException {
+    protected void setSecondaryRecDescAndComparators(IndexType indexType, List<List<String>> secondaryKeyFields,
+            List<IAType> secondaryKeyTypes, int gramLength, AqlMetadataProvider metadata) throws AlgebricksException,
+            AsterixException {
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new AsterixException("Cannot create inverted index on dataset with composite primary key.");
@@ -110,18 +111,21 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         secondaryFieldAccessEvalFactories = new ICopyEvaluatorFactory[numSecondaryKeys + numFilterFields];
         ISerializerDeserializer[] secondaryRecFields = new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys
                 + numFilterFields];
+        ISerializerDeserializer[] enforcedRecFields = new ISerializerDeserializer[1 + numPrimaryKeys + numFilterFields];
         secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
+        ITypeTraits[] enforcedTypeTraits = new ITypeTraits[1 + numPrimaryKeys];
         ISerializerDeserializerProvider serdeProvider = FormatUtils.getDefaultFormat().getSerdeProvider();
         ITypeTraitProvider typeTraitProvider = FormatUtils.getDefaultFormat().getTypeTraitProvider();
-        for (int i = 0; i < numSecondaryKeys; i++) {
-            secondaryFieldAccessEvalFactories[i] = FormatUtils.getDefaultFormat().getFieldAccessEvaluatorFactory(
-                    itemType, secondaryKeyFields.get(i), numPrimaryKeys);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(i), itemType);
+        if (numSecondaryKeys > 0) {
+            secondaryFieldAccessEvalFactories[0] = FormatUtils.getDefaultFormat().getFieldAccessEvaluatorFactory(
+                    isEnforcingKeyTypes ? enforcedItemType : itemType, secondaryKeyFields.get(0), numPrimaryKeys);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
+                    secondaryKeyFields.get(0), itemType);
             secondaryKeyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(secondaryKeyType);
-            secondaryRecFields[i] = keySerde;
-            secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(secondaryKeyType);
+            secondaryRecFields[0] = keySerde;
+            secondaryTypeTraits[0] = typeTraitProvider.getTypeTrait(secondaryKeyType);
         }
         if (numFilterFields > 0) {
             secondaryFieldAccessEvalFactories[numSecondaryKeys] = FormatUtils.getDefaultFormat()
@@ -151,9 +155,13 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         // Type traits for inverted-list elements. Inverted lists contain
         // primary keys.
         invListsTypeTraits = new ITypeTraits[numPrimaryKeys];
-        for (int i = 0; i < numPrimaryKeys; i++) {
-            invListsTypeTraits[i] = primaryRecDesc.getTypeTraits()[i];
+        if (numPrimaryKeys > 0) {
+            invListsTypeTraits[0] = primaryRecDesc.getTypeTraits()[0];
+            enforcedRecFields[0] = primaryRecDesc.getFields()[0];
+            enforcedTypeTraits[0] = primaryRecDesc.getTypeTraits()[0];
         }
+        enforcedRecFields[numPrimaryKeys] = serdeProvider.getSerializerDeserializer(itemType);
+        enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);
         // For tokenization, sorting and loading.
         // One token (+ optional partitioning field) + primary keys.
         numTokenKeyPairFields = (!isPartitioned) ? 1 + numPrimaryKeys : 2 + numPrimaryKeys;
@@ -171,10 +179,10 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
             tokenKeyPairComparatorFactories[1] = PointableBinaryComparatorFactory.of(ShortPointable.FACTORY);
             pkOff = 2;
         }
-        for (int i = 0; i < numPrimaryKeys; i++) {
-            tokenKeyPairFields[i + pkOff] = primaryRecDesc.getFields()[i];
-            tokenKeyPairTypeTraits[i + pkOff] = primaryRecDesc.getTypeTraits()[i];
-            tokenKeyPairComparatorFactories[i + pkOff] = primaryComparatorFactories[i];
+        if (numPrimaryKeys > 0) {
+            tokenKeyPairFields[pkOff] = primaryRecDesc.getFields()[0];
+            tokenKeyPairTypeTraits[pkOff] = primaryRecDesc.getTypeTraits()[0];
+            tokenKeyPairComparatorFactories[pkOff] = primaryComparatorFactories[0];
         }
         if (numFilterFields > 0) {
             tokenKeyPairFields[numPrimaryKeys + pkOff] = secondaryRecFields[numPrimaryKeys + numSecondaryKeys];
@@ -235,13 +243,17 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
         // Create primary index scan op.
         BTreeSearchOperatorDescriptor primaryScanOp = createPrimaryIndexScanOp(spec);
 
-        // Assign op.
-        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, primaryScanOp, numSecondaryKeys);
+        AbstractOperatorDescriptor sourceOp = primaryScanOp;
+        if (isEnforcingKeyTypes) {
+            sourceOp = createCastOp(spec, primaryScanOp, numSecondaryKeys, dataset.getDatasetType());
+            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
+        }
+        AlgebricksMetaOperatorDescriptor asterixAssignOp = createAssignOp(spec, sourceOp, numSecondaryKeys);
 
         // If any of the secondary fields are nullable, then add a select op
         // that filters nulls.
         AlgebricksMetaOperatorDescriptor selectOp = null;
-        if (anySecondaryKeyIsNullable) {
+        if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
             selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys);
         }
 
@@ -258,8 +270,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                 new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
-        if (anySecondaryKeyIsNullable) {
+        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
+        if (anySecondaryKeyIsNullable || isEnforcingKeyTypes) {
             spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
             spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, tokenizerOp, 0);
         } else {

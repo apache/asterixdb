@@ -49,22 +49,25 @@ public class SubstringTypeComputer implements IResultTypeComputer {
 
         ATypeTag tag0, tag1, tag2;
         if (t0.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t0))
-            tag0 = ((AUnionType) t0).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
+            tag0 = ((AUnionType) t0).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
                     .getTypeTag();
         else
             tag0 = t0.getTypeTag();
 
         if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1))
-            tag1 = ((AUnionType) t1).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
+            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
                     .getTypeTag();
         else
             tag1 = t1.getTypeTag();
 
         if (t2.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t2))
-            tag2 = ((AUnionType) t2).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
+            tag2 = ((AUnionType) t2).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
                     .getTypeTag();
         else
             tag2 = t2.getTypeTag();
+
+        if (tag0 == ATypeTag.ANY || tag1 == ATypeTag.ANY || tag2 == ATypeTag.ANY)
+            return BuiltinType.ANY;
 
         if (tag0 != ATypeTag.NULL && tag0 != ATypeTag.STRING) {
             throw new AlgebricksException("First argument should be String Type.");

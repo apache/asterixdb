@@ -14,8 +14,12 @@
  */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -27,8 +31,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConsta
 public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final AbstractFunctionCallExpression funcExpr;
     protected final LogicalVariable[] logicalVars;
-    protected final String[] fieldNames;
-    protected final ATypeTag[] typeTags;
+    protected final LogicalVariable[] sourceVars;
+    protected final ILogicalExpression[] logicalExprs;
+    protected final List<List<String>> fieldNames;
+    protected final IAType[] fieldTypes;
     protected final OptimizableOperatorSubTree[] subTrees;
     protected final IAlgebricksConstantValue[] constantVals;
     protected boolean partialField;
@@ -37,9 +43,14 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
             IAlgebricksConstantValue[] constantVals) {
         this.funcExpr = funcExpr;
         this.logicalVars = logicalVars;
+        this.sourceVars = new LogicalVariable[logicalVars.length];
+        this.logicalExprs = new ILogicalExpression[logicalVars.length];
         this.constantVals = constantVals;
-        this.fieldNames = new String[logicalVars.length];
-        this.typeTags = new ATypeTag[logicalVars.length];
+        this.fieldNames = new ArrayList<List<String>>();
+        for (int i = 0; i < logicalVars.length; i++) {
+            fieldNames.add(new ArrayList<String>());
+        }
+        this.fieldTypes = new IAType[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
 
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
@@ -54,9 +65,14 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
             IAlgebricksConstantValue constantVal) {
         this.funcExpr = funcExpr;
         this.logicalVars = new LogicalVariable[] { logicalVar };
+        this.sourceVars = new LogicalVariable[1];
+        this.logicalExprs = new ILogicalExpression[1];
         this.constantVals = new IAlgebricksConstantValue[] { constantVal };
-        this.fieldNames = new String[logicalVars.length];
-        this.typeTags = new ATypeTag[logicalVars.length];
+        this.fieldNames = new ArrayList<List<String>>();
+        for (int i = 0; i < logicalVars.length; i++) {
+            fieldNames.add(new ArrayList<String>());
+        }
+        this.fieldTypes = new IAType[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
             this.partialField = true;
@@ -86,17 +102,33 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     }
 
     @Override
-    public void setFieldName(int index, String fieldName) {
-        fieldNames[index] = fieldName;
+    public void setLogicalExpr(int index, ILogicalExpression logExpr) {
+        logicalExprs[index] = logExpr;
     }
 
     @Override
-    public String getFieldName(int index) {
-        return fieldNames[index];
+    public ILogicalExpression getLogicalExpr(int index) {
+        return logicalExprs[index];
     }
 
-    public String[] getFieldNames() {
-        return fieldNames;
+    @Override
+    public void setFieldName(int index, List<String> fieldName) {
+        fieldNames.set(index, fieldName);
+    }
+
+    @Override
+    public List<String> getFieldName(int index) {
+        return fieldNames.get(index);
+    }
+
+    @Override
+    public void setFieldType(int index, IAType fieldType) {
+        fieldTypes[index] = fieldType;
+    }
+
+    @Override
+    public IAType getFieldType(int index) {
+        return fieldTypes[index];
     }
 
     @Override
@@ -115,9 +147,9 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     }
 
     @Override
-    public int findFieldName(String fieldName) {
-        for (int i = 0; i < fieldNames.length; i++) {
-            if (fieldName.equals(fieldNames[i])) {
+    public int findFieldName(List<String> fieldName) {
+        for (int i = 0; i < fieldNames.size(); i++) {
+            if (fieldName.equals(fieldNames.get(i))) {
                 return i;
             }
         }
@@ -157,12 +189,27 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     }
 
     @Override
-    public void setTypeTag(int index, ATypeTag typeTag) {
-        typeTags[index] = typeTag;
+    public int hashCode() {
+        return funcExpr.hashCode();
+
     }
 
     @Override
-    public ATypeTag getTypeTag(int index) {
-        return typeTags[index];
+    public boolean equals(Object o) {
+        if (!(o instanceof OptimizableFuncExpr))
+            return false;
+        else
+            return funcExpr.equals(o);
+
     }
+
+    public void setSourceVar(int index, LogicalVariable var) {
+        sourceVars[index] = var;
+    }
+
+    @Override
+    public LogicalVariable getSourceVar(int index) {
+        return sourceVars[index];
+    }
+
 }

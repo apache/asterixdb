@@ -1,0 +1,43 @@
+/*
+ * Test case Name  : scan-insert-rtree-secondary-index-nullable.aql
+ * Description     : This test is intended to test insertion into secondary rtree indexes that are built on nullable fields
+ * Expected Result : Success
+ * Date            : May 12 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+
+create type MyRecordtmp as closed {
+
+  id: int64,
+  point: point?,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle
+}
+
+
+create type MyMiniRecordtmp as closed {
+
+  id: int64,
+  point: point?
+}
+
+
+create type MyMiniRecord as closed {
+  nested : MyMiniRecordtmp
+}
+
+create dataset MyDatatmp(MyRecordtmp)
+  primary key id;
+
+
+
+

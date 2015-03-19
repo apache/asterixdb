@@ -1,0 +1,27 @@
+/*
+ * Description    : Tests whether an ngram_index is applied to optimize a selection query using the contains function.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as open {
+  id: int32,
+  dblpid: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index ngram_index on DBLP(title:string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-basic_ngram-contains.adm";
+
+for $o in dataset('DBLP')
+where contains($o.title, "Multimedia")
+order by $o.id
+return $o

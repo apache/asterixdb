@@ -51,7 +51,7 @@ public class OrderedListConstructorResultType implements IResultTypeComputer {
         for (int k = 0; k < f.getArguments().size(); k++) {
             IAType type = (IAType) env.getType(f.getArguments().get(k).getValue());
             if (type.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) type))
-                type = ((AUnionType) type).getUnionList().get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                type = ((AUnionType) type).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
             if (types.indexOf(type) < 0) {
                 types.add(type);
             }

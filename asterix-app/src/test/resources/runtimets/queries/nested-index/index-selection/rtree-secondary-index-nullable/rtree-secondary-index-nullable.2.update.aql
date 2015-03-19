@@ -1,0 +1,13 @@
+use dataverse test;
+
+load dataset MyDatatmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialDataNulls.json"),("format"="adm"));
+
+insert into dataset MyData
+(
+	for $c in dataset('MyDatatmp')
+	return {
+		"nested" : $c
+	}	
+);

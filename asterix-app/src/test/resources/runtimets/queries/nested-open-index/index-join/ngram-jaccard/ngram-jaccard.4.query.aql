@@ -1,0 +1,15 @@
+/*
+ * Description    : Fuzzy joins two datasets, DBLP and CSX, based on the similarity-jaccard function of their titles' 3-gram tokens.
+ *                  DBLP has a 3-gram index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+set import-private-functions 'true';
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+where similarity-jaccard(gram-tokens($a.nested.title, 3, false), gram-tokens($b.nested.title, 3, false)) >= 0.5f
+      and $a.nested.id < $b.nested.id
+order by $a.nested.id, $b.nested.id
+return { "arec": $a.nested, "brec": $b.nested }

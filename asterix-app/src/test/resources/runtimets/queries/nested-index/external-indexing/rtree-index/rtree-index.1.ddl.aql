@@ -1,0 +1,23 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type MyRecordNested as closed {
+  id: int64,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create type MyRecord as closed {
+  nested: MyRecordNested
+}
+
+create external dataset MyData(MyRecord) using hdfs(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/spatialDataNested.json"),("input-format"="text-input-format"),("format"="adm"));
+
+create index rtree_index_point on MyData(nested.point) type rtree;

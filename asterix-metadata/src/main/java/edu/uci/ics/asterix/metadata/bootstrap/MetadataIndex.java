@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.metadata.bootstrap;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixRuntimeException;
@@ -46,7 +47,7 @@ public final class MetadataIndex implements IMetadataIndex {
     // Types of key fields.
     protected final IAType[] keyTypes;
     // Names of key fields. Used to compute partitionExprs.
-    protected final String[] keyNames;
+    protected final List<List<String>> keyNames;
     // Field permutation for BTree insert. Auto-created based on numFields.
     protected final int[] fieldPermutation;
     // Key Fields that will be used for the bloom filters in the LSM-btree.
@@ -74,11 +75,11 @@ public final class MetadataIndex implements IMetadataIndex {
     // PrimaryKeyField indexes used for secondary index operations
     protected final int[] primaryKeyIndexes;
 
-    public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes, String[] keyNames,
-            int numSecondaryIndexKeys, ARecordType payloadType, int datasetId, boolean isPrimaryIndex,
-            int[] primaryKeyIndexes) throws AsterixRuntimeException {
+    public MetadataIndex(String datasetName, String indexName, int numFields, IAType[] keyTypes,
+            List<List<String>> keyNames, int numSecondaryIndexKeys, ARecordType payloadType, int datasetId,
+            boolean isPrimaryIndex, int[] primaryKeyIndexes) throws AsterixRuntimeException {
         // Sanity checks.
-        if (keyTypes.length != keyNames.length) {
+        if (keyTypes.length != keyNames.size()) {
             throw new AsterixRuntimeException("Unequal number of key types and names given.");
         }
         if (keyTypes.length > numFields) {
@@ -185,12 +186,17 @@ public final class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
-    public List<String> getPartitioningExpr() {
-        ArrayList<String> partitioningExpr = new ArrayList<String>();
-        for (int i = 0; i < keyNames.length; i++) {
-            partitioningExpr.add(keyNames[i]);
+    public List<List<String>> getPartitioningExpr() {
+        ArrayList<List<String>> partitioningExpr = new ArrayList<List<String>>();
+        for (int i = 0; i < keyNames.size(); i++) {
+            partitioningExpr.add(keyNames.get(i));
         }
         return partitioningExpr;
+    }
+
+    @Override
+    public List<IAType> getPartitioningExprType() {
+        return Arrays.asList(keyTypes);
     }
 
     @Override

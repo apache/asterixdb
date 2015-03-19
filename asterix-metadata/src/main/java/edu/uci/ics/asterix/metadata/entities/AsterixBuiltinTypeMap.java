@@ -15,10 +15,15 @@
 
 package edu.uci.ics.asterix.metadata.entities;
 
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.transactions.JobId;
+import edu.uci.ics.asterix.metadata.MetadataException;
+import edu.uci.ics.asterix.metadata.MetadataNode;
 import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.IAType;
 
 /**
  * Maps from a string representation of an Asterix type to an Asterix type.
@@ -57,5 +62,18 @@ public class AsterixBuiltinTypeMap {
 
     public static Map<String, BuiltinType> getBuiltinTypes() {
         return _builtinTypeMap;
+    }
+
+    public static IAType getTypeFromTypeName(MetadataNode metadataNode, JobId jobId, String dataverseName,
+            String typeName) throws MetadataException {
+        IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(typeName);
+        if (type == null) {
+            try {
+                type = metadataNode.getDatatype(jobId, dataverseName, typeName).getDatatype();
+            } catch (RemoteException e) {
+                throw new MetadataException(e);
+            }
+        }
+        return type;
     }
 }

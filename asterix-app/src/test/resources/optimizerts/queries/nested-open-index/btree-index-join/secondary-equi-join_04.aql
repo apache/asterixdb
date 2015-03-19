@@ -1,0 +1,32 @@
+/*
+ * Description    : Self-joins dataset DBLP, based on it's title.
+ *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPTypetmp as open {
+  id: int32,
+  dblpid: string,
+  authors: string,
+  misc: string
+}
+
+create type DBLPType as open {
+  nested : DBLPTypetmp
+}
+
+create dataset DBLP(DBLPType) primary key nested.id;
+
+create index title_index on DBLP(nested.title: string) enforced;
+
+write output to nc1:"rttest/btree-index-join_title-secondary-equi-join_04.adm";
+
+for $a in dataset('DBLP')
+for $a2 in dataset('DBLP')
+where $a.nested.title /*+ indexnl */ = $a2.nested.title
+return {"arec": $a, "arec2": $a2}

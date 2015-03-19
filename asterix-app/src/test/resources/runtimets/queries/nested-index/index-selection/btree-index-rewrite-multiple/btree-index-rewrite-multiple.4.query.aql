@@ -1,0 +1,24 @@
+/*
+ * Description     : Test that multiple subtrees in the same query
+ *                   can be rewritten with secondary BTree indexes.
+ *                   Guards against regression to issue 204.
+ * Expected Result : Success
+ * Issue           : Issue 204
+ */
+
+use dataverse tpch;
+
+for $o in dataset('Orders')
+for $o2 in dataset('Orders')
+where $o.nested.o_custkey = 20 and $o2.nested.o_custkey = 10
+and $o.nested.o_orderstatus < $o2.nested.o_orderstatus
+order by $o.nested.o_orderkey, $o2.nested.o_orderkey
+return {
+  "o_orderkey": $o.nested.o_orderkey,
+  "o_custkey": $o.nested.o_custkey,
+  "o_orderstatus": $o.nested.o_orderstatus,
+  "o_orderkey2": $o2.nested.o_orderkey,
+  "o_custkey2": $o2.nested.o_custkey,
+  "o_orderstatus2": $o2.nested.o_orderstatus
+}
+

@@ -40,6 +40,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
+      <compilation-unit name="meta22">
+        <output-dir compare="Text">meta22</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta23">
+        <output-dir compare="Text">meta23</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
       <compilation-unit name="meta06">
         <output-dir compare="Text">meta06</output-dir>
       </compilation-unit>

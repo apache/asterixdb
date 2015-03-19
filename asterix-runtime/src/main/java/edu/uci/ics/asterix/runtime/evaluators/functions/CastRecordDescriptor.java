@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
@@ -31,7 +30,6 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -70,22 +68,15 @@ public class CastRecordDescriptor extends AbstractScalarFunctionDynamicDescripto
                 final DataOutput out = output.getDataOutput();
                 final ArrayBackedValueStorage recordBuffer = new ArrayBackedValueStorage();
                 final ICopyEvaluator recEvaluator = recordEvalFactory.createEvaluator(recordBuffer);
-                final ARecordType clonedRecType;
-                try {
-                    clonedRecType = new ARecordType(reqType.getTypeName(), reqType.getFieldNames(),
-                            reqType.getFieldTypes(), reqType.isOpen());
-                } catch (AsterixException | HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
 
                 return new ICopyEvaluator() {
                     // pointable allocator
                     private PointableAllocator allocator = new PointableAllocator();
                     final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
-                    final IVisitablePointable resultAccessor = allocator.allocateRecordValue(clonedRecType);
+                    final IVisitablePointable resultAccessor = allocator.allocateRecordValue(reqType);
                     final ACastVisitor castVisitor = new ACastVisitor();
                     final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<IVisitablePointable, IAType, Boolean>(
-                            resultAccessor, clonedRecType, Boolean.FALSE);
+                            resultAccessor, reqType, Boolean.FALSE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

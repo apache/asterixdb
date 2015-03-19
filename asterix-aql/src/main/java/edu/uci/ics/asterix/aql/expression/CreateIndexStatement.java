@@ -17,19 +17,22 @@ package edu.uci.ics.asterix.aql.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.base.Statement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
 public class CreateIndexStatement implements Statement {
 
     private Identifier indexName;
     private Identifier dataverseName;
     private Identifier datasetName;
-    private List<String> fieldExprs = new ArrayList<String>();
+    private List<Pair<List<String>, TypeExpression>> fieldExprs = new ArrayList<Pair<List<String>, TypeExpression>>();
     private IndexType indexType = IndexType.BTREE;
+    private boolean enforced;
     private boolean ifNotExists;
 
     // Specific to NGram indexes.
@@ -70,12 +73,12 @@ public class CreateIndexStatement implements Statement {
         this.datasetName = datasetName;
     }
 
-    public List<String> getFieldExprs() {
+    public List<Pair<List<String>, TypeExpression>> getFieldExprs() {
         return fieldExprs;
     }
 
-    public void addFieldExpr(String fe) {
-        this.fieldExprs.add(fe);
+    public void addFieldExprPair(Pair<List<String>, TypeExpression> fp) {
+        this.fieldExprs.add(fp);
     }
 
     public IndexType getIndexType() {
@@ -84,6 +87,14 @@ public class CreateIndexStatement implements Statement {
 
     public void setIndexType(IndexType indexType) {
         this.indexType = indexType;
+    }
+
+    public boolean isEnforced() {
+        return enforced;
+    }
+
+    public void setEnforced(boolean isEnforced) {
+        this.enforced = isEnforced;
     }
 
     public void setIfNotExists(boolean ifNotExists) {

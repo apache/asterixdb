@@ -1,0 +1,7 @@
+
+use dataverse TinySocial;
+
+for $c in dataset('TweetMessages')
+where $c.user.name < "Nathan Giesen" and $c.user.statuses_count < 473
+return $c
+

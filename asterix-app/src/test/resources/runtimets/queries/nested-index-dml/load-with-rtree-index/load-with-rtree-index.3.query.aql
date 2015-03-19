@@ -1,0 +1,9 @@
+
+
+use dataverse TinySocial;
+
+for $c in dataset('TweetMessages')
+where spatial-intersect($c.user.sender-location, create-rectangle(create-point(0.0,0.0), create-point(50.0,80.0)))
+order by $c.tweetid
+return $c
+

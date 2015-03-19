@@ -1,0 +1,38 @@
+/* 
+ * Test case Name  : scan-delete-btree-secondary-index-open.aql
+ * Description     : This test is intended to test deletion from secondary btree indexes that are built on open fields 
+ * Expected Result : Success
+ * Date            : Feb 13 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as closed {
+  number: int64, 
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int64, 
+  name: string,
+  age: int64?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int64? } ]
+}
+
+create type CustomerOpenType as open {
+  cid: int64, 
+  name: string,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int64? } ]
+}
+
+create dataset Customers(CustomerType) primary key cid;
+
+create dataset CustomersOpen(CustomerOpenType) primary key cid;

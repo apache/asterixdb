@@ -1,0 +1,7 @@
+use dataverse test;
+
+for $c in dataset('LineItem')
+where $c.nested.l_suppkey < 100 and $c.nested.l_suppkey>5
+order by $c.nested.l_orderkey, $c.nested.l_linenumber
+return $c.nested
+

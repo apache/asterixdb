@@ -1,0 +1,14 @@
+/*
+ * Description    : Equi joins two datasets, Customers and Orders, based on the customer id.
+ *                  Given the 'indexnl' hint we expect the join to be transformed
+ *                  into an indexed nested-loop join using Customers' primary index.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+for $c in dataset('Customers')
+for $o in dataset('Orders')
+where $c.nested.cid /*+ indexnl */ = $o.nested.cid
+order by $c.nested.cid, $o.nested.oid
+return {"cid":$c.nested.cid, "oid": $o.nested.oid}

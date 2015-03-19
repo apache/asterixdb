@@ -1,0 +1,7 @@
+
+use dataverse TinySocial;
+
+create index stat on TweetMessages(user.statuses_count);
+create index name on TweetMessages(user.name);
+
+

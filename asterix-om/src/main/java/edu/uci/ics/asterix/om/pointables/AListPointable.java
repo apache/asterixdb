@@ -142,7 +142,7 @@ public class AListPointable extends AbstractVisitablePointable {
                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[itemOffset]);
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, true) + 1;
                     IVisitablePointable tag = allocator.allocateEmpty();
-                    IVisitablePointable item = allocator.allocateFieldValue(itemTag);
+                    IVisitablePointable item = allocator.allocateFieldValue(itemTag, b, itemOffset + 1);
 
                     // set item type tag
                     int start = dataBos.size();

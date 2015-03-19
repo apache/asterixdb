@@ -1,0 +1,24 @@
+/*
+ *  Description     : This test is intended to verify that the secondary BTree index is used
+ *                  : in the optimized query plan.
+ *  Expected Result : Success
+ *  Date            : 26th Mar 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/btree-index_btree-secondary-52.adm";
+
+create type TestType as open {
+    id : int32
+}
+
+create dataset testdst(TestType) primary key id;
+
+create index sec_Idx on testdst(fname:string) enforced;
+
+for $emp in dataset('testdst')
+where $emp.fname > "Max"
+return $emp

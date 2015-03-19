@@ -95,17 +95,18 @@ import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.declared.LoadableDataSource;
 import edu.uci.ics.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
 import edu.uci.ics.asterix.metadata.declared.DatasetDataSource;
+import edu.uci.ics.asterix.metadata.declared.LoadableDataSource;
 import edu.uci.ics.asterix.metadata.declared.ResultSetDataSink;
 import edu.uci.ics.asterix.metadata.declared.ResultSetSinkId;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
+import edu.uci.ics.asterix.om.base.AOrderedList;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -210,7 +211,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         IAType itemType = metadataProvider.findType(clffs.getDataverseName(), dataset.getItemTypeName());
         DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDataverseName(),
                 stmt.getDatasetName());
-        List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
+        List<List<String>> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
 
         LoadableDataSource lds;
         try {
@@ -240,7 +241,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         ArrayList<Mutable<ILogicalExpression>> pkExprs = new ArrayList<Mutable<ILogicalExpression>>();
         List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
         LogicalVariable payloadVar = payloadVars.get(0);
-        for (String keyFieldName : partitionKeys) {
+        for (List<String> keyFieldName : partitionKeys) {
             prepareVarAndExpression(keyFieldName, payloadVar, pkVars, pkExprs, varRefsForLoading);
         }
 
@@ -256,7 +257,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             assign.setExplicitOrderingProperty(new LocalOrderProperty(orderColumns));
         }
 
-        String additionalFilteringField = DatasetUtils.getFilterField(targetDatasource.getDataset());
+        List<String> additionalFilteringField = DatasetUtils.getFilterField(targetDatasource.getDataset());
         List<LogicalVariable> additionalFilteringVars = null;
         List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions = null;
         List<Mutable<ILogicalExpression>> additionalFilteringExpressions = null;
@@ -340,12 +341,12 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
-            List<String> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
-            for (String keyFieldName : partitionKeys) {
+            List<List<String>> partitionKeys = DatasetUtils.getPartitioningKeys(targetDatasource.getDataset());
+            for (List<String> keyFieldName : partitionKeys) {
                 prepareVarAndExpression(keyFieldName, resVar, vars, exprs, varRefsForLoading);
             }
 
-            String additionalFilteringField = DatasetUtils.getFilterField(targetDatasource.getDataset());
+            List<String> additionalFilteringField = DatasetUtils.getFilterField(targetDatasource.getDataset());
             List<LogicalVariable> additionalFilteringVars = null;
             List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions = null;
             List<Mutable<ILogicalExpression>> additionalFilteringExpressions = null;
@@ -412,16 +413,23 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     }
 
     @SuppressWarnings("unchecked")
-    private void prepareVarAndExpression(String field, LogicalVariable resVar,
+    private void prepareVarAndExpression(List<String> field, LogicalVariable resVar,
             List<LogicalVariable> additionalFilteringVars,
             List<Mutable<ILogicalExpression>> additionalFilteringAssignExpressions,
             List<Mutable<ILogicalExpression>> varRefs) {
-        IFunctionInfo finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
-
-        ScalarFunctionCallExpression f = new ScalarFunctionCallExpression(finfoAccess,
-                new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
-                new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                        new AString(field)))));
+        IFunctionInfo finfoAccess;
+        ScalarFunctionCallExpression f;
+        if (field.size() > 1) {
+            finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED);
+            f = new ScalarFunctionCallExpression(finfoAccess, new MutableObject<ILogicalExpression>(
+                    new VariableReferenceExpression(METADATA_DUMMY_VAR)), new MutableObject<ILogicalExpression>(
+                    new ConstantExpression(new AsterixConstantValue(new AOrderedList(field)))));
+        } else {
+            finfoAccess = FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME);
+            f = new ScalarFunctionCallExpression(finfoAccess, new MutableObject<ILogicalExpression>(
+                    new VariableReferenceExpression(METADATA_DUMMY_VAR)), new MutableObject<ILogicalExpression>(
+                    new ConstantExpression(new AsterixConstantValue(new AString(field.get(0))))));
+        }
         f.substituteVar(METADATA_DUMMY_VAR, resVar);
         additionalFilteringAssignExpressions.add(new MutableObject<ILogicalExpression>(f));
         LogicalVariable v = context.newVar();

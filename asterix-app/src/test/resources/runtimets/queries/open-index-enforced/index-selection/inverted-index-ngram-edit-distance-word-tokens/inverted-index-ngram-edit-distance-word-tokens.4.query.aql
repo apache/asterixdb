@@ -1,0 +1,11 @@
+use dataverse test;
+
+for $paper in dataset('DBLP')
+for $word in word-tokens($paper.title)
+where edit-distance-check($word, "Multmedia", 1)[0]
+distinct by $paper.id
+order by $paper.id
+return {
+  "id" : $paper.id,
+  "title" : $paper.title
+}

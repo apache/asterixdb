@@ -1,0 +1,22 @@
+/*
+* Description  : Create an external dataset that contains records stored with text hdfs file format.
+                 Build an index over the external dataset age attribute
+                 Perform a query over the dataset using the index.
+* Expected Res : Success
+* Date         : 3rd Jan 2014
+*/
+use dataverse test;
+
+for $d in dataset MyData
+where $d.nested.id = 10
+return {
+  "id": $d.nested.id,
+  "point": $d.nested.point,
+  "kwds": $d.nested.kwds,
+  "line1": $d.nested.line1,
+  "line2": $d.nested.line2,
+  "poly1": $d.nested.poly1,
+  "poly2": $d.nested.poly2,
+  "rec": $d.nested.rec,
+  "circle": $d.nested.circle
+};

@@ -1,0 +1,10 @@
+/*
+ * Test case Name  : scan-delete-inverted-index-ngram-secondary-index-open.aql
+ * Description     : This test is intended to test deletion from secondary ngram inverted index that is built on open field.
+ * Expected Result : Success
+ * Date            : March 13 2014
+ */
+
+use dataverse test;
+
+create index ngram_index on DBLPOpen(title:string) type ngram(3) enforced;

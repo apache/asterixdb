@@ -60,6 +60,18 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
         }
     }
 
+    private void deepCopyOpaqueParameters(AbstractFunctionCallExpression src, AbstractFunctionCallExpression dest) {
+        Object[] srcOpaqueParameters = src.getOpaqueParameters();
+        Object[] newOpaqueParameters = null;
+        if (srcOpaqueParameters != null) {
+            newOpaqueParameters = new Object[srcOpaqueParameters.length];
+            for (int i = 0; i < srcOpaqueParameters.length; i++) {
+                newOpaqueParameters[i] = srcOpaqueParameters[i];
+            }
+        }
+        dest.setOpaqueParameters(newOpaqueParameters);
+    }
+
     public MutableObject<ILogicalExpression> deepCopyExpressionReference(Mutable<ILogicalExpression> exprRef)
             throws AlgebricksException {
         return new MutableObject<ILogicalExpression>(deepCopy(exprRef.getValue()));
@@ -81,6 +93,7 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
         AggregateFunctionCallExpression exprCopy = new AggregateFunctionCallExpression(expr.getFunctionInfo(),
                 expr.isTwoStep(), deepCopyExpressionReferenceList(expr.getArguments()));
         deepCopyAnnotations(expr, exprCopy);
+        deepCopyOpaqueParameters(expr, exprCopy);
         return exprCopy;
     }
 
@@ -95,6 +108,7 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
         ScalarFunctionCallExpression exprCopy = new ScalarFunctionCallExpression(expr.getFunctionInfo(),
                 deepCopyExpressionReferenceList(expr.getArguments()));
         deepCopyAnnotations(expr, exprCopy);
+        deepCopyOpaqueParameters(expr, exprCopy);
         return exprCopy;
 
     }
@@ -111,6 +125,7 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
         UnnestingFunctionCallExpression exprCopy = new UnnestingFunctionCallExpression(expr.getFunctionInfo(),
                 deepCopyExpressionReferenceList(expr.getArguments()));
         deepCopyAnnotations(expr, exprCopy);
+        deepCopyOpaqueParameters(expr, exprCopy);
         return exprCopy;
     }
 

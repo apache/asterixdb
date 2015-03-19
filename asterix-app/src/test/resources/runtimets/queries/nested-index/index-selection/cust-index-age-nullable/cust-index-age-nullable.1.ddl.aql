@@ -1,0 +1,27 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as open {
+  number: int64,
+  street: string,
+  city: string
+}
+
+create type CustomerTypetmp as open {
+  cid: int64,
+  name: string,
+  age: int64?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int64? } ]
+}
+
+create type CustomerType as open {
+nested : CustomerTypetmp
+}
+
+create dataset Customerstmp(CustomerTypetmp) primary key cid;
+
+create dataset Customers(CustomerType) primary key nested.cid;
+

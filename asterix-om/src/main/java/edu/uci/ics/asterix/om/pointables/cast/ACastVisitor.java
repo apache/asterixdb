@@ -84,7 +84,12 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
                 arg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
-            caster.castRecord(accessor, arg.first, (ARecordType) arg.second, this);
+            ARecordType resultType = (ARecordType) arg.second;
+            //cloning result type to avoid race conditions during comparison\hash calculation
+            ARecordType clonedResultType = new ARecordType(resultType.getTypeName(), resultType.getFieldNames(),
+                    resultType.getFieldTypes(), resultType.isOpen());
+
+            caster.castRecord(accessor, arg.first, clonedResultType, this);
         } catch (Exception e) {
             throw new AsterixException(e);
         }

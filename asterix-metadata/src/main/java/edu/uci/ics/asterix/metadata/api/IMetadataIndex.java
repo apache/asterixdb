@@ -19,6 +19,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.common.transactions.DatasetId;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -35,7 +36,9 @@ public interface IMetadataIndex {
 
     public String getIndexedDatasetName();
 
-    public List<String> getPartitioningExpr();
+    public List<List<String>> getPartitioningExpr();
+
+    public List<IAType> getPartitioningExprType();
 
     public String getIndexName();
 

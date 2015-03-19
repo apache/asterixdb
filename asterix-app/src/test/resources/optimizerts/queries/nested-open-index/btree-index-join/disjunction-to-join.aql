@@ -1,0 +1,26 @@
+/*
+ * Description    : Disjunctive predicate should be transformed into collection scan.
+ *                  Secondary index should be used to probe the values retrieved from collection.
+ * Success        : Yes
+ */
+ 
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type NestedTestType as open {
+};
+
+create type TestType as open {
+  "id" : string,
+  "no-idx" : string,
+  "nested" : NestedTestType
+};
+
+
+create dataset TestSet(TestType) primary key "id";
+create index TestSetIndex on TestSet(nested.idx: string) enforced;
+
+for $x in dataset TestSet 
+where $x.nested.idx = "one" or $x.nested.idx = "two"
+return $x

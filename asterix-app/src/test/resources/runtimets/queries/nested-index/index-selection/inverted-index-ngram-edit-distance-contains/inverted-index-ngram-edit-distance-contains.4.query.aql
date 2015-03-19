@@ -1,0 +1,9 @@
+use dataverse test;
+
+for $paper in dataset('DBLP')
+where edit-distance-contains($paper.nested.title, "Multmedia", 1)[0]
+order by $paper.nested.id
+return {
+  "id" : $paper.nested.id,
+  "title" : $paper.nested.title
+}

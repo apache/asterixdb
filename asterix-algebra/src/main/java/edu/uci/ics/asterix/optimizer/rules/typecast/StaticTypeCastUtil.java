@@ -304,7 +304,7 @@ public class StaticTypeCastUtil {
                     if (reqFieldType.getTypeTag() == ATypeTag.UNION
                             && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
                         IAType itemType = ((AUnionType) reqFieldType).getUnionList().get(
-                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                                AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                         reqFieldType = itemType;
                         if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
                             fieldPermutation[j] = i;
@@ -325,7 +325,7 @@ public class StaticTypeCastUtil {
                     if (fieldType.getTypeTag() == ATypeTag.UNION
                             && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldType)) {
                         IAType itemType = ((AUnionType) fieldType).getUnionList().get(
-                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                                AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                         if (reqFieldType.equals(itemType)) {
                             fieldPermutation[j] = i;
                             openFields[i] = false;
@@ -382,7 +382,7 @@ public class StaticTypeCastUtil {
                 if (reqFieldType.getTypeTag() == ATypeTag.UNION
                         && NonTaggedFormatUtil.isOptionalField((AUnionType) reqFieldType)) {
                     IAType itemType = ((AUnionType) reqFieldType).getUnionList().get(
-                            NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                            AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                     if (fieldType.equals(BuiltinType.ANULL) || fieldType.equals(itemType)) {
                         matched = true;
                         break;

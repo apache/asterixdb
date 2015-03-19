@@ -17,12 +17,12 @@ public class FieldExtractingAdapterFactory implements IAdapterFactory {
 
     private final RecordDescriptor outRecDesc;
 
-    private final int[] extractFields;
+    private final int[][] extractFields;
 
     private final ARecordType rType;
 
     public FieldExtractingAdapterFactory(IAdapterFactory wrappedAdapterFactory, RecordDescriptor inRecDesc,
-            RecordDescriptor outRecDesc, int[] extractFields, ARecordType rType) {
+            RecordDescriptor outRecDesc, int[][] extractFields, ARecordType rType) {
         this.wrappedAdapterFactory = wrappedAdapterFactory;
         this.inRecDesc = inRecDesc;
         this.outRecDesc = outRecDesc;

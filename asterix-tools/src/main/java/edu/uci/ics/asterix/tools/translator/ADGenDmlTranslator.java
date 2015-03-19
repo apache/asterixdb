@@ -54,7 +54,8 @@ public class ADGenDmlTranslator extends AbstractAqlTranslator {
                 String typeDataverse = td.getDataverseName() == null ? defaultDataverse : td.getDataverseName()
                         .getValue();
 
-                Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td, typeDataverse, types);
+                Map<TypeSignature, IAType> typeInStmt = TypeTranslator.computeTypes(mdTxnCtx, td.getTypeDef(), td
+                        .getIdent().getValue(), typeDataverse, types);
                 types.putAll(typeInStmt);
 
                 TypeSignature signature = new TypeSignature(typeDataverse, td.getIdent().getValue());

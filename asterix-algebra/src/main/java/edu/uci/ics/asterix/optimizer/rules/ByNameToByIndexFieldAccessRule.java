@@ -91,19 +91,21 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
                 assign.getInputs().get(0).setValue(assignVar);
                 context.computeAndSetTypeEnvironmentForOperator(assignVar);
                 context.computeAndSetTypeEnvironmentForOperator(assign);
+                //access by name was not replaced to access by index, but the plan was altered, hence changed is true
+                changed = true;
             }
 
             IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
             try {
                 switch (t.getTypeTag()) {
                     case ANY: {
-                        return false;
+                        return false || changed;
                     }
                     case RECORD: {
                         ARecordType recType = (ARecordType) t;
                         ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
                         if (fai == null) {
-                            return false;
+                            return false || changed;
                         }
                         expressions.get(i).setValue(fai);
                         changed = true;
@@ -117,7 +119,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
                                 ARecordType recType = (ARecordType) t2;
                                 ILogicalExpression fai = createFieldAccessByIndex(recType, fce);
                                 if (fai == null) {
-                                    return false;
+                                    return false || changed;
                                 }
                                 expressions.get(i).setValue(fai);
                                 changed = true;

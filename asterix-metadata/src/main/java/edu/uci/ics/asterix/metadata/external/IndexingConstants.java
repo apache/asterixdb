@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.metadata.external;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -75,7 +76,7 @@ public class IndexingConstants {
     public static final int RECORD_OFFSET_FIELD_INDEX = 1;
     public static final int ROW_NUMBER_FIELD_INDEX = 2;
     
-    public static final ArrayList<String> RecordIDFields = new ArrayList<String>();
+    public static final ArrayList<List<String>> RecordIDFields = new ArrayList<List<String>>();
 
     static {
 
@@ -95,9 +96,9 @@ public class IndexingConstants {
         rowNumberEvalFactory = new TupleFieldEvaluatorFactory(3);
         
         // Add field names
-        RecordIDFields.add("FileNumber");
-        RecordIDFields.add("RecordOffset");
-        RecordIDFields.add("RowNumber");
+        RecordIDFields.add(new ArrayList<String>(Arrays.asList("FileNumber")));
+        RecordIDFields.add(new ArrayList<String>(Arrays.asList("RecordOffset")));
+        RecordIDFields.add(new ArrayList<String>(Arrays.asList("RowNumber")));
     }
 
     // This function returns the size of the RID for the passed file input format
@@ -192,7 +193,7 @@ public class IndexingConstants {
         return getRIDSize(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties().get(KEY_INPUT_FORMAT));
     }
 
-    public static List<String> getRIDKeys(Dataset dataset) {
+    public static List<List<String>> getRIDKeys(Dataset dataset) {
         String fileInputFormat = ((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties().get(KEY_INPUT_FORMAT);
         if (fileInputFormat.equals(INPUT_FORMAT_RC) || fileInputFormat.equals(INPUT_FORMAT_RC_FULLY_QUALIFIED))
             return RecordIDFields;

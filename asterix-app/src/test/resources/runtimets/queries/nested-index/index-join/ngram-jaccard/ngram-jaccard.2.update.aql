@@ -1,0 +1,30 @@
+/*
+ * Description    : Fuzzy joins two datasets, DBLP and CSX, based on the similarity-jaccard function of their titles' 3-gram tokens.
+ *                  DBLP has a 3-gram index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+load dataset DBLPtmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000")) pre-sorted;
+
+load dataset CSXtmp
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000"));
+
+
+insert into dataset DBLP(
+	for $x in dataset DBLPtmp
+	return {
+		"nested": $x
+	}
+);
+
+insert into dataset CSX(
+	for $x in dataset CSXtmp
+	return {
+		"nested": $x
+	}
+);

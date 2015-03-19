@@ -190,7 +190,8 @@ public class MetadataNode implements IMetadataNode {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
                 Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
-                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), true, dataset.getPendingOp());
+                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), id.getPrimaryKeyType(), false,
+                        true, dataset.getPendingOp());
 
                 addIndex(jobId, primaryIndex);
                 // Add an entry for the node group
@@ -219,7 +220,7 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void addIndex(JobId jobId, Index index) throws MetadataException, RemoteException {
         try {
-            IndexTupleTranslator tupleWriter = new IndexTupleTranslator(true);
+            IndexTupleTranslator tupleWriter = new IndexTupleTranslator(jobId, this, true);
             ITupleReference tuple = tupleWriter.getTupleFromMetadataEntity(index);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
         } catch (TreeIndexDuplicateKeyException e) {
@@ -295,23 +296,26 @@ public class MetadataNode implements IMetadataNode {
             throws Exception {
         long resourceID = metadataIndex.getResourceID();
         ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
-        indexLifecycleManager.open(resourceID);
+        try {
+            indexLifecycleManager.open(resourceID);
 
-        // prepare a Callback for logging
-        IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
-                lsmIndex, IndexOperation.INSERT);
+            // prepare a Callback for logging
+            IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID,
+                    metadataIndex, lsmIndex, IndexOperation.INSERT);
 
-        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+            ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
-        txnCtx.setWriteTxn(true);
-        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
-                metadataIndex.isPrimaryIndex());
+            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId,
+                    false);
+            txnCtx.setWriteTxn(true);
+            txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                    metadataIndex.isPrimaryIndex());
 
-        // TODO: fix exceptions once new BTree exception model is in hyracks.
-        indexAccessor.forceInsert(tuple);
-
-        indexLifecycleManager.close(resourceID);
+            // TODO: fix exceptions once new BTree exception model is in hyracks.
+            indexAccessor.forceInsert(tuple);
+        } finally {
+            indexLifecycleManager.close(resourceID);
+        }
     }
 
     private IModificationOperationCallback createIndexModificationCallback(JobId jobId, long resourceId,
@@ -815,7 +819,7 @@ public class MetadataNode implements IMetadataNode {
             throws MetadataException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datasetName, indexName);
-            IndexTupleTranslator tupleReaderWriter = new IndexTupleTranslator(false);
+            IndexTupleTranslator tupleReaderWriter = new IndexTupleTranslator(jobId, this, false);
             IValueExtractor<Index> valueExtractor = new MetadataEntityValueExtractor<Index>(tupleReaderWriter);
             List<Index> results = new ArrayList<Index>();
             searchIndex(jobId, MetadataPrimaryIndexes.INDEX_DATASET, searchKey, valueExtractor, results);
@@ -833,7 +837,7 @@ public class MetadataNode implements IMetadataNode {
             throws MetadataException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(dataverseName, datasetName);
-            IndexTupleTranslator tupleReaderWriter = new IndexTupleTranslator(false);
+            IndexTupleTranslator tupleReaderWriter = new IndexTupleTranslator(jobId, this, false);
             IValueExtractor<Index> valueExtractor = new MetadataEntityValueExtractor<Index>(tupleReaderWriter);
             List<Index> results = new ArrayList<Index>();
             searchIndex(jobId, MetadataPrimaryIndexes.INDEX_DATASET, searchKey, valueExtractor, results);

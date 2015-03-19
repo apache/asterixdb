@@ -547,6 +547,8 @@ The following example creates a dataverse named TinySocial.
     TypeExpr             ::= RecordTypeDef | TypeReference | OrderedListTypeDef | UnorderedListTypeDef
     RecordTypeDef        ::= ( "closed" | "open" )? "{" ( RecordField ( "," RecordField )* )? "}"
     RecordField          ::= Identifier ":" ( TypeExpr ) ( "?" )?
+    NestedField          ::= Identifier ( "." Identifier )*
+    OpenField            ::= NestedField ( ":" TypeReference )?
     TypeReference        ::= Identifier
     OrderedListTypeDef   ::= "[" ( TypeExpr ) "]"
     UnorderedListTypeDef ::= "{{" ( TypeExpr ) "}}"
@@ -591,8 +593,9 @@ The employment field is an ordered list of instances of another named record typ
     Properties           ::= ( "(" Property ( "," Property )* ")" )?
     Property             ::= Identifier "=" ( StringLiteral | IntegerLiteral )
     FunctionSignature    ::= FunctionOrTypeName "@" IntegerLiteral
-    PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
+    PrimaryKey           ::= "primary" "key" NestedField ( "," NestedField )*
     CompactionPolicy     ::= Identifier
+    PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
 
 The create dataset statement is used to create a new dataset.
 Datasets are named, unordered collections of ADM record instances; they
@@ -656,7 +659,7 @@ the URL and path needed to locate the data in HDFS and a description of the data
 #### Indices
 
     IndexSpecification ::= "index" Identifier IfNotExists "on" QualifiedName 
-                           "(" ( Identifier ) ( "," Identifier )* ")" ( "type" IndexType )?
+                           "(" ( OpenField ) ( "," OpenField )* ")" ( "type" IndexType )? ( "enforced" )?
     IndexType          ::= "btree"
                          | "rtree"
                          | "keyword"
@@ -665,15 +668,35 @@ the URL and path needed to locate the data in HDFS and a description of the data
 The create index statement creates a secondary index on one or more fields of a specified dataset.
 Supported index types include `btree` for totally ordered datatypes,
 `rtree` for spatial data, and `keyword` and `ngram` for textual (string) data.
-AsterixDB currently requires indexed fields to be part of the named type associated with a dataset.
-(Future plans include support for indexing of open fields as well.)
+Index could be created on arbitrary nested fields by providing valid path expression as an indexed field identifier.
+An index field is not required to be part of the datatype associated with a dataset if that datatype is declared as
+open, field type is provided along with it's type and `enforced` keyword is specified in the end of index definition.
+`Enforcing` an open field will introduce a load-time check, which will make sure that the actual type of an indexed 
+field (if such field exists in the record) matches the specified field type.
 
 The following example creates a btree index called fbAuthorIdx on the author-id field of the FacebookMessages dataset.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the author-id field.
 
 ##### Example
 
-    create index fbAuthorIdx on FacebookMessages(author-id) type btree;
+    create index fbAuthorIdx on FacebookMessages(author-id) type btree enforced;
+
+The following example creates an open btree index called fbSendTimeIdx on the open send-time field of the 
+FacebookMessages dataset having datetime type.
+This index can be useful for accelerating exact-match queries, range search queries, and joins involving the send-time field.
+
+##### Example
+
+    create index fbSendTimeIdx on FacebookMessages(send-time:datetime) type btree;
+
+The following example creates a btree index called twUserScrNameIdx on the screen-name field, which is a nested field
+of the user field in the TweetMessages dataset.
+This index can be useful for accelerating exact-match queries, range search queries, and joins involving the screen-name field.
+
+##### Example
+
+    create index twUserScrNameIdx on TweetMessages(user.screen-name) type btree;
+
 
 The following example creates an rtree index called fbSenderLocIdx on the sender-location field of the FacebookMessages dataset.
 This index can be useful for accelerating queries that use the

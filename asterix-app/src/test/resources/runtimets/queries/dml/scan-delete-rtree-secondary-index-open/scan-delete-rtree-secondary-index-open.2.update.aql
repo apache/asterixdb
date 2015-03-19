@@ -1,0 +1,17 @@
+/*
+ * Test case Name  : scan-delete-rtree-secondary-index-open.aql
+ * Description     : This test is intended to test deletion from secondary rtree index that is built on open field.
+ * Expected Result : Success
+ * Date            : March 13 2014
+ */
+
+use dataverse test;
+
+load dataset MyData
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+
+insert into dataset test.MyDataOpen (
+	for $x in dataset test.MyData
+		return $x
+);

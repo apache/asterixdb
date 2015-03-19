@@ -1,0 +1,3 @@
+use dataverse test;
+
+create index idx_employee_f_l_name on employee(nested.fname,nested.lname);

@@ -1,0 +1,38 @@
+/*
+ * Test case Name  : scan-delete-btree-secondary-index-nullable.aql
+ * Description     : This test is intended to test insertion into secondary btree indexes that are built on nullable fields
+ * Expected Result : Success
+ * Date            : May 12 2012
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as closed {
+  number: int64,
+  street: string,
+  city: string
+}
+
+
+create type CustomerTypetmp as closed {
+
+  cid: int64,
+  name: string,
+  age: int64?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int64? } ]
+}
+
+
+create type CustomerType as closed {
+  nested : CustomerTypetmp
+}
+
+create dataset Customerstmp(CustomerTypetmp) primary key cid;
+create dataset CustomersMinitmp(CustomerTypetmp) primary key cid;
+create dataset CustomersMini(CustomerType) primary key nested.cid;
+

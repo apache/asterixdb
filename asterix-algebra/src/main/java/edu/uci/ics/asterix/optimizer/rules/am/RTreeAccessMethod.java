@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.optimizer.rules.am;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,10 +43,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ConstantExpressio
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ExternalDataLookupOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -168,18 +167,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
 
-        Pair<IAType, Boolean> keyPairType = null;
-        //Get the type of the field from the optFuncExpr
-        for (String fieldName : ((OptimizableFuncExpr) optFuncExpr).getFieldNames()) {
-            try {
-                if (fieldName != null && recordType.getFieldType(fieldName) != null) {
-                    keyPairType = Index.getNonNullableKeyFieldType(fieldName, recordType);
-                    break;
-                }
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
-            }
-        }
+        int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
+        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
+                optFuncExpr.getFieldName(optFieldIdx), recordType);
         if (keyPairType == null) {
             return null;
         }
@@ -189,7 +179,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
         // we made sure indexSubTree has datasource scan
-        DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.dataSourceRef.getValue();
+        AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.dataSourceRef.getValue();
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
         // A spatial object is serialized in the constant of the func expr we are optimizing.
@@ -229,8 +219,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (probeSubTree == null) {
             // We are optimizing a selection query.
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignSearchKeys.getInputs().add(dataSourceScan.getInputs().get(0));
-            assignSearchKeys.setExecutionMode(dataSourceScan.getExecutionMode());
+            assignSearchKeys.getInputs().add(dataSourceOp.getInputs().get(0));
+            assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
             // We are optimizing a join, place the assign op top of the probe subtree.
             assignSearchKeys.getInputs().add(probeSubTree.rootRef);
@@ -242,11 +232,11 @@ public class RTreeAccessMethod implements IAccessMethod {
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             ExternalDataLookupOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(
-                    dataSourceScan, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput,
+                    dataSourceOp, dataset, recordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput,
                     retainNull);
             return externalDataAccessOp;
         } else {
-            UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan,
+            UnnestMapOperator primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp,
                     dataset, recordType, secondaryIndexUnnestOp, context, true, retainInput, false, false);
 
             return primaryIndexUnnestOp;

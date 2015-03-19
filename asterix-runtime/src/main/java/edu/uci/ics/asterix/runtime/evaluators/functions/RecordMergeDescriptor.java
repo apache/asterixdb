@@ -1,9 +1,13 @@
 package edu.uci.ics.asterix.runtime.evaluators.functions;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Stack;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -25,11 +29,18 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
+import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
+//The record merge evaluator is used to combine two records with no matching fieldnames
+//If both records have the same fieldname for a non-record field anywhere in the schema, the merge will fail
+//This function is performed on a recursive level, meaning that nested records can be combined
+//for instance if both records have a nested field called "metadata"
+//where metadata from A is {"comments":"this rocks"}
+//and metadata from B is {"index":7, "priority":5}
+//Records A and B can be combined yielding a nested record called "metadata"
+//That will have all three fields
 public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -78,11 +89,17 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                 final ArrayBackedValueStorage abvs0 = new ArrayBackedValueStorage();
                 final ArrayBackedValueStorage abvs1 = new ArrayBackedValueStorage();
+
                 final ICopyEvaluator eval0 = args[0].createEvaluator(abvs0);
                 final ICopyEvaluator eval1 = args[1].createEvaluator(abvs1);
 
-                final RecordBuilder rb = new RecordBuilder();
-                rb.reset(recType);
+                final Stack<RecordBuilder> rbStack = new Stack<RecordBuilder>();
+
+                final ArrayBackedValueStorage tabvs = new ArrayBackedValueStorage();
+
+                final ByteArrayAccessibleOutputStream nameOutputStream = new ByteArrayAccessibleOutputStream();
+                final ByteArrayInputStream namebais = new ByteArrayInputStream(nameOutputStream.getByteArray());
+                final DataInputStream namedis = new DataInputStream(namebais);
 
                 return new ICopyEvaluator() {
 
@@ -90,7 +107,6 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         abvs0.reset();
                         abvs1.reset();
-                        rb.init();
 
                         eval0.evaluate(tuple);
                         eval1.evaluate(tuple);
@@ -110,40 +126,116 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
 
                         ARecordPointable rp0 = (ARecordPointable) vp0;
                         ARecordPointable rp1 = (ARecordPointable) vp1;
-                        ArrayBackedValueStorage fnvs = new ArrayBackedValueStorage();
-                        UTF8StringPointable fnp = (UTF8StringPointable) UTF8StringPointable.FACTORY.createPointable();
+
                         try {
-                            for (String fieldName : recType.getFieldNames()) {
-                                fnvs.reset();
-                                UTF8StringSerializerDeserializer.INSTANCE.serialize(fieldName, fnvs.getDataOutput());
-                                fnp.set(fnvs);
-                                if (!addFieldFromRecord(rp1, fieldName, fnp)) {
-                                    addFieldFromRecord(rp0, fieldName, fnp);
-                                }
-                            }
-                            rb.write(output.getDataOutput(), true);
+                            mergeFields(recType, rp0, rp1, true, 0);
+
+                            rbStack.get(0).write(output.getDataOutput(), true);
                         } catch (IOException | AsterixException e) {
                             throw new AlgebricksException(e);
                         }
                     }
 
-                    private boolean addFieldFromRecord(ARecordPointable rp, String fieldName, UTF8StringPointable fnp)
-                            throws IOException, AsterixException {
-                        for (int i = 0; i < rp.getFieldNames().size(); ++i) {
-                            IVisitablePointable fp = rp.getFieldNames().get(i);
-                            IVisitablePointable fv = rp.getFieldValues().get(i);
-                            if (fnp.compareTo(fp.getByteArray(), fp.getStartOffset() + 1, fp.getLength() - 1) == 0) {
-                                if (recType.isClosedField(fieldName)) {
-                                    int pos = recType.findFieldPosition(fieldName);
-                                    rb.addField(pos, fv);
-                                } else {
-                                    rb.addField(fp, fv);
+                    private void mergeFields(ARecordType combinedType, ARecordPointable leftRecord,
+                            ARecordPointable rightRecord, boolean openFromParent, int nestedLevel) throws IOException,
+                            AsterixException, AlgebricksException {
+                        if (rbStack.size() < (nestedLevel + 1)) {
+                            rbStack.push(new RecordBuilder());
+                        }
+
+                        rbStack.get(nestedLevel).reset(combinedType);
+                        rbStack.get(nestedLevel).init();
+                        //Add all fields from left record
+                        for (int i = 0; i < leftRecord.getFieldNames().size(); i++) {
+                            IVisitablePointable leftName = leftRecord.getFieldNames().get(i);
+                            IVisitablePointable leftValue = leftRecord.getFieldValues().get(i);
+                            boolean foundMatch = false;
+                            for (int j = 0; j < rightRecord.getFieldNames().size(); j++) {
+                                IVisitablePointable rightName = rightRecord.getFieldNames().get(j);
+                                IVisitablePointable rightValue = rightRecord.getFieldValues().get(j);
+                                if (rightName.equals(leftName)) {
+                                    //Field was found on the right. Merge Sub Records
+                                    if (rightValue.getByteArray()[0] != ATypeTag.RECORD.serialize()
+                                            || leftValue.getByteArray()[0] != ATypeTag.RECORD.serialize()) {
+                                        //The fields need to be records in order to merge
+                                        throw new AlgebricksException("Duplicate field found");
+                                    } else {
+                                        //We are merging two sub records
+                                        addFieldToSubRecord(combinedType, leftName, leftValue, rightValue,
+                                                openFromParent, nestedLevel);
+                                    }
+                                    foundMatch = true;
                                 }
-                                return true;
+                            }
+                            if (!foundMatch) {
+
+                                addFieldToSubRecord(combinedType, leftName, leftValue, null, openFromParent,
+                                        nestedLevel);
+                            }
+
+                        }
+                        //Repeat for right side (ignoring duplicates this time)
+                        for (int j = 0; j < rightRecord.getFieldNames().size(); j++) {
+                            IVisitablePointable rightName = rightRecord.getFieldNames().get(j);
+                            IVisitablePointable rightValue = rightRecord.getFieldValues().get(j);
+                            boolean foundMatch = false;
+                            for (int i = 0; i < leftRecord.getFieldNames().size(); i++) {
+                                IVisitablePointable leftName = leftRecord.getFieldNames().get(i);
+                                if (rightName.equals(leftName)) {
+                                    foundMatch = true;
+                                }
+                            }
+                            if (!foundMatch) {
+                                addFieldToSubRecord(combinedType, rightName, rightValue, null, openFromParent,
+                                        nestedLevel);
+                            }
+
+                        }
+
+                    }
+
+                    //Takes in a record type, field name, and the field values (which are record) from two records
+                    //Merges them into one record of combinedType
+                    //And adds that record as a field to the Record in subrb
+                    //the second value can be null, indicated that you just add the value of left as a field to subrb
+                    private void addFieldToSubRecord(ARecordType combinedType, IVisitablePointable fieldNamePointable,
+                            IVisitablePointable leftValue, IVisitablePointable rightValue, boolean openFromParent,
+                            int nestedLevel) throws IOException, AsterixException, AlgebricksException {
+
+                        nameOutputStream.reset();
+                        nameOutputStream.write(fieldNamePointable.getByteArray(),
+                                fieldNamePointable.getStartOffset() + 1, fieldNamePointable.getLength());
+                        namedis.reset();
+                        String fieldName = AStringSerializerDeserializer.INSTANCE.deserialize(namedis).getStringValue();
+
+                        //Add the merged field
+                        if (combinedType.isClosedField(fieldName)) {
+                            int pos = combinedType.findFieldPosition(fieldName);
+                            if (rightValue == null) {
+                                rbStack.get(nestedLevel).addField(pos, leftValue);
+                            } else {
+                                mergeFields((ARecordType) combinedType.getFieldType(fieldName),
+                                        (ARecordPointable) leftValue, (ARecordPointable) rightValue, false,
+                                        nestedLevel + 1);
+
+                                tabvs.reset();
+                                rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
+                                rbStack.get(nestedLevel).addField(pos, tabvs);
+                            }
+                        } else {
+                            if (rightValue == null) {
+                                rbStack.get(nestedLevel).addField(fieldNamePointable, leftValue);
+                            } else {
+                                mergeFields((ARecordType) combinedType.getFieldType(fieldName),
+                                        (ARecordPointable) leftValue, (ARecordPointable) rightValue, false,
+                                        nestedLevel + 1);
+                                tabvs.reset();
+                                rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);
+                                rbStack.get(nestedLevel).addField(fieldNamePointable, tabvs);
                             }
                         }
-                        return false;
                     }
+
                 };
             }
         };

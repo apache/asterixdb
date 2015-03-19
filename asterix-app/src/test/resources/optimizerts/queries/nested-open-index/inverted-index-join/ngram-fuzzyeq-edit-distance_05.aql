@@ -1,0 +1,47 @@
+/*
+ * Description    : Fuzzy joins two datasets, DBLP and CSX, based on ~= using edit distance of their authors.
+ *                  DBLP has a 3-gram index on authors, and we *do not* expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPTypetmp as open {
+  id: int32,
+  dblpid: string,
+  title: string,
+  misc: string
+}
+
+create type CSXTypetmp as open {
+  id: int32,
+  csxid: string,
+  title: string,
+  misc: string
+}
+
+create type DBLPType as closed {
+  nested : DBLPTypetmp
+}
+
+create type CSXType as closed {
+  nested : CSXTypetmp
+}
+
+create dataset DBLP(DBLPType) primary key nested.id;
+
+create dataset CSX(CSXType) primary key nested.id;
+
+create index ngram_index on CSX(nested.authors: string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-join_ngram-fuzzyeq-edit-distance_01.adm";
+
+set simfunction 'edit-distance';
+set simthreshold '3';
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+where $a.nested.authors ~= $b.nested.authors and $a.nested.id < $b.nested.id
+return {"arec": $a, "brec": $b }

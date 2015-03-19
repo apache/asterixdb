@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.optimizer.base;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.asterix.metadata.declared.AqlSourceId;
@@ -114,14 +115,15 @@ public class AnalysisUtil {
             AbstractFunctionCallExpression fc = (AbstractFunctionCallExpression) expr;
             FunctionIdentifier fid = fc.getFunctionIdentifier();
             if (fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX)
-                    || fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+                    || fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME)
+                    || fid.equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
                 return true;
             }
         }
         return false;
     }
 
-    public static Pair<String, String> getDatasetInfo(DataSourceScanOperator op) throws AlgebricksException {
+    public static Pair<String, String> getDatasetInfo(AbstractDataSourceOperator op) throws AlgebricksException {
         AqlSourceId srcId = (AqlSourceId) op.getDataSource().getId();
         return new Pair<String, String>(srcId.getDataverseName(), srcId.getDatasetName());
     }

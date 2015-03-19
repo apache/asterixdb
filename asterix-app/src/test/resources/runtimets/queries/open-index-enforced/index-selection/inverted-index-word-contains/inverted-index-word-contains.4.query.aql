@@ -1,0 +1,12 @@
+use dataverse test;
+
+for $o in dataset('DBLPOpen')
+where contains($o.title, "Multimedia")
+order by $o.id
+return {
+  "id": $o.id,
+  "dblpid": $o.dblpid,
+  "title": $o.title,
+  "authors": $o.authors,
+  "misc": $o.misc
+}

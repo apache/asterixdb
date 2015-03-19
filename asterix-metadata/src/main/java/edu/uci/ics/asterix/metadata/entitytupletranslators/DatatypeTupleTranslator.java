@@ -20,7 +20,6 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -48,6 +47,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
+import edu.uci.ics.asterix.om.types.AbstractComplexType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -139,7 +139,8 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                         fieldTypeName = ((AString) field
                                 .getValueByPos(MetadataRecordTypes.FIELD_ARECORD_FIELDTYPE_FIELD_INDEX))
                                 .getStringValue();
-                        fieldTypes[fieldId] = getTypeFromTypeName(dataverseName, fieldTypeName);
+                        fieldTypes[fieldId] = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId,
+                                dataverseName, fieldTypeName);
                         fieldId++;
                     }
                     try {
@@ -156,7 +157,8 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                     String itemTypeName;
                     while (cursor.next()) {
                         itemTypeName = ((AString) cursor.get()).getStringValue();
-                        unionList.add(getTypeFromTypeName(dataverseName, itemTypeName));
+                        unionList.add(AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
+                                itemTypeName));
                     }
                     return new Datatype(dataverseName, datatypeName, new AUnionType(unionList, datatypeName),
                             isAnonymous);
@@ -165,33 +167,23 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
                     String unorderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
                             .getStringValue();
-                    return new Datatype(dataverseName, datatypeName, new AUnorderedListType(getTypeFromTypeName(
-                            dataverseName, unorderedlistTypeName), datatypeName), isAnonymous);
+                    return new Datatype(dataverseName, datatypeName, new AUnorderedListType(
+                            AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
+                                    unorderedlistTypeName), datatypeName), isAnonymous);
                 }
                 case ORDEREDLIST: {
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                             .getStringValue();
-                    return new Datatype(dataverseName, datatypeName, new AOrderedListType(getTypeFromTypeName(
-                            dataverseName, orderedlistTypeName), datatypeName), isAnonymous);
+                    return new Datatype(dataverseName, datatypeName, new AOrderedListType(
+                            AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dataverseName,
+                                    orderedlistTypeName), datatypeName), isAnonymous);
                 }
                 default:
                     throw new UnsupportedOperationException("Unsupported derived type: " + tag);
             }
         }
         return new Datatype(dataverseName, datatypeName, type, false);
-    }
-
-    private IAType getTypeFromTypeName(String dataverseName, String typeName) throws MetadataException {
-        IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(typeName);
-        if (type == null) {
-            try {
-                return metadataNode.getDatatype(jobId, dataverseName, typeName).getDatatype();
-            } catch (RemoteException e) {
-                throw new MetadataException(e);
-            }
-        }
-        return type;
     }
 
     @Override
@@ -222,7 +214,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
 
         // write field 2
         ATypeTag tag = dataType.getDatatype().getTypeTag();
-        if (isDerivedType(tag)) {
+        if (tag.isDerivedType()) {
             fieldValue.reset();
             try {
                 writeDerivedTypeRecord(dataType, fieldValue.getDataOutput());
@@ -317,10 +309,10 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
     private void writeCollectionType(Datatype instance, DataOutput out) throws HyracksDataException {
         AbstractCollectionType listType = (AbstractCollectionType) instance.getDatatype();
         String itemTypeName = listType.getItemType().getTypeName();
-        if (isDerivedType(listType.getItemType().getTypeTag())) {
+        if (listType.getItemType().getTypeTag().isDerivedType()) {
             try {
                 itemTypeName = handleNestedDerivedType(itemTypeName, instance.getDatatypeName() + "_ItemType",
-                        listType.getItemType(), instance);
+                        (AbstractComplexType) listType.getItemType(), instance);
             } catch (Exception e) {
                 // TODO: This should not be a HyracksDataException. Can't
                 // fix this currently because of BTree exception model whose
@@ -342,10 +334,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         int i = 0;
         for (IAType t : unionList) {
             typeName = t.getTypeName();
-            if (isDerivedType(t.getTypeTag())) {
+            if (t.getTypeTag().isDerivedType()) {
                 try {
                     typeName = handleNestedDerivedType(typeName,
-                            "Type_#" + i + "_UnionType_" + instance.getDatatypeName(), t, instance);
+                            "Type_#" + i + "_UnionType_" + instance.getDatatypeName(), (AbstractComplexType) t,
+                            instance);
                 } catch (Exception e) {
                     // TODO: This should not be a HyracksDataException. Can't
                     // fix this currently because of BTree exception model whose
@@ -375,10 +368,11 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         String fieldTypeName = null;
         for (int i = 0; i < recType.getFieldNames().length; i++) {
             fieldTypeName = recType.getFieldTypes()[i].getTypeName();
-            if (isDerivedType(recType.getFieldTypes()[i].getTypeTag())) {
+            if (recType.getFieldTypes()[i].getTypeTag().isDerivedType()) {
                 try {
                     fieldTypeName = handleNestedDerivedType(fieldTypeName, "Field_" + recType.getFieldNames()[i]
-                            + "_in_" + instance.getDatatypeName(), recType.getFieldTypes()[i], instance);
+                            + "_in_" + instance.getDatatypeName(), (AbstractComplexType) recType.getFieldTypes()[i],
+                            instance);
                 } catch (Exception e) {
                     // TODO: This should not be a HyracksDataException. Can't
                     // fix this currently because of BTree exception model whose
@@ -424,12 +418,13 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         recordRecordBuilder.write(out, true);
     }
 
-    private String handleNestedDerivedType(String typeName, String suggestedTypeName, IAType nestedType,
+    private String handleNestedDerivedType(String typeName, String suggestedTypeName, AbstractComplexType nestedType,
             Datatype topLevelType) throws Exception {
         MetadataNode mn = MetadataNode.INSTANCE;
         try {
             if (typeName == null) {
                 typeName = suggestedTypeName;
+                nestedType.setTypeName(typeName);
                 metadataNode.addDatatype(jobId, new Datatype(topLevelType.getDataverseName(), typeName, nestedType,
                         true));
 
@@ -444,10 +439,4 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         return typeName;
     }
 
-    private boolean isDerivedType(ATypeTag tag) {
-        if (tag == ATypeTag.RECORD || tag == ATypeTag.ORDEREDLIST || tag == ATypeTag.UNORDEREDLIST
-                || tag == ATypeTag.UNION)
-            return true;
-        return false;
-    }
 }

@@ -1,0 +1,15 @@
+/*
+ * Test case Name  : scan-delete-rtree-secondary-index-nullable.aql
+ * Description     : This test is intended to test deletion from secondary rtree indexes that are built on nullable fields
+ * Expected Result : Success
+ * Date            : May 12 2012
+ */
+
+use dataverse test;
+
+for $o in dataset('MyData')
+
+where spatial-intersect($o.nested.point, create-polygon([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]))
+order by $o.nested.id
+return {"id":$o.nested.id}
+

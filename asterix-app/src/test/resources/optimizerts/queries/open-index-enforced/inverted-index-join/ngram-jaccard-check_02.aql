@@ -1,0 +1,39 @@
+/*
+ * Description    : Fuzzy joins two datasets, closed DBLP and open CSX, based the similarity-jaccard-check function of their titles' 3-gram tokens.
+ *                  CSX has a 3-gram enforced open index on title, and we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+set import-private-functions 'true';
+
+create type DBLPType as closed {
+  id: int32,
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as open {
+  id: int32,
+  csxid: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create dataset CSX(CSXType) primary key id;
+
+create index ngram_index on CSX(title:string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-join_ngram-jaccard-check_02.adm";
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+where similarity-jaccard-check(gram-tokens($a.title, 3, false), gram-tokens($b.title, 3, false), 0.5f)[0]
+      and $a.id < $b.id
+return {"arec": $a, "brec": $b }

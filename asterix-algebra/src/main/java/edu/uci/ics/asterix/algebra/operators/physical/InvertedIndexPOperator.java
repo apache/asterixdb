@@ -159,8 +159,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 throw new AlgebricksException("Code generation error: no index " + indexName + " for dataset "
                         + datasetName);
             }
-            List<String> secondaryKeyFields = secondaryIndex.getKeyFieldNames();
-            int numSecondaryKeys = secondaryKeyFields.size();
+            List<List<String>> secondaryKeyFieldEntries = secondaryIndex.getKeyFieldNames();
+            List<IAType> secondaryKeyTypeEntries = secondaryIndex.getKeyFieldTypes();
+            int numSecondaryKeys = secondaryKeyFieldEntries.size();
             if (numSecondaryKeys != 1) {
                 throw new AlgebricksException(
                         "Cannot use "
@@ -171,10 +172,10 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 throw new AlgebricksException("Only record types can be indexed.");
             }
             ARecordType recordType = (ARecordType) itemType;
-            Pair<IAType, Boolean> keyPairType = Index.getNonNullableKeyFieldType(secondaryKeyFields.get(0), recordType);
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypeEntries.get(0), secondaryKeyFieldEntries.get(0), recordType);
             IAType secondaryKeyType = keyPairType.first;
             if (secondaryKeyType == null) {
-                throw new AlgebricksException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
+                throw new AlgebricksException("Could not find field " + secondaryKeyFieldEntries.get(0) + " in the schema.");
             }
 
             // TODO: For now we assume the type of the generated tokens is the

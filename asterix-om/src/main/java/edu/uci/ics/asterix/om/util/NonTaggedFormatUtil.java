@@ -40,8 +40,6 @@ import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeni
 
 public final class NonTaggedFormatUtil {
 
-    public static final int OPTIONAL_TYPE_INDEX_IN_UNION_LIST = 1;
-
     public static final boolean isFixedSizedCollection(IAType type) {
         switch (type.getTypeTag()) {
             case STRING:
@@ -56,7 +54,7 @@ public final class NonTaggedFormatUtil {
                     return false;
                 else
                     return isFixedSizedCollection(((AUnionType) type).getUnionList().get(
-                            OPTIONAL_TYPE_INDEX_IN_UNION_LIST));
+                            AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST));
             default:
                 return true;
         }

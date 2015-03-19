@@ -237,8 +237,9 @@ public class MetadataBootstrap {
         for (int i = 0; i < primaryIndexes.length; i++) {
             IDatasetDetails id = new InternalDatasetDetails(FileStructure.BTREE, PartitioningStrategy.HASH,
                     primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
-                    primaryIndexes[i].getNodeGroupName(), false, GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
-                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, null);
+                    primaryIndexes[i].getPartitioningExprType(), primaryIndexes[i].getNodeGroupName(), false,
+                    GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME, GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES,
+                    null);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
                     id, new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
@@ -279,7 +280,8 @@ public class MetadataBootstrap {
         for (int i = 0; i < secondaryIndexes.length; i++) {
             MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(secondaryIndexes[i].getDataverseName(),
                     secondaryIndexes[i].getIndexedDatasetName(), secondaryIndexes[i].getIndexName(), IndexType.BTREE,
-                    secondaryIndexes[i].getPartitioningExpr(), false, IMetadataEntity.PENDING_NO_OP));
+                    secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(), false,
+                    false, IMetadataEntity.PENDING_NO_OP));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial indexes.");
@@ -351,7 +353,7 @@ public class MetadataBootstrap {
                 "edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory",
                 "edu.uci.ics.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory",
                 "edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory",
-                "edu.uci.ics.asterix.common.context.CorrelatedPrefixMergePolicyFactory"};
+                "edu.uci.ics.asterix.common.context.CorrelatedPrefixMergePolicyFactory" };
         CompactionPolicy compactionPolicy;
         for (String policyClassName : builtInCompactionPolicyClassNames) {
             compactionPolicy = getCompactionPolicyEntity(policyClassName);

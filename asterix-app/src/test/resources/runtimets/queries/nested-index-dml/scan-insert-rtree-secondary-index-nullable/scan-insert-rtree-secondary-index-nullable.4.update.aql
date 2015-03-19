@@ -1,0 +1,13 @@
+use dataverse test;
+
+insert into dataset MyMiniData
+(
+
+	for $m in dataset('MyDatatmp')
+	return { "nested" : {
+		"id": $m.id,
+		"point": $m.point }
+
+	}
+);
+

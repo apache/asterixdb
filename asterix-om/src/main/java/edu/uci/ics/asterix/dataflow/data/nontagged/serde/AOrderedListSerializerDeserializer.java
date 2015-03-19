@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.om.base.AOrderedList;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
@@ -48,11 +49,16 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     private AOrderedListSerializerDeserializer() {
         this.itemType = null;
         this.orderedlistType = null;
+        initSerializerDeserializer(BuiltinType.ANY);
     }
 
     public AOrderedListSerializerDeserializer(AOrderedListType orderedlistType) {
-        this.itemType = orderedlistType.getItemType();
         this.orderedlistType = orderedlistType;
+        initSerializerDeserializer(orderedlistType.getItemType());
+    }
+
+    private void initSerializerDeserializer(IAType itemType) {
+        this.itemType = itemType;
         serializer = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         deserializer = itemType.getTypeTag() == ATypeTag.ANY ? AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(itemType) : AqlSerializerDeserializerProvider.INSTANCE
@@ -61,7 +67,6 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
 
     @Override
     public AOrderedList deserialize(DataInput in) throws HyracksDataException {
-        // TODO: schemaless ordered list deserializer
         try {
             boolean fixedSize = false;
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(in.readByte());
@@ -78,6 +83,14 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
                     fixedSize = true;
                     break;
             }
+            
+            if (itemType.getTypeTag() == ATypeTag.ANY && typeTag != ATypeTag.ANY)   
+            try {   
+                initSerializerDeserializer(BuiltinType.builtinTypeFromString(typeTag.name().toLowerCase()));    
+            } catch (AsterixException e) {  
+                throw new HyracksDataException(e);  
+            }
+            
 
             in.readInt(); // list size
             int numberOfitems;

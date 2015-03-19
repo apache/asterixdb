@@ -30,7 +30,7 @@ public class FieldExtractingAdapter implements IDatasourceAdapter {
     private final FieldExtractingPushRuntime fefw;
 
     public FieldExtractingAdapter(IHyracksTaskContext ctx, RecordDescriptor inRecDesc, RecordDescriptor outRecDesc,
-            int[] extractFields, ARecordType rType, IDatasourceAdapter wrappedAdapter) {
+            int[][] extractFields, ARecordType rType, IDatasourceAdapter wrappedAdapter) {
         this.inRecDesc = inRecDesc;
         this.outRecDesc = outRecDesc;
         this.wrappedAdapter = wrappedAdapter;
@@ -56,7 +56,7 @@ public class FieldExtractingAdapter implements IDatasourceAdapter {
 
         private final IHyracksTaskContext ctx;
 
-        private final int[] extractFields;
+        private final int[][] extractFields;
 
         private final ARecordType rType;
 
@@ -64,7 +64,7 @@ public class FieldExtractingAdapter implements IDatasourceAdapter {
 
         private final ArrayTupleBuilder tb;
 
-        public FieldExtractingPushRuntime(IHyracksTaskContext ctx, int[] extractFields, ARecordType rType) {
+        public FieldExtractingPushRuntime(IHyracksTaskContext ctx, int[][] extractFields, ARecordType rType) {
             this.ctx = ctx;
             this.extractFields = extractFields;
             this.rType = rType;
@@ -85,24 +85,54 @@ public class FieldExtractingAdapter implements IDatasourceAdapter {
                 tRef.reset(tAccess, i);
                 byte[] record = tRef.getFieldData(0);
                 int recStart = tRef.getFieldStart(0);
+                int recLength = tRef.getFieldLength(0);
                 for (int f = 0; f < extractFields.length; ++f) {
                     try {
-                        int fOffset = ARecordSerializerDeserializer.getFieldOffsetById(record, recStart,
-                                extractFields[f], nullBitmapSize, rType.isOpen());
-                        if (fOffset == 0) {
-                            tb.getDataOutput().write(ATypeTag.NULL.serialize());
-                        } else {
-                            IAType fType = rType.getFieldTypes()[extractFields[f]];
-                            int fLen;
-                            try {
-                                fLen = NonTaggedFormatUtil.getFieldValueLength(record, recStart + fOffset,
-                                        fType.getTypeTag(), false);
-                            } catch (AsterixException e) {
-                                throw new HyracksDataException(e);
+                        byte[] subRecord = record;
+                        int subFStart = recStart;
+                        int subFOffset = 0;
+                        boolean isNull = false;
+                        IAType subFType = rType;
+                        int subFLen = recLength;
+                        int subBitMapSize = nullBitmapSize;
+                        byte[] subRecordTmp;
+
+                        for (int j = 0; j < extractFields[f].length; j++) {
+                            //Get offset for subfield
+                            subFOffset = ARecordSerializerDeserializer.getFieldOffsetById(subRecord, subFStart,
+                                    extractFields[f][j], subBitMapSize, ((ARecordType) subFType).isOpen());
+                            if (subFOffset == 0) {
+                                tb.getDataOutput().write(ATypeTag.NULL.serialize());
+                                isNull = true;
+                                break;
+                            } else {
+                                //Get type of subfield
+                                subFType = ((ARecordType) subFType).getFieldTypes()[extractFields[f][j]];
+                                try {
+                                    //Get length of subfield
+                                    subFLen = NonTaggedFormatUtil.getFieldValueLength(subRecord,
+                                            subFStart + subFOffset, subFType.getTypeTag(), false);
+
+                                    if (j < extractFields[f].length - 1) {
+                                        subRecordTmp = new byte[subFLen + 1];
+                                        subRecordTmp[0] = subFType.getTypeTag().serialize();
+                                        System.arraycopy(subRecord, subFStart + subFOffset, subRecordTmp, 1, subFLen);
+                                        subRecord = subRecordTmp;
+                                        subFStart = 0;
+                                        subBitMapSize = ARecordType.computeNullBitmapSize((ARecordType) subFType);
+                                    }
+
+                                } catch (AsterixException e) {
+                                    throw new HyracksDataException(e);
+                                }
                             }
-                            tb.getDataOutput().write(fType.getTypeTag().serialize());
-                            tb.getDataOutput().write(record, recStart + fOffset, fLen);
                         }
+
+                        if (!isNull) {
+                            tb.getDataOutput().write(subFType.getTypeTag().serialize());
+                            tb.getDataOutput().write(subRecord, subFStart + subFOffset, subFLen);
+                        }
+
                     } catch (IOException e) {
                         throw new HyracksDataException(e);
                     }

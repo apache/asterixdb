@@ -25,6 +25,7 @@ import java.util.List;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.exceptions.TypeException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
 import edu.uci.ics.asterix.om.pointables.ARecordPointable;
 import edu.uci.ics.asterix.om.pointables.PointableAllocator;
@@ -108,25 +109,29 @@ class ARecordCaster {
     }
 
     public void castRecord(ARecordPointable recordAccessor, IVisitablePointable resultAccessor, ARecordType reqType,
-            ACastVisitor visitor) throws IOException, AsterixException {
+            ACastVisitor visitor) throws IOException, TypeException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
         numInputFields = fieldNames.size();
 
-        if (openFields == null || numInputFields > openFields.length) {
-            openFields = new boolean[numInputFields];
-            fieldNamesSortedIndex = new int[numInputFields];
-        }
-        if (cachedReqType == null || !reqType.equals(cachedReqType)) {
-            loadRequiredType(reqType);
-        }
+        try {
+            if (openFields == null || numInputFields > openFields.length) {
+                openFields = new boolean[numInputFields];
+                fieldNamesSortedIndex = new int[numInputFields];
+            }
+            if (cachedReqType == null || !reqType.equals(cachedReqType)) {
+                loadRequiredType(reqType);
+            }
 
-        // clear the previous states
-        reset();
-        matchClosedPart(fieldNames, fieldTypeTags, fieldValues);
-        writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
-        resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
+            // clear the previous states
+            reset();
+            matchClosedPart(fieldNames, fieldTypeTags, fieldValues);
+            writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
+            resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
+        } catch (AsterixException e) {
+            throw new TypeException("Unable to cast record to " + reqType.getTypeName(), e);
+        }
     }
 
     private void reset() {
@@ -162,7 +167,7 @@ class ARecordCaster {
                     && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i])) {
                 // optional field: add the embedded non-null type tag
                 ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
-                        .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                        .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
                 optionalFields[i] = true;
             }
             int tagStart = bos.size();
@@ -297,7 +302,7 @@ class ARecordCaster {
                     nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(0);
                 } else {
                     nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(
-                            NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                            AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                 }
             }
             field.accept(visitor, nestedVisitorArg);

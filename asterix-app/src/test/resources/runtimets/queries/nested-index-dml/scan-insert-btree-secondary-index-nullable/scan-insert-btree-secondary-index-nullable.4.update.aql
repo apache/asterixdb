@@ -1,0 +1,28 @@
+use dataverse test;
+
+
+insert into dataset CustomersMinitmp
+(
+	for $c in dataset('Customerstmp')
+
+	where $c.cid < 200	
+	return {
+	  "cid": $c.cid,
+  	  "name": $c.name,
+  	  "age": $c.age,
+  	  "address": $c.address,
+  	  "interests": $c.interests,
+  	  "children": $c.children
+	}	
+);
+
+
+insert into dataset CustomersMini
+(
+	for $c in dataset('CustomersMinitmp')
+	return {
+		"nested" : $c
+	}	
+);
+
+

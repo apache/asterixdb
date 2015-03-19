@@ -69,10 +69,10 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 if (t.getTypeTag() == ATypeTag.UNION) {
                     if (NonTaggedFormatUtil.isOptionalField((AUnionType) t)) {
                         t2 = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList().get(
-                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                                AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                         serializers[i] = AqlSerializerDeserializerProvider.INSTANCE
                                 .getSerializerDeserializer(((AUnionType) recordType.getFieldTypes()[i]).getUnionList()
-                                        .get(NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST));
+                                        .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST));
                     } else {
                         // union .. the general case
                         throw new NotImplementedException();
@@ -102,7 +102,6 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 } else
                     isExpanded = false;
             }
-
             IAObject[] closedFields = null;
             if (numberOfSchemaFields > 0) {
                 in.readInt(); // read number of closed fields.
@@ -124,7 +123,9 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     }
                     closedFields[fieldId] = (IAObject) deserializers[fieldId].deserialize(in);
                 }
+
             }
+
             if (isExpanded) {
                 int numberOfOpenFields = in.readInt();
                 String[] fieldNames = new String[numberOfOpenFields];
@@ -275,10 +276,10 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         if (serRecord[0] == ATypeTag.RECORD.serialize())
             // 5 is the index of the byte that determines whether the record is
             // expanded or not, i.e. it has an open part.
-            if (serRecord[5] == 1) // true
+            if (serRecord[5] == 1) { // true
                 // 6 is the index of the first byte of the openPartOffset value.
                 openPartOffset = AInt32SerializerDeserializer.getInt(serRecord, 6);
-            else
+            } else
                 return -1; // this record does not have an open part
         else
             return -1; // this record does not have an open part

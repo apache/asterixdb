@@ -1,0 +1,30 @@
+
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int64,
+        statuses_count: int64,
+        name: string,
+        followers_count: int64
+}
+
+create type TweetMessageType as closed {
+        user: TwitterUserType,
+        tweetid: int64,
+        sender-location: point?,
+        send-time: datetime,
+        referred-topics: {{ string }},
+        message-text: string
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+create index ngram_index on TweetMessages(user.name) type keyword;
+create index ngram_index1 on TweetMessages(user.screen-name) type keyword;
+

@@ -137,9 +137,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             while (amIt.hasNext()) {
                 Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
                 AccessMethodAnalysisContext amCtx = entry.getValue();
-                Iterator<Map.Entry<Index, List<Integer>>> indexIt = amCtx.indexExprs.entrySet().iterator();
+                Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = amCtx.indexExprsAndVars.entrySet()
+                        .iterator();
                 while (indexIt.hasNext()) {
-                    Map.Entry<Index, List<Integer>> indexEntry = indexIt.next();
+                    Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
 
                     Index chosenIndex = indexEntry.getKey();
                     if (!chosenIndex.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {

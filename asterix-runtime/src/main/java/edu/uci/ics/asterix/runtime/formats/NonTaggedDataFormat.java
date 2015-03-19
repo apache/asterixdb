@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.runtime.formats;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.om.base.ABoolean;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.ANull;
+import edu.uci.ics.asterix.om.base.AOrderedList;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
@@ -61,7 +63,6 @@ import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
@@ -127,6 +128,7 @@ import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalSecondAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalYearAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
+import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessNestedEvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FunctionManagerImpl;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ABinaryBase64StringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ABinaryHexStringConstructorDescriptor;
@@ -182,6 +184,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.EmbedTypeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EndsWithDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByIndexDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByNameDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessNestedDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FlowRecordDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FuzzyEqDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.GetItemDescriptor;
@@ -395,6 +398,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ClosedRecordConstructorDescriptor.FACTORY);
         temp.add(FieldAccessByIndexDescriptor.FACTORY);
         temp.add(FieldAccessByNameDescriptor.FACTORY);
+        temp.add(FieldAccessNestedDescriptor.FACTORY);
         temp.add(GetItemDescriptor.FACTORY);
         temp.add(NumericUnaryMinusDescriptor.FACTORY);
         temp.add(OpenRecordConstructorDescriptor.FACTORY);
@@ -537,7 +541,6 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ADayTimeDurationConstructorDescriptor.FACTORY);
 
         temp.add(CreateUUIDDescriptor.FACTORY);
-
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);
         temp.add(CreateLineDescriptor.FACTORY);
@@ -691,36 +694,72 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @SuppressWarnings("unchecked")
     @Override
-    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, String fldName, int recordColumn)
-            throws AlgebricksException {
+    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, List<String> fldName,
+            int recordColumn) throws AlgebricksException {
         String[] names = recType.getFieldNames();
         int n = names.length;
-        for (int i = 0; i < n; i++) {
-            if (names[i].equals(fldName)) {
-                ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(recordColumn);
-                ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
-                DataOutput dos = abvs.getDataOutput();
+        boolean fieldFound = false;
+        ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(recordColumn);
+        ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+        DataOutput dos = abvs.getDataOutput();
+        ICopyEvaluatorFactory evalFactory = null;
+        if (fldName.size() == 1) {
+            for (int i = 0; i < n; i++) {
+                if (names[i].equals(fldName.get(0))) {
+                    fieldFound = true;
+                    try {
+                        AInt32 ai = new AInt32(i);
+                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(
+                                ai, dos);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    ICopyEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(
+                            abvs.getByteArray(), abvs.getLength()));
+
+                    evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory, fldIndexEvalFactory, recType);
+                    return evalFactory;
+                }
+            }
+        }
+        if (fldName.size() > 1 || (!fieldFound && recType.isOpen())) {
+            if (fldName.size() == 1) {
+                AString as = new AString(fldName.get(0));
                 try {
-                    AInt32 ai = new AInt32(i);
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
+                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
                             dos);
                 } catch (HyracksDataException e) {
                     throw new AlgebricksException(e);
                 }
-                ICopyEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
-                        abvs.getLength()));
-                ICopyEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
-                        fldIndexEvalFactory, recType);
-                return evalFactory;
+            } else {
+                AOrderedList as = new AOrderedList(fldName);
+                try {
+                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as,
+                            dos);
+                } catch (HyracksDataException e) {
+                    throw new AlgebricksException(e);
+                }
             }
-        }
-        throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
+            ICopyEvaluatorFactory fldNameEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
+                    abvs.getLength()));
+            ICopyEvaluatorFactory[] factories = new ICopyEvaluatorFactory[2];
+            factories[0] = recordEvalFactory;
+            factories[1] = fldNameEvalFactory;
+            if (fldName.size() > 1) {
+                evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, fldNameEvalFactory, recType, fldName);
+            } else {
+                evalFactory = FieldAccessByNameDescriptor.FACTORY.createFunctionDescriptor().createEvaluatorFactory(
+                        factories);
+            }
+            return evalFactory;
+        } else
+            throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn,
-            int dimension, String filterFieldName) throws AlgebricksException {
+    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, List<String> fldName, int recordColumn,
+            int dimension, List<String> filterFieldName) throws AlgebricksException {
         ICopyEvaluatorFactory evalFactory = getFieldAccessEvaluatorFactory(recType, fldName, recordColumn);
         int numOfFields = dimension * 2;
         ICopyEvaluatorFactory[] evalFactories = new ICopyEvaluatorFactory[numOfFields
@@ -760,35 +799,64 @@ public class NonTaggedDataFormat implements IDataFormat {
     @SuppressWarnings("unchecked")
     @Override
     public Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
-            ARecordType recType, String fldName) throws AlgebricksException {
+            ARecordType recType, List<String> fldName) throws AlgebricksException {
         String[] names = recType.getFieldNames();
         int n = names.length;
-        for (int i = 0; i < n; i++) {
-            if (names[i].equals(fldName)) {
-                ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
-                        GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
-                ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
-                DataOutput dos = abvs.getDataOutput();
-                try {
-                    AInt32 ai = new AInt32(i);
-                    AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(ai,
-                            dos);
-                } catch (HyracksDataException e) {
-                    throw new AlgebricksException(e);
-                }
-                ICopyEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
-                        abvs.getLength()));
-                ICopyEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
-                        fldIndexEvalFactory, recType);
-                IFunctionInfo finfoAccess = AsterixBuiltinFunctions
-                        .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+        if (fldName.size() > 1) {
+            for (int i = 0; i < n; i++) {
+                if (names[i].equals(fldName.get(0))) {
+                    ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
+                            GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
+                    ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+                    DataOutput dos = abvs.getDataOutput();
+                    try {
+                        AInt32 ai = new AInt32(i);
+                        AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(ai.getType()).serialize(
+                                ai, dos);
+                    } catch (HyracksDataException e) {
+                        throw new AlgebricksException(e);
+                    }
+                    ICopyEvaluatorFactory fldIndexEvalFactory = new ConstantEvalFactory(Arrays.copyOf(
+                            abvs.getByteArray(), abvs.getLength()));
+                    ICopyEvaluatorFactory evalFactory = new FieldAccessByIndexEvalFactory(recordEvalFactory,
+                            fldIndexEvalFactory, recType);
+                    IFunctionInfo finfoAccess = AsterixBuiltinFunctions
+                            .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX);
 
-                ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
-                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                                new AInt32(i)))));
+                    ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
+                            new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
+                                    new AInt32(i)))));
+                    return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory,
+                            partitionFun, recType.getFieldTypes()[i]);
+                }
+            }
+        } else {
+            ICopyEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(
+                    GlobalConfig.DEFAULT_INPUT_DATA_COLUMN);
+            ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
+            DataOutput dos = abvs.getDataOutput();
+            AOrderedList as = new AOrderedList(fldName);
+            try {
+                AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(as.getType()).serialize(as, dos);
+            } catch (HyracksDataException e) {
+                throw new AlgebricksException(e);
+            }
+            ICopyEvaluatorFactory fldNameEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
+                    abvs.getLength()));
+            ICopyEvaluatorFactory evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, fldNameEvalFactory,
+                    recType, fldName);
+            IFunctionInfo finfoAccess = AsterixBuiltinFunctions
+                    .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED);
+
+            ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
+                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
+                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(as))));
+            try {
                 return new Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType>(evalFactory,
-                        partitionFun, recType.getFieldTypes()[i]);
+                        partitionFun, recType.getSubFieldType(fldName));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
             }
         }
         throw new AlgebricksException("Could not find field " + fldName + " in the schema.");
@@ -818,7 +886,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 if (itemType instanceof AUnionType) {
                     if (((AUnionType) itemType).isNullableType())
                         itemType = ((AUnionType) itemType).getUnionList().get(
-                                NonTaggedFormatUtil.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                                AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
                     else
                         // Convert UNION types into ANY.
                         itemType = BuiltinType.ANY;
@@ -833,6 +901,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
             ((RecordMergeDescriptor) fd).reset(outType, type0, type1);
         }
+
         if (fd.getIdentifier().equals(AsterixBuiltinFunctions.CAST_RECORD)) {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
             ARecordType rt = (ARecordType) TypeComputerUtilities.getRequiredType(funcExpr);
@@ -892,6 +961,27 @@ public class NonTaggedDataFormat implements IDataFormat {
                 }
                 default: {
                     throw new NotImplementedException("field-access-by-index for data of type " + t);
+                }
+            }
+        }
+        if (fd.getIdentifier().equals(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED)) {
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
+            AOrderedList fieldPath = (AOrderedList) (((AsterixConstantValue) ((ConstantExpression) fce.getArguments()
+                    .get(1).getValue()).getValue()).getObject());
+            List<String> listFieldPath = new ArrayList<String>();
+            for (int i = 0; i < fieldPath.size(); i++) {
+                listFieldPath.add(((AString) fieldPath.getItem(i)).getStringValue());
+            }
+
+            switch (t.getTypeTag()) {
+                case RECORD: {
+                    ARecordType recType = (ARecordType) t;
+                    ((FieldAccessNestedDescriptor) fd).reset(recType, listFieldPath);
+                    break;
+                }
+                default: {
+                    throw new NotImplementedException("field-access-nested for data of type " + t);
                 }
             }
         }

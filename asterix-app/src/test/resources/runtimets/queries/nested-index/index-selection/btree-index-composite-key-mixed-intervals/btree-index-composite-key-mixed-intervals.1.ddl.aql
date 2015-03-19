@@ -1,0 +1,37 @@
+/*
+ * Description     : Test that BTree index is used in query plan
+ *                 : define the BTree index on a composite key (fname,lanme)
+ *                 : predicate => where $l.fname > "Julio" and $l.lname > "Mattocks" and
+ *					 $l.fname <= "Micco" and $l.lname < "Vangieson"
+ * Expected Result : Success
+ * Issue           : Issue 174
+ * Date            : 5th Feb, 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type EmpTmp as closed {
+id:int64,
+fname:string,
+lname:string,
+age:int64,
+dept:string
+}
+
+create type Nested as closed {
+id:int64,
+fname:string,
+lname:string,
+age:int64,
+dept:string
+}
+
+create type Emp as closed {
+nested : Nested
+}
+
+create dataset employeeTmp(EmpTmp) primary key id;
+
+create dataset employee(Emp) primary key nested.id;

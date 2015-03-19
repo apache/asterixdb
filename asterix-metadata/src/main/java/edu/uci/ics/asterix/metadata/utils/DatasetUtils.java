@@ -46,7 +46,7 @@ public class DatasetUtils {
     public static IBinaryComparatorFactory[] computeKeysBinaryComparatorFactories(Dataset dataset,
             ARecordType itemType, IBinaryComparatorFactoryProvider comparatorFactoryProvider)
             throws AlgebricksException {
-        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[partitioningKeys.size()];
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             // Get comparators for RID fields.
@@ -61,7 +61,7 @@ public class DatasetUtils {
             for (int i = 0; i < partitioningKeys.size(); i++) {
                 IAType keyType;
                 try {
-                    keyType = itemType.getFieldType(partitioningKeys.get(i));
+                    keyType = itemType.getSubFieldType(partitioningKeys.get(i));
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }
@@ -75,7 +75,7 @@ public class DatasetUtils {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
-        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
         int[] bloomFilterKeyFields = new int[partitioningKeys.size()];
         for (int i = 0; i < partitioningKeys.size(); ++i) {
             bloomFilterKeyFields[i] = i;
@@ -88,12 +88,12 @@ public class DatasetUtils {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
-        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
         IBinaryHashFunctionFactory[] bhffs = new IBinaryHashFunctionFactory[partitioningKeys.size()];
         for (int i = 0; i < partitioningKeys.size(); i++) {
             IAType keyType;
             try {
-                keyType = itemType.getFieldType(partitioningKeys.get(i));
+                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
@@ -107,13 +107,13 @@ public class DatasetUtils {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new AlgebricksException("not implemented");
         }
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numKeys = partitioningKeys.size();
         ITypeTraits[] typeTraits = new ITypeTraits[numKeys + 1];
         for (int i = 0; i < numKeys; i++) {
             IAType keyType;
             try {
-                keyType = itemType.getFieldType(partitioningKeys.get(i));
+                keyType = itemType.getSubFieldType(partitioningKeys.get(i));
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
@@ -122,8 +122,10 @@ public class DatasetUtils {
         typeTraits[numKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
         return typeTraits;
     }
+    
+    
 
-    public static List<String> getPartitioningKeys(Dataset dataset) {
+    public static List<List<String>> getPartitioningKeys(Dataset dataset) {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return IndexingConstants.getRIDKeys(dataset);
         }
@@ -134,7 +136,7 @@ public class DatasetUtils {
         return (((InternalDatasetDetails) dataset.getDatasetDetails())).getNodeGroupName();
     }
 
-    public static String getFilterField(Dataset dataset) {
+    public static List<String> getFilterField(Dataset dataset) {
         return (((InternalDatasetDetails) dataset.getDatasetDetails())).getFilterField();
     }
 
@@ -144,14 +146,14 @@ public class DatasetUtils {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return null;
         }
-        String filterField = getFilterField(dataset);
+        List<String> filterField = getFilterField(dataset);
         if (filterField == null) {
             return null;
         }
         IBinaryComparatorFactory[] bcfs = new IBinaryComparatorFactory[1];
         IAType type;
         try {
-            type = itemType.getFieldType(filterField);
+            type = itemType.getSubFieldType(filterField);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -164,7 +166,7 @@ public class DatasetUtils {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return null;
         }
-        String filterField = getFilterField(dataset);
+        List<String> filterField = getFilterField(dataset);
         if (filterField == null) {
             return null;
         }
@@ -172,7 +174,7 @@ public class DatasetUtils {
 
         IAType type;
         try {
-            type = itemType.getFieldType(filterField);
+            type = itemType.getSubFieldType(filterField);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -185,11 +187,11 @@ public class DatasetUtils {
             return null;
         }
 
-        String filterField = getFilterField(dataset);
+        List<String> filterField = getFilterField(dataset);
         if (filterField == null) {
             return null;
         }
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         int numKeys = partitioningKeys.size();
 
         int[] filterFields = new int[1];
@@ -202,12 +204,12 @@ public class DatasetUtils {
             return null;
         }
 
-        String filterField = getFilterField(dataset);
+        List<String> filterField = getFilterField(dataset);
         if (filterField == null) {
             return null;
         }
 
-        List<String> partitioningKeys = getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = getPartitioningKeys(dataset);
         int[] btreeFields = new int[partitioningKeys.size() + 1];
         for (int i = 0; i < btreeFields.length; ++i) {
             btreeFields[i] = i;
@@ -216,9 +218,9 @@ public class DatasetUtils {
     }
 
     public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {
-        List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+        List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            if (partitioningKeys.get(i).equals(fieldExpr)) {
+            if (partitioningKeys.get(i).size() == 1 &&  partitioningKeys.get(i).get(0).equals(fieldExpr)) {
                 return i;
             }
         }

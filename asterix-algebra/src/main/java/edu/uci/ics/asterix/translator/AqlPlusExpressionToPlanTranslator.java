@@ -266,11 +266,11 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
             }
             ARecordType itemType = (ARecordType) metadata.findType(dataset.getDataverseName(),
                     dataset.getItemTypeName());
-            List<String> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
+            List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
             ArrayList<LogicalVariable> vars = new ArrayList<LogicalVariable>();
             ArrayList<Mutable<ILogicalExpression>> exprs = new ArrayList<Mutable<ILogicalExpression>>();
             List<Mutable<ILogicalExpression>> varRefsForLoading = new ArrayList<Mutable<ILogicalExpression>>();
-            for (String partitioningKey : partitioningKeys) {
+            for (List<String> partitioningKey : partitioningKeys) {
                 Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioner = format
                         .partitioningEvaluatorFactory(itemType, partitioningKey);
                 AbstractFunctionCallExpression f = partitioner.second.cloneExpression();

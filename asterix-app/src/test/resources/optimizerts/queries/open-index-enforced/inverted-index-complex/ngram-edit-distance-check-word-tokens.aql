@@ -1,0 +1,32 @@
+/*
+ * Description    : Tests whether an ngram_index index is applied to optimize a selection query using the similarity-edit-distance-check function on individual word tokens.
+ *                  Tests that the optimizer rule correctly drills through the word-tokens function and existential query.
+ *                  The index should be applied.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPType as open {
+  id: int32,
+  dblpid: string,
+  authors: string,
+  misc: string
+}
+
+create dataset DBLP(DBLPType) primary key id;
+
+create index ngram_index on DBLP(title: string) type ngram(3) enforced;
+
+write output to nc1:"rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm";
+
+for $paper in dataset('DBLP')
+for $word in word-tokens($paper.title)
+where edit-distance-check($word, "Multmedia", 1)[0]
+distinct by $paper.id
+return {
+  "id" : $paper.id,
+  "title" : $paper.title
+}

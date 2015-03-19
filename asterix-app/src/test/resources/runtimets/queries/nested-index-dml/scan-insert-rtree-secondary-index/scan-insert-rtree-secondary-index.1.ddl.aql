@@ -1,0 +1,47 @@
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type MyRecordtmp as closed {
+  id: int64,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+
+create type MyMiniRecordtmp as closed {
+
+  id: int64,
+  point: point
+}
+
+
+create type MyRecord as closed {
+  nested : MyRecordtmp
+}
+
+create type MyMiniRecord as closed {
+  nested : MyMiniRecordtmp
+}
+
+
+create dataset MyDatatmp(MyRecordtmp)
+  primary key id;
+
+create dataset MyMiniDatatmp(MyMiniRecordtmp)
+  primary key id;
+
+  create dataset MyData(MyRecord)
+  primary key nested.id;
+
+create dataset MyMiniData(MyMiniRecord)
+  primary key nested.id;
+
+

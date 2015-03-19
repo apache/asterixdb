@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.asterix.formats.base;
 
+import java.util.List;
+
 import edu.uci.ics.asterix.common.parse.IParseFileSplitsDecl;
 import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -64,9 +66,9 @@ public interface IDataFormat {
     public INullWriterFactory getNullWriterFactory();
 
     public Triple<ICopyEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
-            ARecordType recType, String fldName) throws AlgebricksException;
+            ARecordType recType, List<String> fldName) throws AlgebricksException;
 
-    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, String fldName, int recordColumn)
+    public ICopyEvaluatorFactory getFieldAccessEvaluatorFactory(ARecordType recType, List<String> fldName, int recordColumn)
             throws AlgebricksException;
 
     public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl);
@@ -78,8 +80,8 @@ public interface IDataFormat {
 
     public ICopyEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException;
 
-    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, String fldName, int recordColumn,
-            int dimension, String filterFieldName) throws AlgebricksException;
+    public ICopyEvaluatorFactory[] createMBRFactory(ARecordType recType, List<String> fldName, int recordColumn,
+            int dimension, List<String> filterFieldName) throws AlgebricksException;
 
     public IExpressionEvalSizeComputer getExpressionEvalSizeComputer();
 

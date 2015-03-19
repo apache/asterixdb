@@ -1,0 +1,8 @@
+
+use dataverse twitter;
+
+insert into dataset doublenests(
+{
+"nested":{"nested":{"message-text":"hello"}}
+});
+

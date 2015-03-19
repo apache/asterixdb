@@ -1,0 +1,12 @@
+use dataverse test;
+
+for $o in dataset('DBLPOpen')
+let $ed := edit-distance-check($o.authors, "Amihay Motro", 5)
+where $ed[0]
+return {
+  "id": $o.id,
+  "dblpid": $o.dblpid,
+  "title": $o.title,
+  "authors": $o.authors,
+  "misc": $o.misc
+}

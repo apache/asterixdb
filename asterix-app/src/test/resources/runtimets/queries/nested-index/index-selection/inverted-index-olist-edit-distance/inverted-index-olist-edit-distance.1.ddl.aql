@@ -1,0 +1,31 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  number: int64,
+  street: string,
+  city: string
+}
+
+create type CustomerTypetmp as closed {
+  cid: int64,
+  name: string,
+  age: int64?,
+  address: AddressType?,
+  interests: [string],
+  children: [ { name: string, age: int64? } ]
+}
+
+create type CustomerType as closed {
+nested : CustomerTypetmp
+}
+
+create nodegroup group1 if not exists on nc1;
+
+create dataset Customerstmp(CustomerTypetmp)
+  primary key cid on group1;
+
+ create dataset Customers(CustomerType)
+  primary key nested.cid on group1;
+

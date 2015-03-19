@@ -47,7 +47,11 @@ public class ConstantTupleSourceOperatorNodePushable extends AbstractUnaryOutput
         if (fieldSlots != null && tupleData != null && tupleSize > 0)
             appender.append(fieldSlots, tupleData, 0, tupleSize);
         writer.open();
-        FrameUtils.flushFrame(writeBuffer, writer);
-        writer.close();
+        try {
+            FrameUtils.flushFrame(writeBuffer, writer);
+        }
+        finally {
+            writer.close();
+        }
     }
 }

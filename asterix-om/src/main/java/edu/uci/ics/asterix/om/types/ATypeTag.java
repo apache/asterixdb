@@ -93,4 +93,11 @@ public enum ATypeTag implements IEnumSerializer {
         VALUE_TYPE_MAPPING = typeList.toArray(new ATypeTag[typeList.size()]);
     }
 
+    public boolean isDerivedType() {
+        if (this == ATypeTag.RECORD || this == ATypeTag.ORDEREDLIST || this == ATypeTag.UNORDEREDLIST
+                || this == ATypeTag.UNION)
+            return true;
+        return false;
+    }
+
 }

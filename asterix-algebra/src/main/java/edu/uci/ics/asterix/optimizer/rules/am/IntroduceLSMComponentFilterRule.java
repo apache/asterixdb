@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -35,6 +36,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -79,7 +81,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         }
 
         Dataset dataset = getDataset(op, context);
-        String filterFieldName = null;
+        List<String> filterFieldName = null;
         ARecordType recType = null;
         if (dataset != null && dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterFieldName = DatasetUtils.getFilterField(dataset);
@@ -100,7 +102,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         for (int i = 0; i < analysisCtx.matchedFuncExprs.size(); i++) {
             IOptimizableFuncExpr optFuncExpr = analysisCtx.matchedFuncExprs.get(i);
             boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, recType, datasetIndexes);
-            if (found && optFuncExpr.getFieldName(0).compareTo(filterFieldName) == 0) {
+            if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)) {
                 optFuncExprs.add(optFuncExpr);
             }
         }
@@ -293,7 +295,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     if (funcVarIndex == -1) {
                         continue;
                     }
-                    String fieldName = getFieldNameFromSubAssignTree(optFuncExpr, descendantOp, varIndex, recType);
+                    List<String> fieldName = getFieldNameFromSubAssignTree(optFuncExpr, descendantOp, varIndex, recType).second;
                     if (fieldName == null) {
                         return false;
                     }
@@ -310,7 +312,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         continue;
                     }
                     // The variable value is one of the partitioning fields.
-                    String fieldName = DatasetUtils.getPartitioningKeys(dataset).get(varIndex);
+                    List<String> fieldName = DatasetUtils.getPartitioningKeys(dataset).get(varIndex);
                     if (fieldName == null) {
                         return false;
                     }
@@ -348,7 +350,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     }
 
                     int numSecondaryKeys = AccessMethodUtils.getNumSecondaryKeys(index, recType);
-                    String fieldName;
+                    List<String> fieldName;
                     if (varIndex >= numSecondaryKeys) {
                         fieldName = DatasetUtils.getPartitioningKeys(dataset).get(varIndex - numSecondaryKeys);
                     } else {
@@ -370,33 +372,73 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private String getFieldNameFromSubAssignTree(IOptimizableFuncExpr optFuncExpr, AbstractLogicalOperator op,
-            int varIndex, ARecordType recType) {
+    private Pair<ARecordType, List<String>> getFieldNameFromSubAssignTree(IOptimizableFuncExpr optFuncExpr,
+            AbstractLogicalOperator op, int varIndex, ARecordType recType) {
         AbstractLogicalExpression expr = null;
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             expr = (AbstractLogicalExpression) assignOp.getExpressions().get(varIndex).getValue();
         }
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        if (expr == null || expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return null;
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
-        if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-            ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
-            if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return null;
+        if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME
+                || funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+
+            //get the variable from here. Figure out which input it came from. Go to that input!!!
+            ArrayList<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
+            expr.getUsedVariables(usedVars);
+            LogicalVariable usedVar = usedVars.get(0);
+            List<String> returnList = new ArrayList<String>();
+
+            //Find the input that it came from
+            for (int varCheck = 0; varCheck < op.getInputs().size(); varCheck++) {
+                AbstractLogicalOperator nestedOp = (AbstractLogicalOperator) op.getInputs().get(varCheck).getValue();
+                if (nestedOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+                    if (varCheck == op.getInputs().size() - 1) {
+
+                    }
+                } else {
+                    int nestedAssignVar = ((AssignOperator) nestedOp).getVariables().indexOf(usedVar);
+                    if (nestedAssignVar == -1) {
+                        continue;
+                    }
+                    //get the nested info from the lower input
+                    Pair<ARecordType, List<String>> lowerInfo = getFieldNameFromSubAssignTree(optFuncExpr,
+                            (AbstractLogicalOperator) op.getInputs().get(varCheck).getValue(), nestedAssignVar, recType);
+                    if (lowerInfo != null) {
+                        recType = lowerInfo.first;
+                        returnList = lowerInfo.second;
+                    }
+                }
             }
-            ConstantExpression constExpr = (ConstantExpression) nameArg;
-            return ((AString) ((AsterixConstantValue) constExpr.getValue()).getObject()).getStringValue();
-        } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
-            ILogicalExpression idxArg = funcExpr.getArguments().get(1).getValue();
-            if (idxArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return null;
+
+            if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+                ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
+                if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                    return null;
+                }
+                ConstantExpression constExpr = (ConstantExpression) nameArg;
+                returnList.addAll(Arrays.asList(((AString) ((AsterixConstantValue) constExpr.getValue()).getObject())
+                        .getStringValue()));
+                return new Pair<ARecordType, List<String>>(recType, returnList);
+            } else if (funcIdent == AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+                ILogicalExpression idxArg = funcExpr.getArguments().get(1).getValue();
+                if (idxArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                    return null;
+                }
+                ConstantExpression constExpr = (ConstantExpression) idxArg;
+                int fieldIndex = ((AInt32) ((AsterixConstantValue) constExpr.getValue()).getObject()).getIntegerValue();
+                returnList.addAll(Arrays.asList(recType.getFieldNames()[fieldIndex]));
+                IAType subType = recType.getFieldTypes()[fieldIndex];
+                if (subType.getTypeTag() == ATypeTag.RECORD) {
+                    recType = (ARecordType) subType;
+                }
+                return new Pair<ARecordType, List<String>>(recType, returnList);
             }
-            ConstantExpression constExpr = (ConstantExpression) idxArg;
-            int fieldIndex = ((AInt32) ((AsterixConstantValue) constExpr.getValue()).getObject()).getIntegerValue();
-            return recType.getFieldNames()[fieldIndex];
+
         }
 
         ILogicalExpression argExpr = funcExpr.getArguments().get(0).getValue();

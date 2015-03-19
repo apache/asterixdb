@@ -1,0 +1,4 @@
+
+use dataverse TinySocial;
+
+delete $l from dataset TweetMessages where $l.user.name>="Oli Jackson" or $l.user.statuses_count>362;

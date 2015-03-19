@@ -1,0 +1,42 @@
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary rtree index in index subtree.
+ * Issue        : 730, 741                 
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TwitterUserType as closed {
+	screen-name: string,
+	lang: string,
+	friends-count: int64,
+	statuses-count: int64,
+	name: string,
+	followers-count: int64
+} 
+
+create type TweetMessageNestedType as closed {
+	tweetid: int64,
+        user: TwitterUserType,
+        sender-location: point,
+	send-time: datetime,
+        referred-topics: {{ string }},
+	message-text: string,
+	countA: int64,
+	countB: int64
+}
+
+create type TweetMessageType as closed {
+  nested: TweetMessageNestedType
+}
+
+create external dataset TweetMessages(TweetMessageType) using hdfs(("hdfs"="hdfs://127.0.0.1:31888"),("path"="/asterix/tw_for_indexleftouterjoin_nested.adm"),("input-format"="text-input-format"),("format"="adm"));
+
+create index IdIx on TweetMessages(nested.tweetid) type btree;
+create index msgCountAIx on TweetMessages(nested.countA) type btree;
+create index msgCountBIx on TweetMessages(nested.countB) type btree;
+create index twmSndLocIx on TweetMessages(nested.sender-location) type rtree;
+

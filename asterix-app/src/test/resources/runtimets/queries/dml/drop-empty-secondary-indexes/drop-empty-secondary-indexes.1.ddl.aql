@@ -9,25 +9,49 @@ drop dataverse test if exists;
 create dataverse test;
 
 use dataverse test;
+create type Name as open {
+first : string,
+last : string
+}
+
+create type Person as open {
+name : Name
+}
 
 create type TestType as open {
 id : int32,
 name : string,
 locn : point,
-zip : string
+zip : string,
+person : Person
 }
 
 create dataset t1(TestType) primary key id;
 
 create index rtree_index_point on t1(locn) type rtree;
 
+create index rtree_index_point_open on t1(open_locn:point) type rtree enforced;
+
 create index keyWD_indx on t1(name) type keyword;
+
+create index keyWD_indx_open on t1(nickname:string) type keyword enforced;
 
 create index secndIndx on t1(zip);
 
+create index nested on t1(person.name.first);
+
+create index secndIndx_open on t1(address:string) enforced;
+
 drop index t1.rtree_index_point;
+
+drop index t1.rtree_index_point_open;
 
 drop index t1.keyWD_indx;
 
+drop index t1.keyWD_indx_open;
+
 drop index t1.secndIndx;
 
+drop index t1.nested;
+
+drop index t1.secndIndx_open;

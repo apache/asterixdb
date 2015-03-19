@@ -1,0 +1,14 @@
+/*
+ * Test case Name  : scan-delete-btree-secondary-index-open.aql
+ * Description     : This test is intended to test insertion into secondary btree indexes that are built on open fields
+ * Expected Result : Success
+ * Date            : Feb 13 2014
+ */
+
+
+use dataverse test;
+
+for $c in dataset('CustomersOpen')
+where $c.age < 20
+order by $c.cid
+return $c

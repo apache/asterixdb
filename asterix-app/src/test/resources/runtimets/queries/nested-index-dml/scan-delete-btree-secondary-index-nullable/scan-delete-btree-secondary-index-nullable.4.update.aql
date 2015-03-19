@@ -1,0 +1,6 @@
+use dataverse test;
+
+
+delete $c from dataset Customers where $c.nested.cid>=200;
+
+

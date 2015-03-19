@@ -1,0 +1,4 @@
+use dataverse TestDataverse;
+
+for $i in dataset TestSet
+return $i

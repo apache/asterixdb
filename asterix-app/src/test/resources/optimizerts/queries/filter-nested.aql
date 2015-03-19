@@ -1,0 +1,22 @@
+//Check Plan for nested Filter
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+write output to nc1:"rttest/filter-nested.adm";
+
+create type TestTypetmp as open {
+    fname : string,
+    lname : string
+}
+
+create type TestType as open {
+    nested : TestTypetmp
+}
+
+create dataset testdst(TestType) primary key nested.fname with filter on nested.lname;
+
+for $emp in dataset('testdst')
+where $emp.nested.lname > "Roger"
+return $emp.nested

@@ -96,9 +96,12 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static void deinit() throws Exception {
-        if (nc2 != null) nc2.stop();
-        if (nc1 != null) nc1.stop();
-        if (cc != null) cc.stop();
+        if (nc2 != null)
+            nc2.stop();
+        if (nc1 != null)
+            nc1.stop();
+        if (cc != null)
+            cc.stop();
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
@@ -110,11 +113,10 @@ public class AsterixHyracksIntegrationUtil {
 
     /**
      * main method to run a simple 2 node cluster in-process
+     * suggested VM arguments: <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
      *
-     * suggested VM arguments:
-     * <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
-     *
-     * @param args unused
+     * @param args
+     *            unused
      */
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
