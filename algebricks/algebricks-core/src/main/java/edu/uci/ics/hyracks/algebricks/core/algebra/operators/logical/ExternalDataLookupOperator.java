@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -31,15 +32,15 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvi
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class ExternalDataLookupOperator extends AbstractScanOperator {
+public class ExternalDataLookupOperator extends AbstractDataSourceOperator {
 
     private final List<Object> variableTypes;
     protected final Mutable<ILogicalExpression> expression;
     private final boolean propagateInput;
 
     public ExternalDataLookupOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
-            List<Object> variableTypes, boolean propagateInput) {
-        super(variables);
+            List<Object> variableTypes, boolean propagateInput, IDataSource<?> dataSource) {
+        super(variables, dataSource);
         this.expression = expression;
         this.variableTypes = variableTypes;
         this.propagateInput = propagateInput;

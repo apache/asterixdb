@@ -31,9 +31,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import edu.uci.ics.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class DataSourceScanOperator extends AbstractScanOperator {
-    private IDataSource<?> dataSource;
-
+public class DataSourceScanOperator extends AbstractDataSourceOperator {
     private List<LogicalVariable> projectVars;
 
     private boolean projectPushed = false;
@@ -43,18 +41,13 @@ public class DataSourceScanOperator extends AbstractScanOperator {
     private List<LogicalVariable> maxFilterVars;
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
-        super(variables);
-        this.dataSource = dataSource;
+        super(variables, dataSource);
         projectVars = new ArrayList<LogicalVariable>();
     }
 
     @Override
     public LogicalOperatorTag getOperatorTag() {
         return LogicalOperatorTag.DATASOURCESCAN;
-    }
-
-    public IDataSource<?> getDataSource() {
-        return dataSource;
     }
 
     @Override
