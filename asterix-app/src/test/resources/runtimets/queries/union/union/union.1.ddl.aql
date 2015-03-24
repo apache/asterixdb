@@ -1,0 +1,17 @@
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type FacebookUserType as open {
+        id: int
+}
+
+create type FacebookMessageType as open {
+        message-id: int
+}
+
+create dataset FacebookUsers(FacebookUserType)
+primary key id;
+
+create dataset FacebookMessages(FacebookMessageType)
+primary key message-id;

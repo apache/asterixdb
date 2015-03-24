@@ -42,6 +42,7 @@ import edu.uci.ics.asterix.optimizer.rules.IntroduceMaterializationForInsertWith
 import edu.uci.ics.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectAssignRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
+import edu.uci.ics.asterix.optimizer.rules.IntroduceUnionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenceRule;
 import edu.uci.ics.asterix.optimizer.rules.LoadRecordFieldsRule;
 import edu.uci.ics.asterix.optimizer.rules.NestGroupByRule;
@@ -104,6 +105,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanIntoGroupByRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSubplanWithAggregateDownThroughProductRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushUnnestDownThroughUnionRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantGroupByDecorVars;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantVariablesRule;
@@ -228,6 +230,11 @@ public final class RuleCollections {
         consolidation.add(new RemoveUnusedAssignAndAggregateRule());
         consolidation.add(new RemoveRedundantGroupByDecorVars());
         consolidation.add(new NestedSubplanToJoinRule());
+        //unionRule => PushUnnestDownUnion => RemoveRedundantListifyRule cause these rules are correlated
+        consolidation.add(new IntroduceUnionRule());
+        consolidation.add(new PushUnnestDownThroughUnionRule());
+        consolidation.add(new RemoveRedundantListifyRule());
+
         return consolidation;
     }
 
@@ -310,5 +317,4 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         return prepareForJobGenRewrites;
     }
-
 }

@@ -120,7 +120,6 @@ import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -159,7 +158,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ProjectOper
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
@@ -266,10 +264,8 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             additionalFilteringVars = new ArrayList<LogicalVariable>();
             additionalFilteringAssignExpressions = new ArrayList<Mutable<ILogicalExpression>>();
             additionalFilteringExpressions = new ArrayList<Mutable<ILogicalExpression>>();
-
             prepareVarAndExpression(additionalFilteringField, payloadVar, additionalFilteringVars,
                     additionalFilteringAssignExpressions, additionalFilteringExpressions);
-
             additionalFilteringAssign = new AssignOperator(additionalFilteringVars,
                     additionalFilteringAssignExpressions);
         }
@@ -1110,54 +1106,22 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitUnionExpr(UnionExpr unionExpr,
             Mutable<ILogicalOperator> tupSource) throws AsterixException {
+        //Translate the AQL union into an assign [var] <- [function-call: asterix:union, Args:[..]]
+        //The rule "IntroduceUnionRule" will translates this assign operator into the UnionAll operator.
         Mutable<ILogicalOperator> ts = tupSource;
-        ILogicalOperator lastOp = null;
-        LogicalVariable lastVar = null;
-        boolean first = true;
+        LogicalVariable assignedVar = context.newVar();
+        List<Mutable<ILogicalExpression>> inputVars = new ArrayList<Mutable<ILogicalExpression>>();
         for (Expression e : unionExpr.getExprs()) {
-            if (first) {
-                first = false;
-            } else {
-                ts = new MutableObject<ILogicalOperator>(new EmptyTupleSourceOperator());
-            }
-            Pair<ILogicalOperator, LogicalVariable> p1 = e.accept(this, ts);
-            if (lastOp == null) {
-                lastOp = p1.first;
-                lastVar = p1.second;
-            } else {
-                LogicalVariable unnestVar1 = context.newVar();
-                UnnestOperator unnest1 = new UnnestOperator(unnestVar1, new MutableObject<ILogicalExpression>(
-                        makeUnnestExpression(new VariableReferenceExpression(lastVar))));
-                unnest1.getInputs().add(new MutableObject<ILogicalOperator>(lastOp));
-                LogicalVariable unnestVar2 = context.newVar();
-                UnnestOperator unnest2 = new UnnestOperator(unnestVar2, new MutableObject<ILogicalExpression>(
-                        makeUnnestExpression(new VariableReferenceExpression(p1.second))));
-                unnest2.getInputs().add(new MutableObject<ILogicalOperator>(p1.first));
-                List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>(
-                        1);
-                LogicalVariable resultVar = context.newVar();
-                Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple = new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(
-                        unnestVar1, unnestVar2, resultVar);
-                varMap.add(triple);
-                UnionAllOperator unionOp = new UnionAllOperator(varMap);
-                unionOp.getInputs().add(new MutableObject<ILogicalOperator>(unnest1));
-                unionOp.getInputs().add(new MutableObject<ILogicalOperator>(unnest2));
-                lastVar = resultVar;
-                lastOp = unionOp;
-            }
+            Pair<ILogicalOperator, LogicalVariable> op_var = e.accept(this, ts);
+            ts = new MutableObject<ILogicalOperator>(op_var.first);
+            VariableReferenceExpression var = new VariableReferenceExpression(op_var.second);
+            inputVars.add(new MutableObject<ILogicalExpression>(var));
         }
-        LogicalVariable aggVar = context.newVar();
-        ArrayList<LogicalVariable> aggregVars = new ArrayList<LogicalVariable>(1);
-        aggregVars.add(aggVar);
-        List<Mutable<ILogicalExpression>> afcExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
-        afcExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(lastVar)));
-        AggregateFunctionCallExpression afc = AsterixBuiltinFunctions.makeAggregateFunctionExpression(
-                AsterixBuiltinFunctions.LISTIFY, afcExprs);
-        ArrayList<Mutable<ILogicalExpression>> aggregExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
-        aggregExprs.add(new MutableObject<ILogicalExpression>(afc));
-        AggregateOperator agg = new AggregateOperator(aggregVars, aggregExprs);
-        agg.getInputs().add(new MutableObject<ILogicalOperator>(lastOp));
-        return new Pair<ILogicalOperator, LogicalVariable>(agg, aggVar);
+        AbstractFunctionCallExpression union = new ScalarFunctionCallExpression(
+                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.UNION), inputVars);
+        AssignOperator a = new AssignOperator(assignedVar, new MutableObject<ILogicalExpression>(union));
+        a.getInputs().add(ts);
+        return new Pair<ILogicalOperator, LogicalVariable>(a, assignedVar);
     }
 
     private AbstractFunctionCallExpression createComparisonExpression(OperatorType t) {
@@ -1371,7 +1335,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         return k == Kind.LITERAL_EXPRESSION || k == Kind.LIST_CONSTRUCTOR_EXPRESSION
                 || k == Kind.RECORD_CONSTRUCTOR_EXPRESSION || k == Kind.VARIABLE_EXPRESSION
                 || k == Kind.CALL_EXPRESSION || k == Kind.OP_EXPRESSION || k == Kind.FIELD_ACCESSOR_EXPRESSION
-                || k == Kind.INDEX_ACCESSOR_EXPRESSION || k == Kind.UNARY_EXPRESSION;
+                || k == Kind.INDEX_ACCESSOR_EXPRESSION || k == Kind.UNARY_EXPRESSION || k == Kind.UNION_EXPRESSION;
     }
 
     private <T> ArrayList<T> mkSingletonArrayList(T item) {

@@ -458,11 +458,10 @@ public class AsterixBuiltinFunctions {
             "null", 1);
     public final static FunctionIdentifier STRING_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string", 1);
-    public final static FunctionIdentifier BINARY_HEX_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "hex", 1);
+    public final static FunctionIdentifier BINARY_HEX_CONSTRUCTOR = new FunctionIdentifier(
+            FunctionConstants.ASTERIX_NS, "hex", 1);
     public final static FunctionIdentifier BINARY_BASE64_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS,
-            "base64", 1);
+            FunctionConstants.ASTERIX_NS, "base64", 1);
     public final static FunctionIdentifier INT8_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "int8", 1);
     public final static FunctionIdentifier INT16_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -679,6 +678,8 @@ public class AsterixBuiltinFunctions {
     public final static FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "get-points", 1);
 
+    public final static FunctionIdentifier UNION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "union", 2);
+
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
     public static final FunctionIdentifier GE = AlgebricksBuiltinFunctions.GE;
@@ -693,7 +694,6 @@ public class AsterixBuiltinFunctions {
 
     public static final FunctionIdentifier IS_SYSTEM_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "is-system-null", 1);
-    ;
     public static final FunctionIdentifier NOT_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "not-null",
             1);
     public static final FunctionIdentifier COLLECTION_TO_SEQUENCE = new FunctionIdentifier(
@@ -919,6 +919,9 @@ public class AsterixBuiltinFunctions {
         addFunction(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE, true);
         addFunction(BINARY_HEX_CONSTRUCTOR, OptionalABinaryTypeComputer.INSTANCE, true);
         addFunction(BINARY_BASE64_CONSTRUCTOR, OptionalABinaryTypeComputer.INSTANCE, true);
+
+        addPrivateFunction(UNION, UnorderedListConstructorResultType.INSTANCE, true);
+
         addPrivateFunction(SUBSET_COLLECTION, new IResultTypeComputer() {
 
             @Override
@@ -1257,8 +1260,7 @@ public class AsterixBuiltinFunctions {
                 || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
             return true;
         }
-        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(),
-                signature.getArity());
+        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(), signature.getArity());
         finfo = getAsterixFunctionInfo(fi);
         if (builtinPublicFunctionsSet.keySet().contains(finfo)
                 || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
@@ -1371,8 +1373,7 @@ public class AsterixBuiltinFunctions {
         registeredFunctionsDomain.put(functionInfo, funcDomain);
     }
 
-    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer,
-            boolean isFunctional) {
+    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer, boolean isFunctional) {
         IFunctionInfo functionInfo = new AsterixFunctionInfo(fi, isFunctional);
         builtinPrivateFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);

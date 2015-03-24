@@ -385,7 +385,6 @@ public class TestsUtils {
             LOGGER.info("Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
-
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
                 statement = TestsUtils.readTestFile(testFile);

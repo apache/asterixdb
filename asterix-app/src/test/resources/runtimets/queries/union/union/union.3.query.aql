@@ -1,0 +1,6 @@
+use dataverse TinySocial;
+
+let $t1 := for $t in dataset FacebookUsers return $t.id
+let $t2 := for $s in dataset FacebookMessages return $s.message-id
+let $c := $t1 union $t2
+for $res in $c distinct by $res return $res
