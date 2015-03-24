@@ -92,5 +92,6 @@ public abstract class TypePropagationPolicy {
     };
 
     public abstract Object getVarType(LogicalVariable var, INullableTypeComputer ntc,
-            List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists, ITypeEnvPointer... typeEnvs) throws AlgebricksException;
+            List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
+            ITypeEnvPointer... typeEnvs) throws AlgebricksException;
 }
