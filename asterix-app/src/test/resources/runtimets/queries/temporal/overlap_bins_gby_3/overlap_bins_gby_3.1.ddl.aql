@@ -1,0 +1,18 @@
+/**
+ * Interval_bin_gby test case: test the group-by using interval-bin function
+ * Expected result: success
+ **/
+
+drop dataverse multitask if exists;
+create dataverse multitask;
+use dataverse multitask;
+
+create type LogType as closed {
+        row_id: int32,
+        time: time,
+        duration: int32,
+        app: string
+};
+
+create dataset logs(LogType)
+primary key row_id;

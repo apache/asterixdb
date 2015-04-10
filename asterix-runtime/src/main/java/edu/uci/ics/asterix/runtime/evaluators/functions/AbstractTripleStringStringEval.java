@@ -76,22 +76,18 @@ public abstract class AbstractTripleStringStringEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            // type-check: (string?, string, string)
-
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                if (array1.getByteArray()[0] == SER_STRING_TYPE_TAG && array2.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                    nullSerde.serialize(ANull.NULL, dout);
-                    return;
-                }
-            }
-
-            if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
+            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG
+                    || array2.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                nullSerde.serialize(ANull.NULL, dout);
+                return;
+            } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
+                    || array1.getByteArray()[0] != SER_STRING_TYPE_TAG
                     || array2.getByteArray()[0] != SER_STRING_TYPE_TAG) {
                 throw new AlgebricksException(funcID.getName()
-                        + ": expects input type (STRING/NULL, STRING, STRING), but got ("
+                        + ": expects input type (STRING/NULL, STRING/NULL, STRING/NULL), but got ("
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]) + ", "
                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array1.getByteArray()[0]) + ", "
-                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ").");
+                        + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array2.getByteArray()[0]) + ".");
             }
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);

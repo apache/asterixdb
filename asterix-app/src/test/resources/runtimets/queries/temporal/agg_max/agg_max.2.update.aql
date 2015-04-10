@@ -1,0 +1,5 @@
+use dataverse test;
+ 
+insert into dataset tsdata({"id": 1, "time": time("23:49:23.938"), "date": date("1904-01-06"), "datetime": datetime("2012-01-12T12:31:39"), "dtduration": day-time-duration("PT5M"), "ymduration": year-month-duration("P5M")}) 
+insert into dataset tsdata({"id": 2, "time": time("12:37:10"), "date": date("2194-07-06"), "datetime": datetime("2013-01-12T12:31:39"), "dtduration": day-time-duration("PT5.329S"), "ymduration": year-month-duration("P1Y")}) 
+insert into dataset tsdata({"id": 3, "time": time("09:28:10.9"), "date": date("-1904-01-06"), "datetime": datetime("2012-01-12T18:31:39"), "dtduration": day-time-duration("P3DT2S"), "ymduration": year-month-duration("P29M")}) 

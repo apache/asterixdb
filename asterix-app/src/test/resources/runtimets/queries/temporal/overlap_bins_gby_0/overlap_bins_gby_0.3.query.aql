@@ -1,0 +1,15 @@
+/**
+ * Interval_bin_gby test case: test the group-by using interval-bin function
+ * Expected result: success
+ **/
+
+use dataverse test;
+
+for $i in dataset tsdata
+  order by $i.time
+  for $j in overlap-bins(interval-start-from-time($i.time, $i.duration), time("00:00:00"), day-time-duration("PT1H30M"))
+    group by $bin := $j with $i 
+    order by get-interval-start($bin)
+    for $x in $i
+      let $itv := interval-start-from-time($x.time, $x.duration)
+      return { "tbin": $bin, "interval": $itv, "overlap": get-overlapping-interval($bin, $itv) }

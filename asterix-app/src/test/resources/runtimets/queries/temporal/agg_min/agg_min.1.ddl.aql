@@ -1,0 +1,15 @@
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type Schema as closed{
+  id: int32,
+  time: time,
+  date: date,
+  datetime: datetime,
+  dtduration: day-time-duration,
+  ymduration: year-month-duration
+}
+
+create dataset tsdata(Schema)
+primary key id;

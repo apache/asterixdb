@@ -14,13 +14,18 @@
  */
 package edu.uci.ics.asterix.om.base;
 
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+
 public class AMutableInterval extends AInterval {
 
     public AMutableInterval(long intervalStart, long intervalEnd, byte typetag) {
         super(intervalStart, intervalEnd, typetag);
     }
 
-    public void setValue(long intervalStart, long intervalEnd, byte typetag) {
+    public void setValue(long intervalStart, long intervalEnd, byte typetag) throws AlgebricksException {
+        if (intervalStart >= intervalEnd) {
+            throw new AlgebricksException("Invalid interval: the starting time should be less than the ending time.");
+        }
         this.intervalStart = intervalStart;
         this.intervalEnd = intervalEnd;
         this.typetag = typetag;

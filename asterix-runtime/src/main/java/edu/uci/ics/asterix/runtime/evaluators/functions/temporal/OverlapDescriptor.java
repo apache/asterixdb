@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class OverlapDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
     private final static long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.OVERLAP;
+    public final static FunctionIdentifier FID = AsterixBuiltinFunctions.INTERVAL_OVERLAPPING;
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

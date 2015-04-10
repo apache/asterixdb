@@ -49,6 +49,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUUIDStringSerializerDe
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -193,8 +194,10 @@ public class AqlSerializerDeserializerProvider implements ISerializerDeserialize
             @Override
             public IAObject deserialize(DataInput in) throws HyracksDataException {
                 try {
-                    //deserialize the tag to move the  input cursor forward
-                    SerializerDeserializerUtil.deserializeTag(in);
+                    //deserialize the tag (move input cursor forward) and check if it's not NULL tag
+                    if (SerializerDeserializerUtil.deserializeTag(in) == ATypeTag.NULL) {
+                        return ANull.NULL;
+                    }
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

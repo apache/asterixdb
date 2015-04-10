@@ -38,6 +38,122 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
 
         { "interval-before": true, "interval-after": true }
 
+
+### interval-covers, interval-covered-by ###
+
+ * Syntax:
+
+        interval-covers(interval1, interval2)
+        interval-covered-by(interval1, interval2)
+
+ * These two functions check whether one interval covers the other interval.
+ * Arguments:
+    * `interval1`, `interval2`: two intervals to be compared
+ * Return Value:
+   
+    A `boolean` value. Specifically, `interval-covers(interval1, interval2)` is true if and only if
+
+        interval1.start <= interval2.start
+        AND interval1.end >= interval2.end
+
+    `interval-covered-by(interval1, interval2)` is true if and only if
+
+        interval2.start <= interval1.start
+        AND interval2.end >= interval1.end
+
+    For both functions, if any of the two inputs is `null`, `null` is returned.
+
+ * Examples:
+
+        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
+        let $itv2 := interval-from-date("2000-03-01", "2004-09-09")
+        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
+        let $itv4 := interval-from-date("2004-09-10", "2012-08-01")
+        return {"interval-covers": interval-covers($itv1, $itv2), "interval-covered-by": interval-covered-by($itv3, $itv4)}
+        
+ * The expected result is:
+ 
+        { "interval-covers": true, "interval-covered-by": true }
+
+
+### interval-overlaps, interval-overlapped-by ###
+
+ * Syntax:
+
+        interval-overlaps(interval1, interval2)
+        interval-overlapped-by(interval1, interval2)
+
+ * These functions check whether two intervals overlap with each other.
+ * Arguments:
+    * `interval1`, `interval2`: two intervals to be compared
+ * Return Value:
+   
+    A `boolean` value. Specifically, `interval-overlaps(interval1, interval2)` is true if and only if
+
+        interval1.start < interval2.start
+        AND interval2.end > interval1.end
+        AND interval1.end > interval2.start
+
+    `interval-overlapped-by(interval1, interval2)` is true if and only if
+
+        interval2.start < interval1.start
+        AND interval1.end > interval2.end
+        AND interval2.end > interval1.start
+
+    For all these functions, if any of the two inputs is `null`, `null` is returned.
+
+    Note that `interval-overlaps` and `interval-overlapped-by` are following the Allen's relations on the definition of overlap.
+
+ * Examples:
+
+        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
+        let $itv2 := interval-from-date("2004-05-01", "2012-09-09")
+        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
+        let $itv4 := interval-from-date("2004-09-10", "2006-12-31")
+        return {"overlaps": interval-overlaps($itv1, $itv2), 
+                "overlapped-by": interval-overlapped-by($itv3, $itv4)}
+        
+ * The expected result is:
+ 
+        { "overlaps": true, "overlapped-by": true }
+
+
+###  interval-overlapping ###
+Note that `interval-overlapping` is not an Allen's Relation, but syntactic sugar we added for the case that the intersect of two intervals is not empty. Basically this function returns true if any of these functions return true: `interval-overlaps`, `interval-overlapped-by`, `interval-covers`, or `interval-covered-by`.
+
+ * Syntax:
+
+        interval-overlapping(interval1, interval2)
+
+ * This functions check whether two intervals share any points with each other. 
+ * Arguments:
+    * `interval1`, `interval2`: two intervals to be compared
+ * Return Value:
+   
+    A `boolean` value. Specifically, `interval-overlapping(interval1, interval2)` is true if
+
+        (interval2.start >= interval1.start
+        AND interval2.start < interval1.end)
+        OR
+        (interval2.end > interval1.start
+        AND interval2.end <= interval1.end)
+
+    If any of the two inputs is `null`, `null` is returned.
+
+ * Examples:
+
+        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
+        let $itv2 := interval-from-date("2004-05-01", "2012-09-09")
+        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
+        let $itv4 := interval-from-date("2004-09-10", "2006-12-31")
+        return {"overlapping1": interval-overlapping($itv1, $itv2), 
+                "overlapping2": interval-overlapping($itv3, $itv4)}
+        
+ * The expected result is:
+ 
+        { "overlapping1": true, "overlapping2": true }
+
+
 ### interval-meets, interval-met-by ###
 
  * Syntax:
@@ -63,59 +179,6 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
  * The expected result is:
  
         { "meets": true, "metby": true }
-
-
-### interval-overlaps, interval-overlapped-by, overlap ###
-
- * Syntax:
-
-        interval-overlaps(interval1, interval2)
-        interval-overlapped-by(interval1, interval2)
-        overlap(interval1, interval2)
-
- * These functions check whether two intervals overlap with each other.
- * Arguments:
-    * `interval1`, `interval2`: two intervals to be compared
- * Return Value:
-   
-    A `boolean` value. Specifically, `interval-overlaps(interval1, interval2)` is true if and only if
-
-        interval1.start < interval2.start
-        AND interval2.end > interval1.end
-        AND interval1.end > interval2.start
-
-    `interval-overlapped-by(interval1, interval2)` is true if and only if
-
-        interval2.start < interval1.start
-        AND interval1.end > interval2.end
-        AND interval2.end > interval1.start
-
-    `overlap(interval1, interval2)` is true if
-
-        (interval2.start >= interval1.start
-        AND interval2.start < interval1.end)
-        OR
-        (interval2.end > interval1.start
-        AND interval2.end <= interval.end)
-
-    For all these functions, if any of the two inputs is `null`, `null` is returned.
-
-    Note that `interval-overlaps` and `interval-overlapped-by` are following the Allen's relations on the definition of overlap. `overlap` is a syntactic sugar for the case that the intersect of two intervals is not empty.
-
- * Examples:
-
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2004-05-01", "2012-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2004-09-10", "2006-12-31")
-        return {"overlaps": interval-overlaps($itv1, $itv2), 
-                "overlapped-by": interval-overlapped-by($itv3, $itv4), 
-                "overlapping1": overlap($itv1, $itv2), 
-                "overlapping2": overlap($itv3, $itv4)}
-        
- * The expected result is:
- 
-        { "overlaps": true, "overlapped-by": true, "overlapping1": true, "overlapping2": true }
 
 
 ### interval-starts, interval-started-by ###
@@ -153,43 +216,6 @@ A detailed description of Allen's relations can be found from its [wikipedia ent
  * The expected result is:
  
         { "interval-starts": true, "interval-started-by": true }
-
-
-### interval-covers, interval-covered-by ###
-
- * Syntax:
-
-        interval-covers(interval1, interval2)
-        interval-covered-by(interval1, interval2)
-
- * These two functions check whether one interval covers the other interval.
- * Arguments:
-    * `interval1`, `interval2`: two intervals to be compared
- * Return Value:
-   
-    A `boolean` value. Specifically, `interval-covers(interval1, interval2)` is true if and only if
-
-        interval1.start <= interval2.start
-        AND interval2.end >= interval1.end
-
-    `interval-covered-by(interval1, interval2)` is true if and only if
-
-        interval2.start <= interval1.start
-        AND interval1.end >= interval2.end
-
-    For both functions, if any of the two inputs is `null`, `null` is returned.
-
- * Examples:
-
-        let $itv1 := interval-from-date("2000-01-01", "2005-01-01")
-        let $itv2 := interval-from-date("2000-03-01", "2004-09-09")
-        let $itv3 := interval-from-date("2006-08-01", "2007-03-01")
-        let $itv4 := interval-from-date("2004-09-10", "2012-08-01")
-        return {"interval-covers": interval-covers($itv1, $itv2), "interval-covered-by": interval-covered-by($itv3, $itv4)}
-        
- * The expected result is:
- 
-        { "interval-covers": true, "interval-covered-by": true }
 
 
 ### interval-ends, interval-ended-by ###

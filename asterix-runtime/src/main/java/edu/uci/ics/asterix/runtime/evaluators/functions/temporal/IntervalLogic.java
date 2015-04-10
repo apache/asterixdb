@@ -91,7 +91,7 @@ public class IntervalLogic {
      * @return
      */
     public static <T extends Comparable<T>> boolean overlap(T s1, T e1, T s2, T e2) {
-        return s1.compareTo(e2) < 0 && s2.compareTo(e1) < 0;
+        return (s2.compareTo(s1) >= 0 && s2.compareTo(e1) < 0) || (e2.compareTo(e1) <= 0 && e2.compareTo(s1) > 0);
     }
 
     /**

@@ -1,0 +1,16 @@
+/*
+ * Description      :   Check temporal functions for duration
+ * Expected Result  :   Success
+ * Date             :   08/22/2013
+ */
+
+use dataverse test;
+
+let $itv1 := interval-from-date("2010-10-30", "2010-12-21")
+let $itv2 := interval-from-datetime("2012-06-26T01:01:01.111", "2012-07-27T02:02:02.222")
+let $itv3 := interval-from-time("12:32:38", "20:29:20")
+
+return { "dr1" : duration-from-interval($itv1),
+         "dr2" : duration-from-interval($itv2),
+         "dr3" : duration-from-interval($itv3),
+         "dr4" : duration-from-interval(null) }

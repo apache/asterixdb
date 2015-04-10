@@ -137,7 +137,11 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             throw new HyracksDataException(e);
         }
 
-        aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.DATETIME.serialize());
+        try {
+            aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.DATETIME.serialize());
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
 
         intervalSerde.serialize(aInterval, out);
     }
@@ -180,7 +184,11 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             throw new HyracksDataException(e);
         }
 
-        aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.TIME.serialize());
+        try {
+            aInterval.setValue(chrononTimeInMsStart, chrononTimeInMsEnd, ATypeTag.TIME.serialize());
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
         intervalSerde.serialize(aInterval, out);
     }
 
@@ -214,8 +222,12 @@ public class AIntervalSerializerDeserializer implements ISerializerDeserializer<
             throw new HyracksDataException(e);
         }
 
-        aInterval.setValue((chrononTimeInMsStart / GregorianCalendarSystem.CHRONON_OF_DAY),
-                (chrononTimeInMsEnd / GregorianCalendarSystem.CHRONON_OF_DAY), ATypeTag.DATE.serialize());
+        try {
+            aInterval.setValue((chrononTimeInMsStart / GregorianCalendarSystem.CHRONON_OF_DAY),
+                    (chrononTimeInMsEnd / GregorianCalendarSystem.CHRONON_OF_DAY), ATypeTag.DATE.serialize());
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e);
+        }
 
         intervalSerde.serialize(aInterval, out);
     }

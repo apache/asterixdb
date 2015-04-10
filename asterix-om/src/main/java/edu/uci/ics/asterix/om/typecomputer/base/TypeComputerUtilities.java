@@ -67,7 +67,7 @@ public class TypeComputerUtilities {
             return null;
     }
 
-    public static boolean nullableType(ILogicalExpression expression, IVariableTypeEnvironment env)
+    public static boolean inputInferednullableType(ILogicalExpression expression, IVariableTypeEnvironment env)
             throws AlgebricksException {
         AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) expression;
         if (!(func instanceof ScalarFunctionCallExpression)) {

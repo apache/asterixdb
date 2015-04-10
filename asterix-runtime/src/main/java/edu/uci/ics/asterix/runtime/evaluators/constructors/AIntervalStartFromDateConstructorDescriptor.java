@@ -18,7 +18,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.om.base.AInterval;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
@@ -53,6 +55,8 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_DATE_TYPE_TAG = ATypeTag.DATE.serialize();
     private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
+    private final static byte SER_YEAR_MONTH_DURATION_TYPE_TAG = ATypeTag.YEARMONTHDURATION.serialize();
+    private final static byte SER_DAY_TIME_DURATION_TYPE_TAG = ATypeTag.DAYTIMEDURATION.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -123,6 +127,14 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         ADurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1),
                                         ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
+                            } else if (argOut1.getByteArray()[0] == SER_DAY_TIME_DURATION_TYPE_TAG) {
+                                intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
+                                        0,
+                                        ADayTimeDurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
+                            } else if (argOut1.getByteArray()[0] == SER_YEAR_MONTH_DURATION_TYPE_TAG) {
+                                intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
+                                        AYearMonthDurationSerializerDeserializer.getYearMonth(argOut1.getByteArray(), 1),
+                                        0, false);
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // duration
                                 int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)

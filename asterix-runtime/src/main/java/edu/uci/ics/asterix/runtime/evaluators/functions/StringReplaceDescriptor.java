@@ -122,8 +122,9 @@ public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
                                 astrReplace = (AString) stringSerde.deserialize(di);
                                 replace = astrReplace.getStringValue();
                             }
-                            if (newPattern)
+                            if (newPattern) {
                                 pattern = Pattern.compile(strPattern);
+                            }
                             carSeq.reset(array0, 1);
                             if (newPattern) {
                                 matcher = pattern.matcher(carSeq);

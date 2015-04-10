@@ -50,6 +50,7 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class JObjects {
@@ -304,8 +305,12 @@ public class JObjects {
             interval = new AMutableInterval(intervalStart, intervalEnd, (byte) 0);
         }
 
-        public void setValue(long intervalStart, long intervalEnd, byte typetag) {
-            interval.setValue(intervalStart, intervalEnd, typetag);
+        public void setValue(long intervalStart, long intervalEnd, byte typetag) throws AsterixException {
+            try {
+                interval.setValue(intervalStart, intervalEnd, typetag);
+            } catch (AlgebricksException e) {
+                throw new AsterixException(e);
+            }
         }
 
         @Override

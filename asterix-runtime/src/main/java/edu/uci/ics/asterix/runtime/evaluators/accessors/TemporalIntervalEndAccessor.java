@@ -72,27 +72,27 @@ public class TemporalIntervalEndAccessor extends AbstractScalarFunctionDynamicDe
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
+                    private final DataOutput out = output.getDataOutput();
 
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
 
-                    private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
                     // possible output
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ADate> dateSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATE);
-                    private AMutableDate aDate = new AMutableDate(0);
+                    private final AMutableDate aDate = new AMutableDate(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ADateTime> datetimeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
-                    private AMutableDateTime aDateTime = new AMutableDateTime(0);
+                    private final AMutableDateTime aDateTime = new AMutableDateTime(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ATIME);
-                    private AMutableTime aTime = new AMutableTime(0);
+                    private final AMutableTime aTime = new AMutableTime(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+                    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override

@@ -120,7 +120,13 @@ import edu.uci.ics.asterix.runtime.evaluators.accessors.PointYCoordinateAccessor
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalDayAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalHourAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalEndAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalEndDateAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalEndDatetimeAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalEndTimeAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalStartAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalStartDateAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalStartDatetimeAccessor;
+import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalIntervalStartTimeAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMillisecondAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMinuteAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMonthAccessor;
@@ -271,9 +277,11 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DatetimeFromUni
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayOfWeekDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DayTimeDurationComparatorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromIntervalDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMillisecondsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.DurationFromMonthsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetDayTimeDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetOverlappingIntervalDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.GetYearMonthDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalAfterDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalBeforeDescriptor;
@@ -290,6 +298,7 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStarted
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.IntervalStartsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MillisecondsFromDayTimeDurationDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.MonthsFromYearMonthDurationDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapBinsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.OverlapDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.ParseDateTimeDescriptor;
@@ -603,6 +612,12 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(TemporalMillisecondAccessor.FACTORY);
         temp.add(TemporalIntervalStartAccessor.FACTORY);
         temp.add(TemporalIntervalEndAccessor.FACTORY);
+        temp.add(TemporalIntervalStartDateAccessor.FACTORY);
+        temp.add(TemporalIntervalEndDateAccessor.FACTORY);
+        temp.add(TemporalIntervalStartTimeAccessor.FACTORY);
+        temp.add(TemporalIntervalEndTimeAccessor.FACTORY);
+        temp.add(TemporalIntervalStartDatetimeAccessor.FACTORY);
+        temp.add(TemporalIntervalEndDatetimeAccessor.FACTORY);
 
         // Temporal functions
         temp.add(DateFromUnixTimeInDaysDescriptor.FACTORY);
@@ -644,6 +659,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(GetYearMonthDurationDescriptor.FACTORY);
         temp.add(GetDayTimeDurationDescriptor.FACTORY);
         temp.add(IntervalBinDescriptor.FACTORY);
+        temp.add(OverlapBinsDescriptor.FACTORY);
         temp.add(DayOfWeekDescriptor.FACTORY);
         temp.add(ParseDateDescriptor.FACTORY);
         temp.add(ParseTimeDescriptor.FACTORY);
@@ -651,6 +667,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(PrintDateDescriptor.FACTORY);
         temp.add(PrintTimeDescriptor.FACTORY);
         temp.add(PrintDateTimeDescriptor.FACTORY);
+        temp.add(GetOverlappingIntervalDescriptor.FACTORY);
+        temp.add(DurationFromIntervalDescriptor.FACTORY);
 
         // Interval constructor
         temp.add(AIntervalFromDateConstructorDescriptor.FACTORY);
@@ -1056,12 +1074,13 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     @Override
     public ITupleParserFactory createTupleParser(ARecordType recType, IParseFileSplitsDecl decl) {
-        return createTupleParser(recType, decl.isDelimitedFileFormat(), decl.getDelimChar(), decl.getQuote(), decl.getHasHeader());
+        return createTupleParser(recType, decl.isDelimitedFileFormat(), decl.getDelimChar(), decl.getQuote(),
+                decl.getHasHeader());
     }
 
     @Override
     public ITupleParserFactory createTupleParser(ARecordType recType, boolean delimitedFormat, char delimiter,
-                                                 char quote, boolean hasHeader) {
+            char quote, boolean hasHeader) {
         if (delimitedFormat) {
             int n = recType.getFieldTypes().length;
             IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];

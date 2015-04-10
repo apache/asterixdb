@@ -40,11 +40,13 @@ public class DurationArithmeticOperations {
     public static long addDuration(long pointChronon, int yearMonthDuration, long dayTimeDuration, boolean isTimeOnly) {
 
         if (isTimeOnly) {
-            int rtnChronon = (int) ((pointChronon + dayTimeDuration) % GregorianCalendarSystem.CHRONON_OF_DAY);
-            if (rtnChronon < 0) {
-                rtnChronon += GregorianCalendarSystem.CHRONON_OF_DAY;
+            long rtnChronon = pointChronon + dayTimeDuration;
+            if (rtnChronon < 0L || rtnChronon > GregorianCalendarSystem.CHRONON_OF_DAY) {
+                rtnChronon %= GregorianCalendarSystem.CHRONON_OF_DAY;
+                if (rtnChronon < 0L) {
+                    rtnChronon += GregorianCalendarSystem.CHRONON_OF_DAY;
+                }
             }
-
             return rtnChronon;
         }
 

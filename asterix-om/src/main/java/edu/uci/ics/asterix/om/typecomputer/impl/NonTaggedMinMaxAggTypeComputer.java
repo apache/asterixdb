@@ -81,6 +81,21 @@ public class NonTaggedMinMaxAggTypeComputer implements IResultTypeComputer {
             case STRING:
                 unionList.add(BuiltinType.ASTRING);
                 break;
+            case DATE:
+                unionList.add(BuiltinType.ADATE);
+                break;
+            case TIME:
+                unionList.add(BuiltinType.ATIME);
+                break;
+            case DATETIME:
+                unionList.add(BuiltinType.ADATETIME);
+                break;
+            case YEARMONTHDURATION:
+                unionList.add(BuiltinType.AYEARMONTHDURATION);
+                break;
+            case DAYTIMEDURATION:
+                unionList.add(BuiltinType.ADAYTIMEDURATION);
+                break;
             case ANY:
                 return BuiltinType.ANY;
             default: {

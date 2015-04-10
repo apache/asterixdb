@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.runtime.evaluators.accessors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
 import edu.uci.ics.asterix.dataflow.data.nontagged.Coordinate;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
@@ -46,7 +45,7 @@ public class PointYCoordinateAccessor extends AbstractScalarFunctionDynamicDescr
 
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_POINT_Y_COORDINATE_ACCESSOR;
     private static final byte SER_POINT_TAG = ATypeTag.POINT.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

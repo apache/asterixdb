@@ -1,0 +1,8 @@
+use dataverse test;
+
+let $m0 := max(for $i in dataset tsdata return $i.time)
+let $m1 := max(for $i in dataset tsdata return $i.date)
+let $m2 := max(for $i in dataset tsdata return $i.datetime)
+let $m3 := max(for $i in dataset tsdata return $i.dtduration)
+let $m4 := max(for $i in dataset tsdata return $i.ymduration)
+return {"m0": $m0, "m1": $m1, "m2": $m2, "m3": $m3, "m4": $m4}

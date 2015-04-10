@@ -37,7 +37,7 @@ public class OptionalABinaryTypeComputer implements IResultTypeComputer {
 
     @Override public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        if (TypeComputerUtilities.nullableType(expression, env)) {
+        if (TypeComputerUtilities.inputInferednullableType(expression, env)) {
             List<IAType> unionList = new ArrayList<IAType>();
             unionList.add(BuiltinType.ANULL);
             unionList.add(BuiltinType.ABINARY);

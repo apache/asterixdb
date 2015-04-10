@@ -46,7 +46,7 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
 
     private static final FunctionIdentifier FID = AsterixBuiltinFunctions.GET_CIRCLE_CENTER_ACCESSOR;
     private static final byte SER_CICLE_TAG = ATypeTag.CIRCLE.serialize();
-    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+    private static final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 

@@ -1,0 +1,13 @@
+use dataverse multitask;
+
+for $bin in overlap-bins(interval-from-time(min(for $i in dataset logs return $i.time), max(for $i in dataset logs return $i.time + duration-from-ms($i.duration * 1000))), time("00:00:00.000"), day-time-duration("PT1M"))
+order by get-interval-start($bin)
+return {
+  "timebin": $bin,
+  "subgroups":
+        for $i in dataset logs
+        where interval-covers($bin, interval-start-from-time($i.time, duration-from-ms($i.duration)))
+        group by $subgid := $i.app with $i
+        order by $subgid, count($i)
+        return { "subgid": $subgid, "item_count": count($i) }
+}

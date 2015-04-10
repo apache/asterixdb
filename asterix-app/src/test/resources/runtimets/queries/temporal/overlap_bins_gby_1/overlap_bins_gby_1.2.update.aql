@@ -1,0 +1,17 @@
+/**
+ * Interval_bin_gby test case: test the group-by using interval-bin function
+ * Expected result: success
+ **/
+use dataverse test;
+ 
+insert into dataset tsdata({"id": 1, "time": time("23:49:23.938"), "duration": day-time-duration("PT5M")}) 
+insert into dataset tsdata({"id": 2, "time": time("00:27:13.432"), "duration": day-time-duration("PT1H")}) 
+insert into dataset tsdata({"id": 3, "time": time("18:00:00"), "duration": day-time-duration("PT2H")}) 
+insert into dataset tsdata({"id": 4, "time": time("234933938"), "duration": day-time-duration("PT30S")}) 
+insert into dataset tsdata({"id": 5, "time": time("23:58:17.038"), "duration": day-time-duration("PT39.382S")}) 
+insert into dataset tsdata({"id": 6, "time": time("23:30:00"), "duration": day-time-duration("PT2M")}) 
+insert into dataset tsdata({"id": 7, "time": time("23:22:38"), "duration": day-time-duration("PT20M")}) 
+insert into dataset tsdata({"id": 8, "time": time("17:28:13.900"), "duration": day-time-duration("PT19S")}) 
+insert into dataset tsdata({"id": 9, "time": time("07:49:23.938"), "duration": day-time-duration("PT3H")}) 
+insert into dataset tsdata({"id": 10, "time": time("09:35:28.039"), "duration": day-time-duration("PT10H50M")}) 
+insert into dataset tsdata({"id": 11, "time": time("12:49:23.938"), "duration": day-time-duration("PT3H")}) 

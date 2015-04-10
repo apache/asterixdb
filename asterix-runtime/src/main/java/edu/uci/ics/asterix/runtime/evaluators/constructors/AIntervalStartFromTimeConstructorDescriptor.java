@@ -17,6 +17,7 @@ package edu.uci.ics.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -53,6 +54,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte SER_TIME_TYPE_TAG = ATypeTag.TIME.serialize();
     private final static byte SER_DURATION_TYPE_TAG = ATypeTag.DURATION.serialize();
+    private final static byte SER_DAY_TIME_DURATION_TYPE_TAG = ATypeTag.DAYTIMEDURATION.serialize();
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -132,6 +134,12 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
                                         ADurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1), false);
 
+                            } else if (argOut1.getByteArray()[0] == SER_DAY_TIME_DURATION_TYPE_TAG) {
+
+                                intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
+                                        ADayTimeDurationSerializerDeserializer.getDayTime(argOut1.getByteArray(), 1),
+                                        false);
+
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // duration
 
@@ -149,7 +157,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
                                         aDuration.getMilliseconds(), false);
                             } else {
-                                throw new AlgebricksException("Wrong format for interval constructor from dates.");
+                                throw new AlgebricksException("Wrong format for interval constructor from time.");
                             }
 
                             if (intervalEnd > GregorianCalendarSystem.CHRONON_OF_DAY) {

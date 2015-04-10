@@ -65,6 +65,7 @@ import edu.uci.ics.asterix.optimizer.rules.UnnestToDataScanRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceLSMComponentFilterRule;
 import edu.uci.ics.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
+import edu.uci.ics.asterix.optimizer.rules.temporal.TranslateIntervalExpressionRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
@@ -116,6 +117,12 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.SimpleUnnestToProductRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SubplanOutOfGroupRule;
 
 public final class RuleCollections {
+
+    public final static List<IAlgebraicRewriteRule> buildInitialTranslationRuleCollection() {
+        List<IAlgebraicRewriteRule> typeInfer = new LinkedList<IAlgebraicRewriteRule>();
+        typeInfer.add(new TranslateIntervalExpressionRule());
+        return typeInfer;
+    }
 
     public final static List<IAlgebraicRewriteRule> buildTypeInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> typeInfer = new LinkedList<IAlgebraicRewriteRule>();

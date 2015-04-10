@@ -88,6 +88,8 @@ public class APIFramework {
         SequentialFixpointRuleController seqCtrlFullDfs = new SequentialFixpointRuleController(true);
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
         defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
+                RuleCollections.buildInitialTranslationRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
                 RuleCollections.buildTypeInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
                 RuleCollections.buildAutogenerateIDRuleCollection()));

@@ -449,13 +449,15 @@ Asterix provides various classes of functions to support operations on numeric, 
 ### replace ###
  * Syntax:
 
-        replace(string_expression, string_pattern, string_replacement)
+        replace(string_expression, string_pattern, string_replacement[, string_flags])
 
  * Checks whether the string `string_expression` matches the given pattern `string_pattern`, and replace the matched pattern `string_pattern` with the new pattern `string_replacement`.
  * Arguments:
     * `string_expression` : A `string` that might contain the pattern.
     * `string_pattern` : A pattern `string` to be matched.
     * `string_replacement` : A pattern `string` to be used as the replacement.
+    * `string_flag` : (Optional) A `string` with flags to be used during replace.
+       * The following modes are enabled with these flags: dotall (s), multiline (m), case-insenitive (i), and comments and whitespace (x).
  * Return Value:
     * Returns a `string` that is obtained after the replacements.
 
@@ -1509,72 +1511,6 @@ edit-distance-contains(expression1, expression2, threshold)
 ## <a id="TemporalFunctions">Temporal Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 
-### interval-from-date ###
- * Syntax:
-
-        interval-from-date(string_expression1, string_expression2)
-
- * Constructor function for the `interval` type by parsing two date strings.
- * Arguments:
-    * `string_expression1` : The `string` value representing the starting date.
-    * `string_expression2` : The `string` value representing the ending date.
- * Return Value:
-    * An `interval` value between the two dates.
-
- * Example:
-
-        {"date-interval": interval-from-date("2012-01-01", "2013-04-01")}
-
-
- * The expected result is:
-
-        { "date-interval": interval-date("2012-01-01, 2013-04-01") }
-
-
-### interval-from-time ###
- * Syntax:
-
-        interval-from-time(string_expression1, string_expression2)
-
- * Constructor function for the `interval` type by parsing two time strings.
- * Arguments:
-    * `string_expression1` : The `string` value representing the starting time.
-    * `string_expression2` : The `string` value representing the ending time.
- * Return Value:
-    * An `interval` value between the two times.
-
- * Example:
-
-        {"time-interval": interval-from-time("12:23:34.456Z", "233445567+0800")}
-
-
- * The expected result is:
-
-        { "time-interval": interval-time("12:23:34.456Z, 15:34:45.567Z") }
-
-
-### interval-from-datetime ###
- * Syntax:
-
-        interval-from-datetime(string_expression1, string_expression2)
-
- * Constructor function for `interval` type by parsing two datetime strings.
- * Arguments:
-    * `string_expression1` : The `string` value representing the starting datetime.
-    * `string_expression2` : The `string` value representing the ending datetime.
- * Return Value:
-    * An `interval` value between the two datetimes.
-
- * Example:
-
-        {"datetime-interval": interval-from-datetime("2012-01-01T12:23:34.456+08:00", "20130401T153445567Z")}
-
-
- * The expected result is:
-
-        { "datetime-interval": interval-datetime("2012-01-01T04:23:34.456Z, 2013-04-01T15:34:45.567Z") }
-
-
 ### get-year/get-month/get-day/get-hour/get-minute/get-second/get-millisecond ###
  * Syntax:
 
@@ -1744,10 +1680,10 @@ edit-distance-contains(expression1, expression2, threshold)
         67
 
 
-### duration-from-months/duration-from-milliseconds ###
+### duration-from-months/duration-from-ms ###
 * Syntax:
 
-        duration-from-months/duration-from-milliseconds(number_expression)
+        duration-from-months/duration-from-ms(number_expression)
 
 * Creates a `duration` from `number_expression`.
 * Arguments:
@@ -1760,10 +1696,39 @@ edit-distance-contains(expression1, expression2, threshold)
         let $i := duration-from-months(8)
         return $i;
 
-
 * The expected result is:
 
         duration("P8M")
+
+
+### duration-from-interval ###
+* Syntax:
+
+        duration-from-interval(interval_expression)
+
+* Creates a `duration` from `interval_expression`.
+* Arguments:
+    * `interval_expression` : An `interval` value
+* Return Value:
+    * A `duration` repesenting the time in the `interval_expression`
+
+* Example:
+
+        let $itv1 := interval-from-date("2010-10-30", "2010-12-21")
+        let $itv2 := interval-from-datetime("2012-06-26T01:01:01.111", "2012-07-27T02:02:02.222")
+        let $itv3 := interval-from-time("12:32:38", "20:29:20")
+
+        return { "dr1" : duration-from-interval($itv1),
+          "dr2" : duration-from-interval($itv2),
+          "dr3" : duration-from-interval($itv3),
+          "dr4" : duration-from-interval(null) }
+          
+* The expected result is:
+
+        { "dr1": day-time-duration("P52D"),
+          "dr2": day-time-duration("P31DT1H1M1.111S"),
+          "dr3": day-time-duration("PT7H56M42S"),
+          "dr4": null }
 
 
 ### current-date ###
@@ -1797,8 +1762,6 @@ edit-distance-contains(expression1, expression2, threshold)
     * A `datetime` value of the datetime when the function is called.
 
  * Example:
-
-        use dataverse TinySocial;
 
         {"current-date": current-date(),
         "current-time": current-time(),
@@ -1951,8 +1914,19 @@ parse-date/parse-time/parse-datetime(date_expression,formatting_expression)
 
 * Creates a `date/time/date-time` value by treating `date_expression` with formatting `formatting_expression`
 * Arguments:
-    * `date_expression`: A `string` value representing the `date/time/datetime`
-    * `formatting_expression` A `string` value providing the formatting for `date_expression`
+    * `date_expression`: A `string` value representing the `date/time/datetime`. 
+    * `formatting_expression` A `string` value providing the formatting for `date_expression`.Characters used to create date expression:
+       * `h` hours
+       * `m` minutes
+       * `s` seconds
+       * `n` milliseconds
+       * `a` am/pm
+       * `z` timezone
+       * `Y` year
+       * `M` month
+       * `D` day
+       * `W` weekday
+       * `-`, `'`, `/`, `.`, `,`, `T` seperators for both time and date
 * Return Value:
     * A `date/time/date-time` value corresponding to `date_expression`
 
@@ -1961,35 +1935,43 @@ parse-date/parse-time/parse-datetime(date_expression,formatting_expression)
         let $i := parse-time("30:30","m:s")
         return $i;
 
-
 * The expected result is:
 
         time("00:30:30.000Z")
 
 
+### print-date/print-time/print-datetime ###
+* Syntax:
 
-### interval-start-from-date/time/datetime ###
- * Syntax:
+print-date/print-time/print-datetime(date_expression,formatting_expression)
 
-        interval-start-from-date/time/datetime(date/time/datetime, duration)
+* Creates a `string` representing a `date/time/date-time` value of the `date_expression` using the formatting `formatting_expression`
+* Arguments:
+    * `date_expression`: A `date/time/datetime` value.
+    * `formatting_expression` A `string` value providing the formatting for `date_expression`. Characters used to create date expression:
+       * `h` hours
+       * `m` minutes
+       * `s` seconds
+       * `n` milliseconds
+       * `a` am/pm
+       * `z` timezone
+       * `Y` year
+       * `M` month
+       * `D` day
+       * `W` weekday
+       * `-`, `'`, `/`, `.`, `,`, `T` seperators for both time and date
+* Return Value:
+    * A `string` value corresponding to `date_expression`
 
- * Construct an `interval` value by the given starting `date`/`time`/`datetime` and the `duration` that the interval lasts.
- * Arguments:
-    * `date/time/datetime`: a `string` representing a `date`, `time` or `datetime`, or a `date`/`time`/`datetime` value, representing the starting time point.
-    * `duration`: a `string` or `duration` value representing the duration of the interval. Note that duration cannot be negative value.
- * Return Value:
-    * An `interval` value representing the interval starting from the given time point with the length of duration.
+* Example:
 
- * Example:
+        let $i := print-time(time("00:30:30.000Z"),"m:s")
+        return $i;
 
-        let $itv1 := interval-start-from-date("1984-01-01", "P1Y")
-        let $itv2 := interval-start-from-time(time("02:23:28.394"), "PT3H24M")
-        let $itv3 := interval-start-from-datetime("1999-09-09T09:09:09.999", duration("P2M30D"))
-        return {"interval1": $itv1, "interval2": $itv2, "interval3": $itv3}
+* The expected result is:
 
- * The expectecd result is:
+        "30:30"
 
-        { "interval1": interval-date("1984-01-01, 1985-01-01"), "interval2": interval-time("02:23:28.394Z, 05:47:28.394Z"), "interval3": interval-datetime("1999-09-09T09:09:09.999Z, 1999-12-09T09:09:09.999Z") }
 
 ### get-interval-start, get-interval-end ###
  * Syntax:
@@ -2011,6 +1993,68 @@ parse-date/parse-time/parse-datetime(date_expression,formatting_expression)
  * The expected result is:
 
         { "start": date("1984-01-01"), "end": date("1985-01-01") }
+
+
+### get-interval-start-date/get-interval-start-datetimeget-interval-start-time, get-interval-end-date/get-interval-end-datetime/get-interval-end-time ###
+ * Syntax:
+
+        get-interval-start-date/get-interval-start-datetime/get-interval-start-time/get-interval-end-date/get-interval-end-datetime/get-interval-end-time(interval)
+
+ * Gets the start/end of the given interval for the specific date/datetime/time type.
+ * Arguments:
+    * `interval`: the interval to be accessed.
+ * Return Value:
+    * A `time`, `date`, or `datetime` (depending on the function) representing the starting or ending time.
+
+ * Example:
+
+        let $itv1 := interval-start-from-date("1984-01-01", "P1Y")
+        let $itv2 := interval-start-from-datetime("1984-01-01T08:30:00.000", "P1Y1H")
+        let $itv3 := interval-start-from-time("08:30:00.000", "P1H")
+        return {"start": get-interval-start-date($itv1), "end": get-interval-end-date($itv1), "start": get-interval-start-datetime($itv2), "end": get-interval-end-datetime($itv2), "start": get-interval-start-time($itv3), "end": get-interval-end-time($itv3)}
+
+
+ * The expected result is:
+
+        { "start": date("1984-01-01"), "end": date("1985-01-01"), "start": datetime("1984-01-01T08:30:00.000"), "end": datetime("1984-02-01T09:30:00.000"), "start": date("08:30:00.000"), "end": time("09:30:00.000")  }
+
+
+### get-overlapping-interval ###
+ * Syntax:
+
+        get-overlapping-interval(interval_expression_1, interval_expression_2)
+
+ * Gets the start/end of the given interval for the specific date/datetime/time type.
+ * Arguments:
+    * `interval_expression_1`: an `interval` value
+    * `interval_expression_2`: an `interval` value
+ * Return Value:
+    * Returns an `interval` that is overlapping `interval_expression_1` and `interval_expression_2`. If `interval_expression_1` and `interval_expression_2` do not overlap `null` is returned. Note each interval must be of the same type.
+
+ * Example:
+
+        { "overlap1": get-overlapping-interval(interval-from-time(time("11:23:39"), time("18:27:19")), interval-from-time(time("12:23:39"), time("23:18:00"))), 
+          "overlap2": get-overlapping-interval(interval-from-time(time("12:23:39"), time("18:27:19")), interval-from-time(time("07:19:39"), time("09:18:00"))),
+          "overlap3": get-overlapping-interval(interval-from-date(date("1980-11-30"), date("1999-09-09")), interval-from-date(date("2013-01-01"), date("2014-01-01"))),
+          "overlap4": get-overlapping-interval(interval-from-date(date("1980-11-30"), date("2099-09-09")), interval-from-date(date("2013-01-01"), date("2014-01-01"))),
+          "overlap5": get-overlapping-interval(interval-from-datetime(datetime("1844-03-03T11:19:39"), datetime("2000-10-30T18:27:19")), interval-from-datetime(datetime("1989-03-04T12:23:39"), datetime("2009-10-10T23:18:00"))),
+          "overlap6": get-overlapping-interval(interval-from-datetime(datetime("1989-03-04T12:23:39"), datetime("2000-10-30T18:27:19")), interval-from-datetime(datetime("1844-03-03T11:19:39"), datetime("1888-10-10T23:18:00")))  }
+
+ * The expected result is:
+
+        { "overlap1": interval-time("12:23:39.000Z, 18:27:19.000Z"), 
+          "overlap2": null, 
+          "overlap3": null, 
+          "overlap4": interval-date("2013-01-01, 2014-01-01"), 
+          "overlap5": interval-datetime("1989-03-04T12:23:39.000Z, 2000-10-30T18:27:19.000Z"), 
+          "overlap6": null }
+
+
+### interval-before/interval-after/interval-meets/interval-met-by/interval-overlaps/interval-overlapped-by/interval-overlapping/interval-starts/interval-started-by/interval-covers/interval-covered-by/interval-ends/interval-ended-by ###
+
+
+See the [Allen's Relations](allens.html).
+
 
 ### interval-bin ###
  * Syntax:
@@ -2049,34 +2093,132 @@ parse-date/parse-time/parse-datetime(date_expression,formatting_expression)
           "bin3": interval-time("05:23:00.000Z, 05:24:00.000Z"),
           "bin4": interval-datetime("-1987-11-19T00:00:00.000Z, -1987-11-20T00:00:00.000Z")}
 
-### interval-before/interval-after/interval-meets/interval-met-by/interval-overlaps/interval-overlapped-by/interval-overlapping/interval-starts/interval-started-by/interval-covers/interval-covered-by/interval-ends/interval-ended-by ###
-* Syntax:
 
-        interval-before/interval-after/interval-meets/interval-met-by/interval-overlaps/interval-overlapped-by/interval-overlapping/interval-starts/interval-started-by/interval-covers/interval-covered-by/interval-ends/interval-ended-by(interval_expression_1, interval_expression_2)
+### interval-from-date ###
+ * Syntax:
 
-* Determines whether two `interval` values have a specific relationship
-* Arguments:
-    * `interval_expression_1`: an `interval` value
-    * `interval_expression_2`: an `interval` value
-* Return Value:
-    * An `boolean` value representing whether the relationship holds.
-* Possible Relationships:
-    * `before/after`: The two `interval` values never meet, and the first `interval` `preceeds/follows` the second
-    * `meets/met-by`: The `first/second` `interval` ends precisely where the `second/first` `interval` starts
-    * `overlaps/overlapped-by`: The `first/second` `interval` ends in a sub-interval that begins the `second/first`
-    * `overlapping`: The two `interval` values share a common sub-interval
-    * `starts/started-by`: The `first/second` `interval` is precisely the beginning of the `second/first` `interval`
-    * `ends/ended-by`: The `first/second` `interval` is precisely the end of the `second/first` `interval`
-    * `covers/covered-by`: The `first/second` `interval` completely contains the `second/first` `interval`
+        interval-from-date(string_expression1, string_expression2)
 
-* Example:
+ * Constructor function for the `interval` type by parsing two date strings.
+ * Arguments:
+    * `string_expression1` : The `string` value representing the starting date.
+    * `string_expression2` : The `string` value representing the ending date.
+ * Return Value:
+    * An `interval` value between the two dates.
 
-        let $i := interval-starts(interval-from-date(date("2013-01-01"), date("20130505")),interval-from-date(date("2013-01-01"), date("20130705")))
-        return $i;
+ * Example:
 
-* The expectecd result is:
+        {"date-interval": interval-from-date("2012-01-01", "2013-04-01")}
 
-        true
+
+ * The expected result is:
+
+        { "date-interval": interval-date("2012-01-01, 2013-04-01") }
+
+
+### interval-from-time ###
+ * Syntax:
+
+        interval-from-time(string_expression1, string_expression2)
+
+ * Constructor function for the `interval` type by parsing two time strings.
+ * Arguments:
+    * `string_expression1` : The `string` value representing the starting time.
+    * `string_expression2` : The `string` value representing the ending time.
+ * Return Value:
+    * An `interval` value between the two times.
+
+ * Example:
+
+        {"time-interval": interval-from-time("12:23:34.456Z", "233445567+0800")}
+
+
+ * The expected result is:
+
+        { "time-interval": interval-time("12:23:34.456Z, 15:34:45.567Z") }
+
+
+### interval-from-datetime ###
+ * Syntax:
+
+        interval-from-datetime(string_expression1, string_expression2)
+
+ * Constructor function for `interval` type by parsing two datetime strings.
+ * Arguments:
+    * `string_expression1` : The `string` value representing the starting datetime.
+    * `string_expression2` : The `string` value representing the ending datetime.
+ * Return Value:
+    * An `interval` value between the two datetimes.
+
+ * Example:
+
+        {"datetime-interval": interval-from-datetime("2012-01-01T12:23:34.456+08:00", "20130401T153445567Z")}
+
+
+ * The expected result is:
+
+        { "datetime-interval": interval-datetime("2012-01-01T04:23:34.456Z, 2013-04-01T15:34:45.567Z") }
+
+
+### interval-start-from-date/time/datetime ###
+ * Syntax:
+
+        interval-start-from-date/time/datetime(date/time/datetime, duration)
+
+ * Construct an `interval` value by the given starting `date`/`time`/`datetime` and the `duration` that the interval lasts.
+ * Arguments:
+    * `date/time/datetime`: a `string` representing a `date`, `time` or `datetime`, or a `date`/`time`/`datetime` value, representing the starting time point.
+    * `duration`: a `string` or `duration` value representing the duration of the interval. Note that duration cannot be negative value.
+ * Return Value:
+    * An `interval` value representing the interval starting from the given time point with the length of duration.
+
+ * Example:
+
+        let $itv1 := interval-start-from-date("1984-01-01", "P1Y")
+        let $itv2 := interval-start-from-time(time("02:23:28.394"), "PT3H24M")
+        let $itv3 := interval-start-from-datetime("1999-09-09T09:09:09.999", duration("P2M30D"))
+        return {"interval1": $itv1, "interval2": $itv2, "interval3": $itv3}
+
+ * The expectecd result is:
+
+        { "interval1": interval-date("1984-01-01, 1985-01-01"), "interval2": interval-time("02:23:28.394Z, 05:47:28.394Z"), "interval3": interval-datetime("1999-09-09T09:09:09.999Z, 1999-12-09T09:09:09.999Z") }
+
+
+### overlap-bins ###
+  * Return Value:
+    * A `interval` value representing the bin containing the `time-to-bin` value. Note that the internal type of this interval value should be the same as the `time-to-bin` type.
+
+ * Syntax:
+
+        overlap-bins(interval_expression, time-bin-anchor, duration-bin-size)
+
+ * Returns an ordered list of `interval` values representing each bin that is overlapping the `interval_expression`.
+ * Arguments:
+    * `interval_expression`: an `interval` value
+    * `time-bin-anchor`: a date/time/datetime value representing an anchor of a bin starts. The type of this argument should be the same as the first `time-to-bin` argument.
+    * `duration-bin-size`: the duration value representing the size of the bin, in the type of year-month-duration or day-time-duration. The type of this duration should be compatible with the type of `time-to-bin`, so that the arithmetic operation between `time-to-bin` and `duration-bin-size` is well-defined. Currently AsterixDB supports the following arithmetic operations:
+        * datetime +|- year-month-duration
+        * datetime +|- day-time-duration
+        * date +|- year-month-duration
+        * date +|- day-time-duration
+        * time +|- day-time-duration
+  * Return Value:
+    * A ordered list of `interval` values representing each bin that is overlapping the `interval_expression`. Note that the internal type as `time-to-bin` and `duration-bin-size`.
+
+  * Example:
+
+        let $itv1 := interval-from-time(time("17:23:37"), time("18:30:21"))
+        let $itv2 := interval-from-date(date("1984-03-17"), date("2013-08-22"))
+        let $itv3 := interval-from-datetime(datetime("1800-01-01T23:59:48.938"), datetime("2015-07-26T13:28:30.218"))
+        return { "timebins": overlap-bins($itv1, time("00:00:00"), day-time-duration("PT30M")),
+          "datebins": overlap-bins($itv2, date("1990-01-01"), year-month-duration("P20Y")),
+          "datetimebins": overlap-bins($itv3, datetime("1900-01-01T00:00:00.000"), year-month-duration("P100Y")) }
+          
+   * The expected result is:
+
+        { "timebins": [ interval-time("17:00:00.000Z, 17:30:00.000Z"), interval-time("17:30:00.000Z, 18:00:00.000Z"), interval-time("18:00:00.000Z, 18:30:00.000Z"), interval-time("18:30:00.000Z, 19:00:00.000Z") ], 
+          "datebins": [ interval-date("1970-01-01, 1990-01-01"), interval-date("1990-01-01, 2010-01-01"), interval-date("2010-01-01, 2030-01-01") ], 
+          "datetimebins": [ interval-datetime("1800-01-01T00:00:00.000Z, 1900-01-01T00:00:00.000Z"), interval-datetime("1900-01-01T00:00:00.000Z, 2000-01-01T00:00:00.000Z"), interval-datetime("2000-01-01T00:00:00.000Z, 2100-01-01T00:00:00.000Z") ] }
 
 
 ## <a id="OtherFunctions">Other Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
