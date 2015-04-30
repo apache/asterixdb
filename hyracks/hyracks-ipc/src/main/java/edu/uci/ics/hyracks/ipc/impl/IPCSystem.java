@@ -56,8 +56,12 @@ public class IPCSystem {
     }
 
     public IIPCHandle getHandle(InetSocketAddress remoteAddress) throws IPCException {
+        return getHandle(remoteAddress, 0);
+    }
+
+    public IIPCHandle getHandle(InetSocketAddress remoteAddress, int retries) throws IPCException {
         try {
-            return cMgr.getIPCHandle(remoteAddress);
+            return cMgr.getIPCHandle(remoteAddress, retries);
         } catch (IOException e) {
             throw new IPCException(e);
         } catch (InterruptedException e) {

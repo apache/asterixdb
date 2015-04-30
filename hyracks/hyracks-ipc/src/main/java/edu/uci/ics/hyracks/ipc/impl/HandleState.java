@@ -19,5 +19,6 @@ enum HandleState {
     CONNECT_SENT,
     CONNECT_RECEIVED,
     CONNECTED,
+    CONNECT_FAILED,
     CLOSED,
 }

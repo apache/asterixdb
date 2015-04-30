@@ -87,18 +87,39 @@ public class IPCConnectionManager {
         serverSocketChannel.close();
     }
 
-    IPCHandle getIPCHandle(InetSocketAddress remoteAddress) throws IOException, InterruptedException {
+    IPCHandle getIPCHandle(InetSocketAddress remoteAddress, int retries) throws IOException, InterruptedException {
         IPCHandle handle;
-        synchronized (this) {
-            handle = ipcHandleMap.get(remoteAddress);
-            if (handle == null) {
-                handle = new IPCHandle(system, remoteAddress);
-                pendingConnections.add(handle);
-                networkThread.selector.wakeup();
+        int attempt = 1;
+        while (true) {
+            synchronized (this) {
+                handle = ipcHandleMap.get(remoteAddress);
+                if (handle == null) {
+                    handle = new IPCHandle(system, remoteAddress);
+                    pendingConnections.add(handle);
+                    networkThread.selector.wakeup();
+                }
+            }
+            if (handle.waitTillConnected()) {
+                return handle;
+            }
+            if (retries < 0) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Connection to " + remoteAddress + " failed, retrying...");
+                    attempt++;
+                    Thread.sleep(5000);
+                }
+            } else if (attempt < retries) {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Connection to " + remoteAddress +
+                            " failed (Attempt " + attempt + " of " + retries + ")");
+                    attempt++;
+                    Thread.sleep(5000);
+                }
+            } else {
+                throw new IOException("Connection failed to " + remoteAddress);
             }
         }
-        handle.waitTillConnected();
-        return handle;
+
     }
 
     synchronized void registerHandle(IPCHandle handle) {
@@ -278,13 +299,21 @@ public class IPCConnectionManager {
                                 handle.setState(HandleState.CONNECT_RECEIVED);
                             } else if (key.isConnectable()) {
                                 SocketChannel channel = (SocketChannel) sc;
-                                if (channel.finishConnect()) {
-                                    IPCHandle handle = (IPCHandle) key.attachment();
-                                    handle.setState(HandleState.CONNECT_SENT);
-                                    registerHandle(handle);
-                                    key.interestOps(SelectionKey.OP_READ);
-                                    write(createInitialReqMessage(handle));
+                                IPCHandle handle = (IPCHandle) key.attachment();
+                                try {
+                                    if (!channel.finishConnect()) {
+                                        throw new Exception("Connection did not finish");
+                                    }
                                 }
+                                catch (Exception e) {
+                                    e.printStackTrace();
+                                    handle.setState(HandleState.CONNECT_FAILED);
+                                    continue;
+                                }
+                                handle.setState(HandleState.CONNECT_SENT);
+                                registerHandle(handle);
+                                key.interestOps(SelectionKey.OP_READ);
+                                write(createInitialReqMessage(handle));
                             }
                         }
                     }

@@ -113,10 +113,11 @@ final class IPCHandle implements IIPCHandle {
         notifyAll();
     }
 
-    synchronized void waitTillConnected() throws InterruptedException {
-        while (!isConnected()) {
+    synchronized boolean waitTillConnected() throws InterruptedException {
+        while (state != HandleState.CONNECTED && state != HandleState.CONNECT_FAILED) {
             wait();
         }
+        return state == HandleState.CONNECTED;
     }
 
     ByteBuffer getInBuffer() {
