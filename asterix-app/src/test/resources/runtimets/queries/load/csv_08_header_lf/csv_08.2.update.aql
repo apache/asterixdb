@@ -9,4 +9,4 @@ use dataverse temp;
 
 load dataset testds
 using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/csv/sample_08_header.csv"),("format"="delimited-text"),("header"="true"));
+(("path"="nc1://data/csv/sample_08_header.csv.lf"),("format"="delimited-text"),("header"="true"));

@@ -5943,7 +5943,17 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
-            <compilation-unit name="csv_08">
+            <compilation-unit name="csv_08_header_cr">
+                <output-dir compare="Text">csv_08</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="load">
+            <compilation-unit name="csv_08_header_lf">
+                <output-dir compare="Text">csv_08</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="load">
+            <compilation-unit name="csv_08_header_crlf">
                 <output-dir compare="Text">csv_08</output-dir>
             </compilation-unit>
         </test-case>

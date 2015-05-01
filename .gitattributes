@@ -1,0 +1,17 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.java text
+*.xml text
+*.xsd text
+
+# Declare files that will always have CRLF line endings on checkout.
+*.crlf text eol=crlf
+
+# Declare files that will always have CR line endings on checkout.
+*.cr text eol=cr
+
+# Declare files that will always have LF line endings on checkout.
+*.lf test eol=lf

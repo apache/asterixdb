@@ -1,0 +1,12 @@
+/**
+ *
+ * CSV file loading test
+ * Expected result: success
+ *
+ */
+
+use dataverse temp;
+
+load dataset testds
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/csv/sample_08_header.csv.crlf"),("format"="delimited-text"),("header"="true"));

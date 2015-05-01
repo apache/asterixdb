@@ -51,7 +51,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
     private int[] fldIds;
     private ArrayBackedValueStorage[] nameBuffers;
     private boolean areAllNullFields;
-    private int fieldCount;
 
     public DelimitedDataParser(ARecordType recordType, IValueParserFactory[] valueParserFactories, char fieldDelimter,
             char quote, boolean hasHeader) {
@@ -105,19 +104,18 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
 
     @Override
     public boolean parse(DataOutput out) throws AsterixException, IOException {
-        if (hasHeader && cursor.lineCount == 1) {
+        if (hasHeader && cursor.recordCount == 0) {
             // Consume all fields of first record
             cursor.nextRecord();
-            while (cursor.nextField(fieldCount));
+            while (cursor.nextField());
         }
         while (cursor.nextRecord()) {
             recBuilder.reset(recordType);
             recBuilder.init();
             areAllNullFields = true;
             
-            fieldCount = 0;
             for (int i = 0; i < valueParsers.length; ++i) {
-                if (!cursor.nextField(fieldCount)) {
+                if (!cursor.nextField()) {
                     break;
                 }
                 fieldValueBuffer.reset();
@@ -129,7 +127,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                     // empty string
                     if (recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.UNION
                             || !NonTaggedFormatUtil.isOptionalField((AUnionType) recordType.getFieldTypes()[i])) {
-                        throw new AsterixException("At line: " + cursor.lineCount + " - Field " + i
+                        throw new AsterixException("At record: " + cursor.recordCount + " - Field " + cursor.fieldCount
                                 + " is not an optional type so it cannot accept null value. ");
                     }
                     fieldValueBufferOutput.writeByte(ATypeTag.NULL.serialize());
@@ -151,7 +149,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                 } else {
                     recBuilder.addField(fldIds[i], fieldValueBuffer);
                 }
-                fieldCount++;
             }
 
             if (!areAllNullFields) {
