@@ -37,8 +37,6 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
     private char fieldDelimiter;
     private char quote;
 
-    private int fieldCount;
-
     public DelimitedDataTupleParserFactory(IValueParserFactory[] fieldParserFactories, char fieldDelimiter) {
         this(fieldParserFactories, fieldDelimiter, '\"');
     }
@@ -47,7 +45,6 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
         this.valueParserFactories = fieldParserFactories;
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
-        this.fieldCount = 0;
     }
 
     @Override
@@ -71,7 +68,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     while (cursor.nextRecord()) {
                         tb.reset();
                         for (int i = 0; i < valueParsers.length; ++i) {
-                            if (!cursor.nextField(fieldCount)) {
+                            if (!cursor.nextField()) {
                                 break;
                             }
                             // Eliminate double quotes in the field that we are going to parse
@@ -82,7 +79,6 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                             }
                             valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, dos);
                             tb.addFieldEndOffset();
-                            fieldCount++;
                         }
                         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                             FrameUtils.flushFrame(frame, writer);

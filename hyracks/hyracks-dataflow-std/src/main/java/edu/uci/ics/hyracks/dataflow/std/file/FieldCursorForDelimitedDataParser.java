@@ -32,7 +32,8 @@ public class FieldCursorForDelimitedDataParser {
     public char[] buffer;
     public int fStart;
     public int fEnd;
-    public int lineCount;
+    public int recordCount;
+    public int fieldCount;
     public int doubleQuoteCount;
     public boolean isDoubleQuoteIncludedInThisField;
 
@@ -69,10 +70,13 @@ public class FieldCursorForDelimitedDataParser {
         doubleQuoteCount = 0;
         startedQuote = false;
         isDoubleQuoteIncludedInThisField = false;
-        lineCount = 1;
+        recordCount = 0;
+        fieldCount = 0;
     }
 
     public boolean nextRecord() throws IOException {
+        recordCount++;
+        fieldCount = 0;
         while (true) {
             switch (state) {
                 case INIT:
@@ -119,12 +123,12 @@ public class FieldCursorForDelimitedDataParser {
                         } else if (ch == '\n' && !startedQuote) {
                             start = p + 1;
                             state = State.EOR;
-                            lineCount++;
                             lastDelimiterPosition = p;
                             break;
                         } else if (ch == '\r' && !startedQuote) {
                             start = p + 1;
                             state = State.CR;
+                            lastDelimiterPosition = p;
                             break;
                         }
                         ++p;
@@ -143,7 +147,6 @@ public class FieldCursorForDelimitedDataParser {
                     if (ch == '\n' && !startedQuote) {
                         ++start;
                         state = State.EOR;
-                        lineCount++;
                     } else {
                         state = State.IN_RECORD;
                         return true;
@@ -167,7 +170,8 @@ public class FieldCursorForDelimitedDataParser {
         }
     }
 
-    public boolean nextField(int fieldCount) throws IOException {
+    public boolean nextField() throws IOException {
+        fieldCount++;
         switch (state) {
             case INIT:
             case EOR:
@@ -217,10 +221,10 @@ public class FieldCursorForDelimitedDataParser {
                             } else {
                                 // In this case, we don't have a quote in the beginning of a field.
                                 throw new IOException(
-                                        "At line: "
-                                                + lineCount
+                                        "At record: "
+                                                + recordCount
                                                 + ", field#: "
-                                                + (fieldCount + 1)
+                                                + fieldCount
                                                 + " - a quote enclosing a field needs to be placed in the beginning of that field.");
                             }
                         }
@@ -262,7 +266,7 @@ public class FieldCursorForDelimitedDataParser {
                                 // There is a quote before the delimiter, however it is not directly placed before the delimiter.
                                 // In this case, we throw an exception.
                                 // quoteCount == doubleQuoteCount * 2 + 2 : only true when we have two quotes except double-quotes.
-                                throw new IOException("At line: " + lineCount + ", field#: " + (fieldCount + 1)
+                                throw new IOException("At record: " + recordCount + ", field#: " + fieldCount
                                         + " -  A quote enclosing a field needs to be followed by the delimiter.");
                             }
                         }
@@ -275,7 +279,6 @@ public class FieldCursorForDelimitedDataParser {
                             fEnd = p;
                             start = p + 1;
                             state = State.EOR;
-                            lineCount++;
                             lastDelimiterPosition = p;
                             return true;
                         } else if (startedQuote && lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
@@ -286,7 +289,6 @@ public class FieldCursorForDelimitedDataParser {
                             lastDelimiterPosition = p;
                             start = p + 1;
                             state = State.EOR;
-                            lineCount++;
                             startedQuote = false;
                             return true;
                         }
