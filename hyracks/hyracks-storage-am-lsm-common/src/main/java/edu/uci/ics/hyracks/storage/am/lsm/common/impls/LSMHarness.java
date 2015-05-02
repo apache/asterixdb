@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -61,7 +62,10 @@ public class LSMHarness implements ILSMHarness {
                     case FLUSH:
                         ILSMComponent flushingComponent = ctx.getComponentHolder().get(0);
                         if (!((AbstractMemoryLSMComponent) flushingComponent).isModified()) {
-                            // The mutable component has not been modified by any writer. There is nothing to flush.
+                            //The mutable component has not been modified by any writer. There is nothing to flush.
+                            //since the component is empty, set its state back to READABLE_WRITABLE
+                            ((AbstractLSMIndex) lsmIndex)
+                                    .setCurrentMutableComponentState(ComponentState.READABLE_WRITABLE);
                             return false;
                         }
                         break;
@@ -104,6 +108,9 @@ public class LSMHarness implements ILSMHarness {
                 numEntered++;
             }
             entranceSuccessful = numEntered == components.size();
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
         } finally {
             if (!entranceSuccessful) {
                 int i = 0;
@@ -197,8 +204,13 @@ public class LSMHarness implements ILSMHarness {
                     default:
                         break;
                 }
+            } catch (Throwable e) {
+                e.printStackTrace();
+                throw e;
+
             } finally {
-                if (failedOperation && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                if (failedOperation
+                        && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
                     //When the operation failed, completeOperation() method must be called 
                     //in order to decrement active operation count which was incremented in beforeOperation() method.
                     opTracker.completeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
@@ -292,6 +304,10 @@ public class LSMHarness implements ILSMHarness {
             newComponent = lsmIndex.flush(operation);
             operation.getCallback().afterOperation(LSMOperationType.FLUSH, null, newComponent);
             lsmIndex.markAsValid(newComponent);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+
         } finally {
             exitComponents(ctx, LSMOperationType.FLUSH, newComponent, false);
             operation.getCallback().afterFinalize(LSMOperationType.FLUSH, newComponent);
@@ -337,6 +353,10 @@ public class LSMHarness implements ILSMHarness {
             newComponent = lsmIndex.merge(operation);
             operation.getCallback().afterOperation(LSMOperationType.MERGE, ctx.getComponentHolder(), newComponent);
             lsmIndex.markAsValid(newComponent);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
             operation.getCallback().afterFinalize(LSMOperationType.MERGE, newComponent);
@@ -349,8 +369,10 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void addBulkLoadedComponent(ILSMComponent c) throws HyracksDataException, IndexException {
         lsmIndex.markAsValid(c);
-        lsmIndex.addComponent(c);
-        mergePolicy.diskComponentAdded(lsmIndex, false);
+        synchronized (opTracker) {
+            lsmIndex.addComponent(c);
+            mergePolicy.diskComponentAdded(lsmIndex, false);
+        }
     }
 
     @Override

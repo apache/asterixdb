@@ -248,19 +248,23 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public String toString() {
         return "LSMIndex [" + fileManager.getBaseDir() + "]";
     }
-    
+
     @Override
     public boolean hasMemoryComponents() {
         return true;
     }
-    
+
     @Override
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException {
         //check if the current memory component has been modified
         return !((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).isModified();
     }
-    
-    public void makeCurrentMutableComponentUnWritable() throws HyracksDataException {
-        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setState(ComponentState.READABLE_UNWRITABLE);
+
+    public void setCurrentMutableComponentState(ComponentState componentState) {
+        ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).setState(componentState);
+    }
+
+    public ComponentState getCurrentMutableComponentState() {
+        return ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).getState();
     }
 }

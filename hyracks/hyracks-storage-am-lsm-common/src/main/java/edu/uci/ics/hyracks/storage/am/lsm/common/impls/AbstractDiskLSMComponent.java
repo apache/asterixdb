@@ -30,7 +30,9 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
 
     @Override
     public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) {
-        assert state != ComponentState.INACTIVE;
+        if (state == ComponentState.INACTIVE) {
+            throw new IllegalStateException("Trying to enter an inactive disk component");
+        }
 
         switch (opType) {
             case FORCE_MODIFICATION:
@@ -75,7 +77,10 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
-        assert readerCount > -1;
+        
+        if (readerCount <= -1) {
+            throw new IllegalStateException("Invalid LSM disk component readerCount: " + readerCount);
+        }
     }
 
     @Override
