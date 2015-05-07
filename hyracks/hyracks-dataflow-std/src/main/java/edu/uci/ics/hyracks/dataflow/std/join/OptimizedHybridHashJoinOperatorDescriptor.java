@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFamily;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerGeneratorFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.RepartitionComputerFamily;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
@@ -404,10 +404,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     state.hybridHJ.closeProbe(writer);
 
                     BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
-                    hpcRep0 = new RepartitionComputerGeneratorFactory(state.numOfPartitions, hpcf0)
-                            .createPartitioner(0);
-                    hpcRep1 = new RepartitionComputerGeneratorFactory(state.numOfPartitions, hpcf1)
-                            .createPartitioner(0);
+                    hpcRep0 = new RepartitionComputerFamily(state.numOfPartitions, hpcf0).createPartitioner(0);
+                    hpcRep1 = new RepartitionComputerFamily(state.numOfPartitions, hpcf1).createPartitioner(0);
 
                     rPartbuff.clear();
                     for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid = partitionStatus.nextSetBit(pid + 1)) {
@@ -440,10 +438,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     long probePartSize = wasReversed ? (ohhj.getBuildPartitionSize(pid) / ctx.getFrameSize()) : (ohhj
                             .getProbePartitionSize(pid) / ctx.getFrameSize());
 
-                    LOGGER.fine("\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId()
-                            + ") (pid " + pid + ") - (level " + level + ") - wasReversed " + wasReversed
-                            + " - BuildSize:\t" + buildPartSize + "\tProbeSize:\t" + probePartSize + " - MemForJoin "
-                            + (state.memForJoin) + "  - LeftOuter is " + isLeftOuter);
+                    LOGGER.fine("\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId() + ") (pid "
+                            + pid + ") - (level " + level + ") - wasReversed " + wasReversed + " - BuildSize:\t"
+                            + buildPartSize + "\tProbeSize:\t" + probePartSize + " - MemForJoin " + (state.memForJoin)
+                            + "  - LeftOuter is " + isLeftOuter);
 
                     //Apply in-Mem HJ if possible
                     if (!skipInMemoryHJ && (buildPartSize < state.memForJoin)

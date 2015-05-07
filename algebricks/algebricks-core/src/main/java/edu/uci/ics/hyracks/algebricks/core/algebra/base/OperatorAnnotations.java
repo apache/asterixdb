@@ -18,6 +18,7 @@ public interface OperatorAnnotations {
     // hints
     public static final String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
     public static final String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
+    public static final String USE_RANGE_CONNECTOR = "USE_RANGE_CONNECTOR"; // -->
     // Boolean
     public static final String CARDINALITY = "CARDINALITY"; // -->
     // Integer

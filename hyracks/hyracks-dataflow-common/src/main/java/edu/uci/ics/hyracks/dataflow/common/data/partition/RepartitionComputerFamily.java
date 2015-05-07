@@ -19,29 +19,29 @@ import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFamily;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class RepartitionComputerGeneratorFactory implements ITuplePartitionComputerFamily{
-	
-	 private static final long serialVersionUID = 1L;
+public class RepartitionComputerFamily implements ITuplePartitionComputerFamily {
 
-	    private int factor;
-	    private ITuplePartitionComputerFamily delegateFactory;
+    private static final long serialVersionUID = 1L;
 
-	    public RepartitionComputerGeneratorFactory(int factor, ITuplePartitionComputerFamily delegate) {
-	        this.factor = factor;
-	        this.delegateFactory = delegate;
-	    }
+    private int factor;
+    private ITuplePartitionComputerFamily delegateFactory;
 
-	@Override
-	public ITuplePartitionComputer createPartitioner(int seed) {
-		final int s = seed;
-		return new ITuplePartitionComputer() {
+    public RepartitionComputerFamily(int factor, ITuplePartitionComputerFamily delegate) {
+        this.factor = factor;
+        this.delegateFactory = delegate;
+    }
+
+    @Override
+    public ITuplePartitionComputer createPartitioner(int seed) {
+        final int s = seed;
+        return new ITuplePartitionComputer() {
             private ITuplePartitionComputer delegate = delegateFactory.createPartitioner(s);
 
             @Override
             public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
-            	return delegate.partition(accessor, tIndex, factor * nParts) / factor;
+                return delegate.partition(accessor, tIndex, factor * nParts) / factor;
             }
         };
-	}
+    }
 
 }

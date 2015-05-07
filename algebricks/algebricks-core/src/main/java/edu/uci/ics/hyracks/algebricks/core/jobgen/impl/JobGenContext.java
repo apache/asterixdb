@@ -44,173 +44,165 @@ import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
 public class JobGenContext {
-	private final IOperatorSchema outerFlowSchema;
-	private final Map<ILogicalOperator, IOperatorSchema> schemaMap = new HashMap<ILogicalOperator, IOperatorSchema>();
-	private final ISerializerDeserializerProvider serializerDeserializerProvider;
-	private final IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider;
-	private final IBinaryHashFunctionFamilyProvider hashFunctionFamilyProvider;
-	private final IBinaryComparatorFactoryProvider comparatorFactoryProvider;
-	private final IPrinterFactoryProvider printerFactoryProvider;
-	private final ITypeTraitProvider typeTraitProvider;
-	private final IMetadataProvider<?, ?> metadataProvider;
-	private final INullWriterFactory nullWriterFactory;
-	private final INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
-	private final Object appContext;
-	private final IBinaryBooleanInspectorFactory booleanInspectorFactory;
-	private final IBinaryIntegerInspectorFactory integerInspectorFactory;
-	private final IExpressionRuntimeProvider expressionRuntimeProvider;
-	private final IExpressionTypeComputer expressionTypeComputer;
-	private final IExpressionEvalSizeComputer expressionEvalSizeComputer;
-	private final IPartialAggregationTypeComputer partialAggregationTypeComputer;
-	private final IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider;
-	private final int frameSize;
-	private AlgebricksPartitionConstraint clusterLocations;
-	private int varCounter;
-	private final ITypingContext typingContext;
+    private final IOperatorSchema outerFlowSchema;
+    private final Map<ILogicalOperator, IOperatorSchema> schemaMap = new HashMap<ILogicalOperator, IOperatorSchema>();
+    private final ISerializerDeserializerProvider serializerDeserializerProvider;
+    private final IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider;
+    private final IBinaryHashFunctionFamilyProvider hashFunctionFamilyProvider;
+    private final IBinaryComparatorFactoryProvider comparatorFactoryProvider;
+    private final IPrinterFactoryProvider printerFactoryProvider;
+    private final ITypeTraitProvider typeTraitProvider;
+    private final IMetadataProvider<?, ?> metadataProvider;
+    private final INullWriterFactory nullWriterFactory;
+    private final INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
+    private final Object appContext;
+    private final IBinaryBooleanInspectorFactory booleanInspectorFactory;
+    private final IBinaryIntegerInspectorFactory integerInspectorFactory;
+    private final IExpressionRuntimeProvider expressionRuntimeProvider;
+    private final IExpressionTypeComputer expressionTypeComputer;
+    private final IExpressionEvalSizeComputer expressionEvalSizeComputer;
+    private final IPartialAggregationTypeComputer partialAggregationTypeComputer;
+    private final IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider;
+    private final int frameSize;
+    private AlgebricksPartitionConstraint clusterLocations;
+    private int varCounter;
+    private final ITypingContext typingContext;
 
-	public JobGenContext(
-			IOperatorSchema outerFlowSchema,
-			IMetadataProvider<?, ?> metadataProvider,
-			Object appContext,
-			ISerializerDeserializerProvider serializerDeserializerProvider,
-			IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider,
-			IBinaryHashFunctionFamilyProvider hashFunctionFamilyProvider,
-			IBinaryComparatorFactoryProvider comparatorFactoryProvider,
-			ITypeTraitProvider typeTraitProvider,
-			IBinaryBooleanInspectorFactory booleanInspectorFactory,
-			IBinaryIntegerInspectorFactory integerInspectorFactory,
-			IPrinterFactoryProvider printerFactoryProvider,
-			INullWriterFactory nullWriterFactory,
-			INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider,
-			IExpressionRuntimeProvider expressionRuntimeProvider,
-			IExpressionTypeComputer expressionTypeComputer,
-			INullableTypeComputer nullableTypeComputer,
-			ITypingContext typingContext,
-			IExpressionEvalSizeComputer expressionEvalSizeComputer,
-			IPartialAggregationTypeComputer partialAggregationTypeComputer,
-			IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize, AlgebricksPartitionConstraint clusterLocations) {
-		this.outerFlowSchema = outerFlowSchema;
-		this.metadataProvider = metadataProvider;
-		this.appContext = appContext;
-		this.serializerDeserializerProvider = serializerDeserializerProvider;
-		this.hashFunctionFactoryProvider = hashFunctionFactoryProvider;
-		this.hashFunctionFamilyProvider = hashFunctionFamilyProvider;
-		this.comparatorFactoryProvider = comparatorFactoryProvider;
-		this.typeTraitProvider = typeTraitProvider;
-		this.booleanInspectorFactory = booleanInspectorFactory;
-		this.integerInspectorFactory = integerInspectorFactory;
-		this.printerFactoryProvider = printerFactoryProvider;
-		this.clusterLocations = clusterLocations;
-		this.normalizedKeyComputerFactoryProvider = normalizedKeyComputerFactoryProvider;
-		this.nullWriterFactory = nullWriterFactory;
-		this.expressionRuntimeProvider = expressionRuntimeProvider;
-		this.expressionTypeComputer = expressionTypeComputer;
-		this.typingContext = typingContext;
-		this.expressionEvalSizeComputer = expressionEvalSizeComputer;
-		this.partialAggregationTypeComputer = partialAggregationTypeComputer;
-		this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
-		this.frameSize = frameSize;
-		this.varCounter = 0;
-	}
+    public JobGenContext(IOperatorSchema outerFlowSchema, IMetadataProvider<?, ?> metadataProvider, Object appContext,
+            ISerializerDeserializerProvider serializerDeserializerProvider,
+            IBinaryHashFunctionFactoryProvider hashFunctionFactoryProvider,
+            IBinaryHashFunctionFamilyProvider hashFunctionFamilyProvider,
+            IBinaryComparatorFactoryProvider comparatorFactoryProvider, ITypeTraitProvider typeTraitProvider,
+            IBinaryBooleanInspectorFactory booleanInspectorFactory,
+            IBinaryIntegerInspectorFactory integerInspectorFactory, IPrinterFactoryProvider printerFactoryProvider,
+            INullWriterFactory nullWriterFactory,
+            INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider,
+            IExpressionRuntimeProvider expressionRuntimeProvider, IExpressionTypeComputer expressionTypeComputer,
+            INullableTypeComputer nullableTypeComputer, ITypingContext typingContext,
+            IExpressionEvalSizeComputer expressionEvalSizeComputer,
+            IPartialAggregationTypeComputer partialAggregationTypeComputer,
+            IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
+            AlgebricksPartitionConstraint clusterLocations) {
+        this.outerFlowSchema = outerFlowSchema;
+        this.metadataProvider = metadataProvider;
+        this.appContext = appContext;
+        this.serializerDeserializerProvider = serializerDeserializerProvider;
+        this.hashFunctionFactoryProvider = hashFunctionFactoryProvider;
+        this.hashFunctionFamilyProvider = hashFunctionFamilyProvider;
+        this.comparatorFactoryProvider = comparatorFactoryProvider;
+        this.typeTraitProvider = typeTraitProvider;
+        this.booleanInspectorFactory = booleanInspectorFactory;
+        this.integerInspectorFactory = integerInspectorFactory;
+        this.printerFactoryProvider = printerFactoryProvider;
+        this.clusterLocations = clusterLocations;
+        this.normalizedKeyComputerFactoryProvider = normalizedKeyComputerFactoryProvider;
+        this.nullWriterFactory = nullWriterFactory;
+        this.expressionRuntimeProvider = expressionRuntimeProvider;
+        this.expressionTypeComputer = expressionTypeComputer;
+        this.typingContext = typingContext;
+        this.expressionEvalSizeComputer = expressionEvalSizeComputer;
+        this.partialAggregationTypeComputer = partialAggregationTypeComputer;
+        this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
+        this.frameSize = frameSize;
+        this.varCounter = 0;
+    }
 
-	public IOperatorSchema getOuterFlowSchema() {
-		return outerFlowSchema;
-	}
+    public IOperatorSchema getOuterFlowSchema() {
+        return outerFlowSchema;
+    }
 
-	public AlgebricksPartitionConstraint getClusterLocations() {
-		return clusterLocations;
-	}
+    public AlgebricksPartitionConstraint getClusterLocations() {
+        return clusterLocations;
+    }
 
-	public IMetadataProvider<?, ?> getMetadataProvider() {
-		return metadataProvider;
-	}
+    public IMetadataProvider<?, ?> getMetadataProvider() {
+        return metadataProvider;
+    }
 
-	public Object getAppContext() {
-		return appContext;
-	}
+    public Object getAppContext() {
+        return appContext;
+    }
 
-	public ISerializerDeserializerProvider getSerializerDeserializerProvider() {
-		return serializerDeserializerProvider;
-	}
+    public ISerializerDeserializerProvider getSerializerDeserializerProvider() {
+        return serializerDeserializerProvider;
+    }
 
-	public IBinaryHashFunctionFactoryProvider getBinaryHashFunctionFactoryProvider() {
-		return hashFunctionFactoryProvider;
-	}
+    public IBinaryHashFunctionFactoryProvider getBinaryHashFunctionFactoryProvider() {
+        return hashFunctionFactoryProvider;
+    }
 
-	public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider() {
-		return hashFunctionFamilyProvider;
-	}
+    public IBinaryHashFunctionFamilyProvider getBinaryHashFunctionFamilyProvider() {
+        return hashFunctionFamilyProvider;
+    }
 
-	public IBinaryComparatorFactoryProvider getBinaryComparatorFactoryProvider() {
-		return comparatorFactoryProvider;
-	}
+    public IBinaryComparatorFactoryProvider getBinaryComparatorFactoryProvider() {
+        return comparatorFactoryProvider;
+    }
 
-	public ITypeTraitProvider getTypeTraitProvider() {
-		return typeTraitProvider;
-	}
+    public ITypeTraitProvider getTypeTraitProvider() {
+        return typeTraitProvider;
+    }
 
-	public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
-		return booleanInspectorFactory;
-	}
+    public IBinaryBooleanInspectorFactory getBinaryBooleanInspectorFactory() {
+        return booleanInspectorFactory;
+    }
 
-	public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
-		return integerInspectorFactory;
-	}
+    public IBinaryIntegerInspectorFactory getBinaryIntegerInspectorFactory() {
+        return integerInspectorFactory;
+    }
 
-	public IPrinterFactoryProvider getPrinterFactoryProvider() {
-		return printerFactoryProvider;
-	}
-	
-	public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider(){
-		return predEvaluatorFactoryProvider;
-	}
+    public IPrinterFactoryProvider getPrinterFactoryProvider() {
+        return printerFactoryProvider;
+    }
 
-	public IExpressionRuntimeProvider getExpressionRuntimeProvider() {
-		return expressionRuntimeProvider;
-	}
+    public IPredicateEvaluatorFactoryProvider getPredicateEvaluatorFactoryProvider() {
+        return predEvaluatorFactoryProvider;
+    }
 
-	public IOperatorSchema getSchema(ILogicalOperator op) {
-		return schemaMap.get(op);
-	}
+    public IExpressionRuntimeProvider getExpressionRuntimeProvider() {
+        return expressionRuntimeProvider;
+    }
 
-	public void putSchema(ILogicalOperator op, IOperatorSchema schema) {
-		schemaMap.put(op, schema);
-	}
+    public IOperatorSchema getSchema(ILogicalOperator op) {
+        return schemaMap.get(op);
+    }
 
-	public LogicalVariable createNewVar() {
-		varCounter++;
-		LogicalVariable var = new LogicalVariable(-varCounter);
-		return var;
-	}
+    public void putSchema(ILogicalOperator op, IOperatorSchema schema) {
+        schemaMap.put(op, schema);
+    }
 
-	public Object getType(ILogicalExpression expr, IVariableTypeEnvironment env)
-			throws AlgebricksException {
-		return expressionTypeComputer.getType(expr,
-				typingContext.getMetadataProvider(), env);
-	}
+    public LogicalVariable createNewVar() {
+        varCounter++;
+        LogicalVariable var = new LogicalVariable(-varCounter);
+        return var;
+    }
 
-	public INullWriterFactory getNullWriterFactory() {
-		return nullWriterFactory;
-	}
+    public Object getType(ILogicalExpression expr, IVariableTypeEnvironment env) throws AlgebricksException {
+        return expressionTypeComputer.getType(expr, typingContext.getMetadataProvider(), env);
+    }
 
-	public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider() {
-		return normalizedKeyComputerFactoryProvider;
-	}
+    public INullWriterFactory getNullWriterFactory() {
+        return nullWriterFactory;
+    }
 
-	public IExpressionEvalSizeComputer getExpressionEvalSizeComputer() {
-		return expressionEvalSizeComputer;
-	}
+    public INormalizedKeyComputerFactoryProvider getNormalizedKeyComputerFactoryProvider() {
+        return normalizedKeyComputerFactoryProvider;
+    }
 
-	public int getFrameSize() {
-		return frameSize;
-	}
+    public IExpressionEvalSizeComputer getExpressionEvalSizeComputer() {
+        return expressionEvalSizeComputer;
+    }
 
-	public IPartialAggregationTypeComputer getPartialAggregationTypeComputer() {
-		return partialAggregationTypeComputer;
-	}
+    public int getFrameSize() {
+        return frameSize;
+    }
 
-	public IVariableTypeEnvironment getTypeEnvironment(ILogicalOperator op) {
-		return typingContext.getOutputTypeEnvironment(op);
-	}
+    public IPartialAggregationTypeComputer getPartialAggregationTypeComputer() {
+        return partialAggregationTypeComputer;
+    }
+
+    public IVariableTypeEnvironment getTypeEnvironment(ILogicalOperator op) {
+        return typingContext.getOutputTypeEnvironment(op);
+    }
 
 }
