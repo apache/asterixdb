@@ -1,0 +1,5 @@
+use dataverse TinySocial;
+
+create dataset TwitterUsers(TwitterUserType)
+primary key screen-name;
+

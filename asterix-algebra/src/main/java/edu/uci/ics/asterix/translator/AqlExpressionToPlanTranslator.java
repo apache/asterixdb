@@ -88,6 +88,7 @@ import edu.uci.ics.asterix.aql.expression.WhereClause;
 import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.util.FunctionUtils;
+import edu.uci.ics.asterix.aql.util.RangeMapBuilder;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
@@ -910,7 +911,6 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitOrderbyClause(OrderbyClause oc,
             Mutable<ILogicalOperator> tupSource) throws AsterixException {
-
         OrderOperator ord = new OrderOperator();
         Iterator<OrderModifier> modifIter = oc.getModifierList().iterator();
         Mutable<ILogicalOperator> topOp = tupSource;
@@ -929,6 +929,12 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         }
         if (oc.getNumFrames() > 0) {
             ord.getAnnotations().put(OperatorAnnotations.MAX_NUMBER_FRAMES, oc.getNumFrames());
+        }
+        if (oc.getRangeMap() != null) {
+            Iterator<OrderModifier> orderModifIter = oc.getModifierList().iterator();
+            boolean ascending = (orderModifIter.next() == OrderModifier.ASC);
+            RangeMapBuilder.verifyRangeOrder(oc.getRangeMap(), ascending);
+            ord.getAnnotations().put(OperatorAnnotations.USE_RANGE_CONNECTOR, oc.getRangeMap());
         }
         return new Pair<ILogicalOperator, LogicalVariable>(ord, null);
     }

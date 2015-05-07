@@ -311,6 +311,9 @@ public class CloneAndSubstituteVariablesVisitor implements
             List<VariableSubstitution> arg) throws AsterixException {
         List<Expression> exprList = visitAndCloneExprList(oc.getOrderbyList(), arg);
         OrderbyClause oc2 = new OrderbyClause(exprList, oc.getModifierList());
+        oc2.setNumFrames(oc.getNumFrames());
+        oc2.setNumTuples(oc.getNumTuples());
+        oc2.setRangeMap(oc.getRangeMap());
         return new Pair<IAqlExpression, List<VariableSubstitution>>(oc2, arg);
     }
 

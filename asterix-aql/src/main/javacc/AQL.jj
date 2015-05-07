@@ -10,45 +10,125 @@ PARSER_BEGIN(AQLParser)
 
 package edu.uci.ics.asterix.aql.parser;
 
-import java.io.*;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-
+// For AQLParserTokenManager
 import org.apache.xerces.util.IntStack;
 
-import edu.uci.ics.asterix.aql.literal.FloatLiteral;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import edu.uci.ics.asterix.aql.base.Clause;
+import edu.uci.ics.asterix.aql.base.Expression;
+import edu.uci.ics.asterix.aql.base.Literal;
+import edu.uci.ics.asterix.aql.base.Statement;
+import edu.uci.ics.asterix.aql.context.RootScopeFactory;
+import edu.uci.ics.asterix.aql.context.Scope;
+import edu.uci.ics.asterix.aql.expression.AbstractAccessor;
+import edu.uci.ics.asterix.aql.expression.CallExpr;
+import edu.uci.ics.asterix.aql.expression.CompactStatement;
+import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
+import edu.uci.ics.asterix.aql.expression.CreateIndexStatement;
+import edu.uci.ics.asterix.aql.expression.DatasetDecl;
+import edu.uci.ics.asterix.aql.expression.DataverseDecl;
+import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
+import edu.uci.ics.asterix.aql.expression.DeleteStatement;
+import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.DistinctClause;
+import edu.uci.ics.asterix.aql.expression.DropStatement;
+import edu.uci.ics.asterix.aql.expression.ExternalDetailsDecl;
+import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
+import edu.uci.ics.asterix.aql.expression.FeedDropStatement;
+import edu.uci.ics.asterix.aql.expression.FieldAccessor;
+import edu.uci.ics.asterix.aql.expression.FieldBinding;
+import edu.uci.ics.asterix.aql.expression.ForClause;
+import edu.uci.ics.asterix.aql.expression.FunctionDecl;
+import edu.uci.ics.asterix.aql.expression.FunctionDropStatement;
+import edu.uci.ics.asterix.aql.expression.GbyVariableExpressionPair;
+import edu.uci.ics.asterix.aql.expression.GroupbyClause;
+import edu.uci.ics.asterix.aql.expression.Identifier;
+import edu.uci.ics.asterix.aql.expression.IfExpr;
+import edu.uci.ics.asterix.aql.expression.IndexAccessor;
+import edu.uci.ics.asterix.aql.expression.IndexDropStatement;
+import edu.uci.ics.asterix.aql.expression.InsertStatement;
+import edu.uci.ics.asterix.aql.expression.InternalDetailsDecl;
+import edu.uci.ics.asterix.aql.expression.LetClause;
+import edu.uci.ics.asterix.aql.expression.LimitClause;
+import edu.uci.ics.asterix.aql.expression.ListConstructor;
+import edu.uci.ics.asterix.aql.expression.LiteralExpr;
+import edu.uci.ics.asterix.aql.expression.LoadStatement;
+import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
+import edu.uci.ics.asterix.aql.expression.NodegroupDecl;
+import edu.uci.ics.asterix.aql.expression.OperatorExpr;
+import edu.uci.ics.asterix.aql.expression.OrderbyClause;
+import edu.uci.ics.asterix.aql.expression.OrderedListTypeDefinition;
+import edu.uci.ics.asterix.aql.expression.QuantifiedExpression;
+import edu.uci.ics.asterix.aql.expression.QuantifiedPair;
+import edu.uci.ics.asterix.aql.expression.Query;
+import edu.uci.ics.asterix.aql.expression.RecordConstructor;
+import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition;
+import edu.uci.ics.asterix.aql.expression.RefreshExternalDatasetStatement;
+import edu.uci.ics.asterix.aql.expression.RunStatement;
+import edu.uci.ics.asterix.aql.expression.SetStatement;
+import edu.uci.ics.asterix.aql.expression.TypeDecl;
+import edu.uci.ics.asterix.aql.expression.TypeDropStatement;
+import edu.uci.ics.asterix.aql.expression.TypeExpression;
+import edu.uci.ics.asterix.aql.expression.TypeReferenceExpression;
+import edu.uci.ics.asterix.aql.expression.UnaryExpr;
+import edu.uci.ics.asterix.aql.expression.UnaryExpr.Sign;
+import edu.uci.ics.asterix.aql.expression.UnionExpr;
+import edu.uci.ics.asterix.aql.expression.UnorderedListTypeDefinition;
+import edu.uci.ics.asterix.aql.expression.UpdateClause;
+import edu.uci.ics.asterix.aql.expression.UpdateStatement;
+import edu.uci.ics.asterix.aql.expression.VarIdentifier;
+import edu.uci.ics.asterix.aql.expression.VariableExpr;
+import edu.uci.ics.asterix.aql.expression.WhereClause;
+import edu.uci.ics.asterix.aql.expression.WriteStatement;
 import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
 import edu.uci.ics.asterix.aql.literal.FalseLiteral;
-import edu.uci.ics.asterix.aql.base.Literal;
-import edu.uci.ics.asterix.aql.literal.IntegerLiteral;
+import edu.uci.ics.asterix.aql.literal.FloatLiteral;
 import edu.uci.ics.asterix.aql.literal.LongIntegerLiteral;
 import edu.uci.ics.asterix.aql.literal.NullLiteral;
 import edu.uci.ics.asterix.aql.literal.StringLiteral;
 import edu.uci.ics.asterix.aql.literal.TrueLiteral;
-import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
-
-import edu.uci.ics.asterix.aql.base.*;
-import edu.uci.ics.asterix.aql.expression.*;
+import edu.uci.ics.asterix.aql.util.RangeMapBuilder;
+import edu.uci.ics.asterix.common.annotations.AutoDataGen;
+import edu.uci.ics.asterix.common.annotations.DateBetweenYearsDataGen;
+import edu.uci.ics.asterix.common.annotations.DatetimeAddRandHoursDataGen;
+import edu.uci.ics.asterix.common.annotations.DatetimeBetweenYearsDataGen;
+import edu.uci.ics.asterix.common.annotations.FieldIntervalDataGen;
+import edu.uci.ics.asterix.common.annotations.FieldValFileDataGen;
+import edu.uci.ics.asterix.common.annotations.FieldValFileSameIndexDataGen;
+import edu.uci.ics.asterix.common.annotations.IRecordFieldDataGen;
+import edu.uci.ics.asterix.common.annotations.InsertRandIntDataGen;
+import edu.uci.ics.asterix.common.annotations.ListDataGen;
+import edu.uci.ics.asterix.common.annotations.ListValFileDataGen;
+import edu.uci.ics.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import edu.uci.ics.asterix.common.annotations.TypeDataGen;
+import edu.uci.ics.asterix.common.annotations.UndeclaredFieldsDataGen;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
-import edu.uci.ics.asterix.aql.expression.UnaryExpr.Sign;
-import edu.uci.ics.asterix.aql.expression.TypeExpression.TypeExprKind;
-import edu.uci.ics.asterix.aql.base.Statement.Kind;
-import edu.uci.ics.asterix.aql.context.Scope;
-import edu.uci.ics.asterix.aql.context.RootScopeFactory;
-import edu.uci.ics.asterix.common.annotations.*;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 
 
@@ -56,22 +136,23 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 public class AQLParser extends ScopeChecker {
 
     // optimizer hints
-    private static final String HASH_GROUP_BY_HINT = "hash";
-    private static final String SKIP_SECONDARY_INDEX_SEARCH_HINT = "skip-index";
+    private static final String AUTO_HINT = "auto";
     private static final String BROADCAST_JOIN_HINT = "bcast";
-    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
-    private static final String INMEMORY_HINT = "inmem";
-    private static final String VAL_FILE_HINT = "val-files";
-    private static final String VAL_FILE_SAME_INDEX_HINT = "val-file-same-idx";
-    private static final String INTERVAL_HINT = "interval";
     private static final String COMPOSE_VAL_FILES_HINT = "compose-val-files";
-    private static final String INSERT_RAND_INT_HINT = "insert-rand-int";
-    private static final String LIST_VAL_FILE_HINT = "list-val-file";
-    private static final String LIST_HINT = "list";
-    private static final String DATETIME_BETWEEN_YEARS_HINT = "datetime-between-years";
     private static final String DATE_BETWEEN_YEARS_HINT = "date-between-years";
     private static final String DATETIME_ADD_RAND_HOURS_HINT = "datetime-add-rand-hours";
-    private static final String AUTO_HINT = "auto";
+    private static final String DATETIME_BETWEEN_YEARS_HINT = "datetime-between-years";
+    private static final String HASH_GROUP_BY_HINT = "hash";
+    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
+    private static final String INMEMORY_HINT = "inmem";
+    private static final String INSERT_RAND_INT_HINT = "insert-rand-int";
+    private static final String INTERVAL_HINT = "interval";
+    private static final String LIST_HINT = "list";
+    private static final String LIST_VAL_FILE_HINT = "list-val-file";
+    private static final String RANGE_HINT = "range";
+    private static final String SKIP_SECONDARY_INDEX_SEARCH_HINT = "skip-index";
+    private static final String VAL_FILE_HINT = "val-files";
+    private static final String VAL_FILE_SAME_INDEX_HINT = "val-file-same-idx";
 
     private static final String GEN_FIELDS_HINT = "gen-fields";
 
@@ -2083,24 +2164,29 @@ Clause WhereClause()throws ParseException :
 
 Clause OrderbyClause()throws ParseException :
 {
-  OrderbyClause oc = new OrderbyClause();
-  Expression orderbyExpr;
-  List<Expression> orderbyList = new ArrayList<Expression>();
-  List<OrderbyClause.OrderModifier> modifierList = new ArrayList<OrderbyClause.OrderModifier >();
-  int numOfOrderby = 0;
+    OrderbyClause oc = new OrderbyClause();
+    Expression orderbyExpr;
+    List<Expression> orderbyList = new ArrayList<Expression>();
+    List<OrderbyClause.OrderModifier> modifierList = new ArrayList<OrderbyClause.OrderModifier >();
+    int numOfOrderby = 0;
 }
 {
   (
     <ORDER>
       {
-         String hint = getHint(token);
-         if (hint != null && hint.startsWith(INMEMORY_HINT)) {
-           String splits[] = hint.split(" +");
-           int numFrames = Integer.parseInt(splits[1]);
-           int numTuples = Integer.parseInt(splits[2]);
-           oc.setNumFrames(numFrames);
-           oc.setNumTuples(numTuples);
-         }
+        String hint = getHint(token);
+        if (hint != null) {
+          if (hint.startsWith(INMEMORY_HINT)) {
+            String splits[] = hint.split(" +");
+            int numFrames = Integer.parseInt(splits[1]);
+            int numTuples = Integer.parseInt(splits[2]);
+            oc.setNumFrames(numFrames);
+            oc.setNumTuples(numTuples);
+          }
+          if (hint.startsWith(RANGE_HINT)) {
+            oc.setRangeMap(RangeMapBuilder.parseHint(hint.substring(RANGE_HINT.length())));
+          }
+        }
       }
     <BY> orderbyExpr = Expression()
     {

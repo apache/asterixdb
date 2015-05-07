@@ -4318,6 +4318,25 @@
             </compilation-unit>
         </test-case>
     </test-group>
+    <test-group name="range-hints">
+        <test-case FilePath="range-hints">
+            <compilation-unit name="order-by">
+                <output-dir compare="Text">order-by</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="range-hints">
+            <compilation-unit name="order-by-exception_01">
+                <output-dir compare="Text">order-by</output-dir>
+                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="range-hints">
+            <compilation-unit name="order-by-exception_02">
+                <output-dir compare="Text">order-by</output-dir>
+                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+            </compilation-unit>
+        </test-case>
+    </test-group>
     <test-group name="records">
         <test-case FilePath="records">
             <compilation-unit name="closed-record-constructor_01">
@@ -5404,7 +5423,7 @@
         <test-case FilePath="tpch">
             <compilation-unit name="query-issue562">
                 <output-dir compare="Text">query-issue562</output-dir>
-        </compilation-unit>
+            </compilation-unit>
         </test-case>
         <test-case FilePath="tpch">
             <compilation-unit name="query-issue810">
@@ -6154,7 +6173,7 @@
                 <output-dir compare="Text">agg_01</output-dir>
             </compilation-unit>
         </test-case>
-       <test-case FilePath="temporal">
+        <test-case FilePath="temporal">
             <compilation-unit name="overlap_bins_gby_1">
                 <output-dir compare="Text">overlap_bins_gby_1</output-dir>
             </compilation-unit>
@@ -6310,237 +6329,237 @@
         </test-case>
     </test-group>
     <test-group name="index-leftouterjoin">
-    <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-btree-sidx1">
-        <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-btree-sidx2">
-        <output-dir compare="Text">probe-pidx-with-join-btree-sidx2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-rtree-sidx1">
-        <output-dir compare="Text">probe-pidx-with-join-rtree-sidx1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-rtree-sidx2">
-        <output-dir compare="Text">probe-pidx-with-join-rtree-sidx2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-invidx-sidx1">
-        <output-dir compare="Text">probe-pidx-with-join-invidx-sidx1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-invidx-sidx2">
-        <output-dir compare="Text">probe-pidx-with-join-invidx-sidx2</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="distinct">
-      <test-case FilePath="distinct">
-      <compilation-unit name="query-issue443">
-        <output-dir compare="Text">query-issue443</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="distinct">
-      <compilation-unit name="query-issue443-2">
-        <output-dir compare="Text">query-issue443-2</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="tinysocial">
-    <test-case FilePath="tinysocial">
-      <compilation-unit name="tinysocial-suite">
-        <output-dir compare="Text">tinysocial-suite</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="types">
-    <test-case FilePath="types">
-      <compilation-unit name="record01">
-        <output-dir compare="Text">record01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="type_promotion_0">
-        <output-dir compare="Text">type_promotion_0</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="type_promotion_1">
-        <output-dir compare="Text">type_promotion_1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="opentype_orderby_01">
-        <output-dir compare="Text">opentype_orderby_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_01">
-        <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_02">
-        <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_03">
-        <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_04">
-        <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_05">
-        <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_01">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_02">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_03">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_04">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_05">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_06">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_06</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_07">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_07</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_08">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_08</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_09">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_09</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_10">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_10</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_constant_11">
-        <output-dir compare="Text">promotion_closedtype_field_vs_constant_11</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_opentype_field_01">
-        <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_opentype_field_02">
-        <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_opentype_field_03">
-        <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_closedtype_field_vs_opentype_field_04">
-        <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_01">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_02">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_03">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_04">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_05">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_06">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_06</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_07">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_07</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_constant_08">
-        <output-dir compare="Text">promotion_opentype_field_vs_constant_08</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_opentype_field_01">
-        <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="promotion_opentype_field_vs_opentype_field_02">
-        <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_02</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="materialization">
-    <test-case FilePath="materialization">
-      <compilation-unit name="assign-reuse">
-        <output-dir compare="Text">assign-reuse</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="filters">
-          <test-case FilePath="filters">
+        <test-case FilePath="index-leftouterjoin">
+            <compilation-unit name="probe-pidx-with-join-btree-sidx1">
+                <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-leftouterjoin">
+            <compilation-unit name="probe-pidx-with-join-btree-sidx2">
+                <output-dir compare="Text">probe-pidx-with-join-btree-sidx2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-leftouterjoin">
+            <compilation-unit name="probe-pidx-with-join-rtree-sidx1">
+                <output-dir compare="Text">probe-pidx-with-join-rtree-sidx1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-leftouterjoin">
+            <compilation-unit name="probe-pidx-with-join-rtree-sidx2">
+                <output-dir compare="Text">probe-pidx-with-join-rtree-sidx2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-leftouterjoin">
+            <compilation-unit name="probe-pidx-with-join-invidx-sidx1">
+                <output-dir compare="Text">probe-pidx-with-join-invidx-sidx1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="index-leftouterjoin">
+            <compilation-unit name="probe-pidx-with-join-invidx-sidx2">
+                <output-dir compare="Text">probe-pidx-with-join-invidx-sidx2</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="distinct">
+        <test-case FilePath="distinct">
+            <compilation-unit name="query-issue443">
+                <output-dir compare="Text">query-issue443</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="distinct">
+            <compilation-unit name="query-issue443-2">
+                <output-dir compare="Text">query-issue443-2</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="tinysocial">
+        <test-case FilePath="tinysocial">
+            <compilation-unit name="tinysocial-suite">
+                <output-dir compare="Text">tinysocial-suite</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="types">
+        <test-case FilePath="types">
+            <compilation-unit name="record01">
+                <output-dir compare="Text">record01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="type_promotion_0">
+                <output-dir compare="Text">type_promotion_0</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="type_promotion_1">
+                <output-dir compare="Text">type_promotion_1</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="opentype_orderby_01">
+                <output-dir compare="Text">opentype_orderby_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_01">
+                <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_02">
+                <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_02</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_03">
+                <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_03</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_04">
+                <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_04</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_closedtype_field_05">
+                <output-dir compare="Text">promotion_closedtype_field_vs_closedtype_field_05</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_01">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_02">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_02</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_03">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_03</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_04">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_04</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_05">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_05</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_06">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_06</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_07">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_07</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_08">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_08</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_09">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_09</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_10">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_10</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_constant_11">
+                <output-dir compare="Text">promotion_closedtype_field_vs_constant_11</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_opentype_field_01">
+                <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_opentype_field_02">
+                <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_02</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_opentype_field_03">
+                <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_03</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_closedtype_field_vs_opentype_field_04">
+                <output-dir compare="Text">promotion_closedtype_field_vs_opentype_field_04</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_01">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_02">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_02</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_03">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_03</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_04">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_04</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_05">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_05</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_06">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_06</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_07">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_07</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_constant_08">
+                <output-dir compare="Text">promotion_opentype_field_vs_constant_08</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_opentype_field_01">
+                <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_01</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="types">
+            <compilation-unit name="promotion_opentype_field_vs_opentype_field_02">
+                <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_02</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="materialization">
+        <test-case FilePath="materialization">
+            <compilation-unit name="assign-reuse">
+                <output-dir compare="Text">assign-reuse</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="filters">
+        <test-case FilePath="filters">
             <compilation-unit name="equality-predicate">
                 <output-dir compare="Text">equality-predicate</output-dir>
             </compilation-unit>

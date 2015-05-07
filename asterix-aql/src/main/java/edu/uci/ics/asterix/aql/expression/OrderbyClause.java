@@ -21,10 +21,12 @@ import edu.uci.ics.asterix.aql.base.Expression;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class OrderbyClause implements Clause {
     private List<Expression> orderbyList;
     private List<OrderModifier> modifierList;
+    private IRangeMap rangeMap;
     private int numFrames = -1;
     private int numTuples = -1;
 
@@ -85,5 +87,13 @@ public class OrderbyClause implements Clause {
 
     public void setNumTuples(int numTuples) {
         this.numTuples = numTuples;
+    }
+
+    public IRangeMap getRangeMap() {
+        return rangeMap;
+    }
+
+    public void setRangeMap(IRangeMap rangeMap) {
+        this.rangeMap = rangeMap;
     }
 }

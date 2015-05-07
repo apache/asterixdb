@@ -192,8 +192,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
     private Dataverse activeDefaultDataverse;
     private final List<FunctionDecl> declaredFunctions;
 
-    public AqlTranslator(List<Statement> aqlStatements, SessionConfig conf)
-            throws MetadataException, AsterixException {
+    public AqlTranslator(List<Statement> aqlStatements, SessionConfig conf) throws MetadataException, AsterixException {
         this.aqlStatements = aqlStatements;
         this.sessionConfig = conf;
         declaredFunctions = getDeclaredFunctions(aqlStatements);
@@ -1736,7 +1735,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName, loadStmt
                     .getDatasetName().getValue(), loadStmt.getAdapter(), loadStmt.getProperties(),
                     loadStmt.dataIsAlreadySorted());
-            JobSpecification spec = APIFramework.compileQuery(null, metadataProvider, null, 0, null, sessionConfig, cls);
+            JobSpecification spec = APIFramework
+                    .compileQuery(null, metadataProvider, null, 0, null, sessionConfig, cls);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             if (spec != null) {
@@ -1834,8 +1834,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Pair<Query, Integer> reWrittenQuery = APIFramework.reWriteQuery(declaredFunctions, metadataProvider, query,
                 sessionConfig);
 
-        // Query Compilation (happens under the same ongoing metadata
-        // transaction)
+        // Query Compilation (happens under the same ongoing metadata transaction)
         JobSpecification spec = APIFramework.compileQuery(declaredFunctions, metadataProvider, reWrittenQuery.first,
                 reWrittenQuery.second, stmt == null ? null : stmt.getDatasetName(), sessionConfig, stmt);
 
@@ -2193,8 +2192,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         // In this case (the normal case), we don't use the
                         // "response" JSONObject - just stream the results
                         // to the "out" PrintWriter
-                        if (sessionConfig.fmt() == OutputFormat.CSV &&
-                            sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
+                        if (sessionConfig.fmt() == OutputFormat.CSV
+                                && sessionConfig.is(SessionConfig.FORMAT_CSV_HEADER)) {
                             ResultUtils.displayCSVHeader(metadataProvider.findOutputRecordType(), sessionConfig);
                         }
                         ResultUtils.displayResults(resultReader, sessionConfig);

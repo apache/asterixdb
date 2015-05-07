@@ -1,0 +1,5 @@
+use dataverse TinySocial;
+
+load dataset TwitterUsers using localfs
+(("path"="nc1://data/tinysocial/twu.adm"),("format"="adm"));
+

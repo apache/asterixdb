@@ -1,0 +1,6 @@
+use dataverse TinySocial;
+
+for $user in dataset TwitterUsers
+/*+ range [100, 150, 400] */
+order by $user.friends_count
+return $user;

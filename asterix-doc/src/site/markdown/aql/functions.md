@@ -2223,29 +2223,17 @@ See the [Allen's Relations](allens.html).
 
 ## <a id="OtherFunctions">Other Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
-### len ###
+
+### create-uuid ###
  * Syntax:
 
-    len(list_expression)
+        create-uuid()
 
- * Returns the length of the list list_expression.
- * Arguments:
-    * `list_expression` : An `OrderedList`, `UnorderedList` or `null`, represents the list need to be checked.
- * Return Value:
-    * An `Int32` that represents the length of list_expression.
-
- * Example:
-
-        use dataverse TinySocial;
-
-        let $l := ["ASTERIX", "Hyracks"]
-        return len($l)
-
-
- * The expected result is:
-
-        2
-
+* Generates a `uuid`.
+* Arguments:
+    * none
+* Return Value:
+    * A generated `uuid`.
 
 
 ### is-null ###
@@ -2282,6 +2270,31 @@ See the [Allen's Relations](allens.html).
  * Return Value:
     * A `boolean` on whether the variable is a `system null` or not.
 
+
+### len ###
+ * Syntax:
+
+    len(list_expression)
+
+ * Returns the length of the list list_expression.
+ * Arguments:
+    * `list_expression` : An `OrderedList`, `UnorderedList` or `null`, represents the list need to be checked.
+ * Return Value:
+    * An `Int32` that represents the length of list_expression.
+
+ * Example:
+
+        use dataverse TinySocial;
+
+        let $l := ["ASTERIX", "Hyracks"]
+        return len($l)
+
+
+ * The expected result is:
+
+        2
+
+
 ### not ###
  * Syntax:
 
@@ -2304,17 +2317,30 @@ See the [Allen's Relations](allens.html).
         "world"
 
 
-
-### create-uuid ###
+### range ###
  * Syntax:
 
-        create-uuid()
+        range(start_numeric_expression, end_numeric_expression)
 
-* Generates a `uuid`.
+* Generates a series of `int64` values based start the `start_numeric_expression` until the `end_numeric_expression`.
+  The `range` fucntion must be used list argument of a `for` expression.
 * Arguments:
-    * none
+   * `start_numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the start value.
+   * `end_numeric_expression`: A `int8`/`int16`/`int32`/`int64` value representing the max final value.
 * Return Value:
     * A generated `uuid`.
+* Example:
+
+        for $i in range(0, 3)
+        return $i;
+
+ * The expected result is:
+
+        [ 0
+        , 1 
+        , 2 
+        , 3
+        ]
 
 
 ### switch-case ###
@@ -2348,7 +2374,6 @@ See the [Allen's Relations](allens.html).
 
         0
 
-
  * Example 2:
 
         switch-case("a",
@@ -2357,7 +2382,8 @@ See the [Allen's Relations](allens.html).
             "z", 3
         )
 
-
  * The expected result is:
 
         3
+
+
