@@ -32,6 +32,6 @@ AsterixDB's official documentation resides at [http://asterixdb.ics.uci.edu/docu
 
 ##Support/Contact
 
-If you have any questions, please feel free to ask on our mailing list, [users@asterixdb.incubator.apache.org](mailto:users@asterixdb.incubator.apache.org). Join the list by sending an email to [users-subscribe@asterixdb.incubator.apache.org](mailto:users-subscribe@asterixdb.incubator.apache.org. If you are interested in the internals or developement of AsterixDB, also please feel free to subscribe to our developer mailing list, [dev@asterixdb.incubator.apache.org](mailto:dev@asterixdb.incubator.apache.org), by sending an email to [dev-subscribe@asterixdb.incubator.apache.org](mailto:dev-subscribe@asterixdb.incubator.apache.org).
+If you have any questions, please feel free to ask on our mailing list, [users@asterixdb.incubator.apache.org](mailto:users@asterixdb.incubator.apache.org). Join the list by sending an email to [users-subscribe@asterixdb.incubator.apache.org](mailto:users-subscribe@asterixdb.incubator.apache.org). If you are interested in the internals or developement of AsterixDB, also please feel free to subscribe to our developer mailing list, [dev@asterixdb.incubator.apache.org](mailto:dev@asterixdb.incubator.apache.org), by sending an email to [dev-subscribe@asterixdb.incubator.apache.org](mailto:dev-subscribe@asterixdb.incubator.apache.org).
 
 
