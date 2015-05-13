@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 /**
  * Metadata describing an index.
  */
-public class Index implements IMetadataEntity {
+public class Index implements IMetadataEntity, Comparable<Index> {
 
     private static final long serialVersionUID = 1L;
 
@@ -209,5 +209,43 @@ public class Index implements IMetadataEntity {
     @Override
     public Object dropFromCache(MetadataCache cache) {
         return cache.dropIndex(this);
+    }
+
+    @Override
+    public int compareTo(Index otherIndex) {
+        /** Gives a primary index first priority. */
+        if (isPrimaryIndex && !otherIndex.isPrimaryIndex) {
+            return -1;
+        }
+        if (!isPrimaryIndex && otherIndex.isPrimaryIndex) {
+            return 1;
+        }
+
+        /** Gives a B-Tree index the second priority. */
+        if (indexType == IndexType.BTREE && otherIndex.indexType != IndexType.BTREE) {
+            return -1;
+        }
+        if (indexType != IndexType.BTREE && otherIndex.indexType == IndexType.BTREE) {
+            return 1;
+        }
+
+        /** Gives a R-Tree index the third priority */
+        if (indexType == IndexType.RTREE && otherIndex.indexType != IndexType.RTREE) {
+            return -1;
+        }
+        if (indexType != IndexType.RTREE && otherIndex.indexType == IndexType.RTREE) {
+            return 1;
+        }
+
+        /** Finally, compares based on names. */
+        int result = indexName.compareTo(otherIndex.getIndexName());
+        if (result != 0) {
+            return result;
+        }
+        result = datasetName.compareTo(otherIndex.getDatasetName());
+        if (result != 0) {
+            return result;
+        }
+        return dataverseName.compareTo(otherIndex.getDataverseName());
     }
 }

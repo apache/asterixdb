@@ -15,8 +15,9 @@
 package edu.uci.ics.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
@@ -36,13 +37,13 @@ public class AccessMethodAnalysisContext {
     // Contains candidate indexes and a list of (integer,integer) tuples that index into matchedFuncExprs and matched variable inside this expr.
     // We are mapping from candidate indexes to a list of function expressions 
     // that match one of the index's expressions.
-    public HashMap<Index, List<Pair<Integer, Integer>>> indexExprsAndVars = new HashMap<Index, List<Pair<Integer, Integer>>>();
+    public Map<Index, List<Pair<Integer, Integer>>> indexExprsAndVars = new TreeMap<Index, List<Pair<Integer, Integer>>>();
 
     // Maps from index to the dataset it is indexing.
-    public HashMap<Index, Dataset> indexDatasetMap = new HashMap<Index, Dataset>();
+    public Map<Index, Dataset> indexDatasetMap = new TreeMap<Index, Dataset>();
     
     // Maps from an index to the number of matched fields in the query plan (for performing prefix search)
-    public HashMap<Index, Integer> indexNumMatchedKeys = new HashMap<Index, Integer>();
+    public Map<Index, Integer> indexNumMatchedKeys = new TreeMap<Index, Integer>();
 
     // variables for resetting null placeholder for left-outer-join
     private Mutable<ILogicalOperator> lojGroupbyOpRef = null;
