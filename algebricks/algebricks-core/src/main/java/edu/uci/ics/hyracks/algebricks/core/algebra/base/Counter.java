@@ -31,4 +31,8 @@ public class Counter {
     public void inc() {
         ++counter;
     }
+
+    public void set(int newStart) {
+        counter = newStart;
+    }
 }
