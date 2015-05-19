@@ -60,9 +60,9 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMComponentFilterFrameFactory filterFrameFactory;
     protected final LSMComponentFilterManager filterManager;
     protected final int[] filterFields;
+    protected final boolean durable;
 
     protected boolean isActivated;
-
     protected final AtomicBoolean[] flushRequests;
 
     public AbstractLSMIndex(List<IVirtualBufferCache> virtualBufferCaches, IBufferCache diskBufferCache,
@@ -70,7 +70,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
-            int[] filterFields) {
+            int[] filterFields, boolean durable) {
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
@@ -82,9 +82,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.filterFrameFactory = filterFrameFactory;
         this.filterManager = filterManager;
         this.filterFields = filterFields;
+        this.durable = durable;
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
-        diskComponents = new LinkedList<ILSMComponent>();
+        diskComponents = new ArrayList<ILSMComponent>();
         memoryComponents = new ArrayList<ILSMComponent>();
         currentMutableComponentId = new AtomicInteger();
         flushRequests = new AtomicBoolean[virtualBufferCaches.size()];
@@ -96,13 +97,15 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     // The constructor used by external indexes
     public AbstractLSMIndex(IBufferCache diskBufferCache, ILSMIndexFileManager fileManager,
             IFileMapProvider diskFileMapProvider, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback) {
+            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
+            boolean durable) {
         this.diskBufferCache = diskBufferCache;
         this.diskFileMapProvider = diskFileMapProvider;
         this.fileManager = fileManager;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.ioScheduler = ioScheduler;
         this.ioOpCallback = ioOpCallback;
+        this.durable = durable;
         lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker);
         isActivated = false;
         diskComponents = new LinkedList<ILSMComponent>();
@@ -143,7 +146,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
             }
         }
         // Forces all pages of given file to disk. This guarantees the data makes it to disk.
-        bufferCache.force(fileId, true);
+        // If the index is not durable, then the flush is not necessary.
+        if (durable) {
+            bufferCache.force(fileId, true);
+        }
     }
 
     protected void markAsValidInternal(ITreeIndex treeIndex) throws HyracksDataException {
@@ -175,7 +181,10 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         }
 
         // Force modified metadata page to disk.
-        bufferCache.force(fileId, true);
+        // If the index is not durable, then the flush is not necessary.
+        if (durable) {
+            bufferCache.force(fileId, true);
+        }
     }
 
     @Override

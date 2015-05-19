@@ -77,7 +77,7 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
-        
+
         if (readerCount <= -1) {
             throw new IllegalStateException("Invalid LSM disk component readerCount: " + readerCount);
         }

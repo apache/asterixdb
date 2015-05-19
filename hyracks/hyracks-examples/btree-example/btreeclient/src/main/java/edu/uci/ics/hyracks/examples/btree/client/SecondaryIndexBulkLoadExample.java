@@ -120,7 +120,7 @@ public class SecondaryIndexBulkLoadExample {
 
         // use a disk-order scan to read primary index
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory();
+        IIndexDataflowHelperFactory dataflowHelperFactory = new BTreeDataflowHelperFactory(true);
         TreeIndexDiskOrderScanOperatorDescriptor btreeScanOp = new TreeIndexDiskOrderScanOperatorDescriptor(spec,
                 recDesc, storageManager, lcManagerProvider, primarySplitProvider, primaryTypeTraits,
                 dataflowHelperFactory, NoOpOperationCallbackFactory.INSTANCE);

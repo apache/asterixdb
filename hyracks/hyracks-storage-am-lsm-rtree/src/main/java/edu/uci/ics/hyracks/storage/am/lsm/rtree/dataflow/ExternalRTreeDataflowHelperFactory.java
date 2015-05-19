@@ -31,17 +31,17 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
-    private int version;
+    private final int version;
 
     public ExternalRTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
             RTreePolicyType rtreePolicyType, IBinaryComparatorFactory[] btreeComparatorFactories,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILinearizeComparatorFactory linearizeCmpFactory,
-            double bloomFilterFalsePositiveRate, int[] btreeFields, int version) {
+            double bloomFilterFalsePositiveRate, int[] btreeFields, int version, boolean durable) {
         super(valueProviderFactories, rtreePolicyType, btreeComparatorFactories, null, mergePolicyFactory,
                 mergePolicyProperties, opTrackerFactory, ioSchedulerProvider, ioOpCallbackFactory, linearizeCmpFactory,
-                bloomFilterFalsePositiveRate, null, btreeFields, null, null, null);
+                bloomFilterFalsePositiveRate, null, btreeFields, null, null, null, durable);
         this.version = version;
     }
 
@@ -51,6 +51,7 @@ public class ExternalRTreeDataflowHelperFactory extends LSMRTreeDataflowHelperFa
         return new ExternalRTreeDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, btreeFields, version);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, linearizeCmpFactory, btreeFields,
+                version, durable);
     }
 }

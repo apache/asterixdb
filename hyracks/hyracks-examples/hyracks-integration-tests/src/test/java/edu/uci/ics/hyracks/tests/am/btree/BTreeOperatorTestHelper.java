@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.tests.am.common.TreeOperatorTestHelper;
 public class BTreeOperatorTestHelper extends TreeOperatorTestHelper {
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory() {
-        return new BTreeDataflowHelperFactory();
+        return new BTreeDataflowHelperFactory(true);
     }
 
 }

@@ -36,9 +36,9 @@ import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
 
-    private LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
+    private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();
 
-    private LSMRTreeTestWorkerFactory workerFactory = new LSMRTreeTestWorkerFactory();
+    private final LSMRTreeTestWorkerFactory workerFactory = new LSMRTreeTestWorkerFactory();
 
     public LSMRTreeMultiThreadTest() {
         super(false, RTreeType.LSMRTREE);
@@ -64,7 +64,7 @@ public class LSMRTreeMultiThreadTest extends AbstractRTreeMultiThreadTest {
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallback(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), null, btreeFields, null,
-                null, null);
+                null, null, true);
     }
 
     @Override

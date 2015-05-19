@@ -36,14 +36,13 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 public class ExternalIndexHarness extends LSMHarness {
     private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
 
-
     public ExternalIndexHarness(ILSMIndexInternal lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker) {
-        super(lsmIndex,mergePolicy,opTracker);
+        super(lsmIndex, mergePolicy, opTracker);
     }
 
     @Override
-    protected boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean isTryOperation)
-            throws HyracksDataException {
+    protected boolean getAndEnterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType,
+            boolean isTryOperation) throws HyracksDataException {
         synchronized (opTracker) {
             while (true) {
                 lsmIndex.getOperationalComponents(ctx);
@@ -67,7 +66,8 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException {
+    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType)
+            throws HyracksDataException {
         List<ILSMComponent> components = ctx.getComponentHolder();
         int numEntered = 0;
         boolean entranceSuccessful = false;
@@ -221,10 +221,12 @@ public class ExternalIndexHarness extends LSMHarness {
     @Override
     public void addBulkLoadedComponent(ILSMComponent c) throws HyracksDataException, IndexException {
         lsmIndex.markAsValid(c);
-        lsmIndex.addComponent(c);
-        // Enter the component
-        enterComponent(c);
-        mergePolicy.diskComponentAdded(lsmIndex, false);
+        synchronized (opTracker) {
+            lsmIndex.addComponent(c);
+            // Enter the component
+            enterComponent(c);
+            mergePolicy.diskComponentAdded(lsmIndex, false);
+        }
     }
 
     // Three differences from  addBulkLoadedComponent

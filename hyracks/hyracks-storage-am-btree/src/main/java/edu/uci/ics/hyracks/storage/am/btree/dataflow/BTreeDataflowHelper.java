@@ -26,8 +26,10 @@ import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexOperatorDescriptor;
 import edu.uci.ics.hyracks.storage.am.common.dataflow.TreeIndexDataflowHelper;
 
 public class BTreeDataflowHelper extends TreeIndexDataflowHelper {
-    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition) {
-        super(opDesc, ctx, partition);
+
+    public BTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
+            boolean durable) {
+        super(opDesc, ctx, partition, durable);
     }
 
     @Override

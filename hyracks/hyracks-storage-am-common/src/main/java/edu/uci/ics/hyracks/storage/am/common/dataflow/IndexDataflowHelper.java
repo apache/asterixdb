@@ -40,10 +40,12 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
     protected final FileReference file;
     protected final int partition;
     protected final int ioDeviceId;
+    protected final boolean durable;
 
     protected IIndex index;
 
-    public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition) {
+    public IndexDataflowHelper(IIndexOperatorDescriptor opDesc, final IHyracksTaskContext ctx, int partition,
+            boolean durable) {
         this.opDesc = opDesc;
         this.ctx = ctx;
         this.lcManager = opDesc.getLifecycleManagerProvider().getLifecycleManager(ctx);
@@ -53,14 +55,17 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         this.ioDeviceId = opDesc.getFileSplitProvider().getFileSplits()[partition].getIODeviceId();
         this.file = new FileReference(new File(IndexFileNameUtil.prepareFileName(opDesc.getFileSplitProvider()
                 .getFileSplits()[partition].getLocalFile().getFile().getPath(), ioDeviceId)));
+        this.durable = durable;
     }
 
     protected abstract IIndex createIndexInstance() throws HyracksDataException;
 
+    @Override
     public IIndex getIndexInstance() {
         return index;
     }
 
+    @Override
     public void create() throws HyracksDataException {
         synchronized (lcManager) {
             long resourceID = getResourceID();
@@ -92,6 +97,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         }
     }
 
+    @Override
     public void open() throws HyracksDataException {
         synchronized (lcManager) {
             long resourceID = getResourceID();
@@ -109,12 +115,14 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         }
     }
 
+    @Override
     public void close() throws HyracksDataException {
         synchronized (lcManager) {
             lcManager.close(getResourceID());
         }
     }
 
+    @Override
     public void destroy() throws HyracksDataException {
         synchronized (lcManager) {
             long resourceID = getResourceID();
@@ -132,10 +140,12 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         }
     }
 
+    @Override
     public FileReference getFileReference() {
         return file;
     }
 
+    @Override
     public long getResourceID() throws HyracksDataException {
         LocalResource localResource = localResourceRepository.getResourceByName(file.getFile().getPath());
         if (localResource == null) {
@@ -145,6 +155,7 @@ public abstract class IndexDataflowHelper implements IIndexDataflowHelper {
         }
     }
 
+    @Override
     public IHyracksTaskContext getTaskContext() {
         return ctx;
     }

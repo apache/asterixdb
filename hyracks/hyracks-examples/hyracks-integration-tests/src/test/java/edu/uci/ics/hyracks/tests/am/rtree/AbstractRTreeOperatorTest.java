@@ -87,7 +87,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected final IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     protected final IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
     protected IIndexDataflowHelperFactory rtreeDataflowHelperFactory;
-    protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
+    protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory(true);
 
     // field, type and key declarations for primary index
     protected final int primaryFieldCount = 10;

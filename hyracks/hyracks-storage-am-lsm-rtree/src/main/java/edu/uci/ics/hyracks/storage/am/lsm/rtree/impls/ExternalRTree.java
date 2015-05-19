@@ -41,7 +41,6 @@ import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -51,10 +50,11 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
 import edu.uci.ics.hyracks.storage.am.rtree.impls.SearchPredicate;
@@ -71,12 +71,12 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // A second disk component list that will be used when a transaction is
     // committed and will be seen by subsequent accessors
-    private List<ILSMComponent> secondDiskComponents;
+    private final List<ILSMComponent> secondDiskComponents;
     // A pointer that points to the current most recent list (either
     // diskComponents = 0, or secondDiskComponents = 1). It starts with -1 to
     // indicate first time activation
     private int version = -1;
-    private int fieldCount;
+    private final int fieldCount;
 
     public ExternalRTree(ITreeIndexFrameFactory rtreeInteriorFrameFactory,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory btreeInteriorFrameFactory,
@@ -87,11 +87,11 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             IBinaryComparatorFactory[] btreeCmpFactories, ILinearizeComparatorFactory linearizer,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallback ioOpCallback,
-            int[] buddyBTreeFields, int version) {
+            int[] buddyBTreeFields, int version, boolean durable) {
         super(rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory, btreeLeafFrameFactory,
                 fileNameManager, diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, bloomFilterFalsePositiveRate,
                 diskFileMapProvider, fieldCount, rtreeCmpFactories, btreeCmpFactories, linearizer, comparatorFields,
-                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields);
+                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallback, buddyBTreeFields, durable);
         this.secondDiskComponents = new LinkedList<ILSMComponent>();
         this.version = version;
         this.fieldCount = fieldCount;
@@ -170,6 +170,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
     }
 
     // This function is used when a new component is to be committed.
+    @Override
     public void commitTransactionDiskComponent(ILSMComponent newComponent) throws HyracksDataException {
 
         // determine which list is the new one and flip the pointer
@@ -525,7 +526,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         private boolean cleanedUpArtifacts = false;
         private boolean isEmptyComponent = true;
         private boolean endedBloomFilterLoad = false;
-        private boolean isTransaction;
+        private final boolean isTransaction;
 
         public LSMTwoPCRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
                 boolean checkIfEmptyIndex, boolean isTransaction) throws TreeIndexException, HyracksDataException {
@@ -667,10 +668,9 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessorInternal accessor = new LSMRTreeAccessor(lsmHarness, rctx);
         // create the merge operation.
-        LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation((ILSMIndexAccessorInternal) accessor,
-                mergingComponents, cursor, relMergeFileRefs.getInsertIndexFileReference(),
-                relMergeFileRefs.getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                callback, fileManager.getBaseDir());
+        LSMRTreeMergeOperation mergeOp = new LSMRTreeMergeOperation(accessor, mergingComponents, cursor,
+                relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getDeleteIndexFileReference(),
+                relMergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir());
         // set the keepDeletedTuples flag
         boolean keepDeleteTuples = false;
         if (version == 0) {
@@ -704,14 +704,17 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         return new LSMRTreeAccessor(lsmHarness, createOpContext(searchCallback, version));
     }
 
+    @Override
     public int getCurrentVersion() {
         return version;
     }
 
+    @Override
     public List<ILSMComponent> getFirstComponentList() {
         return diskComponents;
     }
 
+    @Override
     public List<ILSMComponent> getSecondComponentList() {
         return secondDiskComponents;
     }
@@ -745,12 +748,12 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             throw new TreeIndexException(e);
         }
     }
-    
+
     @Override
-    public boolean hasMemoryComponents(){
+    public boolean hasMemoryComponents() {
         return false;
     }
-    
+
     @Override
     public int getFieldCount() {
         return fieldCount;

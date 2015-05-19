@@ -26,8 +26,8 @@ public class RTreeOperatorTestHelper extends TreeOperatorTestHelper {
 
     public IIndexDataflowHelperFactory createDataFlowHelperFactory(
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
-            IBinaryComparatorFactory[] btreeComparatorFactories) {
-        return new RTreeDataflowHelperFactory(valueProviderFactories, rtreePolicyType);
+            IBinaryComparatorFactory[] btreeComparatorFactories, boolean durable) {
+        return new RTreeDataflowHelperFactory(valueProviderFactories, rtreePolicyType, durable);
     }
 
 }

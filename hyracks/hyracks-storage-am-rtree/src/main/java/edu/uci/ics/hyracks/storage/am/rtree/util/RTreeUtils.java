@@ -40,7 +40,8 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 public class RTreeUtils {
     public static RTree createRTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
             ITypeTraits[] typeTraits, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            IBinaryComparatorFactory[] cmpFactories, RTreePolicyType rtreePolicyType, FileReference file) {
+            IBinaryComparatorFactory[] cmpFactories, RTreePolicyType rtreePolicyType, FileReference file,
+            boolean durable) {
 
         RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,

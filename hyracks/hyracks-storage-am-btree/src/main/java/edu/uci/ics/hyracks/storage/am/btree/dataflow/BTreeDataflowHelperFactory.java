@@ -24,9 +24,15 @@ public class BTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
     private static final long serialVersionUID = 1L;
 
+    private final boolean durable;
+
+    public BTreeDataflowHelperFactory(boolean durable) {
+        this.durable = durable;
+    }
+
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new BTreeDataflowHelper(opDesc, ctx, partition);
+        return new BTreeDataflowHelper(opDesc, ctx, partition, durable);
     }
 }

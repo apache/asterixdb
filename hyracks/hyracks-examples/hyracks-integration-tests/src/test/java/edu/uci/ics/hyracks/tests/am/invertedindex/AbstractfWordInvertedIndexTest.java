@@ -96,7 +96,7 @@ public abstract class AbstractfWordInvertedIndexTest extends AbstractIntegration
             DEFAULT_MEM_PAGE_SIZE, DEFAULT_MEM_NUM_PAGES);
     protected IStorageManagerInterface storageManager = new TestStorageManagerInterface();
     protected IIndexLifecycleManagerProvider lcManagerProvider = new TestIndexLifecycleManagerProvider();
-    protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory();
+    protected IIndexDataflowHelperFactory btreeDataflowHelperFactory = new BTreeDataflowHelperFactory(true);
     protected IIndexDataflowHelperFactory invertedIndexDataflowHelperFactory;
 
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");

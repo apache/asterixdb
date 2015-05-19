@@ -40,10 +40,10 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate,
             boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
-            int[] btreeFields, int[] filterFields) {
+            int[] btreeFields, int[] filterFields, boolean durable) {
         super(virtualBufferCacheProvider, mergePolicyFactory, mergePolicyProperties, opTrackerFactory,
                 ioSchedulerProvider, ioOpCallbackFactory, bloomFilterFalsePositiveRate, filterTypeTraits,
-                filterCmpFactories, filterFields);
+                filterCmpFactories, filterFields, durable);
         this.needKeyDupCheck = needKeyDupCheck;
         this.btreeFields = btreeFields;
     }
@@ -55,6 +55,6 @@ public class LSMBTreeDataflowHelperFactory extends AbstractLSMIndexDataflowHelpe
                 virtualBufferCacheProvider.getVirtualBufferCaches(ctx), bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
                 ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, needKeyDupCheck, filterTypeTraits,
-                filterCmpFactories, btreeFields, filterFields);
+                filterCmpFactories, btreeFields, filterFields, durable);
     }
 }

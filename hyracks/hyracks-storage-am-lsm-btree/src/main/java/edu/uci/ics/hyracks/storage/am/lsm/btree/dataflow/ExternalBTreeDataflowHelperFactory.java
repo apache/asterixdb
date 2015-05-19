@@ -29,14 +29,14 @@ public class ExternalBTreeDataflowHelperFactory extends AbstractLSMIndexDataflow
 
     private static final long serialVersionUID = 1L;
 
-    private int version;
+    private final int version;
 
     public ExternalBTreeDataflowHelperFactory(ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            double bloomFilterFalsePositiveRate, int version) {
+            double bloomFilterFalsePositiveRate, int version, boolean durable) {
         super(null, mergePolicyFactory, mergePolicyProperties, opTrackerFactory, ioSchedulerProvider,
-                ioOpCallbackFactory, bloomFilterFalsePositiveRate, null, null, null);
+                ioOpCallbackFactory, bloomFilterFalsePositiveRate, null, null, null, durable);
         this.version = version;
     }
 
@@ -45,7 +45,7 @@ public class ExternalBTreeDataflowHelperFactory extends AbstractLSMIndexDataflow
             int partition) {
         return new ExternalBTreeDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, false, version);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, false, version, durable);
     }
 
 }

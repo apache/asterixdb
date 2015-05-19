@@ -50,7 +50,7 @@ public class WordInvertedIndexTest extends AbstractfWordInvertedIndexTest {
                 new ConstantMergePolicyFactory(), MERGE_POLICY_PROPERTIES,
                 ThreadCountingOperationTrackerProvider.INSTANCE, SynchronousSchedulerProvider.INSTANCE,
                 NoOpIOOperationCallback.INSTANCE, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, null, null, null, null,
-                null, null);
+                null, null, true);
     }
 
     @Override

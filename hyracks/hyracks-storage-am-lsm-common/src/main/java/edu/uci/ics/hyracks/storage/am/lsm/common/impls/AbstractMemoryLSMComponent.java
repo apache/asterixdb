@@ -92,7 +92,6 @@ public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
                 break;
             case FLUSH:
                 if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE) {
-
                     if (writerCount != 0) {
                         throw new IllegalStateException("Trying to flush when writerCount != 0");
                     }

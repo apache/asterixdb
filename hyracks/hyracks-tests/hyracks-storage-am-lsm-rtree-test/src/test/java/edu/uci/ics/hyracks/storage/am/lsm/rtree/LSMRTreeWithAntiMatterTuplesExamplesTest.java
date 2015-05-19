@@ -48,7 +48,7 @@ public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeEx
                 harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                 harness.getIOOperationCallback(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), rtreeFields,
-                filterTypeTraits, filterCmpFactories, filterFields);
+                filterTypeTraits, filterCmpFactories, filterFields, true);
     }
 
     @Before

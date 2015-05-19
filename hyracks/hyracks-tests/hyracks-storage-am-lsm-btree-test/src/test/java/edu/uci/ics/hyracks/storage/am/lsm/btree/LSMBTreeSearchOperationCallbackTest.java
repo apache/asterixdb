@@ -55,7 +55,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerProvider.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
-                harness.getIOOperationCallback(), true, null, null, null, null);
+                harness.getIOOperationCallback(), true, null, null, null, null, true);
     }
 
     @Override
@@ -70,6 +70,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
         harness.tearDown();
     }
 
+    @Override
     @Test
     public void searchCallbackTest() throws Exception {
         Future<Boolean> insertFuture = executor.submit(new InsertionTask());

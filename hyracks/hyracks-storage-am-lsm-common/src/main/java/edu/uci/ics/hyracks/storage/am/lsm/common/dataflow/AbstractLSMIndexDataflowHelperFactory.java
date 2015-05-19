@@ -39,12 +39,14 @@ public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDat
     protected final ITypeTraits[] filterTypeTraits;
     protected final IBinaryComparatorFactory[] filterCmpFactories;
     protected final int[] filterFields;
+    protected final boolean durable;
 
     public AbstractLSMIndexDataflowHelperFactory(IVirtualBufferCacheProvider virtualBufferCacheProvider,
             ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
             ILSMOperationTrackerProvider opTrackerFactory, ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, double bloomFilterFalsePositiveRate,
-            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) {
+            ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields,
+            boolean durable) {
         this.virtualBufferCacheProvider = virtualBufferCacheProvider;
         this.mergePolicyFactory = mergePolicyFactory;
         this.opTrackerFactory = opTrackerFactory;
@@ -55,5 +57,6 @@ public abstract class AbstractLSMIndexDataflowHelperFactory implements IIndexDat
         this.filterTypeTraits = filterTypeTraits;
         this.filterCmpFactories = filterCmpFactories;
         this.filterFields = filterFields;
+        this.durable = durable;
     }
 }

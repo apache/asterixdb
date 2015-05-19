@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public interface ILSMIndexInternal extends ILSMIndex {
+    @Override
     public ILSMIndexAccessorInternal createAccessor(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) throws HyracksDataException;
 
@@ -58,13 +59,20 @@ public interface ILSMIndexInternal extends ILSMIndex {
 
     /**
      * Populates the context's component holder with a snapshot of the components involved in the operation.
-     *
+     * 
      * @param ctx
      *            - the operation's context
      * @throws HyracksDataException
      */
     public void getOperationalComponents(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
+    /**
+     * Persistent the LSM component
+     * 
+     * @param lsmComponent
+     *            , the component to be persistent
+     * @throws HyracksDataException
+     */
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException;

@@ -28,16 +28,18 @@ public class RTreeDataflowHelperFactory implements IIndexDataflowHelperFactory {
 
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
+    private final boolean durable;
 
     public RTreeDataflowHelperFactory(IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType) {
+            RTreePolicyType rtreePolicyType, boolean durable) {
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
+        this.durable = durable;
     }
 
     @Override
     public IndexDataflowHelper createIndexDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition) {
-        return new RTreeDataflowHelper(opDesc, ctx, partition, valueProviderFactories, rtreePolicyType);
+        return new RTreeDataflowHelper(opDesc, ctx, partition, valueProviderFactories, rtreePolicyType, durable);
     }
 }

@@ -207,7 +207,6 @@ public class LSMHarness implements ILSMHarness {
             } catch (Throwable e) {
                 e.printStackTrace();
                 throw e;
-
             } finally {
                 if (failedOperation
                         && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
@@ -307,7 +306,6 @@ public class LSMHarness implements ILSMHarness {
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;
-
         } finally {
             exitComponents(ctx, LSMOperationType.FLUSH, newComponent, false);
             operation.getCallback().afterFinalize(LSMOperationType.FLUSH, newComponent);
@@ -356,7 +354,6 @@ public class LSMHarness implements ILSMHarness {
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;
-
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
             operation.getCallback().afterFinalize(LSMOperationType.MERGE, newComponent);

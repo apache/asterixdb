@@ -51,6 +51,6 @@ public class LSMRTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
                 virtualBufferCacheProvider, new ConstantMergePolicyFactory(), MERGE_POLICY_PROPERTIES,
                 ThreadCountingOperationTrackerProvider.INSTANCE, SynchronousSchedulerProvider.INSTANCE,
                 NoOpIOOperationCallback.INSTANCE, linearizerCmpFactory, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, null,
-                btreeFields, null, null, null);
+                btreeFields, null, null, null, true);
     }
 }

@@ -48,7 +48,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 SerdeUtils.serdesToComparatorFactories(keySerdes, keySerdes.length), bloomFilterKeyFields,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 NoOpOperationTrackerProvider.INSTANCE.getOperationTracker(null), harness.getIOScheduler(),
-                harness.getIOOperationCallback(), true, null, null, null, null);
+                harness.getIOOperationCallback(), true, null, null, null, null, true);
     }
 
     @Override
@@ -63,6 +63,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
         harness.tearDown();
     }
 
+    @Override
     @Test
     public void modificationCallbackTest() throws Exception {
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(cb, NoOpOperationCallback.INSTANCE);

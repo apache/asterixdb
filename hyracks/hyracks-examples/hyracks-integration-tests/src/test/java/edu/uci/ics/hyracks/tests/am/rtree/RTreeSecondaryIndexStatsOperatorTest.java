@@ -39,6 +39,7 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
         this.rTreeType = RTreeType.RTREE;
     }
 
+    @Override
     @Before
     public void setup() throws Exception {
         super.setup();
@@ -72,7 +73,7 @@ public class RTreeSecondaryIndexStatsOperatorTest extends AbstractRTreeOperatorT
             IBinaryComparatorFactory[] btreeComparatorFactories, ILinearizeComparatorFactory linearizerCmpFactory,
             int[] btreeFields) {
         return ((RTreeOperatorTestHelper) testHelper).createDataFlowHelperFactory(secondaryValueProviderFactories,
-                rtreePolicyType, null);
+                rtreePolicyType, null, true);
     }
 
     @Override

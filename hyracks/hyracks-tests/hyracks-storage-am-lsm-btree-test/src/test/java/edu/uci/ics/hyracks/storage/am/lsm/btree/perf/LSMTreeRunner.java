@@ -74,6 +74,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     private final int onDiskPageSize;
     private final int onDiskNumPages;
     private final static ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable r) {
             return new Thread(r);
         }
@@ -108,9 +109,8 @@ public class LSMTreeRunner implements IExperimentRunner {
         AsynchronousScheduler.INSTANCE.init(threadFactory);
 
         lsmtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fmp, typeTraits, cmpFactories,
-                bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),
-                new ThreadCountingTracker(), ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null,
-                null);
+                bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(), new ThreadCountingTracker(),
+                ioScheduler, NoOpIOOperationCallback.INSTANCE, true, null, null, null, null, true);
     }
 
     @Override

@@ -66,11 +66,13 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
         return lsmHarness.modify(ctx, true, tuple);
     }
 
+    @Override
     public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException, IndexException {
         ctx.setOperation(IndexOperation.SEARCH);
         lsmHarness.search(ctx, cursor, searchPred);
     }
 
+    @Override
     public IIndexCursor createSearchCursor(boolean exclusive) {
         return new LSMInvertedIndexSearchCursor();
     }

@@ -40,17 +40,17 @@ import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
 
 public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
 
-    private int version;
+    private final int version;
 
     public ExternalRTreeDataflowHelper(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IBinaryComparatorFactory[] btreeComparatorFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields, int version) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields, int version, boolean durable) {
         super(opDesc, ctx, partition, null, btreeComparatorFactories, valueProviderFactories, rtreePolicyType,
                 mergePolicy, opTrackerFactory, ioScheduler, ioOpCallbackFactory, linearizeCmpFactory, null,
-                btreeFields, null, null, null);
+                btreeFields, null, null, null, durable);
         this.version = version;
     }
 
@@ -59,10 +59,10 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILSMMergePolicy mergePolicy, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields, int version) {
+            ILinearizeComparatorFactory linearizeCmpFactory, int[] btreeFields, int version, boolean durable) {
         super(opDesc, ctx, partition, null, bloomFilterFalsePositiveRate, btreeComparatorFactories,
                 valueProviderFactories, rtreePolicyType, mergePolicy, opTrackerFactory, ioScheduler,
-                ioOpCallbackFactory, linearizeCmpFactory, null, btreeFields, null, null, null);
+                ioOpCallbackFactory, linearizeCmpFactory, null, btreeFields, null, null, null, durable);
         this.version = version;
     }
 
@@ -98,7 +98,8 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
             return LSMRTreeUtils.createExternalRTree(file, diskBufferCache, diskFileMapProvider, typeTraits,
                     rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                     bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, btreeFields, version);
+                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, btreeFields, version,
+                    durable);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

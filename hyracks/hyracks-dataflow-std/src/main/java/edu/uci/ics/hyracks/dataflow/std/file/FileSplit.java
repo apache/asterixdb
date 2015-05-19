@@ -55,4 +55,9 @@ public class FileSplit implements Serializable {
     public int getIODeviceId() {
         return ioDeviceId;
     }
+
+    @Override
+    public String toString() {
+        return file.toString();
+    }
 }

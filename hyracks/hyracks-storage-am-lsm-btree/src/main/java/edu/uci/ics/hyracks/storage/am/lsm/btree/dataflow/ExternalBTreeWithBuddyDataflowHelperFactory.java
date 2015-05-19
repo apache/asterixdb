@@ -29,14 +29,14 @@ public class ExternalBTreeWithBuddyDataflowHelperFactory extends AbstractLSMInde
 
     private static final long serialVersionUID = 1L;
     private final int[] buddyBtreeFields;
-    private int version;
+    private final int version;
 
     public ExternalBTreeWithBuddyDataflowHelperFactory(ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ILSMOperationTrackerProvider opTrackerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            double bloomFilterFalsePositiveRate, int[] buddyBtreeFields, int version) {
+            double bloomFilterFalsePositiveRate, int[] buddyBtreeFields, int version, boolean durable) {
         super(null, mergePolicyFactory, mergePolicyProperties, opTrackerFactory, ioSchedulerProvider,
-                ioOpCallbackFactory, bloomFilterFalsePositiveRate, null, null, null);
+                ioOpCallbackFactory, bloomFilterFalsePositiveRate, null, null, null, durable);
         this.buddyBtreeFields = buddyBtreeFields;
         this.version = version;
     }
@@ -46,7 +46,7 @@ public class ExternalBTreeWithBuddyDataflowHelperFactory extends AbstractLSMInde
             int partition) {
         return new ExternalBTreeWithBuddyDataflowHelper(opDesc, ctx, partition, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, ctx), opTrackerFactory,
-                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, buddyBtreeFields, version);
+                ioSchedulerProvider.getIOScheduler(ctx), ioOpCallbackFactory, buddyBtreeFields, version, durable);
     }
 
 }

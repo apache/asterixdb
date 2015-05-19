@@ -33,9 +33,9 @@ import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 
 public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 
-    private LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
 
-    private LSMBTreeTestWorkerFactory workerFactory = new LSMBTreeTestWorkerFactory();
+    private final LSMBTreeTestWorkerFactory workerFactory = new LSMBTreeTestWorkerFactory();
 
     @Override
     protected void setUp() throws HyracksException {
@@ -54,7 +54,7 @@ public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
                 harness.getDiskBufferCache(), harness.getDiskFileMapProvider(), typeTraits, cmpFactories,
                 bloomFilterKeyFields, harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(),
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallback(), true, null,
-                null, null, null);
+                null, null, null, true);
     }
 
     @Override
