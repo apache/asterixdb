@@ -52,6 +52,9 @@ public final class TranslationContext {
 
     public LogicalVariable newVar(VariableExpr v) {
         Integer i = v.getVar().getId();
+        if (i > varCounter.get()) {
+            varCounter.set(i);
+        }
         LogicalVariable var = new LogicalVariable(i);
         varEnv.put(i, var);
         return var;

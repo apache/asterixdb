@@ -1,0 +1,5 @@
+use dataverse tpch;
+
+for $c in dataset Customer
+return $c;
+ 
