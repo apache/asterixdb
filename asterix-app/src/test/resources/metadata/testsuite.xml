@@ -229,6 +229,11 @@
         <output-dir compare="Text">issue_363_temporal_sec_key_4</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="temp_dataset">
+        <output-dir compare="Text">temp_dataset</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">

@@ -1,0 +1,11 @@
+/* 
+ * Test case Name  : primary_plus_default_secondary_index.aql
+ * Description     : Check that abort from duplicate key exception works and crash recovery works after the abort.   
+ * Expected Result : Success
+ * Date            : Oct 15 2013
+ */
+
+use dataverse recovery;
+
+load dataset Fragile_raw using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="127.0.0.1://../../../../../../asterix-app/data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;

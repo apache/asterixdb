@@ -1,0 +1,33 @@
+/*
+ * Description     : Drop secondary indexes for a temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type Schema as closed {
+unique1:  int64,
+unique2:  int64,
+two:  int64,
+four:  int64,
+ten:  int64,
+twenty:  int64,
+onePercent: int64,
+tenPercent:  int64,
+twentyPercent:  int64,
+fiftyPercent:  int64,
+unique3:  int64,
+evenOnePercent: int64,
+oddOnePercent:  int64,
+stringu1:  string,
+stringu2:  string,
+string4:  string
+}
+
+create temporary dataset t1(Schema) primary key unique2;
+

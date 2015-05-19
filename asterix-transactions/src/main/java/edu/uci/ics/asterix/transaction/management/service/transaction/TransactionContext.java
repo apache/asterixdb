@@ -30,8 +30,8 @@ import edu.uci.ics.asterix.common.transactions.ITransactionManager;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.common.transactions.LogRecord;
 import edu.uci.ics.asterix.common.transactions.MutableLong;
-import edu.uci.ics.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallback;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.storage.am.common.api.IModificationOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
@@ -44,7 +44,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 public class TransactionContext implements ITransactionContext, Serializable {
 
     private static final long serialVersionUID = -6105616785783310111L;
-    private TransactionSubsystem transactionSubsystem;
+    private final TransactionSubsystem transactionSubsystem;
 
     // jobId is set once and read concurrently.
     private final JobId jobId;
@@ -54,18 +54,18 @@ public class TransactionContext implements ITransactionContext, Serializable {
     // But readers and writers can be different threads,
     // so both LSNs are atomic variables in order to be read and written
     // atomically.
-    private AtomicLong firstLSN;
-    private AtomicLong lastLSN;
+    private final AtomicLong firstLSN;
+    private final AtomicLong lastLSN;
 
     // txnState is read and written concurrently.
-    private AtomicInteger txnState;
+    private final AtomicInteger txnState;
 
     // isTimeout is read and written under the lockMgr's tableLatch
     // Thus, no other synchronization is required separately.
     private boolean isTimeout;
 
     // isWriteTxn can be set concurrently by multiple threads.
-    private AtomicBoolean isWriteTxn;
+    private final AtomicBoolean isWriteTxn;
 
     // isMetadataTxn is accessed by a single thread since the metadata is not
     // partitioned
@@ -73,21 +73,21 @@ public class TransactionContext implements ITransactionContext, Serializable {
 
     // indexMap is concurrently accessed by multiple threads,
     // so those threads are synchronized on indexMap object itself
-    private Map<MutableLong, AbstractLSMIOOperationCallback> indexMap;
+    private final Map<MutableLong, AbstractLSMIOOperationCallback> indexMap;
 
     // TODO: fix ComponentLSNs' issues.
     // primaryIndex, primaryIndexCallback, and primaryIndexOptracker will be
     // modified accordingly
     // when the issues of componentLSNs are fixed.
     private ILSMIndex primaryIndex;
-    private PrimaryIndexModificationOperationCallback primaryIndexCallback;
+    private AbstractOperationCallback primaryIndexCallback;
     private PrimaryIndexOperationTracker primaryIndexOpTracker;
 
     // The following three variables are used as temporary variables in order to
     // avoid object creations.
     // Those are used in synchronized methods.
-    private MutableLong tempResourceIdForRegister;
-    private LogRecord logRecord;
+    private final MutableLong tempResourceIdForRegister;
+    private final LogRecord logRecord;
 
     // TODO: implement transactionContext pool in order to avoid object
     // creations.
@@ -108,12 +108,13 @@ public class TransactionContext implements ITransactionContext, Serializable {
         logRecord = new LogRecord();
     }
 
+    @Override
     public void registerIndexAndCallback(long resourceId, ILSMIndex index, AbstractOperationCallback callback,
             boolean isPrimaryIndex) {
         synchronized (indexMap) {
             if (isPrimaryIndex && primaryIndex == null) {
                 primaryIndex = index;
-                primaryIndexCallback = (PrimaryIndexModificationOperationCallback) callback;
+                primaryIndexCallback = callback;
                 primaryIndexOpTracker = (PrimaryIndexOperationTracker) index.getOperationTracker();
             }
             tempResourceIdForRegister.set(resourceId);
@@ -138,18 +139,20 @@ public class TransactionContext implements ITransactionContext, Serializable {
             if (isJobLevelCommit && isMetadataTxn) {
                 primaryIndexOpTracker.exclusiveJobCommitted();
             } else if (!isJobLevelCommit) {
-                primaryIndexOpTracker
-                        .completeOperation(null, LSMOperationType.MODIFICATION, null, primaryIndexCallback);
+                primaryIndexOpTracker.completeOperation(null, LSMOperationType.MODIFICATION, null,
+                        (IModificationOperationCallback) primaryIndexCallback);
             }
         } catch (HyracksDataException e) {
             throw new IllegalStateException(e);
         }
     }
 
+    @Override
     public void setWriteTxn(boolean isWriteTxn) {
         this.isWriteTxn.set(isWriteTxn);
     }
 
+    @Override
     public boolean isWriteTxn() {
         return isWriteTxn.get();
     }
@@ -164,22 +167,27 @@ public class TransactionContext implements ITransactionContext, Serializable {
         return lastLSN.get();
     }
 
+    @Override
     public JobId getJobId() {
         return jobId;
     }
 
+    @Override
     public void setTimeout(boolean isTimeout) {
         this.isTimeout = isTimeout;
     }
 
+    @Override
     public boolean isTimeout() {
         return isTimeout;
     }
 
+    @Override
     public void setTxnState(int txnState) {
         this.txnState.set(txnState);
     }
 
+    @Override
     public int getTxnState() {
         return txnState.get();
     }
@@ -204,6 +212,7 @@ public class TransactionContext implements ITransactionContext, Serializable {
         return isMetadataTxn;
     }
 
+    @Override
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n" + jobId + "\n");

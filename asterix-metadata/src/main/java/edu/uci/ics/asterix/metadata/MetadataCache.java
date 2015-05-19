@@ -17,9 +17,12 @@ package edu.uci.ics.asterix.metadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
+import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
@@ -33,6 +36,7 @@ import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
+import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 
@@ -44,6 +48,8 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
  */
 public class MetadataCache {
 
+    // Default life time period of a temp dataset. It is 30 days.
+    private final static long TEMP_DATASET_INACTIVE_TIME_THRESHOLD = 3600 * 24 * 30 * 1000;
     // Key is dataverse name.
     protected final Map<String, Dataverse> dataverses = new HashMap<String, Dataverse>();
     // Key is dataverse name. Key of value map is dataset name.
@@ -147,34 +153,33 @@ public class MetadataCache {
 
     public Object addDatasetIfNotExists(Dataset dataset) {
         synchronized (datasets) {
-            Map<String, Dataset> m = datasets.get(dataset.getDataverseName());
-            if (m == null) {
-                m = new HashMap<String, Dataset>();
-                datasets.put(dataset.getDataverseName(), m);
+            synchronized (indexes) {
+                // Add the primary index associated with the dataset, if the dataset is an
+                // internal dataset.
+                if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+                    InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
+                    Index index = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
+                            dataset.getDatasetName(), IndexType.BTREE, id.getPartitioningKey(), id.getPrimaryKeyType(),
+                            false, true, dataset.getPendingOp());
+                    addIndexIfNotExistsInternal(index);
+                }
+
+                Map<String, Dataset> m = datasets.get(dataset.getDataverseName());
+                if (m == null) {
+                    m = new HashMap<String, Dataset>();
+                    datasets.put(dataset.getDataverseName(), m);
+                }
+                if (!m.containsKey(dataset.getDatasetName())) {
+                    return m.put(dataset.getDatasetName(), dataset);
+                }
+                return null;
             }
-            if (!m.containsKey(dataset.getDatasetName())) {
-                return m.put(dataset.getDatasetName(), dataset);
-            }
-            return null;
         }
     }
 
     public Object addIndexIfNotExists(Index index) {
         synchronized (indexes) {
-            Map<String, Map<String, Index>> datasetMap = indexes.get(index.getDataverseName());
-            if (datasetMap == null) {
-                datasetMap = new HashMap<String, Map<String, Index>>();
-                indexes.put(index.getDataverseName(), datasetMap);
-            }
-            Map<String, Index> indexMap = datasetMap.get(index.getDatasetName());
-            if (indexMap == null) {
-                indexMap = new HashMap<String, Index>();
-                datasetMap.put(index.getDatasetName(), indexMap);
-            }
-            if (!indexMap.containsKey(index.getIndexName())) {
-                return indexMap.put(index.getIndexName(), index);
-            }
-            return null;
+            return addIndexIfNotExistsInternal(index);
         }
     }
 
@@ -309,7 +314,6 @@ public class MetadataCache {
             if (indexMap == null) {
                 return null;
             }
-
             return indexMap.remove(index.getIndexName());
         }
     }
@@ -393,6 +397,20 @@ public class MetadataCache {
                 retDatasets.add(entry.getValue());
             }
             return retDatasets;
+        }
+    }
+
+    public List<Index> getDatasetIndexes(String dataverseName, String datasetName) {
+        List<Index> retIndexes = new ArrayList<Index>();
+        synchronized (datasets) {
+            Map<String, Index> map = indexes.get(dataverseName).get(datasetName);
+            if (map == null) {
+                return retIndexes;
+            }
+            for (Map.Entry<String, Index> entry : map.entrySet()) {
+                retIndexes.add(entry.getValue());
+            }
+            return retIndexes;
         }
     }
 
@@ -558,6 +576,45 @@ public class MetadataCache {
                 return feedsInDataverse.remove(feed.getFeedName());
             }
             return null;
+        }
+    }
+
+    private Object addIndexIfNotExistsInternal(Index index) {
+        Map<String, Map<String, Index>> datasetMap = indexes.get(index.getDataverseName());
+        if (datasetMap == null) {
+            datasetMap = new HashMap<String, Map<String, Index>>();
+            indexes.put(index.getDataverseName(), datasetMap);
+        }
+        Map<String, Index> indexMap = datasetMap.get(index.getDatasetName());
+        if (indexMap == null) {
+            indexMap = new HashMap<String, Index>();
+            datasetMap.put(index.getDatasetName(), indexMap);
+        }
+        if (!indexMap.containsKey(index.getIndexName())) {
+            return indexMap.put(index.getIndexName(), index);
+        }
+        return null;
+    }
+
+    /**
+     * Clean up temp datasets that are expired.
+     * The garbage collection will pause other dataset operations.
+     */
+    public void cleanupTempDatasets() {
+        synchronized (datasets) {
+            for (Map<String, Dataset> map : datasets.values()) {
+                Iterator<Dataset> datasetIterator = map.values().iterator();
+                while (datasetIterator.hasNext()) {
+                    Dataset dataset = datasetIterator.next();
+                    if (dataset.getDatasetDetails().isTemp()) {
+                        long currentTime = System.currentTimeMillis();
+                        long duration = currentTime - dataset.getDatasetDetails().getLastAccessTime();
+                        if (duration > TEMP_DATASET_INACTIVE_TIME_THRESHOLD) {
+                            datasetIterator.remove();
+                        }
+                    }
+                }
+            }
         }
     }
 }

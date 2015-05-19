@@ -1,0 +1,5 @@
+use dataverse recovery;
+
+delete $r from dataset Fragile_raw 
+  where $r.row_id % 2 = 1
+;

@@ -50,6 +50,8 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
+import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeDataflowHelperFactory;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
@@ -140,13 +142,14 @@ public class HDFSLookupAdapterFactory implements IControlledAdapterFactory {
             throw new AlgebricksException(" Unabel to create merge policy factory for external dataset", e);
         }
 
+        boolean temp = dataset.getDatasetDetails().isTemp();
         // Create the file index data flow helper
         ExternalBTreeDataflowHelperFactory indexDataflowHelperFactory = new ExternalBTreeDataflowHelperFactory(
                 compactionInfo.first, compactionInfo.second, new SecondaryIndexOperationTrackerProvider(
                         dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 LSMBTreeIOOperationCallbackFactory.INSTANCE, metadataProvider.getStorageProperties()
                         .getBloomFilterFalsePositiveRate(), ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(
-                        dataset, metadataProvider));
+                        dataset, metadataProvider), !temp);
 
         // Create the out record descriptor, appContext and fileSplitProvider for the files index
         RecordDescriptor outRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
@@ -160,12 +163,14 @@ public class HDFSLookupAdapterFactory implements IControlledAdapterFactory {
             throw new AlgebricksException(e);
         }
 
+        ISearchOperationCallbackFactory searchOpCallbackFactory = temp ? NoOpOperationCallbackFactory.INSTANCE
+                : new SecondaryIndexSearchOperationCallbackFactory();
         // Create the operator
         ExternalLoopkupOperatorDiscriptor op = new ExternalLoopkupOperatorDiscriptor(jobSpec, adapterFactory,
                 outRecDesc, indexDataflowHelperFactory, retainInput, appContext.getIndexLifecycleManagerProvider(),
                 appContext.getStorageManagerInterface(), spPc.first, dataset.getDatasetId(), metadataProvider
-                        .getStorageProperties().getBloomFilterFalsePositiveRate(),
-                new SecondaryIndexSearchOperationCallbackFactory(),retainNull,context.getNullWriterFactory());
+                        .getStorageProperties().getBloomFilterFalsePositiveRate(), searchOpCallbackFactory, retainNull,
+                context.getNullWriterFactory());
 
         // Return value
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(op, spPc.second);

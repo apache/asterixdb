@@ -1,0 +1,14 @@
+/*
+ * Description     : Drop secondary indexes for a temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+use dataverse test;
+
+// Load data
+load dataset t1
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/wisc/onektup.adm"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+

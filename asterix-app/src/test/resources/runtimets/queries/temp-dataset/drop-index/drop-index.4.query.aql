@@ -1,0 +1,12 @@
+/*
+ * Description     : Drop secondary indexes for a temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+use dataverse test;
+
+for $a in dataset('t1')
+where $a.unique1 > 10 and $a.stringu1="DGAAAAXXXXXXXXXXXXXXXXXXX"
+return $a

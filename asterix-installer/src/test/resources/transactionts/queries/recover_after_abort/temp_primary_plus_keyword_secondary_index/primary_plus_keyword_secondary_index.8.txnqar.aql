@@ -1,0 +1,5 @@
+use dataverse recovery;
+
+for $x in dataset Fragile 
+where word-tokens($x.text) ~= word-tokens(" 1 20130417 1")
+return $x.text;

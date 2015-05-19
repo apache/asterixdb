@@ -1,0 +1,13 @@
+/*
+ * Description     : This test is intended to test inserting into a temporary dataset that has a secondary index and scan
+ * the data at the same time where we insert a materializing to prevent the possibility of dead latch.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+ 
+ 
+use dataverse test;
+
+for $l in dataset('test.employee')
+order by $l.id
+return $l

@@ -390,6 +390,7 @@ public class TestsUtils {
             for (TestFileContext ctx : testFileCtxs) {
                 testFile = ctx.getFile();
                 statement = TestsUtils.readTestFile(testFile);
+                boolean failed = false;
                 try {
                     switch (ctx.getType()) {
                         case "ddl":
@@ -468,7 +469,14 @@ public class TestsUtils {
                                 TestsUtils.executeUpdate(statement);
                             } catch (Exception e) {
                                 //An exception is expected.
+                                failed = true;
+                                e.printStackTrace();
                             }
+                            if (!failed) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception"
+                                        + "is expected.");
+                            }
+                            System.err.println("...but that was expected.");
                             break;
                         case "script":
                             try {
@@ -489,10 +497,16 @@ public class TestsUtils {
                         case "errddl": // a ddlquery that expects error
                             try {
                                 TestsUtils.executeDDL(statement);
-
                             } catch (Exception e) {
                                 // expected error happens
+                                failed = true;
+                                e.printStackTrace();
                             }
+                            if (!failed) {
+                                throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception"
+                                        + "is expected.");
+                            }
+                            System.err.println("...but that was expected.");
                             break;
                         default:
                             throw new IllegalArgumentException("No statements of type " + ctx.getType());
@@ -505,9 +519,9 @@ public class TestsUtils {
                         System.err.println("...Unexpected!");
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     } else {
-                        System.err.println("...but that was expected.");
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                 + " failed as expected: " + e.getMessage());
+                        System.err.println("...but that was expected.");
                     }
                 }
             }

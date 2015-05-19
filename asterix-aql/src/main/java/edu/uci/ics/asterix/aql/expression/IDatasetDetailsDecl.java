@@ -24,4 +24,6 @@ public interface IDatasetDetailsDecl {
 
     public Map<String, String> getCompactionPolicyProperties();
 
+    public boolean isTemp();
+
 }

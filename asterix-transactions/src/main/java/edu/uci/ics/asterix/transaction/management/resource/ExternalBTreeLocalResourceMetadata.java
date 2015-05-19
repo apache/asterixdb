@@ -44,13 +44,20 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) {
         FileReference file = new FileReference(new File(filePath));
-        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
-                runtimeContextProvider.getBloomFilterFalsePositiveRate(), mergePolicyFactory.createMergePolicy(
-                        mergePolicyProperties, runtimeContextProvider.getIndexLifecycleManager()),
+        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(
+                file,
+                runtimeContextProvider.getBufferCache(),
+                runtimeContextProvider.getFileMapManager(),
+                typeTraits,
+                cmpFactories,
+                bloomFilterKeyFields,
+                runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                        runtimeContextProvider.getIndexLifecycleManager()),
                 new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                        datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
-                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1);
+                        datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true);
         return lsmBTree;
     }
 }

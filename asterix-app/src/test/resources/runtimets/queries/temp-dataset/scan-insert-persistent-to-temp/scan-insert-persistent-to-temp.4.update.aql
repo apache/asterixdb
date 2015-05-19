@@ -1,0 +1,18 @@
+/*
+ * Description     : Port data from a temporary dataset into yet-another temporary dataset. 
+ *                   Both datasets have R-tree indexes.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+insert into dataset MyMiniData
+(
+	for $m in dataset('MyData')
+	return {
+		"id": $m.id,
+		"point": $m.point
+	}
+);
+

@@ -1,0 +1,12 @@
+/*
+ * Description     : Delete tuples from a temporary dataset with a R-tree index.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+

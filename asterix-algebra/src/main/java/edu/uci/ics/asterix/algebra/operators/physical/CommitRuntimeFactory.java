@@ -28,12 +28,15 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
     private final JobId jobId;
     private final int datasetId;
     private final int[] primaryKeyFields;
+    private final boolean isTemporaryDatasetWriteJob;
     private final boolean isWriteTransaction;
 
-    public CommitRuntimeFactory(JobId jobId, int datasetId, int[] primaryKeyFields, boolean isWriteTransaction) {
+    public CommitRuntimeFactory(JobId jobId, int datasetId, int[] primaryKeyFields, boolean isTemporaryDatasetWriteJob,
+            boolean isWriteTransaction) {
         this.jobId = jobId;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
+        this.isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob;
         this.isWriteTransaction = isWriteTransaction;
     }
 
@@ -44,6 +47,7 @@ public class CommitRuntimeFactory implements IPushRuntimeFactory {
 
     @Override
     public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws AlgebricksException {
-        return new CommitRuntime(ctx, jobId, datasetId, primaryKeyFields, isWriteTransaction);
+        return new CommitRuntime(ctx, jobId, datasetId, primaryKeyFields, isTemporaryDatasetWriteJob,
+                isWriteTransaction);
     }
 }

@@ -1,0 +1,12 @@
+/*
+ * Description     : Delete a portion of data from a loaded temporary dataset with indexes.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+use dataverse test;
+
+create index idx_LineItem_partkey on LineItem(l_linenumber);
+create index idx_LineItem_suppkey on LineItem(l_suppkey);
+

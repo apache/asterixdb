@@ -1,0 +1,12 @@
+/*
+ * Description     : Delete a portion of data from a loaded temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+use dataverse test;
+  
+for $c in dataset('LineItem')
+order by $c.l_orderkey, $c.l_linenumber
+return $c 

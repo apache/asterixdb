@@ -1,0 +1,15 @@
+/*
+ * Description     : Delete a portion of data from a loaded temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+use dataverse test;
+
+load dataset LineItem 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+delete $l from dataset LineItem where $l.l_orderkey>=10;
+

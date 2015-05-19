@@ -13,7 +13,7 @@
  ! limitations under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
- 
+
   <test-group name="recover_after_abort">
 
     <test-case FilePath="recover_after_abort">
@@ -33,13 +33,13 @@
         <output-dir compare="Text">primary_plus_rtree_index</output-dir>
       </compilation-unit>
     </test-case>
-     
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_keyword_secondary_index">
         <output-dir compare="Text">primary_plus_keyword_secondary_index</output-dir>
       </compilation-unit>
     </test-case>
-      
+
     <test-case FilePath="recover_after_abort">
       <compilation-unit name="primary_plus_ngram_index">
         <output-dir compare="Text">primary_plus_ngram_index</output-dir>
@@ -52,10 +52,51 @@
       </compilation-unit>
     </test-case>
   
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="temp_primary_index_only">
+        <output-dir compare="Text">primary_index_only</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="temp_primary_plus_default_secondary_index">
+        <output-dir compare="Text">primary_plus_default_secondary_index</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="temp_primary_plus_rtree_index">
+        <output-dir compare="Text">primary_plus_rtree_index</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="temp_primary_plus_keyword_secondary_index">
+        <output-dir compare="Text">primary_plus_keyword_secondary_index</output-dir>
+        <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+      </compilation-unit>
+    </test-case>
+      
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="temp_primary_plus_ngram_index">
+        <output-dir compare="Text">primary_plus_ngram_index</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recover_after_abort">
+      <compilation-unit name="primary_plus_multiple_secondary_indices">
+        <output-dir compare="Text">primary_plus_multiple_secondary_indices</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
  </test-group>
 
  <test-group name="recovery_ddl">
-    
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataverse_recovery">
         <output-dir compare="Text">dataverse_recovery</output-dir>
@@ -67,25 +108,25 @@
         <output-dir compare="Text">datatype_recovery</output-dir>
       </compilation-unit>
     </test-case>
-    
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="dataset_recovery">
         <output-dir compare="Text">dataset_recovery</output-dir>
       </compilation-unit>
     </test-case>
-    
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="secondary_index_recovery">
         <output-dir compare="Text">secondary_index_recovery</output-dir>
       </compilation-unit>
     </test-case>
-  
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="load_after_recovery">
         <output-dir compare="Text">load_after_recovery</output-dir>
       </compilation-unit>
     </test-case>
-    
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="insert_after_recovery">
         <output-dir compare="Text">insert_after_recovery</output-dir>
@@ -97,14 +138,48 @@
         <output-dir compare="Text">delete_after_recovery</output-dir>
       </compilation-unit>
     </test-case>
-    
+
     <test-case FilePath="recovery_ddl">
       <compilation-unit name="function_recovery">
         <output-dir compare="Text">function_recovery</output-dir>
       </compilation-unit>
     </test-case>
+
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="temp_dataset_recovery">
+        <output-dir compare="Text">dataset_recovery</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="temp_delete_after_recovery">
+        <output-dir compare="Text">delete_after_recovery</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="temp_insert_after_recovery">
+        <output-dir compare="Text">insert_after_recovery</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="temp_load_after_recovery">
+        <output-dir compare="Text">load_after_recovery</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
+
+    <test-case FilePath="recovery_ddl">
+      <compilation-unit name="temp_secondary_index_recovery">
+        <output-dir compare="Text">secondary_index_recovery</output-dir>
+        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+      </compilation-unit>
+    </test-case>
  
   </test-group>
-
 
 </test-suite>

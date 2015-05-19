@@ -1,0 +1,7 @@
+/*
+ * Description     : Drop empty secondary indexes for a temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+

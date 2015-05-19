@@ -1,0 +1,34 @@
+/*
+ * Description     : Load a temporary dataset with previously created empty indexes.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineItemType as closed {
+  l_orderkey: int64,
+  l_partkey: int64,
+  l_suppkey: int64,
+  l_linenumber: int64,
+  l_quantity: double,
+  l_extendedprice: double,
+  l_discount: double,
+  l_tax: double,
+  l_returnflag: string,
+  l_linestatus: string,
+  l_shipdate: string,
+  l_commitdate: string,
+  l_receiptdate: string,
+  l_shipinstruct: string,
+  l_shipmode: string,
+  l_comment: string
+}
+
+create temporary dataset LineItem(LineItemType)
+  primary key l_orderkey, l_linenumber;
+
+create index part_index on LineItem(l_partkey);

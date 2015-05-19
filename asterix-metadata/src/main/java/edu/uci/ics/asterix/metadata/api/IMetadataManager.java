@@ -616,7 +616,8 @@ public interface IMetadataManager {
      *            added
      * @throws MetadataException
      */
-    public void addExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile) throws MetadataException;
+    public void addExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile)
+            throws MetadataException;
 
     /**
      * @param mdTxnCtx
@@ -637,7 +638,8 @@ public interface IMetadataManager {
      *            dropped
      * @throws MetadataException
      */
-    public void dropExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile) throws MetadataException;
+    public void dropExternalFile(MetadataTransactionContext mdTxnCtx, ExternalFile externalFile)
+            throws MetadataException;
 
     /**
      * @param mdTxnCtx
@@ -648,9 +650,10 @@ public interface IMetadataManager {
      * @throws MetadataException
      */
     public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException;
-    
+
     /**
      * Get en external file
+     * 
      * @param mdTxnCtx
      * @param dataverseName
      * @param datasetName
@@ -658,9 +661,9 @@ public interface IMetadataManager {
      * @return
      * @throws MetadataException
      */
-    public ExternalFile getExternalFile(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName, Integer fileNumber)
-            throws MetadataException;
-    
+    public ExternalFile getExternalFile(MetadataTransactionContext mdTxnCtx, String dataverseName, String datasetName,
+            Integer fileNumber) throws MetadataException;
+
     /**
      * update an existing dataset in metadata.
      * 
@@ -672,5 +675,12 @@ public interface IMetadataManager {
      *             For example, if the dataset already exists.
      */
     public void updateDataset(MetadataTransactionContext ctx, Dataset dataset) throws MetadataException;
-    
+
+    /**
+     * Clean up temporary datasets that have not been active for a long time.
+     * 
+     * @throws MetadataException
+     */
+    public void cleanupTempDatasets() throws MetadataException;
+
 }

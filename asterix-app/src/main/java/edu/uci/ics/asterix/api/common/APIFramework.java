@@ -72,7 +72,6 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.job.IJobletEventListenerFactory;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 
@@ -156,8 +155,7 @@ public class APIFramework {
     }
 
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            AqlMetadataProvider metadataProvider, Query q, SessionConfig conf)
-            throws AsterixException {
+            AqlMetadataProvider metadataProvider, Query q, SessionConfig conf) throws AsterixException {
 
         if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
             conf.out().println();
@@ -185,8 +183,8 @@ public class APIFramework {
 
     public static JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
-            SessionConfig conf, ICompiledDmlStatement statement)
-            throws AsterixException, AlgebricksException, JSONException, RemoteException, ACIDException {
+            SessionConfig conf, ICompiledDmlStatement statement) throws AsterixException, AlgebricksException,
+            JSONException, RemoteException, ACIDException {
 
         if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
             conf.out().println();
@@ -219,7 +217,6 @@ public class APIFramework {
         } else {
             plan = t.translateLoad();
         }
-        boolean isWriteTransaction = queryMetadataProvider.isWriteTransaction();
 
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
         if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
@@ -340,8 +337,8 @@ public class APIFramework {
         builder.setTypeTraitProvider(format.getTypeTraitProvider());
         builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
-                isWriteTransaction);
+        JobEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(asterixJobId,
+                queryMetadataProvider.isWriteTransaction());
         JobSpecification spec = compiler.createJob(AsterixAppContextInfo.getInstance(), jobEventListenerFactory);
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
@@ -365,7 +362,7 @@ public class APIFramework {
     }
 
     public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)
-        throws Exception {
+            throws Exception {
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
             JobId jobId = hcc.startJob(specs[i]);
@@ -378,8 +375,7 @@ public class APIFramework {
 
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out)
-            throws Exception {
+    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out) throws Exception {
         for (int i = 0; i < jobs.length; i++) {
             jobs[i].getJobSpec().setMaxReattempts(0);
             long startTime = System.currentTimeMillis();

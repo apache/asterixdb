@@ -1,0 +1,12 @@
+/*
+ * Description     : Load a temporary dataset with previously created empty indexes.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+for $c in dataset('LineItem')
+order by $c.l_orderkey, $c.l_linenumber
+limit 1
+return $c

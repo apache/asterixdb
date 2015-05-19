@@ -203,6 +203,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
 
     }
 
+    @Override
     protected int getNumSecondaryKeys() {
         return numTokenKeyPairFields - numPrimaryKeys;
     }
@@ -330,6 +331,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
 
     private IIndexDataflowHelperFactory createDataflowHelperFactory() {
         AsterixStorageProperties storageProperties = propertiesProvider.getStorageProperties();
+        boolean temp = dataset.getDatasetDetails().isTemp();
         if (!isPartitioned) {
             return new LSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
                     dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
@@ -338,7 +340,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                     LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                     storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
-                    invertedIndexFieldsForNonBulkLoadOps);
+                    invertedIndexFieldsForNonBulkLoadOps, !temp);
         } else {
             return new PartitionedLSMInvertedIndexDataflowHelperFactory(new AsterixVirtualBufferCacheProvider(
                     dataset.getDatasetId()), mergePolicyFactory, mergePolicyFactoryProperties,
@@ -347,7 +349,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryIndexOperat
                     LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                     storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                     filterCmpFactories, secondaryFilterFields, secondaryFilterFieldsForNonBulkLoadOps,
-                    invertedIndexFieldsForNonBulkLoadOps);
+                    invertedIndexFieldsForNonBulkLoadOps, !temp);
         }
     }
 

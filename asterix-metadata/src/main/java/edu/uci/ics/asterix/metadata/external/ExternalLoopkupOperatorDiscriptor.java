@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.metadata.external;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.transaction.management.opcallbacks.SecondaryIndexSearchOperationCallbackFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
@@ -39,8 +38,8 @@ import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
 public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private IControlledAdapterFactory adapterFactory;
-    private INullWriterFactory iNullWriterFactory;
+    private final IControlledAdapterFactory adapterFactory;
+    private final INullWriterFactory iNullWriterFactory;
 
     public ExternalLoopkupOperatorDiscriptor(IOperatorDescriptorRegistry spec,
             IControlledAdapterFactory adapterFactory, RecordDescriptor outRecDesc,
@@ -53,7 +52,7 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
                 FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
                 FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainNull, iNullWriterFactory, null,
-                new SecondaryIndexSearchOperationCallbackFactory(), null);
+                searchOpCallbackFactory, null);
         this.adapterFactory = adapterFactory;
         this.iNullWriterFactory = iNullWriterFactory;
     }
@@ -69,7 +68,7 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
                 this);
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             // The adapter that uses the file index along with the coming tuples to access files in HDFS
-            private IControlledAdapter adapter = adapterFactory.createAdapter(ctx, fileIndexAccessor,
+            private final IControlledAdapter adapter = adapterFactory.createAdapter(ctx, fileIndexAccessor,
                     recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
 
             @Override

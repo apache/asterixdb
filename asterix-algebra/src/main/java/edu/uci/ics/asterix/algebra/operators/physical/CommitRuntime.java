@@ -44,17 +44,17 @@ public class CommitRuntime implements IPushRuntime {
     private final JobId jobId;
     private final int datasetId;
     private final int[] primaryKeyFields;
+    private final boolean isTemporaryDatasetWriteJob;
     private final boolean isWriteTransaction;
     private final long[] longHashes;
     private final LogRecord logRecord;
 
     private ITransactionContext transactionContext;
-    private RecordDescriptor inputRecordDesc;
     private FrameTupleAccessor frameTupleAccessor;
-    private FrameTupleReference frameTupleReference;
+    private final FrameTupleReference frameTupleReference;
 
     public CommitRuntime(IHyracksTaskContext ctx, JobId jobId, int datasetId, int[] primaryKeyFields,
-            boolean isWriteTransaction) {
+            boolean isTemporaryDatasetWriteJob, boolean isWriteTransaction) {
         this.hyracksTaskCtx = ctx;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
@@ -64,6 +64,7 @@ public class CommitRuntime implements IPushRuntime {
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
         this.frameTupleReference = new FrameTupleReference();
+        this.isTemporaryDatasetWriteJob = isTemporaryDatasetWriteJob;
         this.isWriteTransaction = isWriteTransaction;
         this.longHashes = new long[2];
         this.logRecord = new LogRecord();
@@ -85,14 +86,28 @@ public class CommitRuntime implements IPushRuntime {
         frameTupleAccessor.reset(buffer);
         int nTuple = frameTupleAccessor.getTupleCount();
         for (int t = 0; t < nTuple; t++) {
-            frameTupleReference.reset(frameTupleAccessor, t);
-            pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
-            logRecord.formEntityCommitLogRecord(transactionContext, datasetId, pkHash, frameTupleReference,
-                    primaryKeyFields);
-            try {
-                logMgr.log(logRecord);
-            } catch (ACIDException e) {
-                throw new HyracksDataException(e);
+            if (isTemporaryDatasetWriteJob) {
+                /**
+                 * This "if branch" is for writes over temporary datasets.
+                 * A temporary dataset does not require any lock and does not generate any write-ahead
+                 * update and commit log but generates flush log and job commit log.
+                 * However, a temporary dataset still MUST guarantee no-steal policy so that this
+                 * notification call should be delivered to PrimaryIndexOptracker and used correctly in order
+                 * to decrement number of active operation count of PrimaryIndexOptracker.
+                 * By maintaining the count correctly and only allowing flushing when the count is 0, it can
+                 * guarantee the no-steal policy for temporary datasets, too.
+                 */
+                transactionContext.notifyOptracker(false);
+            } else {
+                frameTupleReference.reset(frameTupleAccessor, t);
+                pkHash = computePrimaryKeyHashValue(frameTupleReference, primaryKeyFields);
+                logRecord.formEntityCommitLogRecord(transactionContext, datasetId, pkHash, frameTupleReference,
+                        primaryKeyFields);
+                try {
+                    logMgr.log(logRecord);
+                } catch (ACIDException e) {
+                    throw new HyracksDataException(e);
+                }
             }
         }
     }
@@ -104,13 +119,12 @@ public class CommitRuntime implements IPushRuntime {
 
     @Override
     public void fail() throws HyracksDataException {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void close() throws HyracksDataException {
-        // TODO Auto-generated method stub
+
     }
 
     @Override
@@ -120,7 +134,6 @@ public class CommitRuntime implements IPushRuntime {
 
     @Override
     public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
-        this.inputRecordDesc = recordDescriptor;
         this.frameTupleAccessor = new FrameTupleAccessor(hyracksTaskCtx.getFrameSize(), recordDescriptor);
     }
 }

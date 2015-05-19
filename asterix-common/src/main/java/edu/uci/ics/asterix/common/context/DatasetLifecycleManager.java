@@ -446,7 +446,8 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                     AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) iInfo.index
                             .getIOOperationCallback();
                     if (!(((AbstractLSMIndex) iInfo.index).isCurrentMutableComponentEmpty()
-                            || ioCallback.hasPendingFlush() || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit())) {
+                            || ioCallback.hasPendingFlush() || opTracker.isFlushLogCreated() || opTracker
+                                .isFlushOnExit())) {
                         long firstLSN = ioCallback.getFirstLSN();
                         if (firstLSN < targetLSN) {
                             opTracker.setFlushOnExit(true);

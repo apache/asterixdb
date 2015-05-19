@@ -55,8 +55,8 @@ public class LogPage implements ILogPage {
 
     private FileChannel fileChannel;
     private boolean stop;
-    private DatasetId reusableDsId;
-    private JobId reusableJobId;
+    private final DatasetId reusableDsId;
+    private final JobId reusableJobId;
 
     public LogPage(TransactionSubsystem txnSubsystem, int logPageSize, MutableLong flushLSN) {
         this.txnSubsystem = txnSubsystem;

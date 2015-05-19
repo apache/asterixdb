@@ -1,0 +1,5 @@
+use dataverse recovery;
+
+count (for $x in dataset Fragile where 
+spatial-intersect($x.location, create-polygon([0.0,0.0, 2.0,2.0, 0.0,2.0, 2.0,0.0]))
+return $x);

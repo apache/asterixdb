@@ -1,0 +1,60 @@
+/* 
+ * Test case Name  : primary_plus_keyword_secondary_index.aql
+ * Description     : Check that abort from duplicate key exception works and crash recovery works after the abort.   
+ * Expected Result : Success
+ * Date            : Oct 15 2013
+ */
+
+drop dataverse recovery if exists;
+create dataverse recovery;
+use dataverse recovery;
+
+/* For raw Fragile data */
+create type FragileTypeRaw as closed {
+  row_id: int32,
+  sid: int32,
+  date: string,
+  day: int32,
+  time: string,
+  bpm: int32,
+  RR: float,
+  /* new string field and location field*/
+  text: string,
+  location: point,
+  text2: string
+  
+};
+
+/* For cleaned Fragile data */
+create type FragileType as closed {
+  row_id: int32,
+  sid: int32,
+  date: date,
+  day: int32,
+  time: time,
+  bpm: int32,
+  RR: float,
+  
+  /* new string field and location field*/
+  text: string,
+  location: point,
+  text2: string
+};
+
+/* Create dataset for loading raw Fragile data */
+create temporary dataset Fragile_raw (FragileTypeRaw)
+primary key row_id;
+
+/* Create dataset for cleaned Fragile data */
+create temporary dataset Fragile (FragileType)
+primary key row_id;
+
+
+/* Create rtree secondary index on dataset clean Fragile */
+create index cfLocation on Fragile(location) type rtree;
+
+create index cfText on Fragile(text) type keyword;
+
+create index cfSidIdx on Fragile(sid);
+
+create index cfText2Ix on Fragile(text2) type ngram(3);

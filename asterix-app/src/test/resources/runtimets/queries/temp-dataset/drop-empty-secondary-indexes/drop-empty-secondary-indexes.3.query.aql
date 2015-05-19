@@ -1,0 +1,10 @@
+/*
+ * Description     : Drop empty secondary indexes for a temporary dataset.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+for $l in dataset('Metadata.Index')
+where $l.IsPrimary=false and $l.DataverseName='test'
+return $l;

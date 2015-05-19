@@ -1,0 +1,13 @@
+/*
+ * Description     : Port data from a temporary dataset into yet-another temporary dataset. 
+ *                   Both datasets have R-tree indexes.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+for $o in dataset('MyMiniData')
+where spatial-intersect($o.point, create-polygon([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]))
+order by $o.id
+return {"id":$o.id}

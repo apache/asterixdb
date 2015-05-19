@@ -57,12 +57,19 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLoca
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
-        return LSMBTreeUtils.createExternalBTreeWithBuddy(file, runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(), typeTraits, btreeCmpFactories, runtimeContextProvider
-                        .getBloomFilterFalsePositiveRate(), mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        runtimeContextProvider.getIndexLifecycleManager()), new BaseOperationTracker(
-                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)),
-                runtimeContextProvider.getLSMIOScheduler(), LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE
-                        .createIOOperationCallback(), buddyBtreeFields, -1);
+        return LSMBTreeUtils.createExternalBTreeWithBuddy(
+                file,
+                runtimeContextProvider.getBufferCache(),
+                runtimeContextProvider.getFileMapManager(),
+                typeTraits,
+                btreeCmpFactories,
+                runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                        runtimeContextProvider.getIndexLifecycleManager()),
+                new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
+                        datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), buddyBtreeFields, -1,
+                true);
     }
 }

@@ -1,0 +1,19 @@
+/* 
+ * Test case Name  : dataverse_recovery
+ * Description     :    
+ * Expected Result : 
+ * Date            : 
+ */
+
+drop dataverse SampleDV if exists;
+create dataverse SampleDV;
+
+use dataverse SampleDV;
+
+create type SampleType as open {
+	id: int32,
+	text: string
+}
+
+create temporary dataset SampleDS(SampleType)
+primary key id;

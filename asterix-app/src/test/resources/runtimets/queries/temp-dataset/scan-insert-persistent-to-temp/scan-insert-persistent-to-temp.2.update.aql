@@ -1,0 +1,17 @@
+/*
+ * Description     : Port data from a temporary dataset into yet-another temporary dataset. 
+ *                   Both datasets have R-tree indexes.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+load dataset MyData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData.json"),("format"="adm")) pre-sorted;
+
+load dataset MyMiniData 
+using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+(("path"="nc1://data/spatial/spatialData0.json"),("format"="adm")) pre-sorted;
+

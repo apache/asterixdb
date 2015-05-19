@@ -1,0 +1,12 @@
+/*
+ * Description     : Delete tuples from a temporary dataset with a R-tree index.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+for $o in dataset('MyData')
+where spatial-intersect($o.point, create-polygon([0.0,1.0,0.0,4.0,12.0,4.0,12.0,1.0]))
+order by $o.id
+return {"id":$o.id}

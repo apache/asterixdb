@@ -88,10 +88,12 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getIndexLifecycleManager()),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                                .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                                .getIndexLifecycleManager(), datasetID,
+                                ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                        .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
             } else {
                 return InvertedIndexUtils.createLSMInvertedIndex(
                         virtualBufferCaches,
@@ -107,10 +109,12 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getIndexLifecycleManager()),
                         new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                                .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                                .getIndexLifecycleManager(), datasetID,
+                                ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                        .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
-                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps);
+                        filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
             }
         } catch (IndexException e) {
             throw new HyracksDataException(e);

@@ -1,0 +1,10 @@
+/*
+ * Description     : Delete tuples from a temporary dataset with a R-tree index.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+use dataverse test;
+
+delete $m from dataset MyData where $m.id>10;
+

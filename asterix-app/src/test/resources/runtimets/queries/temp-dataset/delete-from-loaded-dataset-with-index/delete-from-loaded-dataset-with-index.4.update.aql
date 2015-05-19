@@ -1,0 +1,10 @@
+/*
+ * Description     : Delete a portion of data from a loaded temporary dataset with indexes.
+ * Expected Result : Success
+ * Date            : 27th March 2015
+ *
+ */
+
+use dataverse test;
+
+delete $l from dataset LineItem where $l.l_suppkey>=2 or $l.l_linenumber>1;

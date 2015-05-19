@@ -46,6 +46,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     private final String adapter;
     private final Map<String, String> properties;
     private final String nodeGroupName;
+    private final long addToCacheTime;
     private Date lastRefreshTime;
     private ExternalDatasetTransactionState state;
     protected String compactionPolicy;
@@ -57,6 +58,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         this.properties = properties;
         this.adapter = adapter;
         this.nodeGroupName = nodeGroupName;
+        this.addToCacheTime = System.currentTimeMillis();
         this.lastRefreshTime = lastRefreshTime;
         this.state = state;
         this.compactionPolicy = compactionPolicy;
@@ -194,6 +196,16 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     @Override
     public String getNodeGroupName() {
         return nodeGroupName;
+    }
+
+    @Override
+    public boolean isTemp() {
+        return false;
+    }
+
+    @Override
+    public long getLastAccessTime() {
+        return addToCacheTime;
     }
 
     public Date getTimestamp() {

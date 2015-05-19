@@ -62,6 +62,11 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
         return compactionPolicyProperties;
     }
 
+    @Override
+    public boolean isTemp() {
+        return false;
+    }
+
     public void setCompactionPolicyProperties(Map<String, String> compactionPolicyProperties) {
         this.compactionPolicyProperties = compactionPolicyProperties;
     }

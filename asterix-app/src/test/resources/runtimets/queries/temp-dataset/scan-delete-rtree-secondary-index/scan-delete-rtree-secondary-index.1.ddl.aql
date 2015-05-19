@@ -1,0 +1,26 @@
+/*
+ * Description     : Delete tuples from a temporary dataset with a R-tree index.
+ * Expected Result : Success
+ * Date            : March 27 2015
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type MyRecord as closed {
+  id: int64,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create temporary dataset MyData(MyRecord)
+  primary key id;
+

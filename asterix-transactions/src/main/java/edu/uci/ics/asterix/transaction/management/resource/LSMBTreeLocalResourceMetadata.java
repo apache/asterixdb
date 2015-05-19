@@ -62,15 +62,23 @@ public class LSMBTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
             int partition) {
         FileReference file = new FileReference(new File(filePath));
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
-        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider
-                .getBufferCache(), runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories,
-                bloomFilterKeyFields, runtimeContextProvider.getBloomFilterFalsePositiveRate(), mergePolicyFactory
-                        .createMergePolicy(mergePolicyProperties, runtimeContextProvider.getIndexLifecycleManager()),
+        LSMBTree lsmBTree = LSMBTreeUtils.createLSMTree(
+                virtualBufferCaches,
+                file,
+                runtimeContextProvider.getBufferCache(),
+                runtimeContextProvider.getFileMapManager(),
+                typeTraits,
+                cmpFactories,
+                bloomFilterKeyFields,
+                runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                mergePolicyFactory.createMergePolicy(mergePolicyProperties,
+                        runtimeContextProvider.getIndexLifecycleManager()),
                 isPrimary ? runtimeContextProvider.getLSMBTreeOperationTracker(datasetID) : new BaseOperationTracker(
-                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager()).getDatasetInfo(datasetID)),
-                runtimeContextProvider.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                        .createIOOperationCallback(), isPrimary, filterTypeTraits, filterCmpFactories, btreeFields,
-                filterFields);
+                        (DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(), datasetID,
+                        ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), isPrimary, filterTypeTraits,
+                filterCmpFactories, btreeFields, filterFields, true);
         return lsmBTree;
     }
 

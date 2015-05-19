@@ -172,10 +172,12 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 throw new AlgebricksException("Only record types can be indexed.");
             }
             ARecordType recordType = (ARecordType) itemType;
-            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypeEntries.get(0), secondaryKeyFieldEntries.get(0), recordType);
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypeEntries.get(0),
+                    secondaryKeyFieldEntries.get(0), recordType);
             IAType secondaryKeyType = keyPairType.first;
             if (secondaryKeyType == null) {
-                throw new AlgebricksException("Could not find field " + secondaryKeyFieldEntries.get(0) + " in the schema.");
+                throw new AlgebricksException("Could not find field " + secondaryKeyFieldEntries.get(0)
+                        + " in the schema.");
             }
 
             // TODO: For now we assume the type of the generated tokens is the
@@ -236,8 +238,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
 
             IAsterixApplicationContextInfo appContext = (IAsterixApplicationContextInfo) context.getAppContext();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
-                    .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(),
-                            datasetName, indexName);
+                    .splitProviderAndPartitionConstraintsForDataset(dataset.getDataverseName(), datasetName, indexName,
+                            dataset.getDatasetDetails().isTemp());
             // TODO: Here we assume there is only one search key field.
             int queryField = keyFields[0];
             // Get tokenizer and search modifier factories.
@@ -250,6 +252,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             AsterixStorageProperties storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
             Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo = DatasetUtils.getMergePolicyFactory(
                     dataset, metadataProvider.getMetadataTxnContext());
+            boolean temp = dataset.getDatasetDetails().isTemp();
             if (!isPartitioned) {
                 dataflowHelperFactory = new LSMInvertedIndexDataflowHelperFactory(
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
@@ -258,7 +261,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps);
+                        invertedIndexFieldsForNonBulkLoadOps, !temp);
             } else {
                 dataflowHelperFactory = new PartitionedLSMInvertedIndexDataflowHelperFactory(
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId()), compactionInfo.first,
@@ -267,7 +270,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE,
                         storageProperties.getBloomFilterFalsePositiveRate(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps);
+                        invertedIndexFieldsForNonBulkLoadOps, !temp);
             }
             LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
                     jobSpec, queryField, appContext.getStorageManagerInterface(), secondarySplitsAndConstraint.first,

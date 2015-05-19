@@ -70,12 +70,15 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     @Override
-    public synchronized void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
-            IModificationOperationCallback modificationCallback) throws HyracksDataException {
+    public synchronized void completeOperation(ILSMIndex index, LSMOperationType opType,
+            ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
+            throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             if (numActiveOperations.get() == 0) {
                 flushIfRequested();
+            } else if (numActiveOperations.get() < 0) {
+                throw new HyracksDataException("The number of active operations cannot be negative!");
             }
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             dsInfo.undeclareActiveIOOperation();
@@ -91,7 +94,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
         if (!flushOnExit) {
             for (ILSMIndex lsmIndex : indexes) {
-                if (((ILSMIndexInternal) lsmIndex).hasFlushRequestForCurrentMutableComponent()) {
+                ILSMIndexInternal lsmIndexInternal = (ILSMIndexInternal) lsmIndex;
+                if (lsmIndexInternal.hasFlushRequestForCurrentMutableComponent()) {
                     needsFlush = true;
                     break;
                 }
@@ -135,7 +139,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
             //schedule flush after update
             accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
-
         }
 
         flushLogCreated = false;
