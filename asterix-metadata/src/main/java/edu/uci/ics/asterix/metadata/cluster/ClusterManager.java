@@ -113,7 +113,7 @@ public class ClusterManager implements IClusterManager {
             String hostId = node.getId();
             String nodeControllerId = asterixInstanceName + "_" + node.getId();
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            Pattern startNC = PatternCreator.INSTANCE.createNCStartPattern(ccHost, hostId, nodeControllerId, iodevices);
+            Pattern startNC = PatternCreator.INSTANCE.createNCStartPattern(ccHost, hostId, nodeControllerId, iodevices, false);
             pattern.add(startNC);
             Patterns startNCPattern = new Patterns(pattern);
             client.submit(startNCPattern);

@@ -53,6 +53,9 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Option(name = "-metadata-port", usage = "IP port to bind metadata listener (default: random port)", required = false)
     public int metadataRmiPort = 0;
 
+    @Option(name = "-initial-run", usage = "A flag indicating if it's the first time the NC is started (default: false)", required = false)
+    public boolean initialRun = false;
+
     private INCApplicationContext ncApplicationContext = null;
     private IAsterixAppRuntimeContext runtimeContext;
     private String nodeId;
@@ -93,22 +96,29 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
 
-        // #. recover if the system is corrupted by checking system state.
-        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        systemState = recoveryMgr.getSystemState();
+        if (initialRun) {
+            LOGGER.info("System is being initialized. (first run)");
+            systemState = SystemState.NEW_UNIVERSE;
+        } else {
+            // #. recover if the system is corrupted by checking system state.
+            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+            systemState = recoveryMgr.getSystemState();
 
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("System is in a state: " + systemState);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("System is in a state: " + systemState);
+            }
+
+            if (systemState != SystemState.NEW_UNIVERSE) {
+                PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                        .getLocalResourceRepository();
+                localResourceRepository.initialize(nodeId, null, false, runtimeContext.getResourceIdFactory());
+            }
+            
+            if (systemState == SystemState.CORRUPTED) {
+                recoveryMgr.startRecovery(true);
+            }
         }
 
-        if (systemState != SystemState.NEW_UNIVERSE) {
-            PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                    .getLocalResourceRepository();
-            localResourceRepository.initialize(nodeId, null, false, runtimeContext.getResourceIdFactory());
-        }
-        if (systemState == SystemState.CORRUPTED) {
-            recoveryMgr.startRecovery(true);
-        }
     }
 
     @Override

@@ -107,8 +107,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         try {
             checkpointObject = readCheckpoint();
         } catch (FileNotFoundException e) {
-            //This is initial bootstrap. 
-            //Otherwise, the checkpoint file is deleted unfortunately. What we can do in this case?
+            //The checkpoint file doesn't exist => Failure happened during NC initialization.
+            //Retry to initialize the NC by setting the state to NEW_UNIVERSE
             state = SystemState.NEW_UNIVERSE;
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("The checkpoint file doesn't exist: systemState = NEW_UNIVERSE");

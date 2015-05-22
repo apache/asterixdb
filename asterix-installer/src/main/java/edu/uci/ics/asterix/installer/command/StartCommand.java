@@ -44,7 +44,7 @@ public class StartCommand extends AbstractCommand {
                 asterixInstanceName, instance.getCluster());
         client.submit(asterixBinaryTransferPattern);
         AsterixEventServiceUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
-        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, instance.getCluster());
+        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, instance.getCluster(), false);
         client.submit(patterns);
         AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator
                 + InstallerDriver.ASTERIX_DIR + File.separator + asterixInstanceName);

@@ -62,7 +62,7 @@ public class StartNodeCommand extends AbstractCommand {
                 if (n.equals(node.getId())) {
                     String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
                     Pattern createNC = PatternCreator.INSTANCE.createNCStartPattern(cluster.getMasterNode()
-                            .getClusterIp(), node.getId(), asterixInstanceName + "_" + node.getId(), iodevices);
+                            .getClusterIp(), node.getId(), asterixInstanceName + "_" + node.getId(), iodevices, false);
                     pl.add(createNC);
                     break;
                 }

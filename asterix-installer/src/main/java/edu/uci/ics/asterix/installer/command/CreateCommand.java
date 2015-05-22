@@ -65,7 +65,7 @@ public class CreateCommand extends AbstractCommand {
                 asterixInstanceName, cluster);
         eventrixClient.submit(asterixBinarytrasnferPattern);
 
-        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, cluster);
+        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, cluster, true);
         eventrixClient.submit(patterns);
 
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);

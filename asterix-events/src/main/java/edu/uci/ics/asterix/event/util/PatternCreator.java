@@ -79,7 +79,8 @@ public class PatternCreator {
         return patterns;
     }
 
-    public Patterns getStartAsterixPattern(String asterixInstanceName, Cluster cluster) throws Exception {
+    public Patterns getStartAsterixPattern(String asterixInstanceName, Cluster cluster, boolean createCommand)
+            throws Exception {
         String ccLocationId = cluster.getMasterNode().getId();
         List<Pattern> ps = new ArrayList<Pattern>();
 
@@ -90,7 +91,7 @@ public class PatternCreator {
         for (Node node : cluster.getNode()) {
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
             Pattern createNC = createNCStartPattern(cluster.getMasterNode().getClusterIp(), node.getId(),
-                    asterixInstanceName + "_" + node.getId(), iodevices);
+                    asterixInstanceName + "_" + node.getId(), iodevices, createCommand);
             addInitialDelay(createNC, 5, "sec");
             ps.add(createNC);
         }
@@ -555,9 +556,13 @@ public class PatternCreator {
         return new Pattern(null, 1, null, event);
     }
 
-    public Pattern createNCStartPattern(String ccHost, String hostId, String nodeControllerId, String iodevices) {
+    public Pattern createNCStartPattern(String ccHost, String hostId, String nodeControllerId, String iodevices,
+            boolean isInitialRun) {
         Nodeid nodeid = new Nodeid(new Value(null, hostId));
         String pargs = ccHost + " " + nodeControllerId + " " + iodevices;
+        if (isInitialRun) {
+            pargs += " " + "-initial-run";
+        }
         Event event = new Event("node_join", nodeid, pargs);
         return new Pattern(null, 1, null, event);
     }

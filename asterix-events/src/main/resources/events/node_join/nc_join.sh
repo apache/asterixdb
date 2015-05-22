@@ -15,6 +15,7 @@
 CC_HOST=$1
 NC_ID=$2
 IO_DEVICES=$3
+INITIAL_RUN_FLAG=$4
 if [ ! -d $LOG_DIR ]; 
 then 
   mkdir -p $LOG_DIR
@@ -22,4 +23,4 @@ fi
 
 cd $WORKING_DIR
 
-$ASTERIX_HOME/bin/asterixnc -node-id $NC_ID -cc-host $CC_HOST -cc-port $CLUSTER_NET_PORT  -cluster-net-ip-address $IP_LOCATION  -data-ip-address $IP_LOCATION -iodevices $IO_DEVICES -result-ip-address $IP_LOCATION &> $LOG_DIR/${NC_ID}.log
+$ASTERIX_HOME/bin/asterixnc -node-id $NC_ID -cc-host $CC_HOST -cc-port $CLUSTER_NET_PORT  -cluster-net-ip-address $IP_LOCATION  -data-ip-address $IP_LOCATION -iodevices $IO_DEVICES -result-ip-address $IP_LOCATION -- $INITIAL_RUN_FLAG &> $LOG_DIR/${NC_ID}.log
