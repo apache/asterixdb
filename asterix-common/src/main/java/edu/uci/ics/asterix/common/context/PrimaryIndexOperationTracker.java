@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentStat
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
@@ -72,7 +73,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public synchronized void completeOperation(ILSMIndex index, LSMOperationType opType,
             ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             if (numActiveOperations.get() == 0) {
@@ -86,7 +87,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     public void flushIfRequested() throws HyracksDataException {
-        // If we need a flush, and this is the last completing operation, then schedule the flush,  
+        // If we need a flush, and this is the last completing operation, then schedule the flush,
         // or if there is a flush scheduled by the checkpoint (flushOnExit), then schedule it
 
         boolean needsFlush = false;
@@ -105,8 +106,12 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         if (needsFlush || flushOnExit) {
             //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is schedule.
             for (ILSMIndex lsmIndex : indexes) {
-                if (((AbstractLSMIndex) lsmIndex).getCurrentMutableComponentState() == ComponentState.READABLE_WRITABLE) {
-                    ((AbstractLSMIndex) lsmIndex).setCurrentMutableComponentState(ComponentState.READABLE_UNWRITABLE);
+                AbstractLSMIndex abstractLSMIndex = ((AbstractLSMIndex) lsmIndex);
+                ILSMOperationTracker opTracker = abstractLSMIndex.getOperationTracker();
+                synchronized (opTracker) {
+                    if (abstractLSMIndex.getCurrentMutableComponentState() == ComponentState.READABLE_WRITABLE) {
+                        abstractLSMIndex.setCurrentMutableComponentState(ComponentState.READABLE_UNWRITABLE);
+                    }
                 }
             }
 
@@ -155,7 +160,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     private void incrementNumActiveOperations(IModificationOperationCallback modificationCallback) {
-        //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed. 
+        //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
         if (modificationCallback != NoOpOperationCallback.INSTANCE) {
             numActiveOperations.incrementAndGet();
             ((AbstractOperationCallback) modificationCallback).incrementLocalNumActiveOperations();

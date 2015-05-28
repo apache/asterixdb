@@ -145,7 +145,10 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         flushAndWaitForIO(dsInfo, iInfo);
 
         if (iInfo.isOpen) {
-            iInfo.index.deactivate(false);
+            ILSMOperationTracker indexOpTracker = iInfo.index.getOperationTracker();
+            synchronized (indexOpTracker) {
+                iInfo.index.deactivate(false);
+            }
         }
 
         dsInfo.indexes.remove(resourceID);
@@ -195,7 +198,10 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         dsInfo.isOpen = true;
         dsInfo.touch();
         if (!iInfo.isOpen) {
-            iInfo.index.activate();
+            ILSMOperationTracker opTracker = iInfo.index.getOperationTracker();
+            synchronized (opTracker) {
+                iInfo.index.activate();
+            }
             iInfo.isOpen = true;
         }
         iInfo.touch();
@@ -530,7 +536,10 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
         for (IndexInfo iInfo : dsInfo.indexes.values()) {
             if (iInfo.isOpen) {
-                iInfo.index.deactivate(false);
+                ILSMOperationTracker opTracker = iInfo.index.getOperationTracker();
+                synchronized (opTracker) {
+                    iInfo.index.deactivate(false);
+                }
                 iInfo.isOpen = false;
             }
             assert iInfo.referenceCount == 0;
