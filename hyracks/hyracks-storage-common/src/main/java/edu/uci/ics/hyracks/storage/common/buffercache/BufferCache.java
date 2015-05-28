@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -169,12 +169,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     /**
-     * Takes a virtual page, and copies it to a new page at the physical identifier. 
+     * Takes a virtual page, and copies it to a new page at the physical identifier.
      */
-    //TODO: I should not have to copy the page. I should just append it to the end of the hash bucket, but this is 
-    //safer/easier for now. 
+    //TODO: I should not have to copy the page. I should just append it to the end of the hash bucket, but this is
+    //safer/easier for now.
     public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException {
-        CachedPage virtPage = findPage(vpid, true); //should definitely succeed. 
+        CachedPage virtPage = findPage(vpid, true); //should definitely succeed.
         //pinSanityCheck(dpid); //debug
         ICachedPage realPage = pin(dpid, false);
         virtPage.acquireReadLatch();
@@ -366,7 +366,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         buffer.append("Buffer cache state\n");
         buffer.append("Page Size: ").append(pageSize).append('\n');
         buffer.append("Number of physical pages: ").append(pageReplacementStrategy.getMaxAllowedNumPages())
-                .append('\n');
+        .append('\n');
         buffer.append("Hash table size: ").append(pageMap.length).append('\n');
         buffer.append("Page Map:\n");
         int nCachedPages = 0;
@@ -379,10 +379,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     buffer.append("   ").append(i).append('\n');
                     while (cp != null) {
                         buffer.append("      ").append(cp.cpid).append(" -> [")
-                                .append(BufferedFileHandle.getFileId(cp.dpid)).append(':')
-                                .append(BufferedFileHandle.getPageId(cp.dpid)).append(", ").append(cp.pinCount.get())
-                                .append(", ").append(cp.valid ? "valid" : "invalid").append(", ")
-                                .append(cp.dirty.get() ? "dirty" : "clean").append("]\n");
+                        .append(BufferedFileHandle.getFileId(cp.dpid)).append(':')
+                        .append(BufferedFileHandle.getPageId(cp.dpid)).append(", ").append(cp.pinCount.get())
+                        .append(", ").append(cp.valid ? "valid" : "invalid").append(", ")
+                        .append(cp.dirty.get() ? "dirty" : "clean").append("]\n");
                         cp = cp.next;
                         ++nCachedPages;
                     }
@@ -761,6 +761,18 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
+    public synchronized int getFileReferenceCount(int fileId) {
+        synchronized (fileInfoMap) {
+            BufferedFileHandle fInfo = fileInfoMap.get(fileId);
+            if (fInfo != null) {
+                return fInfo.getReferenceCount();
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    @Override
     public synchronized void deleteMemFile(int fileId) throws HyracksDataException {
         //TODO: possible sanity chcecking here like in above?
         if (LOGGER.isLoggable(Level.INFO)) {
@@ -769,7 +781,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         synchronized (virtualFiles) {
             virtualFiles.remove(fileId);
         }
-        synchronized(fileInfoMap){
+        synchronized (fileInfoMap) {
             fileMapManager.unregisterMemFile(fileId);
         }
     }
@@ -792,8 +804,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         cachedPages.add(page);
     }
 
+    @Override
     public void dumpState(OutputStream os) throws IOException {
         os.write(dumpState().getBytes());
     }
-
 }

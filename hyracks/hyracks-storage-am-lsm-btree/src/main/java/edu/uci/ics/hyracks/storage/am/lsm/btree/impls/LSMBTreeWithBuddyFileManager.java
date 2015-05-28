@@ -21,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -43,12 +42,14 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
     private final TreeIndexFactory<? extends ITreeIndex> buddyBtreeFactory;
 
     private static FilenameFilter btreeFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return !name.startsWith(".") && name.endsWith(BTREE_STRING);
         }
     };
 
     private static FilenameFilter buddyBtreeFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return !name.startsWith(".") && name.endsWith(BUDDY_BTREE_STRING);
         }
@@ -64,8 +65,7 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() {
-        Date date = new Date();
-        String ts = formatter.format(date);
+        String ts = getCurrentTimestamp();
         String baseName = baseDir + ts + SPLIT_STRING + ts;
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseName + SPLIT_STRING + BTREE_STRING),
@@ -199,8 +199,7 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
 
     @Override
     public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
-        Date date = new Date();
-        String ts = formatter.format(date);
+        String ts = getCurrentTimestamp();
         // Create transaction lock file
         Files.createFile(Paths.get(baseDir + TRANSACTION_PREFIX + ts));
 
@@ -215,8 +214,9 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         FilenameFilter transactionFilter;
         File dir = new File(baseDir);
         String[] files = dir.list(transactionFileNameFilter);
-        if (files.length == 0)
+        if (files.length == 0) {
             return null;
+        }
         if (files.length != 1) {
             throw new HyracksDataException("More than one transaction lock found:" + files.length);
         } else {

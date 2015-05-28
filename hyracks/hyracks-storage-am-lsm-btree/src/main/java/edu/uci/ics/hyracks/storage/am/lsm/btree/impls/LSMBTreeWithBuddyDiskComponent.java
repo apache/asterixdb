@@ -21,45 +21,49 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractDiskLSMComponent;
 
 public class LSMBTreeWithBuddyDiskComponent extends AbstractDiskLSMComponent {
 
-	private final BTree btree;
-	private final BTree buddyBtree;
-	private final BloomFilter bloomFilter;
+    private final BTree btree;
+    private final BTree buddyBtree;
+    private final BloomFilter bloomFilter;
 
-	public LSMBTreeWithBuddyDiskComponent(BTree btree, BTree buddyBtree,
-			BloomFilter bloomFilter) {
-		this.btree = btree;
-		this.buddyBtree = buddyBtree;
-		this.bloomFilter = bloomFilter;
-	}
+    public LSMBTreeWithBuddyDiskComponent(BTree btree, BTree buddyBtree, BloomFilter bloomFilter) {
+        this.btree = btree;
+        this.buddyBtree = buddyBtree;
+        this.bloomFilter = bloomFilter;
+    }
 
-	@Override
-	protected void destroy() throws HyracksDataException {
-		btree.deactivate();
-		btree.destroy();
-		buddyBtree.deactivate();
-		buddyBtree.destroy();
-		bloomFilter.deactivate();
-		bloomFilter.destroy();
-	}
+    @Override
+    protected void destroy() throws HyracksDataException {
+        btree.deactivate();
+        btree.destroy();
+        buddyBtree.deactivate();
+        buddyBtree.destroy();
+        bloomFilter.deactivate();
+        bloomFilter.destroy();
+    }
 
-	public BTree getBTree() {
-		return btree;
-	}
+    public BTree getBTree() {
+        return btree;
+    }
 
-	public BTree getBuddyBTree() {
-		return buddyBtree;
-	}
+    public BTree getBuddyBTree() {
+        return buddyBtree;
+    }
 
-	public BloomFilter getBloomFilter() {
-		return bloomFilter;
-	}
+    public BloomFilter getBloomFilter() {
+        return bloomFilter;
+    }
 
-	@Override
-	public long getComponentSize() {
-		long size = btree.getFileReference().getFile().length();
-		size += buddyBtree.getFileReference().getFile().length();
-		size += bloomFilter.getFileReference().getFile().length();
-		return size;
-	}
+    @Override
+    public long getComponentSize() {
+        long size = btree.getFileReference().getFile().length();
+        size += buddyBtree.getFileReference().getFile().length();
+        size += bloomFilter.getFileReference().getFile().length();
+        return size;
+    }
+
+    @Override
+    public int getFileReferenceCount() {
+        return btree.getBufferCache().getFileReferenceCount(btree.getFileId());
+    }
 
 }

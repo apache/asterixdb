@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,8 +42,8 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
                 break;
             case MERGE:
                 if (state == ComponentState.READABLE_MERGING) {
-                    // This should never happen unless there are two concurrent merges that were scheduled 
-                    // concurrently and they have interleaving components to be merged. 
+                    // This should never happen unless there are two concurrent merges that were scheduled
+                    // concurrently and they have interleaving components to be merged.
                     // This should be handled properly by the merge policy, but we guard against that here anyway.
                     return false;
                 }
@@ -96,5 +96,7 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
     protected abstract void destroy() throws HyracksDataException;
 
     public abstract long getComponentSize();
+
+    public abstract int getFileReferenceCount();
 
 }

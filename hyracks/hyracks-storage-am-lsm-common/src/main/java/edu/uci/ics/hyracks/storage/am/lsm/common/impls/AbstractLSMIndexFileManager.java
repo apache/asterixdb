@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,8 +53,9 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
     protected final Comparator<String> cmp = new FileNameComparator();
     protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
-
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
+
+    private String prevTimestamp = null;
 
     public AbstractLSMIndexFileManager(IFileMapProvider fileMapProvider, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
@@ -67,6 +68,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     private static FilenameFilter fileNameFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return !name.startsWith(".");
         }
@@ -96,7 +98,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
             TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles)
-            throws HyracksDataException, IndexException {
+                    throws HyracksDataException, IndexException {
         File dir = new File(baseDir);
         String[] files = dir.list(filter);
         for (String fileName : files) {
@@ -149,6 +151,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected static FilenameFilter bloomFilterFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return !name.startsWith(".") && name.endsWith(BLOOM_FILTER_STRING);
         }
@@ -164,8 +167,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() {
-        Date date = new Date();
-        String ts = formatter.format(date);
+        String ts = getCurrentTimestamp();
         // Begin timestamp and end timestamp are identical since it is a flush
         return new LSMComponentFileReferences(createFlushFile(baseDir + ts + SPLIT_STRING + ts), null, null);
     }
@@ -215,8 +217,8 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 last = current;
             } else if (current.interval[0].compareTo(last.interval[0]) >= 0
                     && current.interval[1].compareTo(last.interval[1]) <= 0) {
-                // The current file is completely contained in the interval of the 
-                // last file. Thus the last file must contain at least as much information 
+                // The current file is completely contained in the interval of the
+                // last file. Thus the last file must contain at least as much information
                 // as the current file, so delete the current file.
                 current.fileRef.delete();
             } else {
@@ -260,6 +262,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return baseDir;
     }
 
+    @Override
     public void recoverTransaction() throws HyracksDataException {
         File dir = new File(baseDir);
         String[] files = dir.list(transactionFileNameFilter);
@@ -354,12 +357,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected static FilenameFilter transactionFileNameFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return name.startsWith(".T");
         }
     };
 
     protected static FilenameFilter dummyFilter = new FilenameFilter() {
+        @Override
         public boolean accept(File dir, String name) {
             return true;
         }
@@ -369,6 +374,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         final String timeStamp = transactionFileName.substring(transactionFileName.indexOf(TRANSACTION_PREFIX)
                 + TRANSACTION_PREFIX.length());
         return new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 if (inclusive) {
                     return name.startsWith(timeStamp);
@@ -396,5 +402,28 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 return (filter1.accept(dir, name) && filter2.accept(dir, name));
             }
         };
+    }
+
+    /**
+     * @return The string format of the current timestamp.
+     *         The returned results of this method are guaranteed to not have duplicates.
+     */
+    protected String getCurrentTimestamp() {
+        Date date = new Date();
+        String ts = formatter.format(date);
+        /**
+         * prevent a corner case where the same timestamp can be given.
+         */
+        while (prevTimestamp != null && ts.compareTo(prevTimestamp) == 0) {
+            try {
+                Thread.sleep(1);
+                date = new Date();
+                ts = formatter.format(date);
+            } catch (InterruptedException e) {
+                //ignore
+            }
+        }
+        prevTimestamp = ts;
+        return ts;
     }
 }

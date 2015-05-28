@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,16 +46,17 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected final ILSMIOOperationScheduler ioScheduler;
     protected final ILSMIOOperationCallback ioOpCallback;
 
-    // In-memory components.   
+    // In-memory components.
     protected final List<ILSMComponent> memoryComponents;
     protected final List<IVirtualBufferCache> virtualBufferCaches;
     protected AtomicInteger currentMutableComponentId;
 
-    // On-disk components.    
+    // On-disk components.
     protected final IBufferCache diskBufferCache;
     protected final ILSMIndexFileManager fileManager;
     protected final IFileMapProvider diskFileMapProvider;
     protected final List<ILSMComponent> diskComponents;
+    protected final List<ILSMComponent> inactiveDiskComponents;
     protected final double bloomFilterFalsePositiveRate;
     protected final ILSMComponentFilterFrameFactory filterFrameFactory;
     protected final LSMComponentFilterManager filterManager;
@@ -82,6 +83,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.filterFrameFactory = filterFrameFactory;
         this.filterManager = filterManager;
         this.filterFields = filterFields;
+        this.inactiveDiskComponents = new LinkedList<ILSMComponent>();
         this.durable = durable;
         lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
         isActivated = false;
@@ -109,6 +111,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker);
         isActivated = false;
         diskComponents = new LinkedList<ILSMComponent>();
+        this.inactiveDiskComponents = new LinkedList<ILSMComponent>();
         // Memory related objects are nulled
         this.virtualBufferCaches = null;
         memoryComponents = null;
@@ -122,7 +125,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     protected void forceFlushDirtyPages(ITreeIndex treeIndex) throws HyracksDataException {
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
-        // Flush all dirty pages of the tree. 
+        // Flush all dirty pages of the tree.
         // By default, metadata and data are flushed asynchronously in the buffercache.
         // This means that the flush issues writes to the OS, but the data may still lie in filesystem buffers.
         ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
@@ -168,7 +171,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
             bufferCache.unpin(metadataPage);
         }
 
-        // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page 
+        // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page
         // won't be flushed to disk because it won't be dirty until the write latch has been released.
         metadataPage = bufferCache.tryPin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId));
         if (metadataPage != null) {
@@ -275,5 +278,19 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     public ComponentState getCurrentMutableComponentState() {
         return ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).getState();
+    }
+
+    public int getCurrentMutableComponentWriterCount() {
+        return ((AbstractMemoryLSMComponent) memoryComponents.get(currentMutableComponentId.get())).getWriterCount();
+    }
+
+    @Override
+    public List<ILSMComponent> getInactiveDiskComponents() {
+        return inactiveDiskComponents;
+    }
+
+    @Override
+    public void addInactiveDiskComponent(ILSMComponent diskComponent) {
+        inactiveDiskComponents.add(diskComponent);
     }
 }

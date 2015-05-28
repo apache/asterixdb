@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -64,8 +65,26 @@ public class LSMHarness implements ILSMHarness {
                         if (!((AbstractMemoryLSMComponent) flushingComponent).isModified()) {
                             //The mutable component has not been modified by any writer. There is nothing to flush.
                             //since the component is empty, set its state back to READABLE_WRITABLE
-                            ((AbstractLSMIndex) lsmIndex)
-                                    .setCurrentMutableComponentState(ComponentState.READABLE_WRITABLE);
+                            if (((AbstractLSMIndex) lsmIndex).getCurrentMutableComponentState() == ComponentState.READABLE_UNWRITABLE) {
+                                ((AbstractLSMIndex) lsmIndex)
+                                        .setCurrentMutableComponentState(ComponentState.READABLE_WRITABLE);
+                            }
+                            return false;
+                        }
+                        if (((AbstractMemoryLSMComponent) flushingComponent).getWriterCount() > 0) {
+                            /*
+                             * This case is a case where even though FLUSH log was flushed to disk and scheduleFlush is triggered,
+                             * the current in-memory component (whose state was changed to READABLE_WRITABLE (RW)
+                             * from READABLE_UNWRITABLE(RU) before FLUSH log was written to log tail (which is memory buffer of log file)
+                             * and then the state was changed back to RW (as shown in the following scenario)) can have writers
+                             * based on the current code base/design.
+                             * Thus, the writer count of the component may be greater than 0.
+                             * if this happens, intead of throwing exception, scheduleFlush() deal with this situation by not flushing
+                             * the component.
+                             * Please see issue 884 for more detail information:
+                             * https://code.google.com/p/asterixdb/issues/detail?id=884&q=owner%3Akisskys%40gmail.com&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20ETA%20Severity
+                             *
+                             */
                             return false;
                         }
                         break;
@@ -84,7 +103,7 @@ public class LSMHarness implements ILSMHarness {
                 }
                 try {
                     // Flush and merge operations should never reach this wait call, because they are always try operations.
-                    // If they fail to enter the components, then it means that there are an ongoing flush/merge operation on 
+                    // If they fail to enter the components, then it means that there are an ongoing flush/merge operation on
                     // the same components, so they should not proceed.
                     opTracker.wait();
                 } catch (InterruptedException e) {
@@ -133,7 +152,7 @@ public class LSMHarness implements ILSMHarness {
                 // Changing the flush status should *always* precede changing the mutable component.
                 lsmIndex.changeFlushStatusForCurrentMutableCompoent(false);
                 lsmIndex.changeMutableComponent();
-                // Notify all waiting threads whenever a flush has been scheduled since they will check 
+                // Notify all waiting threads whenever a flush has been scheduled since they will check
                 // again if they can grab and enter the mutable component.
                 opTracker.notifyAll();
                 break;
@@ -148,78 +167,118 @@ public class LSMHarness implements ILSMHarness {
 
     private void exitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, ILSMComponent newComponent,
             boolean failedOperation) throws HyracksDataException, IndexException {
-        synchronized (opTracker) {
-            try {
-                int i = 0;
-                // First check if there is any action that is needed to be taken based on the state of each component.
-                for (ILSMComponent c : ctx.getComponentHolder()) {
-                    boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
-                    c.threadExit(opType, failedOperation, isMutableComponent);
-                    if (c.getType() == LSMComponentType.MEMORY) {
-                        switch (c.getState()) {
-                            case READABLE_UNWRITABLE:
-                                if (isMutableComponent
-                                        && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
-                                    lsmIndex.changeFlushStatusForCurrentMutableCompoent(true);
-                                }
-                                break;
-                            case INACTIVE:
-                                ((AbstractMemoryLSMComponent) c).reset();
-                                // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
-                                // even though we switched the mutable components, it is possible that the component that we just switched
-                                // to is still busy flushing its data to disk. Thus, the notification that was issued upon scheduling the flush
-                                // is not enough. 
-                                opTracker.notifyAll();
-                                break;
-                            default:
-                                break;
+        List<ILSMComponent> inactiveDiskComponents = null;
+        List<ILSMComponent> inactiveDiskComponentsToBeDeleted = null;
+        try {
+            synchronized (opTracker) {
+                try {
+                    int i = 0;
+                    // First check if there is any action that is needed to be taken based on the state of each component.
+                    for (ILSMComponent c : ctx.getComponentHolder()) {
+                        boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
+                        c.threadExit(opType, failedOperation, isMutableComponent);
+                        if (c.getType() == LSMComponentType.MEMORY) {
+                            switch (c.getState()) {
+                                case READABLE_UNWRITABLE:
+                                    if (isMutableComponent
+                                            && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                                        lsmIndex.changeFlushStatusForCurrentMutableCompoent(true);
+                                    }
+                                    break;
+                                case INACTIVE:
+                                    ((AbstractMemoryLSMComponent) c).reset();
+                                    // Notify all waiting threads whenever the mutable component's has change to inactive. This is important because
+                                    // even though we switched the mutable components, it is possible that the component that we just switched
+                                    // to is still busy flushing its data to disk. Thus, the notification that was issued upon scheduling the flush
+                                    // is not enough.
+                                    opTracker.notifyAll();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } else {
+                            switch (c.getState()) {
+                                case INACTIVE:
+                                    lsmIndex.addInactiveDiskComponent(c);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
+                        i++;
+                    }
+                    // Then, perform any action that is needed to be taken based on the operation type.
+                    switch (opType) {
+                        case FLUSH:
+                            // newComponent is null if the flush op. was not performed.
+                            if (newComponent != null) {
+                                lsmIndex.addComponent(newComponent);
+                                mergePolicy.diskComponentAdded(lsmIndex, false);
+                            }
+                            break;
+                        case MERGE:
+                            // newComponent is null if the merge op. was not performed.
+                            if (newComponent != null) {
+                                lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
+                                mergePolicy.diskComponentAdded(lsmIndex, fullMergeIsRequested.get());
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    throw e;
+                } finally {
+                    if (failedOperation
+                            && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
+                        //When the operation failed, completeOperation() method must be called
+                        //in order to decrement active operation count which was incremented in beforeOperation() method.
+                        opTracker.completeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
+                                ctx.getModificationCallback());
                     } else {
-                        switch (c.getState()) {
-                            case INACTIVE:
-                                ((AbstractDiskLSMComponent) c).destroy();
-                                break;
-                            default:
-                                break;
+                        opTracker.afterOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
+                                ctx.getModificationCallback());
+                    }
+
+                    /*
+                     * = Inactive disk components lazy cleanup if any =
+                     * Prepare to cleanup inactive diskComponents which were old merged components
+                     * and not anymore accessed.
+                     * This cleanup is done outside of optracker synchronized block.
+                     */
+                    inactiveDiskComponents = lsmIndex.getInactiveDiskComponents();
+                    if (!inactiveDiskComponents.isEmpty()) {
+                        for (ILSMComponent inactiveComp : inactiveDiskComponents) {
+                            if (((AbstractDiskLSMComponent) inactiveComp).getFileReferenceCount() == 1) {
+                                if (inactiveDiskComponentsToBeDeleted == null) {
+                                    inactiveDiskComponentsToBeDeleted = new LinkedList<ILSMComponent>();
+                                }
+                                inactiveDiskComponentsToBeDeleted.add(inactiveComp);
+                            }
+                        }
+                        if (inactiveDiskComponentsToBeDeleted != null) {
+                            inactiveDiskComponents.removeAll(inactiveDiskComponentsToBeDeleted);
                         }
                     }
-                    i++;
                 }
-                // Then, perform any action that is needed to be taken based on the operation type.
-                switch (opType) {
-                    case FLUSH:
-                        // newComponent is null if the flush op. was not performed.
-                        if (newComponent != null) {
-                            lsmIndex.addComponent(newComponent);
-                            mergePolicy.diskComponentAdded(lsmIndex, false);
-                        }
-                        break;
-                    case MERGE:
-                        // newComponent is null if the merge op. was not performed.
-                        if (newComponent != null) {
-                            lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
-                            mergePolicy.diskComponentAdded(lsmIndex, fullMergeIsRequested.get());
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-                throw e;
-            } finally {
-                if (failedOperation
-                        && (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION)) {
-                    //When the operation failed, completeOperation() method must be called 
-                    //in order to decrement active operation count which was incremented in beforeOperation() method.
-                    opTracker.completeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
-                            ctx.getModificationCallback());
-                } else {
-                    opTracker.afterOperation(lsmIndex, opType, ctx.getSearchOperationCallback(),
-                            ctx.getModificationCallback());
+            }
+        } finally {
+            /*
+             * cleanup inactive disk components if any
+             */
+            if (inactiveDiskComponentsToBeDeleted != null) {
+                try {
+                    for (ILSMComponent c : inactiveDiskComponentsToBeDeleted) {
+                        ((AbstractDiskLSMComponent) c).destroy();
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    throw e;
                 }
             }
         }
+
     }
 
     @Override
