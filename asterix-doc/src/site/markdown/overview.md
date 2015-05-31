@@ -41,5 +41,5 @@ Access to data in an AsterixDB instance is provided via a REST-based API.
 This is a short document that describes the REST API entry points and their URL syntax.
 
 To all who have now come this far: Thanks for your interest in AsterixDB, and for kicking its tires in its Beta form.
-In addition to getting the system and trying it out, please sign up as a member of the AsterixDB user mailing list (asterixdb-users (at) googlegroups.com) so that you can contact us easily with your questions, issues, and other feedback.
+In addition to getting the system and trying it out, please sign up as a member of the AsterixDB user mailing list (users (at) asterixdb.incubator.apache.org) so that you can contact us easily with your questions, issues, and other feedback.
 We want AsterixDB to be a "big hit" some day, and we are anxious to see what users do with it and to learn from that feedback what we should be working on most urgently in the next phase of the project.

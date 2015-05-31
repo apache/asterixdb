@@ -397,7 +397,7 @@ It is possible to have a single host for Zookeeper. A larger number of hosts wou
 ## <a id="Section3InstallingAsterixDBOnAClusterOfMultipleMachines">Section 3: Installing AsterixDB on a Cluster of Multiple Machines</a><font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 We assume that you have read the two sections above on single-machine AsterixDB setup. Next we explain how to install AsterixDB in a cluster of multiple machines.  As an example, we assume we want to setup AsterixDB on a cluster of three machines, in which we use one machine (called machine A) as the master node and two other machines (called machine B and machine C) as the worker nodes, as shown in the following diagram:
 
-![AsterixCluster](https://asterixdb.googlecode.com/files/AsterixCluster.png)
+![AsterixCluster](images/AsterixCluster.png)
 
 Notice that each machine has a ''cluster_ip'' address, which is used by these machines for their intra-cluster communication. Meanwhile, the master machine also has a ''client_ip'' address, using which an end-user outside the cluster can communicate with this machine.  The reason we differentiate between these two types of IP addresses is that we can have a cluster of machines using a private network. In this case they have internal ip addresses that cannot be used outside the network.  In the case all the machines are on a public network, the "client_ip" and "cluster_ip" of the master machine can share the same address.
 

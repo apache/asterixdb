@@ -53,7 +53,7 @@ Prerequisite: The host is a  part of the ASTERIX cluster.
 
 Earlier, we assumed a single machine ASTERIX setup. To satisfy the prerequisite, log-in to the machine running ASTERIX.
 
- * Download the [data file](https://code.google.com/p/asterixdb/downloads/detail?name=lineitem.tbl&amp;can=2&amp;q=) to an appropriate location. We denote this location by SOURCE_PATH.
+ * Download the [data file](../data/lineitem.tbl) to an appropriate location. We denote this location by SOURCE_PATH.
 
 ASTERIX provides a built-in adapter for data residing on the local file system. The adapter is referred by its alias- 'localfs'. We create an external dataset named Lineitem and use the 'localfs' adapter.
 
@@ -157,7 +157,7 @@ These parameters are described below.
 *format*:
 The parameter 'format' refers to the type of the data contained in the file. For example data contained in a file could be in json, ADM format or could be delimited-text with fields separated by a delimiting character.
 
-As an example. consider the [data file](https://code.google.com/p/asterixdb/downloads/detail?name=lineitem.tbl&amp;can=2&amp;q=).  The file is a text file with each line representing a record. The fields in each record are separated by the '|' character.
+As an example. consider the [data file](../data/lineitem.tbl).  The file is a text file with each line representing a record. The fields in each record are separated by the '|' character.
 
 We assume the HDFS URL to be hdfs://host:port. We further assume that the example data file is copied to the HDFS at a path denoted by HDFS_PATH.
 
