@@ -388,7 +388,11 @@ public class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
-        ctx.addDatatype(datatype);
+        try {
+            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(),datatype.getDataverseName(),datatype.getDatatypeName()));
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
     }
 
     @Override
