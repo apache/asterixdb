@@ -370,14 +370,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 private BuildAndPartitionTaskState state;
                 private ByteBuffer rPartbuff = ctx.allocateFrame();
 
-                private ITuplePartitionComputerFamily hpcf0 = new FieldHashPartitionComputerFamily(probeKeys,
-                        hashFunctionGeneratorFactories);
-                private ITuplePartitionComputerFamily hpcf1 = new FieldHashPartitionComputerFamily(buildKeys,
-                        hashFunctionGeneratorFactories);
-
-                private ITuplePartitionComputer hpcRep0;
-                private ITuplePartitionComputer hpcRep1;
-
                 @Override
                 public void open() throws HyracksDataException {
                     state = (BuildAndPartitionTaskState) ctx.getStateObject(new TaskId(new ActivityId(getOperatorId(),
@@ -404,8 +396,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     state.hybridHJ.closeProbe(writer);
 
                     BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
-                    hpcRep0 = new RepartitionComputerFamily(state.numOfPartitions, hpcf0).createPartitioner(0);
-                    hpcRep1 = new RepartitionComputerFamily(state.numOfPartitions, hpcf1).createPartitioner(0);
 
                     rPartbuff.clear();
                     for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid = partitionStatus.nextSetBit(pid + 1)) {
@@ -457,7 +447,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                         "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
                             //Build Side is smaller
-                            applyInMemHashJoin(buildKeys, probeKeys, tabSize, probeRd, buildRd, hpcRep0, hpcRep1,
+                            applyInMemHashJoin(buildKeys, probeKeys, tabSize, probeRd, buildRd, probeHpc, buildHpc,
                                     buildSideReader, probeSideReader, false, pid); //checked-confirmed
                         } else { //Case 1.2 - InMemHJ with Role Reversal
                             LOGGER.fine("\t>>>Case 1.2. (NoIsLeftOuter || probe<build) AND ApplyInMemHJ WITH RoleReversal - [Level "
@@ -469,7 +459,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                         "Trying to join an empty partition. Invalid table size for inMemoryHashJoin.");
                             }
                             //Probe Side is smaller
-                            applyInMemHashJoin(probeKeys, buildKeys, tabSize, buildRd, probeRd, hpcRep1, hpcRep0,
+                            applyInMemHashJoin(probeKeys, buildKeys, tabSize, buildRd, probeRd, buildHpc, probeHpc,
                                     probeSideReader, buildSideReader, true, pid); //checked-confirmed
                         }
                     }
