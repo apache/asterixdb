@@ -9,7 +9,7 @@
                 -- INSERT_DELETE  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- MATERIALIZE  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$14]  |PARTITIONED|
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- ASSIGN  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|

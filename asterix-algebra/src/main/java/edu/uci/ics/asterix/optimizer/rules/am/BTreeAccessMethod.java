@@ -34,6 +34,7 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -493,8 +494,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             } catch (IOException e) {
                 throw new AlgebricksException(e);
             }
-            primaryIndexUnnestOp = new UnnestMapOperator(dataSourceOp.getVariables(),
-                    secondaryIndexUnnestOp.getExpressionRef(), primaryIndexOutputTypes, retainInput);
+            List<LogicalVariable> scanVariables = dataSourceOp.getVariables();
+            primaryIndexUnnestOp = new UnnestMapOperator(scanVariables, secondaryIndexUnnestOp.getExpressionRef(),
+                    primaryIndexOutputTypes, retainInput);
             primaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
 
             if (!primaryIndexPostProccessingIsNeeded) {
@@ -508,6 +510,11 @@ public class BTreeAccessMethod implements IAccessMethod {
                     conditionRef.setValue(null);
                 }
             }
+
+            // Adds equivalence classes --- one equivalent class between a primary key
+            // variable and a record field-access expression.
+            EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp, scanVariables,
+                    recordType, dataset, context);
         }
 
         return primaryIndexUnnestOp;

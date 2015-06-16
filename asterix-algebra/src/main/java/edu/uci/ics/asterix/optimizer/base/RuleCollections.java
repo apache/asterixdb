@@ -32,6 +32,7 @@ import edu.uci.ics.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import edu.uci.ics.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import edu.uci.ics.asterix.optimizer.rules.FuzzyEqRule;
 import edu.uci.ics.asterix.optimizer.rules.IfElseToSwitchCaseFunctionRule;
+import edu.uci.ics.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
 import edu.uci.ics.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
 import edu.uci.ics.asterix.optimizer.rules.IntroduceDynamicTypeCastForExternalFunctionRule;
@@ -286,6 +287,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new IntroduceInstantLockSearchCallbackRule());
+        physicalRewritesAllLevels.add(new AddEquivalenceClassForRecordConstructorRule());
         physicalRewritesAllLevels.add(new EnforceStructuralPropertiesRule());
         physicalRewritesAllLevels.add(new RemoveSortInFeedIngestionRule());
         physicalRewritesAllLevels.add(new IntroHashPartitionMergeExchange());

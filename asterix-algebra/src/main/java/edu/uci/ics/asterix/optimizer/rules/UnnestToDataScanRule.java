@@ -34,8 +34,10 @@ import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -116,13 +118,19 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
                     }
                 }
                 v.add(unnest.getVariable());
-                DataSourceScanOperator scan = new DataSourceScanOperator(v, metadataProvider.findDataSource(asid));
+                AqlDataSource dataSource = metadataProvider.findDataSource(asid);
+                DataSourceScanOperator scan = new DataSourceScanOperator(v, dataSource);
                 List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
                 scanInpList.addAll(unnest.getInputs());
                 opRef.setValue(scan);
                 addPrimaryKey(v, context);
                 context.computeAndSetTypeEnvironmentForOperator(scan);
 
+                // Adds equivalence classes --- one equivalent class between a primary key
+                // variable and a record field-access expression.
+                IAType[] schemaTypes = dataSource.getSchemaTypes();
+                ARecordType recordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
+                EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(scan, v, recordType, dataset, context);
                 return true;
             }
 
@@ -235,4 +243,5 @@ public class UnnestToDataScanRule implements IAlgebraicRewriteRule {
         String argument = ((AString) acv2.getObject()).getStringValue();
         return argument;
     }
+
 }
