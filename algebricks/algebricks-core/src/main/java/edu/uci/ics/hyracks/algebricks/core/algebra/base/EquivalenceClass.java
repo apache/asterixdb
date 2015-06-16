@@ -14,37 +14,62 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.base;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
+import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
 
 public final class EquivalenceClass {
-    private List<LogicalVariable> members;
+    private Set<ILogicalExpression> expressionMembers = new ListSet<ILogicalExpression>();
+    private Set<LogicalVariable> members = new ListSet<LogicalVariable>();
     private ILogicalExpression constRepresentative;
     private LogicalVariable variableRepresentative;
     private boolean representativeIsConst;
 
-    public EquivalenceClass(List<LogicalVariable> members, ILogicalExpression constRepresentative) {
-        this.members = members;
+    public EquivalenceClass(Collection<LogicalVariable> members, ILogicalExpression constRepresentative) {
+        this.members.addAll(members);
         this.constRepresentative = constRepresentative;
         representativeIsConst = true;
     }
 
-    public EquivalenceClass(List<LogicalVariable> members, LogicalVariable variableRepresentative) {
-        this.members = members;
+    public EquivalenceClass(Collection<LogicalVariable> members, LogicalVariable variableRepresentative) {
+        this.members.addAll(members);
         this.variableRepresentative = variableRepresentative;
         representativeIsConst = false;
+    }
+
+    public EquivalenceClass(Collection<LogicalVariable> members, ILogicalExpression constRepresentative,
+            Collection<ILogicalExpression> expressionMembers) {
+        this(members, constRepresentative);
+        this.expressionMembers.addAll(expressionMembers);
+    }
+
+    public EquivalenceClass(Collection<LogicalVariable> members, LogicalVariable variableRepresentative,
+            Collection<ILogicalExpression> expressionMembers) {
+        this(members, variableRepresentative);
+        this.expressionMembers.addAll(expressionMembers);
     }
 
     public boolean representativeIsConst() {
         return representativeIsConst;
     }
 
-    public List<LogicalVariable> getMembers() {
+    public Collection<LogicalVariable> getMembers() {
         return members;
+    }
+
+    public Collection<ILogicalExpression> getExpressionMembers() {
+        return expressionMembers;
     }
 
     public boolean contains(LogicalVariable var) {
         return members.contains(var);
+    }
+
+    public boolean contains(ILogicalExpression expr) {
+        return expressionMembers.contains(expr);
     }
 
     public ILogicalExpression getConstRepresentative() {
@@ -71,6 +96,7 @@ public final class EquivalenceClass {
             representativeIsConst = true;
             constRepresentative = ec2.getConstRepresentative();
         }
+        expressionMembers.addAll(ec2.getExpressionMembers());
     }
 
     public void addMember(LogicalVariable v) {
@@ -91,7 +117,8 @@ public final class EquivalenceClass {
 
     @Override
     public String toString() {
-        return "(<" + (representativeIsConst ? constRepresentative : variableRepresentative) + "> " + members + ")";
+        return "(<" + (representativeIsConst ? constRepresentative : variableRepresentative) + "> " + members + ";"
+                + expressionMembers + ")";
     }
 
     @Override
@@ -101,6 +128,9 @@ public final class EquivalenceClass {
         } else {
             EquivalenceClass ec = (EquivalenceClass) obj;
             if (!members.equals(ec.getMembers())) {
+                return false;
+            }
+            if (!expressionMembers.equals(ec.getExpressionMembers())) {
                 return false;
             }
             if (representativeIsConst) {

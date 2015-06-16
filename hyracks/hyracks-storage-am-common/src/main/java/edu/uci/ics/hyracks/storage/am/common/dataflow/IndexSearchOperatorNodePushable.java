@@ -208,12 +208,12 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             if (appender.getTupleCount() > 0) {
                 FrameUtils.flushFrame(writeBuffer, writer);
             }
-            writer.close();
             try {
                 cursor.close();
             } catch (Exception e) {
                 throw new HyracksDataException(e);
             }
+            writer.close();
         } finally {
             indexHelper.close();
         }
