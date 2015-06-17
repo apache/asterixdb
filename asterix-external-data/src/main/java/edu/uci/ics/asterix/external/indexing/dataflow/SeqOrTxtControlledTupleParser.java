@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
@@ -42,7 +42,6 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
     private ArrayTupleBuilder tb;
     private transient DataOutput dos;
     private final FrameTupleAppender appender;
-    private final ByteBuffer frame;
     private boolean propagateInput;
     private int[] propagatedFields;
     private FrameTupleReference frameTuple;
@@ -60,8 +59,7 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
     public SeqOrTxtControlledTupleParser(IHyracksTaskContext ctx, IAsterixHDFSRecordParser parser,
             ILookupReader reader, boolean propagateInput, int[] propagatedFields, RecordDescriptor inRecDesc,
             int[] ridFields, boolean retainNull, INullWriterFactory iNullWriterFactory) throws HyracksDataException {
-        appender = new FrameTupleAppender(ctx.getFrameSize());
-        frame = ctx.allocateFrame();
+        appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.parser = parser;
         this.reader = reader;
         this.propagateInput = propagateInput;
@@ -75,8 +73,7 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
             tb = new ArrayTupleBuilder(1);
         }
         dos = tb.getDataOutput();
-        appender.reset(frame, true);
-        this.tupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecDesc);
+        this.tupleAccessor = new FrameTupleAccessor(inRecDesc);
         bbis = new ByteBufferInputStream();
         dis = new DataInputStream(bbis);
         nullByte = ATypeTag.NULL.serialize();
@@ -98,9 +95,7 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
     public void close(IFrameWriter writer) throws Exception {
         try {
             reader.close();
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(frame, writer);
-            }
+            appender.flush(writer, true);
         } catch (IOException ioe) {
             throw new HyracksDataException(ioe);
         }
@@ -182,8 +177,7 @@ public class SeqOrTxtControlledTupleParser implements IControlledTupleParser {
 
     private void addTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
+            appender.flush(writer, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                 throw new IllegalStateException();
             }

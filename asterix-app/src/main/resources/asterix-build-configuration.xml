@@ -47,15 +47,15 @@
 	</property>
 	<property>
 		<name>compiler.sortmemory</name>
-		<value>98304</value>
+		<value>163840</value>
 	</property>
 	<property>
 		<name>compiler.groupmemory</name>
-		<value>98304</value>
+		<value>163840</value>
 	</property>
 	<property>
 		<name>compiler.joinmemory</name>
-		<value>131072</value>
+		<value>163840</value>
 	</property>
 	<property>
 		<name>storage.buffercache.pagesize</name>

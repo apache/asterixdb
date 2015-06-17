@@ -30,7 +30,6 @@ import edu.uci.ics.asterix.runtime.operators.file.IDataParser;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -122,7 +121,6 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
     @Override
     public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
         flushTask = new TimeBasedFlushTask(writer, lock);
-        appender.reset(frame, true);
         IDataParser parser = getDataParser();
         try {
             parser.initialize(in, recType, true);
@@ -140,10 +138,10 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
             if (appender.getTupleCount() > 0) {
                 if (activeTimer) {
                     synchronized (lock) {
-                        FrameUtils.flushFrame(frame, writer);
+                        appender.flush(writer, true);
                     }
                 } else {
-                    FrameUtils.flushFrame(frame, writer);
+                    appender.flush(writer, true);
                 }
             }
         } catch (AsterixException ae) {
@@ -169,8 +167,7 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
 
     protected void addTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (tuplesInFrame == batchSize || !appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
+            appender.flush(writer, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                 throw new IllegalStateException();
             }
@@ -202,8 +199,7 @@ class ConditionalPushTupleParser extends AbstractTupleParser {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("TTL expired flushing frame (" + tuplesInFrame + ")");
                         }
-                        FrameUtils.flushFrame(frame, writer);
-                        appender.reset(frame, true);
+                        appender.flush(writer, true);
                         tuplesInFrame = 0;
                     }
                 }

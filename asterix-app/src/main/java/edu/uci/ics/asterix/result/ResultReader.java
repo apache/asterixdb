@@ -14,12 +14,9 @@
  */
 package edu.uci.ics.asterix.result;
 
-import java.nio.ByteBuffer;
-
-import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
@@ -47,15 +44,15 @@ public class ResultReader {
 
     public void open(JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
         reader = hyracksDataset.createReader(jobId, resultSetId);
-        frameTupleAccessor = new ResultFrameTupleAccessor(FRAME_SIZE);
+        frameTupleAccessor = new ResultFrameTupleAccessor();
     }
 
     public Status getStatus() {
         return reader.getResultStatus();
     }
 
-    public int read(ByteBuffer buffer) throws HyracksDataException {
-        return reader.read(buffer);
+    public int read(IFrame frame) throws HyracksDataException {
+        return reader.read(frame);
     }
 
     public IFrameTupleAccessor getFrameTupleAccessor() {

@@ -113,12 +113,21 @@ public class ExecutionTest {
 
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
+        Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.ONLY_TESTSUITE_XML_NAME);
+        if (testArgs.size() == 0){
+            testArgs = buildTestsInXml(TestCaseContext.DEFAULT_TESTSUITE_XML_NAME);
+        }
+        return testArgs;
+    }
+
+    private static Collection<Object[]> buildTestsInXml(String xmlfile) throws Exception {
         Collection<Object[]> testArgs = new ArrayList<Object[]>();
         TestCaseContext.Builder b = new TestCaseContext.Builder();
-        for (TestCaseContext ctx : b.build(new File(PATH_BASE))) {
+        for (TestCaseContext ctx : b.build(new File(PATH_BASE), xmlfile)) {
             testArgs.add(new Object[] { ctx });
         }
         return testArgs;
+
     }
 
     private TestCaseContext tcCtx;

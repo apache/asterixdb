@@ -63,7 +63,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         this.feedPolicy = feedPolicy;
         policyEnforcer = new FeedPolicyEnforcer(feedId, feedPolicy);
         nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
-        fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
+        fta = new FrameTupleAccessor(recordDesc);
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
         this.feedManager = runtimeCtx.getFeedManager();
@@ -80,7 +80,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                 adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox,
                         feedManager);
 
-                if (adapter.getDataExchangeMode().equals(DataExchangeMode.PULL) && adapter instanceof IPullBasedFeedAdapter) {
+                if (adapter.getDataExchangeMode().equals(DataExchangeMode.PULL)
+                        && adapter instanceof IPullBasedFeedAdapter) {
                     ((IPullBasedFeedAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
                 }
                 if (LOGGER.isLoggable(Level.INFO)) {

@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AInt64;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
@@ -34,7 +35,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public class RCFileControlledTupleParser implements IControlledTupleParser {
@@ -42,7 +42,6 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
     private ArrayTupleBuilder tb;
     private transient DataOutput dos;
     private final FrameTupleAppender appender;
-    private final ByteBuffer frame;
     private boolean propagateInput;
     private int[] propagatedFields;
     private FrameTupleReference frameTuple;
@@ -60,8 +59,7 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
     public RCFileControlledTupleParser(IHyracksTaskContext ctx, IAsterixHDFSRecordParser parser,
             RCFileLookupReader reader, boolean propagateInput, int[] propagatedFields, RecordDescriptor inRecDesc,
             int[] ridFields, boolean retainNull, INullWriterFactory iNullWriterFactory) throws HyracksDataException {
-        appender = new FrameTupleAppender(ctx.getFrameSize());
-        frame = ctx.allocateFrame();
+        appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.parser = parser;
         this.reader = reader;
         this.propagateInput = propagateInput;
@@ -69,7 +67,7 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
         this.retainNull = retainNull;
         this.inRecDesc = inRecDesc;
         this.ridFields = ridFields;
-        this.tupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecDesc);
+        this.tupleAccessor = new FrameTupleAccessor(inRecDesc);
         if (propagateInput) {
             tb = new ArrayTupleBuilder(propagatedFields.length + 1);
         } else {
@@ -77,10 +75,8 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
         }
         frameTuple = new FrameTupleReference();
         dos = tb.getDataOutput();
-        appender.reset(frame, true);
         bbis = new ByteBufferInputStream();
         dis = new DataInputStream(bbis);
-        appender.reset(frame, true);
         nullByte = ATypeTag.NULL.serialize();
         if (retainNull) {
             INullWriter nullWriter = iNullWriterFactory.createNullWriter();
@@ -100,9 +96,7 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
     public void close(IFrameWriter writer) throws Exception {
         try {
             reader.close();
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(frame, writer);
-            }
+            appender.flush(writer, true);
         } catch (IOException ioe) {
             throw new HyracksDataException(ioe);
         }
@@ -128,22 +122,24 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
                 } else {
                     // Get file number
                     bbis.setByteBuffer(frameBuffer, tupleStartOffset + fileNumberStartOffset);
-                    int fileNumber = ((AInt32) inRecDesc.getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]]
+                    int fileNumber = ((AInt32) inRecDesc
+                            .getFields()[ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]]
                             .deserialize(dis)).getIntegerValue();
                     // Get record group offset
                     bbis.setByteBuffer(
                             frameBuffer,
                             tupleStartOffset
                                     + tupleAccessor.getFieldStartOffset(tupleIndex,
-                                            ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
-                    long recordOffset = ((AInt64) inRecDesc.getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]]
+                                    ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]));
+                    long recordOffset = ((AInt64) inRecDesc
+                            .getFields()[ridFields[IndexingConstants.RECORD_OFFSET_FIELD_INDEX]]
                             .deserialize(dis)).getLongValue();
                     // Get row number
                     bbis.setByteBuffer(
                             frameBuffer,
                             tupleStartOffset
                                     + tupleAccessor.getFieldStartOffset(tupleIndex,
-                                            ridFields[IndexingConstants.ROW_NUMBER_FIELD_INDEX]));
+                                    ridFields[IndexingConstants.ROW_NUMBER_FIELD_INDEX]));
                     int rowNumber = ((AInt32) inRecDesc.getFields()[ridFields[IndexingConstants.ROW_NUMBER_FIELD_INDEX]]
                             .deserialize(dis)).getIntegerValue();
 
@@ -193,8 +189,7 @@ public class RCFileControlledTupleParser implements IControlledTupleParser {
 
     protected void addTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
+            appender.flush(writer, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                 throw new IllegalStateException();
             }

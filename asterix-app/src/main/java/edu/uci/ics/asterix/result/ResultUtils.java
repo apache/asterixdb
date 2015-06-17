@@ -20,7 +20,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +36,11 @@ import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.api.http.servlet.APIServlet;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class ResultUtils {
@@ -84,13 +86,14 @@ public class ResultUtils {
         conf.out().print("\r\n");
     }
 
+    public static FrameManager resultDisplayFrameMgr = new FrameManager(ResultReader.FRAME_SIZE);
+
     public static void displayResults(ResultReader resultReader, SessionConfig conf)
             throws HyracksDataException {
         IFrameTupleAccessor fta = resultReader.getFrameTupleAccessor();
 
-        ByteBuffer buffer = ByteBuffer.allocate(ResultReader.FRAME_SIZE);
-        buffer.clear();
-        int bytesRead = resultReader.read(buffer);
+        IFrame frame = new VSizeFrame(resultDisplayFrameMgr);
+        int bytesRead = resultReader.read(frame);
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
         // Whether we need to separate top-level ADM instances with commas
@@ -122,13 +125,13 @@ public class ResultUtils {
         if (bytesRead > 0) {
             do {
                 try {
-                    fta.reset(buffer);
+                    fta.reset(frame.getBuffer());
                     int last = fta.getTupleCount();
                     String result;
                     for (int tIndex = 0; tIndex < last; tIndex++) {
                         int start = fta.getTupleStartOffset(tIndex);
                         int length = fta.getTupleEndOffset(tIndex) - start;
-                        bbis.setByteBuffer(buffer, start);
+                        bbis.setByteBuffer(frame.getBuffer(), start);
                         byte[] recordBytes = new byte[length];
                         int numread = bbis.read(recordBytes, 0, length);
                         if (conf.fmt() == OutputFormat.CSV) {
@@ -146,7 +149,7 @@ public class ResultUtils {
                             conf.out().print("\r\n");
                         }
                     }
-                    buffer.clear();
+                    frame.getBuffer().clear();
                 } finally {
                     try {
                         bbis.close();
@@ -154,7 +157,7 @@ public class ResultUtils {
                         throw new HyracksDataException(e);
                     }
                 }
-            } while (resultReader.read(buffer) > 0);
+            } while (resultReader.read(frame) > 0);
         }
 
         conf.out().flush();

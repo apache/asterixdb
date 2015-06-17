@@ -13,10 +13,10 @@
  ! limitations under the License.
  !-->
 <test-suite
-    xmlns="urn:xml.testframework.asterix.ics.uci.edu"
-    ResultOffsetPath="results"
-    QueryOffsetPath="queries"
-    QueryFileExtension=".aql">
+        xmlns="urn:xml.testframework.asterix.ics.uci.edu"
+        ResultOffsetPath="results"
+        QueryOffsetPath="queries"
+        QueryFileExtension=".aql">
     <test-group name="flwor">
         <test-case FilePath="flwor">
             <compilation-unit name="at00">
@@ -250,87 +250,87 @@
                 <output-dir compare="Text">count_null</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="aggregate">
-      <compilation-unit name="droptype">
-        <output-dir compare="Text">droptype</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!-- TODO(madhusudancs): These tests that test for local_<agg>/global_<agg> functions should be removed, but
-    before that we should modify the code to make sure those built-in functions are still defined but not exposed
-    by AQL, so leaving these test cases commented.
-    <test-case FilePath="aggregate">
-      <compilation-unit name="global-avg_01">
-        <output-dir compare="Text">global-avg_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="global-avg_null">
-        <output-dir compare="Text">global-avg_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_double">
-        <output-dir compare="Text">local-avg_double</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_double_null">
-        <output-dir compare="Text">local-avg_double_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_float">
-        <output-dir compare="Text">local-avg_float</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_float_null">
-        <output-dir compare="Text">local-avg_float_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int16">
-        <output-dir compare="Text">local-avg_int16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int16_null">
-        <output-dir compare="Text">local-avg_int16_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int32">
-        <output-dir compare="Text">local-avg_int32</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int32_null">
-        <output-dir compare="Text">local-avg_int32_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int64">
-        <output-dir compare="Text">local-avg_int64</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int64_null">
-        <output-dir compare="Text">local-avg_int64_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int8">
-        <output-dir compare="Text">local-avg_int8</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate">
-      <compilation-unit name="local-avg_int8_null">
-        <output-dir compare="Text">local-avg_int8_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="aggregate">
+          <compilation-unit name="droptype">
+            <output-dir compare="Text">droptype</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!-- TODO(madhusudancs): These tests that test for local_<agg>/global_<agg> functions should be removed, but
+        before that we should modify the code to make sure those built-in functions are still defined but not exposed
+        by AQL, so leaving these test cases commented.
+        <test-case FilePath="aggregate">
+          <compilation-unit name="global-avg_01">
+            <output-dir compare="Text">global-avg_01</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="global-avg_null">
+            <output-dir compare="Text">global-avg_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_double">
+            <output-dir compare="Text">local-avg_double</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_double_null">
+            <output-dir compare="Text">local-avg_double_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_float">
+            <output-dir compare="Text">local-avg_float</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_float_null">
+            <output-dir compare="Text">local-avg_float_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int16">
+            <output-dir compare="Text">local-avg_int16</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int16_null">
+            <output-dir compare="Text">local-avg_int16_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int32">
+            <output-dir compare="Text">local-avg_int32</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int32_null">
+            <output-dir compare="Text">local-avg_int32_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int64">
+            <output-dir compare="Text">local-avg_int64</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int64_null">
+            <output-dir compare="Text">local-avg_int64_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int8">
+            <output-dir compare="Text">local-avg_int8</output-dir>
+          </compilation-unit>
+        </test-case>
+        <test-case FilePath="aggregate">
+          <compilation-unit name="local-avg_int8_null">
+            <output-dir compare="Text">local-avg_int8_null</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="aggregate">
             <compilation-unit name="max_empty_01">
                 <output-dir compare="Text">max_empty_01</output-dir>
@@ -1000,13 +1000,13 @@
                 <output-dir compare="Text">neq_01</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="comparison">
-      <compilation-unit name="numeric-comparison_01">
-        <output-dir compare="Text">numeric-comparison_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="comparison">
+          <compilation-unit name="numeric-comparison_01">
+            <output-dir compare="Text">numeric-comparison_01</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="comparison">
             <compilation-unit name="string">
                 <output-dir compare="Text">string</output-dir>
@@ -1235,32 +1235,32 @@
                 <output-dir compare="Text">customer_q_08</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="custord">
-      <compilation-unit name="denorm-cust-order_01">
-        <output-dir compare="Text">denorm-cust-order_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="custord">
+          <compilation-unit name="denorm-cust-order_01">
+            <output-dir compare="Text">denorm-cust-order_01</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="custord">
             <compilation-unit name="denorm-cust-order_02">
                 <output-dir compare="Text">denorm-cust-order_02</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="custord">
-      <compilation-unit name="denorm-cust-order_03">
-        <output-dir compare="Text">denorm-cust-order_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="custord">
-      <compilation-unit name="freq-clerk">
-        <output-dir compare="Text">freq-clerk</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="custord">
+          <compilation-unit name="denorm-cust-order_03">
+            <output-dir compare="Text">denorm-cust-order_03</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="custord">
+          <compilation-unit name="freq-clerk">
+            <output-dir compare="Text">freq-clerk</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="custord">
             <compilation-unit name="join_q_01">
                 <output-dir compare="Text">join_q_01</output-dir>
@@ -1328,13 +1328,13 @@
                 <output-dir compare="Text">q2</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="dapd">
-      <compilation-unit name="q3">
-        <output-dir compare="Text">q3</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="dapd">
+          <compilation-unit name="q3">
+            <output-dir compare="Text">q3</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
     </test-group>
     <test-group name="dml">
         <test-case FilePath="dml">
@@ -1494,13 +1494,13 @@
                 <output-dir compare="Text">insert_less_nc</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="dml">
-      <compilation-unit name="load-from-hdfs">
-        <output-dir compare="Text">load-from-hdfs</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="dml">
+          <compilation-unit name="load-from-hdfs">
+            <output-dir compare="Text">load-from-hdfs</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="dml">
             <compilation-unit name="load-with-autogenerated-pk_txt_01">
                 <output-dir compare="Text">load-with-autogenerated-pk_txt_01</output-dir>
@@ -1748,444 +1748,444 @@
         </test-case>
     </test-group>
     <test-group name="failure">
-    <!--
-    <test-case FilePath="failure">
-      <compilation-unit name="q1_pricing_summary_report_failure">
-        <output-dir compare="Text">q1_pricing_summary_report_failure</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="failure">
+          <compilation-unit name="q1_pricing_summary_report_failure">
+            <output-dir compare="Text">q1_pricing_summary_report_failure</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
     </test-group>
-  <!--
-  <test-group name="flwor">
-    <test-case FilePath="flwor">
-      <compilation-unit name="for01">
-        <output-dir compare="Text">for01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for02">
-        <output-dir compare="Text">for02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for03">
-        <output-dir compare="Text">for03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for04">
-        <output-dir compare="Text">for04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for05">
-        <output-dir compare="Text">for05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for06">
-        <output-dir compare="Text">for06</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for07">
-        <output-dir compare="Text">for07</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for08">
-        <output-dir compare="Text">for08</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for09">
-        <output-dir compare="Text">for09</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for10">
-        <output-dir compare="Text">for10</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for11">
-        <output-dir compare="Text">for11</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for12">
-        <output-dir compare="Text">for12</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for13">
-        <output-dir compare="Text">for13</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for14">
-        <output-dir compare="Text">for14</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for15">
-        <output-dir compare="Text">for15</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for16">
-        <output-dir compare="Text">for16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for17">
-        <output-dir compare="Text">for17</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for18">
-        <output-dir compare="Text">for18</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="for19">
-        <output-dir compare="Text">for19</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="grpby01">
-        <output-dir compare="Text">grpby01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="grpby02">
-        <output-dir compare="Text">grpby02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let01">
-        <output-dir compare="Text">let01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let02">
-        <output-dir compare="Text">let02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let03">
-        <output-dir compare="Text">let03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let04">
-        <output-dir compare="Text">let04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let05">
-        <output-dir compare="Text">let05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let06">
-        <output-dir compare="Text">let06</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let07">
-        <output-dir compare="Text">let07</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let08">
-        <output-dir compare="Text">let08</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let09">
-        <output-dir compare="Text">let09</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let10">
-        <output-dir compare="Text">let10</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let11">
-        <output-dir compare="Text">let11</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let12">
-        <output-dir compare="Text">let12</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let13">
-        <output-dir compare="Text">let13</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let14">
-        <output-dir compare="Text">let14</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let15">
-        <output-dir compare="Text">let15</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let16">
-        <output-dir compare="Text">let16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let17">
-        <output-dir compare="Text">let17</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let18">
-        <output-dir compare="Text">let18</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let19">
-        <output-dir compare="Text">let19</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let20">
-        <output-dir compare="Text">let20</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let21">
-        <output-dir compare="Text">let21</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let22">
-        <output-dir compare="Text">let22</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let23">
-        <output-dir compare="Text">let23</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let24">
-        <output-dir compare="Text">let24</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let25">
-        <output-dir compare="Text">let25</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let26">
-        <output-dir compare="Text">let26</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let27">
-        <output-dir compare="Text">let27</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let28">
-        <output-dir compare="Text">let28</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let29">
-        <output-dir compare="Text">let29</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let30">
-        <output-dir compare="Text">let30</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let31">
-        <output-dir compare="Text">let31</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="let32">
-        <output-dir compare="Text">let32</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-01">
-        <output-dir compare="Text">order-by-01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-02">
-        <output-dir compare="Text">order-by-02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-03">
-        <output-dir compare="Text">order-by-03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-04">
-        <output-dir compare="Text">order-by-04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-05">
-        <output-dir compare="Text">order-by-05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-06">
-        <output-dir compare="Text">order-by-06</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-07">
-        <output-dir compare="Text">order-by-07</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-08">
-        <output-dir compare="Text">order-by-08</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-09">
-        <output-dir compare="Text">order-by-09</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-10">
-        <output-dir compare="Text">order-by-10</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-11">
-        <output-dir compare="Text">order-by-11</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="order-by-12">
-        <output-dir compare="Text">order-by-12</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-01">
-        <output-dir compare="Text">ret-01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-02">
-        <output-dir compare="Text">ret-02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-03">
-        <output-dir compare="Text">ret-03</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-04">
-        <output-dir compare="Text">ret-04</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-05">
-        <output-dir compare="Text">ret-05</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-06">
-        <output-dir compare="Text">ret-06</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-07">
-        <output-dir compare="Text">ret-07</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-08">
-        <output-dir compare="Text">ret-08</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-09">
-        <output-dir compare="Text">ret-09</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-10">
-        <output-dir compare="Text">ret-10</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-11">
-        <output-dir compare="Text">ret-11</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-12">
-        <output-dir compare="Text">ret-12</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-13">
-        <output-dir compare="Text">ret-13</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-14">
-        <output-dir compare="Text">ret-14</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-15">
-        <output-dir compare="Text">ret-15</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="writers">
-    <test-case FilePath="writers">
-      <compilation-unit name="print_01">
-        <output-dir compare="Text">print_01</output-dir>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-16">
-        <output-dir compare="Text">ret-16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-17">
-        <output-dir compare="Text">ret-17</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-18">
-        <output-dir compare="Text">ret-18</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="flwor">
-      <compilation-unit name="ret-19">
-        <output-dir compare="Text">ret-19</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  -->
+    <!--
+    <test-group name="flwor">
+      <test-case FilePath="flwor">
+        <compilation-unit name="for01">
+          <output-dir compare="Text">for01</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for02">
+          <output-dir compare="Text">for02</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for03">
+          <output-dir compare="Text">for03</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for04">
+          <output-dir compare="Text">for04</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for05">
+          <output-dir compare="Text">for05</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for06">
+          <output-dir compare="Text">for06</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for07">
+          <output-dir compare="Text">for07</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for08">
+          <output-dir compare="Text">for08</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for09">
+          <output-dir compare="Text">for09</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for10">
+          <output-dir compare="Text">for10</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for11">
+          <output-dir compare="Text">for11</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for12">
+          <output-dir compare="Text">for12</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for13">
+          <output-dir compare="Text">for13</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for14">
+          <output-dir compare="Text">for14</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for15">
+          <output-dir compare="Text">for15</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for16">
+          <output-dir compare="Text">for16</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for17">
+          <output-dir compare="Text">for17</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for18">
+          <output-dir compare="Text">for18</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="for19">
+          <output-dir compare="Text">for19</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="grpby01">
+          <output-dir compare="Text">grpby01</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="grpby02">
+          <output-dir compare="Text">grpby02</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let01">
+          <output-dir compare="Text">let01</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let02">
+          <output-dir compare="Text">let02</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let03">
+          <output-dir compare="Text">let03</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let04">
+          <output-dir compare="Text">let04</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let05">
+          <output-dir compare="Text">let05</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let06">
+          <output-dir compare="Text">let06</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let07">
+          <output-dir compare="Text">let07</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let08">
+          <output-dir compare="Text">let08</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let09">
+          <output-dir compare="Text">let09</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let10">
+          <output-dir compare="Text">let10</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let11">
+          <output-dir compare="Text">let11</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let12">
+          <output-dir compare="Text">let12</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let13">
+          <output-dir compare="Text">let13</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let14">
+          <output-dir compare="Text">let14</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let15">
+          <output-dir compare="Text">let15</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let16">
+          <output-dir compare="Text">let16</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let17">
+          <output-dir compare="Text">let17</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let18">
+          <output-dir compare="Text">let18</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let19">
+          <output-dir compare="Text">let19</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let20">
+          <output-dir compare="Text">let20</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let21">
+          <output-dir compare="Text">let21</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let22">
+          <output-dir compare="Text">let22</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let23">
+          <output-dir compare="Text">let23</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let24">
+          <output-dir compare="Text">let24</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let25">
+          <output-dir compare="Text">let25</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let26">
+          <output-dir compare="Text">let26</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let27">
+          <output-dir compare="Text">let27</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let28">
+          <output-dir compare="Text">let28</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let29">
+          <output-dir compare="Text">let29</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let30">
+          <output-dir compare="Text">let30</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let31">
+          <output-dir compare="Text">let31</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="let32">
+          <output-dir compare="Text">let32</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-01">
+          <output-dir compare="Text">order-by-01</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-02">
+          <output-dir compare="Text">order-by-02</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-03">
+          <output-dir compare="Text">order-by-03</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-04">
+          <output-dir compare="Text">order-by-04</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-05">
+          <output-dir compare="Text">order-by-05</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-06">
+          <output-dir compare="Text">order-by-06</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-07">
+          <output-dir compare="Text">order-by-07</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-08">
+          <output-dir compare="Text">order-by-08</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-09">
+          <output-dir compare="Text">order-by-09</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-10">
+          <output-dir compare="Text">order-by-10</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-11">
+          <output-dir compare="Text">order-by-11</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="order-by-12">
+          <output-dir compare="Text">order-by-12</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-01">
+          <output-dir compare="Text">ret-01</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-02">
+          <output-dir compare="Text">ret-02</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-03">
+          <output-dir compare="Text">ret-03</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-04">
+          <output-dir compare="Text">ret-04</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-05">
+          <output-dir compare="Text">ret-05</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-06">
+          <output-dir compare="Text">ret-06</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-07">
+          <output-dir compare="Text">ret-07</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-08">
+          <output-dir compare="Text">ret-08</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-09">
+          <output-dir compare="Text">ret-09</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-10">
+          <output-dir compare="Text">ret-10</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-11">
+          <output-dir compare="Text">ret-11</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-12">
+          <output-dir compare="Text">ret-12</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-13">
+          <output-dir compare="Text">ret-13</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-14">
+          <output-dir compare="Text">ret-14</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-15">
+          <output-dir compare="Text">ret-15</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="writers">
+      <test-case FilePath="writers">
+        <compilation-unit name="print_01">
+          <output-dir compare="Text">print_01</output-dir>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-16">
+          <output-dir compare="Text">ret-16</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-17">
+          <output-dir compare="Text">ret-17</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-18">
+          <output-dir compare="Text">ret-18</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="flwor">
+        <compilation-unit name="ret-19">
+          <output-dir compare="Text">ret-19</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    -->
     <test-group name="fuzzyjoin">
         <test-case FilePath="fuzzyjoin">
             <compilation-unit name="dblp-1_1">
@@ -2414,13 +2414,13 @@
                 <output-dir compare="Text">dblp-lookup_1</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="fuzzyjoin">
-      <compilation-unit name="dblp-splits-3_1">
-        <output-dir compare="Text">dblp-splits-3_1</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="fuzzyjoin">
+          <compilation-unit name="dblp-splits-3_1">
+            <output-dir compare="Text">dblp-splits-3_1</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="fuzzyjoin">
             <compilation-unit name="opentype">
                 <output-dir compare="Text">opentype</output-dir>
@@ -2781,17 +2781,17 @@
                 <output-dir compare="Text">scan-collection_01</output-dir>
             </compilation-unit>
         </test-case>
-<!--         <test-case FilePath="list">	 
-            <compilation-unit name="union_01">		
-                <output-dir compare="Text">union_01</output-dir>		
-            </compilation-unit>		
-        </test-case>		
-        <test-case FilePath="list">		
-            <compilation-unit name="union_02">		
-                <output-dir compare="Text">union_02</output-dir>		
-            </compilation-unit>		
-        </test-case>
- -->
+        <!--         <test-case FilePath="list">
+                    <compilation-unit name="union_01">
+                        <output-dir compare="Text">union_01</output-dir>
+                    </compilation-unit>
+                </test-case>
+                <test-case FilePath="list">
+                    <compilation-unit name="union_02">
+                        <output-dir compare="Text">union_02</output-dir>
+                    </compilation-unit>
+                </test-case>
+         -->
         <test-case FilePath="list">
             <compilation-unit name="unordered-list-constructor_01">
                 <output-dir compare="Text">unordered-list-constructor_01</output-dir>
@@ -2860,20 +2860,20 @@
                 <output-dir compare="Text">stable_sort</output-dir>
             </compilation-unit>
         </test-case>
-   <!--
-    <test-case FilePath="misc">
-      <compilation-unit name="range_01">
-        <output-dir compare="Text">range_01</output-dir>
-      </compilation-unit>
-    </test-case>
-   -->
-  <!--
-    <test-case FilePath="misc">
-      <compilation-unit name="tid_01">
-        <output-dir compare="Text">tid_01</output-dir>
-      </compilation-unit>
-    </test-case>
-   -->
+        <!--
+         <test-case FilePath="misc">
+           <compilation-unit name="range_01">
+             <output-dir compare="Text">range_01</output-dir>
+           </compilation-unit>
+         </test-case>
+        -->
+        <!--
+          <test-case FilePath="misc">
+            <compilation-unit name="tid_01">
+              <output-dir compare="Text">tid_01</output-dir>
+            </compilation-unit>
+          </test-case>
+         -->
         <test-case FilePath="misc">
             <compilation-unit name="year_01">
                 <output-dir compare="Text">year_01</output-dir>
@@ -3969,27 +3969,27 @@
         </test-case>
     </test-group>
     <test-group name="open-closed">
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="c2c-w-optional">
-        <output-dir compare="Text">c2c-w-optional</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="c2c-wo-optional">
-        <output-dir compare="Text">c2c-wo-optional</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="c2c">
-        <output-dir compare="Text">c2c</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="c2c-w-optional">
+            <output-dir compare="Text">c2c-w-optional</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="c2c-wo-optional">
+            <output-dir compare="Text">c2c-wo-optional</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="c2c">
+            <output-dir compare="Text">c2c</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="open-closed">
             <compilation-unit name="heterog-list-ordered01">
                 <output-dir compare="Text">heterog-list-ordered01</output-dir>
@@ -4000,20 +4000,20 @@
                 <output-dir compare="Text">heterog-list01</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="heterog-list02">
-        <output-dir compare="Text">heterog-list02</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="heterog-list03">
-        <output-dir compare="Text">heterog-list03</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="heterog-list02">
+            <output-dir compare="Text">heterog-list02</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="heterog-list03">
+            <output-dir compare="Text">heterog-list03</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="open-closed">
             <compilation-unit name="open-closed-01">
                 <output-dir compare="Text">open-closed-01</output-dir>
@@ -4059,55 +4059,55 @@
                 <output-dir compare="Text">query-issue236</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-15">
-        <output-dir compare="Text">open-closed-15</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-16">
-        <output-dir compare="Text">open-closed-16</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-17">
-        <output-dir compare="Text">open-closed-17</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-19">
-        <output-dir compare="Text">open-closed-19</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-20">
-        <output-dir compare="Text">open-closed-20</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-21">
-        <output-dir compare="Text">open-closed-21</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-22">
-        <output-dir compare="Text">open-closed-22</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-15">
+            <output-dir compare="Text">open-closed-15</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-16">
+            <output-dir compare="Text">open-closed-16</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-17">
+            <output-dir compare="Text">open-closed-17</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-19">
+            <output-dir compare="Text">open-closed-19</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-20">
+            <output-dir compare="Text">open-closed-20</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-21">
+            <output-dir compare="Text">open-closed-21</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-22">
+            <output-dir compare="Text">open-closed-22</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="open-closed">
             <compilation-unit name="open-closed-24">
                 <output-dir compare="Text">open-closed-24</output-dir>
@@ -4123,25 +4123,25 @@
                 <output-dir compare="Text">open-closed-26</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-28">
-        <output-dir compare="Text">open-closed-28</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-28">
+            <output-dir compare="Text">open-closed-28</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="open-closed">
             <compilation-unit name="open-closed-29">
                 <output-dir compare="Text">open-closed-29</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="open-closed">
-      <compilation-unit name="open-closed-30">
-        <output-dir compare="Text">open-closed-30</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="open-closed">
+          <compilation-unit name="open-closed-30">
+            <output-dir compare="Text">open-closed-30</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="open-closed">
             <compilation-unit name="open-closed-31">
                 <output-dir compare="Text">open-closed-31</output-dir>
@@ -4267,20 +4267,20 @@
                 <output-dir compare="Text">everysat_01</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="quantifiers">
-      <compilation-unit name="everysat_02">
-        <output-dir compare="Text">everysat_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="quantifiers">
-      <compilation-unit name="everysat_03">
-        <output-dir compare="Text">everysat_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="quantifiers">
+          <compilation-unit name="everysat_02">
+            <output-dir compare="Text">everysat_02</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="quantifiers">
+          <compilation-unit name="everysat_03">
+            <output-dir compare="Text">everysat_03</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="quantifiers">
             <compilation-unit name="everysat_04">
                 <output-dir compare="Text">everysat_04</output-dir>
@@ -4296,27 +4296,27 @@
                 <output-dir compare="Text">somesat_02</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="quantifiers">
-      <compilation-unit name="somesat_03">
-        <output-dir compare="Text">somesat_03</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="quantifiers">
-      <compilation-unit name="somesat_04">
-        <output-dir compare="Text">somesat_04</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--
-    <test-case FilePath="quantifiers">
-      <compilation-unit name="somesat_05">
-        <output-dir compare="Text">somesat_05</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="quantifiers">
+          <compilation-unit name="somesat_03">
+            <output-dir compare="Text">somesat_03</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="quantifiers">
+          <compilation-unit name="somesat_04">
+            <output-dir compare="Text">somesat_04</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--
+        <test-case FilePath="quantifiers">
+          <compilation-unit name="somesat_05">
+            <output-dir compare="Text">somesat_05</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="quantifiers">
             <compilation-unit name="somesat_06">
                 <output-dir compare="Text">somesat_06</output-dir>
@@ -4455,25 +4455,25 @@
                 <output-dir compare="Text">spatial_types_01</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="scan">
-      <compilation-unit name="spatial_types_02">
-        <output-dir compare="Text">spatial_types_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="scan">
+          <compilation-unit name="spatial_types_02">
+            <output-dir compare="Text">spatial_types_02</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="scan">
             <compilation-unit name="temp_types_01">
                 <output-dir compare="Text">temp_types_01</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="scan">
-      <compilation-unit name="temp_types_02">
-        <output-dir compare="Text">temp_types_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="scan">
+          <compilation-unit name="temp_types_02">
+            <output-dir compare="Text">temp_types_02</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
     </test-group>
     <test-group name="semistructured">
         <test-case FilePath="semistructured">
@@ -4992,13 +4992,13 @@
                 <output-dir compare="Text">startwith02</output-dir>
             </compilation-unit>
         </test-case>
-    <!--
-    <test-case FilePath="string">
-      <compilation-unit name="startwith03">
-        <output-dir compare="Text">startwith03</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--
+        <test-case FilePath="string">
+          <compilation-unit name="startwith03">
+            <output-dir compare="Text">startwith03</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="string">
             <compilation-unit name="strconcat01">
                 <output-dir compare="Text">strconcat01</output-dir>
@@ -5609,13 +5609,13 @@
                 <output-dir compare="Text">print_01</output-dir>
             </compilation-unit>
         </test-case>
-<!--  TODO(madhusudancs): Enable this test when REST API supports serialized output support.
-    <test-case FilePath="writers">
-      <compilation-unit name="serialized_01">
-        <output-dir compare="Text">serialized_01</output-dir>
-      </compilation-unit>
-    </test-case>
--->
+        <!--  TODO(madhusudancs): Enable this test when REST API supports serialized output support.
+            <test-case FilePath="writers">
+              <compilation-unit name="serialized_01">
+                <output-dir compare="Text">serialized_01</output-dir>
+              </compilation-unit>
+            </test-case>
+        -->
     </test-group>
     <test-group name="cross-dataverse">
         <test-case FilePath="cross-dataverse">
@@ -5643,13 +5643,13 @@
                 <output-dir compare="Text">cross-dv07</output-dir>
             </compilation-unit>
         </test-case>
-    <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
-    <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv08">
-        <output-dir compare="Text">cross-dv08</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
+        <test-case FilePath="cross-dataverse">
+          <compilation-unit name="cross-dv08">
+            <output-dir compare="Text">cross-dv08</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv09">
                 <output-dir compare="Text">cross-dv09</output-dir>
@@ -5687,20 +5687,20 @@
                 <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
-    <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
-    <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv17">
-        <output-dir compare="Text">cross-dv17</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
-    <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv18">
-        <output-dir compare="Text">cross-dv18</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
+        <test-case FilePath="cross-dataverse">
+          <compilation-unit name="cross-dv17">
+            <output-dir compare="Text">cross-dv17</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
+        <test-case FilePath="cross-dataverse">
+          <compilation-unit name="cross-dv18">
+            <output-dir compare="Text">cross-dv18</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv19">
                 <output-dir compare="Text">cross-dv19</output-dir>
@@ -5764,13 +5764,13 @@
                 <output-dir compare="Text">udf02</output-dir>
             </compilation-unit>
         </test-case>
-    <!-- causes NPE: Issue 200
-    <test-case FilePath="user-defined-functions">
-      <compilation-unit name="udf03">
-        <output-dir compare="Text">udf03</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!-- causes NPE: Issue 200
+        <test-case FilePath="user-defined-functions">
+          <compilation-unit name="udf03">
+            <output-dir compare="Text">udf03</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf04">
                 <output-dir compare="Text">udf04</output-dir>
@@ -5826,13 +5826,13 @@
                 <output-dir compare="Text">udf14</output-dir>
             </compilation-unit>
         </test-case>
-    <!-- Issue 166
-    <test-case FilePath="user-defined-functions">
-      <compilation-unit name="udf15">
-        <output-dir compare="Text">udf15</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!-- Issue 166
+        <test-case FilePath="user-defined-functions">
+          <compilation-unit name="udf15">
+            <output-dir compare="Text">udf15</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf16">
                 <output-dir compare="Text">udf16</output-dir>
@@ -5873,20 +5873,20 @@
                 <output-dir compare="Text">udf23</output-dir>
             </compilation-unit>
         </test-case>
-    <!-- Issue 195
-    <test-case FilePath="user-defined-functions">
-      <compilation-unit name="udf24">
-        <output-dir compare="Text">udf24</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
-    <!-- Issue 218
-    <test-case FilePath="user-defined-functions">
-      <compilation-unit name="udf25">
-        <output-dir compare="Text">udf25</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!-- Issue 195
+        <test-case FilePath="user-defined-functions">
+          <compilation-unit name="udf24">
+            <output-dir compare="Text">udf24</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
+        <!-- Issue 218
+        <test-case FilePath="user-defined-functions">
+          <compilation-unit name="udf25">
+            <output-dir compare="Text">udf25</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf26">
                 <output-dir compare="Text">udf26</output-dir>
@@ -6090,13 +6090,13 @@
                 <output-dir compare="Text">feeds_05</output-dir>
             </compilation-unit>
         </test-case>
-    <!--Disable it because of sporadic failures. Raman will re-enable it.
-    <test-case FilePath="feeds">
-      <compilation-unit name="feeds_06">
-        <output-dir compare="Text">feeds_06</output-dir>
-      </compilation-unit>
-    </test-case>
-    -->
+        <!--Disable it because of sporadic failures. Raman will re-enable it.
+        <test-case FilePath="feeds">
+          <compilation-unit name="feeds_06">
+            <output-dir compare="Text">feeds_06</output-dir>
+          </compilation-unit>
+        </test-case>
+        -->
         <test-case FilePath="feeds">
             <compilation-unit name="feeds_07">
                 <output-dir compare="Text">feeds_07</output-dir>
@@ -6132,6 +6132,28 @@
         <test-case FilePath="hdfs">
             <compilation-unit name="hdfs_03">
                 <output-dir compare="Text">hdfs_03</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group>
+        <test-case FilePath="big-object">
+            <compilation-unit name="big_object_sort">
+                <output-dir compare="Text">big_object_sort</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="big-object">
+            <compilation-unit name="big_object_groupby">
+                <output-dir compare="Text">big_object_groupby</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="big-object">
+            <compilation-unit name="big_object_groupby-2">
+                <output-dir compare="Text">big_object_groupby-2</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="big-object">
+            <compilation-unit name="big_object_join">
+                <output-dir compare="Text">big_object_join</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>

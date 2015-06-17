@@ -147,7 +147,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
             this.runtimeType = runtimeType;
             this.feedId = feedConnectionId;
             this.nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
-            fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
+            fta = new FrameTupleAccessor(recordDesc);
             IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                     .getApplicationContext().getApplicationObject();
             this.feedManager = runtimeCtx.getFeedManager();

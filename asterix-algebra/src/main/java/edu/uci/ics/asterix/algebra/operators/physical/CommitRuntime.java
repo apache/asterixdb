@@ -134,6 +134,6 @@ public class CommitRuntime implements IPushRuntime {
 
     @Override
     public void setInputRecordDescriptor(int index, RecordDescriptor recordDescriptor) {
-        this.frameTupleAccessor = new FrameTupleAccessor(hyracksTaskCtx.getFrameSize(), recordDescriptor);
+        this.frameTupleAccessor = new FrameTupleAccessor(recordDescriptor);
     }
 }

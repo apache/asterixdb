@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.external.indexing.dataflow;
 
 import java.io.DataOutput;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 
 import edu.uci.ics.asterix.external.indexing.input.AbstractHDFSReader;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
@@ -25,12 +24,12 @@ import edu.uci.ics.asterix.om.base.AMutableInt64;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 
 public abstract class AbstractIndexingTupleParser implements ITupleParser{
@@ -38,7 +37,6 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
     protected ArrayTupleBuilder tb;
     protected DataOutput dos;
     protected final FrameTupleAppender appender;
-    protected final ByteBuffer frame;
     protected final ARecordType recType;
     protected final IHyracksTaskContext ctx;
     protected final IAsterixHDFSRecordParser deserializer;
@@ -51,8 +49,7 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
     protected final ISerializerDeserializer longSerde = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     
     public AbstractIndexingTupleParser(IHyracksTaskContext ctx, ARecordType recType, IAsterixHDFSRecordParser deserializer) throws HyracksDataException {
-        appender = new FrameTupleAppender(ctx.getFrameSize());
-        frame = ctx.allocateFrame();
+        appender = new FrameTupleAppender(new VSizeFrame(ctx));
         this.recType = recType;
         this.ctx = ctx;
         this.deserializer = deserializer;
@@ -61,7 +58,6 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
     @Override
     public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
         AbstractHDFSReader inReader = (AbstractHDFSReader) in;
-        appender.reset(frame, true);
         Object record;
         try {
             inReader.initialize();
@@ -75,9 +71,7 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
                 addTupleToFrame(writer);
                 record = inReader.readNext();
             }
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(frame, writer);
-            }
+            appender.flush(writer, true);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -88,8 +82,7 @@ public abstract class AbstractIndexingTupleParser implements ITupleParser{
 
     protected void addTupleToFrame(IFrameWriter writer) throws HyracksDataException {
         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
+            appender.flush(writer, true);
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                 throw new IllegalStateException("Record is too big to fit in a frame");
             }

@@ -1,0 +1,16 @@
+/*
+* Description  : Create an external dataset that contains long comments fields, 10% of the records have a 32K size comments.
+                 This will trigger into the VSizeFrame path
+* Expected Res : Success
+* Date         : Jun 16 2015
+*/
+
+use dataverse test;
+
+for $i in dataset('Line')
+group by $comment := $i.l_comment, $id := $i.l_orderkey with $i
+order by $id
+return {
+    "id": $id,
+    "length": string-length($comment),
+    "comment": $comment}

@@ -1,0 +1,66 @@
+/*
+* Description  : Create an external dataset that contains long comments fields, 10% of the records have a 32K size comments.
+                 This will trigger into the VSizeFrame path
+* Expected Res : Success
+* Date         : Jun 16 2015
+*/
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineType as closed {
+  l_orderkey: int32,
+  l_partkey: int32,
+  l_suppkey: int32,
+  l_linenumber: int32,
+  l_quantity: double,
+  l_extendedprice: double,
+  l_discount: double,
+  l_tax: double,
+  l_returnflag: string,
+  l_linestatus: string,
+  l_shipdate: string,
+  l_commitdate: string,
+  l_receiptdate: string,
+  l_shipinstruct: string,
+  l_shipmode: string,
+  l_comment: string
+}
+
+create type OrderType as closed {
+  o_orderkey: int32,
+  o_custkey: int32,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
+  o_orderpriority: string,
+  o_clerk: string,
+  o_shippriority: int32,
+  o_comment: string
+}
+
+create type CustomerType as closed {
+  c_custkey: int32,
+  c_name: string,
+  c_address: string,
+  c_nationkey: int32,
+  c_phone: string,
+  c_acctbal: double,
+  c_mktsegment: string,
+  c_comment: string
+}
+
+
+create external dataset Line(LineType)
+using localfs
+(("path"="nc1://data/big-object/lineitem.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+
+create external dataset Order(OrderType)
+using localfs
+(("path"="nc1://data/big-object/order.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+
+create external dataset Customer(CustomerType)
+using localfs
+(("path"="nc1://data/big-object/customer.tbl.big"),("input-format"="text-input-format"),("format"="delimited-text"),("delimiter"="|"));
+

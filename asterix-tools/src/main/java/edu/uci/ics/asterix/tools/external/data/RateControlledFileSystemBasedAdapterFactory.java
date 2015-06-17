@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -255,7 +254,6 @@ class RateControlledTupleParser extends AbstractTupleParser {
     @Override
     public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
 
-        appender.reset(frame, true);
         IDataParser parser = getDataParser();
         try {
             parser.initialize(in, recType, true);
@@ -270,9 +268,7 @@ class RateControlledTupleParser extends AbstractTupleParser {
                 }
                 addTupleToFrame(writer);
             }
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(frame, writer);
-            }
+            appender.flush(writer, true);
         } catch (AsterixException ae) {
             throw new HyracksDataException(ae);
         } catch (IOException ioe) {
