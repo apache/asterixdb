@@ -14,14 +14,15 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group.external;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -33,7 +34,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppenderAccessor;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
@@ -60,12 +61,12 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
     /**
      * Input frames, one for each run file.
      */
-    private List<ByteBuffer> inFrames;
+    private List<IFrame> inFrames;
     /**
      * Output frame.
      */
-    private ByteBuffer outFrame, writerFrame;
-    private final FrameTupleAppender outAppender;
+    private IFrame outFrame, writerFrame;
+    private final FrameTupleAppenderAccessor outAppender;
     private FrameTupleAppender writerAppender;
     private LinkedList<RunFileReader> runs;
     private ExternalGroupState aggState;
@@ -76,7 +77,6 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private int runFrameLimit = 1;
     private int[] currentFrameIndexInRun;
     private int[] currentRunFrames;
-    private final FrameTupleAccessor outFrameAccessor;
 
     ExternalGroupMergeOperatorNodePushable(IHyracksTaskContext ctx, Object stateId,
             IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory nmkFactory, int[] keyFields,
@@ -108,8 +108,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
         tupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
         this.ctx = ctx;
-        outAppender = new FrameTupleAppender(ctx.getFrameSize());
-        outFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), outRecordDescriptor);
+        outAppender = new FrameTupleAppenderAccessor(outRecordDescriptor);
         this.isOutputSorted = isOutputSorted;
         this.framesLimit = framesLimit;
         this.outRecordDescriptor = outRecordDescriptor;
@@ -132,10 +131,9 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
             } else {
                 aggState = null;
                 runs = new LinkedList<RunFileReader>(runs);
-                inFrames = new ArrayList<ByteBuffer>();
-                outFrame = ctx.allocateFrame();
+                inFrames = new ArrayList<>();
+                outFrame = new VSizeFrame(ctx);
                 outAppender.reset(outFrame, true);
-                outFrameAccessor.reset(outFrame);
                 while (runs.size() > 0) {
                     try {
                         doPass(runs);
@@ -160,7 +158,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
         boolean finalPass = false;
 
         while (inFrames.size() + 2 < framesLimit) {
-            inFrames.add(ctx.allocateFrame());
+            inFrames.add(new VSizeFrame(ctx));
         }
         int runNumber;
         if (runs.size() + 2 <= framesLimit) {
@@ -184,8 +182,8 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
             RunFileReader[] runFileReaders = new RunFileReader[runNumber];
             FrameTupleAccessor[] tupleAccessors = new FrameTupleAccessor[inFrames.size()];
             Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
-            ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), outRecordDescriptor,
-                    runNumber, comparator, keyFields, nmkComputer);
+            ReferencedPriorityQueue topTuples = new ReferencedPriorityQueue(runNumber, comparator, keyFields,
+                    nmkComputer);
             /**
              * current tuple index in each run
              */
@@ -203,8 +201,8 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
                 for (int j = 0; j < runFrameLimit; j++) {
                     int frameIndex = currentFrameIndexInRun[runIndex] + j;
                     if (runFileReaders[runIndex].nextFrame(inFrames.get(frameIndex))) {
-                        tupleAccessors[frameIndex] = new FrameTupleAccessor(ctx.getFrameSize(), outRecordDescriptor);
-                        tupleAccessors[frameIndex].reset(inFrames.get(frameIndex));
+                        tupleAccessors[frameIndex] = new FrameTupleAccessor(outRecordDescriptor);
+                        tupleAccessors[frameIndex].reset(inFrames.get(frameIndex).getBuffer());
                         currentRunFrames[runIndex]++;
                         if (j == 0)
                             setNextTopTuple(runIndex, tupleIndices, runFileReaders, tupleAccessors, topTuples);
@@ -224,11 +222,11 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
                 ReferenceEntry top = topTuples.peek();
                 int tupleIndex = top.getTupleIndex();
                 int runIndex = topTuples.peek().getRunid();
-                FrameTupleAccessor fta = top.getAccessor();
+                IFrameTupleAccessor fta = top.getAccessor();
 
-                int currentTupleInOutFrame = outFrameAccessor.getTupleCount() - 1;
+                int currentTupleInOutFrame = outAppender.getTupleCount() - 1;
                 if (currentTupleInOutFrame < 0
-                        || compareFrameTuples(fta, tupleIndex, outFrameAccessor, currentTupleInOutFrame) != 0) {
+                        || compareFrameTuples(fta, tupleIndex, outAppender, currentTupleInOutFrame) != 0) {
                     /**
                      * Initialize the first output record Reset the
                      * tuple builder
@@ -259,7 +257,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
                      * outFrame
                      */
 
-                    aggregator.aggregate(fta, tupleIndex, outFrameAccessor, currentTupleInOutFrame, aggregateState);
+                    aggregator.aggregate(fta, tupleIndex, outAppender, currentTupleInOutFrame, aggregateState);
 
                 }
                 tupleIndices[runIndex]++;
@@ -295,49 +293,42 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
         }
 
         if (writerFrame == null) {
-            writerFrame = ctx.allocateFrame();
+            writerFrame = new VSizeFrame(ctx);
         }
 
         if (writerAppender == null) {
-            writerAppender = new FrameTupleAppender(ctx.getFrameSize());
+            writerAppender = new FrameTupleAppender();
             writerAppender.reset(writerFrame, true);
         }
 
-        outFrameAccessor.reset(outFrame);
-
-        for (int i = 0; i < outFrameAccessor.getTupleCount(); i++) {
+        for (int i = 0; i < outAppender.getTupleCount(); i++) {
 
             finalTupleBuilder.reset();
 
             for (int k = 0; k < storedKeys.length; k++) {
-                finalTupleBuilder.addField(outFrameAccessor, i, storedKeys[k]);
+                finalTupleBuilder.addField(outAppender, i, storedKeys[k]);
             }
 
             if (isFinal) {
 
-                aggregator.outputFinalResult(finalTupleBuilder, outFrameAccessor, i, aggregateState);
+                aggregator.outputFinalResult(finalTupleBuilder, outAppender, i, aggregateState);
 
             } else {
 
-                aggregator.outputPartialResult(finalTupleBuilder, outFrameAccessor, i, aggregateState);
+                aggregator.outputPartialResult(finalTupleBuilder, outAppender, i, aggregateState);
             }
 
             if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
                     finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
-                FrameUtils.flushFrame(writerFrame, writer);
-                writerAppender.reset(writerFrame, true);
+                writerAppender.flush(writer, true);
                 if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
                         finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
                     throw new HyracksDataException("Aggregation output is too large to be fit into a frame.");
                 }
             }
         }
-        if (writerAppender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(writerFrame, writer);
-            writerAppender.reset(writerFrame, true);
-        }
+        writerAppender.flush(writer, true);
 
-        outAppender.reset(outFrame, true);
     }
 
     private void setNextTopTuple(int runIndex, int[] tupleIndices, RunFileReader[] runCursors,
@@ -377,7 +368,7 @@ class ExternalGroupMergeOperatorNodePushable extends AbstractUnaryOutputSourceOp
             for (int j = 0; j < runFrameLimit; j++) {
                 int frameIndex = currentFrameIndexInRun[runIndex] + j;
                 if (runCursors[runIndex].nextFrame(inFrames.get(frameIndex))) {
-                    tupleAccessors[frameIndex].reset(inFrames.get(frameIndex));
+                    tupleAccessors[frameIndex].reset(inFrames.get(frameIndex).getBuffer());
                     existNext = true;
                     currentRunFrames[runIndex]++;
                 } else {

@@ -14,16 +14,16 @@
  */
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
-import java.nio.ByteBuffer;
-
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class FrameDeserializingDataReader implements IOpenableDataReader<Object[]> {
-    private final ByteBuffer buffer;
+    private final IFrame frame;
 
     private boolean eos;
 
@@ -35,16 +35,15 @@ public class FrameDeserializingDataReader implements IOpenableDataReader<Object[
 
     public FrameDeserializingDataReader(IHyracksTaskContext ctx, IFrameReader frameReader,
             RecordDescriptor recordDescriptor) throws HyracksDataException {
-        buffer = ctx.allocateFrame();
+        this.frame = new VSizeFrame(ctx);
         this.frameReader = frameReader;
-        this.frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), recordDescriptor);
+        this.frameDeserializer = new FrameDeserializer(recordDescriptor);
     }
 
     @Override
     public void open() throws HyracksDataException {
         frameReader.open();
-        buffer.clear();
-        buffer.flip();
+        frame.reset();
         eos = false;
         first = true;
     }
@@ -64,11 +63,11 @@ public class FrameDeserializingDataReader implements IOpenableDataReader<Object[
             if (!first && !frameDeserializer.done()) {
                 return frameDeserializer.deserializeRecord();
             }
-            buffer.clear();
-            if (!frameReader.nextFrame(buffer)) {
+            frame.reset();
+            if (!frameReader.nextFrame(frame)) {
                 eos = true;
             } else {
-                frameDeserializer.reset(buffer);
+                frameDeserializer.reset(frame.getBuffer());
             }
             first = false;
         }

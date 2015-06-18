@@ -15,8 +15,8 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.io.DataOutput;
-import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -60,9 +60,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
             try {
                 indexAccessor.diskOrderScan(cursor);
                 int fieldCount = treeIndex.getFieldCount();
-                ByteBuffer frame = ctx.allocateFrame();
-                FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-                appender.reset(frame, true);
+                FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
                 DataOutput dos = tb.getDataOutput();
 
@@ -72,21 +70,15 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
 
                     ITupleReference frameTuple = cursor.getTuple();
                     for (int i = 0; i < frameTuple.getFieldCount(); i++) {
-                        dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
+                        dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i),
+                                frameTuple.getFieldLength(i));
                         tb.addFieldEndOffset();
                     }
 
-                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        FrameUtils.flushFrame(frame, writer);
-                        appender.reset(frame, true);
-                        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
-                        }
-                    }
+                    FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                            tb.getSize());
                 }
-                if (appender.getTupleCount() > 0) {
-                    FrameUtils.flushFrame(frame, writer);
-                }
+                appender.flush(writer, true);
             } catch (Exception e) {
                 writer.fail();
                 throw new HyracksDataException(e);

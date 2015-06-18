@@ -22,6 +22,7 @@ import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFieldFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputRuntimeFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -31,26 +32,24 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IScalarEvaluatorFactory cond;
+    private final IScalarEvaluatorFactory cond;
 
-    private IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
+    private final IBinaryBooleanInspectorFactory binaryBooleanInspectorFactory;
 
-    private boolean retainNull;
+    private final boolean retainNull;
 
-    private int nullPlaceholderVariableIndex;
+    private final int nullPlaceholderVariableIndex;
 
-    private INullWriterFactory nullWriterFactory;
+    private final INullWriterFactory nullWriterFactory;
 
     /**
      * @param cond
-     * @param projectionList
-     *            if projectionList is null, then no projection is performed
+     * @param projectionList               if projectionList is null, then no projection is performed
      * @param retainNull
      * @param nullPlaceholderVariableIndex
      * @param nullWriterFactory
@@ -75,7 +74,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx) {
         final IBinaryBooleanInspector bbi = binaryBooleanInspectorFactory.createBinaryBooleanInspector(ctx);
-        return new AbstractOneInputOneOutputOneFramePushRuntime() {
+        return new AbstractOneInputOneOutputOneFieldFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
             private IScalarEvaluator eval;
             private INullWriter nullWriter = null;
@@ -122,35 +121,11 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                         }
                     } else {
                         if (retainNull) {
-                            //keep all field values as is except setting nullPlaceholderVariable field to null
-                            int i = 0;
-                            int tryCount = 0;
-                            while (true) {
-                                for (i = 0; i < tRef.getFieldCount(); i++) {
-                                    if (i == nullPlaceholderVariableIndex) {
-                                        if (!appender.appendField(nullTupleBuilder.getByteArray(), 0,
-                                                nullTupleBuilder.getSize())) {
-                                            FrameUtils.flushFrame(frame, writer);
-                                            appender.reset(frame, true);
-                                            break;
-                                        }
-                                    } else {
-                                        if (!appender.appendField(tAccess, t, i)) {
-                                            FrameUtils.flushFrame(frame, writer);
-                                            appender.reset(frame, true);
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (i == tRef.getFieldCount()) {
-                                    break;
+                            for (int i = 0; i < tRef.getFieldCount(); i++) {
+                                if (i == nullPlaceholderVariableIndex) {
+                                    appendField(nullTupleBuilder.getByteArray(), 0, nullTupleBuilder.getSize());
                                 } else {
-                                    tryCount++;
-                                    if (tryCount == 2) {
-                                        throw new IllegalStateException(
-                                                "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime).");
-                                    }
+                                    appendField(tAccess, t, i);
                                 }
                             }
                         }

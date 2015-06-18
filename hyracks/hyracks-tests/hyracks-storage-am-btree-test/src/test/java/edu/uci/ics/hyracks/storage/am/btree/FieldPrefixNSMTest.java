@@ -16,14 +16,15 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
-import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.logging.Level;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -69,8 +70,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
             }
         }
 
-        ByteBuffer buf = ctx.allocateFrame();
-        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        IFrame buf = new VSizeFrame(ctx);
+        FrameTupleAppender appender = new FrameTupleAppender(buf);
         ArrayTupleBuilder tb = new ArrayTupleBuilder(3);
         DataOutput dos = tb.getDataOutput();
 
@@ -78,8 +79,8 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
-        accessor.reset(buf);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(recDesc);
+        accessor.reset(buf.getBuffer());
         FrameTupleReference tuple = new FrameTupleReference();
 
         tb.reset();

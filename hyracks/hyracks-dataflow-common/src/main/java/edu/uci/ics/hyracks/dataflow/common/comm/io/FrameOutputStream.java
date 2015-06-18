@@ -14,28 +14,26 @@
  */
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
-import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
     private static final Logger LOGGER = Logger.getLogger(FrameOutputStream.class.getName());
 
     private final FrameTupleAppender frameTupleAppender;
 
-    public FrameOutputStream(int frameSize) {
-        super(frameSize);
-        this.frameTupleAppender = new FrameTupleAppender(frameSize);
+    public FrameOutputStream(int initialStreamCapaciy) {
+        super(initialStreamCapaciy);
+        this.frameTupleAppender = new FrameTupleAppender();
     }
 
-    public void reset(ByteBuffer buffer, boolean clear) {
-        if (clear) {
-            buffer.clear();
-        }
-        frameTupleAppender.reset(buffer, clear);
+    public void reset(IFrame frame, boolean clear) throws HyracksDataException {
+        frameTupleAppender.reset(frame, clear);
     }
 
     public int getTupleCount() {
@@ -46,12 +44,16 @@ public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
         return tupleCount;
     }
 
-    public boolean appendTuple() {
+    public boolean appendTuple() throws HyracksDataException {
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("appendTuple(): tuple size: " + count);
         }
         boolean appended = frameTupleAppender.append(buf, 0, count);
         count = 0;
         return appended;
+    }
+
+    public void flush(IFrameWriter writer) throws HyracksDataException {
+        frameTupleAppender.flush(writer, true);
     }
 }

@@ -22,7 +22,9 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryBooleanInspector;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -63,15 +65,15 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
             throws HyracksDataException {
         return new AbstractUnaryInputOperatorNodePushable() {
             private final IFrameWriter[] writers = new IFrameWriter[outputArity];
-            private final ByteBuffer[] writeBuffers = new ByteBuffer[outputArity];
+            private final IFrame[] writeBuffers = new IFrame[outputArity];
             private final ICopyEvaluator[] evals = new ICopyEvaluator[outputArity];
             private final ArrayBackedValueStorage evalBuf = new ArrayBackedValueStorage();
             private final RecordDescriptor inOutRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(),
                     0);
-            private final FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), inOutRecDesc);
+            private final FrameTupleAccessor accessor = new FrameTupleAccessor(inOutRecDesc);
             private final FrameTupleReference frameTuple = new FrameTupleReference();
 
-            private final FrameTupleAppender tupleAppender = new FrameTupleAppender(ctx.getFrameSize());
+            private final FrameTupleAppender tupleAppender = new FrameTupleAppender();
             private final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(inOutRecDesc.getFieldCount());
             private final DataOutput tupleDos = tupleBuilder.getDataOutput();
 
@@ -80,9 +82,8 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 // Flush (possibly not full) buffers that have data, and close writers.
                 for (int i = 0; i < outputArity; i++) {
                     tupleAppender.reset(writeBuffers[i], false);
-                    if (tupleAppender.getTupleCount() > 0) {
-                        FrameUtils.flushFrame(writeBuffers[i], writers[i]);
-                    }
+                    // ? by JF why didn't clear the buffer ?
+                    tupleAppender.flush(writers[i], false);
                     writers[i].close();
                 }
             }
@@ -133,17 +134,8 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }
-                // Append to frame.
-                tupleAppender.reset(writeBuffers[outputIndex], false);
-                if (!tupleAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                        tupleBuilder.getSize())) {
-                    FrameUtils.flushFrame(writeBuffers[outputIndex], writers[outputIndex]);
-                    tupleAppender.reset(writeBuffers[outputIndex], true);
-                    if (!tupleAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                            tupleBuilder.getSize())) {
-                        throw new IllegalStateException();
-                    }
-                }
+                FrameUtils.appendToWriter(writers[outputIndex], tupleAppender, tupleBuilder.getFieldEndOffsets(),
+                        tupleBuilder.getByteArray(), 0, tupleBuilder.getSize());
             }
 
             @Override
@@ -153,7 +145,7 @@ public class PartitioningSplitOperatorDescriptor extends AbstractSingleActivityO
                 }
                 // Create write buffers.
                 for (int i = 0; i < outputArity; i++) {
-                    writeBuffers[i] = ctx.allocateFrame();
+                    writeBuffers[i] = new VSizeFrame(ctx);
                     // Make sure to clear all buffers, since we are reusing the tupleAppender.
                     tupleAppender.reset(writeBuffers[i], true);
                 }

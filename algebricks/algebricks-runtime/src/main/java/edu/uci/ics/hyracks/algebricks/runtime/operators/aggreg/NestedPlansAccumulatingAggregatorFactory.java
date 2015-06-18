@@ -50,7 +50,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDesc,
             RecordDescriptor outRecordDescriptor, int[] keys, int[] partialKeys) throws HyracksDataException {
 
-        final AggregatorOutput outputWriter = new AggregatorOutput(ctx.getFrameSize(), subplans, keyFieldIdx.length,
+        final AggregatorOutput outputWriter = new AggregatorOutput(subplans, keyFieldIdx.length,
                 decorFieldIdx.length);
         final NestedTupleSourceRuntime[] pipelines = new NestedTupleSourceRuntime[subplans.length];
         for (int i = 0; i < subplans.length; i++) {
@@ -173,7 +173,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         private ArrayTupleBuilder tb;
         private AlgebricksPipeline[] subplans;
 
-        public AggregatorOutput(int frameSize, AlgebricksPipeline[] subplans, int numKeys, int numDecors) {
+        public AggregatorOutput(AlgebricksPipeline[] subplans, int numKeys, int numDecors) {
             this.subplans = subplans;
             // this.keyFieldIndexes = keyFieldIndexes;
             int totalAggFields = 0;
@@ -187,7 +187,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
 
             this.tAccess = new FrameTupleAccessor[inputRecDesc.length];
             for (int i = 0; i < inputRecDesc.length; i++) {
-                tAccess[i] = new FrameTupleAccessor(frameSize, inputRecDesc[i]);
+                tAccess[i] = new FrameTupleAccessor(inputRecDesc[i]);
             }
         }
 

@@ -16,7 +16,8 @@ package edu.uci.ics.hyracks.dataflow.std.collectors;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.channels.IInputChannel;
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -34,16 +35,27 @@ public class NonDeterministicFrameReader implements IFrameReader {
     }
 
     @Override
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
+    public boolean nextFrame(IFrame frame) throws HyracksDataException {
         int index = channelReader.findNextSender();
-        if (index >= 0) {
-            IInputChannel[] channels = channelReader.getChannels();
-            ByteBuffer srcFrame = channels[index].getNextBuffer();
-            FrameUtils.copy(srcFrame, buffer);
-            channels[index].recycleBuffer(srcFrame);
-            return true;
+        if (index < 0) {
+            return false;
         }
-        return false;
+        frame.reset();
+        ByteBuffer srcFrame = channelReader.getNextBuffer(index);
+        int nBlocks = FrameHelper.deserializeNumOfMinFrame(srcFrame);
+        frame.ensureFrameSize(frame.getMinSize() * nBlocks);
+        FrameUtils.copyWholeFrame(srcFrame, frame.getBuffer());
+        channelReader.recycleBuffer(index, srcFrame);
+        for (int i = 1; i < nBlocks; ++i) {
+            srcFrame = channelReader.getNextBuffer(index);
+            frame.getBuffer().put(srcFrame);
+            channelReader.recycleBuffer(index, srcFrame);
+        }
+        if (frame.getBuffer().hasRemaining()) { // bigger frame
+            FrameHelper.clearRemainingFrame(frame.getBuffer(), frame.getBuffer().position());
+        }
+        frame.getBuffer().flip();
+        return true;
     }
 
     @Override

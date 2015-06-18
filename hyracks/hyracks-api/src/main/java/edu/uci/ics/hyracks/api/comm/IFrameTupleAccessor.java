@@ -17,23 +17,28 @@ package edu.uci.ics.hyracks.api.comm;
 import java.nio.ByteBuffer;
 
 public interface IFrameTupleAccessor {
-    public int getFieldCount();
+    int getFieldCount();
 
-    public int getFieldSlotsLength();
+    int getFieldSlotsLength();
 
-    public int getFieldEndOffset(int tupleIndex, int fIdx);
+    int getFieldEndOffset(int tupleIndex, int fIdx);
 
-    public int getFieldStartOffset(int tupleIndex, int fIdx);
+    int getFieldStartOffset(int tupleIndex, int fIdx);
 
-    public int getFieldLength(int tupleIndex, int fIdx);
+    int getFieldLength(int tupleIndex, int fIdx);
 
-    public int getTupleEndOffset(int tupleIndex);
+    int getTupleLength(int tupleIndex);
 
-    public int getTupleStartOffset(int tupleIndex);
+    int getTupleEndOffset(int tupleIndex);
 
-    public int getTupleCount();
+    int getTupleStartOffset(int tupleIndex);
 
-    public ByteBuffer getBuffer();
+    int getAbsoluteFieldStartOffset(int tupleIndex, int fIdx);
 
-    public void reset(ByteBuffer buffer);
+    int getTupleCount();
+
+    ByteBuffer getBuffer();
+
+    void reset(ByteBuffer buffer);
+
 }

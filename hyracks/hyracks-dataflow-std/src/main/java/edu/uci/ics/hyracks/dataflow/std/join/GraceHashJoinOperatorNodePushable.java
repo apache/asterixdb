@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -103,7 +105,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
 
         try {
 
-            ByteBuffer buffer = ctx.allocateFrame();// input
+            IFrame buffer = new VSizeFrame(ctx);
             // buffer
             int tableSize = (int) (numPartitions * recordsPerFrame * factor);
             ISerializableTable table = new SerializableHashTable(tableSize, ctx);
@@ -115,19 +117,19 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
                     continue;
                 }
                 table.reset();
-                InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(
-                        ctx.getFrameSize(), rd0), hpcRep0, new FrameTupleAccessor(ctx.getFrameSize(), rd1), hpcRep1,
-                        new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter, nullWriters1, table, predEvaluator);
+                InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, tableSize, new FrameTupleAccessor(rd0), hpcRep0,
+                        new FrameTupleAccessor(rd1), hpcRep1, new FrameTuplePairComparator(keys0, keys1, comparators),
+                        isLeftOuter, nullWriters1, table, predEvaluator);
 
                 // build
                 if (buildWriter != null) {
                     RunFileReader buildReader = buildWriter.createReader();
                     buildReader.open();
                     while (buildReader.nextFrame(buffer)) {
-                        ByteBuffer copyBuffer = ctx.allocateFrame();
-                        FrameUtils.copy(buffer, copyBuffer);
+                        ByteBuffer copyBuffer = ctx.allocateFrame(buffer.getFrameSize());
+                        FrameUtils.copyAndFlip(buffer.getBuffer(), copyBuffer);
                         joiner.build(copyBuffer);
-                        buffer.clear();
+                        buffer.reset();
                     }
                     buildReader.close();
                 }
@@ -136,8 +138,8 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
                 RunFileReader probeReader = probeWriter.createReader();
                 probeReader.open();
                 while (probeReader.nextFrame(buffer)) {
-                    joiner.join(buffer, writer);
-                    buffer.clear();
+                    joiner.join(buffer.getBuffer(), writer);
+                    buffer.reset();
                 }
                 probeReader.close();
                 joiner.closeJoin(writer);

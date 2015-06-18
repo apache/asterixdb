@@ -27,10 +27,12 @@ import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
 import edu.uci.ics.hyracks.api.resources.IDeallocatable;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
+import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
 
 public class TestJobletContext implements IHyracksJobletContext {
     private final int frameSize;
     private final INCApplicationContext appContext;
+    private final FrameManager frameManger;
     private JobId jobId;
     private WorkspaceFileFactory fileFactory;
 
@@ -39,10 +41,23 @@ public class TestJobletContext implements IHyracksJobletContext {
         this.appContext = appContext;
         this.jobId = jobId;
         fileFactory = new WorkspaceFileFactory(this, (IOManager) getIOManager());
+        this.frameManger = new FrameManager(frameSize);
     }
 
-    public ByteBuffer allocateFrame() {
-        return ByteBuffer.allocate(frameSize);
+    ByteBuffer allocateFrame() throws HyracksDataException {
+        return frameManger.allocateFrame();
+    }
+
+    public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        return frameManger.allocateFrame(bytes);
+    }
+
+    ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newFrameSizeInBytes, boolean copyOldData) throws HyracksDataException {
+        return frameManger.reallocateFrame(tobeDeallocate, newFrameSizeInBytes, copyOldData);
+    }
+
+    void deallocateFrames(int bytes) {
+        frameManger.deallocateFrames(bytes);
     }
 
     public int getFrameSize() {
@@ -106,4 +121,5 @@ public class TestJobletContext implements IHyracksJobletContext {
     public ClassLoader getClassLoader() {
         return this.getClass().getClassLoader();
     }
+
 }

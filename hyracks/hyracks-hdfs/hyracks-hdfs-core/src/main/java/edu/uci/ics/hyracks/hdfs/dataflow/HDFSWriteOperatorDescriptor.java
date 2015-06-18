@@ -76,7 +76,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
 
             private FSDataOutputStream dos;
             private RecordDescriptor inputRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);;
-            private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRd);
+            private FrameTupleAccessor accessor = new FrameTupleAccessor(inputRd);
             private FrameTupleReference tuple = new FrameTupleReference();
             private ITupleWriter tupleWriter;
             private ClassLoader ctxCL;

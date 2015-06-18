@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
@@ -64,7 +66,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
     private static int NUM_READ_BUFFERS = 1;
 
     public HyracksDatasetReader(IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection,
-            ClientNetworkManager netManager, DatasetClientContext datasetClientCtx, JobId jobId, ResultSetId resultSetId)
+            ClientNetworkManager netManager, DatasetClientContext datasetClientCtx, JobId jobId,
+            ResultSetId resultSetId)
             throws Exception {
         this.datasetDirectoryServiceConnection = datasetDirectoryServiceConnection;
         this.netManager = netManager;
@@ -119,7 +122,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
     }
 
     @Override
-    public int read(ByteBuffer buffer) throws HyracksDataException {
+    public int read(IFrame frame) throws HyracksDataException {
+        frame.reset();
         ByteBuffer readBuffer;
         int readSize = 0;
 
@@ -129,7 +133,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
             }
         }
 
-        while (readSize <= 0
+        while (readSize < frame.getFrameSize()
                 && !((lastReadPartition == knownRecords.length - 1) && isPartitionReadComplete(lastMonitor))) {
             waitForNextFrame(lastMonitor);
             if (isPartitionReadComplete(lastMonitor)) {
@@ -142,14 +146,23 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                 readBuffer = resultChannel.getNextBuffer();
                 lastMonitor.notifyFrameRead();
                 if (readBuffer != null) {
-                    buffer.put(readBuffer);
-                    buffer.flip();
-                    readSize = buffer.limit();
-                    resultChannel.recycleBuffer(readBuffer);
+                    if (readSize <=0) {
+                        int nBlocks = FrameHelper.deserializeNumOfMinFrame(readBuffer);
+                        frame.ensureFrameSize(frame.getMinSize() * nBlocks);
+                        frame.getBuffer().clear();
+                        frame.getBuffer().put(readBuffer);
+                        resultChannel.recycleBuffer(readBuffer);
+                        readSize = frame.getBuffer().position();
+                    } else {
+                        frame.getBuffer().put(readBuffer);
+                        resultChannel.recycleBuffer(readBuffer);
+                        readSize = frame.getBuffer().position();
+                    }
                 }
             }
         }
 
+        frame.getBuffer().flip();
         return readSize;
     }
 

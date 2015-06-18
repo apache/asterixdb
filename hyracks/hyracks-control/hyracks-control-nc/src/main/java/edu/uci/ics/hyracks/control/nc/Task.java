@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
@@ -120,12 +121,23 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     }
 
     @Override
-    public void deallocateFrames(int frameCount) {
-        joblet.deallocateFrames(frameCount);
+    public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        return joblet.allocateFrame(bytes);
     }
 
     @Override
-    public int getFrameSize() {
+    public ByteBuffer reallocateFrame(ByteBuffer usedBuffer, int newSizeInBytes, boolean copyOldData)
+            throws HyracksDataException {
+        return joblet.reallocateFrame(usedBuffer, newSizeInBytes, copyOldData);
+    }
+
+    @Override
+    public void deallocateFrames(int bytes) {
+        joblet.deallocateFrames(bytes);
+    }
+
+    @Override
+    public int getInitialFrameSize() {
         return joblet.getFrameSize();
     }
 
@@ -317,12 +329,12 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                 try {
                     writer.open();
                     try {
-                        ByteBuffer buffer = allocateFrame();
-                        while (reader.nextFrame(buffer)) {
+                        VSizeFrame frame = new VSizeFrame(this);
+                        while( reader.nextFrame(frame)){
                             if (aborted) {
                                 return;
                             }
-                            buffer.flip();
+                            ByteBuffer buffer = frame.getBuffer();
                             writer.nextFrame(buffer);
                             buffer.compact();
                         }

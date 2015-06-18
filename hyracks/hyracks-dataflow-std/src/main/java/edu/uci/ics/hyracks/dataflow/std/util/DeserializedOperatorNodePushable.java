@@ -36,7 +36,7 @@ public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOp
             RecordDescriptor inRecordDesc) {
         this.ctx = ctx;
         this.delegate = delegate;
-        deserializer = inRecordDesc == null ? null : new FrameDeserializer(ctx.getFrameSize(), inRecordDesc);
+        deserializer = inRecordDesc == null ? null : new FrameDeserializer(inRecordDesc);
     }
 
     @Override

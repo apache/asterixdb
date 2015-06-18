@@ -15,13 +15,14 @@
 package edu.uci.ics.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
-import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.logging.Level;
 
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -110,16 +111,16 @@ public class BTreeStatsTest extends AbstractBTreeTest {
             LOGGER.info("INSERTING INTO TREE");
         }
 
-        ByteBuffer frame = ctx.allocateFrame();
-        FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        IFrame frame = new VSizeFrame(ctx);
+        FrameTupleAppender appender = new FrameTupleAppender();
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
 
         ISerializerDeserializer[] recDescSers = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
-        IFrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
-        accessor.reset(frame);
+        IFrameTupleAccessor accessor = new FrameTupleAccessor(recDesc);
+        accessor.reset(frame.getBuffer());
         FrameTupleReference tuple = new FrameTupleReference();
 
         ITreeIndexAccessor indexAccessor = btree.createAccessor(TestOperationCallback.INSTANCE,

@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -39,7 +41,7 @@ class GraceHashJoinPartitionBuildOperatorNodePushable extends
     private final FrameTupleAccessor accessor0;
     private final ITuplePartitionComputer hpc;
     private final FrameTupleAppender appender;
-    private ByteBuffer[] outbufs;
+    private IFrame[] outbufs;
     private GraceHashJoinPartitionState state;
 
     GraceHashJoinPartitionBuildOperatorNodePushable(IHyracksTaskContext ctx, Object stateId, int[] keys,
@@ -48,8 +50,8 @@ class GraceHashJoinPartitionBuildOperatorNodePushable extends
         this.ctx = ctx;
         this.stateId = stateId;
         this.numPartitions = numPartitions;
-        accessor0 = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDescriptor);
-        appender = new FrameTupleAppender(ctx.getFrameSize());
+        accessor0 = new FrameTupleAccessor(inRecordDescriptor);
+        appender = new FrameTupleAppender();
         hpc = new FieldHashPartitionComputerFactory(keys, hashFunctionFactories).createPartitioner();
         comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -60,7 +62,7 @@ class GraceHashJoinPartitionBuildOperatorNodePushable extends
     @Override
     public void close() throws HyracksDataException {
         for (int i = 0; i < numPartitions; i++) {
-            ByteBuffer head = outbufs[i];
+            ByteBuffer head = outbufs[i].getBuffer();
             accessor0.reset(head);
             if (accessor0.getTupleCount() > 0) {
                 write(i, head);
@@ -97,13 +99,13 @@ class GraceHashJoinPartitionBuildOperatorNodePushable extends
         for (int i = 0; i < tCount; ++i) {
 
             int entry = hpc.partition(accessor0, i, numPartitions);
-            ByteBuffer outbuf = outbufs[entry];
+            IFrame outbuf = outbufs[entry];
             appender.reset(outbuf, false);
             if (!appender.append(accessor0, i)) {
                 // buffer is full, ie. we cannot fit the tuple
                 // into the buffer -- write it to disk
-                write(entry, outbuf);
-                outbuf.clear();
+                write(entry, outbuf.getBuffer());
+                outbuf.reset();
                 appender.reset(outbuf, true);
                 if (!appender.append(accessor0, i)) {
                     throw new HyracksDataException("Item too big to fit in frame");
@@ -115,10 +117,10 @@ class GraceHashJoinPartitionBuildOperatorNodePushable extends
     @Override
     public void open() throws HyracksDataException {
         state = new GraceHashJoinPartitionState(ctx.getJobletContext().getJobId(), stateId);
-        outbufs = new ByteBuffer[numPartitions];
+        outbufs = new IFrame[numPartitions];
         state.setRunWriters(new RunFileWriter[numPartitions]);
         for (int i = 0; i < numPartitions; i++) {
-            outbufs[i] = ctx.allocateFrame();
+            outbufs[i] = new VSizeFrame(ctx);
         }
     }
 

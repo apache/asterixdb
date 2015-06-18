@@ -29,7 +29,7 @@ public class FrameDeserializingDataWriter implements IFrameWriter {
     public FrameDeserializingDataWriter(IHyracksTaskContext ctx, IOpenableDataWriter<Object[]> writer,
             RecordDescriptor recordDescriptor) {
         this.writer = writer;
-        this.frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), recordDescriptor);
+        this.frameDeserializer = new FrameDeserializer(recordDescriptor);
     }
 
     @Override

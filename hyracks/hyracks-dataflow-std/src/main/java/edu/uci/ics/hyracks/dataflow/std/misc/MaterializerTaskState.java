@@ -19,6 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
@@ -27,6 +28,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
+import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 
 public class MaterializerTaskState extends AbstractStateObject {
@@ -61,15 +63,13 @@ public class MaterializerTaskState extends AbstractStateObject {
         out.nextFrame(buffer);
     }
 
-    public void writeOut(IFrameWriter writer, ByteBuffer frame) throws HyracksDataException {
+    public void writeOut(IFrameWriter writer, IFrame frame) throws HyracksDataException {
         RunFileReader in = out.createReader();
         writer.open();
         try {
             in.open();
             while (in.nextFrame(frame)) {
-                frame.flip();
-                writer.nextFrame(frame);
-                frame.clear();
+                writer.nextFrame(frame.getBuffer());
             }
             in.close();
         } catch (Exception e) {

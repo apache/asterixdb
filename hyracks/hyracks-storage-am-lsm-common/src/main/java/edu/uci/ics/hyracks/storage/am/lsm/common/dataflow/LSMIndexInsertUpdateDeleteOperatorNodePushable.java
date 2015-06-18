@@ -30,6 +30,12 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
 
     protected FrameTupleAppender appender;
 
+    @Override
+    public void open() throws HyracksDataException {
+        super.open();
+        appender = new FrameTupleAppender(writeBuffer);
+    }
+
     public LSMIndexInsertUpdateDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op) {
         super(opDesc, ctx, partition, fieldPermutation, recordDescProvider, op);
@@ -85,8 +91,8 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
                         break;
                     }
                     default: {
-                        throw new HyracksDataException("Unsupported operation " + op
-                                + " in tree index InsertUpdateDelete operator");
+                        throw new HyracksDataException(
+                                "Unsupported operation " + op + " in tree index InsertUpdateDelete operator");
                     }
                 }
             } catch (HyracksDataException e) {
@@ -97,8 +103,9 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
         }
         if (nextFlushTupleIndex == 0) {
             // No partial flushing was necessary. Forward entire frame.
-            System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());
-            FrameUtils.flushFrame(writeBuffer, writer);
+            writeBuffer.ensureFrameSize(buffer.capacity());
+            FrameUtils.copyAndFlip(buffer, writeBuffer.getBuffer());
+            FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
         } else {
             // Flush remaining partial frame.
             flushPartialFrame(nextFlushTupleIndex, tupleCount);
@@ -106,17 +113,9 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
     }
 
     private void flushPartialFrame(int startTupleIndex, int endTupleIndex) throws HyracksDataException {
-        if (appender == null) {
-            appender = new FrameTupleAppender(ctx.getFrameSize());
-        }
-        appender.reset(writeBuffer, true);
         for (int i = startTupleIndex; i < endTupleIndex; i++) {
-            if (!appender.append(accessor, i)) {
-                throw new HyracksDataException("Record size ("
-                        + (accessor.getTupleEndOffset(i) - accessor.getTupleStartOffset(i))
-                        + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
-            }
+            FrameUtils.appendToWriter(writer, appender, accessor, i);
         }
-        FrameUtils.flushFrame(writeBuffer, writer);
+        appender.flush(writer, true);
     }
 }

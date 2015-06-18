@@ -19,18 +19,18 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppenderAccessor;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
@@ -59,9 +59,8 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     protected final MultiComparator invListCmp;
 
     protected final ArrayTupleBuilder queryTokenBuilder = new ArrayTupleBuilder(QUERY_TOKEN_REC_DESC.getFieldCount());
-    protected final ByteBuffer queryTokenFrame;
-    protected final FrameTupleAppender queryTokenAppender;
-    protected final FrameTupleAccessor queryTokenAccessor;
+    protected final IFrame queryTokenFrame;
+    protected final FrameTupleAppenderAccessor queryTokenAppender;
     protected final FrameTupleReference searchKey = new FrameTupleReference();
 
     protected int occurrenceThreshold;
@@ -78,10 +77,9 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         this.invListCursorFactory = new InvertedListCursorFactory(invIndex);
         this.invListCursorCache = new ObjectCache<IInvertedListCursor>(invListCursorFactory, OBJECT_CACHE_INIT_SIZE,
                 OBJECT_CACHE_EXPAND_SIZE);
-        this.queryTokenFrame = ctx.allocateFrame();
-        this.queryTokenAppender = new FrameTupleAppender(ctx.getFrameSize());
-        this.queryTokenAccessor = new FrameTupleAccessor(ctx.getFrameSize(), QUERY_TOKEN_REC_DESC);
-        this.queryTokenAccessor.reset(queryTokenFrame);
+        this.queryTokenFrame =  new VSizeFrame(ctx);
+        this.queryTokenAppender = new FrameTupleAppenderAccessor(QUERY_TOKEN_REC_DESC);
+        this.queryTokenAppender.reset(queryTokenFrame, true);
     }
 
     public void reset() {
@@ -116,7 +114,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     }
 
     public IFrameTupleAccessor createResultFrameTupleAccessor() {
-        return new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), searchResult.getTypeTraits());
+        return new FixedSizeFrameTupleAccessor(ctx.getInitialFrameSize(), searchResult.getTypeTraits());
     }
 
     public ITupleReference createResultFrameTupleReference() {
@@ -144,8 +142,10 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
             ByteBuffer testBuf = buffer.get(i);
             resultFrameTupleAcc.reset(testBuf);
             for (int j = 0; j < resultFrameTupleAcc.getTupleCount(); j++) {
-                strBuffer.append(IntegerPointable.getInteger(resultFrameTupleAcc.getBuffer().array(), resultFrameTupleAcc.getFieldStartOffset(j, 0)) + ",");
-                strBuffer.append(IntegerPointable.getInteger(resultFrameTupleAcc.getBuffer().array(), resultFrameTupleAcc.getFieldStartOffset(j, 1)) + " ");
+                strBuffer.append(IntegerPointable.getInteger(resultFrameTupleAcc.getBuffer().array(),
+                        resultFrameTupleAcc.getFieldStartOffset(j, 0)) + ",");
+                strBuffer.append(IntegerPointable.getInteger(resultFrameTupleAcc.getBuffer().array(),
+                        resultFrameTupleAcc.getFieldStartOffset(j, 1)) + " ");
             }
         }
         System.out.println(strBuffer.toString());

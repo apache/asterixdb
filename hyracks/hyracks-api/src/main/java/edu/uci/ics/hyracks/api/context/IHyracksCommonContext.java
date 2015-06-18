@@ -14,17 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.context;
 
-import java.nio.ByteBuffer;
-
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 
-public interface IHyracksCommonContext {
-    public int getFrameSize();
+public interface IHyracksCommonContext extends IHyracksFrameMgrContext{
 
     public IIOManager getIOManager();
-
-    public ByteBuffer allocateFrame() throws HyracksDataException;
-    
-    public void deallocateFrames(int frameCount);
 }

@@ -61,7 +61,7 @@ class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOpera
         this.spillableTableFactory = spillableTableFactory;
         this.inRecordDescriptor = inRecordDescriptor;
         this.outRecordDescriptor = outRecordDescriptor;
-        this.accessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDescriptor);
+        this.accessor = new FrameTupleAccessor(inRecordDescriptor);
     }
 
     @Override

@@ -16,10 +16,10 @@
 package edu.uci.ics.hyracks.examples.btree.helper;
 
 import java.io.DataOutput;
-import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Random;
 
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -61,8 +60,7 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
 
-        final ByteBuffer outputFrame = ctx.allocateFrame();
-        final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+        final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
         final RecordDescriptor recDesc = recordDescriptors[0];
         final ArrayTupleBuilder tb = new ArrayTupleBuilder(recDesc.getFields().length);
         final Random rnd = new Random(randomSeed);
@@ -79,7 +77,6 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
             public void initialize() throws HyracksDataException {
                 writer.open();
                 try {
-                    appender.reset(outputFrame, true);
                     for (int i = 0; i < numRecords; i++) {
                         tb.reset();
                         for (int j = 0; j < recDesc.getFieldCount(); j++) {
@@ -87,14 +84,13 @@ public class DataGenOperatorDescriptor extends AbstractSingleActivityOperatorDes
                         }
 
                         if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            FrameUtils.flushFrame(outputFrame, writer);
-                            appender.reset(outputFrame, true);
+                            appender.flush(writer, true);
                             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                                 throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
                             }
                         }
                     }
-                    FrameUtils.flushFrame(outputFrame, writer);
+                    appender.flush(writer, true);
                 } catch (Exception e) {
                     writer.fail();
                     throw new HyracksDataException(e);

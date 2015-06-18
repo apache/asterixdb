@@ -57,6 +57,12 @@
   		<groupId>edu.uci.ics.hyracks</groupId>
   		<artifactId>hyracks-data-std</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
+    </dependency>
+   	<dependency>
+  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<artifactId>hyracks-control-nc</artifactId>
+  		<version>0.2.16-SNAPSHOT</version>
+        <scope>test</scope>
   	</dependency>
   </dependencies>
 </project>

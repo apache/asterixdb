@@ -54,8 +54,8 @@ public class SearchResult {
         // Integer for counting occurrences.
         typeTraits[invListFields.length] = IntegerPointable.TYPE_TRAITS;
         this.ctx = ctx;
-        appender = new FixedSizeFrameTupleAppender(ctx.getFrameSize(), typeTraits);
-        accessor = new FixedSizeFrameTupleAccessor(ctx.getFrameSize(), typeTraits);
+        appender = new FixedSizeFrameTupleAppender(ctx.getInitialFrameSize(), typeTraits);
+        accessor = new FixedSizeFrameTupleAccessor(ctx.getInitialFrameSize(), typeTraits);
         tuple = new FixedSizeTupleReference(typeTraits);
         buffers.add(ctx.allocateFrame());
     }

@@ -64,7 +64,7 @@ public class PartitionManager {
              */
             NetworkOutputChannel writer = partitionRequests.remove(pid);
             if (writer != null) {
-                writer.setFrameSize(partition.getTaskContext().getFrameSize());
+                writer.setFrameSize(partition.getTaskContext().getInitialFrameSize());
                 partition.writeTo(writer);
                 if (!partition.isReusable()) {
                     return;
@@ -116,7 +116,7 @@ public class PartitionManager {
             List<IPartition> pList = availablePartitionMap.get(partitionId);
             if (pList != null && !pList.isEmpty()) {
                 IPartition partition = pList.get(0);
-                writer.setFrameSize(partition.getTaskContext().getFrameSize());
+                writer.setFrameSize(partition.getTaskContext().getInitialFrameSize());
                 partition.writeTo(writer);
                 if (!partition.isReusable()) {
                     availablePartitionMap.remove(partitionId);

@@ -24,8 +24,10 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
@@ -48,12 +50,12 @@ public class SerializationDeserializationTest {
         private final IHyracksTaskContext ctx;
         private static final int FRAME_SIZE = 32768;
         private RecordDescriptor rDes;
-        private List<ByteBuffer> buffers;
+        private List<IFrame> buffers;
 
         public SerDeserRunner(RecordDescriptor rDes) throws HyracksException {
             ctx = TestUtils.create(FRAME_SIZE);
             this.rDes = rDes;
-            buffers = new ArrayList<ByteBuffer>();
+            buffers = new ArrayList<>();
         }
 
         public IOpenableDataWriter<Object[]> createWriter() throws HyracksDataException {
@@ -64,8 +66,8 @@ public class SerializationDeserializationTest {
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    ByteBuffer toBuf = ctx.allocateFrame();
-                    toBuf.put(buffer);
+                    IFrame toBuf = new VSizeFrame(ctx);
+                    toBuf.getBuffer().put(buffer);
                     buffers.add(toBuf);
                 }
 
@@ -89,12 +91,12 @@ public class SerializationDeserializationTest {
                 }
 
                 @Override
-                public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                public boolean nextFrame(IFrame frame) throws HyracksDataException {
                     if (i < buffers.size()) {
-                        ByteBuffer buf = buffers.get(i);
-                        buf.flip();
-                        buffer.put(buf);
-                        buffer.flip();
+                        IFrame buf = buffers.get(i);
+                        buf.getBuffer().flip();
+                        frame.getBuffer().put(buf.getBuffer());
+                        frame.getBuffer().flip();
                         ++i;
                         return true;
                     }

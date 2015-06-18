@@ -14,9 +14,9 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -29,7 +29,7 @@ public interface ISpillableTable {
 
     public int getFrameCount();
 
-    public List<ByteBuffer> getFrames();
+    public List<IFrame> getFrames();
 
     public void sortFrames() throws HyracksDataException;
 

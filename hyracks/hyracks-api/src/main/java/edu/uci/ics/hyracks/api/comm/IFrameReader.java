@@ -14,14 +14,12 @@
  */
 package edu.uci.ics.hyracks.api.comm;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFrameReader {
-    public void open() throws HyracksDataException;
+    void open() throws HyracksDataException;
 
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException;
+    boolean nextFrame(IFrame frame) throws HyracksDataException;
 
-    public void close() throws HyracksDataException;
+    void close() throws HyracksDataException;
 }

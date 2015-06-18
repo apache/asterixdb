@@ -203,7 +203,7 @@ public class HadoopHelper {
 
     public int getSortFrameLimit(IHyracksCommonContext ctx) {
         int sortMemory = job.getConfiguration().getInt("io.sort.mb", 100);
-        return (int) (((long) sortMemory * 1024 * 1024) / ctx.getFrameSize());
+        return (int) (((long) sortMemory * 1024 * 1024) / ctx.getInitialFrameSize());
     }
 
     public Job getJob() {

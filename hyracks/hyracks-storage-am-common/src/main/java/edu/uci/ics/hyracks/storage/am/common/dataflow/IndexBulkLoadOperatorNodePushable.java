@@ -66,7 +66,7 @@ public class IndexBulkLoadOperatorNodePushable extends
     public void open() throws HyracksDataException {
         RecordDescriptor recDesc = recDescProvider.getInputRecordDescriptor(
                 opDesc.getActivityId(), 0);
-        accessor = new FrameTupleAccessor(ctx.getFrameSize(), recDesc);
+        accessor = new FrameTupleAccessor(recDesc);
         indexHelper.open();
         index = indexHelper.getIndexInstance();
         try {

@@ -41,7 +41,7 @@ public class SinkWriterRuntime extends AbstractOneInputSinkPushRuntime {
         this.ctx = ctx;
         this.printStream = printStream;
         this.inputRecordDesc = inputRecordDesc;
-        this.tAccess = new FrameTupleAccessor(ctx.getFrameSize(), inputRecordDesc);
+        this.tAccess = new FrameTupleAccessor(inputRecordDesc);
     }
 
     public SinkWriterRuntime(IAWriter writer, IHyracksTaskContext ctx, PrintStream printStream,
@@ -54,7 +54,7 @@ public class SinkWriterRuntime extends AbstractOneInputSinkPushRuntime {
     public void open() throws HyracksDataException {
         if (first) {
             first = false;
-            tAccess = new FrameTupleAccessor(ctx.getFrameSize(), inputRecordDesc);
+            tAccess = new FrameTupleAccessor(inputRecordDesc);
             try {
                 writer.init();
             } catch (AlgebricksException e) {

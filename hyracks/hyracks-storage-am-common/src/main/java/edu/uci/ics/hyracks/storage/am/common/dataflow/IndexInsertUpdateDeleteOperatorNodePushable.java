@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -45,7 +47,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     protected final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     protected FrameTupleAccessor accessor;
     protected FrameTupleReference frameTuple;
-    protected ByteBuffer writeBuffer;
+    protected IFrame writeBuffer;
     protected IIndexAccessor indexAccessor;
     protected ITupleFilter tupleFilter;
     protected IModificationOperationCallback modCallback;
@@ -63,8 +65,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     @Override
     public void open() throws HyracksDataException {
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
-        accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
-        writeBuffer = ctx.allocateFrame();
+        accessor = new FrameTupleAccessor(inputRecDesc);
+        writeBuffer = new VSizeFrame(ctx);
         writer.open();
         indexHelper.open();
         IIndex index = indexHelper.getIndexInstance();
@@ -134,8 +136,9 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             }
         }
         // Pass a copy of the frame to next op.
-        System.arraycopy(buffer.array(), 0, writeBuffer.array(), 0, buffer.capacity());
-        FrameUtils.flushFrame(writeBuffer, writer);
+        writeBuffer.ensureFrameSize(buffer.capacity());
+        FrameUtils.copyAndFlip(buffer, writeBuffer.getBuffer());
+        FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
     }
 
     @Override

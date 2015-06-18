@@ -67,6 +67,11 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
     }
 
     @Override
+    public int getTupleLength(int tupleIndex) {
+        return getTupleEndOffset(tupleIndex) - getTupleStartOffset(tupleIndex);
+    }
+
+    @Override
     public int getFieldSlotsLength() {
         return 0;
     }
@@ -89,6 +94,11 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
     @Override
     public int getTupleStartOffset(int tupleIndex) {
         return tupleIndex * tupleSize;
+    }
+
+    @Override
+    public int getAbsoluteFieldStartOffset(int tupleIndex, int fIdx) {
+        return getTupleStartOffset(tupleIndex) + getFieldSlotsLength() + getFieldStartOffset(tupleIndex, fIdx);
     }
 
     @Override

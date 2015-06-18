@@ -29,7 +29,6 @@
 package edu.uci.ics.hyracks.dataflow.hadoop;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +44,7 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -205,9 +205,7 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
 
                     key = hadoopRecordReader.createKey();
                     value = hadoopRecordReader.createValue();
-                    ByteBuffer outBuffer = ctx.allocateFrame();
-                    FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-                    appender.reset(outBuffer, true);
+                    FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
                     RecordDescriptor outputRecordDescriptor = DatatypeHelper.createKeyValueRecordDescriptor(
                             (Class<? extends Writable>) hadoopRecordReader.createKey().getClass(),
                             (Class<? extends Writable>) hadoopRecordReader.createValue().getClass());
@@ -223,18 +221,11 @@ public class HadoopReadOperatorDescriptor extends AbstractSingleActivityOperator
                                 case 1:
                                     tb.addField(outputRecordDescriptor.getFields()[1], value);
                             }
-                            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                FrameUtils.flushFrame(outBuffer, writer);
-                                appender.reset(outBuffer, true);
-                                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                    throw new HyracksDataException("Record size (" + tb.getSize()
-                                            + ") larger than frame size (" + outBuffer.capacity() + ")");
-                                }
-                            }
+                            FrameUtils
+                                    .appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(),
+                                            0, tb.getSize());
                         }
-                        if (appender.getTupleCount() > 0) {
-                            FrameUtils.flushFrame(outBuffer, writer);
-                        }
+                        appender.flush(writer, true);
                     } catch (Exception e) {
                         writer.fail();
                         throw new HyracksDataException(e);

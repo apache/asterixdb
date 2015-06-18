@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.collectors;
 
+import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,12 +68,27 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
         return nSenderPartitions;
     }
 
-    public void open() throws HyracksDataException {
-        lastReadSender = -1;
+    public synchronized ByteBuffer getNextBuffer(int index) throws HyracksDataException {
+        while ((availableFrameCounts[index] <= 0)) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+        if (--availableFrameCounts[index] == 0) {
+            frameAvailability.clear(index);
+        }
+        return channels[index].getNextBuffer();
+
     }
 
-    public IInputChannel[] getChannels() {
-        return channels;
+    public void recycleBuffer(int index, ByteBuffer frame) {
+        channels[index].recycleBuffer(frame);
+    }
+
+    public void open() throws HyracksDataException {
+        lastReadSender = -1;
     }
 
     public synchronized int findNextSender() throws HyracksDataException {
@@ -83,9 +99,6 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
             }
             if (lastReadSender >= 0) {
                 assert availableFrameCounts[lastReadSender] > 0;
-                if (--availableFrameCounts[lastReadSender] == 0) {
-                    frameAvailability.clear(lastReadSender);
-                }
                 return lastReadSender;
             }
             if (!failSenders.isEmpty()) {

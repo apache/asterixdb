@@ -38,12 +38,12 @@ public class TOccurrenceSearcher extends AbstractTOccurrenceSearcher {
     public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
             IIndexOperationContext ictx) throws HyracksDataException, IndexException {
         tokenizeQuery(searchPred);
-        int numQueryTokens = queryTokenAccessor.getTupleCount();
+        int numQueryTokens = queryTokenAppender.getTupleCount();
 
         invListCursors.clear();
         invListCursorCache.reset();
         for (int i = 0; i < numQueryTokens; i++) {
-            searchKey.reset(queryTokenAccessor, i);
+            searchKey.reset(queryTokenAppender, i);
             IInvertedListCursor invListCursor = invListCursorCache.getNext();
             invIndex.openInvertedListCursor(invListCursor, searchKey, ictx);
             invListCursors.add(invListCursor);

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.IPredicateEvaluator;
@@ -30,6 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
@@ -43,7 +45,6 @@ public class InMemoryHashJoin {
     private final ITuplePartitionComputer tpcProbe;
     private final FrameTupleAppender appender;
     private final FrameTuplePairComparator tpComparator;
-    private final ByteBuffer outBuffer;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder nullTupleBuild;
     private final ISerializableTable table;
@@ -75,10 +76,8 @@ public class InMemoryHashJoin {
         this.tpcBuild = tpc1;
         this.accessorProbe = accessor0;
         this.tpcProbe = tpc0;
-        appender = new FrameTupleAppender(ctx.getFrameSize());
+        appender = new FrameTupleAppender(new VSizeFrame(ctx));
         tpComparator = comparator;
-        outBuffer = ctx.allocateFrame();
-        appender.reset(outBuffer, true);
         predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
@@ -136,24 +135,15 @@ public class InMemoryHashJoin {
                 } while (true);
             }
             if (!matchFound && isLeftOuter) {
-                if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(),
-                        nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
-                    flushFrame(outBuffer, writer);
-                    appender.reset(outBuffer, true);
-                    if (!appender.appendConcat(accessorProbe, i, nullTupleBuild.getFieldEndOffsets(),
-                            nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
-                        throw new HyracksDataException("Record size larger than frame size ("
-                                + appender.getBuffer().capacity() + ")");
-                    }
-                }
+                FrameUtils.appendConcatToWriter(writer, appender, accessorProbe, i,
+                        nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0,
+                        nullTupleBuild.getSize());
             }
         }
     }
 
     public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        if (appender.getTupleCount() > 0) {
-            flushFrame(outBuffer, writer);
-        }
+        appender.flush(writer, true);
         int nFrames = buffers.size();
         buffers.clear();
         ctx.deallocateFrames(nFrames);
@@ -179,31 +169,11 @@ public class InMemoryHashJoin {
 
     private void appendToResult(int probeSidetIx, int buildSidetIx, IFrameWriter writer) throws HyracksDataException {
         if (!reverseOutputOrder) {
-            if (!appender.appendConcat(accessorProbe, probeSidetIx, accessorBuild, buildSidetIx)) {
-                flushFrame(outBuffer, writer);
-                appender.reset(outBuffer, true);
-                if (!appender.appendConcat(accessorProbe, probeSidetIx, accessorBuild, buildSidetIx)) {
-                    int tSize = accessorProbe.getTupleEndOffset(probeSidetIx)
-                            - accessorProbe.getTupleStartOffset(probeSidetIx)
-                            + accessorBuild.getTupleEndOffset(buildSidetIx)
-                            - accessorBuild.getTupleStartOffset(buildSidetIx);
-                    throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
-                            + appender.getBuffer().capacity() + ")");
-                }
-            }
+            FrameUtils.appendConcatToWriter(writer, appender, accessorProbe, probeSidetIx, accessorBuild,
+                    buildSidetIx);
         } else {
-            if (!appender.appendConcat(accessorBuild, buildSidetIx, accessorProbe, probeSidetIx)) {
-                flushFrame(outBuffer, writer);
-                appender.reset(outBuffer, true);
-                if (!appender.appendConcat(accessorBuild, buildSidetIx, accessorProbe, probeSidetIx)) {
-                    int tSize = accessorProbe.getTupleEndOffset(probeSidetIx)
-                            - accessorProbe.getTupleStartOffset(probeSidetIx)
-                            + accessorBuild.getTupleEndOffset(buildSidetIx)
-                            - accessorBuild.getTupleStartOffset(buildSidetIx);
-                    throw new HyracksDataException("Record size (" + tSize + ") larger than frame size ("
-                            + appender.getBuffer().capacity() + ")");
-                }
-            }
+            FrameUtils.appendConcatToWriter(writer, appender, accessorBuild, buildSidetIx, accessorProbe,
+                    probeSidetIx);
         }
     }
 }

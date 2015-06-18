@@ -22,4 +22,10 @@ public class IntSerDeUtils {
                 + ((bytes[offset + 3] & 0xff) << 0);
     }
 
+    public static void putInt(byte[] bytes, int offset, int value) {
+        bytes[offset++] = (byte) (value >> 24);
+        bytes[offset++] = (byte) (value >> 16);
+        bytes[offset++] = (byte) (value >> 8);
+        bytes[offset++] = (byte) (value);
+    }
 }

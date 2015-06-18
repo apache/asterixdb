@@ -18,6 +18,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -45,7 +46,6 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected final IIndexDataflowHelper indexHelper;
     protected FrameTupleAccessor accessor;
 
-    protected ByteBuffer writeBuffer;
     protected FrameTupleAppender appender;
     protected ArrayTupleBuilder tb;
     protected DataOutput dos;
@@ -103,7 +103,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     @Override
     public void open() throws HyracksDataException {
-        accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRecDesc);
+        accessor = new FrameTupleAccessor(inputRecDesc);
         writer.open();
         indexHelper.open();
         index = indexHelper.getIndexInstance();
@@ -126,11 +126,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
         try {
             searchPred = createSearchPredicate();
-            writeBuffer = ctx.allocateFrame();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
-            appender = new FrameTupleAppender(ctx.getFrameSize());
-            appender.reset(writeBuffer, true);
+            appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
             ISearchOperationCallback searchCallback = opDesc.getSearchOpCallbackFactory()
                     .createSearchOperationCallback(indexHelper.getResourceID(), ctx);
             indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE, searchCallback);
@@ -162,27 +160,13 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                 tb.addFieldEndOffset();
             }
-            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                FrameUtils.flushFrame(writeBuffer, writer);
-                appender.reset(writeBuffer, true);
-                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size ("
-                            + appender.getBuffer().capacity() + ")");
-                }
-            }
+            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                    tb.getSize());
         }
 
         if (!matched && retainInput && retainNull) {
-            if (!appender.appendConcat(accessor, tupleIndex, nullTupleBuild.getFieldEndOffsets(),
-                    nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
-                FrameUtils.flushFrame(writeBuffer, writer);
-                appender.reset(writeBuffer, true);
-                if (!appender.appendConcat(accessor, tupleIndex, nullTupleBuild.getFieldEndOffsets(),
-                        nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize())) {
-                    throw new HyracksDataException("Record size larger than frame size ("
-                            + appender.getBuffer().capacity() + ")");
-                }
-            }
+            FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex,
+                    nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize());
         }
     }
 
@@ -205,9 +189,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     @Override
     public void close() throws HyracksDataException {
         try {
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(writeBuffer, writer);
-            }
+            appender.flush(writer, true);
             try {
                 cursor.close();
             } catch (Exception e) {

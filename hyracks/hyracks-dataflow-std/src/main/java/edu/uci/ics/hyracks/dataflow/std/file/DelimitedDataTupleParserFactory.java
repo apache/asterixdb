@@ -18,11 +18,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -41,7 +40,8 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
         this(fieldParserFactories, fieldDelimiter, '\"');
     }
 
-    public DelimitedDataTupleParserFactory(IValueParserFactory[] fieldParserFactories, char fieldDelimiter, char quote) {
+    public DelimitedDataTupleParserFactory(IValueParserFactory[] fieldParserFactories, char fieldDelimiter,
+            char quote) {
         this.valueParserFactories = fieldParserFactories;
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
@@ -57,8 +57,8 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     for (int i = 0; i < valueParserFactories.length; ++i) {
                         valueParsers[i] = valueParserFactories[i].createValueParser();
                     }
-                    ByteBuffer frame = ctx.allocateFrame();
-                    FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+                    IFrame frame = new VSizeFrame(ctx);
+                    FrameTupleAppender appender = new FrameTupleAppender();
                     appender.reset(frame, true);
                     ArrayTupleBuilder tb = new ArrayTupleBuilder(valueParsers.length);
                     DataOutput dos = tb.getDataOutput();
@@ -80,18 +80,10 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                             valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, dos);
                             tb.addFieldEndOffset();
                         }
-                        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                            FrameUtils.flushFrame(frame, writer);
-                            appender.reset(frame, true);
-                            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                                throw new HyracksDataException("Record size (" + tb.getSize()
-                                        + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
-                            }
-                        }
+                        FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                                tb.getSize());
                     }
-                    if (appender.getTupleCount() > 0) {
-                        FrameUtils.flushFrame(frame, writer);
-                    }
+                    appender.flush(writer, true);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

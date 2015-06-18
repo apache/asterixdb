@@ -30,7 +30,7 @@ public class ReadBufferFactory implements IBufferFactory {
 
     public ReadBufferFactory(int limit, IHyracksCommonContext ctx) {
         this.limit = limit;
-        this.frameSize = ctx.getFrameSize();
+        this.frameSize = ctx.getInitialFrameSize();
     }
 
     @Override

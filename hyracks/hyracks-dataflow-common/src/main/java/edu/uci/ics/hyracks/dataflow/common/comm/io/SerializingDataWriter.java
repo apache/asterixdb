@@ -14,20 +14,19 @@
  */
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
-import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
     private static final Logger LOGGER = Logger.getLogger(SerializingDataWriter.class.getName());
-
-    private final ByteBuffer buffer;
 
     private final ArrayTupleBuilder tb;
 
@@ -41,20 +40,17 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
 
     public SerializingDataWriter(IHyracksTaskContext ctx, RecordDescriptor recordDescriptor, IFrameWriter frameWriter)
             throws HyracksDataException {
-        buffer = ctx.allocateFrame();
         tb = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
         this.recordDescriptor = recordDescriptor;
         this.frameWriter = frameWriter;
-        tupleAppender = new FrameTupleAppender(ctx.getFrameSize());
+        tupleAppender = new FrameTupleAppender(new VSizeFrame(ctx));
         open = false;
     }
 
     @Override
     public void open() throws HyracksDataException {
         frameWriter.open();
-        buffer.clear();
         open = true;
-        tupleAppender.reset(buffer, true);
     }
 
     @Override
@@ -62,9 +58,7 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         if (!open) {
             throw new HyracksDataException("Closing SerializingDataWriter that has not been opened");
         }
-        if (tupleAppender.getTupleCount() > 0) {
-            flushFrame();
-        }
+        tupleAppender.flush(frameWriter, true);
         frameWriter.close();
         open = false;
     }
@@ -82,22 +76,8 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
             }
             tb.addField(recordDescriptor.getFields()[i], instance);
         }
-        if (!tupleAppender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest("Flushing: position = " + buffer.position());
-            }
-            flushFrame();
-            tupleAppender.reset(buffer, true);
-            if (!tupleAppender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + buffer.capacity() + ")");
-            }
-        }
-    }
-
-    private void flushFrame() throws HyracksDataException {
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
-        frameWriter.nextFrame(buffer);
+        FrameUtils.appendToWriter(frameWriter, tupleAppender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                tb.getSize());
     }
 
     @Override

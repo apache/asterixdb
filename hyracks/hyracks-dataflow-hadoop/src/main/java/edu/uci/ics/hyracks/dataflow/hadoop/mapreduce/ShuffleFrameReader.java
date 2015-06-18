@@ -22,8 +22,11 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 
-import edu.uci.ics.hyracks.api.channels.IInputChannel;
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.comm.NoShrinkVSizeFrame;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -34,26 +37,29 @@ import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortRunMerger;
+import edu.uci.ics.hyracks.dataflow.std.sort.RunAndMaxFrameSizePair;
 
 public class ShuffleFrameReader implements IFrameReader {
     private final IHyracksTaskContext ctx;
     private final NonDeterministicChannelReader channelReader;
     private final HadoopHelper helper;
     private final RecordDescriptor recordDescriptor;
+    private final IFrame vframe;
     private List<RunFileWriter> runFileWriters;
+    private List<Integer> runFileMaxFrameSize;
     private RunFileReader reader;
 
     public ShuffleFrameReader(IHyracksTaskContext ctx, NonDeterministicChannelReader channelReader,
             MarshalledWritable<Configuration> mConfig) throws HyracksDataException {
         this.ctx = ctx;
         this.channelReader = channelReader;
-        helper = new HadoopHelper(mConfig);
+        this.helper = new HadoopHelper(mConfig);
         this.recordDescriptor = helper.getMapOutputRecordDescriptor();
+        this.vframe = new NoShrinkVSizeFrame(ctx);
     }
 
     @Override
@@ -61,21 +67,28 @@ public class ShuffleFrameReader implements IFrameReader {
         channelReader.open();
         int nSenders = channelReader.getSenderPartitionCount();
         runFileWriters = new ArrayList<RunFileWriter>();
+        runFileMaxFrameSize = new ArrayList<>();
         RunInfo[] infos = new RunInfo[nSenders];
-        FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
-        IInputChannel[] channels = channelReader.getChannels();
+        FrameTupleAccessor accessor = new FrameTupleAccessor(recordDescriptor);
         while (true) {
             int entry = channelReader.findNextSender();
             if (entry < 0) {
                 break;
             }
             RunInfo info = infos[entry];
-            IInputChannel channel = channels[entry];
-            ByteBuffer netBuffer = channel.getNextBuffer();
-            accessor.reset(netBuffer);
+            ByteBuffer netBuffer = channelReader.getNextBuffer(entry);
+            netBuffer.clear();
+            int nBlocks = FrameHelper.deserializeNumOfMinFrame(netBuffer);
+
+            if (nBlocks > 1) {
+                netBuffer = getCompleteBuffer(nBlocks, netBuffer, entry);
+            }
+
+            accessor.reset(netBuffer, 0, netBuffer.limit());
             int nTuples = accessor.getTupleCount();
             for (int i = 0; i < nTuples; ++i) {
-                int tBlockId = IntegerPointable.getInteger(accessor.getBuffer().array(), FrameUtils.getAbsoluteFieldStartOffset(accessor, i, HadoopHelper.BLOCKID_FIELD_INDEX));
+                int tBlockId = IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        accessor.getAbsoluteFieldStartOffset(i, HadoopHelper.BLOCKID_FIELD_INDEX));
                 if (info == null) {
                     info = new RunInfo();
                     info.reset(tBlockId);
@@ -86,7 +99,10 @@ public class ShuffleFrameReader implements IFrameReader {
                 }
                 info.write(accessor, i);
             }
-            channel.recycleBuffer(netBuffer);
+
+            if (nBlocks == 1) {
+                channelReader.recycleBuffer(entry, netBuffer);
+            }
         }
         for (int i = 0; i < infos.length; ++i) {
             RunInfo info = infos[i];
@@ -94,7 +110,6 @@ public class ShuffleFrameReader implements IFrameReader {
                 info.close();
             }
         }
-        infos = null;
 
         FileReference outFile = ctx.createManagedWorkspaceFile(ShuffleFrameReader.class.getName() + ".run");
         int framesLimit = helper.getSortFrameLimit(ctx);
@@ -103,22 +118,40 @@ public class ShuffleFrameReader implements IFrameReader {
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
-        List<IFrameReader> runs = new LinkedList<IFrameReader>();
-        for (RunFileWriter rfw : runFileWriters) {
-            runs.add(rfw.createReader());
+        List<RunAndMaxFrameSizePair> runs = new LinkedList<>();
+        for (int i = 0; i < runFileWriters.size(); i++) {
+            runs.add(new RunAndMaxFrameSizePair(runFileWriters.get(i).createReader(), runFileMaxFrameSize.get(i)));
         }
         RunFileWriter rfw = new RunFileWriter(outFile, ctx.getIOManager());
-        ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, null, runs, new int[] { 0 }, comparators, null,
-                recordDescriptor, framesLimit, rfw);
+        ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, null, runs, new int[] { 0 },
+                comparators, null, recordDescriptor, framesLimit, rfw);
         merger.process();
 
         reader = rfw.createReader();
         reader.open();
     }
 
+    private ByteBuffer getCompleteBuffer(int nBlocks, ByteBuffer netBuffer, int entry) throws HyracksDataException {
+        vframe.reset();
+        vframe.ensureFrameSize(vframe.getMinSize() * nBlocks);
+        FrameUtils.copyWholeFrame(netBuffer, vframe.getBuffer());
+        channelReader.recycleBuffer(entry, netBuffer);
+        for (int i = 1; i < nBlocks; ++i) {
+            netBuffer = channelReader.getNextBuffer(entry);
+            netBuffer.clear();
+            vframe.getBuffer().put(netBuffer);
+            channelReader.recycleBuffer(entry, netBuffer);
+        }
+        if (vframe.getBuffer().hasRemaining()) { // bigger frame
+            FrameHelper.clearRemainingFrame(vframe.getBuffer(), vframe.getBuffer().position());
+        }
+        vframe.getBuffer().flip();
+        return vframe.getBuffer();
+    }
+
     @Override
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        return reader.nextFrame(buffer);
+    public boolean nextFrame(IFrame frame) throws HyracksDataException {
+        return reader.nextFrame(frame);
     }
 
     @Override
@@ -127,20 +160,22 @@ public class ShuffleFrameReader implements IFrameReader {
     }
 
     private class RunInfo {
-        private final ByteBuffer buffer;
+        private final IFrame buffer;
         private final FrameTupleAppender fta;
 
         private FileReference file;
         private RunFileWriter rfw;
         private int blockId;
+        private int maxFrameSize = ctx.getInitialFrameSize();
 
         public RunInfo() throws HyracksDataException {
-            buffer = ctx.allocateFrame();
-            fta = new FrameTupleAppender(ctx.getFrameSize());
+            buffer = new VSizeFrame(ctx);
+            fta = new FrameTupleAppender();
         }
 
         public void reset(int blockId) throws HyracksDataException {
             this.blockId = blockId;
+            this.maxFrameSize = ctx.getInitialFrameSize();
             fta.reset(buffer, true);
             try {
                 file = ctx.createManagedWorkspaceFile(ShuffleFrameReader.class.getName() + ".run");
@@ -165,15 +200,15 @@ public class ShuffleFrameReader implements IFrameReader {
             flush();
             rfw.close();
             runFileWriters.add(rfw);
+            runFileMaxFrameSize.add(maxFrameSize);
         }
 
         private void flush() throws HyracksDataException {
             if (fta.getTupleCount() <= 0) {
                 return;
             }
-            buffer.limit(buffer.capacity());
-            buffer.position(0);
-            rfw.nextFrame(buffer);
+            maxFrameSize = buffer.getFrameSize() > maxFrameSize ? buffer.getFrameSize() : maxFrameSize;
+            rfw.nextFrame((ByteBuffer) buffer.getBuffer().clear());
             fta.reset(buffer, true);
         }
     }

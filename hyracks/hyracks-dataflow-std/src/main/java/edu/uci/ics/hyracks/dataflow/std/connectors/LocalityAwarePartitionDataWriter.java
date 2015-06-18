@@ -17,19 +17,22 @@ package edu.uci.ics.hyracks.dataflow.std.connectors;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAppender;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class LocalityAwarePartitionDataWriter implements IFrameWriter {
 
     private final IFrameWriter[] pWriters;
-    private final FrameTupleAppender[] appenders;
+    private final IFrameTupleAppender[] appenders;
     private final FrameTupleAccessor tupleAccessor;
     private final ITuplePartitionComputer tpc;
 
@@ -38,17 +41,17 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
             ILocalityMap localityMap, int senderIndex) throws HyracksDataException {
         int[] consumerPartitions = localityMap.getConsumers(senderIndex, nConsumerPartitions);
         pWriters = new IFrameWriter[consumerPartitions.length];
-        appenders = new FrameTupleAppender[consumerPartitions.length];
+        appenders = new IFrameTupleAppender[consumerPartitions.length];
         for (int i = 0; i < consumerPartitions.length; ++i) {
             try {
                 pWriters[i] = pwFactory.createFrameWriter(consumerPartitions[i]);
-                appenders[i] = new FrameTupleAppender(ctx.getFrameSize());
-                appenders[i].reset(ctx.allocateFrame(), true);
+                appenders[i] = new FrameTupleAppender();
+                appenders[i].reset(new VSizeFrame(ctx), true);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
         }
-        tupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
+        tupleAccessor = new FrameTupleAccessor(recordDescriptor);
         this.tpc = tpc;
     }
 
@@ -61,7 +64,6 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
     public void open() throws HyracksDataException {
         for (int i = 0; i < pWriters.length; ++i) {
             pWriters[i].open();
-            appenders[i].reset(appenders[i].getBuffer(), true);
         }
     }
 
@@ -77,15 +79,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
         int tupleCount = tupleAccessor.getTupleCount();
         for (int i = 0; i < tupleCount; ++i) {
             int h = pWriters.length == 1 ? 0 : tpc.partition(tupleAccessor, i, pWriters.length);
-            FrameTupleAppender appender = appenders[h];
-            if (!appender.append(tupleAccessor, i)) {
-                ByteBuffer appenderBuffer = appender.getBuffer();
-                flushFrame(appenderBuffer, pWriters[h]);
-                appender.reset(appenderBuffer, true);
-                if (!appender.append(tupleAccessor, i)) {
-                    throw new HyracksDataException("Record size (" + (tupleAccessor.getTupleEndOffset(i) - tupleAccessor.getTupleStartOffset(i)) + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
-                }
-            }
+            FrameUtils.appendToWriter(pWriters[h], appenders[h], tupleAccessor, i);
         }
     }
 
@@ -101,12 +95,6 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
         }
     }
 
-    private void flushFrame(ByteBuffer buffer, IFrameWriter frameWriter) throws HyracksDataException {
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
-        frameWriter.nextFrame(buffer);
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -115,9 +103,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
     @Override
     public void close() throws HyracksDataException {
         for (int i = 0; i < pWriters.length; ++i) {
-            if (appenders[i].getTupleCount() > 0) {
-                flushFrame(appenders[i].getBuffer(), pWriters[i]);
-            }
+            appenders[i].flush(pWriters[i], true);
             pWriters[i].close();
         }
     }

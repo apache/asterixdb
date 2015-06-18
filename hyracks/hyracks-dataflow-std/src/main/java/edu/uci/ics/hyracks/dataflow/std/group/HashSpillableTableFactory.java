@@ -14,11 +14,12 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.group;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -33,7 +34,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
@@ -76,10 +76,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         }
 
         RecordDescriptor internalRecordDescriptor = outRecordDescriptor;
-        final FrameTupleAccessor storedKeysAccessor1 = new FrameTupleAccessor(ctx.getFrameSize(),
-                internalRecordDescriptor);
-        final FrameTupleAccessor storedKeysAccessor2 = new FrameTupleAccessor(ctx.getFrameSize(),
-                internalRecordDescriptor);
+        final FrameTupleAccessor storedKeysAccessor1 = new FrameTupleAccessor(internalRecordDescriptor);
+        final FrameTupleAccessor storedKeysAccessor2 = new FrameTupleAccessor(internalRecordDescriptor);
 
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -118,14 +116,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
             private int lastBufIndex;
 
-            private ByteBuffer outputFrame;
+            private IFrame outputFrame;
             private FrameTupleAppender outputAppender;
 
-            private FrameTupleAppender stateAppender = new FrameTupleAppender(ctx.getFrameSize());
+            private FrameTupleAppender stateAppender = new FrameTupleAppender();
 
             private final ISerializableTable table = new SerializableHashTable(tableSize, ctx);
             private final TuplePointer storedTuplePointer = new TuplePointer();
-            private final List<ByteBuffer> frames = new ArrayList<ByteBuffer>();
+            private final List<IFrame> frames = new ArrayList<>();
 
             /**
              * A tuple is "pointed" to by 3 entries in the tPointers array. [0]
@@ -153,7 +151,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                         table.getTuplePointer(entry, offset, storedTuplePointer);
                         int fIndex = storedTuplePointer.frameIndex;
                         int tIndex = storedTuplePointer.tupleIndex;
-                        storedKeysAccessor1.reset(frames.get(fIndex));
+                        storedKeysAccessor1.reset(frames.get(fIndex).getBuffer());
                         int tStart = storedKeysAccessor1.getTupleStartOffset(tIndex);
                         int f0StartRel = storedKeysAccessor1.getFieldStartOffset(tIndex, sfIdx);
                         int f0EndRel = storedKeysAccessor1.getFieldEndOffset(tIndex, sfIdx);
@@ -191,7 +189,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     table.getTuplePointer(entry, offset++, storedTuplePointer);
                     if (storedTuplePointer.frameIndex < 0)
                         break;
-                    storedKeysAccessor1.reset(frames.get(storedTuplePointer.frameIndex));
+                    storedKeysAccessor1.reset(frames.get(storedTuplePointer.frameIndex).getBuffer());
                     int c = ftpcPartial.compare(accessor, tIndex, storedKeysAccessor1, storedTuplePointer.tupleIndex);
                     if (c == 0) {
                         foundGroup = true;
@@ -232,7 +230,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             }
 
             @Override
-            public List<ByteBuffer> getFrames() {
+            public List<IFrame> getFrames() {
                 return frames;
             }
 
@@ -244,11 +242,11 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             @Override
             public void flushFrames(IFrameWriter writer, boolean isPartial) throws HyracksDataException {
                 if (outputFrame == null) {
-                    outputFrame = ctx.allocateFrame();
+                    outputFrame = new VSizeFrame(ctx);
                 }
 
                 if (outputAppender == null) {
-                    outputAppender = new FrameTupleAppender(outputFrame.capacity());
+                    outputAppender = new FrameTupleAppender();
                 }
 
                 outputAppender.reset(outputFrame, true);
@@ -265,7 +263,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                             int bIndex = storedTuplePointer.frameIndex;
                             int tIndex = storedTuplePointer.tupleIndex;
 
-                            storedKeysAccessor1.reset(frames.get(bIndex));
+                            storedKeysAccessor1.reset(frames.get(bIndex).getBuffer());
 
                             outputTupleBuilder.reset();
                             for (int k = 0; k < storedKeys.length; k++) {
@@ -285,8 +283,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                             if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                                     outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                                FrameUtils.flushFrame(outputFrame, writer);
-                                outputAppender.reset(outputFrame, true);
+                                outputAppender.flush(writer, true);
                                 if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                                         outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
                                     throw new HyracksDataException(
@@ -296,10 +293,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                         } while (true);
                     }
-                    if (outputAppender.getTupleCount() > 0) {
-                        FrameUtils.flushFrame(outputFrame, writer);
-                        outputAppender.reset(outputFrame, true);
-                    }
+                    outputAppender.flush(writer, true);
                     aggregator.close();
                     return;
                 }
@@ -311,8 +305,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     int frameIndex = storedTuplePointer.frameIndex;
                     int tupleIndex = storedTuplePointer.tupleIndex;
                     // Get the frame containing the value
-                    ByteBuffer buffer = frames.get(frameIndex);
-                    storedKeysAccessor1.reset(buffer);
+                    IFrame buffer = frames.get(frameIndex);
+                    storedKeysAccessor1.reset(buffer.getBuffer());
 
                     outputTupleBuilder.reset();
                     for (int k = 0; k < storedKeys.length; k++) {
@@ -332,18 +326,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                     if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                             outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                        FrameUtils.flushFrame(outputFrame, writer);
-                        outputAppender.reset(outputFrame, true);
+                        outputAppender.flush(writer, true);
                         if (!outputAppender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
                                 outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
                             throw new HyracksDataException("The output item is too large to be fit into a frame.");
                         }
                     }
                 }
-                if (outputAppender.getTupleCount() > 0) {
-                    FrameUtils.flushFrame(outputFrame, writer);
-                    outputAppender.reset(outputFrame, true);
-                }
+                outputAppender.flush(writer, true);
                 aggregator.close();
             }
 
@@ -372,19 +362,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                 if (frames.size() < framesLimit) {
                     // Insert a new frame
-                    ByteBuffer frame = ctx.allocateFrame();
-                    frame.position(0);
-                    frame.limit(frame.capacity());
+                    IFrame frame = new VSizeFrame(ctx);
                     frames.add(frame);
                     stateAppender.reset(frame, true);
                     lastBufIndex = frames.size() - 1;
                 } else {
                     // Reuse an old frame
                     lastBufIndex++;
-                    ByteBuffer frame = frames.get(lastBufIndex);
-                    frame.position(0);
-                    frame.limit(frame.capacity());
-                    stateAppender.reset(frame, true);
+                    stateAppender.reset(frames.get(lastBufIndex), true);
                 }
                 return true;
             }
@@ -398,7 +383,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 table.getTuplePointer(mTable, mRow, storedTuplePointer);
                 int mFrame = storedTuplePointer.frameIndex;
                 int mTuple = storedTuplePointer.tupleIndex;
-                storedKeysAccessor1.reset(frames.get(mFrame));
+                storedKeysAccessor1.reset(frames.get(mFrame).getBuffer());
 
                 int a = offset;
                 int b = a;
@@ -416,7 +401,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                             table.getTuplePointer(bTable, bRow, storedTuplePointer);
                             int bFrame = storedTuplePointer.frameIndex;
                             int bTuple = storedTuplePointer.tupleIndex;
-                            storedKeysAccessor2.reset(frames.get(bFrame));
+                            storedKeysAccessor2.reset(frames.get(bFrame).getBuffer());
                             cmp = ftpcTuple.compare(storedKeysAccessor2, bTuple, storedKeysAccessor1, mTuple);
                         }
                         if (cmp > 0) {
@@ -438,7 +423,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                             table.getTuplePointer(cTable, cRow, storedTuplePointer);
                             int cFrame = storedTuplePointer.frameIndex;
                             int cTuple = storedTuplePointer.tupleIndex;
-                            storedKeysAccessor2.reset(frames.get(cFrame));
+                            storedKeysAccessor2.reset(frames.get(cFrame).getBuffer());
                             cmp = ftpcTuple.compare(storedKeysAccessor2, cTuple, storedKeysAccessor1, mTuple);
                         }
                         if (cmp < 0) {

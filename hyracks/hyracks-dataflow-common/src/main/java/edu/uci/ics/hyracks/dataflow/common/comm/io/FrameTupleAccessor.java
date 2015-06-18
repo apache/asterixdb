@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.common.comm.io;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.FrameConstants;
 import edu.uci.ics.hyracks.api.comm.FrameHelper;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -26,29 +27,33 @@ import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
 
 /**
  * FrameTupleCursor is used to navigate over tuples in a Frame. A frame is
- * formatted with tuple data concatenated starting at offset 0, one tuple after
- * another. Offset FS - 4 holds an int indicating the number of tuples (N) in
+ * formatted with tuple data concatenated starting at offset 1, one tuple after
+ * another. The first byte is used to notify how big the frame is, so the maximum frame size is 255 * initialFrameSetting.
+ * Offset FS - 4 holds an int indicating the number of tuples (N) in
  * the frame. FS - ((i + 1) * 4) for i from 0 to N - 1 holds an int indicating
  * the offset of the (i + 1)^th tuple. Every tuple is organized as a sequence of
  * ints indicating the end of each field in the tuple relative to the end of the
  * field slots.
- *
- * @author vinayakb
  */
-public final class FrameTupleAccessor implements IFrameTupleAccessor {
-    private final int frameSize;
+public class FrameTupleAccessor implements IFrameTupleAccessor {
+    private int tupleCountOffset;
     private final RecordDescriptor recordDescriptor;
-
     private ByteBuffer buffer;
+    private int start;
 
-    public FrameTupleAccessor(int frameSize, RecordDescriptor recordDescriptor) {
-        this.frameSize = frameSize;
+    public FrameTupleAccessor(RecordDescriptor recordDescriptor) {
         this.recordDescriptor = recordDescriptor;
     }
 
     @Override
     public void reset(ByteBuffer buffer) {
+        reset(buffer, 0, buffer.limit());
+    }
+
+    public void reset(ByteBuffer buffer, int start, int length) {
         this.buffer = buffer;
+        this.start = start;
+        this.tupleCountOffset = start + FrameHelper.getTupleCountOffset(length);
     }
 
     @Override
@@ -58,28 +63,39 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getTupleCount() {
-        return IntSerDeUtils.getInt(buffer.array(), FrameHelper.getTupleCountOffset(frameSize));
+        return IntSerDeUtils.getInt(buffer.array(), tupleCountOffset);
     }
 
     @Override
     public int getTupleStartOffset(int tupleIndex) {
-        return tupleIndex == 0 ? 0 : IntSerDeUtils.getInt(buffer.array(), FrameHelper.getTupleCountOffset(frameSize)
-                - 4 * tupleIndex);
+        int offset = tupleIndex == 0 ?
+                FrameConstants.TUPLE_START_OFFSET :
+                IntSerDeUtils.getInt(buffer.array(), tupleCountOffset - 4 * tupleIndex);
+        return start + offset;
+    }
+
+    @Override
+    public int getAbsoluteFieldStartOffset(int tupleIndex, int fIdx) {
+        return getTupleStartOffset(tupleIndex) + getFieldSlotsLength() + getFieldStartOffset(tupleIndex, fIdx);
     }
 
     @Override
     public int getTupleEndOffset(int tupleIndex) {
-        return IntSerDeUtils.getInt(buffer.array(), FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleIndex + 1));
+        return start + IntSerDeUtils
+                .getInt(buffer.array(), tupleCountOffset - FrameConstants.SIZE_LEN * (tupleIndex + 1));
     }
 
     @Override
     public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return fIdx == 0 ? 0 : IntSerDeUtils.getInt(buffer.array(), getTupleStartOffset(tupleIndex) + (fIdx - 1) * 4);
+        return fIdx == 0 ?
+                0 :
+                IntSerDeUtils
+                        .getInt(buffer.array(), getTupleStartOffset(tupleIndex) + (fIdx - 1) * FrameConstants.SIZE_LEN);
     }
 
     @Override
     public int getFieldEndOffset(int tupleIndex, int fIdx) {
-        return IntSerDeUtils.getInt(buffer.array(), getTupleStartOffset(tupleIndex) + fIdx * 4);
+        return IntSerDeUtils.getInt(buffer.array(), getTupleStartOffset(tupleIndex) + fIdx * FrameConstants.SIZE_LEN);
     }
 
     @Override
@@ -88,30 +104,53 @@ public final class FrameTupleAccessor implements IFrameTupleAccessor {
     }
 
     @Override
-    public int getFieldSlotsLength() {
-        return getFieldCount() * 4;
+    public int getTupleLength(int tupleIndex) {
+        return getTupleEndOffset(tupleIndex) - getTupleStartOffset(tupleIndex);
     }
 
-    public void prettyPrint() {
+    @Override
+    public int getFieldSlotsLength() {
+        return getFieldCount() * FrameConstants.SIZE_LEN;
+    }
+
+    public void prettyPrint(String prefix) {
         ByteBufferInputStream bbis = new ByteBufferInputStream();
         DataInputStream dis = new DataInputStream(bbis);
         int tc = getTupleCount();
-        System.err.println("TC: " + tc);
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("TC: " + tc).append("\n");
         for (int i = 0; i < tc; ++i) {
-            System.err.print(i + ":(" + getTupleStartOffset(i) + ", " + getTupleEndOffset(i) + ")[");
-            for (int j = 0; j < getFieldCount(); ++j) {
-                System.err.print(j + ":(" + getFieldStartOffset(i, j) + ", " + getFieldEndOffset(i, j) + ") ");
-                System.err.print("{");
-                bbis.setByteBuffer(buffer, getTupleStartOffset(i) + getFieldSlotsLength() + getFieldStartOffset(i, j));
-                try {
-                    System.err.print(recordDescriptor.getFields()[j].deserialize(dis));
-                } catch (HyracksDataException e) {
-                    e.printStackTrace();
-                }
-                System.err.print("}");
-            }
-            System.err.println("]");
+            prettyPrint(i, bbis, dis, sb);
         }
+        System.err.println(sb.toString());
+    }
+
+    public void prettyPrint() {
+        prettyPrint("");
+    }
+
+    protected void prettyPrint(int tid, ByteBufferInputStream bbis, DataInputStream dis, StringBuilder sb) {
+        sb.append(" tid" + tid + ":(" + getTupleStartOffset(tid) + ", " + getTupleEndOffset(tid) + ")[");
+        for (int j = 0; j < getFieldCount(); ++j) {
+            sb.append("f" + j + ":(" + getFieldStartOffset(tid, j) + ", " + getFieldEndOffset(tid, j) + ") ");
+            sb.append("{");
+            bbis.setByteBuffer(buffer, getTupleStartOffset(tid) + getFieldSlotsLength() + getFieldStartOffset(tid, j));
+            try {
+                sb.append(recordDescriptor.getFields()[j].deserialize(dis));
+            } catch (HyracksDataException e) {
+                e.printStackTrace();
+            }
+            sb.append("}");
+        }
+        sb.append("\n");
+    }
+
+    public void prettyPrint(int tid) {
+        ByteBufferInputStream bbis = new ByteBufferInputStream();
+        DataInputStream dis = new DataInputStream(bbis);
+        StringBuilder sb = new StringBuilder();
+        prettyPrint(tid, bbis, dis, sb);
+        System.err.println(sb.toString());
     }
 
     @Override

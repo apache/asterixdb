@@ -15,14 +15,13 @@
 package edu.uci.ics.hyracks.storage.am.common.dataflow;
 
 import java.io.DataOutput;
-import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
@@ -70,18 +69,18 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
                     .getInteriorFrameFactory().createFrame(), treeIndex.getFreePageManager().getMetaDataFrameFactory()
                     .createFrame());
             // Write the stats output as a single string field.
-            ByteBuffer frame = ctx.allocateFrame();
-            FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-            appender.reset(frame, true);
+            FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
             DataOutput dos = tb.getDataOutput();
             tb.reset();
             UTF8StringSerializerDeserializer.INSTANCE.serialize(stats.toString(), dos);
             tb.addFieldEndOffset();
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity() + ")");
+                throw new HyracksDataException(
+                        "Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity()
+                                + ")");
             }
-            FrameUtils.flushFrame(frame, writer);
+            appender.flush(writer, false);
         } catch (Exception e) {
             writer.fail();
         } finally {

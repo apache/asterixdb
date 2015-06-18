@@ -14,8 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.nc.profiling;
 
-import java.nio.ByteBuffer;
-
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -44,8 +43,8 @@ public class ConnectorReceiverProfilingFrameReader implements IFrameReader {
     }
 
     @Override
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        boolean status = reader.nextFrame(buffer);
+    public boolean nextFrame(IFrame frame) throws HyracksDataException {
+        boolean status = reader.nextFrame(frame);
         if (status) {
             frameCounter.update(1);
         }

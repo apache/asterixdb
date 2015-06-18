@@ -14,13 +14,12 @@
  */
 package edu.uci.ics.hyracks.api.dataset;
 
-import java.nio.ByteBuffer;
-
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public interface IHyracksDatasetReader {
     public Status getResultStatus();
 
-    public int read(ByteBuffer buffer) throws HyracksDataException;
+    public int read(IFrame frame) throws HyracksDataException;
 }

@@ -14,8 +14,8 @@
  */
 package edu.uci.ics.hyracks.dataflow.common.io;
 
-import java.nio.ByteBuffer;
-
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
@@ -43,12 +43,30 @@ public class RunFileReader implements IFrameReader {
     }
 
     @Override
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        buffer.clear();
+    public boolean nextFrame(IFrame frame) throws HyracksDataException {
         if (readPtr >= size) {
             return false;
         }
-        readPtr += ioManager.syncRead(handle, readPtr, buffer);
+        frame.reset();
+        int readLength = ioManager.syncRead(handle, readPtr, frame.getBuffer());
+        if (readLength <= 0) {
+            throw new HyracksDataException("Premature end of file");
+        }
+        readPtr += readLength;
+        frame.ensureFrameSize(frame.getMinSize() * FrameHelper.deserializeNumOfMinFrame(frame.getBuffer()));
+        if (frame.getBuffer().hasRemaining()) {
+            if (readPtr < size) {
+                readLength = ioManager.syncRead(handle, readPtr, frame.getBuffer());
+                if (readLength < 0) {
+                    throw new HyracksDataException("Premature end of file");
+                }
+                readPtr += readLength;
+            }
+            if (frame.getBuffer().hasRemaining()) { // file is vanished.
+                FrameHelper.clearRemainingFrame(frame.getBuffer(), frame.getBuffer().position());
+            }
+        }
+        frame.getBuffer().flip();
         return true;
     }
 

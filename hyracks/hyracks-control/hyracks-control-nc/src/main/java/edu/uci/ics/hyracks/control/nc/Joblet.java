@@ -56,6 +56,7 @@ import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
 import edu.uci.ics.hyracks.control.nc.io.WorkspaceFileFactory;
 import edu.uci.ics.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
+import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
 
 public class Joblet implements IHyracksJobletContext, ICounterContext {
     private static final Logger LOGGER = Logger.getLogger(Joblet.class.getName());
@@ -88,7 +89,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IJobletEventListener jobletEventListener;
 
-    private final int frameSize;
+    private final FrameManager frameManager;
 
     private final AtomicLong memoryAllocation;
 
@@ -102,7 +103,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.appCtx = appCtx;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
-        this.frameSize = acg.getFrameSize();
+        this.frameManager = new FrameManager(acg.getFrameSize());
         memoryAllocation = new AtomicLong();
         this.acg = acg;
         partitionRequestMap = new HashMap<PartitionId, IPartitionCollector>();
@@ -222,23 +223,33 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     }
 
     ByteBuffer allocateFrame() throws HyracksDataException {
-        if (appCtx.getMemoryManager().allocate(frameSize)) {
-            memoryAllocation.addAndGet(frameSize);
-            return ByteBuffer.allocate(frameSize);
-        }
+        return frameManager.allocateFrame();
+    }
+
+    ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        if (appCtx.getMemoryManager().allocate(bytes)) {
+            memoryAllocation.addAndGet(bytes);
+            return frameManager.allocateFrame(bytes);
+       }
         throw new HyracksDataException("Unable to allocate frame: Not enough memory");
     }
 
-    public void deallocateFrames(int nFrames) {
-        memoryAllocation.addAndGet(nFrames * frameSize);
-        appCtx.getMemoryManager().deallocate(nFrames * frameSize);
+    ByteBuffer reallocateFrame(ByteBuffer usedBuffer, int newFrameSizeInBytes, boolean copyOldData)
+            throws HyracksDataException {
+        return frameManager.reallocateFrame(usedBuffer, newFrameSizeInBytes, copyOldData);
     }
 
-    final int getFrameSize() {
-        return frameSize;
+    void deallocateFrames(int bytes) {
+        memoryAllocation.addAndGet(bytes);
+        appCtx.getMemoryManager().deallocate(bytes);
+        frameManager.deallocateFrames(bytes);
     }
 
-    IIOManager getIOManager() {
+    public final int getFrameSize() {
+        return frameManager.getInitialFrameSize();
+    }
+
+    public IIOManager getIOManager() {
         return appCtx.getRootContext().getIOManager();
     }
 

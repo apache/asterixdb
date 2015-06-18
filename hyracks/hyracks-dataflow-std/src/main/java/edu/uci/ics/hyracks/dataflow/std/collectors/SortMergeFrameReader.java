@@ -14,11 +14,12 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.collectors;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
@@ -54,13 +55,13 @@ public class SortMergeFrameReader implements IFrameReader {
     @Override
     public void open() throws HyracksDataException {
         if (maxConcurrentMerges >= nSenders) {
-            List<ByteBuffer> inFrames = new ArrayList<ByteBuffer>();
+            List<IFrame> inFrames = new ArrayList<>(nSenders);
             for (int i = 0; i < nSenders; ++i) {
-                inFrames.add(ByteBuffer.allocate(ctx.getFrameSize()));
+                inFrames.add(new VSizeFrame(ctx));
             }
-            List<IFrameReader> batch = new ArrayList<IFrameReader>();
+            List<IFrameReader> batch = new ArrayList<IFrameReader>(nSenders);
             pbm.getNextBatch(batch, nSenders);
-            merger = new RunMergingFrameReader(ctx, batch.toArray(new IFrameReader[nSenders]), inFrames, sortFields,
+            merger = new RunMergingFrameReader(ctx, batch, inFrames, sortFields,
                     comparators, nmkComputer, recordDescriptor);
         } else {
             // multi level merge.
@@ -70,10 +71,8 @@ public class SortMergeFrameReader implements IFrameReader {
     }
 
     @Override
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        buffer.position(buffer.capacity());
-        buffer.limit(buffer.capacity());
-        return merger.nextFrame(buffer);
+    public boolean nextFrame(IFrame frame) throws HyracksDataException {
+        return merger.nextFrame(frame);
     }
 
     @Override

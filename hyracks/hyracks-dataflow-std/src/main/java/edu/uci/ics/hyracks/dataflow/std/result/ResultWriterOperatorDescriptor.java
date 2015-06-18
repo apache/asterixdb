@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -61,17 +63,17 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             throws HyracksDataException {
         final IDatasetPartitionManager dpm = ctx.getDatasetPartitionManager();
 
-        final ByteBuffer outputBuffer = ctx.allocateFrame();
+        final IFrame frame = new VSizeFrame(ctx);
 
-        final FrameOutputStream frameOutputStream = new FrameOutputStream(ctx.getFrameSize());
-        frameOutputStream.reset(outputBuffer, true);
+        final FrameOutputStream frameOutputStream = new FrameOutputStream(ctx.getInitialFrameSize());
+        frameOutputStream.reset(frame, true);
         PrintStream printStream = new PrintStream(frameOutputStream);
 
         final RecordDescriptor outRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         final IResultSerializer resultSerializer = resultSerializerFactory.createResultSerializer(outRecordDesc,
                 printStream);
 
-        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(), outRecordDesc);
+        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(outRecordDesc);
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
             IFrameWriter datasetPartitionWriter;
@@ -94,12 +96,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
                     resultSerializer.appendTuple(frameTupleAccessor, tIndex);
                     if (!frameOutputStream.appendTuple()) {
-                        datasetPartitionWriter.nextFrame(outputBuffer);
-                        frameOutputStream.reset(outputBuffer, true);
+                        frameOutputStream.flush(datasetPartitionWriter);
 
-                        /* TODO(madhusudancs): This works under the assumption that no single serialized record is
-                         * longer than the buffer size.
-                         */
                         resultSerializer.appendTuple(frameTupleAccessor, tIndex);
                         frameOutputStream.appendTuple();
                     }
@@ -114,8 +112,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void close() throws HyracksDataException {
                 if (frameOutputStream.getTupleCount() > 0) {
-                    datasetPartitionWriter.nextFrame(outputBuffer);
-                    frameOutputStream.reset(outputBuffer, true);
+                    frameOutputStream.flush(datasetPartitionWriter);
                 }
                 datasetPartitionWriter.close();
             }

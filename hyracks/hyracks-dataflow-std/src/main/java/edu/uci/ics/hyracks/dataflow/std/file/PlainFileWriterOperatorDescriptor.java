@@ -37,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodeP
 public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 
@@ -45,11 +45,6 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
 
     private String delim;
 
-    /**
-     * @param spec
-     * @param inputArity
-     * @param outputArity
-     */
     public PlainFileWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, IFileSplitProvider fileSplitProvider,
             String delim) {
         super(spec, 1, 0);
@@ -74,7 +69,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
         // Output files
         final FileSplit[] splits = fileSplitProvider.getFileSplits();
         // Frame accessor
-        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(ctx.getFrameSize(),
+        final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0));
         // Record descriptor
         final RecordDescriptor recordDescriptor = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);

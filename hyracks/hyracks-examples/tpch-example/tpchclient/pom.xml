@@ -56,7 +56,7 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.examples.tpch.client.Main</mainClass>
+                  <mainClass>edu.uci.ics.hyracks.examples.tpch.client.Sort</mainClass>
                   <name>tpchclient</name>
                 </program>
               </programs>

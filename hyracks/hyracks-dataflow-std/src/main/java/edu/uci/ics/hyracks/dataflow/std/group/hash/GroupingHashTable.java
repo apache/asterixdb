@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -32,6 +34,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
+import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -40,7 +43,7 @@ class GroupingHashTable {
     /**
      * The pointers in the link store 3 int values for each entry in the
      * hashtable: (bufferIdx, tIndex, accumulatorIdx).
-     * 
+     *
      * @author vinayakb
      */
     private static class Link {
@@ -67,7 +70,7 @@ class GroupingHashTable {
     private static final int INIT_AGG_STATE_SIZE = 8;
     private final IHyracksTaskContext ctx;
 
-    private final List<ByteBuffer> buffers;
+    private final List<IFrame> buffers;
     private final Link[] table;
     /**
      * Aggregate states: a list of states for all groups maintained in the main
@@ -84,6 +87,7 @@ class GroupingHashTable {
     private final ITuplePartitionComputer tpc;
     private final IAggregatorDescriptor aggregator;
 
+    private final IFrame outputFrame;
     private final FrameTupleAppender appender;
 
     private final FrameTupleAccessor storedKeysAccessor;
@@ -96,7 +100,7 @@ class GroupingHashTable {
             throws HyracksDataException {
         this.ctx = ctx;
 
-        buffers = new ArrayList<ByteBuffer>();
+        buffers = new ArrayList<>();
         table = new Link[tableSize];
 
         keys = fields;
@@ -127,10 +131,10 @@ class GroupingHashTable {
         accumulatorSize = 0;
 
         RecordDescriptor storedKeysRecordDescriptor = new RecordDescriptor(storedKeySerDeser);
-        storedKeysAccessor = new FrameTupleAccessor(ctx.getFrameSize(), storedKeysRecordDescriptor);
+        storedKeysAccessor = new FrameTupleAccessor(storedKeysRecordDescriptor);
         lastBIndex = -1;
 
-        appender = new FrameTupleAppender(ctx.getFrameSize());
+        appender = new FrameTupleAppender();
 
         addNewBuffer();
 
@@ -140,14 +144,13 @@ class GroupingHashTable {
             stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length + 1);
         }
         outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
+        outputFrame = new VSizeFrame(ctx);
     }
 
     private void addNewBuffer() throws HyracksDataException {
-        ByteBuffer buffer = ctx.allocateFrame();
-        buffer.position(0);
-        buffer.limit(buffer.capacity());
-        buffers.add(buffer);
-        appender.reset(buffer, true);
+        VSizeFrame frame = new VSizeFrame(ctx);
+        buffers.add(frame);
+        appender.reset(frame, true);
         ++lastBIndex;
     }
 
@@ -161,7 +164,7 @@ class GroupingHashTable {
         for (int i = 0; i < link.size; i += 3) {
             int sbIndex = link.pointers[i];
             int stIndex = link.pointers[i + 1];
-            storedKeysAccessor.reset(buffers.get(sbIndex));
+            storedKeysAccessor.reset(buffers.get(sbIndex).getBuffer());
             int c = ftpc.compare(accessor, tIndex, storedKeysAccessor, stIndex);
             if (c == 0) {
                 saIndex = link.pointers[i + 2];
@@ -206,8 +209,7 @@ class GroupingHashTable {
     }
 
     void write(IFrameWriter writer) throws HyracksDataException {
-        ByteBuffer buffer = ctx.allocateFrame();
-        appender.reset(buffer, true);
+        appender.reset(outputFrame, true);
 
         for (int i = 0; i < table.length; ++i) {
             Link link = table[i];
@@ -216,7 +218,7 @@ class GroupingHashTable {
                     int bIndex = link.pointers[j];
                     int tIndex = link.pointers[j + 1];
                     int aIndex = link.pointers[j + 2];
-                    ByteBuffer keyBuffer = buffers.get(bIndex);
+                    ByteBuffer keyBuffer = buffers.get(bIndex).getBuffer();
                     storedKeysAccessor.reset(keyBuffer);
 
                     // copy keys
@@ -228,22 +230,13 @@ class GroupingHashTable {
                     aggregator.outputFinalResult(outputTupleBuilder, storedKeysAccessor, tIndex,
                             aggregateStates[aIndex]);
 
-                    if (!appender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
-                            outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                        writer.nextFrame(buffer);
-                        appender.reset(buffer, true);
-                        if (!appender.appendSkipEmptyField(outputTupleBuilder.getFieldEndOffsets(),
-                                outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                            throw new HyracksDataException("Cannot write the aggregation output into a frame.");
-                        }
-                    }
+                    FrameUtils.appendSkipEmptyFieldToWriter(writer, appender, outputTupleBuilder.getFieldEndOffsets(),
+                            outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize());
 
                 }
             }
         }
-        if (appender.getTupleCount() != 0) {
-            writer.nextFrame(buffer);
-        }
+        appender.flush(writer, true);
     }
 
     void close() throws HyracksDataException {

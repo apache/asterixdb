@@ -43,16 +43,29 @@ public class TestTaskContext implements IHyracksTaskContext {
     }
 
     @Override
-    public ByteBuffer allocateFrame() {
+    public ByteBuffer allocateFrame() throws HyracksDataException {
         return jobletContext.allocateFrame();
-    }
-    
-    @Override
-    public void deallocateFrames(int frameCount) {
     }
 
     @Override
-    public int getFrameSize() {
+    public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        return jobletContext.allocateFrame(bytes);
+    }
+
+    @Override
+    public ByteBuffer reallocateFrame(ByteBuffer tobeDeallocate, int newSizeInBytes, boolean copyOldData)
+            throws HyracksDataException {
+        return jobletContext.reallocateFrame(tobeDeallocate,newSizeInBytes, copyOldData);
+
+    }
+
+    @Override
+    public void deallocateFrames(int bytes) {
+        jobletContext.deallocateFrames(bytes);
+    }
+
+    @Override
+    public int getInitialFrameSize() {
         return jobletContext.getFrameSize();
     }
 

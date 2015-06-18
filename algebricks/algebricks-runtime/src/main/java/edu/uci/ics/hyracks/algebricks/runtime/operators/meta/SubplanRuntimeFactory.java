@@ -33,7 +33,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
@@ -87,9 +86,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
             class TupleOuterProduct implements IFrameWriter {
 
                 private boolean smthWasWritten = false;
-                private IHyracksTaskContext hCtx = ctx;
-                private int frameSize = hCtx.getFrameSize();
-                private FrameTupleAccessor ta = new FrameTupleAccessor(frameSize,
+                private FrameTupleAccessor ta = new FrameTupleAccessor(
                         pipeline.getRecordDescriptors()[pipeline.getRecordDescriptors().length - 1]);
                 private ArrayTupleBuilder tb = new ArrayTupleBuilder(nullWriters.length);
 
@@ -103,14 +100,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                     ta.reset(buffer);
                     int nTuple = ta.getTupleCount();
                     for (int t = 0; t < nTuple; t++) {
-                        if (!appender.appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t)) {
-                            FrameUtils.flushFrame(frame, writer);
-                            appender.reset(frame, true);
-                            if (!appender.appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t)) {
-                                throw new HyracksDataException(
-                                        "Could not write frame: subplan result is larger than the single-frame limit.");
-                            }
-                        }
+                        appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t);
                     }
                     smthWasWritten = true;
                 }

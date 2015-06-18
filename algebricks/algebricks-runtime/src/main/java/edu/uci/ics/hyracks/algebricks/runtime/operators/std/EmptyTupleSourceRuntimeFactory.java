@@ -14,16 +14,14 @@
  */
 package edu.uci.ics.hyracks.algebricks.runtime.operators.std;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
 import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputSourcePushRuntime;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
 
@@ -41,18 +39,16 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     public IPushRuntime createPushRuntime(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new AbstractOneInputSourcePushRuntime() {
 
-            private ByteBuffer frame = ctx.allocateFrame();
             private ArrayTupleBuilder tb = new ArrayTupleBuilder(0);
-            private FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
+            private FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
 
             @Override
             public void open() throws HyracksDataException {
                 writer.open();
-                appender.reset(frame, true);
                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                     throw new IllegalStateException();
                 }
-                FrameUtils.flushFrame(frame, writer);
+                appender.flush(writer, true);
                 writer.close();
             }
         };

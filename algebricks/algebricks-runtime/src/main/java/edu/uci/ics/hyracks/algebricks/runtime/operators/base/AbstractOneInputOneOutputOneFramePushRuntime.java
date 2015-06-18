@@ -14,8 +14,11 @@
  */
 package edu.uci.ics.hyracks.algebricks.runtime.operators.base;
 
-import java.nio.ByteBuffer;
-
+import edu.uci.ics.hyracks.api.comm.IFrame;
+import edu.uci.ics.hyracks.api.comm.IFrameAppender;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAppender;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -26,24 +29,42 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 
 public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends AbstractOneInputOneOutputPushRuntime {
 
-    protected FrameTupleAppender appender;
-    protected ByteBuffer frame;
+    protected IFrameAppender appender;
+    protected IFrame frame;
     protected FrameTupleAccessor tAccess;
     protected FrameTupleReference tRef;
+
+    protected final void initAccessAppend(IHyracksTaskContext ctx) throws HyracksDataException {
+        frame = new VSizeFrame(ctx);
+        appender = new FrameTupleAppender(frame);
+        tAccess = new FrameTupleAccessor(inputRecordDesc);
+    }
+
+    protected final void initAccessAppendRef(IHyracksTaskContext ctx) throws HyracksDataException {
+        initAccessAppend(ctx);
+        tRef = new FrameTupleReference();
+    }
 
     @Override
     public void close() throws HyracksDataException {
         flushIfNotFailed();
         writer.close();
-        appender.reset(frame, true);
+    }
+
+    protected void flushAndReset() throws HyracksDataException {
+        if (appender.getTupleCount() > 0) {
+            appender.flush(writer, true);
+        }
     }
 
     protected void flushIfNotFailed() throws HyracksDataException {
         if (!failed) {
-            if (appender.getTupleCount() > 0) {
-                FrameUtils.flushFrame(frame, writer);
-            }
+            flushAndReset();
         }
+    }
+
+    protected IFrameTupleAppender getTupleAppender() {
+        return (FrameTupleAppender) appender;
     }
 
     protected void appendToFrameFromTupleBuilder(ArrayTupleBuilder tb) throws HyracksDataException {
@@ -51,17 +72,10 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
     }
 
     protected void appendToFrameFromTupleBuilder(ArrayTupleBuilder tb, boolean flushFrame) throws HyracksDataException {
-        if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
-            if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new HyracksDataException(
-                        "Could not write frame: the size of the tuple is too long to be fit into a single frame. (AbstractOneInputOneOutputOneFramePushRuntime.appendToFrameFromTupleBuilder)");
-            }
-        }
+        FrameUtils.appendToWriter(writer, getTupleAppender(), tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                tb.getSize());
         if (flushFrame) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
+            flushAndReset();
         }
     }
 
@@ -71,52 +85,18 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
 
     protected void appendProjectionToFrame(int tIndex, int[] projectionList, boolean flushFrame)
             throws HyracksDataException {
-        if (!appender.appendProjection(tAccess, tIndex, projectionList)) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
-            if (!appender.appendProjection(tAccess, tIndex, projectionList)) {
-                throw new IllegalStateException(
-                        "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime.appendProjectionToFrame).");
-            }
-            return;
-        }
+        FrameUtils.appendProjectionToWriter(writer, getTupleAppender(), tAccess, tIndex, projectionList);
         if (flushFrame) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
+            flushAndReset();
         }
     }
 
     protected void appendTupleToFrame(int tIndex) throws HyracksDataException {
-        if (!appender.append(tAccess, tIndex)) {
-            FrameUtils.flushFrame(frame, writer);
-            appender.reset(frame, true);
-            if (!appender.append(tAccess, tIndex)) {
-                throw new IllegalStateException(
-                        "Could not write frame (AbstractOneInputOneOutputOneFramePushRuntime.appendTupleToFrame).");
-            }
-        }
+        FrameUtils.appendToWriter(writer, getTupleAppender(), tAccess, tIndex);
     }
 
-    protected final void initAccessAppend(IHyracksTaskContext ctx) throws HyracksDataException {
-        // if (allocFrame) {
-        frame = ctx.allocateFrame();
-        appender = new FrameTupleAppender(ctx.getFrameSize());
-        appender.reset(frame, true);
-        // }
-        tAccess = new FrameTupleAccessor(ctx.getFrameSize(), inputRecordDesc);
+    protected void appendConcat(IFrameTupleAccessor accessor0, int tIndex0, IFrameTupleAccessor accessor1, int tIndex1)
+            throws HyracksDataException {
+        FrameUtils.appendConcatToWriter(writer, getTupleAppender(), accessor0, tIndex0, accessor1, tIndex1);
     }
-
-    protected final void initAccessAppendRef(IHyracksTaskContext ctx) throws HyracksDataException {
-        initAccessAppend(ctx);
-        tRef = new FrameTupleReference();
-    }
-
-    protected final void initAccessAppendFieldRef(IHyracksTaskContext ctx) throws HyracksDataException {
-        frame = ctx.allocateFrame();
-        appender = new FrameTupleAppender(ctx.getFrameSize(), inputRecordDesc.getFieldCount());
-        appender.reset(frame, true);
-        tAccess = new FrameTupleAccessor(ctx.getFrameSize(), inputRecordDesc);
-        tRef = new FrameTupleReference();
-    }
-
 }

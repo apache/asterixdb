@@ -18,13 +18,10 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.Comparator;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class ReferencedPriorityQueue {
-    private final int frameSize;
-    private final RecordDescriptor recordDescriptor;
     private final ReferenceEntry entries[];
     private final int size;
     private final BitSet runAvail;
@@ -34,10 +31,8 @@ public class ReferencedPriorityQueue {
     private final INormalizedKeyComputer nmkComputer;
     private final int[] keyFields;
 
-    public ReferencedPriorityQueue(int frameSize, RecordDescriptor recordDescriptor, int initSize,
-            Comparator<ReferenceEntry> comparator, int[] keyFields, INormalizedKeyComputer nmkComputer) {
-        this.frameSize = frameSize;
-        this.recordDescriptor = recordDescriptor;
+    public ReferencedPriorityQueue(int initSize, Comparator<ReferenceEntry> comparator, int[] keyFields,
+            INormalizedKeyComputer nmkComputer) {
         if (initSize < 1)
             throw new IllegalArgumentException();
         this.comparator = comparator;
@@ -55,7 +50,7 @@ public class ReferencedPriorityQueue {
 
     /**
      * Retrieve the top entry without removing it
-     * 
+     *
      * @return the top entry
      */
     public ReferenceEntry peek() {
@@ -65,17 +60,14 @@ public class ReferencedPriorityQueue {
     /**
      * compare the new entry with entries within the queue, to find a spot for
      * this new entry
-     * 
-     * @param entry
+     *
+     * @param fta
      * @return runid of this entry
      * @throws IOException
      */
-    public int popAndReplace(FrameTupleAccessor fta, int tIndex) {
+    public int popAndReplace(IFrameTupleAccessor fta, int tIndex) {
         ReferenceEntry entry = entries[0];
-        if (entry.getAccessor() == null) {
-            entry.setAccessor(new FrameTupleAccessor(frameSize, recordDescriptor));
-        }
-        entry.getAccessor().reset(fta.getBuffer());
+        entry.setAccessor(fta);
         entry.setTupleIndex(tIndex, keyFields, nmkComputer);
 
         add(entry);
@@ -84,9 +76,8 @@ public class ReferencedPriorityQueue {
 
     /**
      * Push entry into priority queue
-     * 
-     * @param e
-     *            the new Entry
+     *
+     * @param e the new Entry
      */
     private void add(ReferenceEntry e) {
         ReferenceEntry min = entries[0];
@@ -127,7 +118,7 @@ public class ReferencedPriorityQueue {
 
     /**
      * Pop is called only when a run is exhausted
-     * 
+     *
      * @return
      */
     public ReferenceEntry pop() {

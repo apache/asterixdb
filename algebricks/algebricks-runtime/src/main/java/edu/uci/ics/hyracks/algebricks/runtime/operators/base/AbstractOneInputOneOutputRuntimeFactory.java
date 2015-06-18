@@ -24,7 +24,7 @@ public abstract class AbstractOneInputOneOutputRuntimeFactory implements IPushRu
 
     private static final long serialVersionUID = 1L;
 
-    protected int[] projectionList;
+    protected final int[] projectionList;
 
     public AbstractOneInputOneOutputRuntimeFactory(int[] projectionList) {
         this.projectionList = projectionList;

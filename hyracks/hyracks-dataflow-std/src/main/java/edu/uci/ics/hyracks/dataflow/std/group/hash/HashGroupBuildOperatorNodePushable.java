@@ -44,7 +44,7 @@ class HashGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOperatorN
             IAggregatorDescriptorFactory aggregatorFactory, int tableSize, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor) {
         this.ctx = ctx;
-        this.accessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDescriptor);
+        this.accessor = new FrameTupleAccessor(inRecordDescriptor);
         this.stateId = stateId;
         this.keys = keys;
         this.tpcf = tpcf;

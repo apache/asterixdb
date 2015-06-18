@@ -14,12 +14,13 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.util;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class ReferenceEntry {
     private final int runid;
-    private FrameTupleAccessor acccessor;
+    private IFrameTupleAccessor acccessor;
     private int tupleIndex;
     private int[] tPointers;
 
@@ -38,11 +39,11 @@ public class ReferenceEntry {
         return runid;
     }
 
-    public FrameTupleAccessor getAccessor() {
+    public IFrameTupleAccessor getAccessor() {
         return acccessor;
     }
 
-    public void setAccessor(FrameTupleAccessor fta) {
+    public void setAccessor(IFrameTupleAccessor fta) {
         this.acccessor = fta;
     }
 
@@ -62,15 +63,14 @@ public class ReferenceEntry {
         initTPointer(acccessor, tupleIndex, keyFields, nmkComputer);
     }
 
-    private void initTPointer(FrameTupleAccessor fta, int tupleIndex, int[] keyFields,
+    private void initTPointer(IFrameTupleAccessor fta, int tupleIndex, int[] keyFields,
             INormalizedKeyComputer nmkComputer) {
         this.tupleIndex = tupleIndex;
         byte[] b1 = fta.getBuffer().array();
         for (int f = 0; f < keyFields.length; ++f) {
             int fIdx = keyFields[f];
-            tPointers[2 * f + 1] = fta.getTupleStartOffset(tupleIndex) + fta.getFieldSlotsLength()
-                    + fta.getFieldStartOffset(tupleIndex, fIdx);
-            tPointers[2 * f + 2] = fta.getFieldEndOffset(tupleIndex, fIdx) - fta.getFieldStartOffset(tupleIndex, fIdx);
+            tPointers[2 * f + 1] = fta.getAbsoluteFieldStartOffset(tupleIndex, fIdx);
+            tPointers[2 * f + 2] = fta.getFieldLength(tupleIndex, fIdx);
             if (f == 0) {
                 if (nmkComputer != null) {
                     tPointers[0] = nmkComputer.normalize(b1, tPointers[1], tPointers[2]);

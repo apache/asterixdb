@@ -15,12 +15,11 @@
 
 package edu.uci.ics.hyracks.hdfs.lib;
 
-import java.nio.ByteBuffer;
-
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -37,9 +36,7 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
             throws HyracksDataException {
 
         final ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
-        final ByteBuffer buffer = ctx.allocateFrame();
-        final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-        appender.reset(buffer, true);
+        final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
 
         return new IKeyValueParser<LongWritable, Text>() {
 
@@ -53,18 +50,13 @@ public class TextKeyValueParserFactory implements IKeyValueParserFactory<LongWri
                     throws HyracksDataException {
                 tb.reset();
                 tb.addField(value.getBytes(), 0, value.getLength());
-                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    FrameUtils.flushFrame(buffer, writer);
-                    appender.reset(buffer, true);
-                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        throw new HyracksDataException("tuple cannot be appended into the frame");
-                    }
-                }
+                FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                        tb.getSize());
             }
 
             @Override
             public void close(IFrameWriter writer) throws HyracksDataException {
-                FrameUtils.flushFrame(buffer, writer);
+                appender.flush(writer, false);
             }
 
         };

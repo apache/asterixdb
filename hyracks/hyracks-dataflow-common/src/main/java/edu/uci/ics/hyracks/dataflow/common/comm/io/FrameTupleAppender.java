@@ -1,164 +1,121 @@
 /*
  * Copyright 2009-2013 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  you may obtain a copy of the License from
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.comm.FrameHelper;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAppender;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
 
-public class FrameTupleAppender {
-    private final int frameSize;
+public class FrameTupleAppender extends AbstractFrameAppender implements IFrameTupleAppender {
 
-    private ByteBuffer buffer;
-
-    private int tupleCount;
-
-    private int tupleDataEndOffset;
-
-    private int numberOfFields = -1;
-    private int currentField = 0;
-    private int lastFieldEndOffset = 0;
-
-    public FrameTupleAppender(int frameSize) {
-        this.frameSize = frameSize;
+    public FrameTupleAppender() {
     }
 
-    public FrameTupleAppender(int frameSize, int numberOfFields) {
-        this.frameSize = frameSize;
-        this.numberOfFields = numberOfFields;
+    public FrameTupleAppender(IFrame frame) throws HyracksDataException {
+        reset(frame, true);
     }
 
-    public void reset(ByteBuffer buffer, boolean clear) {
-        this.buffer = buffer;
-        if (clear) {
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), 0);
-            tupleCount = 0;
-            tupleDataEndOffset = 0;
-        } else {
-            tupleCount = buffer.getInt(FrameHelper.getTupleCountOffset(frameSize));
-            tupleDataEndOffset = tupleCount == 0 ? 0 : buffer.getInt(FrameHelper.getTupleCountOffset(frameSize)
-                    - tupleCount * 4);
-        }
+    public FrameTupleAppender(IFrame frame, boolean clear) throws HyracksDataException {
+        reset(frame, clear);
     }
 
-    public boolean append(int[] fieldSlots, byte[] bytes, int offset, int length) {
-        if (tupleDataEndOffset + fieldSlots.length * 4 + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+    public boolean append(int[] fieldSlots, byte[] bytes, int offset, int length) throws HyracksDataException {
+        if (canHoldNewTuple(fieldSlots.length, length)) {
             for (int i = 0; i < fieldSlots.length; ++i) {
-                buffer.putInt(tupleDataEndOffset + i * 4, fieldSlots[i]);
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, fieldSlots[i]);
             }
-            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset + fieldSlots.length * 4, length);
+            System.arraycopy(bytes, offset, array, tupleDataEndOffset + fieldSlots.length * 4, length);
             tupleDataEndOffset += fieldSlots.length * 4 + length;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(getBuffer().array(),
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(getBuffer().array(), FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
-    public boolean append(byte[] bytes, int offset, int length) {
-        if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
-            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset, length);
+    public boolean append(byte[] bytes, int offset, int length) throws HyracksDataException {
+        if (canHoldNewTuple(0, length)) {
+            System.arraycopy(bytes, offset, getBuffer().array(), tupleDataEndOffset, length);
             tupleDataEndOffset += length;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
-    public boolean appendSkipEmptyField(int[] fieldSlots, byte[] bytes, int offset, int length) {
-        if (tupleDataEndOffset + fieldSlots.length * 4 + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+    public boolean appendSkipEmptyField(int[] fieldSlots, byte[] bytes, int offset, int length)
+            throws HyracksDataException {
+        if (canHoldNewTuple(fieldSlots.length, length)) {
             int effectiveSlots = 0;
             for (int i = 0; i < fieldSlots.length; ++i) {
                 if (fieldSlots[i] > 0) {
-                    buffer.putInt(tupleDataEndOffset + i * 4, fieldSlots[i]);
+                    IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, fieldSlots[i]);
                     effectiveSlots++;
                 }
             }
-            System.arraycopy(bytes, offset, buffer.array(), tupleDataEndOffset + effectiveSlots * 4, length);
+            System.arraycopy(bytes, offset, array, tupleDataEndOffset + effectiveSlots * 4, length);
             tupleDataEndOffset += effectiveSlots * 4 + length;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1),
+                    tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
-    public boolean appendField(byte[] bytes, int offset, int length) {
-        if (numberOfFields < 0) {
-            throw new IllegalStateException("unintialized number of fields " + numberOfFields);
-        }
-        int currentTupleDataStart = tupleDataEndOffset + numberOfFields * 4 + lastFieldEndOffset;
-        if (currentTupleDataStart + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
-            System.arraycopy(bytes, offset, buffer.array(), currentTupleDataStart, length);
-            lastFieldEndOffset = lastFieldEndOffset + length;
-            buffer.putInt(tupleDataEndOffset + currentField * 4, lastFieldEndOffset);
-            if (++currentField == numberOfFields) {
-                tupleDataEndOffset += numberOfFields * 4 + lastFieldEndOffset;
-                buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
-                ++tupleCount;
-                buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
-
-                //reset for the next tuple
-                currentField = 0;
-                lastFieldEndOffset = 0;
-            }
-            return true;
-        } else {
-            //reset for the next tuple
-            currentField = 0;
-            lastFieldEndOffset = 0;
-            return false;
-        }
-    }
-
-    public boolean appendField(IFrameTupleAccessor fta, int tIndex, int fIndex) {
-        if (numberOfFields < 0) {
-            throw new IllegalStateException("unintialized number of fields " + numberOfFields);
-        }
-        int startOffset = fta.getTupleStartOffset(tIndex);
-        int fStartOffset = fta.getFieldStartOffset(tIndex, fIndex);
-        int fLen = fta.getFieldEndOffset(tIndex, fIndex) - fStartOffset;
-        return appendField(fta.getBuffer().array(), startOffset + fta.getFieldSlotsLength() + fStartOffset, fLen);
-    }
-
-    public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset) {
+    public boolean append(IFrameTupleAccessor tupleAccessor, int tStartOffset, int tEndOffset)
+            throws HyracksDataException {
         int length = tEndOffset - tStartOffset;
-        if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+        if (canHoldNewTuple(0, length)) {
             ByteBuffer src = tupleAccessor.getBuffer();
-            System.arraycopy(src.array(), tStartOffset, buffer.array(), tupleDataEndOffset, length);
+            System.arraycopy(src.array(), tStartOffset, array, tupleDataEndOffset, length);
             tupleDataEndOffset += length;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1),
+                    tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
-    public boolean append(IFrameTupleAccessor tupleAccessor, int tIndex) {
+    public boolean append(IFrameTupleAccessor tupleAccessor, int tIndex) throws HyracksDataException {
         int tStartOffset = tupleAccessor.getTupleStartOffset(tIndex);
         int tEndOffset = tupleAccessor.getTupleEndOffset(tIndex);
         return append(tupleAccessor, tStartOffset, tEndOffset);
     }
 
-    public boolean appendConcat(IFrameTupleAccessor accessor0, int tIndex0, IFrameTupleAccessor accessor1, int tIndex1) {
+    public boolean appendConcat(IFrameTupleAccessor accessor0, int tIndex0, IFrameTupleAccessor accessor1,
+            int tIndex1) throws HyracksDataException {
         int startOffset0 = accessor0.getTupleStartOffset(tIndex0);
         int endOffset0 = accessor0.getTupleEndOffset(tIndex0);
         int length0 = endOffset0 - startOffset0;
@@ -167,7 +124,7 @@ public class FrameTupleAppender {
         int endOffset1 = accessor1.getTupleEndOffset(tIndex1);
         int length1 = endOffset1 - startOffset1;
 
-        if (tupleDataEndOffset + length0 + length1 + 4 + (tupleCount + 1) * 4 <= frameSize) {
+        if (canHoldNewTuple(0, length0 + length1)) {
             ByteBuffer src0 = accessor0.getBuffer();
             ByteBuffer src1 = accessor1.getBuffer();
             int slotsLen0 = accessor0.getFieldSlotsLength();
@@ -175,28 +132,31 @@ public class FrameTupleAppender {
             int dataLen0 = length0 - slotsLen0;
             int dataLen1 = length1 - slotsLen1;
             // Copy slots from accessor0 verbatim
-            System.arraycopy(src0.array(), startOffset0, buffer.array(), tupleDataEndOffset, slotsLen0);
+            System.arraycopy(src0.array(), startOffset0, array, tupleDataEndOffset, slotsLen0);
             // Copy slots from accessor1 with the following transformation: newSlotIdx = oldSlotIdx + dataLen0
             for (int i = 0; i < slotsLen1 / 4; ++i) {
-                buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4, src1.getInt(startOffset1 + i * 4) + dataLen0);
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + slotsLen0 + i * 4,
+                        src1.getInt(startOffset1 + i * 4) + dataLen0);
             }
             // Copy data0
-            System.arraycopy(src0.array(), startOffset0 + slotsLen0, buffer.array(), tupleDataEndOffset + slotsLen0
+            System.arraycopy(src0.array(), startOffset0 + slotsLen0, array, tupleDataEndOffset + slotsLen0
                     + slotsLen1, dataLen0);
             // Copy data1
-            System.arraycopy(src1.array(), startOffset1 + slotsLen1, buffer.array(), tupleDataEndOffset + slotsLen0
+            System.arraycopy(src1.array(), startOffset1 + slotsLen1, array, tupleDataEndOffset + slotsLen0
                     + slotsLen1 + dataLen0, dataLen1);
             tupleDataEndOffset += (length0 + length1);
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
     public boolean appendConcat(IFrameTupleAccessor accessor0, int tIndex0, int[] fieldSlots1, byte[] bytes1,
-            int offset1, int dataLen1) {
+            int offset1, int dataLen1) throws HyracksDataException {
         int startOffset0 = accessor0.getTupleStartOffset(tIndex0);
         int endOffset0 = accessor0.getTupleEndOffset(tIndex0);
         int length0 = endOffset0 - startOffset0;
@@ -204,33 +164,36 @@ public class FrameTupleAppender {
         int slotsLen1 = fieldSlots1.length * 4;
         int length1 = slotsLen1 + dataLen1;
 
-        if (tupleDataEndOffset + length0 + length1 + 4 + (tupleCount + 1) * 4 <= frameSize) {
+        if (canHoldNewTuple(0, length0 + length1)) {
             ByteBuffer src0 = accessor0.getBuffer();
             int slotsLen0 = accessor0.getFieldSlotsLength();
             int dataLen0 = length0 - slotsLen0;
             // Copy slots from accessor0 verbatim
-            System.arraycopy(src0.array(), startOffset0, buffer.array(), tupleDataEndOffset, slotsLen0);
+            System.arraycopy(src0.array(), startOffset0, array, tupleDataEndOffset, slotsLen0);
             // Copy fieldSlots1 with the following transformation: newSlotIdx = oldSlotIdx + dataLen0
             for (int i = 0; i < fieldSlots1.length; ++i) {
-                buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4, (fieldSlots1[i] + dataLen0));
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + slotsLen0 + i * 4,
+                        (fieldSlots1[i] + dataLen0));
             }
             // Copy data0
-            System.arraycopy(src0.array(), startOffset0 + slotsLen0, buffer.array(), tupleDataEndOffset + slotsLen0
+            System.arraycopy(src0.array(), startOffset0 + slotsLen0, array, tupleDataEndOffset + slotsLen0
                     + slotsLen1, dataLen0);
             // Copy bytes1
-            System.arraycopy(bytes1, offset1, buffer.array(), tupleDataEndOffset + slotsLen0 + fieldSlots1.length * 4
-                    + dataLen0, dataLen1);
+            System.arraycopy(bytes1, offset1, array,
+                    tupleDataEndOffset + slotsLen0 + fieldSlots1.length * 4 + dataLen0, dataLen1);
             tupleDataEndOffset += (length0 + length1);
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
     public boolean appendConcat(int[] fieldSlots0, byte[] bytes0, int offset0, int dataLen0,
-            IFrameTupleAccessor accessor1, int tIndex1) {
+            IFrameTupleAccessor accessor1, int tIndex1) throws HyracksDataException {
         int slotsLen0 = fieldSlots0.length * 4;
         int length0 = slotsLen0 + dataLen0;
 
@@ -238,40 +201,45 @@ public class FrameTupleAppender {
         int endOffset1 = accessor1.getTupleEndOffset(tIndex1);
         int length1 = endOffset1 - startOffset1;
 
-        if (tupleDataEndOffset + length0 + length1 + 4 + (tupleCount + 1) * 4 <= frameSize) {
+        if (canHoldNewTuple(0, length0 + length1)) {
             ByteBuffer src1 = accessor1.getBuffer();
             int slotsLen1 = accessor1.getFieldSlotsLength();
             int dataLen1 = length1 - slotsLen1;
             // Copy fieldSlots0 verbatim
             for (int i = 0; i < fieldSlots0.length; ++i) {
-                buffer.putInt(tupleDataEndOffset + i * 4, fieldSlots0[i]);
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, fieldSlots0[i]);
             }
             // Copy slots from accessor1 with the following transformation: newSlotIdx = oldSlotIdx + dataLen0
             for (int i = 0; i < slotsLen1 / 4; ++i) {
-                buffer.putInt(tupleDataEndOffset + slotsLen0 + i * 4, src1.getInt(startOffset1 + i * 4) + dataLen0);
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + slotsLen0 + i * 4,
+                        src1.getInt(startOffset1 + i * 4) + dataLen0);
             }
             // Copy bytes0
-            System.arraycopy(bytes0, offset0, buffer.array(), tupleDataEndOffset + slotsLen0 + slotsLen1, dataLen0);
+            System.arraycopy(bytes0, offset0, array, tupleDataEndOffset + slotsLen0 + slotsLen1,
+                    dataLen0);
             // Copy data1
-            System.arraycopy(src1.array(), startOffset1 + slotsLen1, buffer.array(), tupleDataEndOffset + slotsLen0
+            System.arraycopy(src1.array(), startOffset1 + slotsLen1, array, tupleDataEndOffset + slotsLen0
                     + slotsLen1 + dataLen0, dataLen1);
             tupleDataEndOffset += (length0 + length1);
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
-    public boolean appendProjection(IFrameTupleAccessor accessor, int tIndex, int[] fields) {
+    public boolean appendProjection(IFrameTupleAccessor accessor, int tIndex, int[] fields)
+            throws HyracksDataException {
         int fTargetSlotsLength = fields.length * 4;
         int length = fTargetSlotsLength;
         for (int i = 0; i < fields.length; ++i) {
             length += (accessor.getFieldEndOffset(tIndex, fields[i]) - accessor.getFieldStartOffset(tIndex, fields[i]));
         }
 
-        if (tupleDataEndOffset + length + 4 + (tupleCount + 1) * 4 <= frameSize) {
+        if (canHoldNewTuple(0, length)) {
             int fSrcSlotsLength = accessor.getFieldSlotsLength();
             int tStartOffset = accessor.getTupleStartOffset(tIndex);
 
@@ -281,26 +249,21 @@ public class FrameTupleAppender {
                 int fSrcStart = tStartOffset + fSrcSlotsLength + accessor.getFieldStartOffset(tIndex, fields[i]);
                 int fLen = accessor.getFieldEndOffset(tIndex, fields[i])
                         - accessor.getFieldStartOffset(tIndex, fields[i]);
-                System.arraycopy(accessor.getBuffer().array(), fSrcStart, buffer.array(), tupleDataEndOffset
+                System.arraycopy(accessor.getBuffer().array(), fSrcStart, array, tupleDataEndOffset
                         + fTargetSlotsLength + fStartOffset, fLen);
                 fEndOffset += fLen;
-                buffer.putInt(tupleDataEndOffset + i * 4, fEndOffset);
+                IntSerDeUtils.putInt(array, tupleDataEndOffset + i * 4, fEndOffset);
                 fStartOffset = fEndOffset;
             }
             tupleDataEndOffset += length;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleCount + 1), tupleDataEndOffset);
+            IntSerDeUtils.putInt(array,
+                    FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1), tupleDataEndOffset);
             ++tupleCount;
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+            IntSerDeUtils
+                    .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
             return true;
         }
         return false;
     }
 
-    public int getTupleCount() {
-        return tupleCount;
-    }
-
-    public ByteBuffer getBuffer() {
-        return buffer;
-    }
 }

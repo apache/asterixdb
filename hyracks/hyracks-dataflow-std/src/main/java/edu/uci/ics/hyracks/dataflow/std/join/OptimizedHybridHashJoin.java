@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
@@ -74,7 +76,7 @@ public class OptimizedHybridHashJoin {
     private final boolean isLeftOuter;
     private final INullWriter[] nullWriters1;
 
-    private ByteBuffer[] memBuffs; //Memory buffers for build
+    private IFrame[] memBuffs; //Memory buffers for build
     private int[] curPBuff; //Current (last) Buffer for each partition
     private int[] nextBuff; //Next buffer in the partition's buffer chain
     private int[] buildPSizeInTups; //Size of build partitions (in tuples)
@@ -92,9 +94,9 @@ public class OptimizedHybridHashJoin {
     private FrameTupleAppender probeTupAppenderToSpilled;
 
     private int numOfSpilledParts;
-    private ByteBuffer[] sPartBuffs; //Buffers for probe spilled partitions (one buffer per spilled partition)
-    private ByteBuffer probeResBuff; //Buffer for probe resident partition tuples
-    private ByteBuffer reloadBuffer; //Buffer for reloading spilled partitions during partition tuning 
+    private IFrame[] sPartBuffs; //Buffers for probe spilled partitions (one buffer per spilled partition)
+    private IFrame probeResBuff; //Buffer for probe resident partition tuples
+    private IFrame reloadBuffer; //Buffer for reloading spilled partitions during partition tuning
 
     private int[] buildPSizeInFrames; //Used for partition tuning
     private int freeFramesCounter; //Used for partition tuning
@@ -124,8 +126,8 @@ public class OptimizedHybridHashJoin {
         this.buildRFWriters = new RunFileWriter[numOfPartitions];
         this.probeRFWriters = new RunFileWriter[numOfPartitions];
 
-        this.accessorBuild = new FrameTupleAccessor(ctx.getFrameSize(), buildRd);
-        this.accessorProbe = new FrameTupleAccessor(ctx.getFrameSize(), probeRd);
+        this.accessorBuild = new FrameTupleAccessor(buildRd);
+        this.accessorProbe = new FrameTupleAccessor(probeRd);
 
         this.predEvaluator = predEval;
         this.isLeftOuter = false;
@@ -154,8 +156,8 @@ public class OptimizedHybridHashJoin {
         this.buildRFWriters = new RunFileWriter[numOfPartitions];
         this.probeRFWriters = new RunFileWriter[numOfPartitions];
 
-        this.accessorBuild = new FrameTupleAccessor(ctx.getFrameSize(), buildRd);
-        this.accessorProbe = new FrameTupleAccessor(ctx.getFrameSize(), probeRd);
+        this.accessorBuild = new FrameTupleAccessor(buildRd);
+        this.accessorProbe = new FrameTupleAccessor(probeRd);
 
         this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
@@ -170,7 +172,7 @@ public class OptimizedHybridHashJoin {
     }
 
     public void initBuild() throws HyracksDataException {
-        memBuffs = new ByteBuffer[memForJoin];
+        memBuffs = new IFrame[memForJoin];
         curPBuff = new int[numOfPartitions];
         nextBuff = new int[memForJoin];
         pStatus = new BitSet(numOfPartitions);
@@ -179,19 +181,22 @@ public class OptimizedHybridHashJoin {
         buildPSizeInFrames = new int[numOfPartitions];
         freeFramesCounter = memForJoin - numOfPartitions;
 
-        for (int i = 0; i < numOfPartitions; i++) { //Allocating one buffer per partition and setting as the head of the chain of buffers for that partition
-            memBuffs[i] = ctx.allocateFrame();
+        for (int i = 0; i
+                < numOfPartitions; i++) { //Allocating one buffer per partition and setting as the head of the chain of buffers for that partition
+            memBuffs[i] = new VSizeFrame(ctx);
             curPBuff[i] = i;
             nextBuff[i] = -1;
             buildPSizeInFrames[i] = 1; //The dedicated initial buffer
         }
 
-        nextFreeBuffIx = ((numOfPartitions < memForJoin) ? numOfPartitions : NO_MORE_FREE_BUFFER); //Setting the chain of unallocated frames
+        nextFreeBuffIx = ((numOfPartitions < memForJoin) ?
+                numOfPartitions :
+                NO_MORE_FREE_BUFFER); //Setting the chain of unallocated frames
         for (int i = numOfPartitions; i < memBuffs.length; i++) {
             nextBuff[i] = UNALLOCATED_FRAME;
         }
 
-        buildTupAppender = new FrameTupleAppender(ctx.getFrameSize());
+        buildTupAppender = new FrameTupleAppender();
 
     }
 
@@ -213,7 +218,7 @@ public class OptimizedHybridHashJoin {
     }
 
     private void processTuple(int tid, int pid) throws HyracksDataException {
-        ByteBuffer partition = memBuffs[curPBuff[pid]]; //Getting current buffer for the target partition
+        IFrame partition = memBuffs[curPBuff[pid]]; //Getting current buffer for the target partition
 
         if (!pStatus.get(pid)) { //resident partition
             buildTupAppender.reset(partition, false);
@@ -226,7 +231,8 @@ public class OptimizedHybridHashJoin {
                 if (newBuffIx == NO_MORE_FREE_BUFFER) { //Spill one partition
                     int pidToSpill = selectPartitionToSpill();
                     if (pidToSpill == -1) { //No more partition to spill
-                        throw new HyracksDataException("not enough memory for Hash Join (Allocation exceeds the limit)");
+                        throw new HyracksDataException(
+                                "not enough memory for Hash Join (Allocation exceeds the limit)");
                     }
                     spillPartition(pidToSpill);
                     buildTupAppender.reset(memBuffs[pidToSpill], true);
@@ -249,8 +255,8 @@ public class OptimizedHybridHashJoin {
                     break;
                 }
                 //Dedicated in-memory buffer for the partition is full, needed to be flushed first 
-                buildWrite(pid, partition);
-                partition.clear();
+                buildWrite(pid, partition.getBuffer());
+                partition.reset();
                 needClear = true;
                 buildPSizeInFrames[pid]++;
             }
@@ -260,7 +266,7 @@ public class OptimizedHybridHashJoin {
     private int allocateFreeBuffer(int pid) throws HyracksDataException {
         if (nextFreeBuffIx != NO_MORE_FREE_BUFFER) {
             if (memBuffs[nextFreeBuffIx] == null) {
-                memBuffs[nextFreeBuffIx] = ctx.allocateFrame();
+                memBuffs[nextFreeBuffIx] = new VSizeFrame(ctx);
             }
             int curPartBuffIx = curPBuff[pid];
             curPBuff[pid] = nextFreeBuffIx;
@@ -274,7 +280,7 @@ public class OptimizedHybridHashJoin {
             } else {
                 nextFreeBuffIx = oldNext;
             }
-            (memBuffs[curPBuff[pid]]).clear();
+            memBuffs[curPBuff[pid]].reset();
 
             freeFramesCounter--;
             return (curPBuff[pid]);
@@ -300,11 +306,10 @@ public class OptimizedHybridHashJoin {
                 + " frames for Thread ID " + Thread.currentThread().getId() + " (free frames: " + freeFramesCounter
                 + ").");
         int curBuffIx = curPBuff[pid];
-        ByteBuffer buff = null;
         while (curBuffIx != END_OF_PARTITION) {
-            buff = memBuffs[curBuffIx];
-            buildWrite(pid, buff);
-            buff.clear();
+            IFrame frame = memBuffs[curBuffIx];
+            buildWrite(pid, frame.getBuffer());
+            frame.reset();
 
             int freedBuffIx = curBuffIx;
             curBuffIx = nextBuff[curBuffIx];
@@ -346,8 +351,9 @@ public class OptimizedHybridHashJoin {
         }
 
         ByteBuffer buff = null;
-        for (int i = pStatus.nextSetBit(0); i >= 0; i = pStatus.nextSetBit(i + 1)) { //flushing and DeAllocating the dedicated buffers for the spilled partitions
-            buff = memBuffs[i];
+        for (int i = pStatus.nextSetBit(0); i >= 0; i = pStatus
+                .nextSetBit(i + 1)) { //flushing and DeAllocating the dedicated buffers for the spilled partitions
+            buff = memBuffs[i].getBuffer();
             accessorBuild.reset(buff);
             if (accessorBuild.getTupleCount() > 0) {
                 buildWrite(i, buff);
@@ -389,7 +395,7 @@ public class OptimizedHybridHashJoin {
     }
 
     private void partitionTune() throws HyracksDataException {
-        reloadBuffer = ctx.allocateFrame();
+        reloadBuffer = new VSizeFrame(ctx);
         ArrayList<Integer> reloadSet = selectPartitionsToReload();
         for (int i = 0; i < reloadSet.size(); i++) {
             int pid = reloadSet.get(i);
@@ -414,7 +420,6 @@ public class OptimizedHybridHashJoin {
             loadPartitionInMem(pid, buildRFWriters[pid], buffsToLoad);
         }
         reloadSet.clear();
-        reloadSet = null;
     }
 
     private void loadPartitionInMem(int pid, RunFileWriter wr, int[] buffs) throws HyracksDataException {
@@ -422,16 +427,16 @@ public class OptimizedHybridHashJoin {
         r.open();
         int counter = 0;
         ByteBuffer mBuff = null;
-        reloadBuffer.clear();
+        reloadBuffer.reset();
         while (r.nextFrame(reloadBuffer)) {
-            mBuff = memBuffs[buffs[counter]];
-            if (mBuff == null) {
-                mBuff = ctx.allocateFrame();
-                memBuffs[buffs[counter]] = mBuff;
+            if (memBuffs[buffs[counter]] == null) {
+                memBuffs[buffs[counter]] = new VSizeFrame(ctx);
             }
-            FrameUtils.copy(reloadBuffer, mBuff);
+            memBuffs[buffs[counter]].ensureFrameSize(reloadBuffer.getFrameSize());
+            mBuff = memBuffs[buffs[counter]].getBuffer();
+            FrameUtils.copyAndFlip(reloadBuffer.getBuffer(), mBuff);
             counter++;
-            reloadBuffer.clear();
+            reloadBuffer.reset();
         }
 
         int curNext = nextBuff[buffs[buffs.length - 1]];
@@ -459,10 +464,10 @@ public class OptimizedHybridHashJoin {
 
     private void createInMemoryJoiner(int inMemTupCount) throws HyracksDataException {
         ISerializableTable table = new SerializableHashTable(inMemTupCount, ctx);
-        this.inMemJoiner = new InMemoryHashJoin(ctx, inMemTupCount,
-                new FrameTupleAccessor(ctx.getFrameSize(), probeRd), probeHpc, new FrameTupleAccessor(
-                        ctx.getFrameSize(), buildRd), buildHpc, new FrameTuplePairComparator(probeKeys, buildKeys,
-                        comparators), isLeftOuter, nullWriters1, table, predEvaluator, isReversed);
+        this.inMemJoiner = new InMemoryHashJoin(ctx, inMemTupCount, new FrameTupleAccessor(probeRd), probeHpc,
+                new FrameTupleAccessor(buildRd), buildHpc,
+                new FrameTuplePairComparator(probeKeys, buildKeys, comparators), isLeftOuter, nullWriters1, table,
+                predEvaluator, isReversed);
     }
 
     private void cacheInMemJoin() throws HyracksDataException {
@@ -471,7 +476,7 @@ public class OptimizedHybridHashJoin {
             if (!pStatus.get(pid)) {
                 int nextBuffIx = curPBuff[pid];
                 while (nextBuffIx > -1) { //It is not Invalid or End_Of_Partition
-                    inMemJoiner.build(memBuffs[nextBuffIx]);
+                    inMemJoiner.build(memBuffs[nextBuffIx].getBuffer());
                     nextBuffIx = nextBuff[nextBuffIx];
                 }
             }
@@ -480,9 +485,9 @@ public class OptimizedHybridHashJoin {
 
     public void initProbe() throws HyracksDataException {
 
-        sPartBuffs = new ByteBuffer[numOfSpilledParts];
+        sPartBuffs = new IFrame[numOfSpilledParts];
         for (int i = 0; i < numOfSpilledParts; i++) {
-            sPartBuffs[i] = ctx.allocateFrame();
+            sPartBuffs[i] = new VSizeFrame(ctx);
         }
         curPBuff = new int[numOfPartitions];
         int nextBuffIxToAlloc = 0;
@@ -495,12 +500,12 @@ public class OptimizedHybridHashJoin {
         probePSizeInTups = new int[numOfPartitions];
         probeRFWriters = new RunFileWriter[numOfPartitions];
 
-        probeResBuff = ctx.allocateFrame();
+        probeResBuff = new VSizeFrame(ctx);
 
-        probeTupAppenderToResident = new FrameTupleAppender(ctx.getFrameSize());
+        probeTupAppenderToResident = new FrameTupleAppender();
         probeTupAppenderToResident.reset(probeResBuff, true);
 
-        probeTupAppenderToSpilled = new FrameTupleAppender(ctx.getFrameSize());
+        probeTupAppenderToSpilled = new FrameTupleAppender();
 
     }
 
@@ -517,21 +522,20 @@ public class OptimizedHybridHashJoin {
             inMemJoiner.join(buffer, writer);
             return;
         }
-        ByteBuffer buff = null;
         for (int i = 0; i < tupleCount; ++i) {
             int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
 
-            if (buildPSizeInTups[pid] > 0) { //Tuple has potential match from previous phase
+            if (buildPSizeInTups[pid] > 0 || isLeftOuter) { //Tuple has potential match from previous phase
                 if (pStatus.get(pid)) { //pid is Spilled
                     boolean needToClear = false;
-                    buff = sPartBuffs[curPBuff[pid]];
+                    IFrame frame = sPartBuffs[curPBuff[pid]];
                     while (true) {
-                        probeTupAppenderToSpilled.reset(buff, needToClear);
+                        probeTupAppenderToSpilled.reset(frame, needToClear);
                         if (probeTupAppenderToSpilled.append(accessorProbe, i)) {
                             break;
                         }
-                        probeWrite(pid, buff);
-                        buff.clear();
+                        probeWrite(pid, frame.getBuffer());
+                        frame.reset();
                         needToClear = true;
                     }
                 } else { //pid is Resident
@@ -539,7 +543,7 @@ public class OptimizedHybridHashJoin {
                         if (probeTupAppenderToResident.append(accessorProbe, i)) {
                             break;
                         }
-                        inMemJoiner.join(probeResBuff, writer);
+                        inMemJoiner.join(probeResBuff.getBuffer(), writer);
                         probeTupAppenderToResident.reset(probeResBuff, true);
                     }
 
@@ -551,13 +555,13 @@ public class OptimizedHybridHashJoin {
 
     }
 
-    public void closeProbe(IFrameWriter writer) throws HyracksDataException { //We do NOT join the spilled partitions here, that decision is made at the descriptor level (which join technique to use)
-        inMemJoiner.join(probeResBuff, writer);
+    public void closeProbe(IFrameWriter writer) throws
+            HyracksDataException { //We do NOT join the spilled partitions here, that decision is made at the descriptor level (which join technique to use)
+        inMemJoiner.join(probeResBuff.getBuffer(), writer);
         inMemJoiner.closeJoin(writer);
 
-        ByteBuffer buff = null;
         for (int pid = pStatus.nextSetBit(0); pid >= 0; pid = pStatus.nextSetBit(pid + 1)) {
-            buff = sPartBuffs[curPBuff[pid]];
+            ByteBuffer buff = sPartBuffs[curPBuff[pid]].getBuffer();
             accessorProbe.reset(buff);
             if (accessorProbe.getTupleCount() > 0) {
                 probeWrite(pid, buff);
@@ -651,10 +655,10 @@ public class OptimizedHybridHashJoin {
 
         double avgBuildSpSz = sumOfBuildSpilledSizes / numOfSpilledPartitions;
         double avgProbeSpSz = sumOfProbeSpilledSizes / numOfSpilledPartitions;
-        String s = "Resident Partitions:\t" + numOfResidentPartitions + "\nSpilled Partitions:\t"
-                + numOfSpilledPartitions + "\nAvg Build Spilled Size:\t" + avgBuildSpSz + "\nAvg Probe Spilled Size:\t"
-                + avgProbeSpSz + "\nIn-Memory Tups:\t" + numOfInMemTups + "\nNum of Free Buffers:\t"
-                + freeFramesCounter;
+        String s =
+                "Resident Partitions:\t" + numOfResidentPartitions + "\nSpilled Partitions:\t" + numOfSpilledPartitions
+                        + "\nAvg Build Spilled Size:\t" + avgBuildSpSz + "\nAvg Probe Spilled Size:\t" + avgProbeSpSz
+                        + "\nIn-Memory Tups:\t" + numOfInMemTups + "\nNum of Free Buffers:\t" + freeFramesCounter;
         return s;
     }
 

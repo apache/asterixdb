@@ -36,6 +36,10 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractStateObject;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotLastFit;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.VariableFrameMemoryManager;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.VariableFramePool;
 
 public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
@@ -76,7 +80,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
         builder.addBlockingEdge(sa, ma);
     }
 
-    public static class SortTaskState extends AbstractStateObject {
+    private static class SortTaskState extends AbstractStateObject {
         private FrameSorterMergeSort frameSorter;
 
         public SortTaskState() {
@@ -110,20 +114,29 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void open() throws HyracksDataException {
-                    state = new SortTaskState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
-                    state.frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory,
-                            comparatorFactories, recordDescriptors[0]);
+                    state = new SortTaskState(ctx.getJobletContext().getJobId(),
+                            new TaskId(getActivityId(), partition));
+
+                    IFrameBufferManager frameBufferManager = new VariableFrameMemoryManager(
+                            new VariableFramePool(ctx, VariableFramePool.UNLIMITED_MEMORY), new FrameFreeSlotLastFit());
+
+                    state.frameSorter = new FrameSorterMergeSort(ctx, frameBufferManager, sortFields,
+                            firstKeyNormalizerFactory, comparatorFactories, recordDescriptors[0]);
                     state.frameSorter.reset();
                 }
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    state.frameSorter.insertFrame(buffer);
+                    if (!state.frameSorter.insertFrame(buffer)) {
+                        throw new HyracksDataException("Failed to insert the given frame into sorting buffer. "
+                                + "Please increase the sorting memory budget to enable the in-memory sorting, "
+                                + "or you could use ExternalSort instead.");
+                    }
                 }
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.frameSorter.sortFrames();
+                    state.frameSorter.sort();
                     ctx.setStateObject(state);
                 }
 
@@ -152,7 +165,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                     try {
                         SortTaskState state = (SortTaskState) ctx.getStateObject(new TaskId(new ActivityId(
                                 getOperatorId(), SORT_ACTIVITY_ID), partition));
-                        state.frameSorter.flushFrames(writer);
+                        state.frameSorter.flush(writer);
                     } catch (Exception e) {
                         writer.fail();
                         throw new HyracksDataException(e);

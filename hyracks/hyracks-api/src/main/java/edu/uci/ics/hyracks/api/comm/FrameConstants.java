@@ -15,9 +15,34 @@
 package edu.uci.ics.hyracks.api.comm;
 
 public interface FrameConstants {
-    public static final int SIZE_LEN = 4;
+    /**
+     * We use 4bytes to store the tupleCount at the end of the Frame.
+     */
+    int SIZE_LEN = 4;
 
-    public static final boolean DEBUG_FRAME_IO = false;
+    /**
+     * The offset of the frame_count which is one byte indicate how many initial_frames contained in current frame.
+     * The actual frameSize = frame_count * intitialFrameSize(given by user)
+     */
+    int META_DATA_FRAME_COUNT_OFFSET = 0;
 
-    public static final int FRAME_FIELD_MAGIC = 0x12345678;
+    /**
+     * The start offset of the tuple data. The first byte is used to store the frame_count
+     */
+    int TUPLE_START_OFFSET = 1;
+
+    /**
+     * Since we use one byte to store the frame_count, the max frame_count is 255.
+     */
+    int MAX_NUM_MINFRAME = 255;
+
+    /**
+     * Indicate the total size of the meta data.
+     */
+    int META_DATA_LEN = SIZE_LEN  + TUPLE_START_OFFSET;
+
+    boolean DEBUG_FRAME_IO = false;
+
+    int FRAME_FIELD_MAGIC = 0x12345678;
+
 }

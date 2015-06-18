@@ -26,7 +26,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
 
@@ -57,47 +56,37 @@ public class MicroPreClusteredGroupRuntimeFactory extends AbstractOneInputOneOut
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws AlgebricksException {
-        try {
-            final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
-            for (int i = 0; i < comparatorFactories.length; ++i) {
-                comparators[i] = comparatorFactories[i].createBinaryComparator();
-            }
-            final ByteBuffer copyFrame = ctx.allocateFrame();
-            final FrameTupleAccessor copyFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecordDesc);
-            copyFrameAccessor.reset(copyFrame);
-            ByteBuffer outFrame = ctx.allocateFrame();
-            final FrameTupleAppender appender = new FrameTupleAppender(ctx.getFrameSize());
-            appender.reset(outFrame, true);
-
-            return new AbstractOneInputOneOutputPushRuntime() {
-
-                private PreclusteredGroupWriter pgw;
-
-                @Override
-                public void open() throws HyracksDataException {
-                    pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc,
-                            outRecordDesc, writer);
-                    pgw.open();
-                }
-
-                @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    pgw.nextFrame(buffer);
-                }
-
-                @Override
-                public void fail() throws HyracksDataException {
-                    pgw.fail();
-                }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    pgw.close();
-                }
-            };
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+        final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
+        for (int i = 0; i < comparatorFactories.length; ++i) {
+            comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
+
+        return new AbstractOneInputOneOutputPushRuntime() {
+
+            private PreclusteredGroupWriter pgw;
+
+            @Override
+            public void open() throws HyracksDataException {
+                pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregatorFactory, inRecordDesc,
+                        outRecordDesc, writer);
+                pgw.open();
+            }
+
+            @Override
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                pgw.nextFrame(buffer);
+            }
+
+            @Override
+            public void fail() throws HyracksDataException {
+                pgw.fail();
+            }
+
+            @Override
+            public void close() throws HyracksDataException {
+                pgw.close();
+            }
+        };
 
     }
 }

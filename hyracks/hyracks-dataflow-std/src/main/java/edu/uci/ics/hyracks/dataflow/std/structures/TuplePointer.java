@@ -14,7 +14,48 @@
  */
 package edu.uci.ics.hyracks.dataflow.std.structures;
 
-public class TuplePointer {
+public class TuplePointer implements IResetable<TuplePointer> {
+    public static final int INVALID_ID = -1;
     public int frameIndex;
     public int tupleIndex;
+
+    public TuplePointer() {
+        this(INVALID_ID, INVALID_ID);
+    }
+
+    public TuplePointer(int frameId, int tupleId) {
+        reset(frameId, tupleId);
+    }
+
+    public void reset(TuplePointer other) {
+        reset(other.frameIndex, other.tupleIndex);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        TuplePointer that = (TuplePointer) o;
+
+        if (frameIndex != that.frameIndex)
+            return false;
+        return tupleIndex == that.tupleIndex;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = frameIndex;
+        result = 31 * result + tupleIndex;
+        return result;
+    }
+
+    public void reset(int frameId, int tupleId) {
+        this.frameIndex = frameId;
+        this.tupleIndex = tupleId;
+    }
+
 }

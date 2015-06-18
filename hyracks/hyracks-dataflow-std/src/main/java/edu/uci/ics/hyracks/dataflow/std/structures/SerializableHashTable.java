@@ -41,7 +41,7 @@ public class SerializableHashTable implements ISerializableTable {
 
     public SerializableHashTable(int tableSize, final IHyracksTaskContext ctx) throws HyracksDataException {
         this.ctx = ctx;
-        int frameSize = ctx.getFrameSize();
+        int frameSize = ctx.getInitialFrameSize();
 
         int residual = tableSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
         int headerSize = tableSize * INT_SIZE * 2 / frameSize + residual;

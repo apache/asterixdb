@@ -25,6 +25,10 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.sort.FrameSorterMergeSort;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.FrameFreeSlotLastFit;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.VariableFramePool;
+import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.VariableFrameMemoryManager;
 
 public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
@@ -57,7 +61,10 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
             @Override
             public void open() throws HyracksDataException {
                 if (frameSorter == null) {
-                    frameSorter = new FrameSorterMergeSort(ctx, sortFields, firstKeyNormalizerFactory,
+                    IFrameBufferManager manager = new VariableFrameMemoryManager(
+                            new VariableFramePool(ctx, VariableFramePool.UNLIMITED_MEMORY),
+                            new FrameFreeSlotLastFit());
+                    frameSorter = new FrameSorterMergeSort(ctx, manager, sortFields, firstKeyNormalizerFactory,
                             comparatorFactories, outputRecordDesc);
                 }
                 frameSorter.reset();
@@ -76,8 +83,8 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
             @Override
             public void close() throws HyracksDataException {
-                frameSorter.sortFrames();
-                frameSorter.flushFrames(writer);
+                frameSorter.sort();
+                frameSorter.flush(writer);
                 writer.close();
             }
         };

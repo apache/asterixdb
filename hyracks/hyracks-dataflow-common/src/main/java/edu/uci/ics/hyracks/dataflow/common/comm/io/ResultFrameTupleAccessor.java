@@ -15,79 +15,23 @@
 package edu.uci.ics.hyracks.dataflow.common.comm.io;
 
 import java.io.DataInputStream;
-import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
-public class ResultFrameTupleAccessor implements IFrameTupleAccessor {
+public class ResultFrameTupleAccessor extends FrameTupleAccessor {
 
-    private final int frameSize;
-    private ByteBuffer buffer;
-
-    public ResultFrameTupleAccessor(int frameSize) {
-        this.frameSize = frameSize;
+    public ResultFrameTupleAccessor() {
+        super(null);
     }
 
     @Override
-    public void reset(ByteBuffer buffer) {
-        this.buffer = buffer;
-    }
+    protected void prettyPrint(int tid, ByteBufferInputStream bbis, DataInputStream dis, StringBuilder sb) {
+        sb.append(tid + ":(" + getTupleStartOffset(tid) + ", " + getTupleEndOffset(tid) + ")[");
 
-    @Override
-    public ByteBuffer getBuffer() {
-        return buffer;
-    }
+        bbis.setByteBuffer(getBuffer(), getTupleStartOffset(tid));
+        sb.append(dis);
 
-    @Override
-    public int getTupleCount() {
-        return buffer.getInt(FrameHelper.getTupleCountOffset(frameSize));
-    }
-
-    @Override
-    public int getTupleStartOffset(int tupleIndex) {
-        return tupleIndex == 0 ? 0 : buffer.getInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * tupleIndex);
-    }
-
-    @Override
-    public int getTupleEndOffset(int tupleIndex) {
-        return buffer.getInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleIndex + 1));
-    }
-
-    @Override
-    public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return fIdx == 0 ? 0 : buffer.getInt(getTupleStartOffset(tupleIndex) + (fIdx - 1) * 4);
-    }
-
-    @Override
-    public int getFieldEndOffset(int tupleIndex, int fIdx) {
-        return buffer.getInt(getTupleStartOffset(tupleIndex) + fIdx * 4);
-    }
-
-    @Override
-    public int getFieldLength(int tupleIndex, int fIdx) {
-        return getFieldEndOffset(tupleIndex, fIdx) - getFieldStartOffset(tupleIndex, fIdx);
-    }
-
-    @Override
-    public int getFieldSlotsLength() {
-        return getFieldCount() * 4;
-    }
-
-    public void prettyPrint() {
-        ByteBufferInputStream bbis = new ByteBufferInputStream();
-        DataInputStream dis = new DataInputStream(bbis);
-        int tc = getTupleCount();
-        System.err.println("TC: " + tc);
-        for (int i = 0; i < tc; ++i) {
-            System.err.print(i + ":(" + getTupleStartOffset(i) + ", " + getTupleEndOffset(i) + ")[");
-
-            bbis.setByteBuffer(buffer, getTupleStartOffset(i));
-            System.err.print(dis);
-
-            System.err.println("]");
-        }
+        sb.append("]\n");
     }
 
     @Override

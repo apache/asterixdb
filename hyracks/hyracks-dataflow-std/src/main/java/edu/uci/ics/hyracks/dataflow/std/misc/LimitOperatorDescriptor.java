@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.dataflow.std.misc;
 
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -50,7 +51,7 @@ public class LimitOperatorDescriptor extends AbstractSingleActivityOperatorDescr
 
             @Override
             public void open() throws HyracksDataException {
-                fta = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptors[0]);
+                fta = new FrameTupleAccessor(recordDescriptors[0]);
                 currentSize = 0;
                 finished = false;
                 writer.open();
@@ -62,16 +63,13 @@ public class LimitOperatorDescriptor extends AbstractSingleActivityOperatorDescr
                     fta.reset(buffer);
                     int count = fta.getTupleCount();
                     if ((currentSize + count) > outputLimit) {
-                        ByteBuffer b = ctx.allocateFrame();
-                        FrameTupleAppender partialAppender = new FrameTupleAppender(ctx.getFrameSize());
-                        partialAppender.reset(b, true);
+                        FrameTupleAppender partialAppender = new FrameTupleAppender(new VSizeFrame(ctx));
                         int copyCount = outputLimit - currentSize;
                         for (int i = 0; i < copyCount; i++) {
-                            partialAppender.append(fta, i);
+                            FrameUtils.appendToWriter(writer, partialAppender, fta, i);
                             currentSize++;
                         }
-                        FrameUtils.makeReadable(b);
-                        FrameUtils.flushFrame(b, writer);
+                        partialAppender.flush(writer,false);
                         finished = true;
                     } else {
                         FrameUtils.flushFrame(buffer, writer);

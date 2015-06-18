@@ -15,44 +15,42 @@
 package edu.uci.ics.hyracks.dataflow.hadoop.mapreduce;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.mapred.RawKeyValueIterator;
 import org.apache.hadoop.util.Progress;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class KVIterator implements RawKeyValueIterator {
     private final HadoopHelper helper;
     private FrameTupleAccessor accessor;
     private DataInputBuffer kBuffer;
     private DataInputBuffer vBuffer;
-    private List<ByteBuffer> buffers;
+    private List<IFrame> buffers;
     private int bSize;
     private int bPtr;
     private int tIdx;
     private boolean eog;
 
-    public KVIterator(IHyracksTaskContext ctx, HadoopHelper helper, RecordDescriptor recordDescriptor) {
+    public KVIterator(HadoopHelper helper, RecordDescriptor recordDescriptor) {
         this.helper = helper;
-        accessor = new FrameTupleAccessor(ctx.getFrameSize(), recordDescriptor);
+        accessor = new FrameTupleAccessor(recordDescriptor);
         kBuffer = new DataInputBuffer();
         vBuffer = new DataInputBuffer();
     }
 
-    void reset(List<ByteBuffer> buffers, int bSize) {
+    void reset(List<IFrame> buffers, int bSize) {
         this.buffers = buffers;
         this.bSize = bSize;
         bPtr = 0;
         tIdx = 0;
         eog = false;
         if (bSize > 0) {
-            accessor.reset(buffers.get(0));
+            accessor.reset(buffers.get(0).getBuffer());
             tIdx = -1;
         } else {
             eog = true;
@@ -83,14 +81,14 @@ public class KVIterator implements RawKeyValueIterator {
                     continue;
                 }
                 tIdx = -1;
-                accessor.reset(buffers.get(bPtr));
+                accessor.reset(buffers.get(bPtr).getBuffer());
                 continue;
             }
             kBuffer.reset(accessor.getBuffer().array(),
-                    FrameUtils.getAbsoluteFieldStartOffset(accessor, tIdx, helper.KEY_FIELD_INDEX),
+                    accessor.getAbsoluteFieldStartOffset(tIdx, helper.KEY_FIELD_INDEX),
                     accessor.getFieldLength(tIdx, helper.KEY_FIELD_INDEX));
             vBuffer.reset(accessor.getBuffer().array(),
-                    FrameUtils.getAbsoluteFieldStartOffset(accessor, tIdx, helper.VALUE_FIELD_INDEX),
+                    accessor.getAbsoluteFieldStartOffset(tIdx, helper.KEY_FIELD_INDEX),
                     accessor.getFieldLength(tIdx, helper.VALUE_FIELD_INDEX));
             break;
         }

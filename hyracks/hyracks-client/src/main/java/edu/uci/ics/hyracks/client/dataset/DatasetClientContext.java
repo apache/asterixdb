@@ -14,21 +14,16 @@
  */
 package edu.uci.ics.hyracks.client.dataset;
 
-import java.nio.ByteBuffer;
-
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
 import edu.uci.ics.hyracks.api.io.IIOManager;
+import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
 
-public class DatasetClientContext implements IHyracksCommonContext {
+public class DatasetClientContext extends FrameManager implements IHyracksCommonContext {
     private final int frameSize;
 
     public DatasetClientContext(int frameSize) {
+        super(frameSize);
         this.frameSize = frameSize;
-    }
-
-    @Override
-    public int getFrameSize() {
-        return frameSize;
     }
 
     @Override
@@ -36,14 +31,4 @@ public class DatasetClientContext implements IHyracksCommonContext {
         return null;
     }
 
-    @Override
-    public ByteBuffer allocateFrame() {
-        return ByteBuffer.allocate(frameSize);
-    }
-
-    @Override
-    public void deallocateFrames(int frameCount) {
-        // TODO Auto-generated method stub
-        
-    }
 }

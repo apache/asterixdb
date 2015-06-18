@@ -114,6 +114,9 @@ public class MaterializedPartitionInputChannel implements IInputChannel {
                 ByteBuffer destFrame = emptyQueue.poll();
                 buffer.position(0);
                 buffer.limit(buffer.capacity());
+                if (destFrame.capacity() < buffer.capacity()){
+                    throw new HyracksDataException("should never happen");
+                }
                 destFrame.clear();
                 destFrame.put(buffer);
                 fullQueue.add(destFrame);

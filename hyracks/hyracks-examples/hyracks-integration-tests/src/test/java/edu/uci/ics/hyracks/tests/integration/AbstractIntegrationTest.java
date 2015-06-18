@@ -15,10 +15,11 @@
 package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.junit.rules.TemporaryFolder;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetReader;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -45,6 +47,7 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
@@ -138,12 +141,11 @@ public abstract class AbstractIntegrationTest {
         hcc.waitForCompletion(jobId);
     }
 
+
     protected List<String> readResults(JobSpecification spec, JobId jobId, ResultSetId resultSetId) throws Exception {
         int nReaders = 1;
-        ByteBuffer resultBuffer = ByteBuffer.allocate(spec.getFrameSize());
-        resultBuffer.clear();
 
-        IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor(spec.getFrameSize());
+        IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor();
 
         IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
         IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, resultSetId);
@@ -151,16 +153,18 @@ public abstract class AbstractIntegrationTest {
         List<String> resultRecords = new ArrayList<String>();
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
-        int readSize = reader.read(resultBuffer);
+        FrameManager resultDisplayFrameMgr = new FrameManager(spec.getFrameSize());
+        VSizeFrame frame = new VSizeFrame(resultDisplayFrameMgr);
+        int readSize = reader.read(frame);
 
         while (readSize > 0) {
 
             try {
-                frameTupleAccessor.reset(resultBuffer);
+                frameTupleAccessor.reset(frame.getBuffer());
                 for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
                     int start = frameTupleAccessor.getTupleStartOffset(tIndex);
                     int length = frameTupleAccessor.getTupleEndOffset(tIndex) - start;
-                    bbis.setByteBuffer(resultBuffer, start);
+                    bbis.setByteBuffer(frame.getBuffer(), start);
                     byte[] recordBytes = new byte[length];
                     bbis.read(recordBytes, 0, length);
                     resultRecords.add(new String(recordBytes, 0, length));
@@ -169,8 +173,7 @@ public abstract class AbstractIntegrationTest {
                 bbis.close();
             }
 
-            resultBuffer.clear();
-            readSize = reader.read(resultBuffer);
+            readSize = reader.read(frame);
         }
         return resultRecords;
     }
@@ -196,6 +199,22 @@ public abstract class AbstractIntegrationTest {
 
         hcc.waitForCompletion(jobId);
         return true;
+    }
+
+    protected void runTestAndStoreResult(JobSpecification spec, File file) throws Exception {
+        JobId jobId = executeTest(spec);
+
+        BufferedWriter output = new BufferedWriter(new FileWriter(file));
+        List<String> results;
+        for (int i = 0; i < spec.getResultSetIds().size(); i++) {
+            results = readResults(spec, jobId, spec.getResultSetIds().get(i));
+            for(String str : results) {
+                output.write(str);
+            }
+        }
+        output.close();
+
+        hcc.waitForCompletion(jobId);
     }
 
     protected File createTempFile() throws IOException {

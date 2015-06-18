@@ -16,7 +16,6 @@ package edu.uci.ics.hyracks.tests.integration;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -33,6 +32,7 @@ import org.junit.rules.TemporaryFolder;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDataset;
 import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetReader;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -44,6 +44,7 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
 import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
@@ -66,7 +67,8 @@ public abstract class AbstractMultiNCIntegrationTest {
     public TemporaryFolder outputFolder = new TemporaryFolder();
 
     public AbstractMultiNCIntegrationTest() {
-        outputFiles = new ArrayList<File>();;
+        outputFiles = new ArrayList<File>();
+        ;
     }
 
     @BeforeClass
@@ -124,10 +126,10 @@ public abstract class AbstractMultiNCIntegrationTest {
 
         int nReaders = 1;
 
-        ByteBuffer resultBuffer = ByteBuffer.allocate(spec.getFrameSize());
-        resultBuffer.clear();
+        FrameManager resultDisplayFrameMgr = new FrameManager(spec.getFrameSize());
+        VSizeFrame resultFrame = new VSizeFrame(resultDisplayFrameMgr);
 
-        IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor(spec.getFrameSize());
+        IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor();
 
         IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
         IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, spec.getResultSetIds().get(0));
@@ -135,16 +137,16 @@ public abstract class AbstractMultiNCIntegrationTest {
         JSONArray resultRecords = new JSONArray();
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
-        int readSize = reader.read(resultBuffer);
+        int readSize = reader.read(resultFrame);
 
         while (readSize > 0) {
 
             try {
-                frameTupleAccessor.reset(resultBuffer);
+                frameTupleAccessor.reset(resultFrame.getBuffer());
                 for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
                     int start = frameTupleAccessor.getTupleStartOffset(tIndex);
                     int length = frameTupleAccessor.getTupleEndOffset(tIndex) - start;
-                    bbis.setByteBuffer(resultBuffer, start);
+                    bbis.setByteBuffer(resultFrame.getBuffer(), start);
                     byte[] recordBytes = new byte[length];
                     bbis.read(recordBytes, 0, length);
                     resultRecords.put(new String(recordBytes, 0, length));
@@ -157,8 +159,7 @@ public abstract class AbstractMultiNCIntegrationTest {
                 }
             }
 
-            resultBuffer.clear();
-            readSize = reader.read(resultBuffer);
+            readSize = reader.read(resultFrame);
         }
 
         hcc.waitForCompletion(jobId);

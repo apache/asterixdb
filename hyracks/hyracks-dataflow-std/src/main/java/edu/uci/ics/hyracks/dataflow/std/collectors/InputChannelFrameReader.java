@@ -18,6 +18,8 @@ import java.nio.ByteBuffer;
 
 import edu.uci.ics.hyracks.api.channels.IInputChannel;
 import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
+import edu.uci.ics.hyracks.api.comm.FrameHelper;
+import edu.uci.ics.hyracks.api.comm.IFrame;
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -42,27 +44,58 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
     public void open() throws HyracksDataException {
     }
 
-    @Override
-    public boolean nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        synchronized (this) {
-            while (!failed && !eos && availableFrames <= 0) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
-                }
+    private synchronized boolean canGetNextBuffer() throws HyracksDataException {
+        while (!failed && !eos && availableFrames <= 0) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new HyracksDataException(e);
             }
-            if (failed) {
-                throw new HyracksDataException("Failure occurred on input");
-            }
-            if (availableFrames <= 0 && eos) {
-                return false;
-            }
-            --availableFrames;
         }
-        ByteBuffer srcBuffer = channel.getNextBuffer();
-        FrameUtils.copy(srcBuffer, buffer);
-        channel.recycleBuffer(srcBuffer);
+        if (failed) {
+            throw new HyracksDataException("Failure occurred on input");
+        }
+        if (availableFrames <= 0 && eos) {
+            return false;
+        }
+        --availableFrames;
+        return true;
+    }
+
+    /**
+     * This implementation works under the truth that one Channel is never shared by two readers.
+     * More precisely, one channel only has exact one reader and one writer side.
+     *
+     * @param frame outputFrame
+     * @return {@code true} if succeed to read the data from the channel to the {@code frame}.
+     * Otherwise return {@code false} if the end of stream is reached.
+     * @throws HyracksDataException
+     */
+    @Override
+    public boolean nextFrame(IFrame frame) throws HyracksDataException {
+        if (!canGetNextBuffer()) {
+            return false;
+        }
+        frame.reset();
+        ByteBuffer srcFrame = channel.getNextBuffer();
+        int nBlocks = FrameHelper.deserializeNumOfMinFrame(srcFrame);
+        frame.ensureFrameSize(frame.getMinSize() * nBlocks);
+        FrameUtils.copyWholeFrame(srcFrame, frame.getBuffer());
+        channel.recycleBuffer(srcFrame);
+
+        for (int i = 1; i < nBlocks; ++i) {
+            if (!canGetNextBuffer()) {
+                throw new HyracksDataException(
+                        "InputChannelReader is waiting for the new frames, but the input stream is finished");
+            }
+            srcFrame = channel.getNextBuffer();
+            frame.getBuffer().put(srcFrame);
+            channel.recycleBuffer(srcFrame);
+        }
+        if (frame.getBuffer().hasRemaining()) { // bigger frame
+            FrameHelper.clearRemainingFrame(frame.getBuffer(), frame.getBuffer().position());
+        }
+        frame.getBuffer().flip();
         return true;
     }
 

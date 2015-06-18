@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  * Note: If the call to {@link IFrameWriter#open()} failed, the {@link IFrameWriter#close()} is not called by the producer. So an exceptional
  * return from the {@link IFrameWriter#open()} call must clean up all partially
  * allocated resources.
- * 
+ *
  * @author vinayakb
  */
 public interface IFrameWriter {
@@ -56,9 +56,8 @@ public interface IFrameWriter {
 
     /**
      * Provide data to the stream of this {@link IFrameWriter}.
-     * 
-     * @param buffer
-     *            - Buffer containing data.
+     *
+     * @param buffer - Buffer containing data.
      * @throws HyracksDataException
      */
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException;
@@ -66,14 +65,14 @@ public interface IFrameWriter {
     /**
      * Indicate that a failure was encountered and the current stream is to be
      * aborted.
-     * 
+     *
      * @throws HyracksDataException
      */
     public void fail() throws HyracksDataException;
 
     /**
      * Close this {@link IFrameWriter} and give up all resources.
-     * 
+     *
      * @throws HyracksDataException
      */
     public void close() throws HyracksDataException;
