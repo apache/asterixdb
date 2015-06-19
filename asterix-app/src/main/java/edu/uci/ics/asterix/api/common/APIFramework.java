@@ -157,7 +157,7 @@ public class APIFramework {
     public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider metadataProvider, Query q, SessionConfig conf) throws AsterixException {
 
-        if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
+        if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
             conf.out().println();
 
             if (conf.is(SessionConfig.FORMAT_HTML)) {
@@ -186,7 +186,7 @@ public class APIFramework {
             SessionConfig conf, ICompiledDmlStatement statement) throws AsterixException, AlgebricksException,
             JSONException, RemoteException, ACIDException {
 
-        if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
+        if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
             conf.out().println();
 
             if (conf.is(SessionConfig.FORMAT_HTML)) {
@@ -219,7 +219,7 @@ public class APIFramework {
         }
 
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-        if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
+        if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
             conf.out().println();
 
             if (conf.is(SessionConfig.FORMAT_HTML)) {
