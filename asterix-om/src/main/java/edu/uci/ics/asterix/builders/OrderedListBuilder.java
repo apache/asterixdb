@@ -27,7 +27,7 @@ public class OrderedListBuilder extends AbstractListBuilder {
 
     public void addItem(IToken token) throws IOException {
         if (!fixedSize) {
-            offsets.add((short) outputStorage.getLength());
+            offsets.add(outputStorage.getLength());
         }
         numberOfItems++;
         token.serializeToken(outputStorage);
