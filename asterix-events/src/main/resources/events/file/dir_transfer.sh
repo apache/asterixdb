@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #/*
 # Copyright 2009-2013 by The Regents of the University of California
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*/
+
 USERNAME=$1
 DIR_TO_TRANSFER=$2
 DEST_HOST=$3

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #/*
 # Copyright 2009-2013 by The Regents of the University of California
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*/
+
 NC_ID=$1
 
 INFO=`ps -ef | grep nc_join | grep -v grep | grep -v ssh| grep $NC_ID | head -n 1`

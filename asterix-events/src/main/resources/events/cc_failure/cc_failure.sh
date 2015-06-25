@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #/*
 # Copyright 2009-2013 by The Regents of the University of California
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*/
-#kill -9 `ps -ef  | grep hyracks | grep -v grep | cut -d "/" -f1 | tr -s " " | cut -d " " -f2`
+
 CC_PARENT_ID_INFO=`ps -ef  | grep asterix | grep cc_start | grep -v ssh`
 CC_PARENT_ID=`echo $CC_PARENT_ID_INFO | tr -s " " | cut -d " " -f2`
 CC_ID_INFO=`ps -ef | grep asterix | grep $CC_PARENT_ID | grep -v bash`

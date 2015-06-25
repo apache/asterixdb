@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ZK_HOME=$1
 SERVER_JAVA_HOME=$2
 shift 2

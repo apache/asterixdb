@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 ZK_HOME=$1
 shift 1
 for zk_host in  $@

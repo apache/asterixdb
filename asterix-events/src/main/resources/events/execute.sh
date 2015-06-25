@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 USERNAME=$1
 if [ ! -d $MANAGIX_HOME/logs ];
 then

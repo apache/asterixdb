@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #/*
 # Copyright 2009-2013 by The Regents of the University of California
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,5 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #*/
+
+
 JAVA_VERSION=`java -version 2>&1 |awk 'NR==1{ gsub(/"/,""); print $3 }'`
 echo "java_version=$JAVA_VERSION" 1>&2
