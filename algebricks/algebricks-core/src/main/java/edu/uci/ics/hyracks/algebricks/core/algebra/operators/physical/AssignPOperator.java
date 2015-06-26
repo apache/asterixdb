@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
+import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -39,6 +40,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 public class AssignPOperator extends AbstractPhysicalOperator {
 
     private boolean flushFramesRapidly;
+    private int cardinalityConstraint = 0;
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
@@ -87,7 +89,13 @@ public class AssignPOperator extends AbstractPhysicalOperator {
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
-        builder.contributeMicroOperator(assign, runtime, recDesc);
+        if (cardinalityConstraint > 0) {
+            AlgebricksCountPartitionConstraint countConstraint = new AlgebricksCountPartitionConstraint(
+                    cardinalityConstraint);
+            builder.contributeMicroOperator(assign, runtime, recDesc, countConstraint);
+        } else {
+            builder.contributeMicroOperator(assign, runtime, recDesc);
+        }
         // and contribute one edge from its child
         ILogicalOperator src = assign.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, assign, 0);
@@ -102,6 +110,11 @@ public class AssignPOperator extends AbstractPhysicalOperator {
     public void setRapidFrameFlush(boolean flushFramesRapidly) {
         this.flushFramesRapidly = flushFramesRapidly;
     }
+
+    public void setCardinalityConstraint(int cardinality) {
+        this.cardinalityConstraint = cardinality;
+    }
+
 
     @Override
     public boolean expensiveThanMaterialization() {

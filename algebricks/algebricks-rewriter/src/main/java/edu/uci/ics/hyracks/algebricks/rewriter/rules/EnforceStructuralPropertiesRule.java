@@ -56,6 +56,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.InMemorySt
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergePOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.RangePartitionPOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
@@ -538,18 +539,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 case RANDOM: {
                     RandomPartitioningProperty rpp = (RandomPartitioningProperty) pp;
                     INodeDomain nd = rpp.getNodeDomain();
-                    if (nd == null) {
-                        throw new AlgebricksException("Unknown node domain for " + rpp);
-                    }
-                    if (nd.cardinality() == null) {
-                        throw new AlgebricksException("Unknown cardinality for node domain " + nd);
-                    }
-                    if (nd.cardinality() != 1) {
-                        throw new NotImplementedException(
-                                "Random repartitioning is only implemented for target domains of"
-                                        + "cardinality equal to 1.");
-                    }
-                    pop = new BroadcastPOperator(nd);
+                    pop = new RandomPartitionPOperator(nd);
                     break;
                 }
                 default: {
