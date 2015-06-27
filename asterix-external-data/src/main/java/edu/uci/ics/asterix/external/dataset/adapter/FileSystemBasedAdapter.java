@@ -17,9 +17,8 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.io.IOException;
 import java.io.InputStream;
 
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AbstractTupleParser;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -34,23 +33,22 @@ public abstract class FileSystemBasedAdapter implements IDatasourceAdapter {
 
     public abstract InputStream getInputStream(int partition) throws IOException;
 
-    protected final ITupleParser tupleParser;
+    protected final ITupleParserFactory parserFactory;
+    protected ITupleParser tupleParser;
     protected final IAType sourceDatatype;
     protected IHyracksTaskContext ctx;
 
     public FileSystemBasedAdapter(ITupleParserFactory parserFactory, IAType sourceDatatype, IHyracksTaskContext ctx)
             throws HyracksDataException {
-        this.tupleParser = parserFactory.createTupleParser(ctx);
+        this.parserFactory = parserFactory;
         this.sourceDatatype = sourceDatatype;
         this.ctx = ctx;
     }
 
     @Override
     public void start(int partition, IFrameWriter writer) throws Exception {
+        tupleParser = parserFactory.createTupleParser(ctx);
         InputStream in = getInputStream(partition);
-        if (tupleParser instanceof AbstractTupleParser) {
-            ((AbstractTupleParser) tupleParser).setFilename(getFilename(partition));
-        }
         tupleParser.parse(in, writer);
     }
 

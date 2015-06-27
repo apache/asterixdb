@@ -43,15 +43,12 @@ public class MessageListener {
 
     public void stop() {
         listenerServer.stop();
-        System.out.println("STOPPED MESSAGE RECEIVING SERVICE AT " + port);
         if (!executorService.isShutdown()) {
             executorService.shutdownNow();
         }
-
     }
 
     public void start() throws IOException {
-        System.out.println("STARTING MESSAGE RECEIVING SERVICE AT " + port);
         listenerServer = new MessageListenerServer(port, outbox);
         executorService.execute(listenerServer);
     }
@@ -61,6 +58,8 @@ public class MessageListener {
         private final int port;
         private final LinkedBlockingQueue<String> outbox;
         private ServerSocket server;
+
+        private static final char EOL = (char) "\n".getBytes()[0];
 
         public MessageListenerServer(int port, LinkedBlockingQueue<String> outbox) {
             this.port = port;
@@ -77,7 +76,6 @@ public class MessageListener {
 
         @Override
         public void run() {
-            char EOL = (char) "\n".getBytes()[0];
             Socket client = null;
             try {
                 server = new ServerSocket(port);
@@ -118,61 +116,6 @@ public class MessageListener {
             }
 
         }
-
-    }
-
-    private static class MessageParser implements Runnable {
-
-        private Socket client;
-        private IMessageAnalyzer messageAnalyzer;
-        private static final char EOL = (char) "\n".getBytes()[0];
-
-        public MessageParser(Socket client, IMessageAnalyzer messageAnalyzer) {
-            this.client = client;
-            this.messageAnalyzer = messageAnalyzer;
-        }
-
-        @Override
-        public void run() {
-            CharBuffer buffer = CharBuffer.allocate(5000);
-            char ch;
-            try {
-                InputStream in = client.getInputStream();
-                while (true) {
-                    ch = (char) in.read();
-                    if (((int) ch) == -1) {
-                        break;
-                    }
-                    while (ch != EOL) {
-                        buffer.put(ch);
-                        ch = (char) in.read();
-                    }
-                    buffer.flip();
-                    String s = new String(buffer.array());
-                    synchronized (messageAnalyzer) {
-                        messageAnalyzer.getMessageQueue().add(s + "\n");
-                    }
-                    buffer.position(0);
-                    buffer.limit(5000);
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            } finally {
-                try {
-                    client.close();
-                } catch (IOException ioe) {
-                    // do nothing
-                }
-            }
-        }
-    }
-
-    public static interface IMessageAnalyzer {
-
-        /**
-         * @return
-         */
-        public LinkedBlockingQueue<String> getMessageQueue();
 
     }
 

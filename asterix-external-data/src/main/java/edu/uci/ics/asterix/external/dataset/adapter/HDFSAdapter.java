@@ -23,6 +23,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
+
 import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
 import edu.uci.ics.asterix.external.indexing.input.GenericFileAwareRecordReader;
 import edu.uci.ics.asterix.external.indexing.input.GenericRecordReader;
@@ -30,6 +31,7 @@ import edu.uci.ics.asterix.external.indexing.input.TextualDataReader;
 import edu.uci.ics.asterix.external.indexing.input.TextualFullScanDataReader;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -71,9 +73,9 @@ public class HDFSAdapter extends FileSystemBasedAdapter {
     @Override
     public InputStream getInputStream(int partition) throws IOException {
         if ((conf.getInputFormat() instanceof TextInputFormat || conf.getInputFormat() instanceof SequenceFileInputFormat)
-                && (HDFSAdapterFactory.FORMAT_ADM.equalsIgnoreCase((String) configuration
-                        .get(HDFSAdapterFactory.KEY_FORMAT)) || HDFSAdapterFactory.FORMAT_DELIMITED_TEXT
-                        .equalsIgnoreCase((String) configuration.get(HDFSAdapterFactory.KEY_FORMAT)))) {
+                && (AsterixTupleParserFactory.FORMAT_ADM.equalsIgnoreCase((String) configuration
+                        .get(AsterixTupleParserFactory.KEY_FORMAT)) || AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT
+                        .equalsIgnoreCase((String) configuration.get(AsterixTupleParserFactory.KEY_FORMAT)))) {
             if (files != null) {
                 return new TextualDataReader(inputSplits, readSchedule, nodeName, conf, executed, files);
             } else {

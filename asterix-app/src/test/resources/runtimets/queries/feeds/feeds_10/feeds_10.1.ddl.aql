@@ -1,0 +1,30 @@
+/*
+ * Description  : Create a dataset with a secondary btree index.
+                  Create a feed that uses the file_feed adapter.
+                  The file_feed adapter simulates a feed from a file in the HDFS.
+                  Connect the feed to the dataset and verify contents of the dataset post completion.
+ * Issue        : 711
+ * Expected Res : Success
+ * Date         : 6th Feb 2014
+ */
+
+drop dataverse feeds_10 if exists;
+create dataverse feeds_10;
+use dataverse feeds_10;
+
+create type TweetType as closed {
+  id: string,
+  username : string,
+  location : string,
+  text : string,
+  timestamp : string
+}      
+
+create dataset Tweets(TweetType)
+primary key id;
+
+create index usernameIdx on Tweets(username) type btree;
+
+create feed TweetFeed
+using file_feed
+(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets.adm"),("format"="adm"),("type-name"="TweetType"),("tuple-interval"="10"));

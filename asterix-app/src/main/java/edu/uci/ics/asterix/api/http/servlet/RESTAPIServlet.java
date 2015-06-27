@@ -15,7 +15,6 @@
 package edu.uci.ics.asterix.api.http.servlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -30,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.api.common.APIFramework;
 import edu.uci.ics.asterix.api.common.SessionConfig;
 import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
 import edu.uci.ics.asterix.aql.base.Statement;

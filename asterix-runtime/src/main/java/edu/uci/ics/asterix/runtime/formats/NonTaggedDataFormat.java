@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -309,8 +310,8 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.PrintTimeDescri
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.YearMonthDurationComparatorDecriptor;
-import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import edu.uci.ics.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
@@ -1081,22 +1082,25 @@ public class NonTaggedDataFormat implements IDataFormat {
     @Override
     public ITupleParserFactory createTupleParser(ARecordType recType, boolean delimitedFormat, char delimiter,
             char quote, boolean hasHeader) {
+        Map<String, String> conf = new HashMap<String, String>();
+        AsterixTupleParserFactory.InputDataFormat inputFormat = null;
         if (delimitedFormat) {
-            int n = recType.getFieldTypes().length;
-            IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
-            for (int i = 0; i < n; i++) {
-                ATypeTag tag = recType.getFieldTypes()[i].getTypeTag();
-                IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
-                if (vpf == null) {
-                    throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
-                }
-                fieldParserFactories[i] = vpf;
-            }
-            return new NtDelimitedDataTupleParserFactory(recType, fieldParserFactories, delimiter, quote, hasHeader);
+            conf.put(AsterixTupleParserFactory.KEY_FORMAT, AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT);
+            conf.put(AsterixTupleParserFactory.KEY_DELIMITER, "" + delimiter);
+            inputFormat = InputDataFormat.DELIMITED;
         } else {
-            return new AdmSchemafullRecordParserFactory(recType);
+            conf.put(AsterixTupleParserFactory.KEY_FORMAT, AsterixTupleParserFactory.FORMAT_ADM);
+            inputFormat = InputDataFormat.ADM;
         }
+
+        if (hasHeader) {
+            conf.put(AsterixTupleParserFactory.HAS_HEADER,
+                    hasHeader ? Boolean.TRUE.toString() : Boolean.FALSE.toString());
+        }
+        conf.put(AsterixTupleParserFactory.KEY_QUOTE, "" + quote);
+        return new AsterixTupleParserFactory(conf, recType, inputFormat);
     }
+
 
     @Override
     public INullWriterFactory getNullWriterFactory() {

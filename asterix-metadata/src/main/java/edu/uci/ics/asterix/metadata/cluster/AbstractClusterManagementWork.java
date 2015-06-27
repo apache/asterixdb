@@ -16,8 +16,8 @@ package edu.uci.ics.asterix.metadata.cluster;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.asterix.metadata.api.IClusterEventsSubscriber;
-import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
+import edu.uci.ics.asterix.common.api.IClusterEventsSubscriber;
+import edu.uci.ics.asterix.common.api.IClusterManagementWork;
 
 public abstract class AbstractClusterManagementWork implements IClusterManagementWork {
 
@@ -34,6 +34,8 @@ public abstract class AbstractClusterManagementWork implements IClusterManagemen
         this.subscriber = subscriber;
         this.workId = WorkIdGenerator.getNextWorkId();
     }
+
+   
 
     private static class WorkIdGenerator {
         private static AtomicInteger workId = new AtomicInteger(0);

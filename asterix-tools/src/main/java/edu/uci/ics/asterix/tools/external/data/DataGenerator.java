@@ -1,5 +1,5 @@
 /*
-x * Copyright 2009-2013 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -21,21 +21,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import edu.uci.ics.asterix.external.util.Datatypes;
+
 public class DataGenerator {
 
     private RandomDateGenerator randDateGen;
-
     private RandomNameGenerator randNameGen;
-
     private RandomMessageGenerator randMessageGen;
-
     private RandomLocationGenerator randLocationGen;
-
     private Random random = new Random();
-
     private TwitterUser twUser = new TwitterUser();
-
     private TweetMessage twMessage = new TweetMessage();
+    private static final String DEFAULT_COUNTRY = "US";
 
     public DataGenerator(InitializationInfo info) {
         initialize(info);
@@ -44,28 +41,32 @@ public class DataGenerator {
     public class TweetMessageIterator implements Iterator<TweetMessage> {
 
         private final int duration;
-        private final GULongIDGenerator idGen;
         private long startTime = 0;
+        private int tweetId;
 
-        public TweetMessageIterator(int duration, GULongIDGenerator idGen) {
+        public TweetMessageIterator(int duration) {
             this.duration = duration;
-            this.idGen = idGen;
             this.startTime = System.currentTimeMillis();
         }
 
         @Override
         public boolean hasNext() {
+            if (duration == TweetGenerator.INFINITY) {
+                return true;
+            }
             return System.currentTimeMillis() - startTime <= duration * 1000;
         }
 
         @Override
         public TweetMessage next() {
+            tweetId++;
             TweetMessage msg = null;
             getTwitterUser(null);
             Message message = randMessageGen.getNextRandomMessage();
             Point location = randLocationGen.getRandomPoint();
             DateTime sendTime = randDateGen.getNextRandomDatetime();
-            twMessage.reset(idGen.getNextULong(), twUser, location, sendTime, message.getReferredTopics(), message);
+            twMessage.reset(tweetId, twUser, location.getLatitude(), location.getLongitude(), sendTime.toString(),
+                    message, DEFAULT_COUNTRY);
             msg = twMessage;
             return msg;
         }
@@ -73,6 +74,7 @@ public class DataGenerator {
         @Override
         public void remove() {
             // TODO Auto-generated method stub
+
         }
 
     }
@@ -218,8 +220,7 @@ public class DataGenerator {
 
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("datetime");
-            builder.append("(\"");
+            builder.append("\"");
             builder.append(super.getYear());
             builder.append("-");
             builder.append(super.getMonth() < 10 ? "0" + super.getMonth() : super.getMonth());
@@ -227,7 +228,7 @@ public class DataGenerator {
             builder.append(super.getDay() < 10 ? "0" + super.getDay() : super.getDay());
             builder.append("T");
             builder.append(hour + ":" + min + ":" + sec);
-            builder.append("\")");
+            builder.append("\"");
             return builder.toString();
         }
     }
@@ -475,78 +476,112 @@ public class DataGenerator {
 
     public static class TweetMessage {
 
-        private long tweetid;
+        private static final String[] DEFAULT_FIELDS = new String[] { TweetFields.TWEETID, TweetFields.USER,
+                TweetFields.LATITUDE, TweetFields.LONGITUDE, TweetFields.MESSAGE_TEXT, TweetFields.CREATED_AT,
+                TweetFields.COUNTRY };
+
+        private int id;
         private TwitterUser user;
-        private Point senderLocation;
-        private DateTime sendTime;
-        private List<String> referredTopics;
+        private double latitude;
+        private double longitude;
+        private String created_at;
         private Message messageText;
+        private String country;
+
+        public static final class TweetFields {
+            public static final String TWEETID = "id";
+            public static final String USER = "user";
+            public static final String LATITUDE = "latitude";
+            public static final String LONGITUDE = "longitude";
+            public static final String MESSAGE_TEXT = "message_text";
+            public static final String CREATED_AT = "created_at";
+            public static final String COUNTRY = "country";
+
+        }
 
         public TweetMessage() {
         }
 
-        public TweetMessage(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
-                List<String> referredTopics, Message messageText) {
-            this.tweetid = tweetid;
+        public TweetMessage(int tweetid, TwitterUser user, double latitude, double longitude, String created_at,
+                Message messageText, String country) {
+            this.id = tweetid;
             this.user = user;
-            this.senderLocation = senderLocation;
-            this.sendTime = sendTime;
-            this.referredTopics = referredTopics;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.created_at = created_at;
             this.messageText = messageText;
+            this.country = country;
         }
 
-        public void reset(long tweetid, TwitterUser user, Point senderLocation, DateTime sendTime,
-                List<String> referredTopics, Message messageText) {
-            this.tweetid = tweetid;
+        public void reset(int tweetid, TwitterUser user, double latitude, double longitude, String created_at,
+                Message messageText, String country) {
+            this.id = tweetid;
             this.user = user;
-            this.senderLocation = senderLocation;
-            this.sendTime = sendTime;
-            this.referredTopics = referredTopics;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.created_at = created_at;
             this.messageText = messageText;
+            this.country = country;
         }
 
-        public String toString() {
+        public String getAdmEquivalent(String[] fields) {
+            if (fields == null) {
+                fields = DEFAULT_FIELDS;
+            }
             StringBuilder builder = new StringBuilder();
             builder.append("{");
-            builder.append("\"tweetid\":");
-            builder.append("int64(\"" + tweetid + "\")");
-            builder.append(",");
-            builder.append("\"user\":");
-            builder.append(user);
-            builder.append(",");
-            builder.append("\"sender-location\":");
-            builder.append(senderLocation);
-            builder.append(",");
-            builder.append("\"send-time\":");
-            builder.append(sendTime);
-            builder.append(",");
-            builder.append("\"referred-topics\":");
-            builder.append("{{");
-            for (String topic : referredTopics) {
-                builder.append("\"" + topic + "\"");
+            for (String field : fields) {
+                switch (field) {
+                    case Datatypes.Tweet.ID:
+                        appendFieldName(builder, Datatypes.Tweet.ID);
+                        builder.append("int64(\"" + id + "\")");
+                        break;
+                    case Datatypes.Tweet.USER:
+                        appendFieldName(builder, Datatypes.Tweet.USER);
+                        builder.append(user);
+                        break;
+                    case Datatypes.Tweet.LATITUDE:
+                        appendFieldName(builder, Datatypes.Tweet.LATITUDE);
+                        builder.append(latitude);
+                        break;
+                    case Datatypes.Tweet.LONGITUDE:
+                        appendFieldName(builder, Datatypes.Tweet.LONGITUDE);
+                        builder.append(longitude);
+                        break;
+                    case Datatypes.Tweet.MESSAGE:
+                        appendFieldName(builder, Datatypes.Tweet.MESSAGE);
+                        builder.append("\"");
+                        for (int i = 0; i < messageText.getLength(); i++) {
+                            builder.append(messageText.charAt(i));
+                        }
+                        builder.append("\"");
+                        break;
+                    case Datatypes.Tweet.CREATED_AT:
+                        appendFieldName(builder, Datatypes.Tweet.CREATED_AT);
+                        builder.append(created_at);
+                        break;
+                    case Datatypes.Tweet.COUNTRY:
+                        appendFieldName(builder, Datatypes.Tweet.COUNTRY);
+                        builder.append("\"" + country + "\"");
+                        break;
+                }
                 builder.append(",");
             }
-            if (referredTopics.size() > 0) {
-                builder.deleteCharAt(builder.lastIndexOf(","));
-            }
-            builder.append("}}");
-            builder.append(",");
-            builder.append("\"message-text\":");
-            builder.append("\"");
-            for (int i = 0; i < messageText.getLength(); i++) {
-                builder.append(messageText.charAt(i));
-            }
-            builder.append("\"");
+            builder.deleteCharAt(builder.length() - 1);
             builder.append("}");
-            return new String(builder);
+            return builder.toString();
         }
 
-        public long getTweetid() {
-            return tweetid;
+        private void appendFieldName(StringBuilder builder, String fieldName) {
+            builder.append("\"" + fieldName + "\":");
         }
 
-        public void setTweetid(long tweetid) {
-            this.tweetid = tweetid;
+        public int getTweetid() {
+            return id;
+        }
+
+        public void setTweetid(int tweetid) {
+            this.id = tweetid;
         }
 
         public TwitterUser getUser() {
@@ -557,28 +592,12 @@ public class DataGenerator {
             this.user = user;
         }
 
-        public Point getSenderLocation() {
-            return senderLocation;
+        public double getLatitude() {
+            return latitude;
         }
 
-        public void setSenderLocation(Point senderLocation) {
-            this.senderLocation = senderLocation;
-        }
-
-        public DateTime getSendTime() {
-            return sendTime;
-        }
-
-        public void setSendTime(DateTime sendTime) {
-            this.sendTime = sendTime;
-        }
-
-        public List<String> getReferredTopics() {
-            return referredTopics;
-        }
-
-        public void setReferredTopics(List<String> referredTopics) {
-            this.referredTopics = referredTopics;
+        public String getSendTime() {
+            return created_at;
         }
 
         public Message getMessageText() {
@@ -587,6 +606,10 @@ public class DataGenerator {
 
         public void setMessageText(Message messageText) {
             this.messageText = messageText;
+        }
+
+        public String getCountry() {
+            return country;
         }
 
     }
@@ -643,13 +666,13 @@ public class DataGenerator {
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("{");
-            builder.append("\"screen-name\":" + "\"" + screenName + "\"");
+            builder.append("\"screen_name\":" + "\"" + screenName + "\"");
             builder.append(",");
-            builder.append("\"lang\":" + "\"" + lang + "\"");
+            builder.append("\"language\":" + "\"" + lang + "\"");
             builder.append(",");
             builder.append("\"friends_count\":" + friendsCount);
             builder.append(",");
-            builder.append("\"statuses_count\":" + statusesCount);
+            builder.append("\"status_count\":" + statusesCount);
             builder.append(",");
             builder.append("\"name\":" + "\"" + name + "\"");
             builder.append(",");
@@ -1158,5 +1181,4 @@ public class DataGenerator {
             "Lexicone", "Fax-fax", "Viatechi", "Inchdox", "Kongreen", "Doncare", "Y-geohex", "Opeelectronics",
             "Medflex", "Dancode", "Roundhex", "Labzatron", "Newhotplus", "Sancone", "Ronholdings", "Quoline",
             "zoomplus", "Fix-touch", "Codetechno", "Tanzumbam", "Indiex", "Canline" };
-
 }

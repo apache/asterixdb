@@ -42,6 +42,7 @@ import edu.uci.ics.asterix.external.library.java.JObjects.JRectangle;
 import edu.uci.ics.asterix.external.library.java.JObjects.JString;
 import edu.uci.ics.asterix.external.library.java.JObjects.JTime;
 import edu.uci.ics.asterix.external.library.java.JObjects.JUnorderedList;
+import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -52,6 +53,7 @@ import edu.uci.ics.asterix.om.types.EnumDeserializer;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.om.util.container.IObjectPool;
+import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class JObjectUtil {
@@ -129,7 +131,11 @@ public class JObjectUtil {
                 long start = dis.readLong();
                 long end = dis.readLong();
                 byte intervalType = dis.readByte();
-                ((JInterval) jObject).setValue(start, end, intervalType);
+                try {
+                    ((JInterval) jObject).setValue(start, end, intervalType);
+                } catch (AlgebricksException e) {
+                    throw new AsterixException(e);
+                }
                 break;
             }
 
@@ -184,7 +190,7 @@ public class JObjectUtil {
                     p1.setValue(dis.readDouble(), dis.readDouble());
                     points.add(p1);
                 }
-                ((JPolygon) jObject).setValue(points);
+                ((JPolygon) jObject).setValue(points.toArray(new APoint[]{}));
                 break;
             }
 

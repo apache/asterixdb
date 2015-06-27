@@ -121,9 +121,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         AqlSourceId asid = ((IDataSource<AqlSourceId>) scan.getDataSource()).getId();
 
-        Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
+        Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
-            throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
+            throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");
         }
         if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
@@ -306,9 +306,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             }
                             AqlSourceId asid = dataSource.getId();
                             AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-                            Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasetName());
+                            Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
                             if (dataset == null) {
-                                throw new AlgebricksException("Dataset " + asid.getDatasetName() + " not found.");
+                                throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");
                             }
                             if (dataset.getDatasetType() != DatasetType.INTERNAL) {
                                 setAsFinal(access, context, finalAnnot);

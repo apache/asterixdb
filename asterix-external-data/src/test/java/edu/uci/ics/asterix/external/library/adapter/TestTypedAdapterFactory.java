@@ -17,19 +17,23 @@ package edu.uci.ics.asterix.external.library.adapter;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
+import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter.AdapterType;
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory.SupportedOperation;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
-public class TestTypedAdapterFactory implements ITypedAdapterFactory {
+public class TestTypedAdapterFactory implements IFeedAdapterFactory {
 
     /**
      * 
@@ -38,7 +42,7 @@ public class TestTypedAdapterFactory implements ITypedAdapterFactory {
 
     public static final String NAME = "test_typed_adapter";
 
-    private static ARecordType adapterOutputType = initOutputType();
+    private ARecordType outputType;
 
     public static final String KEY_NUM_OUTPUT_RECORDS = "num_output_records";
 
@@ -50,7 +54,7 @@ public class TestTypedAdapterFactory implements ITypedAdapterFactory {
     }
 
     private static ARecordType initOutputType() {
-        String[] fieldNames = new String[] { "tweetid", "message-text" };
+        String[] fieldNames = new String[] { "id", "message-text" };
         IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, BuiltinType.ASTRING };
         ARecordType outputType = null;
         try {
@@ -67,29 +71,36 @@ public class TestTypedAdapterFactory implements ITypedAdapterFactory {
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.TYPED;
-    }
-
-    @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
         return new AlgebricksCountPartitionConstraint(1);
     }
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        ITupleParserFactory tupleParserFactory = new AdmSchemafullRecordParserFactory(adapterOutputType);
-        return new TestTypedAdapter(tupleParserFactory, adapterOutputType, ctx, configuration);
+        ITupleParserFactory tupleParserFactory = new AsterixTupleParserFactory(configuration, outputType,
+                InputDataFormat.ADM);
+        return new TestTypedAdapter(tupleParserFactory, outputType, ctx, configuration, partition);
     }
 
     @Override
     public ARecordType getAdapterOutputType() {
-        return adapterOutputType;
+        return outputType;
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
+        this.outputType = outputType;
+    }
+
+    @Override
+    public boolean isRecordTrackingEnabled() {
+        return false;
+    }
+
+    @Override
+    public IIntakeProgressTracker createIntakeProgressTracker() {
+        return null;
     }
 
 }

@@ -1,5 +1,5 @@
 /*
-x * Copyright 2009-2013 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,6 +17,8 @@ package edu.uci.ics.asterix.tools.external.data;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,45 +33,38 @@ public class TweetGenerator {
 
     public static final String KEY_DURATION = "duration";
     public static final String KEY_TPS = "tps";
-    public static final String KEY_GUID_SEED = "guid-seed";
+    public static final String KEY_VERBOSE = "verbose";
+    public static final String KEY_FIELDS = "fields";
+    public static final int INFINITY = 0;
 
-    public static final String OUTPUT_FORMAT = "output-format";
-    public static final String OUTPUT_FORMAT_ARECORD = "arecord";
-    public static final String OUTPUT_FORMAT_ADM_STRING = "adm-string";
-
-    private static final int DEFAULT_DURATION = 60; //seconds
-    private static final int DEFAULT_GUID_SEED = 0;
+    private static final int DEFAULT_DURATION = INFINITY;
 
     private int duration;
     private TweetMessageIterator tweetIterator = null;
     private int partition;
-    private int tweetCount = 0;
+    private long tweetCount = 0;
     private int frameTweetCount = 0;
     private int numFlushedTweets = 0;
-    private OutputStream os;
     private DataGenerator dataGenerator = null;
     private ByteBuffer outputBuffer = ByteBuffer.allocate(32 * 1024);
-    private GULongIDGenerator uidGenerator;
+    private String[] fields;
+    private final List<OutputStream> subscribers;
+    private final Object lock = new Object();
+    private final List<OutputStream> subscribersForRemoval = new ArrayList<OutputStream>();
 
-    public int getTweetCount() {
-        return tweetCount;
-    }
-
-    public TweetGenerator(Map<String, String> configuration, int partition, String format, OutputStream os)
-            throws Exception {
+    public TweetGenerator(Map<String, String> configuration, int partition) throws Exception {
         this.partition = partition;
         String value = configuration.get(KEY_DURATION);
         this.duration = value != null ? Integer.parseInt(value) : DEFAULT_DURATION;
-        int guidSeed = configuration.get(KEY_GUID_SEED) != null ? Integer.parseInt(configuration.get(KEY_GUID_SEED))
-                : DEFAULT_GUID_SEED;
-        uidGenerator = new GULongIDGenerator(partition, (byte) (guidSeed));
         dataGenerator = new DataGenerator(new InitializationInfo());
-        tweetIterator = dataGenerator.new TweetMessageIterator(duration, uidGenerator);
-        this.os = os;
+        tweetIterator = dataGenerator.new TweetMessageIterator(duration);
+        this.fields = configuration.get(KEY_FIELDS) != null ? configuration.get(KEY_FIELDS).split(",") : null;
+        this.subscribers = new ArrayList<OutputStream>();
     }
 
     private void writeTweetString(TweetMessage tweetMessage) throws IOException {
-        String tweet = tweetMessage.toString() + "\n";
+        String tweet = tweetMessage.getAdmEquivalent(fields) + "\n";
+        System.out.println(tweet);
         tweetCount++;
         byte[] b = tweet.getBytes();
         if (outputBuffer.position() + b.length > outputBuffer.limit()) {
@@ -83,18 +78,26 @@ public class TweetGenerator {
         frameTweetCount++;
     }
 
-    public int getNumFlushedTweets() {
-        return numFlushedTweets;
-    }
-
     private void flush() throws IOException {
         outputBuffer.flip();
-        os.write(outputBuffer.array(), 0, outputBuffer.limit());
+        synchronized (lock) {
+            for (OutputStream os : subscribers) {
+                try {
+                    os.write(outputBuffer.array(), 0, outputBuffer.limit());
+                } catch (Exception e) {
+                    subscribersForRemoval.add(os);
+                }
+            }
+            if (!subscribersForRemoval.isEmpty()) {
+                subscribers.removeAll(subscribersForRemoval);
+                subscribersForRemoval.clear();
+            }
+        }
         outputBuffer.position(0);
         outputBuffer.limit(32 * 1024);
     }
 
-    public boolean setNextRecordBatch(int numTweetsInBatch) throws Exception {
+    public boolean generateNextBatch(int numTweets) throws Exception {
         boolean moreData = tweetIterator.hasNext();
         if (!moreData) {
             if (outputBuffer.position() > 0) {
@@ -106,11 +109,44 @@ public class TweetGenerator {
             return false;
         } else {
             int count = 0;
-            while (count < numTweetsInBatch) {
+            while (count < numTweets) {
                 writeTweetString(tweetIterator.next());
                 count++;
             }
             return true;
         }
     }
+
+    public int getNumFlushedTweets() {
+        return numFlushedTweets;
+    }
+
+    public void registerSubscriber(OutputStream os) {
+        synchronized (lock) {
+            subscribers.add(os);
+        }
+    }
+
+    public void deregisterSubscribers(OutputStream os) {
+        synchronized (lock) {
+            subscribers.remove(os);
+        }
+    }
+
+    public void close() throws IOException {
+        synchronized (lock) {
+            for (OutputStream os : subscribers) {
+                os.close();
+            }
+        }
+    }
+
+    public boolean isSubscribed() {
+        return !subscribers.isEmpty();
+    }
+
+    public long getTweetCount() {
+        return tweetCount;
+    }
+
 }

@@ -14,30 +14,15 @@
  */
 package edu.uci.ics.asterix.external.adapter.factory;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.external.util.INodeResolver;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.feeds.ConditionalPushTupleParserFactory;
-import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AdmSchemafullRecordParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.NtDelimitedDataTupleParserFactory;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.FloatParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.LongParserFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
@@ -45,146 +30,18 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
     private static final long serialVersionUID = 1L;
     protected static final Logger LOGGER = Logger.getLogger(StreamBasedAdapterFactory.class.getName());
 
-    protected Map<String, String> configuration;
     protected static INodeResolver nodeResolver;
 
-    public static final String KEY_FORMAT = "format";
-    public static final String KEY_PARSER_FACTORY = "parser";
-    public static final String KEY_DELIMITER = "delimiter";
-    public static final String KEY_QUOTE = "quote";
-    public static final String KEY_HEADER = "header";
-    public static final String KEY_PATH = "path";
-    public static final String KEY_SOURCE_DATATYPE = "output-type-name";
-    // The length of a delimiter should be 1.
-    public static final String DEFAULT_DELIMITER = ",";
-    // A quote is used to enclose a string if it includes delimiter(s) in it.
-    // The length of a quote should be 1.
-    public static final String DEFAULT_QUOTE = "\"";
-    public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
-    public static final String FORMAT_ADM = "adm";
-    public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
-    public static final String BATCH_SIZE = "batch-size";
-    public static final String BATCH_INTERVAL = "batch-interval";
-
+    protected Map<String, String> configuration;
     protected ITupleParserFactory parserFactory;
-    protected ITupleParser parser;
+   
 
-    protected List<ExternalFile> files;
-
-    protected static final HashMap<ATypeTag, IValueParserFactory> typeToValueParserFactMap = new HashMap<ATypeTag, IValueParserFactory>();
-
-    static {
-        typeToValueParserFactMap.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
-        typeToValueParserFactMap.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
-    }
-
-    protected ITupleParserFactory getDelimitedDataTupleParserFactory(ARecordType recordType, boolean conditionalPush)
-            throws AsterixException {
-        int n = recordType.getFieldTypes().length;
-        IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
-        for (int i = 0; i < n; i++) {
-            ATypeTag tag = null;
-            if (recordType.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
-                List<IAType> unionTypes = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList();
-                if (unionTypes.size() != 2 && unionTypes.get(0).getTypeTag() != ATypeTag.NULL) {
-                    throw new NotImplementedException("Non-optional UNION type is not supported.");
-                }
-                tag = unionTypes.get(1).getTypeTag();
-            } else {
-                tag = recordType.getFieldTypes()[i].getTypeTag();
-            }
-            if (tag == null) {
-                throw new NotImplementedException("Failed to get the type information for field " + i + ".");
-            }
-            IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
-            if (vpf == null) {
-                throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
-            }
-            fieldParserFactories[i] = vpf;
-        }
-
-        char delimiter = getDelimiter(configuration);
-        char quote = getQuote(configuration, delimiter);
-        boolean hasHeader = getHasHeader(configuration);
-
-        return conditionalPush ? new ConditionalPushTupleParserFactory(recordType, fieldParserFactories, delimiter,
-                quote, hasHeader, configuration) : new NtDelimitedDataTupleParserFactory(recordType,
-                fieldParserFactories, delimiter, quote, hasHeader);
-    }
-
-    protected ITupleParserFactory getADMDataTupleParserFactory(ARecordType recordType, boolean conditionalPush)
-            throws AsterixException {
-        try {
-            return conditionalPush ? new ConditionalPushTupleParserFactory(recordType, configuration)
-                    : new AdmSchemafullRecordParserFactory(recordType);
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
-
-    }
+    public abstract InputDataFormat getInputDataFormat();
 
     protected void configureFormat(IAType sourceDatatype) throws Exception {
-        String propValue = (String) configuration.get(BATCH_SIZE);
-        int batchSize = propValue != null ? Integer.parseInt(propValue) : -1;
-        propValue = configuration.get(BATCH_INTERVAL);
-        long batchInterval = propValue != null ? Long.parseLong(propValue) : -1;
-        boolean conditionalPush = batchSize > 0 || batchInterval > 0;
-
-        String parserFactoryClassname = configuration.get(KEY_PARSER_FACTORY);
-        if (parserFactoryClassname == null) {
-            String specifiedFormat = configuration.get(KEY_FORMAT);
-            if (specifiedFormat == null) {
-                throw new IllegalArgumentException(" Unspecified data format");
-            } else if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
-                parserFactory = getDelimitedDataTupleParserFactory((ARecordType) sourceDatatype, conditionalPush);
-            } else if (FORMAT_ADM.equalsIgnoreCase((String) configuration.get(KEY_FORMAT))) {
-                parserFactory = getADMDataTupleParserFactory((ARecordType) sourceDatatype, conditionalPush);
-            } else {
-                throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
-            }
-        } else {
-            parserFactory = (ITupleParserFactory) Class.forName(parserFactoryClassname).newInstance();
-        }
+        parserFactory = new AsterixTupleParserFactory(configuration, (ARecordType) sourceDatatype, getInputDataFormat());
 
     }
 
-    // Get a delimiter from the given configuration
-    public static char getDelimiter(Map<String, String> configuration) throws AsterixException {
-        String delimiterValue = configuration.get(KEY_DELIMITER);
-        if (delimiterValue == null) {
-            delimiterValue = DEFAULT_DELIMITER;
-        } else if (delimiterValue.length() != 1) {
-            throw new AsterixException("'" + delimiterValue
-                    + "' is not a valid delimiter. The length of a delimiter should be 1.");
-        }
-        return delimiterValue.charAt(0);
-    }
-
-    // Get a quote from the given configuration when the delimiter is given
-    // Need to pass delimiter to check whether they share the same character
-    public static char getQuote(Map<String, String> configuration, char delimiter) throws AsterixException {
-        String quoteValue = configuration.get(KEY_QUOTE);
-        if (quoteValue == null) {
-            quoteValue = DEFAULT_QUOTE;
-        } else if (quoteValue.length() != 1) {
-            throw new AsterixException("'" + quoteValue + "' is not a valid quote. The length of a quote should be 1.");
-        }
-
-        // Since delimiter (char type value) can't be null,
-        // we only check whether delimiter and quote use the same character
-        if (quoteValue.charAt(0) == delimiter) {
-            throw new AsterixException("Quote '" + quoteValue + "' cannot be used with the delimiter '" + delimiter
-                    + "'. ");
-        }
-
-        return quoteValue.charAt(0);
-    }
-
-    // Get the header flag
-    public static boolean getHasHeader(Map<String, String> configuration) {
-        return Boolean.parseBoolean(configuration.get(KEY_HEADER));
-    }
+  
 }

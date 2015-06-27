@@ -23,15 +23,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.IClusterEventsSubscriber;
+import edu.uci.ics.asterix.common.api.IClusterManagementWork;
+import edu.uci.ics.asterix.common.api.IClusterManagementWorkResponse;
+import edu.uci.ics.asterix.common.api.IClusterManagementWorkResponse.Status;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.metadata.api.IClusterEventsSubscriber;
-import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
-import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse;
-import edu.uci.ics.asterix.metadata.cluster.IClusterManagementWorkResponse.Status;
 import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWorkResponse;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
@@ -141,8 +141,8 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         for (IClusterManagementWork w : workSet) {
             switch (w.getClusterManagementWorkType()) {
                 case ADD_NODE:
-                    if (nodesToAdd < ((AddNodeWork) w).getNumberOfNodes()) {
-                        nodesToAdd = ((AddNodeWork) w).getNumberOfNodes();
+                    if (nodesToAdd < ((AddNodeWork) w).getNumberOfNodesRequested()) {
+                        nodesToAdd = ((AddNodeWork) w).getNumberOfNodesRequested();
                     }
                     nodeAdditionRequests.add((AddNodeWork) w);
                     break;
@@ -181,7 +181,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         }
 
         for (AddNodeWork w : nodeAdditionRequests) {
-            int n = w.getNumberOfNodes();
+            int n = w.getNumberOfNodesRequested();
             List<String> nodesToBeAddedForWork = new ArrayList<String>();
             for (int i = 0; i < n && i < addedNodes.size(); i++) {
                 nodesToBeAddedForWork.add(addedNodes.get(i));

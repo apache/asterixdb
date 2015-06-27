@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.asterix.external.library;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.uci.ics.asterix.external.library.java.IJObject;
@@ -48,6 +47,11 @@ import edu.uci.ics.asterix.om.util.container.IObjectFactory;
 
 public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
 
+    public static final JTypeObjectFactory INSTANCE = new JTypeObjectFactory();
+
+    private JTypeObjectFactory() {
+    }
+
     @Override
     public IJObject create(IAType type) {
         IJObject retValue = null;
@@ -77,7 +81,7 @@ public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
                 retValue = new JPoint3D(0, 0, 0);
                 break;
             case POLYGON:
-                retValue = new JPolygon(new ArrayList<JPoint>());
+                retValue = new JPolygon(new JPoint[] {});
                 break;
             case LINE:
                 retValue = new JLine(new JPoint(0, 0), new JPoint(0, 0));

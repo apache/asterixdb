@@ -20,9 +20,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.api.IClusterManagementWork;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.metadata.api.IClusterManagementWork;
 import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
 import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
 import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWork;
@@ -50,8 +50,8 @@ public class ClusterWorkExecutor implements Runnable {
                 for (IClusterManagementWork w : workSet) {
                     switch (w.getClusterManagementWorkType()) {
                         case ADD_NODE:
-                            if (nodesToAdd < ((AddNodeWork) w).getNumberOfNodes()) {
-                                nodesToAdd = ((AddNodeWork) w).getNumberOfNodes();
+                            if (nodesToAdd < ((AddNodeWork) w).getNumberOfNodesRequested()) {
+                                nodesToAdd = ((AddNodeWork) w).getNumberOfNodesRequested();
                             }
                             nodeAdditionRequests.add(w);
                             break;

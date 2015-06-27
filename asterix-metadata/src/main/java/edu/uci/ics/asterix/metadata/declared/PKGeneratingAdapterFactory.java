@@ -14,8 +14,10 @@
  */
 package edu.uci.ics.asterix.metadata.declared;
 
-import edu.uci.ics.asterix.metadata.feeds.IAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import java.util.Map;
+
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -58,11 +60,6 @@ public class PKGeneratingAdapterFactory implements IAdapterFactory {
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return wrappedAdapterFactory.getAdapterType();
-    }
-
-    @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
         return wrappedAdapterFactory.getPartitionConstraint();
     }
@@ -71,5 +68,15 @@ public class PKGeneratingAdapterFactory implements IAdapterFactory {
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         IDatasourceAdapter wrappedAdapter = wrappedAdapterFactory.createAdapter(ctx, partition);
         return new PKGeneratingAdapter(ctx, inRecDesc, outRecDesc, inRecType, outRecType, wrappedAdapter, pkIndex);
+    }
+
+    @Override
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
+        wrappedAdapterFactory.configure(configuration, outputType);        
+    }
+
+    @Override
+    public ARecordType getAdapterOutputType() {
+        return wrappedAdapterFactory.getAdapterOutputType();
     }
 }

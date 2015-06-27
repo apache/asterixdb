@@ -16,93 +16,86 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import twitter4j.Query;
 import twitter4j.QueryResult;
-import twitter4j.Tweet;
+import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import edu.uci.ics.asterix.om.base.AMutableRecord;
-import edu.uci.ics.asterix.om.base.AMutableString;
-import edu.uci.ics.asterix.om.base.IAObject;
+import edu.uci.ics.asterix.external.util.TweetProcessor;
+import edu.uci.ics.asterix.external.util.TwitterUtil;
+import edu.uci.ics.asterix.external.util.TwitterUtil.SearchAPIConstants;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
- * An implementation of @see {PullBasedFeedClient} for the Twitter service.
- * The feed client fetches data from Twitter service by sending request at
- * regular (configurable) interval.
+ * An implementation of @see {PullBasedFeedClient} for the Twitter service. The
+ * feed client fetches data from Twitter service by sending request at regular
+ * (configurable) interval.
  */
-public class PullBasedTwitterFeedClient extends PullBasedFeedClient {
+public class PullBasedTwitterFeedClient extends FeedClient {
 
     private String keywords;
     private Query query;
     private Twitter twitter;
-    private int requestInterval = 10; // seconds
+    private int requestInterval = 5; // seconds
     private QueryResult result;
 
-    private IAObject[] mutableFields;
-    private String[] tupleFieldValues;
     private ARecordType recordType;
     private int nextTweetIndex = 0;
+    private long lastTweetIdReceived = 0;
+    private TweetProcessor tweetProcessor;
 
     public PullBasedTwitterFeedClient(IHyracksTaskContext ctx, ARecordType recordType, PullBasedTwitterAdapter adapter) {
-        twitter = new TwitterFactory().getInstance();
-        mutableFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableString(null),
-                new AMutableString(null), new AMutableString(null) };
+        this.twitter = TwitterUtil.getTwitterService(adapter.getConfiguration());
         this.recordType = recordType;
-        recordSerDe = new ARecordSerializerDeserializer(recordType);
-        mutableRecord = new AMutableRecord(recordType, mutableFields);
-        tupleFieldValues = new String[recordType.getFieldNames().length];
-        initialize(adapter.getConfiguration());
+        this.tweetProcessor = new TweetProcessor(recordType);
+        this.recordSerDe = new ARecordSerializerDeserializer(recordType);
+        this.mutableRecord = tweetProcessor.getMutableRecord();
+        this.initialize(adapter.getConfiguration());
     }
 
     public ARecordType getRecordType() {
         return recordType;
     }
 
-    public AMutableRecord getMutableRecord() {
-        return mutableRecord;
-    }
-
     @Override
-    public InflowState setNextRecord() throws Exception {
-        Tweet tweet;
+    public InflowState retrieveNextRecord() throws Exception {
+        Status tweet;
         tweet = getNextTweet();
         if (tweet == null) {
             return InflowState.DATA_NOT_AVAILABLE;
         }
-        int numFields = recordType.getFieldNames().length;
-        tupleFieldValues[0] = UUID.randomUUID().toString();
-        tupleFieldValues[1] = tweet.getFromUser();
-        tupleFieldValues[2] = tweet.getLocation() == null ? "" : tweet.getLocation();
-        tupleFieldValues[3] = tweet.getText();
-        tupleFieldValues[4] = tweet.getCreatedAt().toString();
-        for (int i = 0; i < numFields; i++) {
-            ((AMutableString) mutableFields[i]).setValue(tupleFieldValues[i]);
-            mutableRecord.setValueAtPos(i, mutableFields[i]);
-        }
+
+        tweetProcessor.processNextTweet(tweet);
         return InflowState.DATA_AVAILABLE;
     }
 
     private void initialize(Map<String, String> params) {
-        this.keywords = (String) params.get(PullBasedTwitterAdapter.QUERY);
-        this.requestInterval = Integer.parseInt((String) params.get(PullBasedTwitterAdapter.INTERVAL));
+        this.keywords = (String) params.get(SearchAPIConstants.QUERY);
+        this.requestInterval = Integer.parseInt((String) params.get(SearchAPIConstants.INTERVAL));
         this.query = new Query(keywords);
-        query.setRpp(100);
+        this.query.setCount(100);
     }
 
-    private Tweet getNextTweet() throws TwitterException, InterruptedException {
+    private Status getNextTweet() throws TwitterException, InterruptedException {
         if (result == null || nextTweetIndex >= result.getTweets().size()) {
             Thread.sleep(1000 * requestInterval);
+            query.setSinceId(lastTweetIdReceived);
             result = twitter.search(query);
             nextTweetIndex = 0;
         }
-        List<Tweet> tw = result.getTweets();
-        return tw.get(nextTweetIndex++);
+        if (result != null && !result.getTweets().isEmpty()) {
+            List<Status> tw = result.getTweets();
+            Status tweet = tw.get(nextTweetIndex++);
+            if (lastTweetIdReceived < tweet.getId()) {
+                lastTweetIdReceived = tweet.getId();
+            }
+            return tweet;
+        } else {
+            return null;
+        }
     }
 
 }

@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter.DataExchangeMode;
 import edu.uci.ics.asterix.external.dataset.adapter.StreamBasedAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -43,8 +44,8 @@ public class TestTypedAdapter extends StreamBasedAdapter implements IFeedAdapter
     private DummyGenerator generator;
 
     public TestTypedAdapter(ITupleParserFactory parserFactory, ARecordType sourceDatatype, IHyracksTaskContext ctx,
-            Map<String, String> configuration) throws IOException {
-        super(parserFactory, sourceDatatype, ctx);
+            Map<String, String> configuration, int partition) throws IOException {
+        super(parserFactory, sourceDatatype, ctx, partition);
         pos = new PipedOutputStream();
         pis = new PipedInputStream(pos);
         this.configuration = configuration;
@@ -129,6 +130,11 @@ public class TestTypedAdapter extends StreamBasedAdapter implements IFeedAdapter
     @Override
     public void stop() throws Exception {
         generator.stop();
+    }
+
+    @Override
+    public boolean handleException(Exception e) {
+        return false;
     }
 
 }

@@ -19,14 +19,16 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
+import edu.uci.ics.asterix.common.parse.ITupleForwardPolicy;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * RSSFeedAdapter provides the functionality of fetching an RSS based feed.
  */
-public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
+public class RSSFeedAdapter extends ClientBasedFeedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,7 +37,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     private List<String> feedURLs = new ArrayList<String>();
     private String id_prefix = "";
 
-    private IPullBasedFeedClient rssFeedClient;
+    private IFeedClient rssFeedClient;
 
     private ARecordType recordType;
 
@@ -62,7 +64,7 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     }
 
     @Override
-    public IPullBasedFeedClient getFeedClient(int partition) throws Exception {
+    public IFeedClient getFeedClient(int partition) throws Exception {
         if (rssFeedClient == null) {
             rssFeedClient = new RSSFeedClient(this, feedURLs.get(partition), id_prefix);
         }
@@ -76,6 +78,16 @@ public class RSSFeedAdapter extends PullBasedAdapter implements IFeedAdapter {
     @Override
     public DataExchangeMode getDataExchangeMode() {
         return DataExchangeMode.PULL;
+    }
+
+    @Override
+    public boolean handleException(Exception e) {
+        return false;
+    }
+
+    @Override
+    public ITupleForwardPolicy getTupleParserPolicy() {
+        return AsterixTupleParserFactory.getTupleParserPolicy(configuration);
     }
 
 }

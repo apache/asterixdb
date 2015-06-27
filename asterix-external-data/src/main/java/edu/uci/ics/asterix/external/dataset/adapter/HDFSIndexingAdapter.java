@@ -27,6 +27,7 @@ import edu.uci.ics.asterix.external.indexing.input.RCFileDataReader;
 import edu.uci.ics.asterix.external.indexing.input.TextualDataReader;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
@@ -64,8 +65,8 @@ public class HDFSIndexingAdapter extends FileSystemBasedAdapter {
     public InputStream getInputStream(int partition) throws IOException {
         if (inputFormat.equals(HDFSAdapterFactory.INPUT_FORMAT_RC)) {
             return new RCFileDataReader(inputSplits, readSchedule, nodeName, conf, executed, files);
-        } else if (format.equals(HDFSAdapterFactory.FORMAT_ADM)
-                || format.equals(HDFSAdapterFactory.FORMAT_DELIMITED_TEXT)) {
+        } else if (format.equals(AsterixTupleParserFactory.FORMAT_ADM)
+                || format.equals(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
             return new TextualDataReader(inputSplits, readSchedule, nodeName, conf, executed, files);
         } else {
             return new GenericFileAwareRecordReader(inputSplits, readSchedule, nodeName, conf, executed, files);

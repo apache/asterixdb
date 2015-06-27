@@ -18,7 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import edu.uci.ics.asterix.builders.RecordBuilder;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.base.AMutableUUID;
 import edu.uci.ics.asterix.om.base.AUUID;
 import edu.uci.ics.asterix.om.pointables.ARecordPointable;

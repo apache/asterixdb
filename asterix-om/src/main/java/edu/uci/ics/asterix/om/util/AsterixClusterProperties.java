@@ -28,6 +28,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import edu.uci.ics.asterix.common.api.IClusterManagementWork.ClusterState;
 import edu.uci.ics.asterix.event.schema.cluster.Cluster;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -70,12 +71,9 @@ public class AsterixClusterProperties {
         }
     }
 
-    public enum State {
-        ACTIVE,
-        UNUSABLE
-    }
+    
 
-    private State state = State.UNUSABLE;
+    private ClusterState state = ClusterState.UNUSABLE;
 
     public synchronized void removeNCConfiguration(String nodeId) {
         // state = State.UNUSABLE;
@@ -87,7 +85,7 @@ public class AsterixClusterProperties {
         ncConfiguration.put(nodeId, configuration);
         if (ncConfiguration.keySet().size() == AsterixAppContextInfo.getInstance().getMetadataProperties()
                 .getNodeNames().size()) {
-            state = State.ACTIVE;
+            state = ClusterState.ACTIVE;
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(" Registering configuration parameters for node id " + nodeId);
@@ -129,7 +127,7 @@ public class AsterixClusterProperties {
         return ncConfig.get(IO_DEVICES).split(",");
     }
 
-    public State getState() {
+    public ClusterState getState() {
         return state;
     }
 

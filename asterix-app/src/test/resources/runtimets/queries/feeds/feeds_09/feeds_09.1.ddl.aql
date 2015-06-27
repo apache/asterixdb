@@ -1,0 +1,42 @@
+/*
+ * Description  : Create a feed using the synthetic feed simulator adapter. 
+                  Create a dataset that has an associated ngram index.
+                  The synthetic feed simulator uses the Social-Data generator to generate data and simulate a feed. 
+                  The feed lasts a configured duration with data arriving at a configured rate (tweets per second). 
+                  Verify the existence of data after the feed finishes.
+ * Issue        : 711                 
+ * Expected Res : Success
+ * Date         : 8th Feb 2014
+ */
+
+drop dataverse feeds_09 if exists;
+create dataverse feeds_09;
+use dataverse feeds_09;
+
+create type TwitterUserType as closed {
+	screen_name: string,
+	language: string,
+	friends_count: int32,
+	status_count: int32,
+	name: string,
+	followers_count: int32
+} 
+
+create type TweetMessageType as closed {
+    id: int64,
+    user: TwitterUserType,
+    latitude: double,
+    longitude: double,
+    message_text: string,
+    created_at: string,
+    country: string
+}
+
+create dataset SyntheticTweets(TweetMessageType)
+primary key id;
+
+create index message_text on SyntheticTweets(message_text) type btree;
+
+create feed  SyntheticTweetFeed
+using twitter_firehose
+(("duration"="5"),("tps"="50"),("tput-duration"="5"),("type-name"="TweetMessageType"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));

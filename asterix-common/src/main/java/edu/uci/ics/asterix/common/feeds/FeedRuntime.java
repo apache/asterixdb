@@ -14,155 +14,57 @@
  */
 package edu.uci.ics.asterix.common.feeds;
 
-import java.nio.ByteBuffer;
-
+import edu.uci.ics.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
+import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 
-public class FeedRuntime {
+public class FeedRuntime implements IFeedRuntime {
 
-    public enum FeedRuntimeType {
-        INGESTION,
-        COMPUTE,
-        STORAGE,
-        COMMIT
+    /** A unique identifier for the runtime **/
+    protected final FeedRuntimeId runtimeId;
+
+    /** The output frame writer associated with the runtime **/
+    protected IFrameWriter frameWriter;
+
+    /** The pre-processor associated with the runtime **/
+    protected FeedRuntimeInputHandler inputHandler;
+
+    public FeedRuntime(FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter) {
+        this.runtimeId = runtimeId;
+        this.frameWriter = frameWriter;
+        this.inputHandler = inputHandler;
     }
 
-    /** A unique identifier */
-    protected final FeedRuntimeId feedRuntimeId;
-
-    /** The runtime state: @see FeedRuntimeState */
-    protected FeedRuntimeState runtimeState;
-
-    public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType) {
-        this.feedRuntimeId = new FeedRuntimeId(feedId, feedRuntimeType, partition);
+    public void setFrameWriter(IFeedOperatorOutputSideHandler frameWriter) {
+        this.frameWriter = frameWriter;
     }
 
-    public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType, String operandId) {
-        this.feedRuntimeId = new FeedRuntimeId(feedId, feedRuntimeType, operandId, partition);
+    @Override
+    public FeedRuntimeId getRuntimeId() {
+        return runtimeId;
     }
 
-    public FeedRuntime(FeedConnectionId feedId, int partition, FeedRuntimeType feedRuntimeType, String operandId,
-            FeedRuntimeState runtimeState) {
-        this.feedRuntimeId = new FeedRuntimeId(feedId, feedRuntimeType, operandId, partition);
-        this.runtimeState = runtimeState;
+    @Override
+    public IFrameWriter getFeedFrameWriter() {
+        return frameWriter;
     }
 
     @Override
     public String toString() {
-        return feedRuntimeId + " " + "runtime state present ? " + (runtimeState != null);
+        return runtimeId.toString();
     }
 
-    public static class FeedRuntimeState {
-
-        private ByteBuffer frame;
-        private IFrameWriter frameWriter;
-        private Exception exception;
-
-        public FeedRuntimeState(ByteBuffer frame, IFrameWriter frameWriter, Exception exception) {
-            this.frame = frame;
-            this.frameWriter = frameWriter;
-            this.exception = exception;
-        }
-
-        public ByteBuffer getFrame() {
-            return frame;
-        }
-
-        public void setFrame(ByteBuffer frame) {
-            this.frame = frame;
-        }
-
-        public IFrameWriter getFrameWriter() {
-            return frameWriter;
-        }
-
-        public void setFrameWriter(IFrameWriter frameWriter) {
-            this.frameWriter = frameWriter;
-        }
-
-        public Exception getException() {
-            return exception;
-        }
-
-        public void setException(Exception exception) {
-            this.exception = exception;
-        }
-
+    @Override
+    public FeedRuntimeInputHandler getInputHandler() {
+        return inputHandler;
     }
 
-    public static class FeedRuntimeId {
-
-        public static final String DEFAULT_OPERATION_ID = "N/A";
-        private final FeedRuntimeType feedRuntimeType;
-        private final String operandId;
-        private final FeedConnectionId feedId;
-        private final int partition;
-        private final int hashCode;
-
-        public FeedRuntimeId(FeedConnectionId feedId, FeedRuntimeType runtimeType, String operandId, int partition) {
-            this.feedRuntimeType = runtimeType;
-            this.operandId = operandId;
-            this.feedId = feedId;
-            this.partition = partition;
-            this.hashCode = (feedId + "[" + partition + "]" + feedRuntimeType).hashCode();
-        }
-
-        public FeedRuntimeId(FeedConnectionId feedId, FeedRuntimeType runtimeType, int partition) {
-            this.feedRuntimeType = runtimeType;
-            this.operandId = DEFAULT_OPERATION_ID;
-            this.feedId = feedId;
-            this.partition = partition;
-            this.hashCode = (feedId + "[" + partition + "]" + feedRuntimeType).hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return feedId + "[" + partition + "]" + " " + feedRuntimeType + "(" + operandId + ")";
-        }
-
-        @Override
-        public int hashCode() {
-            return hashCode;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o instanceof FeedRuntimeId) {
-                FeedRuntimeId oid = ((FeedRuntimeId) o);
-                return oid.getFeedId().equals(feedId) && oid.getFeedRuntimeType().equals(feedRuntimeType)
-                        && oid.getOperandId().equals(operandId) && oid.getPartition() == partition;
-            }
-            return false;
-        }
-
-        public FeedRuntimeType getFeedRuntimeType() {
-            return feedRuntimeType;
-        }
-
-        public FeedConnectionId getFeedId() {
-            return feedId;
-        }
-
-        public String getOperandId() {
-            return operandId;
-        }
-
-        public int getPartition() {
-            return partition;
-        }
-
+    public Mode getMode() {
+        return inputHandler != null ? inputHandler.getMode() : Mode.PROCESS;
     }
 
-    public FeedRuntimeState getRuntimeState() {
-        return runtimeState;
-    }
-
-    public void setRuntimeState(FeedRuntimeState runtimeState) {
-        this.runtimeState = runtimeState;
-    }
-
-    public FeedRuntimeId getFeedRuntimeId() {
-        return feedRuntimeId;
+    public void setMode(Mode mode) {
+        this.inputHandler.setMode(mode);
     }
 
 }

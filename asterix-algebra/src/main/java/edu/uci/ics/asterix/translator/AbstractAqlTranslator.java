@@ -26,6 +26,7 @@ import edu.uci.ics.asterix.aql.expression.DeleteStatement;
 import edu.uci.ics.asterix.aql.expression.DropStatement;
 import edu.uci.ics.asterix.aql.expression.InsertStatement;
 import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
+import edu.uci.ics.asterix.common.api.IClusterManagementWork.ClusterState;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
 import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints;
@@ -48,12 +49,12 @@ public abstract class AbstractAqlTranslator {
 
     public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
 
-        if (!(AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.ACTIVE) && AsterixClusterProperties.INSTANCE
+        if (!(AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE) && AsterixClusterProperties.INSTANCE
                 .isGlobalRecoveryCompleted())) {
             int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
-                while (!AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.ACTIVE)
+                while (!AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)
                         && waitCycleCount < maxWaitCycles) {
                     Thread.sleep(1000);
                     waitCycleCount++;
@@ -61,21 +62,21 @@ public abstract class AbstractAqlTranslator {
             } catch (InterruptedException e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning("Thread interrupted while waiting for cluster to be "
-                            + AsterixClusterProperties.State.ACTIVE);
+                            + ClusterState.ACTIVE);
                 }
             }
-            if (!AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.ACTIVE)) {
-                throw new AsterixException(" Asterix Cluster is in " + AsterixClusterProperties.State.UNUSABLE
+            if (!AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)) {
+                throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE
                         + " state." + "\n One or more Node Controllers have left or haven't joined yet.\n");
             } else {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Cluster is now " + AsterixClusterProperties.State.ACTIVE);
+                    LOGGER.info("Cluster is now " + ClusterState.ACTIVE);
                 }
             }
         }
 
-        if (AsterixClusterProperties.INSTANCE.getState().equals(AsterixClusterProperties.State.UNUSABLE)) {
-            throw new AsterixException(" Asterix Cluster is in " + AsterixClusterProperties.State.UNUSABLE + " state."
+        if (AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.UNUSABLE)) {
+            throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE + " state."
                     + "\n One or more Node Controllers have left.\n");
         }
 
@@ -94,7 +95,7 @@ public abstract class AbstractAqlTranslator {
             }
             if (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()) {
                 throw new AsterixException(" Asterix Cluster Global recovery is not yet complete and The system is in "
-                        + AsterixClusterProperties.State.ACTIVE + " state");
+                        + ClusterState.ACTIVE + " state");
             }
         }
 

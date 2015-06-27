@@ -22,7 +22,7 @@ create type TwitterUserType as closed {
 } 
 
 create type TweetMessageType as closed {
-	tweetid: int64,
+	tweetid: string,
     user: TwitterUserType,
     sender-location: point,
 	send-time: datetime,
@@ -35,4 +35,4 @@ primary key tweetid;
 
 create feed  SyntheticTweetFeed
 using twitter_firehose
-(("duration"="5"),("tps"="50"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+(("duration"="5"),("tps"="50"),("type-name"="TweetMessageType"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));

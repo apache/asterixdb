@@ -125,7 +125,7 @@ public class AnalysisUtil {
 
     public static Pair<String, String> getDatasetInfo(AbstractDataSourceOperator op) throws AlgebricksException {
         AqlSourceId srcId = (AqlSourceId) op.getDataSource().getId();
-        return new Pair<String, String>(srcId.getDataverseName(), srcId.getDatasetName());
+        return new Pair<String, String>(srcId.getDataverseName(), srcId.getDatasourceName());
     }
 
     private static List<FunctionIdentifier> fieldAccessFunctions = new ArrayList<FunctionIdentifier>();

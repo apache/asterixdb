@@ -15,7 +15,6 @@
 
 package edu.uci.ics.asterix.metadata.bootstrap;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.uci.ics.asterix.metadata.MetadataException;

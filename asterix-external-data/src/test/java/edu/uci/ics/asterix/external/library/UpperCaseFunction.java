@@ -53,9 +53,6 @@ public class UpperCaseFunction implements IExternalScalarFunction {
         JRecord result = (JRecord) functionHelper.getResultObject();
         result.setField("id", id);
         result.setField("text", text);
-        JString newField = (JString) functionHelper.getObject(JTypeTag.STRING);
-        newField.setValue(text.getValue().substring(random.nextInt(text.getValue().length())));
-        result.addField("substring", newField);
         functionHelper.setResult(result);
     }
 }

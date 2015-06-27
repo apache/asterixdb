@@ -14,28 +14,29 @@ create dataverse feeds;
 use dataverse feeds;
 
 create type TwitterUserType as closed {
-	screen-name: string,
-	lang: string,
+	screen_name: string,
+	language: string,
 	friends_count: int32,
-	statuses_count: int32,
+	status_count: int32,
 	name: string,
 	followers_count: int32
 } 
 
 create type TweetMessageType as closed {
-	tweetid: int64,
-        user: TwitterUserType,
-        sender-location: point,
-	send-time: datetime,
-        referred-topics: {{ string }},
-	message-text: string
+	id: int64,
+    user: TwitterUserType,
+    latitude: double,
+	longitude: double,
+	message_text: string,
+	created_at: string,
+	country: string
 }
 
 create dataset SyntheticTweets(TweetMessageType)
-primary key tweetid;
+primary key id;
 
-create index ngram_index on SyntheticTweets(message-text) type ngram(3);
+create index ngram_index on SyntheticTweets(message_text) type ngram(3);
 
 create feed  SyntheticTweetFeed
 using twitter_firehose
-(("duration"="5"),("tps"="50"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+(("duration"="5"),("tps"="50"),("type-name"="TweetMessageType"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));

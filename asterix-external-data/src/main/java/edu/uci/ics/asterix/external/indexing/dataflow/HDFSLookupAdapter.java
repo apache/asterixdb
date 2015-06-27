@@ -35,6 +35,7 @@ import edu.uci.ics.asterix.metadata.external.IControlledAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -81,7 +82,7 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
         // Create the lookup reader and the controlled parser
         if (configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_RC)) {
             configureRCFile(jobConf, iNullWriterFactory);
-        } else if (configuration.get(HDFSAdapterFactory.KEY_FORMAT).equals(HDFSAdapterFactory.FORMAT_ADM)) {
+        } else if (configuration.get(AsterixTupleParserFactory.KEY_FORMAT).equals(AsterixTupleParserFactory.FORMAT_ADM)) {
             // create an adm parser
             ADMDataParser dataParser = new ADMDataParser();
             if (configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT).equals(HDFSAdapterFactory.INPUT_FORMAT_TEXT)) {
@@ -95,10 +96,10 @@ public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
                 parser = new AdmOrDelimitedControlledTupleParser(ctx, (ARecordType) atype, in, propagateInput,
                         inRecDesc, dataParser, propagatedFields, ridFields, retainNull, iNullWriterFactory);
             }
-        } else if (configuration.get(HDFSAdapterFactory.KEY_FORMAT).equals(HDFSAdapterFactory.FORMAT_DELIMITED_TEXT)) {
+        } else if (configuration.get(AsterixTupleParserFactory.KEY_FORMAT).equals(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
             // create a delimited text parser
-            char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
-            char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
+            char delimiter = AsterixTupleParserFactory.getDelimiter(configuration);
+            char quote = AsterixTupleParserFactory.getQuote(configuration, delimiter);
 
             DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser((ARecordType) atype,
                     delimiter, quote);

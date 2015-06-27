@@ -20,15 +20,17 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter;
 import edu.uci.ics.asterix.external.util.DNSResolverFactory;
 import edu.uci.ics.asterix.external.util.INodeResolver;
 import edu.uci.ics.asterix.external.util.INodeResolverFactory;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -41,7 +43,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
  * NCFileSystemAdapter reads external data residing on the local file system of
  * an NC.
  */
-public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
+public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implements IAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String NC_FILE_SYSTEM_ADAPTER_NAME = "localfs";
@@ -50,6 +52,8 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
 
     private IAType sourceDatatype;
     private FileSplit[] fileSplits;
+    private ARecordType outputType;
+
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
@@ -62,10 +66,6 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
         return NC_FILE_SYSTEM_ADAPTER_NAME;
     }
 
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.GENERIC;
-    }
 
     @Override
     public SupportedOperation getSupportedOperations() {
@@ -75,7 +75,8 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
     @Override
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
-        String[] splits = ((String) configuration.get(KEY_PATH)).split(",");
+        this.outputType = outputType;
+        String[] splits = ((String) configuration.get(AsterixTupleParserFactory.KEY_PATH)).split(",");
         IAType sourceDatatype = (IAType) outputType;
         configureFileSplits(splits);
         configureFormat(sourceDatatype);
@@ -127,7 +128,7 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
 
     private static INodeResolver initializeNodeResolver() {
         INodeResolver nodeResolver = null;
-        String configuredNodeResolverFactory = System.getProperty(NODE_RESOLVER_FACTORY_PROPERTY);
+        String configuredNodeResolverFactory = System.getProperty(AsterixTupleParserFactory.NODE_RESOLVER_FACTORY_PROPERTY);
         if (configuredNodeResolverFactory != null) {
             try {
                 nodeResolver = ((INodeResolverFactory) (Class.forName(configuredNodeResolverFactory).newInstance()))
@@ -145,8 +146,17 @@ public class NCFileSystemAdapterFactory extends StreamBasedAdapterFactory implem
         }
         return nodeResolver;
     }
-
+    
     @Override
+    public ARecordType getAdapterOutputType() {
+        return outputType;
+    }
+    
+    @Override
+    public InputDataFormat getInputDataFormat() {
+        return InputDataFormat.UNKNOWN;
+    }
+
     public void setFiles(List<ExternalFile> files) throws AlgebricksException {
         throw new AlgebricksException("can't set files for this Adapter");
     }

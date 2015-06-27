@@ -1,5 +1,5 @@
 /*
-x * Copyright 2009-2013 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,23 +19,24 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.StreamBasedAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
- * TPS can be configured between 1 and 20,000
- * 
- * @author ramang
+ * A simulator of the Twitter Firehose. Generates meaningful tweets
+ * at a configurable rate
  */
 public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IFeedAdapter {
 
@@ -52,8 +53,8 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     private final TwitterServer twitterServer;
 
     public TwitterFirehoseFeedAdapter(Map<String, String> configuration, ITupleParserFactory parserFactory,
-            ARecordType outputtype, int partition, IHyracksTaskContext ctx) throws Exception {
-        super(parserFactory, outputtype, ctx);
+            ARecordType outputtype, IHyracksTaskContext ctx, int partition) throws Exception {
+        super(parserFactory, outputtype, ctx, partition);
         this.twitterServer = new TwitterServer(configuration, partition, outputtype, outputStream, executorService);
     }
 
@@ -68,7 +69,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
         return inputStream;
     }
 
-    public static class TwitterServer {
+    private static class TwitterServer {
         private final DataProvider dataProvider;
         private final ExecutorService executorService;
 
@@ -88,7 +89,7 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
     }
 
-    public static class DataProvider implements Runnable {
+    private static class DataProvider implements Runnable {
 
         public static final String KEY_MODE = "mode";
 
@@ -105,8 +106,8 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
 
         public DataProvider(Map<String, String> configuration, ARecordType outputtype, int partition, OutputStream os)
                 throws Exception {
-            this.tweetGenerator = new TweetGenerator(configuration, partition, TweetGenerator.OUTPUT_FORMAT_ADM_STRING,
-                    os);
+            this.tweetGenerator = new TweetGenerator(configuration, partition);
+            this.tweetGenerator.registerSubscriber(os);
             this.os = os;
             mode = configuration.get(KEY_MODE) != null ? Mode.valueOf(configuration.get(KEY_MODE).toUpperCase())
                     : Mode.AGGRESSIVE;
@@ -130,30 +131,29 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
             long startBatch;
             long endBatch;
 
-            try {
-                while (moreData && continuePush) {
-                    switch (mode) {
-                        case AGGRESSIVE:
-                            moreData = tweetGenerator.setNextRecordBatch(batchSize);
-                            break;
-                        case CONTROLLED:
-                            startBatch = System.currentTimeMillis();
-                            moreData = tweetGenerator.setNextRecordBatch(batchSize);
-                            endBatch = System.currentTimeMillis();
-                            if (endBatch - startBatch < 1000) {
-                                Thread.sleep(1000 - (endBatch - startBatch));
-                            } else {
-                                if (LOGGER.isLoggable(Level.WARNING)) {
-                                    LOGGER.warning("Unable to reach the required tps of " + batchSize);
+            while (true) {
+                try {
+                    while (moreData && continuePush) {
+                        switch (mode) {
+                            case AGGRESSIVE:
+                                moreData = tweetGenerator.generateNextBatch(batchSize);
+                                break;
+                            case CONTROLLED:
+                                startBatch = System.currentTimeMillis();
+                                moreData = tweetGenerator.generateNextBatch(batchSize);
+                                endBatch = System.currentTimeMillis();
+                                if (endBatch - startBatch < 1000) {
+                                    Thread.sleep(1000 - (endBatch - startBatch));
                                 }
-                            }
-                            break;
+                                break;
+                        }
                     }
-                }
-                os.close();
-            } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Exception in adapter " + e.getMessage());
+                    os.close();
+                    break;
+                } catch (Exception e) {
+                    if (LOGGER.isLoggable(Level.WARNING)) {
+                        LOGGER.warning("Exception in adaptor " + e.getMessage());
+                    }
                 }
             }
         }
@@ -172,6 +172,18 @@ public class TwitterFirehoseFeedAdapter extends StreamBasedAdapter implements IF
     @Override
     public DataExchangeMode getDataExchangeMode() {
         return DataExchangeMode.PUSH;
+    }
+
+    @Override
+    public boolean handleException(Exception e) {
+        try {
+            twitterServer.stop();
+        } catch (Exception re) {
+            re.printStackTrace();
+            return false;
+        }
+        twitterServer.start();
+        return true;
     }
 
 }

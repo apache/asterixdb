@@ -85,7 +85,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         aString.setValue(adapter.getAdapterIdentifier().getNamespace());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
-        aString.setValue(adapter.getAdapterIdentifier().getAdapterName());
+        aString.setValue(adapter.getAdapterIdentifier().getName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -101,7 +101,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
 
         // write field 1
         fieldValue.reset();
-        aString.setValue(adapter.getAdapterIdentifier().getAdapterName());
+        aString.setValue(adapter.getAdapterIdentifier().getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX, fieldValue);
 

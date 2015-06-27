@@ -44,4 +44,4 @@ using socket_adapter
 
 create feed client_test_feed 
 using socket_client
-(("sockets"="127.0.0.1:9009"),("addressType"="IP"),("format"="adm"),("file_splits"="data/twitter/tw_messages_100.adm"));
+(("sockets"="127.0.0.1:9009"),("type-name"="TweetMessageType"),("addressType"="IP"),("format"="adm"),("file_splits"="data/twitter/tw_messages_100.adm"));

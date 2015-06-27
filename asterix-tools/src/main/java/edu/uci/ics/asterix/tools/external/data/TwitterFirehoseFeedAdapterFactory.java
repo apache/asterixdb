@@ -18,50 +18,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Factory class for creating @see{TwitterFirehoseFeedAdapter}.
- * The adapter simulates a twitter firehose with tweets being "pushed" into Asterix at a configurable rate
- * measured in terms of TPS (tweets/second). The stream of tweets lasts for a configurable duration (measured in seconds).
+ * Factory class for creating @see{TwitterFirehoseFeedAdapter}. The adapter
+ * simulates a twitter firehose with tweets being "pushed" into Asterix at a
+ * configurable rate measured in terms of TPS (tweets/second). The stream of
+ * tweets lasts for a configurable duration (measured in seconds).
  */
-public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory implements ITypedAdapterFactory {
+public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory implements IFeedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
 
-    /*
-     * Degree of parallelism for feed ingestion activity. Defaults to 1.
-     * This builds up the count constraint for the ingestion operator.
-     */
+    /**
+     * Degree of parallelism for feed ingestion activity. Defaults to 1. This
+     * determines the count constraint for the ingestion operator.
+     **/
     private static final String KEY_INGESTION_CARDINALITY = "ingestion-cardinality";
 
-    /*
-     * The absolute locations where ingestion operator instances will be places.
-     */
+    /**
+     * The absolute locations where ingestion operator instances will be placed.
+     **/
     private static final String KEY_INGESTION_LOCATIONS = "ingestion-location";
 
-    private static final ARecordType outputType = initOutputType();
+    private ARecordType outputType;
 
     @Override
     public String getName() {
         return "twitter_firehose";
-    }
-
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.TYPED;
     }
 
     @Override
@@ -70,10 +65,11 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        configuration.put(KEY_FORMAT, FORMAT_ADM);
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
+        configuration.put(AsterixTupleParserFactory.KEY_FORMAT, AsterixTupleParserFactory.FORMAT_ADM);
         this.configuration = configuration;
-        this.configureFormat(initOutputType());
+        this.outputType = outputType;
+        this.configureFormat(outputType);
     }
 
     @Override
@@ -100,7 +96,7 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
 
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
-        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, partition, ctx);
+        return new TwitterFirehoseFeedAdapter(configuration, parserFactory, outputType, ctx, partition);
     }
 
     @Override
@@ -108,27 +104,17 @@ public class TwitterFirehoseFeedAdapterFactory extends StreamBasedAdapterFactory
         return outputType;
     }
 
-    private static ARecordType initOutputType() {
-        ARecordType outputType = null;
-        try {
-            String[] userFieldNames = new String[] { "screen-name", "lang", "friends_count", "statuses_count", "name",
-                    "followers_count" };
-
-            IAType[] userFieldTypes = new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32,
-                    BuiltinType.AINT32, BuiltinType.ASTRING, BuiltinType.AINT32 };
-            ARecordType userRecordType = new ARecordType("TwitterUserType", userFieldNames, userFieldTypes, false);
-
-            String[] fieldNames = new String[] { "tweetid", "user", "sender-location", "send-time", "referred-topics",
-                    "message-text" };
-
-            AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, "referred-topics");
-            IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, userRecordType, BuiltinType.APOINT,
-                    BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
-            outputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
-
-        } catch (AsterixException | HyracksDataException e) {
-            throw new IllegalStateException("Unable to initialize output type");
-        }
-        return outputType;
+    @Override
+    public InputDataFormat getInputDataFormat() {
+        return InputDataFormat.ADM;
     }
+
+    public boolean isRecordTrackingEnabled() {
+        return false;
+    }
+
+    public IIntakeProgressTracker createIntakeProgressTracker() {
+        throw new UnsupportedOperationException("Tracking of ingested records not enabled");
+    }
+
 }

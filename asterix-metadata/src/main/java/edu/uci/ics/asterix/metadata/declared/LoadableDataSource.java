@@ -51,7 +51,7 @@ public class LoadableDataSource extends AqlDataSource {
 
     public LoadableDataSource(Dataset targetDataset, IAType itemType, String adapter, Map<String, String> properties)
             throws AlgebricksException, IOException {
-        super(new AqlSourceId("loadable_dv", "loadable_ds"), "loadable_dv", "loadable_source",
+        super(new AqlSourceId("loadable_dv", "loadable_ds"), "loadable_dv", "loadable_source", itemType,
                 AqlDataSourceType.LOADABLE);
         this.targetDataset = targetDataset;
         this.adapter = adapter;

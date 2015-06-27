@@ -114,7 +114,7 @@ public class ExecutionTest {
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.ONLY_TESTSUITE_XML_NAME);
-        if (testArgs.size() == 0){
+        if (testArgs.size() == 0) {
             testArgs = buildTestsInXml(TestCaseContext.DEFAULT_TESTSUITE_XML_NAME);
         }
         return testArgs;
@@ -138,6 +138,6 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
+            TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 }

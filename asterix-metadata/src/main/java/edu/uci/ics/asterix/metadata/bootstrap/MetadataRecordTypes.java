@@ -50,19 +50,21 @@ public final class MetadataRecordTypes {
     public static ARecordType FUNCTION_RECORDTYPE;
     public static ARecordType DATASOURCE_ADAPTER_RECORDTYPE;
     public static ARecordType FEED_RECORDTYPE;
+    public static ARecordType PRIMARY_FEED_DETAILS_RECORDTYPE;
+    public static ARecordType SECONDARY_FEED_DETAILS_RECORDTYPE;
     public static ARecordType FEED_ADAPTER_CONFIGURATION_RECORDTYPE;
     public static ARecordType FEED_ACTIVITY_RECORDTYPE;
     public static ARecordType FEED_POLICY_RECORDTYPE;
     public static ARecordType POLICY_PARAMS_RECORDTYPE;
-    public static ARecordType FEED_ACTIVITY_DETAILS_RECORDTYPE;
     public static ARecordType LIBRARY_RECORDTYPE;
     public static ARecordType COMPACTION_POLICY_RECORDTYPE;
     public static ARecordType EXTERNAL_FILE_RECORDTYPE;
 
     /**
      * Create all metadata record types.
+     * @throws HyracksDataException 
      */
-    public static void init() throws MetadataException {
+    public static void init() throws MetadataException, HyracksDataException {
         // Attention: The order of these calls is important because some types
         // depend on other types being created first.
         // These calls are one "dependency chain".
@@ -90,10 +92,10 @@ public final class MetadataRecordTypes {
             FUNCTION_RECORDTYPE = createFunctionRecordType();
             DATASOURCE_ADAPTER_RECORDTYPE = createDatasourceAdapterRecordType();
 
-            FEED_RECORDTYPE = createFeedRecordType();
             FEED_ADAPTER_CONFIGURATION_RECORDTYPE = createPropertiesRecordType();
-            FEED_ACTIVITY_DETAILS_RECORDTYPE = createPropertiesRecordType();
-            FEED_ACTIVITY_RECORDTYPE = createFeedActivityRecordType();
+            PRIMARY_FEED_DETAILS_RECORDTYPE = createPrimaryFeedDetailsRecordType();
+            SECONDARY_FEED_DETAILS_RECORDTYPE = createSecondaryFeedDetailsRecordType();
+            FEED_RECORDTYPE = createFeedRecordType();
             FEED_POLICY_RECORDTYPE = createFeedPolicyRecordType();
             LIBRARY_RECORDTYPE = createLibraryRecordType();
 
@@ -498,50 +500,67 @@ public final class MetadataRecordTypes {
     public static final int FEED_ACTIVITY_ARECORD_ACTIVITY_TYPE_FIELD_INDEX = 4;
     public static final int FEED_ACTIVITY_ARECORD_DETAILS_FIELD_INDEX = 5;
     public static final int FEED_ACTIVITY_ARECORD_LAST_UPDATE_TIMESTAMP_FIELD_INDEX = 6;
-
-    private static ARecordType createFeedActivityRecordType() throws AsterixException {
-        AUnorderedListType unorderedPropertyListType = new AUnorderedListType(FEED_ACTIVITY_DETAILS_RECORDTYPE, null);
-        String[] fieldNames = { "DataverseName", "FeedName", "DatasetName", "ActivityId", "ActivityType", "Details",
-                "Timestamp" };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32,
-                BuiltinType.ASTRING, unorderedPropertyListType, BuiltinType.ASTRING };
-        try {
-            return new ARecordType("FeedActivityRecordType", fieldNames, fieldTypes, true);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
-    }
+   
 
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_ARECORD_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ARECORD_ADAPTER_NAME_FIELD_INDEX = 2;
-    public static final int FEED_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX = 3;
-    public static final int FEED_ARECORD_FUNCTION_FIELD_INDEX = 4;
-    public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 5;
+    public static final int FEED_ARECORD_FUNCTION_FIELD_INDEX = 2;
+    public static final int FEED_ARECORD_FEED_TYPE_FIELD_INDEX = 3;
+    public static final int FEED_ARECORD_PRIMARY_TYPE_DETAILS_FIELD_INDEX = 4;
+    public static final int FEED_ARECORD_SECONDARY_TYPE_DETAILS_FIELD_INDEX = 5;
+    public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 6;
 
-    private static ARecordType createFeedRecordType() throws AsterixException {
+    
+    public static final int FEED_ARECORD_PRIMARY_FIELD_DETAILS_ADAPTOR_NAME_FIELD_INDEX = 0;
+    public static final int FEED_ARECORD_PRIMARY_FIELD_DETAILS_ADAPTOR_CONFIGURATION_FIELD_INDEX = 1;
 
-        AUnorderedListType unorderedAdapterPropertyListType = new AUnorderedListType(
-                DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
+    public static final int FEED_ARECORD_SECONDARY_FIELD_DETAILS_SOURCE_FEED_NAME_FIELD_INDEX = 0;
+
+    private static ARecordType createFeedRecordType() throws AsterixException, HyracksDataException {
 
         List<IAType> feedFunctionUnionList = new ArrayList<IAType>();
         feedFunctionUnionList.add(BuiltinType.ANULL);
         feedFunctionUnionList.add(BuiltinType.ASTRING);
         AUnionType feedFunctionUnion = new AUnionType(feedFunctionUnionList, null);
 
-        String[] fieldNames = { "DataverseName", "FeedName", "AdapterName", "AdapterConfiguration", "Function",
-                "Timestamp" };
-        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                unorderedAdapterPropertyListType, feedFunctionUnion, BuiltinType.ASTRING };
+        List<IAType> primaryFeedTypeDetailsRecordUnionList = new ArrayList<IAType>();
+        primaryFeedTypeDetailsRecordUnionList.add(BuiltinType.ANULL);
+        primaryFeedTypeDetailsRecordUnionList.add(PRIMARY_FEED_DETAILS_RECORDTYPE);
+        AUnionType primaryRecordUnion = new AUnionType(primaryFeedTypeDetailsRecordUnionList, null);
 
-        try {
-            return new ARecordType("FeedRecordType", fieldNames, fieldTypes, true);
-        } catch (HyracksDataException e) {
-            throw new AsterixException(e);
-        }
+        List<IAType> secondaryFeedTypeDetailsRecordUnionList = new ArrayList<IAType>();
+        secondaryFeedTypeDetailsRecordUnionList.add(BuiltinType.ANULL);
+        secondaryFeedTypeDetailsRecordUnionList.add(SECONDARY_FEED_DETAILS_RECORDTYPE);
+        AUnionType secondaryRecordUnion = new AUnionType(secondaryFeedTypeDetailsRecordUnionList, null);
 
+        String[] fieldNames = { "DataverseName", "FeedName", "Function", "FeedType", "PrimaryTypeDetails",
+                "SecondaryTypeDetails", "Timestamp" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, BuiltinType.ASTRING, feedFunctionUnion, BuiltinType.ASTRING,
+                primaryRecordUnion, secondaryRecordUnion, BuiltinType.ASTRING };
+
+        return new ARecordType("FeedRecordType", fieldNames, fieldTypes, true);
     }
 
+    public static final int FEED_TYPE_PRIMARY_ARECORD_ADAPTER_NAME_FIELD_INDEX = 0;
+    public static final int FEED_TYPE_PRIMARY_ARECORD_ADAPTER_CONFIGURATION_FIELD_INDEX = 1;
+    
+    private static final ARecordType createPrimaryFeedDetailsRecordType() throws AsterixException, HyracksDataException {
+        AUnorderedListType unorderedAdaptorPropertyListType = new AUnorderedListType(
+                DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE, null);
+
+        String[] fieldNames = { "AdapterName", "AdapterConfiguration" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING, unorderedAdaptorPropertyListType };
+        return new ARecordType(null, fieldNames, fieldTypes, true);
+    }
+
+    public static final int FEED_TYPE_SECONDARY_ARECORD_SOURCE_FEED_NAME_FIELD_INDEX = 0;
+
+    private static final ARecordType createSecondaryFeedDetailsRecordType() throws AsterixException, HyracksDataException {
+        String[] fieldNames = { "SourceFeedName" };
+        IAType[] fieldTypes = { BuiltinType.ASTRING };
+        return new ARecordType(null, fieldNames, fieldTypes, true);
+    }
+    
     public static final int LIBRARY_ARECORD_DATAVERSENAME_FIELD_INDEX = 0;
     public static final int LIBRARY_ARECORD_NAME_FIELD_INDEX = 1;
     public static final int LIBRARY_ARECORD_TIMESTAMP_FIELD_INDEX = 2;

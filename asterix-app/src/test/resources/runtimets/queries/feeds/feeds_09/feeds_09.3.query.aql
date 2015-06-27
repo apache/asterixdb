@@ -1,0 +1,22 @@
+/*
+ * Description  : Create a feed using the synthetic feed simulator adapter.                   
+                  Create a dataset that has an associated ngram index.
+                  The synthetic feed simulator uses the Social-Data generator to generate data and simulate a feed.
+                  The feed lasts a configured duration with data arriving at a configured rate (tweets per second).
+                  Verify the existence of data after the feed finishes.
+ * Issue        : 711
+ * Expected Res : Success
+ * Date         : 2nd Feb 2014
+ */
+
+use dataverse feeds_09;
+
+let $totalTweets:=count(
+for $x in dataset('SyntheticTweets')
+return $x)
+return 
+(if($totalTweets > 0)
+  then 1
+else
+  0
+)

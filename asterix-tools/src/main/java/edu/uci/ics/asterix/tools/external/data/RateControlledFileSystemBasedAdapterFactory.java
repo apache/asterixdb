@@ -14,34 +14,21 @@
  */
 package edu.uci.ics.asterix.tools.external.data;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
 import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
-import edu.uci.ics.asterix.runtime.operators.file.AbstractTupleParser;
-import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
-import edu.uci.ics.asterix.runtime.operators.file.IDataParser;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * Factory class for creating @see{RateControllerFileSystemBasedAdapter} The
@@ -50,7 +37,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
  * source file has been ingested.
  */
 public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdapterFactory implements
-        IGenericAdapterFactory {
+        IFeedAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String KEY_FILE_SYSTEM = "fs";
@@ -59,9 +46,8 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
     public static final String KEY_PATH = "path";
     public static final String KEY_FORMAT = "format";
 
-    private IGenericAdapterFactory adapterFactory;
+    private IAdapterFactory adapterFactory;
     private String format;
-    private Map<String, String> configuration;
     private ARecordType atype;
 
     @Override
@@ -79,8 +65,8 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
         if (configuration.get(KEY_FILE_SYSTEM) == null) {
             throw new Exception("File system type not specified. (fs=?) File system could be 'localfs' or 'hdfs'");
         }
-        if (configuration.get(IGenericAdapterFactory.KEY_TYPE_NAME) == null) {
-            throw new Exception("Record type not specified (output-type-name=?)");
+        if (configuration.get(IAdapterFactory.KEY_TYPE_NAME) == null) {
+            throw new Exception("Record type not specified (type-name=?)");
         }
         if (configuration.get(KEY_PATH) == null) {
             throw new Exception("File path not specified (path=?)");
@@ -91,17 +77,12 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.GENERIC;
-    }
-
-    @Override
     public SupportedOperation getSupportedOperations() {
         return SupportedOperation.READ;
     }
 
     @Override
-    public void configure(Map<String, String> configuration, ARecordType recordType) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
         checkRequiredArgs(configuration);
         String fileSystem = (String) configuration.get(KEY_FILE_SYSTEM);
@@ -113,12 +94,11 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
         } else {
             throw new AsterixException("Unsupported file system type " + fileSystem);
         }
+        this.atype = outputType;
         format = configuration.get(KEY_FORMAT);
-        adapterFactory = (IGenericAdapterFactory) Class.forName(adapterFactoryClass).newInstance();
-        adapterFactory.configure(configuration, recordType);
-
-        atype = (ARecordType) recordType;
-        configureFormat();
+        adapterFactory = (IAdapterFactory) Class.forName(adapterFactoryClass).newInstance();
+        adapterFactory.configure(configuration, outputType);
+        configureFormat(outputType);
     }
 
     @Override
@@ -126,155 +106,22 @@ public class RateControlledFileSystemBasedAdapterFactory extends StreamBasedAdap
         return adapterFactory.getPartitionConstraint();
     }
 
-    private void configureFormat() throws AsterixException {
-        switch (format) {
-            case FORMAT_ADM:
-                parserFactory = new RateControlledTupleParserFactory(atype, configuration);
-                break;
-
-            case FORMAT_DELIMITED_TEXT:
-                char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
-                char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
-                boolean hasHeader = StreamBasedAdapterFactory.getHasHeader(configuration);
-                IValueParserFactory[] valueParserFactories = getValueParserFactories(atype);
-                parserFactory = new RateControlledTupleParserFactory(atype, valueParserFactories, delimiter, quote,
-                        hasHeader, configuration);
-                break;
-        }
-    }
-
-    protected IValueParserFactory[] getValueParserFactories(ARecordType recordType) throws AsterixException {
-        int n = recordType.getFieldTypes().length;
-        IValueParserFactory[] fieldParserFactories = new IValueParserFactory[n];
-        for (int i = 0; i < n; i++) {
-            ATypeTag tag = recordType.getFieldTypes()[i].getTypeTag();
-            IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
-            if (vpf == null) {
-                throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
-            }
-            fieldParserFactories[i] = vpf;
-
-        }
-        return fieldParserFactories;
+    @Override
+    public ARecordType getAdapterOutputType() {
+        return atype;
     }
 
     @Override
-    public void setFiles(List<ExternalFile> files) throws AlgebricksException {
-        throw new AlgebricksException("can't set files for this Adapter");
+    public InputDataFormat getInputDataFormat() {
+        return InputDataFormat.UNKNOWN;
     }
 
-}
-
-class RateControlledTupleParserFactory implements ITupleParserFactory {
-
-    private static final long serialVersionUID = 1L;
-
-    private final ARecordType recordType;
-    private final Map<String, String> configuration;
-    private IValueParserFactory[] valueParserFactories;
-    private char delimiter;
-    private char quote;
-    private boolean hasHeader;
-    private final ParserType parserType;
-
-    public enum ParserType {
-        ADM,
-        DELIMITED_DATA
+    public boolean isRecordTrackingEnabled() {
+        return false;
     }
 
-    public RateControlledTupleParserFactory(ARecordType recordType, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, char quote, boolean hasHeader, Map<String, String> configuration) {
-        this.recordType = recordType;
-        this.valueParserFactories = valueParserFactories;
-        this.delimiter = fieldDelimiter;
-        this.quote = quote;
-        this.hasHeader = hasHeader;
-        this.configuration = configuration;
-        this.parserType = ParserType.DELIMITED_DATA;
+    public IIntakeProgressTracker createIntakeProgressTracker() {
+        throw new UnsupportedOperationException("Tracking of ingested records not enabled");
     }
 
-    public RateControlledTupleParserFactory(ARecordType recordType, Map<String, String> configuration) {
-        this.recordType = recordType;
-        this.configuration = configuration;
-        this.parserType = ParserType.ADM;
-    }
-
-    @Override
-    public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        IDataParser dataParser = null;
-        switch (parserType) {
-            case ADM:
-                dataParser = new ADMDataParser();
-                break;
-            case DELIMITED_DATA:
-                dataParser = new DelimitedDataParser(recordType, valueParserFactories, delimiter, quote, hasHeader);
-                break;
-        }
-        return new RateControlledTupleParser(ctx, recordType, dataParser, configuration);
-    }
-
-}
-
-class RateControlledTupleParser extends AbstractTupleParser {
-
-    private final IDataParser dataParser;
-    private long interTupleInterval;
-    private boolean delayConfigured;
-    private boolean continueIngestion = true;
-
-    public static final String INTER_TUPLE_INTERVAL = "tuple-interval";
-
-    public RateControlledTupleParser(IHyracksTaskContext ctx, ARecordType recType, IDataParser dataParser,
-            Map<String, String> configuration) throws HyracksDataException {
-        super(ctx, recType);
-        this.dataParser = dataParser;
-        String propValue = configuration.get(INTER_TUPLE_INTERVAL);
-        if (propValue != null) {
-            interTupleInterval = Long.parseLong(propValue);
-        } else {
-            interTupleInterval = 0;
-        }
-        delayConfigured = interTupleInterval != 0;
-    }
-
-    public void setInterTupleInterval(long val) {
-        this.interTupleInterval = val;
-        this.delayConfigured = val > 0;
-    }
-
-    public void stop() {
-        continueIngestion = false;
-    }
-
-    @Override
-    public IDataParser getDataParser() {
-        return dataParser;
-    }
-
-    @Override
-    public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
-
-        IDataParser parser = getDataParser();
-        try {
-            parser.initialize(in, recType, true);
-            while (continueIngestion) {
-                tb.reset();
-                if (!parser.parse(tb.getDataOutput())) {
-                    break;
-                }
-                tb.addFieldEndOffset();
-                if (delayConfigured) {
-                    Thread.sleep(interTupleInterval);
-                }
-                addTupleToFrame(writer);
-            }
-            appender.flush(writer, true);
-        } catch (AsterixException ae) {
-            throw new HyracksDataException(ae);
-        } catch (IOException ioe) {
-            throw new HyracksDataException(ioe);
-        } catch (InterruptedException ie) {
-            throw new HyracksDataException(ie);
-        }
-    }
 }

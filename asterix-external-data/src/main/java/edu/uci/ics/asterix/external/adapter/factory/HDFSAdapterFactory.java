@@ -31,15 +31,17 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
 import edu.uci.ics.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactory;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.ICCContext;
@@ -53,7 +55,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 /**
  * A factory class for creating an instance of HDFSAdapter
  */
-public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
+public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     public static final String HDFS_ADAPTER_NAME = "hdfs";
@@ -80,6 +82,7 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
     private boolean configured = false;
     public static Scheduler hdfsScheduler;
     private static boolean initialized = false;
+    protected List<ExternalFile> files;
 
     private static Scheduler initializeHDFSScheduler() {
         ICCContext ccContext = AsterixAppContextInfo.getInstance().getCCApplicationContext().getCCContext();
@@ -134,11 +137,6 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         conf.set("mapred.input.dir", ((String) configuration.get(KEY_PATH)).trim());
         conf.set("mapred.input.format.class", formatClassName);
         return conf;
-    }
-
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.GENERIC;
     }
 
     @Override
@@ -203,25 +201,41 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IGe
         return new AlgebricksAbsolutePartitionConstraint(cluster);
     }
 
+    @Override
+    public ARecordType getAdapterOutputType() {
+        return (ARecordType) atype;
+    }
+
+    @Override
+    public InputDataFormat getInputDataFormat() {
+        return InputDataFormat.UNKNOWN;
+    }
+
     /*
      * This method is overridden to do the following:
      * if data is text data (adm or delimited text), it will use a text tuple parser,
      * otherwise it will use hdfs record object parser
      */
     protected void configureFormat(IAType sourceDatatype) throws Exception {
-        String specifiedFormat = (String) configuration.get(KEY_FORMAT);
-        if (specifiedFormat == null) {
-            throw new IllegalArgumentException(" Unspecified data format");
-        } else if (FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
-            parserFactory = getDelimitedDataTupleParserFactory((ARecordType) sourceDatatype, false);
-        } else if (FORMAT_ADM.equalsIgnoreCase((String) configuration.get(KEY_FORMAT))) {
-            parserFactory = getADMDataTupleParserFactory((ARecordType) sourceDatatype, false);
-        } else if (FORMAT_BINARY.equalsIgnoreCase((String) configuration.get(KEY_FORMAT))) {
-            parserFactory = new HDFSObjectTupleParserFactory((ARecordType) atype, this, configuration);
-        } else {
-            throw new IllegalArgumentException(" format " + configuration.get(KEY_FORMAT) + " not supported");
-        }
-    }
+         String specifiedFormat = (String) configuration.get(AsterixTupleParserFactory.KEY_FORMAT);
+         if (specifiedFormat == null) {
+                 throw new IllegalArgumentException(" Unspecified data format");
+         } 
+         
+         if(AsterixTupleParserFactory.FORMAT_BINARY.equalsIgnoreCase(specifiedFormat)){
+             parserFactory = new HDFSObjectTupleParserFactory((ARecordType) atype, this, configuration);
+         } else {
+             InputDataFormat inputFormat = InputDataFormat.UNKNOWN;
+             if (AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT.equalsIgnoreCase(specifiedFormat)) {
+                 inputFormat = InputDataFormat.DELIMITED;
+             }   else if (AsterixTupleParserFactory.FORMAT_ADM.equalsIgnoreCase(specifiedFormat)) {
+                 inputFormat = InputDataFormat.ADM;
+             }    
+             parserFactory = new AsterixTupleParserFactory(configuration, (ARecordType) sourceDatatype
+                     , inputFormat);
+         }  
+        
+     }
 
     /**
      * Instead of creating the split using the input format, we do it manually

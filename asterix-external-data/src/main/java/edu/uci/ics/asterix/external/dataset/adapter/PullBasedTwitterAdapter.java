@@ -17,30 +17,33 @@ package edu.uci.ics.asterix.external.dataset.adapter;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
+import edu.uci.ics.asterix.common.parse.ITupleForwardPolicy;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import edu.uci.ics.asterix.runtime.operators.file.CounterTimerTupleForwardPolicy;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * An adapter that provides the functionality of receiving tweets from the
  * Twitter service in the form of ADM formatted records.
  */
-public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAdapter {
+public class PullBasedTwitterAdapter extends ClientBasedFeedAdapter implements IFeedAdapter {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String QUERY = "query";
-    public static final String INTERVAL = "interval";
+    private static final int DEFAULT_BATCH_SIZE = 5;
 
     private ARecordType recordType;
     private PullBasedTwitterFeedClient tweetClient;
 
     @Override
-    public IPullBasedFeedClient getFeedClient(int partition) {
+    public IFeedClient getFeedClient(int partition) {
         return tweetClient;
     }
 
-    public PullBasedTwitterAdapter(Map<String, String> configuration, ARecordType recordType, IHyracksTaskContext ctx) throws AsterixException {
+    public PullBasedTwitterAdapter(Map<String, String> configuration, ARecordType recordType, IHyracksTaskContext ctx)
+            throws AsterixException {
         super(configuration, ctx);
         tweetClient = new PullBasedTwitterFeedClient(ctx, recordType, this);
     }
@@ -52,6 +55,22 @@ public class PullBasedTwitterAdapter extends PullBasedAdapter implements IFeedAd
     @Override
     public DataExchangeMode getDataExchangeMode() {
         return DataExchangeMode.PULL;
+    }
+
+    @Override
+    public boolean handleException(Exception e) {
+        return true;
+    }
+
+    @Override
+    public ITupleForwardPolicy getTupleParserPolicy() {
+        configuration.put(ITupleForwardPolicy.PARSER_POLICY,
+                ITupleForwardPolicy.TupleForwardPolicyType.COUNTER_TIMER_EXPIRED.name());
+        String propValue = configuration.get(CounterTimerTupleForwardPolicy.BATCH_SIZE);
+        if (propValue == null) {
+            configuration.put(CounterTimerTupleForwardPolicy.BATCH_SIZE, "" + DEFAULT_BATCH_SIZE);
+        }
+        return AsterixTupleParserFactory.getTupleParserPolicy(configuration);
     }
 
 }

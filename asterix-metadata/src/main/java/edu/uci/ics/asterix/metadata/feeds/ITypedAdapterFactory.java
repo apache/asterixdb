@@ -16,6 +16,7 @@ package edu.uci.ics.asterix.metadata.feeds;
 
 import java.util.Map;
 
+import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 
 public interface ITypedAdapterFactory extends IAdapterFactory {

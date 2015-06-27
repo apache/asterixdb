@@ -16,23 +16,20 @@ package edu.uci.ics.asterix.tools.external.data;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-public class SocketClientAdapterFactory implements ITypedAdapterFactory {
+public class SocketClientAdapterFactory implements IFeedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private static final ARecordType outputType = initOutputType();
+    private ARecordType outputType;
 
     private GenericSocketFeedAdapterFactory genericSocketAdapterFactory;
 
@@ -41,42 +38,26 @@ public class SocketClientAdapterFactory implements ITypedAdapterFactory {
     public static final String KEY_FILE_SPLITS = "file_splits";
 
     @Override
-    public SupportedOperation getSupportedOperations() {
-        return SupportedOperation.READ;
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
+        this.outputType = outputType;
+        String fileSplitsValue = configuration.get(KEY_FILE_SPLITS);
+        if (fileSplitsValue == null) {
+            throw new IllegalArgumentException(
+                    "File splits not specified. File split is specified as a comma separated list of paths");
+        }
+        fileSplits = fileSplitsValue.trim().split(",");
+        genericSocketAdapterFactory = new GenericSocketFeedAdapterFactory();
+        genericSocketAdapterFactory.configure(configuration, outputType);
     }
 
-    private static ARecordType initOutputType() {
-        ARecordType outputType = null;
-        try {
-            String[] userFieldNames = new String[] { "screen-name", "lang", "friends_count", "statuses_count", "name",
-                    "followers_count" };
-
-            IAType[] userFieldTypes = new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32,
-                    BuiltinType.AINT32, BuiltinType.ASTRING, BuiltinType.AINT32 };
-            ARecordType userRecordType = new ARecordType("TwitterUserType", userFieldNames, userFieldTypes, false);
-
-            String[] fieldNames = new String[] { "tweetid", "user", "sender-location", "send-time", "referred-topics",
-                    "message-text" };
-
-            AUnorderedListType unorderedListType = new AUnorderedListType(BuiltinType.ASTRING, "referred-topics");
-            IAType[] fieldTypes = new IAType[] { BuiltinType.AINT64, userRecordType, BuiltinType.APOINT,
-                    BuiltinType.ADATETIME, unorderedListType, BuiltinType.ASTRING };
-            outputType = new ARecordType("TweetMessageType", fieldNames, fieldTypes, false);
-
-        } catch (AsterixException | HyracksDataException e) {
-            throw new IllegalStateException("Unable to initialize output type");
-        }
-        return outputType;
+    @Override
+    public SupportedOperation getSupportedOperations() {
+        return SupportedOperation.READ;
     }
 
     @Override
     public String getName() {
         return "socket_client";
-    }
-
-    @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.TYPED;
     }
 
     @Override
@@ -96,14 +77,13 @@ public class SocketClientAdapterFactory implements ITypedAdapterFactory {
     }
 
     @Override
-    public void configure(Map<String, String> configuration) throws Exception {
-        String fileSplitsValue = configuration.get(KEY_FILE_SPLITS);
-        if (fileSplitsValue == null) {
-            throw new IllegalArgumentException(
-                    "File splits not specified. File split is specified as a comma separated list of paths");
-        }
-        fileSplits = fileSplitsValue.trim().split(",");
-        genericSocketAdapterFactory = new GenericSocketFeedAdapterFactory();
-        genericSocketAdapterFactory.configure(configuration, outputType);
+    public boolean isRecordTrackingEnabled() {
+        return false;
     }
+
+    @Override
+    public IIntakeProgressTracker createIntakeProgressTracker() {
+        return null;
+    }
+
 }

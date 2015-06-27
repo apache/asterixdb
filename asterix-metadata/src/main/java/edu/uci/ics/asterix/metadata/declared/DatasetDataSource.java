@@ -21,7 +21,7 @@ public class DatasetDataSource extends AqlDataSource {
 
     public DatasetDataSource(AqlSourceId id, String datasourceDataverse, String datasourceName, IAType itemType,
             AqlDataSourceType datasourceType) throws AlgebricksException {
-        super(id, datasourceDataverse, datasourceName, datasourceType);
+        super(id, datasourceDataverse, datasourceName, itemType, datasourceType);
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();

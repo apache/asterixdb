@@ -23,7 +23,6 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
@@ -32,7 +31,6 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Feed;
-import edu.uci.ics.asterix.metadata.entities.FeedActivity;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
@@ -64,9 +62,7 @@ public class MetadataCache {
     protected final Map<FunctionSignature, Function> functions = new HashMap<FunctionSignature, Function>();
     // Key is adapter dataverse. Key of value map is the adapter name  
     protected final Map<String, Map<String, DatasourceAdapter>> adapters = new HashMap<String, Map<String, DatasourceAdapter>>();
-    // Key is FeedId   
-    protected final Map<FeedConnectionId, FeedActivity> feedActivity = new HashMap<FeedConnectionId, FeedActivity>();
-
+  
     // Key is DataverseName, Key of the value map is the Policy name   
     protected final Map<String, Map<String, FeedPolicy>> feedPolicies = new HashMap<String, Map<String, FeedPolicy>>();
     // Key is library dataverse. Key of value map is the library name
@@ -110,7 +106,6 @@ public class MetadataCache {
                         synchronized (datatypes) {
                             synchronized (functions) {
                                 synchronized (adapters) {
-                                    synchronized (feedActivity) {
                                         synchronized (libraries) {
                                             synchronized (compactionPolicies) {
                                                 dataverses.clear();
@@ -120,7 +115,6 @@ public class MetadataCache {
                                                 datatypes.clear();
                                                 functions.clear();
                                                 adapters.clear();
-                                                feedActivity.clear();
                                                 libraries.clear();
                                                 compactionPolicies.clear();
                                             }
@@ -133,7 +127,7 @@ public class MetadataCache {
                 }
             }
         }
-    }
+    
 
     public Object addDataverseIfNotExists(Dataverse dataverse) {
         synchronized (dataverses) {
@@ -240,7 +234,6 @@ public class MetadataCache {
                         synchronized (functions) {
                             synchronized (adapters) {
                                 synchronized (libraries) {
-                                    synchronized (feedActivity) {
                                         synchronized (feeds) {
                                             synchronized (compactionPolicies) {
                                                 datasets.remove(dataverse.getDataverseName());
@@ -257,19 +250,8 @@ public class MetadataCache {
                                                 for (FunctionSignature signature : markedFunctionsForRemoval) {
                                                     functions.remove(signature);
                                                 }
-                                                List<FeedConnectionId> feedActivitiesMarkedForRemoval = new ArrayList<FeedConnectionId>();
-                                                for (FeedConnectionId fid : feedActivity.keySet()) {
-                                                    if (fid.getDataverse().equals(dataverse.getDataverseName())) {
-                                                        feedActivitiesMarkedForRemoval.add(fid);
-                                                    }
-                                                }
-                                                for (FeedConnectionId fid : feedActivitiesMarkedForRemoval) {
-                                                    feedActivity.remove(fid);
-                                                }
-
                                                 libraries.remove(dataverse.getDataverseName());
                                                 feeds.remove(dataverse.getDataverseName());
-
                                                 return dataverses.remove(dataverse.getDataverseName());
                                             }
                                         }
@@ -281,7 +263,7 @@ public class MetadataCache {
                 }
             }
         }
-    }
+    
 
     public Object dropDataset(Dataset dataset) {
         synchronized (datasets) {
@@ -503,9 +485,9 @@ public class MetadataCache {
                 adaptersInDataverse = new HashMap<String, DatasourceAdapter>();
                 adapters.put(adapter.getAdapterIdentifier().getNamespace(), adaptersInDataverse);
             }
-            DatasourceAdapter adapterObject = adaptersInDataverse.get(adapter.getAdapterIdentifier().getAdapterName());
+            DatasourceAdapter adapterObject = adaptersInDataverse.get(adapter.getAdapterIdentifier().getName());
             if (adapterObject == null) {
-                return adaptersInDataverse.put(adapter.getAdapterIdentifier().getAdapterName(), adapter);
+                return adaptersInDataverse.put(adapter.getAdapterIdentifier().getName(), adapter);
             }
             return null;
         }
@@ -516,28 +498,14 @@ public class MetadataCache {
             Map<String, DatasourceAdapter> adaptersInDataverse = adapters.get(adapter.getAdapterIdentifier()
                     .getNamespace());
             if (adaptersInDataverse != null) {
-                return adaptersInDataverse.remove(adapter.getAdapterIdentifier().getAdapterName());
+                return adaptersInDataverse.remove(adapter.getAdapterIdentifier().getName());
             }
             return null;
         }
     }
 
-    public Object addFeedActivityIfNotExists(FeedActivity fa) {
-        synchronized (feedActivity) {
-            FeedConnectionId fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
-            if (!feedActivity.containsKey(fid)) {
-                feedActivity.put(fid, fa);
-            }
-        }
-        return null;
-    }
+  
 
-    public Object dropFeedActivity(FeedActivity fa) {
-        synchronized (feedActivity) {
-            FeedConnectionId fid = new FeedConnectionId(fa.getDataverseName(), fa.getFeedName(), fa.getDatasetName());
-            return feedActivity.remove(fid);
-        }
-    }
 
     public Object addLibraryIfNotExists(Library library) {
         synchronized (libraries) {

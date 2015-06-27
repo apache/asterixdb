@@ -1,3 +1,0 @@
-use dataverse feeds;
-
-connect feed TwitterFirehose to dataset Tweets;

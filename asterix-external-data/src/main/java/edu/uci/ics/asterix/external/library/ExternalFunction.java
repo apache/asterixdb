@@ -90,9 +90,9 @@ public abstract class ExternalFunction implements IExternalFunction {
                 castBuffer.reset();
                 ATypeHierarchy.convertNumericTypeByteArray(inputVal.getByteArray(), inputVal.getStartOffset(),
                         inputVal.getLength(), targetTypeTag, castBuffer.getDataOutput());
-                functionHelper.setArgument(i, castBuffer.getByteArray());
+                functionHelper.setArgument(i, castBuffer);
             } else {
-                functionHelper.setArgument(i, inputVal.getByteArray());
+                functionHelper.setArgument(i, inputVal);
             }
         }
     }

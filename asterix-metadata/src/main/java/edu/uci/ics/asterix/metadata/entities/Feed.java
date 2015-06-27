@@ -15,62 +15,67 @@
 
 package edu.uci.ics.asterix.metadata.entities;
 
-import java.util.Map;
-
+import edu.uci.ics.asterix.common.feeds.FeedId;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.metadata.MetadataCache;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 
 /**
- * Metadata describing a feed.
+ * Feed POJO
  */
 public class Feed implements IMetadataEntity {
 
     private static final long serialVersionUID = 1L;
 
-    private final String dataverseName;
-    private final String feedName;
-    private final String adapterName;
-    private final Map<String, String> adapterConfiguration;
-    private final FunctionSignature appliedFunction;
+    /** A unique identifier for the feed */
+    protected final FeedId feedId;
 
-    public Feed(String dataverseName, String datasetName, String adapterName, Map<String, String> adapterConfiguration,
-            FunctionSignature appliedFunction) {
-        this.dataverseName = dataverseName;
-        this.feedName = datasetName;
-        this.adapterName = adapterName;
-        this.adapterConfiguration = adapterConfiguration;
+    /** The function that is to be applied on each incoming feed tuple **/
+    protected final FunctionSignature appliedFunction;
+
+    /** The type {@code FeedType} associated with the feed. **/
+    protected final FeedType feedType;
+
+    /** A string representation of the instance **/
+    protected final String displayName;
+
+    public enum FeedType {
+        /**
+         * A feed that derives its data from an external source.
+         */
+        PRIMARY,
+
+        /**
+         * A feed that derives its data from another primary or secondary feed.
+         */
+        SECONDARY
+    }
+
+    public Feed(String dataverseName, String datasetName, FunctionSignature appliedFunction, FeedType feedType) {
+        this.feedId = new FeedId(dataverseName, datasetName);
         this.appliedFunction = appliedFunction;
+        this.feedType = feedType;
+        this.displayName = feedType + "(" + feedId + ")";
+    }
+
+    public FeedId getFeedId() {
+        return feedId;
     }
 
     public String getDataverseName() {
-        return dataverseName;
+        return feedId.getDataverse();
     }
 
     public String getFeedName() {
-        return feedName;
-    }
-
-    public String getAdapterName() {
-        return adapterName;
-    }
-
-    public Map<String, String> getAdapterConfiguration() {
-        return adapterConfiguration;
+        return feedId.getFeedName();
     }
 
     public FunctionSignature getAppliedFunction() {
         return appliedFunction;
     }
 
-    @Override
-    public Object addToCache(MetadataCache cache) {
-        return cache.addFeedIfNotExists(this);
-    }
-
-    @Override
-    public Object dropFromCache(MetadataCache cache) {
-        return cache.dropFeed(this);
+    public FeedType getFeedType() {
+        return feedType;
     }
 
     @Override
@@ -81,13 +86,27 @@ public class Feed implements IMetadataEntity {
         if (!(other instanceof Feed)) {
             return false;
         }
-        Feed otherDataset = (Feed) other;
-        if (!otherDataset.dataverseName.equals(dataverseName)) {
-            return false;
-        }
-        if (!otherDataset.feedName.equals(feedName)) {
-            return false;
-        }
-        return true;
+        Feed otherFeed = (Feed) other;
+        return otherFeed.getFeedId().equals(feedId);
+    }
+
+    @Override
+    public int hashCode() {
+        return displayName.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return feedType + "(" + feedId + ")";
+    }
+
+    @Override
+    public Object addToCache(MetadataCache cache) {
+        return cache.addFeedIfNotExists(this);
+    }
+
+    @Override
+    public Object dropFromCache(MetadataCache cache) {
+        return cache.dropFeed(this);
     }
 }

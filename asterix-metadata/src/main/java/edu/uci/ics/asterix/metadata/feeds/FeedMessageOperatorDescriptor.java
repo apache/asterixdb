@@ -15,6 +15,7 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
+import edu.uci.ics.asterix.common.feeds.api.IFeedMessage;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -29,20 +30,20 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedConnectionId feedId;
+    private final FeedConnectionId connectionId;
     private final IFeedMessage feedMessage;
 
-    public FeedMessageOperatorDescriptor(JobSpecification spec, String dataverse, String feedName, String dataset,
+    public FeedMessageOperatorDescriptor(JobSpecification spec, FeedConnectionId connectionId,
             IFeedMessage feedMessage) {
         super(spec, 0, 1);
-        this.feedId = new FeedConnectionId(dataverse, feedName, dataset);
+        this.connectionId = connectionId;
         this.feedMessage = feedMessage;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new FeedMessageOperatorNodePushable(ctx, feedId, feedMessage, partition, nPartitions);
+        return new FeedMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition, nPartitions);
     }
 
 }

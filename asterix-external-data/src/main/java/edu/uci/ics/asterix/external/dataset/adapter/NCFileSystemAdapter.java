@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AbstractTupleParser;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -58,15 +57,7 @@ public class NCFileSystemAdapter extends FileSystemBasedAdapter {
         }
     }
 
-    @Override
-    public void start(int partition, IFrameWriter writer) throws Exception {
-        InputStream in = getInputStream(partition);
-        if (tupleParser instanceof AbstractTupleParser) {
-            ((AbstractTupleParser) tupleParser).setFilename(getFilename(partition));
-        }
-        tupleParser.parse(in, writer);
-    }
-
+   
     @Override
     public String getFilename(int partition) {
         final FileSplit fileSplit = fileSplits[partition];

@@ -23,19 +23,21 @@ create type TwitterUserType as closed {
 } 
 
 create type TweetMessageType as closed {
-	tweetid: int64,
-        user: TwitterUserType,
-        sender-location: point,
+	id: int64,
+    user: TwitterUserType,
+	latitude: double,
+	longitude: double,
 	send-time: datetime,
-        referred-topics: {{ string }},
-	message-text: string
+	message_text: string,
+	created_at: string,
+	country: string
 }
 
 create dataset SyntheticTweets(TweetMessageType)
-primary key tweetid;
+primary key id;
 
 create index locationIdx on SyntheticTweets(sender-location) type rtree;
 
 create feed  SyntheticTweetFeed
 using twitter_firehose
-(("duration"="5"),("tps"="50"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));
+(("duration"="5"),("tps"="50"),("type-name"="TweetMessageType"),("tput-duration"="5"),("dataverse-dataset"="feeds:SyntheticTweets"),("mode"="controlled"));

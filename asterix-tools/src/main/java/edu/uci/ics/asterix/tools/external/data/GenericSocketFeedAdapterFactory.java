@@ -23,12 +23,14 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IGenericAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.util.AsterixRuntimeUtil;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -40,7 +42,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
  * adapter listens at a port for receiving data (from external world).
  * Data received is transformed into Asterix Data Format (ADM).
  */
-public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory implements IGenericAdapterFactory {
+public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory implements IFeedAdapterFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -65,11 +67,6 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.GENERIC;
-    }
-
-    @Override
     public SupportedOperation getSupportedOperations() {
         return SupportedOperation.READ;
     }
@@ -81,9 +78,9 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     @Override
     public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
-        outputType = (ARecordType) outputType;
-        this.configureFormat(outputType);
         this.configureSockets(configuration);
+        this.configureFormat(outputType);
+        this.outputType = (ARecordType) outputType;
     }
 
     @Override
@@ -98,7 +95,7 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     @Override
     public IDatasourceAdapter createAdapter(IHyracksTaskContext ctx, int partition) throws Exception {
         Pair<String, Integer> socket = sockets.get(partition);
-        return new GenericSocketFeedAdapter(parserFactory, outputType, socket.second, ctx);
+        return new GenericSocketFeedAdapter(parserFactory, outputType, socket.second, ctx, partition);
     }
 
     private void configureSockets(Map<String, String> configuration) throws Exception {
@@ -117,8 +114,8 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
         Random random = new Random();
         for (String socket : socketsArray) {
             String[] socketTokens = socket.split(":");
-            String host = socketTokens[0];
-            int port = Integer.parseInt(socketTokens[1]);
+            String host = socketTokens[0].trim();
+            int port = Integer.parseInt(socketTokens[1].trim());
             Pair<String, Integer> p = null;
             switch (mode) {
                 case IP:
@@ -148,6 +145,23 @@ public class GenericSocketFeedAdapterFactory extends StreamBasedAdapterFactory i
     }
 
     @Override
+    public ARecordType getAdapterOutputType() {
+        return outputType;
+    }
+
+    @Override
+    public InputDataFormat getInputDataFormat() {
+        return InputDataFormat.UNKNOWN;
+    }
+
+    public boolean isRecordTrackingEnabled() {
+        return false;
+    }
+
+    public IIntakeProgressTracker createIntakeProgressTracker() {
+        throw new UnsupportedOperationException("Tracking of ingested records not enabled");
+    }
+    
     public void setFiles(List<ExternalFile> files) throws AlgebricksException {
         throw new AlgebricksException("files access not supported for this adapter");
     }

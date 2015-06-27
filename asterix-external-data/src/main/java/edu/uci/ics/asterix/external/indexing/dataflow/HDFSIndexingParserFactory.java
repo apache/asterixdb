@@ -24,6 +24,7 @@ import edu.uci.ics.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
 import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -84,11 +85,11 @@ public class HDFSIndexingParserFactory implements ITupleParserFactory {
          * 2. RC indexing tuple parser
          * 3. textual data tuple parser
          */
-        if (format.equalsIgnoreCase(StreamBasedAdapterFactory.FORMAT_ADM)) {
+        if (format.equalsIgnoreCase(AsterixTupleParserFactory.FORMAT_ADM)) {
             // choice 3 with adm data parser
             ADMDataParser dataParser = new ADMDataParser();
             return new AdmOrDelimitedIndexingTupleParser(ctx, atype, dataParser);
-        } else if (format.equalsIgnoreCase(StreamBasedAdapterFactory.FORMAT_DELIMITED_TEXT)) {
+        } else if (format.equalsIgnoreCase(AsterixTupleParserFactory.FORMAT_DELIMITED_TEXT)) {
             // choice 3 with delimited data parser
             DelimitedDataParser dataParser = HDFSIndexingAdapterFactory.getDelimitedDataParser(atype,
                 delimiter, quote); 

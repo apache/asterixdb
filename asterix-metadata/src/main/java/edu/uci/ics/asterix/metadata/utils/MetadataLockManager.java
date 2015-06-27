@@ -15,6 +15,7 @@ public class MetadataLockManager {
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> functionsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> nodeGroupsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedsLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> compactionPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
 
@@ -24,6 +25,7 @@ public class MetadataLockManager {
         functionsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         nodeGroupsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         feedsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
+        feedPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         compactionPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         dataTypeLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
     }
@@ -204,6 +206,19 @@ public class MetadataLockManager {
 
     public void releaseFeedWriteLock(String feedName) {
         feedsLocks.get(feedName).writeLock().unlock();
+    }
+    
+    public void acquireFeedPolicyWriteLock(String policyName) {
+        ReentrantReadWriteLock fLock = feedPolicyLocks.get(policyName);
+        if (fLock == null) {
+            feedPolicyLocks.putIfAbsent(policyName, new ReentrantReadWriteLock());
+            fLock = feedPolicyLocks.get(policyName);
+        }
+        fLock.writeLock().lock();
+    }
+
+    public void releaseFeedPolicyWriteLock(String policyName) {
+        feedPolicyLocks.get(policyName).writeLock().unlock();
     }
 
     public void acquireCompactionPolicyReadLock(String compactionPolicyName) {
@@ -411,6 +426,16 @@ public class MetadataLockManager {
         releaseFeedWriteLock(feedFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
+    
+    public void dropFeedPolicyBegin(String dataverseName, String policyName) {
+        releaseFeedWriteLock(policyName);
+        releaseDataverseReadLock(dataverseName);
+    }
+
+    public void dropFeedPolicyEnd(String dataverseName, String policyName) {
+        releaseFeedWriteLock(policyName);
+        releaseDataverseReadLock(dataverseName);
+    }
 
     public void createFeedBegin(String dataverseName, String feedFullyQualifiedName) {
         acquireDataverseReadLock(dataverseName);
@@ -434,6 +459,16 @@ public class MetadataLockManager {
         releaseDataverseReadLock(dataverseName);
     }
 
+    public void createFeedPolicyBegin(String dataverseName, String policyName) {
+        acquireDataverseReadLock(dataverseName);
+        acquireFeedPolicyWriteLock(policyName);
+    }
+
+    public void createFeedPolicyEnd(String dataverseName, String policyName) {
+        releaseFeedPolicyWriteLock(policyName);
+        releaseDataverseReadLock(dataverseName);
+    }
+    
     public void disconnectFeedBegin(String dataverseName, String datasetFullyQualifiedName,
             String feedFullyQualifiedName) {
         acquireDataverseReadLock(dataverseName);
@@ -442,6 +477,19 @@ public class MetadataLockManager {
     }
 
     public void disconnectFeedEnd(String dataverseName, String datasetFullyQualifiedName, String feedFullyQualifiedName) {
+        releaseFeedReadLock(feedFullyQualifiedName);
+        releaseDatasetReadLock(datasetFullyQualifiedName);
+        releaseDataverseReadLock(dataverseName);
+    }
+    
+    public void subscribeFeedBegin(String dataverseName, String datasetFullyQualifiedName,
+            String feedFullyQualifiedName) {
+        acquireDataverseReadLock(dataverseName);
+        acquireDatasetReadLock(datasetFullyQualifiedName);
+        acquireFeedReadLock(feedFullyQualifiedName);
+    }
+    
+    public void subscribeFeedEnd(String dataverseName, String datasetFullyQualifiedName, String feedFullyQualifiedName) {
         releaseFeedReadLock(feedFullyQualifiedName);
         releaseDatasetReadLock(datasetFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);

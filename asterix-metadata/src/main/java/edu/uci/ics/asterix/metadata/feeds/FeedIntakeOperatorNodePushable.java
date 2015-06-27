@@ -14,133 +14,196 @@
  */
 package edu.uci.ics.asterix.metadata.feeds;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntime;
-import edu.uci.ics.asterix.common.feeds.FeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeManager;
-import edu.uci.ics.asterix.common.feeds.IFeedManager;
-import edu.uci.ics.asterix.metadata.feeds.AdapterRuntimeManager.State;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapter.DataExchangeMode;
+import edu.uci.ics.asterix.common.feeds.CollectionRuntime;
+import edu.uci.ics.asterix.common.feeds.DistributeFeedFrameWriter;
+import edu.uci.ics.asterix.common.feeds.FeedId;
+import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
+import edu.uci.ics.asterix.common.feeds.IngestionRuntime;
+import edu.uci.ics.asterix.common.feeds.SubscribableFeedRuntimeId;
+import edu.uci.ics.asterix.common.feeds.api.IAdapterRuntimeManager;
+import edu.uci.ics.asterix.common.feeds.api.IAdapterRuntimeManager.State;
+import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
+import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import edu.uci.ics.asterix.common.feeds.api.IFeedSubscriptionManager;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
+import edu.uci.ics.asterix.common.feeds.api.ISubscriberRuntime;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
- * The runtime for @see{FeedIntakeOperationDescriptor}
+ * The runtime for @see{FeedIntakeOperationDescriptor}.
+ * Provides the core functionality to set up the artifacts for ingestion of a feed.
+ * The artifacts are lazily activated when a feed receives a subscription request.
  */
 public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
+    private final FeedId feedId;
     private final int partition;
-    private final FeedConnectionId feedId;
-    private final LinkedBlockingQueue<IFeedMessage> inbox;
-    private final Map<String, String> feedPolicy;
-    private final FeedPolicyEnforcer policyEnforcer;
-    private final String nodeId;
-    private final FrameTupleAccessor fta;
+    private final IFeedSubscriptionManager feedSubscriptionManager;
     private final IFeedManager feedManager;
+    private final IHyracksTaskContext ctx;
+    private final IFeedAdapterFactory adapterFactory;
+    private final FeedPolicyAccessor policyAccessor;
 
-    private FeedRuntime ingestionRuntime;
+    private IngestionRuntime ingestionRuntime;
     private IFeedAdapter adapter;
-    private FeedFrameWriter feedFrameWriter;
+    private IIntakeProgressTracker tracker;
+    private DistributeFeedFrameWriter feedFrameWriter;
 
-    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId feedId, IFeedAdapter adapter,
-            Map<String, String> feedPolicy, int partition, IngestionRuntime ingestionRuntime) {
-        this.adapter = adapter;
-        this.partition = partition;
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, FeedId feedId, IFeedAdapterFactory adapterFactory,
+            int partition, IngestionRuntime ingestionRuntime, FeedPolicyAccessor policyAccessor) {
+        this.ctx = ctx;
         this.feedId = feedId;
+        this.partition = partition;
         this.ingestionRuntime = ingestionRuntime;
-        inbox = new LinkedBlockingQueue<IFeedMessage>();
-        this.feedPolicy = feedPolicy;
-        policyEnforcer = new FeedPolicyEnforcer(feedId, feedPolicy);
-        nodeId = ctx.getJobletContext().getApplicationContext().getNodeId();
-        fta = new FrameTupleAccessor(recordDesc);
+        this.adapterFactory = adapterFactory;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
+        this.feedSubscriptionManager = runtimeCtx.getFeedManager().getFeedSubscriptionManager();
         this.feedManager = runtimeCtx.getFeedManager();
+        this.policyAccessor = policyAccessor;
     }
 
     @Override
     public void initialize() throws HyracksDataException {
-
-        AdapterRuntimeManager adapterRuntimeMgr = null;
+        IAdapterRuntimeManager adapterRuntimeManager = null;
         try {
             if (ingestionRuntime == null) {
-                feedFrameWriter = new FeedFrameWriter(writer, this, feedId, policyEnforcer, nodeId,
-                        FeedRuntimeType.INGESTION, partition, fta, feedManager);
-                adapterRuntimeMgr = new AdapterRuntimeManager(feedId, adapter, feedFrameWriter, partition, inbox,
-                        feedManager);
-
-                if (adapter.getDataExchangeMode().equals(DataExchangeMode.PULL)
-                        && adapter instanceof IPullBasedFeedAdapter) {
-                    ((IPullBasedFeedAdapter) adapter).setFeedPolicyEnforcer(policyEnforcer);
-                }
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Beginning new feed:" + feedId);
-                }
-                feedFrameWriter.open();
-                adapterRuntimeMgr.start();
-            } else {
-                adapterRuntimeMgr = ((IngestionRuntime) ingestionRuntime).getAdapterRuntimeManager();
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Resuming old feed:" + feedId);
-                }
-                adapter = adapterRuntimeMgr.getFeedAdapter();
-                writer.open();
-                adapterRuntimeMgr.getAdapterExecutor().setWriter(writer);
-                adapterRuntimeMgr.getAdapterExecutor().getWriter().reset();
-                adapterRuntimeMgr.setState(State.ACTIVE_INGESTION);
-                feedFrameWriter = adapterRuntimeMgr.getAdapterExecutor().getWriter();
-            }
-
-            ingestionRuntime = adapterRuntimeMgr.getIngestionRuntime();
-            synchronized (adapterRuntimeMgr) {
-                while (!adapterRuntimeMgr.getState().equals(State.FINISHED_INGESTION)) {
-                    adapterRuntimeMgr.wait();
-                }
-            }
-            feedManager.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
-            feedFrameWriter.close();
-        } catch (InterruptedException ie) {
-            if (policyEnforcer.getFeedPolicyAccessor().continueOnHardwareFailure()) {
-                if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Continuing on failure as per feed policy, switching to INACTIVE INGESTION temporarily");
-                }
-                adapterRuntimeMgr.setState(State.INACTIVE_INGESTION);
-                FeedRuntimeManager runtimeMgr = feedManager.getFeedRuntimeManager(feedId);
                 try {
-                    runtimeMgr.close(false);
-                } catch (IOException ioe) {
+                    adapter = (IFeedAdapter) adapterFactory.createAdapter(ctx, partition);
+                    if (adapterFactory.isRecordTrackingEnabled()) {
+                        tracker = adapterFactory.createIntakeProgressTracker();
+                    }
+                } catch (Exception e) {
+                    LOGGER.severe("Unable to create adapter : " + adapterFactory.getName() + "[" + partition + "]"
+                            + " Exception " + e);
+                    throw new HyracksDataException(e);
+                }
+                FrameTupleAccessor fta = new FrameTupleAccessor(recordDesc);
+                feedFrameWriter = new DistributeFeedFrameWriter(ctx, feedId, writer, FeedRuntimeType.INTAKE, partition, fta,
+                        feedManager);
+                adapterRuntimeManager = new AdapterRuntimeManager(feedId, adapter, tracker, feedFrameWriter, partition);
+                SubscribableFeedRuntimeId runtimeId = new SubscribableFeedRuntimeId(feedId, FeedRuntimeType.INTAKE,
+                        partition);
+                ingestionRuntime = new IngestionRuntime(feedId, runtimeId, feedFrameWriter, recordDesc,
+                        adapterRuntimeManager);
+                feedSubscriptionManager.registerFeedSubscribableRuntime(ingestionRuntime);
+                feedFrameWriter.open();
+            } else {
+                if (ingestionRuntime.getAdapterRuntimeManager().getState().equals(State.INACTIVE_INGESTION)) {
+                    ingestionRuntime.getAdapterRuntimeManager().setState(State.ACTIVE_INGESTION);
+                    adapter = ingestionRuntime.getAdapterRuntimeManager().getFeedAdapter();
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info(" Switching to " + State.ACTIVE_INGESTION + " for ingestion runtime "
+                                + ingestionRuntime);
+                        LOGGER.info(" Adaptor " + adapter.getClass().getName() + "[" + partition + "]"
+                                + " connected to backend for feed " + feedId);
+                    }
+                    feedFrameWriter = (DistributeFeedFrameWriter) ingestionRuntime.getFeedFrameWriter();
+                } else {
+                    String message = "Feed Ingestion Runtime for feed " + feedId
+                            + " is already registered and is active!.";
+                    LOGGER.severe(message);
+                    throw new IllegalStateException(message);
+                }
+            }
+
+            waitTillIngestionIsOver(adapterRuntimeManager);
+            feedSubscriptionManager.deregisterFeedSubscribableRuntime((SubscribableFeedRuntimeId) ingestionRuntime
+                    .getRuntimeId());
+            if (adapterRuntimeManager.getState().equals(IAdapterRuntimeManager.State.FAILED_INGESTION)) {
+                throw new HyracksDataException("Unable to ingest data");
+            }
+
+        } catch (InterruptedException ie) {
+            /*
+             * An Interrupted Exception is thrown if the Intake job cannot progress further due to failure of another node involved in the Hyracks job.  
+             * As the Intake job involves only the intake operator, the exception is indicative of a failure at the sibling intake operator location.
+             * The surviving intake partitions must continue to live and receive data from the external source. 
+             */
+            List<ISubscriberRuntime> subscribers = ingestionRuntime.getSubscribers();
+            FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(new HashMap<String, String>());
+            boolean needToHandleFailure = false;
+            List<ISubscriberRuntime> failingSubscribers = new ArrayList<ISubscriberRuntime>();
+            for (ISubscriberRuntime subscriber : subscribers) {
+                policyAccessor.reset(subscriber.getFeedPolicy());
+                if (!policyAccessor.continueOnHardwareFailure()) {
+                    failingSubscribers.add(subscriber);
+                } else {
+                    needToHandleFailure = true;
+                }
+            }
+
+            for (ISubscriberRuntime failingSubscriber : failingSubscribers) {
+                try {
+                    ingestionRuntime.unsubscribeFeed((CollectionRuntime) failingSubscriber);
+                } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Unable to close Feed Runtime Manager " + ioe.getMessage());
+                        LOGGER.warning("Excpetion in unsubscribing " + failingSubscriber + " message " + e.getMessage());
                     }
                 }
-                feedFrameWriter.fail();
+            }
+
+            if (needToHandleFailure) {
+                ingestionRuntime.getAdapterRuntimeManager().setState(State.INACTIVE_INGESTION);
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Switching to " + State.INACTIVE_INGESTION + " on occurrence of failure.");
+                }
             } else {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Interrupted Exception, something went wrong");
+                    LOGGER.info("Interrupted Exception. None of the subscribers need to handle failures. Shutting down feed ingestion");
                 }
-
-                feedManager.deRegisterFeedRuntime(ingestionRuntime.getFeedRuntimeId());
-                feedFrameWriter.close();
+                feedSubscriptionManager.deregisterFeedSubscribableRuntime((SubscribableFeedRuntimeId) ingestionRuntime
+                        .getRuntimeId());
                 throw new HyracksDataException(ie);
             }
         } catch (Exception e) {
             e.printStackTrace();
             throw new HyracksDataException(e);
+        } finally {
+            if (ingestionRuntime != null
+                    && !ingestionRuntime.getAdapterRuntimeManager().getState().equals(State.INACTIVE_INGESTION)) {
+                feedFrameWriter.close();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Closed Frame Writer " + feedFrameWriter + " adapter state "
+                            + ingestionRuntime.getAdapterRuntimeManager().getState());
+                }
+            } else {
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Ending intake operator node pushable in state " + State.INACTIVE_INGESTION
+                            + " Will resume after correcting failure");
+                }
+            }
+
         }
     }
 
-    public Map<String, String> getFeedPolicy() {
-        return feedPolicy;
+    private void waitTillIngestionIsOver(IAdapterRuntimeManager adapterRuntimeManager) throws InterruptedException {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Waiting for adaptor [" + partition + "]" + "to be done with ingestion of feed " + feedId);
+        }
+        synchronized (adapterRuntimeManager) {
+            while (!(adapterRuntimeManager.getState().equals(IAdapterRuntimeManager.State.FINISHED_INGESTION) || (adapterRuntimeManager
+                    .getState().equals(IAdapterRuntimeManager.State.FAILED_INGESTION)))) {
+                adapterRuntimeManager.wait();
+            }
+        }
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info(" Adaptor " + adapter.getClass().getName() + "[" + partition + "]"
+                    + " done with ingestion of feed " + feedId);
+        }
     }
+
 }

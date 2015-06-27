@@ -16,21 +16,56 @@ package edu.uci.ics.asterix.external.library.java;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import edu.uci.ics.asterix.builders.IAsterixListBuilder;
+import edu.uci.ics.asterix.builders.RecordBuilder;
+import edu.uci.ics.asterix.builders.UnorderedListBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ALineSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APoint3DSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
+import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import edu.uci.ics.asterix.om.base.ABoolean;
+import edu.uci.ics.asterix.om.base.ADouble;
+import edu.uci.ics.asterix.om.base.AFloat;
+import edu.uci.ics.asterix.om.base.AInt16;
+import edu.uci.ics.asterix.om.base.AInt32;
+import edu.uci.ics.asterix.om.base.AInt64;
+import edu.uci.ics.asterix.om.base.AInt8;
 import edu.uci.ics.asterix.om.base.AMutableCircle;
 import edu.uci.ics.asterix.om.base.AMutableDate;
 import edu.uci.ics.asterix.om.base.AMutableDateTime;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
 import edu.uci.ics.asterix.om.base.AMutableDuration;
 import edu.uci.ics.asterix.om.base.AMutableFloat;
+import edu.uci.ics.asterix.om.base.AMutableInt16;
 import edu.uci.ics.asterix.om.base.AMutableInt32;
 import edu.uci.ics.asterix.om.base.AMutableInt64;
+import edu.uci.ics.asterix.om.base.AMutableInt8;
 import edu.uci.ics.asterix.om.base.AMutableInterval;
 import edu.uci.ics.asterix.om.base.AMutableLine;
 import edu.uci.ics.asterix.om.base.AMutableOrderedList;
@@ -43,15 +78,17 @@ import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.AMutableUnorderedList;
 import edu.uci.ics.asterix.om.base.APoint;
+import edu.uci.ics.asterix.om.base.ARectangle;
+import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.IAObject;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class JObjects {
 
@@ -73,26 +110,84 @@ public class JObjects {
         public IAObject getIAObject() {
             return value;
         }
+
     }
 
-    public static final class JInt implements IJObject {
+    public static final class JByte extends JObject {
 
-        private AMutableInt32 value;
+        public JByte(byte value) {
+            super(new AMutableInt8(value));
+        }
+
+        public void setValue(byte v) {
+            ((AMutableInt8) value).setValue(v);
+        }
+
+        public byte getValue() {
+            return ((AMutableInt8) value).getByteValue();
+        }
+
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AInt8SerializerDeserializer.INSTANCE.serialize((AInt8) value, dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            ((AMutableInt8) value).setValue((byte) 0);
+        }
+    }
+
+    public static final class JShort extends JObject {
+
+        private AMutableInt16 value;
+
+        public JShort(short value) {
+            super(new AMutableInt16(value));
+        }
+
+        public void setValue(byte v) {
+            ((AMutableInt16) value).setValue(v);
+        }
+
+        public short getValue() {
+            return ((AMutableInt16) value).getShortValue();
+        }
+
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AInt16SerializerDeserializer.INSTANCE.serialize((AInt16) value, dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            ((AMutableInt16) value).setValue((short) 0);
+        }
+
+    }
+
+    public static final class JInt extends JObject {
 
         public JInt(int value) {
-            this.value = new AMutableInt32(value);
+            super(new AMutableInt32(value));
         }
 
         public void setValue(int v) {
-            if (value == null) {
-                value = new AMutableInt32(v);
-            } else {
-                ((AMutableInt32) value).setValue(v);
-            }
-        }
-
-        public void setValue(AMutableInt32 v) {
-            value = v;
+            ((AMutableInt32) value).setValue(v);
         }
 
         public int getValue() {
@@ -100,15 +195,21 @@ public class JObjects {
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return BuiltinType.AINT32.getTypeTag();
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AInt32SerializerDeserializer.INSTANCE.serialize((AInt32) value, dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return value;
+        public void reset() {
+            ((AMutableInt32) value).setValue(0);
         }
-
     }
 
     public static final class JBoolean implements IJObject {
@@ -133,6 +234,23 @@ public class JObjects {
             return value ? ABoolean.TRUE : ABoolean.FALSE;
         }
 
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.BOOLEAN.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ABooleanSerializerDeserializer.INSTANCE.serialize((ABoolean) getIAObject(), dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            value = false;
+        }
+
     }
 
     public static final class JLong extends JObject {
@@ -147,6 +265,23 @@ public class JObjects {
 
         public long getValue() {
             return ((AMutableInt64) value).getLongValue();
+        }
+
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AInt64SerializerDeserializer.INSTANCE.serialize((AInt64) value, dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            ((AMutableInt64) value).setValue(0);
         }
 
     }
@@ -165,6 +300,23 @@ public class JObjects {
             return ((AMutableDouble) value).getDoubleValue();
         }
 
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ADoubleSerializerDeserializer.INSTANCE.serialize((ADouble) value, dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            ((AMutableDouble) value).setValue(0);
+        }
+
     }
 
     public static final class JString extends JObject {
@@ -181,14 +333,29 @@ public class JObjects {
             return ((AMutableString) value).getStringValue();
         }
 
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AStringSerializerDeserializer.INSTANCE.serialize((AString) value, dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            ((AMutableString) value).setValue("");
+        }
+
     }
 
-    public static final class JFloat implements IJObject {
-
-        private AMutableFloat value;
+    public static final class JFloat extends JObject {
 
         public JFloat(float v) {
-            value = new AMutableFloat(v);
+            super(new AMutableFloat(v));
         }
 
         public void setValue(float v) {
@@ -200,13 +367,20 @@ public class JObjects {
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return BuiltinType.AFLOAT.getTypeTag();
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AFloatSerializerDeserializer.INSTANCE.serialize((AFloat) value, dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return value;
+        public void reset() {
+            ((AMutableFloat) value).setValue(0);
         }
 
     }
@@ -237,18 +411,37 @@ public class JObjects {
         public String toString() {
             return value.toString();
         }
+
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            APointSerializerDeserializer.INSTANCE.serialize((APoint) value, dataOutput);
+        }
+
+        @Override
+        public void reset() {
+            ((AMutablePoint) value).setValue(0, 0);
+        }
     }
 
-    public static final class JRectangle implements IJObject {
-
-        private AMutableRectangle rect;
+    public static final class JRectangle extends JObject {
 
         public JRectangle(JPoint p1, JPoint p2) {
-            rect = new AMutableRectangle((APoint) p1.getValue(), (APoint) p2.getValue());
+            super(new AMutableRectangle((APoint) p1.getIAObject(), (APoint) p2.getIAObject()));
         }
 
         public void setValue(JPoint p1, JPoint p2) {
-            this.rect.setValue((APoint) p1.getValue(), (APoint) p2.getValue());
+            ((AMutableRectangle) value).setValue((APoint) p1.getValue(), (APoint) p2.getValue());
+        }
+
+        public void setValue(APoint p1, APoint p2) {
+            ((AMutableRectangle) value).setValue(p1, p2);
         }
 
         @Override
@@ -257,190 +450,200 @@ public class JObjects {
         }
 
         @Override
-        public IAObject getIAObject() {
-            return rect;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(value.getType().getTypeTag().serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ARectangleSerializerDeserializer.INSTANCE.serialize((ARectangle) value, dataOutput);
         }
 
         @Override
-        public String toString() {
-            return rect.toString();
+        public void reset() {
         }
 
     }
 
-    public static final class JTime implements IJObject {
-
-        private AMutableTime time;
+    public static final class JTime extends JObject {
 
         public JTime(int timeInMillsec) {
-            time = new AMutableTime(timeInMillsec);
+            super(new AMutableTime(timeInMillsec));
         }
 
         public void setValue(int timeInMillsec) {
-            time.setValue(timeInMillsec);
+            ((AMutableTime) value).setValue(timeInMillsec);
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.TIME;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.TIME.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ATimeSerializerDeserializer.INSTANCE.serialize((AMutableTime) value, dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return time;
-        }
-
-        @Override
-        public String toString() {
-            return time.toString();
+        public void reset() {
+            ((AMutableTime) value).setValue(0);
         }
 
     }
 
-    public static final class JInterval implements IJObject {
-
-        private AMutableInterval interval;
+    public static final class JInterval extends JObject {
 
         public JInterval(long intervalStart, long intervalEnd) {
-            interval = new AMutableInterval(intervalStart, intervalEnd, (byte) 0);
+            super(new AMutableInterval(intervalStart, intervalEnd, (byte) 0));
         }
 
-        public void setValue(long intervalStart, long intervalEnd, byte typetag) throws AsterixException {
-            try {
-                interval.setValue(intervalStart, intervalEnd, typetag);
-            } catch (AlgebricksException e) {
-                throw new AsterixException(e);
-            }
-        }
-
-        @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.INTERVAL;
-        }
-
-        @Override
-        public IAObject getIAObject() {
-            return interval;
-        }
-
-        @Override
-        public String toString() {
-            return interval.toString();
+        public void setValue(long intervalStart, long intervalEnd, byte typetag) throws AlgebricksException {
+            ((AMutableInterval) value).setValue(intervalStart, intervalEnd, typetag);
         }
 
         public long getIntervalStart() {
-            return interval.getIntervalStart();
+            return ((AMutableInterval) value).getIntervalStart();
         }
 
         public long getIntervalEnd() {
-            return interval.getIntervalEnd();
+            return ((AMutableInterval) value).getIntervalEnd();
         }
 
         public short getIntervalType() {
-            return interval.getIntervalType();
+            return ((AMutableInterval) value).getIntervalType();
+        }
+
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.INTERVAL.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            AIntervalSerializerDeserializer.INSTANCE.serialize(((AMutableInterval) value), dataOutput);
+        }
+
+        @Override
+        public void reset() throws AlgebricksException {
+            ((AMutableInterval) value).setValue(0L, 0L, (byte) 0);
         }
 
     }
 
-    public static final class JDate implements IJObject {
-
-        private AMutableDate date;
+    public static final class JDate extends JObject {
 
         public JDate(int chrononTimeInDays) {
-            date = new AMutableDate(chrononTimeInDays);
+            super(new AMutableDate(chrononTimeInDays));
         }
 
         public void setValue(int chrononTimeInDays) {
-            date.setValue(chrononTimeInDays);
+            ((AMutableDate) value).setValue(chrononTimeInDays);
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.DATE;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.DATE.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ADateSerializerDeserializer.INSTANCE.serialize(((AMutableDate) value), dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return date;
+        public void reset() {
+            ((AMutableDate) value).setValue(0);
         }
-
-        @Override
-        public String toString() {
-            return date.toString();
-        }
-
     }
 
-    public static final class JDateTime implements IJObject {
-
-        private AMutableDateTime dateTime;
+    public static final class JDateTime extends JObject {
 
         public JDateTime(long chrononTime) {
-            dateTime = new AMutableDateTime(chrononTime);
+            super(new AMutableDateTime(chrononTime));
         }
 
         public void setValue(long chrononTime) {
-            dateTime.setValue(chrononTime);
+            ((AMutableDateTime) value).setValue(chrononTime);
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.DATETIME;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.DATETIME.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ADateTimeSerializerDeserializer.INSTANCE.serialize(((AMutableDateTime) value), dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return dateTime;
-        }
-
-        @Override
-        public String toString() {
-            return dateTime.toString();
+        public void reset() {
+            ((AMutableDateTime) value).setValue(0);
         }
 
     }
 
-    public static final class JDuration implements IJObject {
-
-        private AMutableDuration duration;
+    public static final class JDuration extends JObject {
 
         public JDuration(int months, long milliseconds) {
-            duration = new AMutableDuration(months, milliseconds);
+            super(new AMutableDuration(months, milliseconds));
         }
 
         public void setValue(int months, long milliseconds) {
-            duration.setValue(months, milliseconds);
+            ((AMutableDuration) value).setValue(months, milliseconds);
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.DURATION;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.DURATION.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ADurationSerializerDeserializer.INSTANCE.serialize(((AMutableDuration) value), dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return duration;
-        }
-
-        @Override
-        public String toString() {
-            return duration.toString();
+        public void reset() {
+            ((AMutableDuration) value).setValue(0, 0);
         }
 
     }
 
-    public static final class JPolygon implements IJObject {
+    public static final class JPolygon extends JObject {
 
-        private AMutablePolygon polygon;
-        private List<JPoint> points;
-
-        public JPolygon(List<JPoint> points) {
-            this.points = points;
+        public JPolygon(JPoint[] points) {
+            super(new AMutablePolygon(getAPoints(points)));
         }
 
-        public void setValue(List<JPoint> points) {
-            this.points = points;
-            polygon = null;
+        public void setValue(APoint[] points) {
+            ((AMutablePolygon) value).setValue(points);
+        }
+
+        public void setValue(JPoint[] points) {
+            ((AMutablePolygon) value).setValue(getAPoints(points));
+        }
+
+        private static APoint[] getAPoints(JPoint[] jpoints) {
+            APoint[] apoints = new APoint[jpoints.length];
+            int index = 0;
+            for (JPoint jpoint : jpoints) {
+                apoints[index++] = (APoint) jpoint.getIAObject();
+            }
+            return apoints;
         }
 
         @Override
@@ -449,35 +652,32 @@ public class JObjects {
         }
 
         @Override
-        public IAObject getIAObject() {
-            if (polygon == null) {
-                APoint[] pts = new APoint[points.size()];
-                int index = 0;
-                for (JPoint p : points) {
-                    pts[index++] = (APoint) p.getIAObject();
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.POLYGON.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
                 }
-                polygon = new AMutablePolygon(pts);
             }
-            return polygon;
+            APolygonSerializerDeserializer.INSTANCE.serialize((AMutablePolygon) value, dataOutput);
         }
 
         @Override
-        public String toString() {
-            return getIAObject().toString();
+        public void reset() {
+            ((AMutablePolygon) value).setValue(null);
         }
 
     }
 
-    public static final class JCircle implements IJObject {
-
-        private AMutableCircle circle;
+    public static final class JCircle extends JObject {
 
         public JCircle(JPoint center, double radius) {
-            circle = new AMutableCircle((APoint) center.getIAObject(), radius);
+            super(new AMutableCircle((APoint) center.getIAObject(), radius));
         }
 
         public void setValue(JPoint center, double radius) {
-            circle.setValue((APoint) center.getIAObject(), radius);
+            ((AMutableCircle) (value)).setValue((APoint) center.getIAObject(), radius);
         }
 
         @Override
@@ -486,56 +686,64 @@ public class JObjects {
         }
 
         @Override
-        public IAObject getIAObject() {
-            return circle;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.CIRCLE.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ACircleSerializerDeserializer.INSTANCE.serialize(((AMutableCircle) (value)), dataOutput);
         }
 
         @Override
-        public String toString() {
-            return circle.toString();
+        public void reset() {
         }
-
     }
 
-    public static final class JLine implements IJObject {
-
-        private AMutableLine line;
+    public static final class JLine extends JObject {
 
         public JLine(JPoint p1, JPoint p2) {
-            line = new AMutableLine((APoint) p1.getIAObject(), (APoint) p2.getIAObject());
+            super(new AMutableLine((APoint) p1.getIAObject(), (APoint) p2.getIAObject()));
         }
 
         public void setValue(JPoint p1, JPoint p2) {
-            line.setValue((APoint) p1.getIAObject(), (APoint) p2.getIAObject());
+            ((AMutableLine) value).setValue((APoint) p1.getIAObject(), (APoint) p2.getIAObject());
+        }
+
+        public void setValue(APoint p1, APoint p2) {
+            ((AMutableLine) value).setValue(p1, p2);
         }
 
         @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.LINE;
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.LINE.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            ALineSerializerDeserializer.INSTANCE.serialize(((AMutableLine) value), dataOutput);
         }
 
         @Override
-        public IAObject getIAObject() {
-            return line;
-        }
+        public void reset() {
+            // TODO Auto-generated method stub
 
-        @Override
-        public String toString() {
-            return line.toString();
         }
 
     }
 
-    public static final class JPoint3D implements IJObject {
-
-        private AMutablePoint3D value;
+    public static final class JPoint3D extends JObject {
 
         public JPoint3D(double x, double y, double z) {
-            value = new AMutablePoint3D(x, y, z);
+            super(new AMutablePoint3D(x, y, z));
         }
 
         public void setValue(double x, double y, double z) {
-            value.setValue(x, y, z);
+            ((AMutablePoint3D) value).setValue(x, y, z);
         }
 
         public double getXValue() {
@@ -550,38 +758,73 @@ public class JObjects {
             return ((AMutablePoint3D) value).getZ();
         }
 
-        public IAObject getValue() {
-            return value;
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(ATypeTag.POINT3D.serialize());
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+            APoint3DSerializerDeserializer.INSTANCE.serialize(((AMutablePoint3D) value), dataOutput);
         }
 
         @Override
-        public String toString() {
-            return value.toString();
-        }
+        public void reset() {
+            // TODO Auto-generated method stub
 
-        @Override
-        public ATypeTag getTypeTag() {
-            return ATypeTag.POINT3D;
-        }
-
-        @Override
-        public IAObject getIAObject() {
-            return value;
         }
     }
 
-    public static final class JOrderedList implements IJObject {
+    public static abstract class JList implements IJObject {
+        protected List<IJObject> jObjects;
 
-        private AOrderedListType listType;
-        private List<IJObject> jObjects;
+        public JList() {
+            jObjects = new ArrayList<IJObject>();
+        }
 
-        public JOrderedList(IJObject jObject) {
-            this.listType = new AOrderedListType(jObject.getIAObject().getType(), null);
-            this.jObjects = new ArrayList<IJObject>();
+        public boolean isEmpty() {
+            return jObjects.isEmpty();
         }
 
         public void add(IJObject jObject) {
             jObjects.add(jObject);
+        }
+
+        public void addAll(Collection<IJObject> jObjectCollection) {
+            jObjects.addAll(jObjectCollection);
+        }
+
+        public void clear() {
+            jObjects.clear();
+        }
+
+        public IJObject getElement(int index) {
+            return jObjects.get(index);
+        }
+
+        public int size() {
+            return jObjects.size();
+        }
+
+        public Iterator<IJObject> iterator() {
+            return jObjects.iterator();
+        }
+    }
+
+    public static final class JOrderedList extends JList {
+
+        private AOrderedListType listType;
+
+        public JOrderedList(IJObject jObject) {
+            super();
+            this.listType = new AOrderedListType(jObject.getIAObject().getType(), null);
+        }
+
+        public JOrderedList(IAType listItemType) {
+            super();
+            this.listType = new AOrderedListType(listItemType, null);
         }
 
         @Override
@@ -602,31 +845,40 @@ public class JObjects {
             return listType;
         }
 
-        public void addAll(Collection<IJObject> jObjectCollection) {
-            jObjects.addAll(jObjectCollection);
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            IAsterixListBuilder listBuilder = new UnorderedListBuilder();
+            listBuilder.reset(listType);
+            ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+            for (IJObject jObject : jObjects) {
+                fieldValue.reset();
+                jObject.serialize(fieldValue.getDataOutput(), true);
+                listBuilder.addItem(fieldValue);
+            }
+            listBuilder.write(dataOutput, writeTypeTag);
+
         }
 
-        public void clear() {
-            jObjects.clear();
-        }
+        @Override
+        public void reset() {
+            // TODO Auto-generated method stub
 
-        public IJObject getElement(int index) {
-            return jObjects.get(index);
-        }
-
-        public int size() {
-            return jObjects.size();
         }
 
     }
 
-    public static final class JUnorderedList implements IJObject {
+    public static final class JUnorderedList extends JList {
 
         private AUnorderedListType listType;
-        private List<IJObject> jObjects;
 
         public JUnorderedList(IJObject jObject) {
             this.listType = new AUnorderedListType(jObject.getIAObject().getType(), null);
+            this.jObjects = new ArrayList<IJObject>();
+        }
+
+        public JUnorderedList(IAType listItemType) {
+            super();
+            this.listType = new AUnorderedListType(listItemType, null);
             this.jObjects = new ArrayList<IJObject>();
         }
 
@@ -652,24 +904,22 @@ public class JObjects {
             return listType;
         }
 
-        public boolean isEmpty() {
-            return jObjects.isEmpty();
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            IAsterixListBuilder listBuilder = new UnorderedListBuilder();
+            listBuilder.reset(listType);
+            ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+            for (IJObject jObject : jObjects) {
+                fieldValue.reset();
+                jObject.serialize(fieldValue.getDataOutput(), true);
+                listBuilder.addItem(fieldValue);
+            }
+            listBuilder.write(dataOutput, writeTypeTag);
         }
 
-        public void addAll(Collection<IJObject> jObjectCollection) {
-            jObjects.addAll(jObjectCollection);
-        }
-
-        public void clear() {
+        @Override
+        public void reset() {
             jObjects.clear();
-        }
-
-        public IJObject getElement(int index) {
-            return jObjects.get(index);
-        }
-
-        public int size() {
-            return jObjects.size();
         }
 
     }
@@ -678,34 +928,19 @@ public class JObjects {
 
         private AMutableRecord value;
         private ARecordType recordType;
-        private List<IJObject> fields;
-        private List<String> fieldNames;
-        private List<IAType> fieldTypes;
-        private int numFieldsAdded = 0;
-        private List<Boolean> openField;
-
-        public JRecord(ARecordType recordType) {
-            this.recordType = recordType;
-            this.fields = new ArrayList<IJObject>();
-            initFieldInfo();
-        }
+        private IJObject[] fields;
+        private Map<String, IJObject> openFields;
 
         public JRecord(ARecordType recordType, IJObject[] fields) {
             this.recordType = recordType;
-            this.fields = new ArrayList<IJObject>();
-            for (IJObject jObject : fields) {
-                this.fields.add(jObject);
-            }
-            initFieldInfo();
+            this.fields = fields;
+            this.openFields = new LinkedHashMap<String, IJObject>();
         }
 
-        public JRecord(String[] fieldNames, IJObject[] fields) throws AsterixException {
-            this.recordType = getARecordType(fieldNames, fields);
-            this.fields = new ArrayList<IJObject>();
-            for (IJObject jObject : fields) {
-                this.fields.add(jObject);
-            }
-            initFieldInfo();
+        public JRecord(ARecordType recordType, IJObject[] fields, LinkedHashMap<String, IJObject> openFields) {
+            this.recordType = recordType;
+            this.fields = fields;
+            this.openFields = openFields;
         }
 
         private ARecordType getARecordType(String[] fieldNames, IJObject[] fields) throws AsterixException {
@@ -723,74 +958,34 @@ public class JObjects {
             return recordType;
         }
 
-        private void initFieldInfo() {
-            this.openField = new ArrayList<Boolean>();
-            fieldNames = new ArrayList<String>();
-            for (String name : recordType.getFieldNames()) {
-                fieldNames.add(name);
-                openField.add(false);
-            }
-            fieldTypes = new ArrayList<IAType>();
-            for (IAType type : recordType.getFieldTypes()) {
-                fieldTypes.add(type);
-            }
-
-        }
-
-        private IAObject[] getIAObjectArray(List<IJObject> fields) {
-            IAObject[] retValue = new IAObject[fields.size()];
-            int index = 0;
-            for (IJObject jObject : fields) {
-                retValue[index++] = getIAObject(jObject);
-            }
-            return retValue;
-        }
-
-        private IAObject getIAObject(IJObject jObject) {
-            IAObject retVal = null;
-            switch (jObject.getTypeTag()) {
-                case RECORD:
-                    ARecordType recType = ((JRecord) jObject).getRecordType();
-                    IAObject[] fields = new IAObject[((JRecord) jObject).getFields().size()];
-                    int index = 0;
-                    for (IJObject field : ((JRecord) jObject).getFields()) {
-                        fields[index++] = getIAObject(field);
-                    }
-                    retVal = new AMutableRecord(recType, fields);
-                default:
-                    retVal = jObject.getIAObject();
-                    break;
-            }
-            return retVal;
-        }
-
-        public void addField(String fieldName, IJObject fieldValue) {
+        public void addField(String fieldName, IJObject fieldValue) throws AsterixException {
             int pos = getFieldPosByName(fieldName);
             if (pos >= 0) {
-                throw new IllegalArgumentException("field already defined");
+                throw new AsterixException("field already defined in closed part");
             }
-            numFieldsAdded++;
-            fields.add(fieldValue);
-            fieldNames.add(fieldName);
-            fieldTypes.add(fieldValue.getIAObject().getType());
-            openField.add(true);
+            if (openFields.get(fieldName) != null) {
+                throw new AsterixException("field already defined in open part");
+            }
+            openFields.put(fieldName, fieldValue);
         }
 
         public IJObject getValueByName(String fieldName) throws AsterixException, IOException {
+            // check closed part
             int fieldPos = getFieldPosByName(fieldName);
-            if (fieldPos < 0) {
-                throw new AsterixException("unknown field: " + fieldName);
+            if (fieldPos >= 0) {
+                return fields[fieldPos];
+            } else {
+                // check open part
+                IJObject fieldValue = openFields.get(fieldName);
+                if (fieldValue == null) {
+                    throw new AsterixException("unknown field: " + fieldName);
+                }
+                return fieldValue;
             }
-            return fields.get(fieldPos);
         }
 
-        public void setValueAtPos(int pos, IJObject jtype) {
-            fields.set(pos, jtype);
-        }
-
-        public void setValue(AMutableRecord mutableRecord) {
-            this.value = mutableRecord;
-            this.recordType = mutableRecord.getType();
+        public void setValueAtPos(int pos, IJObject jObject) {
+            fields[pos] = jObject;
         }
 
         @Override
@@ -798,16 +993,22 @@ public class JObjects {
             return recordType.getTypeTag();
         }
 
-        public void setField(String fieldName, IJObject fieldValue) {
+        public void setField(String fieldName, IJObject fieldValue) throws AsterixException {
             int pos = getFieldPosByName(fieldName);
-            fields.set(pos, fieldValue);
-            if (value != null) {
-                value.setValueAtPos(pos, fieldValue.getIAObject());
+            if (pos >= 0) {
+                fields[pos] = fieldValue;
+            } else {
+                if (openFields.get(fieldName) != null) {
+                    openFields.put(fieldName, fieldValue);
+                } else {
+                    throw new AsterixException("unknown field: " + fieldName);
+                }
             }
         }
 
         private int getFieldPosByName(String fieldName) {
             int index = 0;
+            String[] fieldNames = recordType.getFieldNames();
             for (String name : fieldNames) {
                 if (name.equals(fieldName)) {
                     return index;
@@ -821,40 +1022,75 @@ public class JObjects {
             return recordType;
         }
 
-        public List<IJObject> getFields() {
+        public IJObject[] getFields() {
             return fields;
+        }
+
+        public RecordBuilder getRecordBuilder() {
+            RecordBuilder recordBuilder = new RecordBuilder();
+            recordBuilder.reset(recordType);
+            return recordBuilder;
+        }
+
+        public void serialize(DataOutput output, boolean writeTypeTag) throws HyracksDataException {
+            RecordBuilder recordBuilder = new RecordBuilder();
+            recordBuilder.reset(recordType);
+            int index = 0;
+            ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+            for (IJObject jObject : fields) {
+                fieldValue.reset();
+                jObject.serialize(fieldValue.getDataOutput(), writeTypeTag);
+                recordBuilder.addField(index, fieldValue);
+                index++;
+            }
+
+            try {
+                if (openFields != null && !openFields.isEmpty()) {
+                    ArrayBackedValueStorage openFieldName = new ArrayBackedValueStorage();
+                    ArrayBackedValueStorage openFieldValue = new ArrayBackedValueStorage();
+                    AMutableString nameValue = new AMutableString(""); // get from the pool
+                    for (Entry<String, IJObject> entry : openFields.entrySet()) {
+                        openFieldName.reset();
+                        openFieldValue.reset();
+                        nameValue.setValue(entry.getKey());
+                        openFieldName.getDataOutput().write(ATypeTag.STRING.serialize());
+                        AStringSerializerDeserializer.INSTANCE.serialize(nameValue, openFieldName.getDataOutput());
+                        entry.getValue().serialize(openFieldValue.getDataOutput(), true);
+                        recordBuilder.addField(openFieldName, openFieldValue);
+                    }
+                }
+            } catch (IOException | AsterixException ae) {
+                throw new HyracksDataException(ae);
+            }
+            try {
+                recordBuilder.write(output, writeTypeTag);
+            } catch (IOException | AsterixException e) {
+                throw new HyracksDataException(e);
+            }
         }
 
         @Override
         public IAObject getIAObject() {
-            if (value == null || numFieldsAdded > 0) {
-                value = new AMutableRecord(recordType, getIAObjectArray(fields));
-            }
             return value;
         }
 
-        public void close() {
-            if (numFieldsAdded > 0) {
-                int totalFields = fieldNames.size();
-                for (int i = 0; i < numFieldsAdded; i++) {
-                    fieldNames.remove(totalFields - 1 - i);
-                    fieldTypes.remove(totalFields - 1 - i);
-                    fields.remove(totalFields - 1 - i);
+        public void reset() throws AlgebricksException {
+            if (openFields != null && !openFields.isEmpty()) {
+                openFields.clear();
+            }
+            if (fields != null) {
+                for (IJObject field : fields) {
+                    if (field != null) {
+                        field.reset();
+                    }
                 }
-                numFieldsAdded = 0;
             }
         }
 
-        public List<Boolean> getOpenField() {
-            return openField;
-        }
-
-        public List<String> getFieldNames() {
-            return fieldNames;
-        }
-
-        public List<IAType> getFieldTypes() {
-            return fieldTypes;
+        public void reset(IJObject[] fields, LinkedHashMap<String, IJObject> openFields) throws AlgebricksException {
+            this.reset();
+            this.fields = fields;
+            this.openFields = openFields;
         }
 
     }

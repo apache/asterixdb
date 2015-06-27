@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.external.library;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import edu.uci.ics.asterix.om.functions.IExternalFunctionInfo;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
@@ -26,19 +23,14 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ExternalFunctionProvider {
 
-    private static Map<IExternalFunctionInfo, ExternalScalarFunction> functionRepo = new HashMap<IExternalFunctionInfo, ExternalScalarFunction>();
-
     public static IExternalFunction getExternalFunctionEvaluator(IExternalFunctionInfo finfo,
             ICopyEvaluatorFactory args[], IDataOutputProvider outputProvider) throws AlgebricksException {
         switch (finfo.getKind()) {
             case SCALAR:
-                ExternalScalarFunction function = functionRepo.get(finfo);
-                function = new ExternalScalarFunction(finfo, args, outputProvider);
-                // functionRepo.put(finfo, function);
-                return function;
+                return new ExternalScalarFunction(finfo, args, outputProvider);
             case AGGREGATE:
             case UNNEST:
-                throw new IllegalArgumentException(" not supported function kind" + finfo.getKind());
+                throw new IllegalArgumentException(" UDF of kind" + finfo.getKind() + " not supported.");
             default:
                 throw new IllegalArgumentException(" unknown function kind" + finfo.getKind());
         }
@@ -62,9 +54,10 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         try {
             setArguments(tuple);
             evaluate(functionHelper);
+            functionHelper.reset();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AlgebricksException(e);
+            //throw new AlgebricksException(e);
         }
     }
 

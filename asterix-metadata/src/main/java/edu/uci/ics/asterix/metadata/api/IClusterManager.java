@@ -2,6 +2,7 @@ package edu.uci.ics.asterix.metadata.api;
 
 import java.util.Set;
 
+import edu.uci.ics.asterix.common.api.IClusterEventsSubscriber;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.event.schema.cluster.Node;
 

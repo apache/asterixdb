@@ -19,12 +19,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
 import edu.uci.ics.asterix.external.dataset.adapter.RSSFeedAdapter;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
-import edu.uci.ics.asterix.metadata.feeds.ITypedAdapterFactory;
+import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -32,7 +32,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 /**
  * A factory class for creating the @see {CNNFeedAdapter}.
  */
-public class CNNFeedAdapterFactory implements ITypedAdapterFactory {
+public class CNNFeedAdapterFactory implements IFeedAdapterFactory {
     private static final long serialVersionUID = 1L;
 
     private Map<String, String> configuration;
@@ -40,6 +40,7 @@ public class CNNFeedAdapterFactory implements ITypedAdapterFactory {
     private List<String> feedURLs = new ArrayList<String>();
     private static Map<String, String> topicFeeds = new HashMap<String, String>();
     private ARecordType recordType;
+    private FeedPolicyAccessor policyAccessor;
 
     public static final String KEY_RSS_URL = "topic";
     public static final String KEY_INTERVAL = "interval";
@@ -91,22 +92,14 @@ public class CNNFeedAdapterFactory implements ITypedAdapterFactory {
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.TYPED;
-    }
-
-    @Override
-    public void configure(Map<String, String> configuration) throws Exception {
+    public void configure(Map<String, String> configuration, ARecordType outputType) throws Exception {
         this.configuration = configuration;
         String rssURLProperty = (String) configuration.get(KEY_RSS_URL);
         if (rssURLProperty == null) {
             throw new IllegalArgumentException("no rss url provided");
         }
         initializeFeedURLs(rssURLProperty);
-        recordType = new ARecordType("FeedRecordType", new String[] { "id", "title", "description", "link" },
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-                false);
-
+        this.recordType = outputType;
     }
 
     private void initializeFeedURLs(String rssURLProperty) {
@@ -145,6 +138,16 @@ public class CNNFeedAdapterFactory implements ITypedAdapterFactory {
     @Override
     public ARecordType getAdapterOutputType() {
         return recordType;
+    }
+
+    @Override
+    public boolean isRecordTrackingEnabled() {
+        return false;
+    }
+
+    @Override
+    public IIntakeProgressTracker createIntakeProgressTracker() {
+        return null;
     }
 
 }

@@ -22,6 +22,7 @@ import edu.uci.ics.asterix.common.api.AsterixThreadExecutor;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
 import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
+import edu.uci.ics.asterix.common.config.AsterixFeedProperties;
 import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
 import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
 import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
@@ -31,11 +32,11 @@ import edu.uci.ics.asterix.common.context.AsterixFileMapManager;
 import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.IFeedManager;
+import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
 import edu.uci.ics.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
+import edu.uci.ics.asterix.feeds.FeedManager;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import edu.uci.ics.asterix.metadata.feeds.FeedManager;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import edu.uci.ics.asterix.transaction.management.service.logging.LogManager;
@@ -89,6 +90,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixMetadataProperties metadataProperties;
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
+    private AsterixFeedProperties feedProperties;
+
 
     private AsterixThreadExecutor threadExecutor;
     private DatasetLifecycleManager indexLifecycleManager;
@@ -111,6 +114,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         metadataProperties = new AsterixMetadataProperties(ASTERIX_PROPERTIES_ACCESSOR);
         storageProperties = new AsterixStorageProperties(ASTERIX_PROPERTIES_ACCESSOR);
         txnProperties = new AsterixTransactionProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        feedProperties = new AsterixFeedProperties(ASTERIX_PROPERTIES_ACCESSOR);
     }
 
     public void initialize() throws IOException, ACIDException, AsterixException {
@@ -147,7 +151,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         
         isShuttingdown = false;
 
-        feedManager = new FeedManager(ncApplicationContext.getNodeId());
+        feedManager = new FeedManager(ncApplicationContext.getNodeId(), feedProperties,
+                compilerProperties.getFrameSize());
 
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
         ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
@@ -233,6 +238,11 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public AsterixExternalProperties getExternalProperties() {
         return externalProperties;
+    }
+    
+    @Override
+    public AsterixFeedProperties getFeedProperties() {
+        return feedProperties;
     }
 
     @Override

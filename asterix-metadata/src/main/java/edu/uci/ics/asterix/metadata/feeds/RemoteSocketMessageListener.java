@@ -31,8 +31,7 @@ public class RemoteSocketMessageListener {
     private final String host;
     private final int port;
     private final LinkedBlockingQueue<String> outbox;
-
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     private RemoteMessageListenerServer listenerServer;
 

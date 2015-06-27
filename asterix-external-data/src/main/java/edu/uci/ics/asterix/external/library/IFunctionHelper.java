@@ -29,4 +29,6 @@ public interface IFunctionHelper {
     public void setResult(IJObject result) throws IOException, AsterixException;
 
     public IJObject getObject(JTypeTag jtypeTag);
+
+    public void reset();
 }

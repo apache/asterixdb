@@ -273,8 +273,8 @@ public class AsterixBuiltinFunctions {
             "string-join", 2);
 
     public final static FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
-    public final static FunctionIdentifier FEED_INGEST = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "feed-ingest", 3);
+    public final static FunctionIdentifier FEED_COLLECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "feed-collect", 6);
     public final static FunctionIdentifier FEED_INTERCEPT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "feed-intercept", 1);
 
@@ -1253,14 +1253,14 @@ public class AsterixBuiltinFunctions {
 
     static {
         datasetFunctions.add(getAsterixFunctionInfo(DATASET));
-        datasetFunctions.add(getAsterixFunctionInfo(FEED_INGEST));
+        datasetFunctions.add(getAsterixFunctionInfo(FEED_COLLECT));
         datasetFunctions.add(getAsterixFunctionInfo(FEED_INTERCEPT));
         datasetFunctions.add(getAsterixFunctionInfo(INDEX_SEARCH));
     }
 
     static {
         addUnnestFun(DATASET, false);
-        addUnnestFun(FEED_INGEST, false);
+        addUnnestFun(FEED_COLLECT, false);
         addUnnestFun(FEED_INTERCEPT, false);
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);

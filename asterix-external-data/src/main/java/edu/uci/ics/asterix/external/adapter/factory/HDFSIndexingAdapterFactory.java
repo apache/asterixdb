@@ -16,22 +16,24 @@ package edu.uci.ics.asterix.external.adapter.factory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.external.dataset.adapter.HDFSIndexingAdapter;
 import edu.uci.ics.asterix.external.indexing.dataflow.HDFSIndexingParserFactory;
 import edu.uci.ics.asterix.external.indexing.dataflow.IndexingScheduler;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
+import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -39,7 +41,12 @@ import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.context.ICCContext;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.DoubleParserFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.FloatParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.LongParserFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.InputSplitsFactory;
 
@@ -83,11 +90,6 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
     }
 
     @Override
-    public AdapterType getAdapterType() {
-        return AdapterType.GENERIC;
-    }
-
-    @Override
     public AlgebricksPartitionConstraint getPartitionConstraint() throws Exception {
         if (!configured) {
             throw new IllegalStateException("Adapter factory has not been configured yet");
@@ -104,7 +106,8 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         ((HDFSIndexingParserFactory) parserFactory).setArguments(configuration);
         HDFSIndexingAdapter hdfsIndexingAdapter = new HDFSIndexingAdapter(atype, readSchedule, executed, inputSplits,
                 conf, clusterLocations, files, parserFactory, ctx, nodeName,
-                (String) configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT), (String) configuration.get(KEY_FORMAT));
+                (String) configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT),
+                (String) configuration.get(AsterixTupleParserFactory.KEY_FORMAT));
         return hdfsIndexingAdapter;
     }
 
@@ -131,12 +134,13 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
 
     protected void configureFormat(IAType sourceDatatype) throws Exception {
 
-        char delimiter = StreamBasedAdapterFactory.getDelimiter(configuration);
-        char quote = StreamBasedAdapterFactory.getQuote(configuration, delimiter);
+        char delimiter = AsterixTupleParserFactory.getDelimiter(configuration);
+        char quote = AsterixTupleParserFactory.getQuote(configuration, delimiter);
 
         parserFactory = new HDFSIndexingParserFactory((ARecordType) atype,
-                configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT), configuration.get(KEY_FORMAT), delimiter,
-                quote, configuration.get(HDFSAdapterFactory.KEY_PARSER));
+                configuration.get(HDFSAdapterFactory.KEY_INPUT_FORMAT),
+                configuration.get(AsterixTupleParserFactory.KEY_FORMAT), delimiter, quote,
+                configuration.get(HDFSAdapterFactory.KEY_PARSER));
     }
 
     /**
@@ -165,7 +169,7 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
             if (tag == null) {
                 throw new NotImplementedException("Failed to get the type information for field " + i + ".");
             }
-            IValueParserFactory vpf = typeToValueParserFactMap.get(tag);
+            IValueParserFactory vpf = valueParserFactoryMap.get(tag);
             if (vpf == null) {
                 throw new NotImplementedException("No value parser factory for delimited fields of type " + tag);
             }
@@ -189,5 +193,17 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         String[] cluster = new String[locs.size()];
         cluster = locs.toArray(cluster);
         return new AlgebricksAbsolutePartitionConstraint(cluster);
+    }
+
+    private static Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = initializeValueParserFactoryMap();
+
+    private static Map<ATypeTag, IValueParserFactory> initializeValueParserFactoryMap() {
+        Map<ATypeTag, IValueParserFactory> m = new HashMap<ATypeTag, IValueParserFactory>();
+        m.put(ATypeTag.INT32, IntegerParserFactory.INSTANCE);
+        m.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
+        m.put(ATypeTag.DOUBLE, DoubleParserFactory.INSTANCE);
+        m.put(ATypeTag.INT64, LongParserFactory.INSTANCE);
+        m.put(ATypeTag.STRING, UTF8StringParserFactory.INSTANCE);
+        return m;
     }
 }

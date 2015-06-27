@@ -15,60 +15,32 @@
 package edu.uci.ics.asterix.metadata.feeds;
 
 import java.rmi.RemoteException;
-import java.util.HashMap;
 import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.entities.FeedActivity;
-import edu.uci.ics.asterix.metadata.entities.FeedActivity.FeedActivityType;
+import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
 
 public class FeedPolicyEnforcer {
 
-    private final FeedConnectionId feedId;
-    private final FeedPolicyAccessor feedPolicyAccessor;
-    private final FeedActivity feedActivity;
+    private final FeedConnectionId connectionId;
+    private final FeedPolicyAccessor policyAccessor;
 
-    public FeedPolicyEnforcer(FeedConnectionId feedId, Map<String, String> feedPolicy) {
-        this.feedId = feedId;
-        this.feedPolicyAccessor = new FeedPolicyAccessor(feedPolicy);
-        this.feedActivity = new FeedActivity(feedId.getDataverse(), feedId.getFeedName(), feedId.getDatasetName(),
-                null, new HashMap<String, String>());
+    public FeedPolicyEnforcer(FeedConnectionId feedConnectionId, Map<String, String> feedPolicy) {
+        this.connectionId = feedConnectionId;
+        this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
     }
 
     public boolean continueIngestionPostSoftwareFailure(Exception e) throws RemoteException, ACIDException {
-        boolean continueIngestion = feedPolicyAccessor.continueOnApplicationFailure();
-        if (feedPolicyAccessor.logErrorOnFailure()) {
-            persistExceptionDetails(e);
-        }
-        return continueIngestion;
-    }
-
-    private synchronized void persistExceptionDetails(Exception e) throws RemoteException, ACIDException {
-        MetadataManager.INSTANCE.acquireWriteLatch();
-        MetadataTransactionContext ctx = null;
-        try {
-            ctx = MetadataManager.INSTANCE.beginTransaction();
-            feedActivity.setActivityType(FeedActivityType.FEED_FAILURE);
-            feedActivity.getFeedActivityDetails().put(FeedActivity.FeedActivityDetails.EXCEPTION_MESSAGE,
-                    e.getMessage());
-            MetadataManager.INSTANCE.registerFeedActivity(ctx, feedId, feedActivity);
-            MetadataManager.INSTANCE.commitTransaction(ctx);
-        } catch (Exception e2) {
-            MetadataManager.INSTANCE.abortTransaction(ctx);
-        } finally {
-            MetadataManager.INSTANCE.releaseWriteLatch();
-        }
+        return policyAccessor.continueOnSoftFailure();
     }
 
     public FeedPolicyAccessor getFeedPolicyAccessor() {
-        return feedPolicyAccessor;
+        return policyAccessor;
     }
 
     public FeedConnectionId getFeedId() {
-        return feedId;
+        return connectionId;
     }
 
 }

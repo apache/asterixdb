@@ -37,6 +37,9 @@ import edu.uci.ics.asterix.aql.expression.AbstractAccessor;
 import edu.uci.ics.asterix.aql.expression.CallExpr;
 import edu.uci.ics.asterix.aql.expression.CompactStatement;
 import edu.uci.ics.asterix.aql.expression.ConnectFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CreateFeedPolicyStatement;
+import edu.uci.ics.asterix.aql.expression.CreatePrimaryFeedStatement;
+import edu.uci.ics.asterix.aql.expression.CreateSecondaryFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateDataverseStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFeedStatement;
 import edu.uci.ics.asterix.aql.expression.CreateFunctionStatement;
@@ -336,6 +339,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = DataverseSpecification()
     | stmt = FunctionSpecification()
     | stmt = FeedSpecification()
+    | stmt = FeedPolicySpecification()
   )
   {
     return stmt;
@@ -653,21 +657,58 @@ CreateFeedStatement FeedSpecification() throws ParseException:
   Map<String,String> properties = null;
   FunctionSignature appliedFunction = null;
   CreateFeedStatement cfs = null;
+  Pair<Identifier,Identifier> sourceNameComponents = null;
+  
 }
 {
   (
-    "feed"  nameComponents = QualifiedName()
-    ifNotExists = IfNotExists()
-    "using" adapterName = AdapterName() properties = Configuration()
-    (appliedFunction = ApplyFunction())?
+    "secondary" "feed"  nameComponents = QualifiedName() ifNotExists = IfNotExists()
+      <FROM> "feed" sourceNameComponents = QualifiedName() (appliedFunction = ApplyFunction())?
       {
-        cfs = new CreateFeedStatement(nameComponents.first,
-                                   nameComponents.second, adapterName, properties, appliedFunction, ifNotExists);
+        cfs = new CreateSecondaryFeedStatement(nameComponents,
+                                   sourceNameComponents, appliedFunction, ifNotExists);
       }
-
+     |
+     ("primary")? "feed" nameComponents = QualifiedName() ifNotExists = IfNotExists()
+      "using" adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?  
+       {
+        cfs = new CreatePrimaryFeedStatement(nameComponents,
+                                    adapterName, properties, appliedFunction, ifNotExists);
+       }
   )
     {
       return cfs;
+    }
+}
+
+CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
+{
+  String policyName = null;  
+  String basePolicyName = null; 
+  String sourcePolicyFile = null;
+  String definition = null;
+  boolean ifNotExists = false;
+  Map<String,String> properties = null;
+  CreateFeedPolicyStatement cfps = null;
+}
+{
+  (
+    "ingestion" "policy"  policyName = Identifier() ifNotExists = IfNotExists()
+      <FROM> 
+      ("policy" basePolicyName = Identifier() properties = Configuration() ("definition" definition = StringLiteral())?  
+      {
+        cfps = new CreateFeedPolicyStatement(policyName,
+                                   basePolicyName, properties, definition, ifNotExists);
+      }
+     | "path" sourcePolicyFile = Identifier() ("definition" definition = StringLiteral())?  
+       {
+        cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
+       }
+     ) 
+       
+  )
+    {
+      return cfps;
     }
 }
 

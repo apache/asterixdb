@@ -1,0 +1,30 @@
+/*
+ * Description  : Create a feed from the contents of  a file using a file_feed adaptor. 
+                  The contents here contain a duplicate record. Since default ingestion policy requires the feed
+                  to recover from failures, feed ingestion should be able to surpaas the tuple with duplicate key
+                  without an abort. 
+                  Verify that all but the duplicate record are inserted into the target dataset.
+ * Expected Res : Success
+ * Date         : 3rd Apr 2014
+ */
+drop dataverse feeds_12 if exists;
+create dataverse feeds_12;
+use dataverse feeds_12;
+
+
+create type TweetType as closed {
+  id: string,
+  username : string,
+  location : string,
+  text : string,
+  timestamp : string
+}      
+
+create dataset Tweets(TweetType)
+primary key id;
+
+create feed TweetFeed
+using file_feed
+(("fs"="localfs"),("path"="nc1://data/twitter/obamatweets_duplicate.adm"),("format"="adm"),("type-name"="TweetType"),("tuple-interval"="10"));
+
+

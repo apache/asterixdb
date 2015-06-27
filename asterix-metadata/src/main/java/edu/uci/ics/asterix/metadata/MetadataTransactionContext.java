@@ -26,11 +26,14 @@ import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Feed;
+import edu.uci.ics.asterix.metadata.entities.Feed.FeedType;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
 import edu.uci.ics.asterix.metadata.entities.Function;
 import edu.uci.ics.asterix.metadata.entities.Index;
 import edu.uci.ics.asterix.metadata.entities.Library;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import edu.uci.ics.asterix.metadata.entities.PrimaryFeed;
+import edu.uci.ics.asterix.metadata.entities.SecondaryFeed;
 import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
 
 /**
@@ -228,8 +231,16 @@ public class MetadataTransactionContext extends MetadataCache {
 
     }
 
-    public void dropFeed(String dataverse, String feedName) {
-        Feed feed = new Feed(dataverse, feedName, null, null, null);
+    public void dropFeed(String dataverseName, String feedName, FeedType feedType) {
+        Feed feed = null;
+        switch (feedType) {
+            case PRIMARY:
+                feed = new PrimaryFeed(dataverseName, feedName, null, null, null);
+                break;
+            case SECONDARY:
+                feed = new SecondaryFeed(dataverseName, feedName, null, null);
+                break;
+        }
         droppedCache.addFeedIfNotExists(feed);
         logAndApply(new MetadataLogicalOperation(feed, false));
     }

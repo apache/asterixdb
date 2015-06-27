@@ -124,9 +124,8 @@ public class ExternalLibraryBootstrap {
             List<edu.uci.ics.asterix.metadata.entities.DatasourceAdapter> adapters = MetadataManager.INSTANCE
                     .getDataverseAdapters(mdTxnCtx, dataverse);
             for (edu.uci.ics.asterix.metadata.entities.DatasourceAdapter adapter : adapters) {
-                if (adapter.getAdapterIdentifier().getAdapterName().startsWith(libraryName + "#")) {
-                    MetadataManager.INSTANCE.dropAdapter(mdTxnCtx, dataverse, adapter.getAdapterIdentifier()
-                            .getAdapterName());
+                if (adapter.getAdapterIdentifier().getName().startsWith(libraryName + "#")) {
+                    MetadataManager.INSTANCE.dropAdapter(mdTxnCtx, dataverse, adapter.getAdapterIdentifier().getName());
                 }
             }
 
@@ -145,11 +144,12 @@ public class ExternalLibraryBootstrap {
     private static void installLibraryIfNeeded(String dataverse, final File libraryDir,
             Map<String, List<String>> uninstalledLibs) throws Exception {
 
-        String libraryName = libraryDir.getName();
+        String libraryName = libraryDir.getName().trim();
         List<String> uninstalledLibsInDv = uninstalledLibs.get(dataverse);
         boolean wasUninstalled = uninstalledLibsInDv != null && uninstalledLibsInDv.contains(libraryName);
 
         MetadataTransactionContext mdTxnCtx = null;
+        MetadataManager.INSTANCE.acquireWriteLatch();
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             edu.uci.ics.asterix.metadata.entities.Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(
@@ -168,7 +168,7 @@ public class ExternalLibraryBootstrap {
             ExternalLibrary library = getLibrary(new File(libraryDir + File.separator + libraryDescriptors[0]));
 
             if (libraryDescriptors.length == 0) {
-                throw new Exception("No library descriptors defined");
+                throw new Exception("No library descriptor defined");
             } else if (libraryDescriptors.length > 1) {
                 throw new Exception("More than 1 library descriptors defined");
             }
@@ -186,12 +186,12 @@ public class ExternalLibraryBootstrap {
                         args.add(arg);
                     }
                     edu.uci.ics.asterix.metadata.entities.Function f = new edu.uci.ics.asterix.metadata.entities.Function(
-                            dataverse, libraryName + "#" + function.getName(), args.size(), args,
-                            function.getReturnType(), function.getDefinition(), library.getLanguage(),
-                            function.getFunctionType());
+                            dataverse, libraryName + "#" + function.getName().trim(), args.size(), args, function
+                                    .getReturnType().trim(), function.getDefinition().trim(), library.getLanguage()
+                                    .trim(), function.getFunctionType().trim());
                     MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
                     if (LOGGER.isLoggable(Level.INFO)) {
-                        LOGGER.info("Installed function: " + libraryName + "#" + function.getName());
+                        LOGGER.info("Installed function: " + libraryName + "#" + function.getName().trim());
                     }
                 }
             }
@@ -202,8 +202,8 @@ public class ExternalLibraryBootstrap {
 
             if (library.getLibraryAdapters() != null) {
                 for (LibraryAdapter adapter : library.getLibraryAdapters().getLibraryAdapter()) {
-                    String adapterFactoryClass = adapter.getFactoryClass();
-                    String adapterName = libraryName + "#" + adapter.getName();
+                    String adapterFactoryClass = adapter.getFactoryClass().trim();
+                    String adapterName = libraryName + "#" + adapter.getName().trim();
                     AdapterIdentifier aid = new AdapterIdentifier(dataverse, adapterName);
                     DatasourceAdapter dsa = new DatasourceAdapter(aid, adapterFactoryClass, AdapterType.EXTERNAL);
                     MetadataManager.INSTANCE.addAdapter(mdTxnCtx, dsa);
@@ -231,6 +231,8 @@ public class ExternalLibraryBootstrap {
                 LOGGER.info("Exception in installing library " + libraryName);
             }
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+        } finally {
+            MetadataManager.INSTANCE.releaseWriteLatch();
         }
     }
 

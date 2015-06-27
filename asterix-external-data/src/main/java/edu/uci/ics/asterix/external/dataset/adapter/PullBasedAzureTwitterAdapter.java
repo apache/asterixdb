@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import com.microsoft.windowsazure.services.core.storage.CloudStorageAccount;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.feeds.IDatasourceAdapter;
+import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 
@@ -76,5 +76,10 @@ public class PullBasedAzureTwitterAdapter extends PullBasedAdapter implements ID
     @Override
     public DataExchangeMode getDataExchangeMode() {
         return DataExchangeMode.PULL;
+    }
+
+    @Override
+    public boolean handleException(Exception e) {
+        return false;
     }
 }
