@@ -1,0 +1,23 @@
+    <cluster xmlns="yarn_cluster">
+        <name>my_awesome_instance</name>
+        <txn_log_dir>/home/yarn/</txn_log_dir>
+        <iodevices>/home/yarn/</iodevices>
+        <store>asterix-data</store>
+        <master_node>
+            <id>cc</id>
+            <client_ip>10.10.0.2</client_ip>
+            <cluster_ip>10.10.0.2</cluster_ip>
+            <client_port>1098</client_port>
+            <cluster_port>1099</cluster_port>
+            <http_port>8888</http_port>
+        </master_node>
+        <node>
+            <id>nc1</id>
+            <cluster_ip>10.10.0.3</cluster_ip>
+        </node>
+        <node>
+            <id>nc2</id>
+            <cluster_ip>10.10.0.4</cluster_ip>
+        </node>
+        <metadata_node>nc1</metadata_node>
+    </cluster>

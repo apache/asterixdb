@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:cl="yarn_cluster" targetNamespace="yarn_cluster" elementFormDefault="qualified">
+
+	<!-- definition of simple types -->
+	<xs:element name="instance_name" type="xs:string" />
+	<xs:element name="cluster_name" type="xs:string" />
+	<xs:element name="log_dir" type="xs:string" />
+	<xs:element name="txn_log_dir" type="xs:string" />
+	<xs:element name="id" type="xs:string" />
+	<xs:element name="client_ip" type="xs:string" />
+	<xs:element name="cluster_ip" type="xs:string" />
+	<xs:element name="key" type="xs:string" />
+	<xs:element name="value" type="xs:string" />
+	<xs:element name="store" type="xs:string" />
+	<xs:element name="iodevices" type="xs:string" />
+	<xs:element name="web_port" type="xs:string" />
+	<xs:element name="client_port" type="xs:integer" />
+	<xs:element name="cluster_port" type="xs:integer" />
+	<xs:element name="http_port" type="xs:integer" />
+	<xs:element name="debug_port" type="xs:integer" />
+	<xs:element name="metadata_node" type="xs:string" />
+	<xs:element name="cc_container_mem" type="xs:string" />
+	<xs:element name="nc_container_mem" type="xs:string" />
+	
+
+	<!-- definition of complex elements -->
+
+	<xs:element name="master_node">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:id" />
+				<xs:element ref="cl:client_ip" />
+				<xs:element ref="cl:cluster_ip" />
+				<xs:element ref="cl:log_dir" minOccurs="0" />
+				<xs:element ref="cl:client_port" />
+				<xs:element ref="cl:cluster_port" />
+				<xs:element ref="cl:http_port" />
+				<xs:element ref="cl:debug_port" minOccurs="0" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="property">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:key" />
+				<xs:element ref="cl:value" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="env">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:property" minOccurs="0" maxOccurs="unbounded" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="node">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:id" />
+				<xs:element ref="cl:cluster_ip" />
+				<xs:element ref="cl:log_dir" minOccurs="0" />
+				<xs:element ref="cl:txn_log_dir" minOccurs="0" />
+				<xs:element ref="cl:store" minOccurs="0" />
+				<xs:element ref="cl:iodevices" minOccurs="0" />
+				<xs:element ref="cl:debug_port" minOccurs="0" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="substitute_nodes">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:node" maxOccurs="unbounded" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="cluster">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:instance_name" />
+				<xs:element ref="cl:cluster_name" />
+				<xs:element ref="cl:cc_container_mem" minOccurs="0" />
+				<xs:element ref="cl:nc_container_mem" minOccurs="0" />
+				<xs:element ref="cl:env" minOccurs="0" />
+				<xs:element ref="cl:log_dir" minOccurs="0" />
+				<xs:element ref="cl:txn_log_dir" minOccurs="0" />
+				<xs:element ref="cl:store" minOccurs="0" />
+				<xs:element ref="cl:iodevices" minOccurs="0" />
+				<xs:element ref="cl:metadata_node" />
+				<xs:element ref="cl:master_node" />
+				<xs:element ref="cl:node" maxOccurs="unbounded" />
+				<xs:element ref="cl:substitute_nodes" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>     

@@ -1,0 +1,14 @@
+/*
+ * Description  : Create a feed dataset that uses the feed simulator adapter.
+                  The feed simulator simulates feed from a file in the local fs.
+                  Associate with the feed an external user-defined function. The UDF 
+                  finds topics in each tweet. A topic is identified by a #. 
+                  Begin ingestion and apply external user defined function
+ * Expected Res : Success
+ * Date         : 23rd Apr 2013
+ */
+use dataverse externallibtest;
+
+set wait-for-completion-feed "true";
+
+connect feed TweetFeed to dataset TweetsFeedIngest;

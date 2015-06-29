@@ -1,0 +1,5 @@
+use dataverse externallibtest;
+
+let $input:={"id": int32("1"), "text":"university of california, irvine"}
+let $x:=testlib-zip-binary-assembly#toUpper($input)
+return $x

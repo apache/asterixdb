@@ -1,0 +1,5 @@
+use dataverse externallibtest;
+
+let $input:=["England","Italy","China","United States","India","Jupiter"]
+for $country in $input
+return testlib-zip-binary-assembly#getCapital($country)

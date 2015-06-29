@@ -1,0 +1,4 @@
+use dataverse externallibtest;
+
+let $x:=testlib-zip-binary-assembly#mysum(3,4)
+return $x

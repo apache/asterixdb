@@ -7,6 +7,7 @@
 
 
 	<xs:element name="instanceName" type="xs:string" />
+	<xs:element name="version" type="xs:string"/>
 	<xs:element name="metadataNode" type="xs:string" />
 	<xs:element name="coredumpPath" type="xs:string" />
 	<xs:element name="storeDirs" type="xs:string" />
@@ -60,6 +61,7 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="mg:instanceName" minOccurs="0" />
+				<xs:element ref="mg:version" minOccurs="0" />
 				<xs:element ref="mg:metadataNode" minOccurs="0" />
 				<xs:element ref="mg:store" maxOccurs="unbounded" />
 				<xs:element ref="mg:coredump" maxOccurs="unbounded" />

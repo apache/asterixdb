@@ -30,6 +30,7 @@ import edu.uci.ics.asterix.api.http.servlet.FeedServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
+import edu.uci.ics.asterix.api.http.servlet.ShutdownAPIServlet;
 import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
 import edu.uci.ics.asterix.common.api.AsterixThreadFactory;
 import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
@@ -162,6 +163,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
         context.addServlet(new ServletHolder(new AQLAPIServlet()), "/aql");
         context.addServlet(new ServletHolder(new ConnectorAPIServlet()), "/connector");
+        context.addServlet(new ServletHolder(new ShutdownAPIServlet()), "/admin/shutdown");
     }
 
     private void setupFeedServer(AsterixExternalProperties externalProperties) throws Exception {

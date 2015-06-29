@@ -1,0 +1,56 @@
+<test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+  <test-group name="library-functions">
+    <test-case FilePath="library-functions">
+      <compilation-unit name="mysum">
+        <output-dir compare="Text">mysum</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="library-functions">
+      <compilation-unit name="toUpper">
+        <output-dir compare="Text">toUpper</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="library-functions">
+      <compilation-unit name="insert-from-select">
+        <output-dir compare="Text">insert-from-select</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="library-functions">
+      <compilation-unit name="getCapital">
+        <output-dir compare="Text">getCapital</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="library-metadata">
+    <test-case FilePath="library-metadata">
+      <compilation-unit name="functionDataset">
+        <output-dir compare="Text">functionDataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="library-metadata">
+      <compilation-unit name="libraryDataset">
+        <output-dir compare="Text">libraryDataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="library-metadata">
+      <compilation-unit name="dataverseDataset">
+        <output-dir compare="Text">dataverseDataset</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="library-feeds">
+    <test-case FilePath="library-feeds" category="slow">
+      <compilation-unit name="feed_ingest">
+        <output-dir compare="Text">feed_ingest</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="library-adapters">
+    <test-case FilePath="library-adapters">
+      <compilation-unit name="typed_adapter">
+        <output-dir compare="Text">typed_adapter</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>
+

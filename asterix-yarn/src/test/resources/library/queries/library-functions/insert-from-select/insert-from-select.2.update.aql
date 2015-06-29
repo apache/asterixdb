@@ -1,0 +1,6 @@
+use dataverse externallibtest;
+
+insert into dataset Check (
+{"id": 1, "text":"university of california, irvine"}
+);
+

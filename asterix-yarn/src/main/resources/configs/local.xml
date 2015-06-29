@@ -1,0 +1,31 @@
+    <cluster xmlns="yarn_cluster">
+
+      <!-- Name of the cluster -->
+      <name>local</name>
+
+      <log_dir>/tmp/</log_dir>
+      <txn_log_dir>/tmp/</txn_log_dir>
+
+      <!-- Mount point of an iodevice. Use a comma separated list for a machine that
+                      has multiple iodevices (disks).
+                                 This property can be overriden for a node by redefining at the node level. -->
+      <iodevices>/tmp</iodevices>
+
+      <!-- Path on each iodevice where Asterix will store its data -->
+      <store>storage</store>
+
+       <!-- IP addresses of the master machine A -->
+      <master_node>
+          <id>cc</id>
+	      <client_ip>localhost</client_ip>
+	      <cluster_ip>localhost</cluster_ip>
+	      <client_port>1098</client_port>
+	      <cluster_port>1099</cluster_port>
+	      <http_port>8888</http_port>
+      </master_node>
+      <node>
+      	      <id>nc1</id>
+      	      <cluster_ip>127.0.0.1</cluster_ip>
+      </node>
+    <metadata_node>nc1</metadata_node>
+</cluster>

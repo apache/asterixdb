@@ -48,7 +48,7 @@
         <algebricks.version>0.2.16-SNAPSHOT</algebricks.version>
         <hyracks.version>0.2.16-SNAPSHOT</hyracks.version>
         <hadoop.version>2.2.0</hadoop.version>
-        <junit.version>4.8.1</junit.version>
+        <junit.version>4.11</junit.version>
         <commons.io.version>2.4</commons.io.version>
         <servlet.api.version>2.5</servlet.api.version>
         <json.version>20090211</json.version>
@@ -186,6 +186,7 @@
         <module>asterix-events</module>
         <module>asterix-doc</module>
         <module>asterix-fuzzyjoin</module>
+        <module>asterix-yarn</module>
     </modules>
 
     <repositories>

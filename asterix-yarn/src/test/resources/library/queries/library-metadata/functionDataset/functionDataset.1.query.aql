@@ -1,0 +1,3 @@
+for $x in dataset Metadata.Function
+order by $x.Name
+return $x

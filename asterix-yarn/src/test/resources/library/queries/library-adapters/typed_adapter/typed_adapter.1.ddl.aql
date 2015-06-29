@@ -1,0 +1,21 @@
+/*
+ * Description  : Create a feed dataset that uses the feed simulator adapter.
+                  The feed simulator simulates feed from a file in the local fs.
+                  Associate with the feed an external user-defined function. The UDF 
+                  finds topics in each tweet. A topic is identified by a #. 
+                  Begin ingestion and apply external user defined function
+ * Expected Res : Success
+ * Date         : 23rd Apr 2013
+ */
+use dataverse externallibtest;
+
+create type TestTypedAdapterOutputType as closed {
+  tweetid: int64,
+  message-text: string
+}
+
+create dataset TweetsTestAdapter(TestTypedAdapterOutputType)
+primary key tweetid;
+
+create feed TestTypedAdapterFeed
+using "testlib-zip-binary-assembly#test_typed_adapter" (("num_output_records"="5"),("type-name"="TestTypedAdapterOutputType"));

@@ -1,0 +1,7 @@
+use dataverse externallibtest;
+
+create type TextType if not exists as closed {
+id: int32,
+text: string
+};
+

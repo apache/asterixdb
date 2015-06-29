@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!--
  ! Copyright 2009-2013 by The Regents of the University of California
  ! Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +13,17 @@
  ! See the License for the specific language governing permissions and
  ! limitations under the License.
  !-->
-<assembly>
-	<id>binary-assembly</id>
-	<formats>
-		<format>zip</format>
-		<format>dir</format>
-        <format>jar</format>
-	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
-	<fileSets>
-		<fileSet>
-			<directory>target/appassembler/bin</directory>
-			<outputDirectory>bin</outputDirectory>
-			<fileMode>0755</fileMode>
-		</fileSet>
-		<fileSet>
-			<directory>target/appassembler/lib</directory>
-			<outputDirectory>lib</outputDirectory>
-		</fileSet>
-	</fileSets>
-</assembly>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+
+<property>
+    <name>hadoop.tmp.dir</name>
+    <value>/tmp/hadoop</value>
+</property>
+
+
+</configuration>

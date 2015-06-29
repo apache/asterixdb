@@ -24,6 +24,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 
 import edu.uci.ics.asterix.event.error.VerificationUtil;
 import edu.uci.ics.asterix.event.model.AsterixInstance;
@@ -33,6 +35,8 @@ import edu.uci.ics.asterix.event.service.ServiceProvider;
 import edu.uci.ics.asterix.installer.command.CommandHandler;
 import edu.uci.ics.asterix.test.aql.TestsUtils;
 import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 
 public class AsterixLifecycleIT {
 
@@ -69,7 +73,7 @@ public class AsterixLifecycleIT {
     }
 
     @Test
-    public void testStopActiveInstance() throws Exception {
+    public void test_1_StopActiveInstance() throws Exception {
         try {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.ACTIVE);
             String command = "stop -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
@@ -85,7 +89,7 @@ public class AsterixLifecycleIT {
     }
 
     @Test
-    public void testStartActiveInstance() throws Exception {
+    public void test_2_StartActiveInstance() throws Exception {
         try {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
             String command = "start -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;
@@ -101,7 +105,7 @@ public class AsterixLifecycleIT {
     }
 
     @Test
-    public void testDeleteActiveInstance() throws Exception {
+    public void test_3_DeleteActiveInstance() throws Exception {
         try {
             AsterixInstallerIntegrationUtil.transformIntoRequiredState(State.INACTIVE);
             String command = "delete -n " + AsterixInstallerIntegrationUtil.ASTERIX_INSTANCE_NAME;

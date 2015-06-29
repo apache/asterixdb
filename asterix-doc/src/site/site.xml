@@ -21,20 +21,14 @@
   <bannerLeft>
     <name>AsterixDB</name>
     <src>images/asterixlogo.png</src>
-    <href>http://asterixdb.incubator.apache.org/</href>
+    <href>http://asterixdb.ics.uci.edu/</href>
   </bannerLeft>
-
-  <bannerRight>
-      <name>Apache Software Foundation Incubator</name>
-      <src>images/egg-logo.png</src>
-      <href>http://incubator.apache.org/</href>
-  </bannerRight>
 
   <version position="right"/>
 
   <poweredBy>
     <logo name="Hyracks"
-          href="http://asterixdb.incubator.apache.org/"
+          href="https://code.google.com/p/hyracks/"
           img="images/hyrax_ts.png"/>
   </poweredBy>
 
@@ -60,21 +54,25 @@
   </custom>
 
   <body>
+    <head>
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-41536543-1', 'uci.edu');
+        ga('send', 'pageview');
+      </script>
+    </head>
     <links>
-      <item name="Home" href="index.html"/>
+      <item name="Documentation Home" href="index.html"/>
     </links>
 
-    <menu name="Apache Software Foundation">
-      <item name="Home" href="http://www.apache.org/" />
-      <item name="Donate" href="http://www.apache.org/foundation/sponsorship.html" />
-      <item name="Thanks" href="http://www.apache.org/foundation/thanks.html" />
-      <item name="Security" href="http://www.apache.org/security/" />
-    </menu>
-
-    <menu name="User Documentation">
+    <menu name="Documentation">
       <item name="Installing and Managing AsterixDB using Managix" href="install.html"/>
       <item name="AsterixDB 101: An ADM and AQL Primer" href="aql/primer.html"/>
-      <item name="AsterixDB 101: An ADM and AQL Primer (For SQL Fans)" href="aql/primer-sql-like.html"/>
+       <item name="AsterixDB 101: An ADM and AQL Primer (For SQL Fans)" href="aql/primer-sql-like.html"/>
       <item name="AsterixDB Javascript SDK" href="aql/js-sdk.html"/>
       <item name="Asterix Data Model (ADM)" href="aql/datamodel.html"/>
       <item name="Asterix Query Language (AQL)" href="aql/manual.html"/>
