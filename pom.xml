@@ -104,6 +104,67 @@
         <version>1.2</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.11</version>
+        <executions>
+            <execution>
+                <phase>verify</phase>
+                <goals>
+                    <goal>check</goal>
+                </goals>
+            </execution>
+        </executions>
+        <configuration>
+          <licenses>
+            <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+              <licenseFamilyCategory>MIT</licenseFamilyCategory>
+              <licenseFamilyName>The MIT License</licenseFamilyName>
+              <notes>For JQuery MIT/GPL2 Dual License</notes>
+              <patterns>
+                <pattern>Dual licensed under the MIT or GPL Version 2 licenses.</pattern>
+                <pattern>Dual licensed under the MIT and GPL2 licenses.</pattern>
+                <pattern>http://jquery.org/license</pattern>
+                <pattern>Dual licensed under the MIT</pattern>
+                <pattern>Released under the MIT license by IOLA, December 2007.</pattern>
+              </patterns>
+            </license>
+          </licenses>
+          <licenseFamilies>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>The MIT License</familyName>
+            </licenseFamily>
+            <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+              <familyName>Apache License Version 2.0</familyName>
+            </licenseFamily>
+          </licenseFamilies>
+          <excludes>
+            <exclude>**/dist.all*</exclude>
+            <exclude>**/data/file**</exclude>
+            <exclude>**/ClusterControllerService/*</exclude>
+            <exclude>**/*.txt</exclude>
+            <exclude>**/*.tbl</exclude>
+            <exclude>**/*.tsv</exclude>
+            <exclude>**/*.ddl</exclude>
+            <exclude>**/*.out</exclude>
+            <exclude>**/*.piglet</exclude>
+            <exclude>**/*.js</exclude>
+            <exclude>**/device_id_0/*</exclude>
+            <exclude>**/part-*</exclude>
+            <exclude>**/conf/local_cluster.conf</exclude>
+            <exclude>**/wordcount/wordcount.job</exclude>
+            <exclude>**/ClusterControllerService/**</exclude>
+            <exclude>**/*.log*</exclude>
+            <exclude>**/*.xml*</exclude>
+            <exclude>**/seen_txid</exclude>
+            <exclude>**/fsimage*</exclude>
+            <exclude>**/current/VERSION</exclude>
+            <exclude>**/blk_*</exclude>
+            <exclude>**/resources/conf/*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-surefire-plugin</artifactId>
 	<version>2.16</version>
