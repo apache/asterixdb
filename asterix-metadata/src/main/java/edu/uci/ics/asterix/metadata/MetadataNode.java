@@ -22,6 +22,7 @@ import java.util.List;
 import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
+import edu.uci.ics.asterix.common.dataflow.AsterixLSMIndexUtil;
 import edu.uci.ics.asterix.common.exceptions.ACIDException;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
@@ -99,6 +100,7 @@ import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
 import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
@@ -301,8 +303,12 @@ public class MetadataNode implements IMetadataNode {
             txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
                     metadataIndex.isPrimaryIndex());
 
+            AsterixLSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
+
             // TODO: fix exceptions once new BTree exception model is in hyracks.
             indexAccessor.forceInsert(tuple);
+        } catch (Exception e) {
+            throw e;
         } finally {
             indexLifecycleManager.close(resourceID);
         }
@@ -378,7 +384,7 @@ public class MetadataNode implements IMetadataNode {
                     dropFeed(jobId, dataverseName, feed.getFeedName());
                 }
             }
-            
+
             List<FeedPolicy> feedPolicies = getDataversePolicies(jobId, dataverseName);
             if (feedPolicies != null && feedPolicies.size() > 0) {
                 // Drop all feed ingestion policies in this dataverse.
@@ -631,19 +637,27 @@ public class MetadataNode implements IMetadataNode {
             throws Exception {
         long resourceID = metadataIndex.getResourceID();
         ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
-        indexLifecycleManager.open(resourceID);
-        // prepare a Callback for logging
-        IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID, metadataIndex,
-                lsmIndex, IndexOperation.DELETE);
-        ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
+        try {
+            indexLifecycleManager.open(resourceID);
+            // prepare a Callback for logging
+            IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID,
+                    metadataIndex, lsmIndex, IndexOperation.DELETE);
+            ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(modCallback, NoOpOperationCallback.INSTANCE);
 
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId, false);
-        txnCtx.setWriteTxn(true);
-        txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
-                metadataIndex.isPrimaryIndex());
+            ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(jobId,
+                    false);
+            txnCtx.setWriteTxn(true);
+            txnCtx.registerIndexAndCallback(resourceID, lsmIndex, (AbstractOperationCallback) modCallback,
+                    metadataIndex.isPrimaryIndex());
 
-        indexAccessor.forceDelete(tuple);
-        indexLifecycleManager.close(resourceID);
+            AsterixLSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
+
+            indexAccessor.forceDelete(tuple);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            indexLifecycleManager.close(resourceID);
+        }
     }
 
     @Override
@@ -1331,7 +1345,6 @@ public class MetadataNode implements IMetadataNode {
         return DatasetIdFactory.getMostRecentDatasetId();
     }
 
- 
     @Override
     public void addFeedPolicy(JobId jobId, FeedPolicy feedPolicy) throws MetadataException, RemoteException {
         try {
@@ -1367,8 +1380,6 @@ public class MetadataNode implements IMetadataNode {
             throw new MetadataException(e);
         }
     }
-
- 
 
     @Override
     public void addFeed(JobId jobId, Feed feed) throws MetadataException, RemoteException {
@@ -1422,7 +1433,6 @@ public class MetadataNode implements IMetadataNode {
 
     }
 
-  
     @Override
     public void dropFeedPolicy(JobId jobId, String dataverseName, String policyName) throws MetadataException,
             RemoteException {
@@ -1451,7 +1461,7 @@ public class MetadataNode implements IMetadataNode {
             throw new MetadataException(e);
         }
     }
-    
+
     @Override
     public void addExternalFile(JobId jobId, ExternalFile externalFile) throws MetadataException, RemoteException {
         try {
