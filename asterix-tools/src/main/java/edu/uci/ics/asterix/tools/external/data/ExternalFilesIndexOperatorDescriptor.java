@@ -48,7 +48,7 @@ import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
  * This operator is intended solely for external dataset files replicated index.
  * It either create and bulkload when used for a new index
  * or bulkmodify the index creating a hidden transaction component which later might be committed or deleted by another operator
- * 
+ *
  * @author alamouda
  */
 public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOperatorDescriptor {

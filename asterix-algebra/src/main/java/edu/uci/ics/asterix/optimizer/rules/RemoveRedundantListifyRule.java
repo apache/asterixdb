@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,19 +48,19 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.properties.UnpartitionedPrope
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /*
- * 
+ *
  *  unnest $x [[ at $p ]] <- $y
  *    aggregate $y <- function-call: listify@1(unresolved), Args:[$z]
  *       Rest 
  *   
  * if $y is not used above these operators, 
  * the plan fragment becomes
- * 
+ *
  *  [[ runningaggregate $p <- tid]]
  *  assign $x <- $z
  *       Rest
  *  
- * 
+ *
  */
 
 public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {

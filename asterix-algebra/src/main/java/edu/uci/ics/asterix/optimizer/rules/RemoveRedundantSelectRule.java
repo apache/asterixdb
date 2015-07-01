@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * in which the condition is TRUE.
  * Note that the ConstantFoldingRule will evaluate the condition expression
  * during compile time if it is possible.
- * 
+ *
  * @author yingyib
  */
 public class RemoveRedundantSelectRule implements IAlgebraicRewriteRule {

@@ -89,6 +89,60 @@
                     </excludes>
                 </configuration>
             </plugin>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <version>0.11</version>
+            <executions>
+                <execution>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+              <excludeSubProjects>true</excludeSubProjects>
+              <licenses>
+                <license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                  <licenseFamilyCategory>MIT</licenseFamilyCategory>
+                  <licenseFamilyName>The MIT License</licenseFamilyName>
+                  <notes>For JQuery MIT/GPL2 Dual License</notes>
+                  <patterns>
+                    <pattern>Dual licensed under the MIT or GPL Version 2 licenses.</pattern>
+                    <pattern>Dual licensed under the MIT and GPL2 licenses.</pattern>
+                    <pattern>http://jquery.org/license</pattern>
+                    <pattern>Dual licensed under the MIT</pattern>
+                    <pattern>Released under the MIT license by IOLA, December 2007.</pattern>
+                  </patterns>
+                </license>
+              </licenses>
+              <licenseFamilies>
+                <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                  <familyName>The MIT License</familyName>
+                </licenseFamily>
+                <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                  <familyName>Apache License Version 2.0</familyName>
+                </licenseFamily>
+              </licenseFamilies>
+              <excludes>
+                <exclude>**/*.txt</exclude>
+                <exclude>**/*.tbl</exclude>
+                <exclude>**/*.tsv</exclude>
+                <exclude>**/*.ddl</exclude>
+                <exclude>**/*.aql</exclude>
+                <exclude>**/*.adm</exclude>
+                <exclude>**/*.csv</exclude>
+                <exclude>**/*.out</exclude>
+                <exclude>**/*.iml</exclude>
+              </excludes>
+              <includes>
+                <include>**/asterix-*</include>
+                <include>**/*.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+
         </plugins>
     </build>
 

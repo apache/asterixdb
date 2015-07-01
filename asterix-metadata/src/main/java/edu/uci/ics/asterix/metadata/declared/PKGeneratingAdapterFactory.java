@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 
 /**
- * 
+ *
  * @author alamouda
  * This wrapper adapter factory is an adapter that is used when loading data into a dataset with a UUID primary key. The factory creates an adapter that
  * generates UUIDs and merge them into parsed records
