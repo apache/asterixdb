@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.io;
+package org.apache.hyracks.api.io;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IWorkspaceFileFactory {
     public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException;

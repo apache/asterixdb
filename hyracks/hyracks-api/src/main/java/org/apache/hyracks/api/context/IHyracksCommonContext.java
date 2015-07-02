@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package org.apache.hyracks.api.context;
 
-import edu.uci.ics.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IIOManager;
 
 public interface IHyracksCommonContext extends IHyracksFrameMgrContext{
 

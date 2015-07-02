@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.exceptions;
+package org.apache.hyracks.algebricks.examples.piglet.exceptions;
 
 public class PigletException extends Exception {
     private static final long serialVersionUID = 1L;

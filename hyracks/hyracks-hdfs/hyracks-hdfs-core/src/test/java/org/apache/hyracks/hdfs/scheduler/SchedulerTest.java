@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.scheduler;
+package org.apache.hyracks.hdfs.scheduler;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,11 +30,11 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.client.NodeStatus;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.topology.ClusterTopology;
-import edu.uci.ics.hyracks.api.topology.TopologyDefinitionParser;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.topology.ClusterTopology;
+import org.apache.hyracks.api.topology.TopologyDefinitionParser;
 
 @SuppressWarnings("deprecation")
 public class SchedulerTest extends TestCase {

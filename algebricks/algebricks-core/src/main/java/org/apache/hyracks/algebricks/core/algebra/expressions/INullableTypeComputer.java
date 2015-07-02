@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
+package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface INullableTypeComputer {
     public Object makeNullableType(Object type) throws AlgebricksException;

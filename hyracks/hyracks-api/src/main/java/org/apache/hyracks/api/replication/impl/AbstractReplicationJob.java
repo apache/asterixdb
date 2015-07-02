@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.replication.impl;
+package org.apache.hyracks.api.replication.impl;
 
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.replication.IReplicationJob;
+import org.apache.hyracks.api.replication.IReplicationJob;
 
 public abstract class AbstractReplicationJob implements IReplicationJob {
     

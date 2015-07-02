@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.file;
+package org.apache.hyracks.storage.common.file;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.api.io.IFileHandle;
 
 public class BufferedFileHandle {
     private final int fileId;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.resources;
+package org.apache.hyracks.api.resources;
 
 public interface IDeallocatableRegistry {
     public void registerDeallocatable(IDeallocatable deallocatable);

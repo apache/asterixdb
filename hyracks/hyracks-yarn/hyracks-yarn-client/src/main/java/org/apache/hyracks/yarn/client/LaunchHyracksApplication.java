@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.yarn.client;
+package org.apache.hyracks.yarn.client;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,10 +28,10 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.hyracks.yarn.common.protocols.clientrm.YarnApplication;
-import edu.uci.ics.hyracks.yarn.common.protocols.clientrm.YarnClientRMConnection;
-import edu.uci.ics.hyracks.yarn.common.resources.LocalResourceHelper;
-import edu.uci.ics.hyracks.yarn.common.resources.ResourceHelper;
+import org.apache.hyracks.yarn.common.protocols.clientrm.YarnApplication;
+import org.apache.hyracks.yarn.common.protocols.clientrm.YarnClientRMConnection;
+import org.apache.hyracks.yarn.common.resources.LocalResourceHelper;
+import org.apache.hyracks.yarn.common.resources.ResourceHelper;
 
 public class LaunchHyracksApplication {
     private final Options options;

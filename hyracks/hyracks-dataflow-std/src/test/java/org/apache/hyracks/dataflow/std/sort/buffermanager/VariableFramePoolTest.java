@@ -13,12 +13,12 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.BUDGET;
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.MIN_FRAME_SIZE;
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.NUM_MIN_FRAME;
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.commonFrameManager;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.BUDGET;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.MIN_FRAME_SIZE;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.NUM_MIN_FRAME;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.commonFrameManager;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -35,7 +35,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class VariableFramePoolTest {
 

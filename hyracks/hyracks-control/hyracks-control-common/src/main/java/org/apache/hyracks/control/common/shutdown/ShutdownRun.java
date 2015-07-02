@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.common.shutdown;
+package org.apache.hyracks.control.common.shutdown;
 
 import java.util.Set;
 import java.util.TreeSet;

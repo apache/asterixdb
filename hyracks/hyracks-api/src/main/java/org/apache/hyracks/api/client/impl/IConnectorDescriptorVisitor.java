@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.client.impl;
+package org.apache.hyracks.api.client.impl;
 
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksException;
 
 public interface IConnectorDescriptorVisitor {
     public void visit(IConnectorDescriptor conn) throws HyracksException;

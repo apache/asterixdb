@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.examples.btree.helper;
+package org.apache.hyracks.examples.btree.helper;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 
 public enum IndexLifecycleManagerProvider implements IIndexLifecycleManagerProvider {
     INSTANCE;

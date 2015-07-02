@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.data.accessors;
+package org.apache.hyracks.dataflow.common.data.accessors;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 
 public final class FrameTupleReference implements IFrameTupleReference {
     private IFrameTupleAccessor fta;

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.api;
+package org.apache.hyracks.storage.am.rtree.api;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public interface IRTreeFrame extends ITreeIndexFrame {
 

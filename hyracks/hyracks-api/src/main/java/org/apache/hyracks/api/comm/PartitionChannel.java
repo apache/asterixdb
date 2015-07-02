@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.comm;
+package org.apache.hyracks.api.comm;
 
-import edu.uci.ics.hyracks.api.channels.IInputChannel;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.api.channels.IInputChannel;
+import org.apache.hyracks.api.partitions.PartitionId;
 
 public class PartitionChannel {
     private PartitionId partitionId;

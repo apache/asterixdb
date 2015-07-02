@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.algebricks.examples.piglet.test;
+package org.apache.algebricks.examples.piglet.test;
 
 import java.io.File;
 import java.io.FileReader;
@@ -22,9 +22,9 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.algebricks.examples.piglet.ast.ASTNode;
-import edu.uci.ics.hyracks.algebricks.examples.piglet.compiler.PigletCompiler;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.algebricks.examples.piglet.ast.ASTNode;
+import org.apache.hyracks.algebricks.examples.piglet.compiler.PigletCompiler;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class PigletTestCase extends TestCase {
 

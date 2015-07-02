@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.hdfs2.dataflow;
+package org.apache.hyracks.hdfs2.dataflow;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 import org.apache.hadoop.mapreduce.Job;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ConfFactory implements Serializable {
     private static final long serialVersionUID = 1L;

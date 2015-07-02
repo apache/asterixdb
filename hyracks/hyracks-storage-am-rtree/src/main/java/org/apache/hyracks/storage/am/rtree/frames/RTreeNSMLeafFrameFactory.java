@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.frames;
+package org.apache.hyracks.storage.am.rtree.frames;
 
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriterFactory;
+import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 
 public class RTreeNSMLeafFrameFactory implements ITreeIndexFrameFactory {
 

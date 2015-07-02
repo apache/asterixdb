@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.partitions;
+package org.apache.hyracks.api.partitions;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.job.JobId;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.job.JobId;
 
 public final class ResultSetPartitionId implements Serializable {
     private static final long serialVersionUID = 1L;

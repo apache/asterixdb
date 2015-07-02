@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.common.deployment;
+package org.apache.hyracks.control.common.deployment;
 
 /**
  * The conditional variable interface for deployment

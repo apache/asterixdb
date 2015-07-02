@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package org.apache.hyracks.storage.am.btree.api;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 
 public interface IBTreeInteriorFrame extends IBTreeFrame {
     public int getChildPageId(RangePredicate pred) throws HyracksDataException;

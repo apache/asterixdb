@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.am.btree;
+package org.apache.hyracks.tests.am.btree;
 
-import edu.uci.ics.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.tests.am.common.TreeOperatorTestHelper;
+import org.apache.hyracks.storage.am.btree.dataflow.BTreeDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.tests.am.common.TreeOperatorTestHelper;
 
 public class BTreeOperatorTestHelper extends TreeOperatorTestHelper {
 

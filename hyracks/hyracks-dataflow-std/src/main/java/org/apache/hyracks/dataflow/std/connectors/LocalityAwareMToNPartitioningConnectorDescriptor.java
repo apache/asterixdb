@@ -12,22 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.connectors;
+package org.apache.hyracks.dataflow.std.connectors;
 
 import java.util.BitSet;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.comm.IPartitionCollector;
-import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
-import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
-import edu.uci.ics.hyracks.dataflow.std.collectors.PartitionCollector;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.comm.IPartitionCollector;
+import org.apache.hyracks.api.comm.IPartitionWriterFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
+import org.apache.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
+import org.apache.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
+import org.apache.hyracks.dataflow.std.collectors.PartitionCollector;
 
 public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMToNConnectorDescriptor {
 
@@ -48,10 +48,10 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
      * (non-Javadoc)
      * 
      * @see
-     * edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor#createPartitioner
-     * (edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
-     * edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory, int, int, int)
+     * org.apache.hyracks.api.dataflow.IConnectorDescriptor#createPartitioner
+     * (org.apache.hyracks.api.context.IHyracksTaskContext,
+     * org.apache.hyracks.api.dataflow.value.RecordDescriptor,
+     * org.apache.hyracks.api.comm.IPartitionWriterFactory, int, int, int)
      */
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
@@ -64,10 +64,10 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
     /*
      * (non-Javadoc)
      * 
-     * @see edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor#
+     * @see org.apache.hyracks.api.dataflow.IConnectorDescriptor#
      * createPartitionCollector
-     * (edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int, int, int)
+     * (org.apache.hyracks.api.context.IHyracksTaskContext,
+     * org.apache.hyracks.api.dataflow.value.RecordDescriptor, int, int, int)
      */
     @Override
     public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,

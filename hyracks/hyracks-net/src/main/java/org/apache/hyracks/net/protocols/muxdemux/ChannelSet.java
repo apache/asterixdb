@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.exceptions.NetException;
 
 public class ChannelSet {
     private static final Logger LOGGER = Logger.getLogger(ChannelSet.class.getName());

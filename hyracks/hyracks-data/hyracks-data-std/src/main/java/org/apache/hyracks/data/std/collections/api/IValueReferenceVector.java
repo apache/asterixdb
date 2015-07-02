@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.data.std.collections.api;
+package org.apache.hyracks.data.std.collections.api;
 
 /**
  * Represents an immutable vector of ValueReferences. Users of this interface make the assumption

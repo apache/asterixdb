@@ -17,7 +17,7 @@
   <artifactId>hyracks-server</artifactId>
   <name>hyracks-server</name>
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -53,15 +53,15 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+                  <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
                   <name>hyrackscc</name>
                 </program>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+                  <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
                   <name>hyracksnc</name>
                 </program>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.server.drivers.VirtualClusterDriver</mainClass>
+                  <mainClass>org.apache.hyracks.server.drivers.VirtualClusterDriver</mainClass>
                   <name>hyracks-virtual-cluster</name>
                 </program>
               </programs>
@@ -96,14 +96,14 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>

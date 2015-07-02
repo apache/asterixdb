@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.adminconsole.pages;
+package org.apache.hyracks.control.cc.adminconsole.pages;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,13 +28,13 @@ import org.apache.wicket.util.string.StringValue;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
-import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONWork;
+import org.apache.hyracks.api.dataflow.ActivityId;
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
+import org.apache.hyracks.control.cc.work.GetJobRunJSONWork;
 
 public class JobDetailsPage extends AbstractPage {
     private static final long serialVersionUID = 1L;

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.frames;
+package org.apache.hyracks.storage.am.common.frames;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ISlotManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public abstract class AbstractSlotManager implements ISlotManager {
 	

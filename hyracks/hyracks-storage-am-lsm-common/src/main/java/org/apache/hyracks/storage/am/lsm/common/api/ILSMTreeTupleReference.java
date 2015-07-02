@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.common.api;
+package org.apache.hyracks.storage.am.lsm.common.api;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public interface ILSMTreeTupleReference extends ITreeIndexTupleReference {
     public boolean isAntimatter();

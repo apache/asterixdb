@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.expressions;
+package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface IVariableEvalSizeEnvironment {
     // size in bytes or -1 if unknown

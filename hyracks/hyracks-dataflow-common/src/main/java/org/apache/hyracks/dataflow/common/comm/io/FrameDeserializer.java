@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.comm.io;
+package org.apache.hyracks.dataflow.common.comm.io;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -20,10 +20,10 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.api.comm.FrameConstants;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 
 public class FrameDeserializer {
     private static final Logger LOGGER = Logger.getLogger(FrameDeserializer.class.getName());

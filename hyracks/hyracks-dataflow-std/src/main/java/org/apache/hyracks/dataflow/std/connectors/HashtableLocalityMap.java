@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.connectors;
+package org.apache.hyracks.dataflow.std.connectors;
 
 import java.util.BitSet;
 
@@ -30,7 +30,7 @@ public class HashtableLocalityMap implements ILocalityMap {
      * (non-Javadoc)
      * 
      * @see
-     * edu.uci.ics.hyracks.examples.text.client.aggregation.helpers.ILocalityMap
+     * org.apache.hyracks.examples.text.client.aggregation.helpers.ILocalityMap
      * #getConsumers(int, int)
      */
     @Override
@@ -56,7 +56,7 @@ public class HashtableLocalityMap implements ILocalityMap {
      * (non-Javadoc)
      * 
      * @see
-     * edu.uci.ics.hyracks.examples.text.client.aggregation.helpers.ILocalityMap
+     * org.apache.hyracks.examples.text.client.aggregation.helpers.ILocalityMap
      * #getConsumerPartitionCount(int)
      */
     @Override

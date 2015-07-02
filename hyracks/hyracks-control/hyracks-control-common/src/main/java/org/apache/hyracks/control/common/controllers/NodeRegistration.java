@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.controllers;
+package org.apache.hyracks.control.common.controllers;
 
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatSchema;
+import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 
 public final class NodeRegistration implements Serializable {
     private static final long serialVersionUID = 1L;

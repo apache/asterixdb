@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.common;
+package org.apache.hyracks.storage.am.lsm.common;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 
 public class VirtualFreePageManagerTest {
 

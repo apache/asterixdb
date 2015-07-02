@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.channels;
+package org.apache.hyracks.comm.channels;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.IBufferFactory;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.net.protocols.muxdemux.IBufferFactory;
 
 /**
  * @author yingyib

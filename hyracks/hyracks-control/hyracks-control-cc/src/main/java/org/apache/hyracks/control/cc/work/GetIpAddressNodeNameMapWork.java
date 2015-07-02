@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.work;
+package org.apache.hyracks.control.cc.work;
 
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetIpAddressNodeNameMapWork extends SynchronizableWork {
     private final ClusterControllerService ccs;

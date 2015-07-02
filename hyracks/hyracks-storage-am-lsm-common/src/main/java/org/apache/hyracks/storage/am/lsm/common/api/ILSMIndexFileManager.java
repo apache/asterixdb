@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.common.api;
+package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 /**
  * Provides file names for LSM on-disk components. Also cleans up invalid files.

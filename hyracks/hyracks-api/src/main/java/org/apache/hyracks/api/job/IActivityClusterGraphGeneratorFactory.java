@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
 import java.io.Serializable;
 import java.util.EnumSet;
 
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.exceptions.HyracksException;
 
 public interface IActivityClusterGraphGeneratorFactory extends Serializable {
     public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(JobId jobId,

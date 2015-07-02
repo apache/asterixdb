@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.impls;
+package org.apache.hyracks.storage.am.common.impls;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 
 public abstract class AbstractSearchPredicate implements ISearchPredicate {
 

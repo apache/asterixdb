@@ -18,20 +18,20 @@
   <name>textclient</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>text-example</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>texthelper</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
@@ -60,7 +60,7 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.examples.text.client.WordCountMain</mainClass>
+                  <mainClass>org.apache.hyracks.examples.text.client.WordCountMain</mainClass>
                   <name>textclient</name>
                 </program>
               </programs>
@@ -77,7 +77,7 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.examples.text.client.ExternalGroupClient</mainClass>
+                  <mainClass>org.apache.hyracks.examples.text.client.ExternalGroupClient</mainClass>
                   <name>groupclient</name>
                 </program>
               </programs>

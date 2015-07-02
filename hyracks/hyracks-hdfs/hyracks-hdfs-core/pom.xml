@@ -14,7 +14,7 @@
 	<name>hyracks-hdfs-core</name>
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
-		<groupId>edu.uci.ics.hyracks</groupId>
+		<groupId>org.apache.hyracks</groupId>
 		<version>0.2.16-SNAPSHOT</version>
 	</parent>
 
@@ -72,7 +72,7 @@
 			<id>hadoop-0.20.2</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-1.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -91,7 +91,7 @@
 			<id>hadoop-1.0.4</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-1.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -111,7 +111,7 @@
 			<id>hadoop-2.2.0</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-2.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -130,7 +130,7 @@
 			<id>hadoop-0.23.1</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-2.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -149,7 +149,7 @@
 			<id>hadoop-0.23.6</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-2.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -168,7 +168,7 @@
 			<id>cdh-4.1</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-2.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -187,7 +187,7 @@
 			<id>cdh-4.2</id>
 			<dependencies>
 				<dependency>
-					<groupId>edu.uci.ics.hyracks</groupId>
+					<groupId>org.apache.hyracks</groupId>
 					<artifactId>hyracks-hdfs-2.x</artifactId>
 					<version>${project.version}</version>
 					<type>jar</type>
@@ -199,31 +199,31 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<scope>test</scope>

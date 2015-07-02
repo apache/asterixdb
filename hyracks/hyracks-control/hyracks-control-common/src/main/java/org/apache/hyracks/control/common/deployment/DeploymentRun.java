@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.common.deployment;
+package org.apache.hyracks.control.common.deployment;
 
 import java.util.Set;
 import java.util.TreeSet;

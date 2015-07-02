@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.collectors;
+package org.apache.hyracks.dataflow.std.collectors;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.channels.IInputChannel;
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.api.channels.IInputChannel;
+import org.apache.hyracks.api.comm.IFrameReader;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.partitions.PartitionId;
 
 public class NonDeterministicPartitionBatchManager implements IPartitionBatchManager {
     private final IInputChannel[] channels;

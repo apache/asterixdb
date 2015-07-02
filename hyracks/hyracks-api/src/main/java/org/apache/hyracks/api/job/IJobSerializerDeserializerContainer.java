@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.deployment.DeploymentId;
 
 public interface IJobSerializerDeserializerContainer {
 

@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 
 public abstract class AbstractMemoryLSMComponent extends AbstractLSMComponent {
 

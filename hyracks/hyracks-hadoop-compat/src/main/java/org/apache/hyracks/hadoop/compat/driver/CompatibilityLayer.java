@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.hadoop.compat.driver;
+package org.apache.hyracks.hadoop.compat.driver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,15 +28,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.hadoop.compat.client.HyracksClient;
-import edu.uci.ics.hyracks.hadoop.compat.client.HyracksRunningJob;
-import edu.uci.ics.hyracks.hadoop.compat.util.CompatibilityConfig;
-import edu.uci.ics.hyracks.hadoop.compat.util.ConfigurationConstants;
-import edu.uci.ics.hyracks.hadoop.compat.util.DCacheHandler;
-import edu.uci.ics.hyracks.hadoop.compat.util.HadoopAdapter;
-import edu.uci.ics.hyracks.hadoop.compat.util.Utilities;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.hadoop.compat.client.HyracksClient;
+import org.apache.hyracks.hadoop.compat.client.HyracksRunningJob;
+import org.apache.hyracks.hadoop.compat.util.CompatibilityConfig;
+import org.apache.hyracks.hadoop.compat.util.ConfigurationConstants;
+import org.apache.hyracks.hadoop.compat.util.DCacheHandler;
+import org.apache.hyracks.hadoop.compat.util.HadoopAdapter;
+import org.apache.hyracks.hadoop.compat.util.Utilities;
 
 public class CompatibilityLayer {
 

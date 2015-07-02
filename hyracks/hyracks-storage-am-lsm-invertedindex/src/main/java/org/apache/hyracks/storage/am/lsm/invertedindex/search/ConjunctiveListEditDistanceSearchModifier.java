@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search;
+package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 
 public class ConjunctiveListEditDistanceSearchModifier extends ListEditDistanceSearchModifier {
 

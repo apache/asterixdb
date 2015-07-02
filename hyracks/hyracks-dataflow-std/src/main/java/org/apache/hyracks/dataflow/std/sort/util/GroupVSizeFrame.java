@@ -13,12 +13,12 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.util;
+package org.apache.hyracks.dataflow.std.sort.util;
 
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.comm.VSizeFrame;
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.VSizeFrame;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class GroupVSizeFrame extends VSizeFrame {
 

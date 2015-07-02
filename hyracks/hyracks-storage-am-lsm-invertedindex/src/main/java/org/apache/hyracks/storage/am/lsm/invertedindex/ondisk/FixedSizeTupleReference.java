@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
+package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class FixedSizeTupleReference implements ITupleReference {
 

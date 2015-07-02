@@ -13,11 +13,11 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.data.normalizers;
+package org.apache.hyracks.dataflow.common.data.normalizers;
 
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializerTest;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializerTest;
 import org.junit.Test;
 
 import java.util.Random;

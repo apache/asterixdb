@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers;
+package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +30,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.GrowableArray;
 
 public class WordTokenizerTest {
 

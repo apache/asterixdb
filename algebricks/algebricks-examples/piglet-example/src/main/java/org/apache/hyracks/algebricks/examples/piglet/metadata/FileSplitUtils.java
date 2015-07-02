@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.metadata;
+package org.apache.hyracks.algebricks.examples.piglet.metadata;
 
 import java.io.File;
 
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class FileSplitUtils {
     public static FileSplit[] parseFileSplits(String fileSplits) {

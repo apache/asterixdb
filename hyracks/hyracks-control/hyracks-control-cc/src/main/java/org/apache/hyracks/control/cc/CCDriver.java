@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc;
+package org.apache.hyracks.control.cc;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 
 public class CCDriver {
     public static void main(String args[]) throws Exception {

@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.tuples;
+package org.apache.hyracks.storage.am.common.tuples;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 
 public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
 

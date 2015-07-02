@@ -25,7 +25,7 @@ Hyracks Applications
 
 * Hyracks Application Startup and Shutdown
 
-  Hyracks provides applications to run code at startup and shutdown. An application can provide the code to be executed at the ClusterController by providing an implementation of the edu.uci.ics.hyracks.api.application.ICCBootstrap interface. Similarly, the code to be executed at the NodeControllers can be specified by providing and implementation of the edu.uci.ics.hyracks.api.application.INCBootstrap interface. The bootstrap classes implementations of the above interfaces are specified in a deployment descriptor file.
+  Hyracks provides applications to run code at startup and shutdown. An application can provide the code to be executed at the ClusterController by providing an implementation of the org.apache.hyracks.api.application.ICCBootstrap interface. Similarly, the code to be executed at the NodeControllers can be specified by providing and implementation of the org.apache.hyracks.api.application.INCBootstrap interface. The bootstrap classes implementations of the above interfaces are specified in a deployment descriptor file.
 
 * Hyracks deployment descriptor
 

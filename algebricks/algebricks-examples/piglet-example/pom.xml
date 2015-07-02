@@ -17,7 +17,7 @@
   <artifactId>piglet-example</artifactId>
   <name>piglet-example</name>
  <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks-examples</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -112,7 +112,7 @@
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-compiler</artifactId>
       <version>0.2.16-SNAPSHOT</version>
     </dependency>

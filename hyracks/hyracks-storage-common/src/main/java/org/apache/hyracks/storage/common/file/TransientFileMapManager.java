@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.file;
+package org.apache.hyracks.storage.common.file;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 
 public class TransientFileMapManager implements IFileMapManager {
     private static final long serialVersionUID = 1L;

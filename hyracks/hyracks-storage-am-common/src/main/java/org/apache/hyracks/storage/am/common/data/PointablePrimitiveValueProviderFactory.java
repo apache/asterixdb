@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.common.data;
+package org.apache.hyracks.storage.am.common.data;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.data.std.api.INumeric;
-import edu.uci.ics.hyracks.data.std.api.IPointable;
-import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.data.std.api.INumeric;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 
 public class PointablePrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
     private static final long serialVersionUID = 1L;

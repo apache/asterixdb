@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree;
+package org.apache.hyracks.storage.am.lsm.rtree;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestDriver;
-import edu.uci.ics.hyracks.storage.am.rtree.RTreeTestUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.rtree.impls.AbstractLSMRTree;
+import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestDriver;
+import org.apache.hyracks.storage.am.rtree.RTreeTestUtils;
+import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 @SuppressWarnings("rawtypes")
 public abstract class LSMRTreeMergeTestDriver extends AbstractRTreeTestDriver {

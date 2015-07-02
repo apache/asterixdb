@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.hdfs.scheduler;
+package org.apache.hyracks.hdfs.scheduler;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,9 +25,9 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.hdfs.api.INcCollection;
-import edu.uci.ics.hyracks.hdfs.api.INcCollectionBuilder;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.hdfs.api.INcCollection;
+import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
 
 @SuppressWarnings("deprecation")
 public class IPProximityNcCollectionBuilder implements INcCollectionBuilder {

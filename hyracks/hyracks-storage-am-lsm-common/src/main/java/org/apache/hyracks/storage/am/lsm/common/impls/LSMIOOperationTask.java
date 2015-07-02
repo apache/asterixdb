@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 
 public class LSMIOOperationTask<T> extends FutureTask<T> {
     private final ILSMIOOperation operation;

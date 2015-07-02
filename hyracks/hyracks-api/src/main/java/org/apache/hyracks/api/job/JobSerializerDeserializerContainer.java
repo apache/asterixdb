@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.deployment.DeploymentId;
 
 public class JobSerializerDeserializerContainer implements IJobSerializerDeserializerContainer {
 

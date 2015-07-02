@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.hadoop.compat.client;
+package org.apache.hyracks.hadoop.compat.client;
 
 import java.io.IOException;
 
@@ -24,8 +24,8 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
 
-import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.job.JobId;
 
 public class HyracksRunningJob implements RunningJob {
 
@@ -102,14 +102,14 @@ public class HyracksRunningJob implements RunningJob {
 
     @Override
     public boolean isComplete() throws IOException {
-        edu.uci.ics.hyracks.api.job.JobStatus status = null;
+        org.apache.hyracks.api.job.JobStatus status = null;
         try {
             status = hyracksClient.getJobStatus(jobId);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return status.equals(edu.uci.ics.hyracks.api.job.JobStatus.TERMINATED);
+        return status.equals(org.apache.hyracks.api.job.JobStatus.TERMINATED);
     }
 
     @Override

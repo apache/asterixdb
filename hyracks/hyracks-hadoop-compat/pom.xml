@@ -18,7 +18,7 @@
   <name>hyracks-hadoop-compat</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -54,7 +54,7 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.hadoop.compat.driver.CompatibilityLayer</mainClass>
+                  <mainClass>org.apache.hyracks.hadoop.compat.driver.CompatibilityLayer</mainClass>
                   <name>hadoop-compat</name>
                 </program>
               </programs>
@@ -101,7 +101,7 @@
         <scope>compile</scope>
     </dependency>
     <dependency>
-    	<groupId>edu.uci.ics.hyracks</groupId>
+    	<groupId>org.apache.hyracks</groupId>
     	<artifactId>hyracks-dataflow-hadoop</artifactId>
     	<version>0.2.16-SNAPSHOT</version>
     	<type>jar</type>

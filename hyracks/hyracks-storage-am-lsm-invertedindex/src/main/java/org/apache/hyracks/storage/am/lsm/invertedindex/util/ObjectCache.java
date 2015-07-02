@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util;
+package org.apache.hyracks.storage.am.lsm.invertedindex.util;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
 
 public class ObjectCache<T> {
     protected final int expandSize;

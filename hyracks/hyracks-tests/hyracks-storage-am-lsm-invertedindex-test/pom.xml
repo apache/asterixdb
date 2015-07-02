@@ -18,7 +18,7 @@
 
 	<parent>
 		<artifactId>hyracks-tests</artifactId>
-		<groupId>edu.uci.ics.hyracks</groupId>
+		<groupId>org.apache.hyracks</groupId>
 		<version>0.2.16-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
@@ -38,21 +38,21 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-test-support</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-data-std</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<type>jar</type>

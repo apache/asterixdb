@@ -13,11 +13,11 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
-import edu.uci.ics.hyracks.dataflow.std.structures.IResetableComparable;
-import edu.uci.ics.hyracks.dataflow.std.structures.IResetableComparableFactory;
-import edu.uci.ics.hyracks.dataflow.std.structures.MaxHeap;
+import org.apache.hyracks.dataflow.std.structures.IResetableComparable;
+import org.apache.hyracks.dataflow.std.structures.IResetableComparableFactory;
+import org.apache.hyracks.dataflow.std.structures.MaxHeap;
 
 public class FrameFreeSlotBiggestFirst implements IFrameFreeSlotPolicy {
     private static final int INVALID = -1;

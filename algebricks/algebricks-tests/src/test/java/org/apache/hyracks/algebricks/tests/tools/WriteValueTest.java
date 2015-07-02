@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.tests.tools;
+package org.apache.hyracks.algebricks.tests.tools;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
-import edu.uci.ics.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 public class WriteValueTest {
 

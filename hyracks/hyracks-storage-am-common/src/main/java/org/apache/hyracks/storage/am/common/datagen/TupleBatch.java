@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.datagen;
+package org.apache.hyracks.storage.am.common.datagen;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 @SuppressWarnings("rawtypes")
 public class TupleBatch {

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.channels;
+package org.apache.hyracks.comm.channels;
 
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -21,15 +21,15 @@ import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.channels.IInputChannel;
-import edu.uci.ics.hyracks.api.channels.IInputChannelMonitor;
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
-import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
+import org.apache.hyracks.api.channels.IInputChannel;
+import org.apache.hyracks.api.channels.IInputChannelMonitor;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.net.buffers.IBufferAcceptor;
+import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
+import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
 public class DatasetNetworkInputChannel implements IInputChannel {
     private static final Logger LOGGER = Logger.getLogger(DatasetNetworkInputChannel.class.getName());

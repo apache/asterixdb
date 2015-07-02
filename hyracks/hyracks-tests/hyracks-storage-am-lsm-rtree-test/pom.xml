@@ -17,7 +17,7 @@
   <artifactId>hyracks-storage-am-lsm-rtree-test</artifactId>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -37,14 +37,14 @@
   </build>
   <dependencies>  	
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>

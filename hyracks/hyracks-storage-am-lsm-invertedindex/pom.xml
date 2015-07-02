@@ -18,7 +18,7 @@
 
 	<parent>
 		<artifactId>hyracks</artifactId>
-		<groupId>edu.uci.ics.hyracks</groupId>
+		<groupId>org.apache.hyracks</groupId>
 		<version>0.2.16-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
@@ -47,14 +47,14 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-btree</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-common</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<type>jar</type>

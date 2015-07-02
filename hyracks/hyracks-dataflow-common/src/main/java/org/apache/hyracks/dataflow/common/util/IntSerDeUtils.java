@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.util;
+package org.apache.hyracks.dataflow.common.util;
 
 public class IntSerDeUtils {
 

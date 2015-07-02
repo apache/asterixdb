@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.application;
+package org.apache.hyracks.control.common.application;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
-import edu.uci.ics.hyracks.api.application.IApplicationContext;
-import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
-import edu.uci.ics.hyracks.api.job.JobSerializerDeserializerContainer;
-import edu.uci.ics.hyracks.api.messages.IMessageBroker;
-import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.api.application.IApplicationContext;
+import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
+import org.apache.hyracks.api.job.JobSerializerDeserializerContainer;
+import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.control.common.context.ServerContext;
 
 public abstract class ApplicationContext implements IApplicationContext {
     protected ServerContext serverCtx;

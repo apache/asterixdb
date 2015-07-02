@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.data;
+package org.apache.hyracks.algebricks.data;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public interface IBinaryIntegerInspectorFactory extends Serializable {
     public IBinaryIntegerInspector createBinaryIntegerInspector(IHyracksTaskContext ctx);

@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.impls;
+package org.apache.hyracks.storage.am.rtree.impls;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.am.common.api.ICursorInitialState;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class RTreeCursorInitialState implements ICursorInitialState {
 

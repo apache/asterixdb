@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.data.std.algorithms;
+package org.apache.hyracks.data.std.algorithms;
 
-import edu.uci.ics.hyracks.data.std.api.IComparable;
-import edu.uci.ics.hyracks.data.std.collections.api.IValueReferenceVector;
+import org.apache.hyracks.data.std.api.IComparable;
+import org.apache.hyracks.data.std.collections.api.IValueReferenceVector;
 
 /**
  * Performs Binary Search over a vector of value references.

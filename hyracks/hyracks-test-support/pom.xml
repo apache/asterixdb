@@ -18,7 +18,7 @@
   <name>hyracks-test-support</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -53,33 +53,33 @@
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-common</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-btree</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-rtree</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <type>jar</type>

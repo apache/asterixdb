@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api;
+package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
 /**
  * Maps from the dictionary BTree file/path to a corresponding inverted-lists file/path.

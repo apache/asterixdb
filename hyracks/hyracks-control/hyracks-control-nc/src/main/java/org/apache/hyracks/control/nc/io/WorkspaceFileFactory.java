@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.io;
+package org.apache.hyracks.control.nc.io;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IWorkspaceFileFactory;
-import edu.uci.ics.hyracks.api.resources.IDeallocatable;
-import edu.uci.ics.hyracks.api.resources.IDeallocatableRegistry;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IWorkspaceFileFactory;
+import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
 public final class WorkspaceFileFactory implements IWorkspaceFileFactory {
     private final IDeallocatableRegistry registry;

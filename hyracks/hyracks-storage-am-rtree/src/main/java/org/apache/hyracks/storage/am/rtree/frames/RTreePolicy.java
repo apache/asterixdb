@@ -13,26 +13,26 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.frames;
+package org.apache.hyracks.storage.am.rtree.frames;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ISlotManager;
-import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreePolicy;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTreeSplitKey;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.Rectangle;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
-import edu.uci.ics.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import org.apache.hyracks.storage.am.common.api.ISlotManager;
+import org.apache.hyracks.storage.am.common.api.ISplitKey;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.am.rtree.api.IRTreeFrame;
+import org.apache.hyracks.storage.am.rtree.api.IRTreePolicy;
+import org.apache.hyracks.storage.am.rtree.impls.RTreeSplitKey;
+import org.apache.hyracks.storage.am.rtree.impls.Rectangle;
+import org.apache.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
+import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 
 public class RTreePolicy implements IRTreePolicy {
 

@@ -19,7 +19,7 @@
   <name>hyracks-yarn</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
     <version>0.2.1-SNAPSHOT</version>
   </parent>

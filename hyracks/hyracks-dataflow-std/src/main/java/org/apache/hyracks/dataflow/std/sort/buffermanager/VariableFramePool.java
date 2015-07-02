@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksFrameMgrContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class VariableFramePool implements IFramePool {
     public static final int UNLIMITED_MEMORY = -1;

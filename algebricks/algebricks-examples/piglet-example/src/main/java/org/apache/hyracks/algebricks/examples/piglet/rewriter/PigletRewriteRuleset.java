@@ -12,35 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.rewriter;
+package org.apache.hyracks.algebricks.examples.piglet.rewriter;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractGbyExpressionsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.FactorRedundantGroupAndDecorVarsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.InferTypesRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushProjectIntoDataSourceScanRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
+import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
+import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
+import org.apache.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ExtractGbyExpressionsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.FactorRedundantGroupAndDecorVarsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.InferTypesRule;
+import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
+import org.apache.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
+import org.apache.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
+import org.apache.hyracks.algebricks.rewriter.rules.PushProjectDownRule;
+import org.apache.hyracks.algebricks.rewriter.rules.PushProjectIntoDataSourceScanRule;
+import org.apache.hyracks.algebricks.rewriter.rules.PushSelectDownRule;
+import org.apache.hyracks.algebricks.rewriter.rules.PushSelectIntoJoinRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ReinferAllTypesRule;
+import org.apache.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
+import org.apache.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
 
 public class PigletRewriteRuleset {
 

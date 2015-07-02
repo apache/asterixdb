@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.work;
+package org.apache.hyracks.control.nc.work;
 
 import java.io.ByteArrayOutputStream;
 
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
-import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class StateDumpWork extends SynchronizableWork {
     private final NodeControllerService ncs;

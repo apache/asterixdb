@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.work;
+package org.apache.hyracks.control.cc.work;
 
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -22,15 +22,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
-import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
-import edu.uci.ics.hyracks.control.common.ipc.CCNCFunctions;
-import edu.uci.ics.hyracks.control.common.ipc.NodeControllerRemoteProxy;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
-import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.common.base.INodeController;
+import org.apache.hyracks.control.common.controllers.NodeParameters;
+import org.apache.hyracks.control.common.controllers.NodeRegistration;
+import org.apache.hyracks.control.common.ipc.CCNCFunctions;
+import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.ipc.api.IIPCHandle;
 
 public class RegisterNodeWork extends SynchronizableWork {
     private static final Logger LOGGER = Logger.getLogger(RegisterNodeWork.class.getName());

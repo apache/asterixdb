@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.common.tuples;
+package org.apache.hyracks.storage.am.common.tuples;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class DualTupleReference implements ITupleReference {
 

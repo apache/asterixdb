@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.common.frames;
+package org.apache.hyracks.storage.am.lsm.common.frames;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrame;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrame;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMComponentFilterFrame implements ILSMComponentFilterFrame {
 

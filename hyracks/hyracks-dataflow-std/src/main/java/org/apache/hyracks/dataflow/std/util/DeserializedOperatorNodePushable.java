@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.util;
+package org.apache.hyracks.dataflow.std.util;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.SerializingDataWriter;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
-import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameDeserializer;
+import org.apache.hyracks.dataflow.common.comm.io.SerializingDataWriter;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
+import org.apache.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 
 public final class DeserializedOperatorNodePushable extends AbstractUnaryInputOperatorNodePushable {
     private final IHyracksTaskContext ctx;

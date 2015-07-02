@@ -12,23 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.work;
+package org.apache.hyracks.control.cc.work;
 
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
-import edu.uci.ics.hyracks.api.job.ActivityCluster;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.job.ActivityPlan;
-import edu.uci.ics.hyracks.control.cc.job.JobRun;
-import edu.uci.ics.hyracks.control.cc.job.Task;
-import edu.uci.ics.hyracks.control.cc.job.TaskAttempt;
-import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
-import edu.uci.ics.hyracks.control.cc.job.TaskClusterAttempt;
+import org.apache.hyracks.api.dataflow.ActivityId;
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.job.ActivityCluster;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.ActivityPlan;
+import org.apache.hyracks.control.cc.job.JobRun;
+import org.apache.hyracks.control.cc.job.Task;
+import org.apache.hyracks.control.cc.job.TaskAttempt;
+import org.apache.hyracks.control.cc.job.TaskCluster;
+import org.apache.hyracks.control.cc.job.TaskClusterAttempt;
 
 public abstract class AbstractTaskLifecycleWork extends AbstractHeartbeatWork {
     protected final ClusterControllerService ccs;

@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.work;
+package org.apache.hyracks.control.nc.work;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.JobletProfile;
-import edu.uci.ics.hyracks.control.common.work.FutureValue;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
-import edu.uci.ics.hyracks.control.nc.Joblet;
-import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
+import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
+import org.apache.hyracks.control.common.work.FutureValue;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.control.nc.Joblet;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class BuildJobProfilesWork extends SynchronizableWork {
     private final NodeControllerService ncs;

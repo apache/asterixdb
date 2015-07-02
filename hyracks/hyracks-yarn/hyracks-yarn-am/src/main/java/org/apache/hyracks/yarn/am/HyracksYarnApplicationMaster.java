@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.yarn.am;
+package org.apache.hyracks.yarn.am;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,12 +46,12 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.hyracks.yarn.am.manifest.AbstractProcess;
-import edu.uci.ics.hyracks.yarn.am.manifest.ContainerSpecification;
-import edu.uci.ics.hyracks.yarn.am.manifest.HyracksCluster;
-import edu.uci.ics.hyracks.yarn.am.manifest.ManifestParser;
-import edu.uci.ics.hyracks.yarn.am.manifest.NodeController;
-import edu.uci.ics.hyracks.yarn.common.protocols.amrm.AMRMConnection;
+import org.apache.hyracks.yarn.am.manifest.AbstractProcess;
+import org.apache.hyracks.yarn.am.manifest.ContainerSpecification;
+import org.apache.hyracks.yarn.am.manifest.HyracksCluster;
+import org.apache.hyracks.yarn.am.manifest.ManifestParser;
+import org.apache.hyracks.yarn.am.manifest.NodeController;
+import org.apache.hyracks.yarn.common.protocols.amrm.AMRMConnection;
 
 public class HyracksYarnApplicationMaster {
     private final Options options;

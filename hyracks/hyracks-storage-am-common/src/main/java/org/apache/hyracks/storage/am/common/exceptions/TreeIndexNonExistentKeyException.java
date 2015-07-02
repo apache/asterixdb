@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.exceptions;
+package org.apache.hyracks.storage.am.common.exceptions;
 
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
 
 public class TreeIndexNonExistentKeyException extends TreeIndexException {
 

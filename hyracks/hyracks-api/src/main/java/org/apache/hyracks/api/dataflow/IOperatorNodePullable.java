@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package org.apache.hyracks.api.dataflow;
 
 public interface IOperatorNodePullable extends IOpenableDataReader<Object[]> {
     public void setDataReader(int index, IOpenableDataWriter<Object[]> writer);

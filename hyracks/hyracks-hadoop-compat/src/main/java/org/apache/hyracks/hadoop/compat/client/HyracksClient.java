@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.hadoop.compat.client;
+package org.apache.hyracks.hadoop.compat.client;
 
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.hadoop.compat.util.ConfigurationConstants;
-import edu.uci.ics.hyracks.hadoop.compat.util.Utilities;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.hadoop.compat.util.ConfigurationConstants;
+import org.apache.hyracks.hadoop.compat.util.Utilities;
 
 public class HyracksClient {
 

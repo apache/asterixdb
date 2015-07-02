@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.test.util;
+package org.apache.hyracks.dataflow.std.test.util;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.dataflow.std.util.SelectionTree;
-import edu.uci.ics.hyracks.dataflow.std.util.SelectionTree.Entry;
+import org.apache.hyracks.dataflow.std.util.SelectionTree;
+import org.apache.hyracks.dataflow.std.util.SelectionTree.Entry;
 
 public class SelectionTreeTest {
     @Test

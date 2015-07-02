@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.replication;
+package org.apache.hyracks.api.replication;
 
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
 public interface IIOReplicationManager extends ILifeCycleComponent {
 

@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.test.support;
+package org.apache.hyracks.test.support;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
-import edu.uci.ics.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
+import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
+import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 
 public class TestVirtualBufferCacheProvider implements IVirtualBufferCacheProvider {
 

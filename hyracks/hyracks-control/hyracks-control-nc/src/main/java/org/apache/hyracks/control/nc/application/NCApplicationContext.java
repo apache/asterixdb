@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.application;
+package org.apache.hyracks.control.nc.application;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.application.IStateDumpHandler;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
-import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
-import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
-import edu.uci.ics.hyracks.control.common.context.ServerContext;
-import edu.uci.ics.hyracks.control.nc.resources.memory.MemoryManager;
+import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.IStateDumpHandler;
+import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.resources.memory.IMemoryManager;
+import org.apache.hyracks.control.common.application.ApplicationContext;
+import org.apache.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 
 public class NCApplicationContext extends ApplicationContext implements INCApplicationContext {
     private final ILifeCycleComponentManager lccm;

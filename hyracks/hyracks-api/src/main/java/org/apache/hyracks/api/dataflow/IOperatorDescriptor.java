@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package org.apache.hyracks.api.dataflow;
 
 import java.io.Serializable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.constraints.IConstraintAcceptor;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.constraints.IConstraintAcceptor;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 /**
  * Descriptor for operators in Hyracks.

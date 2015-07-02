@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.common.exceptions;
+package org.apache.hyracks.algebricks.common.exceptions;
 
 public class NotImplementedException extends RuntimeException {
     private static final long serialVersionUID = 2L;

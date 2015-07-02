@@ -13,30 +13,30 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.examples.btree.helper;
+package org.apache.hyracks.examples.btree.helper;
 
 import java.util.concurrent.ThreadFactory;
 
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
-import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
-import edu.uci.ics.hyracks.storage.common.buffercache.HeapBufferAllocator;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
-import edu.uci.ics.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
-import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
-import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactoryProvider;
-import edu.uci.ics.hyracks.storage.common.file.TransientFileMapManager;
-import edu.uci.ics.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
+import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
+import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
+import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
+import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import org.apache.hyracks.storage.common.file.IFileMapManager;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
+import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
+import org.apache.hyracks.storage.common.file.ResourceIdFactory;
+import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
+import org.apache.hyracks.storage.common.file.TransientFileMapManager;
+import org.apache.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
 
 public class RuntimeContext {
     private IBufferCache bufferCache;

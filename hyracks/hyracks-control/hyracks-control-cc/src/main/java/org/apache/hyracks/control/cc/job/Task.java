@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package org.apache.hyracks.control.cc.job;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.dataflow.TaskId;
 
 public class Task {
     private final TaskId taskId;

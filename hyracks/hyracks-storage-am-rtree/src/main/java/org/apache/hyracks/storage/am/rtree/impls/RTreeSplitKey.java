@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.impls;
+package org.apache.hyracks.storage.am.rtree.impls;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.ISplitKey;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 
 public class RTreeSplitKey implements ISplitKey {
 	public byte[] leftPageData = null;

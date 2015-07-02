@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
 import java.io.Serializable;
 import java.net.URL;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.util.JavaSerializationUtils;
 
 public class JobSerializerDeserializer implements IJobSerializerDeserializer {
 

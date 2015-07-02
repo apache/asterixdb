@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.hadoop.data;
+package org.apache.hyracks.dataflow.hadoop.data;
 
 import org.apache.hadoop.io.RawComparator;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.dataflow.common.util.ReflectionUtils;
 
 public class WritableComparingBinaryComparatorFactory<T> implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;

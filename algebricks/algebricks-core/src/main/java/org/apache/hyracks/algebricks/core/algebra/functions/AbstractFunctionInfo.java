@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.algebricks.core.algebra.functions;
+package org.apache.hyracks.algebricks.core.algebra.functions;
 
 import java.io.Serializable;
 

@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import edu.uci.ics.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileReference;
 
 public class AbortRecoverLSMIndexFileManager extends AbstractLSMIndexFileManager {
     public AbortRecoverLSMIndexFileManager(FileReference file) {

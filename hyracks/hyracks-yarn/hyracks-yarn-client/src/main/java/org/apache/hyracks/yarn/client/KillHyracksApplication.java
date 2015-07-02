@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.yarn.client;
+package org.apache.hyracks.yarn.client;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.hyracks.yarn.common.protocols.clientrm.YarnClientRMConnection;
+import org.apache.hyracks.yarn.common.protocols.clientrm.YarnClientRMConnection;
 
 public class KillHyracksApplication {
     private final Options options;

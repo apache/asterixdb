@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.tcp;
+package org.apache.hyracks.net.protocols.tcp;
 
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.exceptions.NetException;
 
 public interface ITCPConnectionEventListener {
     public void notifyIOReady(TCPConnection connection, boolean readable, boolean writable) throws IOException,

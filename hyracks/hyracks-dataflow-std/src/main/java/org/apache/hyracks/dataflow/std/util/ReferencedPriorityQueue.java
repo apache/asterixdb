@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.util;
+package org.apache.hyracks.dataflow.std.util;
 
 import java.io.IOException;
 import java.util.BitSet;
 import java.util.Comparator;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 
 public class ReferencedPriorityQueue {
     private final ReferenceEntry entries[];

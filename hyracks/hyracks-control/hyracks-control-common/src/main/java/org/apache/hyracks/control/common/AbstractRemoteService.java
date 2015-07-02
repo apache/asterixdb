@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common;
+package org.apache.hyracks.control.common;
 
-import edu.uci.ics.hyracks.control.common.service.IService;
+import org.apache.hyracks.control.common.service.IService;
 
 public abstract class AbstractRemoteService implements IService {
     public AbstractRemoteService() {

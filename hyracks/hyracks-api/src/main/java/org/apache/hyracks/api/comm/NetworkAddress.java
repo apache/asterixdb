@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.comm;
+package org.apache.hyracks.api.comm;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -22,7 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
-import edu.uci.ics.hyracks.api.io.IWritable;
+import org.apache.hyracks.api.io.IWritable;
 
 public final class NetworkAddress implements IWritable, Serializable {
     private static final long serialVersionUID = 2L;

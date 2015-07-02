@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.api;
+package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 
 public interface ILSMMergePolicyFactory extends Serializable {
     // Having two methods to create the merge policy with two different signatures is hacky, but we do it now

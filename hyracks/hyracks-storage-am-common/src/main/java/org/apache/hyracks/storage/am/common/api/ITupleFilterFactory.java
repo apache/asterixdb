@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.am.common.api;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public interface ITupleFilterFactory extends Serializable {
     public ITupleFilter createTupleFilter(IHyracksTaskContext ctx) throws Exception;

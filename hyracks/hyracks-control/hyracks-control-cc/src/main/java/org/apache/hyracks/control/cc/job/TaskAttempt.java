@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package org.apache.hyracks.control.cc.job;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
 
 public class TaskAttempt {
     public enum TaskStatus {

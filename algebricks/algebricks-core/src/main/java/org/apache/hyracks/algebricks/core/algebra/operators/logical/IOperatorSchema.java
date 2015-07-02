@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical;
+package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface IOperatorSchema extends Iterable<LogicalVariable> {
     public void addAllVariables(IOperatorSchema source);

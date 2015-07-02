@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package org.apache.hyracks.control.cc.job;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,8 +20,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.job.ActivityCluster;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.api.job.ActivityCluster;
+import org.apache.hyracks.api.partitions.PartitionId;
 
 public class TaskCluster {
     private final TaskClusterId taskClusterId;

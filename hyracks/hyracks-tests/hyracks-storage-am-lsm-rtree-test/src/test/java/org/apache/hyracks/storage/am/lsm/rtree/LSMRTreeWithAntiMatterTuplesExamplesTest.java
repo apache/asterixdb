@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree;
+package org.apache.hyracks.storage.am.lsm.rtree;
 
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.rtree.utils.LSMRTreeUtils;
+import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeExamplesTest {
     private final LSMRTreeTestHarness harness = new LSMRTreeTestHarness();

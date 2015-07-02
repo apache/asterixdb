@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.job.profiling.counters;
+package org.apache.hyracks.control.common.job.profiling.counters;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class Counter implements ICounter {
     private final String name;

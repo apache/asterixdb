@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.cc.work;
+package org.apache.hyracks.control.cc.work;
 
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
-import edu.uci.ics.hyracks.control.common.shutdown.ShutdownRun;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.deployment.DeploymentRun;
+import org.apache.hyracks.control.common.deployment.DeploymentStatus;
+import org.apache.hyracks.control.common.shutdown.ShutdownRun;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class NotifyShutdownWork extends SynchronizableWork {
 

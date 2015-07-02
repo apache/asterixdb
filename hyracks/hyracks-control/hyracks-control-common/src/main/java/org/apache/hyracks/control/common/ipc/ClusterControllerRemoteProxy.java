@@ -12,24 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.ipc;
+package org.apache.hyracks.control.common.ipc;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.base.IClusterController;
-import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
-import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
-import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
-import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.TaskProfile;
-import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
+import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.common.base.IClusterController;
+import org.apache.hyracks.control.common.controllers.NodeRegistration;
+import org.apache.hyracks.control.common.deployment.DeploymentStatus;
+import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
+import org.apache.hyracks.control.common.job.PartitionDescriptor;
+import org.apache.hyracks.control.common.job.PartitionRequest;
+import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
+import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
+import org.apache.hyracks.ipc.api.IIPCHandle;
 
 public class ClusterControllerRemoteProxy implements IClusterController {
     private final IIPCHandle ipcHandle;

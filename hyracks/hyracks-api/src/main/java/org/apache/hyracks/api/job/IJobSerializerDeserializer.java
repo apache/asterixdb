@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
 import java.io.Serializable;
 import java.net.URL;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 
 /**
  * The serializer/deserializer/classloader interface for job/task information such as job specifications, activity graphs and so on.

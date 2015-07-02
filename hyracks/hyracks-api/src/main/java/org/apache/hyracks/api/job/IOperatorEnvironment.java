@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
-import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
+import org.apache.hyracks.api.dataflow.state.IStateObject;
 
 public interface IOperatorEnvironment {
     public void setStateObject(IStateObject taskState);

@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.profiling;
+package org.apache.hyracks.control.nc.profiling;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.comm.IPartitionWriterFactory;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
-import edu.uci.ics.hyracks.control.common.job.profiling.om.PartitionProfile;
-import edu.uci.ics.hyracks.control.nc.Task;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.comm.IPartitionWriterFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
+import org.apache.hyracks.control.common.job.profiling.om.PartitionProfile;
+import org.apache.hyracks.control.nc.Task;
 
 public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory {
     private static final int N_SAMPLES = 64;

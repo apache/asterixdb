@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.file;
+package org.apache.hyracks.dataflow.std.file;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -20,16 +20,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
 /**
  * File writer to output plain text.
@@ -56,10 +56,10 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
      * (non-Javadoc)
      * 
      * @see
-     * edu.uci.ics.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.
+     * org.apache.hyracks.api.dataflow.IActivityNode#createPushRuntime(edu.
      * uci.ics.hyracks.api.context.IHyracksContext,
-     * edu.uci.ics.hyracks.api.job.IOperatorEnvironment,
-     * edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider, int,
+     * org.apache.hyracks.api.job.IOperatorEnvironment,
+     * org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider, int,
      * int)
      */
     @Override

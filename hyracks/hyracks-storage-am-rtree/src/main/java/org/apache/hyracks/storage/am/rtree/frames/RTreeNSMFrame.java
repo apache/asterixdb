@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.frames;
+package org.apache.hyracks.storage.am.rtree.frames;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.ISplitKey;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
-import edu.uci.ics.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreeFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.api.IRTreePolicy;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import org.apache.hyracks.storage.am.common.api.ISplitKey;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.frames.TreeIndexNSMFrame;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.am.rtree.api.IRTreeFrame;
+import org.apache.hyracks.storage.am.rtree.api.IRTreePolicy;
+import org.apache.hyracks.storage.am.rtree.impls.UnorderedSlotManager;
 
 public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeFrame {
     protected static final int pageNsnOff = smFlagOff + 1;

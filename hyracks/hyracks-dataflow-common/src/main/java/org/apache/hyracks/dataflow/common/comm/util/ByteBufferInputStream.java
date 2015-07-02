@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.comm.util;
+package org.apache.hyracks.dataflow.common.comm.util;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.comm;
+package org.apache.hyracks.api.comm;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * {@link IFrameWriter} is the interface implemented by a stream consumer. An {@link IFrameWriter} could be in one of the following states:

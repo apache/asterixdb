@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.frames;
+package org.apache.hyracks.storage.am.common.frames;
 
 public enum FrameOpSpaceStatus {
     INSUFFICIENT_SPACE, SUFFICIENT_CONTIGUOUS_SPACE, SUFFICIENT_SPACE, SUFFICIENT_INPLACE_SPACE

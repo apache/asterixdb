@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.file;
+package org.apache.hyracks.dataflow.std.file;
 
 import java.io.File;
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.FileReference;
 
 public class FileSplit implements Serializable {
     private static final long serialVersionUID = 1L;

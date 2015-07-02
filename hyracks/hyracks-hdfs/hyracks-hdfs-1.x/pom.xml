@@ -19,7 +19,7 @@
 	<name>hyracks-hdfs-1.x</name>
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
-		<groupId>edu.uci.ics.hyracks</groupId>
+		<groupId>org.apache.hyracks</groupId>
 		<version>0.2.16-SNAPSHOT</version>
 	</parent>
 
@@ -98,7 +98,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
 			<version>0.2.16-SNAPSHOT</version>
 			<type>jar</type>

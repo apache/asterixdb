@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.common.file;
+package org.apache.hyracks.storage.common.file;
 
 /**
  * Dummy operation factory provider that does nothing.

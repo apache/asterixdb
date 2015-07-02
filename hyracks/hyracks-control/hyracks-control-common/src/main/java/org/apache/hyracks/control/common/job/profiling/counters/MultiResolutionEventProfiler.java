@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.job.profiling.counters;
+package org.apache.hyracks.control.common.job.profiling.counters;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.io.IWritable;
+import org.apache.hyracks.api.io.IWritable;
 
 public class MultiResolutionEventProfiler implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;

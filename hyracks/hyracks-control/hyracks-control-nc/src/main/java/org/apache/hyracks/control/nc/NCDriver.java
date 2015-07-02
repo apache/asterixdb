@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc;
+package org.apache.hyracks.control.nc;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 
 public class NCDriver {
     private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());

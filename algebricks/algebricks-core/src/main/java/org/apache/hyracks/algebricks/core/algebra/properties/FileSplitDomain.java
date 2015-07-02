@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
+package org.apache.hyracks.algebricks.core.algebra.properties;
 
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class FileSplitDomain implements INodeDomain {
 

@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.base;
+package org.apache.hyracks.dataflow.std.base;
 
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 
 public abstract class AbstractOperatorNodePushable implements IOperatorNodePushable {
     @Override

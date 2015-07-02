@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.application;
+package org.apache.hyracks.api.application;
 
 public interface INCApplicationEntryPoint {
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception;

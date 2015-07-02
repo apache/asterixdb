@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.comm.channels;
+package org.apache.hyracks.comm.channels;
 
 import java.net.SocketAddress;
 
-import edu.uci.ics.hyracks.net.exceptions.NetException;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
+import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
 public interface IChannelConnectionFactory {
     public ChannelControlBlock connect(SocketAddress remoteAddress) throws InterruptedException, NetException;

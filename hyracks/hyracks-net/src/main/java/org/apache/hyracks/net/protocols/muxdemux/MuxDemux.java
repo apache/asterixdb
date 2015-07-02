@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.net.exceptions.NetException;
-import edu.uci.ics.hyracks.net.protocols.tcp.ITCPConnectionListener;
-import edu.uci.ics.hyracks.net.protocols.tcp.TCPConnection;
-import edu.uci.ics.hyracks.net.protocols.tcp.TCPEndpoint;
+import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.protocols.tcp.ITCPConnectionListener;
+import org.apache.hyracks.net.protocols.tcp.TCPConnection;
+import org.apache.hyracks.net.protocols.tcp.TCPEndpoint;
 
 /**
  * Multiplexed Connection Manager.

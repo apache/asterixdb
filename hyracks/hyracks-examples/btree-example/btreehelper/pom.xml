@@ -14,36 +14,36 @@
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>edu.uci.ics.hyracks.examples.btree</groupId>
+  <groupId>org.apache.hyracks.examples.btree</groupId>
   <artifactId>btreehelper</artifactId>
   <name>btreehelper</name>
   <parent>
-    <groupId>edu.uci.ics.hyracks.examples</groupId>
+    <groupId>org.apache.hyracks.examples</groupId>
     <artifactId>btree-example</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-api</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-data-std</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   	</dependency>

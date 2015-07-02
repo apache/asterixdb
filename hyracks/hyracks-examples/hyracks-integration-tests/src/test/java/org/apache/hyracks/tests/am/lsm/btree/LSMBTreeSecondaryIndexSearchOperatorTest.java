@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.am.lsm.btree;
+package org.apache.hyracks.tests.am.lsm.btree;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
-import edu.uci.ics.hyracks.tests.am.btree.BTreeSecondaryIndexSearchOperatorTest;
-import edu.uci.ics.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
+import org.apache.hyracks.tests.am.btree.BTreeSecondaryIndexSearchOperatorTest;
+import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 
 public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryIndexSearchOperatorTest {
     protected ITreeIndexOperatorTestHelper createTestHelper() throws HyracksException {

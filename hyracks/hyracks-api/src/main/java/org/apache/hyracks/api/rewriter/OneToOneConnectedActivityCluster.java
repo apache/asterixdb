@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.rewriter;
+package org.apache.hyracks.api.rewriter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.job.ActivityCluster;
-import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
-import edu.uci.ics.hyracks.api.job.ActivityClusterId;
+import org.apache.hyracks.api.dataflow.ActivityId;
+import org.apache.hyracks.api.job.ActivityCluster;
+import org.apache.hyracks.api.job.ActivityClusterGraph;
+import org.apache.hyracks.api.job.ActivityClusterId;
 
 /**
  * All the connectors in an OneToOneConnectedCluster are OneToOneConnectorDescriptors.

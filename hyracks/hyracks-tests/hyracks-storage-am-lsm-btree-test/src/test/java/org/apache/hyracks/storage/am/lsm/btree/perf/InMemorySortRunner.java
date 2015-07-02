@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
+package org.apache.hyracks.storage.am.lsm.btree.perf;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -21,15 +21,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
-import edu.uci.ics.hyracks.storage.am.common.datagen.TupleBatch;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
+import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
 public class InMemorySortRunner implements IExperimentRunner {
     public class TupleComparator implements Comparator<ITupleReference> {

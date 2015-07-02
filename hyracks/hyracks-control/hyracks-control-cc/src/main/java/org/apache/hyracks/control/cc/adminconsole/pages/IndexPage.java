@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.adminconsole.pages;
+package org.apache.hyracks.control.cc.adminconsole.pages;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
@@ -23,10 +23,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.web.util.JSONUtils;
-import edu.uci.ics.hyracks.control.cc.work.GetJobSummariesJSONWork;
-import edu.uci.ics.hyracks.control.cc.work.GetNodeSummariesJSONWork;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.web.util.JSONUtils;
+import org.apache.hyracks.control.cc.work.GetJobSummariesJSONWork;
+import org.apache.hyracks.control.cc.work.GetNodeSummariesJSONWork;
 
 public class IndexPage extends AbstractPage {
     private static final long serialVersionUID = 1L;

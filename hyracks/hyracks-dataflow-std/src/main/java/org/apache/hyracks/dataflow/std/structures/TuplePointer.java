@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.structures;
+package org.apache.hyracks.dataflow.std.structures;
 
 public class TuplePointer implements IResetable<TuplePointer> {
     public static final int INVALID_ID = -1;

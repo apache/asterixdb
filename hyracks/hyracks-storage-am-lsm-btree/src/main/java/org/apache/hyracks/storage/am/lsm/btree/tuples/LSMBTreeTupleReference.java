@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.tuples;
+package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 
 public class LSMBTreeTupleReference extends TypeAwareTupleReference implements ILSMTreeTupleReference {
 

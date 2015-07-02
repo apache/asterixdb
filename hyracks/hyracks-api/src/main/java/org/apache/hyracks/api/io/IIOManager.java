@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.io;
+package org.apache.hyracks.api.io;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.Executor;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IIOManager {
     public enum FileReadWriteMode {

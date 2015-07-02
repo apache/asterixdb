@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.data.std.primitive;
+package org.apache.hyracks.data.std.primitive;
 
 import org.junit.Test;
 

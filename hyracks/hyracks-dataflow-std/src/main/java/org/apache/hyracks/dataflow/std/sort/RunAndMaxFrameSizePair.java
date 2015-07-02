@@ -13,9 +13,9 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort;
+package org.apache.hyracks.dataflow.std.sort;
 
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
+import org.apache.hyracks.api.comm.IFrameReader;
 
 public class RunAndMaxFrameSizePair {
     public IFrameReader run;

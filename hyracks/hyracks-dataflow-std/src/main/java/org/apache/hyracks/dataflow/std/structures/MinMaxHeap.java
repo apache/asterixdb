@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.structures;
+package org.apache.hyracks.dataflow.std.structures;
 
 public class MinMaxHeap extends AbstractHeap implements IMinMaxHeap<IResetableComparable> {
 

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.api;
+package org.apache.hyracks.storage.am.rtree.api;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 
 public interface IGenericPrimitiveSerializerDeserializer<T> extends
 		ISerializerDeserializer<T> {

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.tests;
+package org.apache.hyracks.net.tests;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -25,12 +25,12 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
-import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.ChannelControlBlock;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.IChannelOpenListener;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.MultiplexedConnection;
-import edu.uci.ics.hyracks.net.protocols.muxdemux.MuxDemux;
+import org.apache.hyracks.net.buffers.IBufferAcceptor;
+import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
+import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
+import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
+import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
+import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
 
 public class NetTest {
     @Test

@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.ondisk;
+package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 
 public class FixedSizeFrameTupleAppender {
 

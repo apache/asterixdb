@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.file;
+package org.apache.hyracks.dataflow.std.file;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
-import edu.uci.ics.hyracks.dataflow.std.util.StringSerializationUtils;
+import org.apache.hyracks.dataflow.std.util.StringSerializationUtils;
 
 public abstract class RecordWriter implements IRecordWriter {
 

@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.utils;
+package org.apache.hyracks.storage.am.rtree.utils;
 
 import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractRTreeTest {
     protected final Logger LOGGER = Logger.getLogger(RTreeTestHarness.class.getName());

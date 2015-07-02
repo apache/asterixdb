@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.rtree.linearize;
+package org.apache.hyracks.storage.am.rtree.linearize;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparator;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 
 public class HilbertDoubleComparatorFactory implements ILinearizeComparatorFactory {
     private static final long serialVersionUID = 1L;

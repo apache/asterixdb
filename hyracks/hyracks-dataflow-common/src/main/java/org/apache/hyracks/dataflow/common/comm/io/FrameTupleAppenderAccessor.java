@@ -13,19 +13,19 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.comm.io;
+package org.apache.hyracks.dataflow.common.comm.io;
 
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.comm.IFrame;
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
-import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.api.comm.FrameConstants;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 
 public class FrameTupleAppenderAccessor extends FrameTupleAppender implements IFrameTupleAccessor {
     private int tupleCountOffset;

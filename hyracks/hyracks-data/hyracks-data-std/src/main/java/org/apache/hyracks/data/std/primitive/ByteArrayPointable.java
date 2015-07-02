@@ -13,10 +13,10 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.data.std.primitive;
+package org.apache.hyracks.data.std.primitive;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.data.std.api.*;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.data.std.api.*;
 
 public class ByteArrayPointable extends AbstractPointable implements IHashable, IComparable {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow.value;
+package org.apache.hyracks.api.dataflow.value;
 
 public interface IComparator<T> {
     public int compare(T o1, T o2);

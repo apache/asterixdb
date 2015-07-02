@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.collectors;
+package org.apache.hyracks.dataflow.std.collectors;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.comm.IFrameReader;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.comm.IFrameReader;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IPartitionBatchManager extends IPartitionAcceptor {
     public void getNextBatch(List<IFrameReader> batch, int size) throws HyracksDataException;

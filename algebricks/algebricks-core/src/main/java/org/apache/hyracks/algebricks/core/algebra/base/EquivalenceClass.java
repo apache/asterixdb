@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.base;
+package org.apache.hyracks.algebricks.core.algebra.base;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.algebricks.common.utils.ListSet;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 
 public final class EquivalenceClass {
     private Set<ILogicalExpression> expressionMembers = new ListSet<ILogicalExpression>();

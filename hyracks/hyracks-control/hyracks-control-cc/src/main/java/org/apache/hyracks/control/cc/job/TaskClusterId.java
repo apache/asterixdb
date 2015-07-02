@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package org.apache.hyracks.control.cc.job;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.job.ActivityClusterId;
+import org.apache.hyracks.api.job.ActivityClusterId;
 
 public final class TaskClusterId implements Serializable {
     private static final long serialVersionUID = 1L;

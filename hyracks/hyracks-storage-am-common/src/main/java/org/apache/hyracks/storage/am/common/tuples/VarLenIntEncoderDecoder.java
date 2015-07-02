@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.tuples;
+package org.apache.hyracks.storage.am.common.tuples;
 
 // encodes positive integers in a variable-byte format
 

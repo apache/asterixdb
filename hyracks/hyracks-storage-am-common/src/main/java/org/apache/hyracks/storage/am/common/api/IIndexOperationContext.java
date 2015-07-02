@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 public interface IIndexOperationContext {
     void setOperation(IndexOperation newOp) throws HyracksDataException;

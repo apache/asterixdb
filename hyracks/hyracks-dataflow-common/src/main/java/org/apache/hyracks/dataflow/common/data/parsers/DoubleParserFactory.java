@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.parsers;
+package org.apache.hyracks.dataflow.common.data.parsers;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class DoubleParserFactory implements IValueParserFactory {
     public static final IValueParserFactory INSTANCE = new DoubleParserFactory();

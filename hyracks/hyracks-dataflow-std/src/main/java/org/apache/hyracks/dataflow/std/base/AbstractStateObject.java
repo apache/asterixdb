@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.base;
+package org.apache.hyracks.dataflow.std.base;
 
-import edu.uci.ics.hyracks.api.dataflow.state.IStateObject;
-import edu.uci.ics.hyracks.api.job.JobId;
+import org.apache.hyracks.api.dataflow.state.IStateObject;
+import org.apache.hyracks.api.job.JobId;
 
 public abstract class AbstractStateObject implements IStateObject {
     protected JobId jobId;

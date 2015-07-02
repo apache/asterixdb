@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.common.constraints;
+package org.apache.hyracks.algebricks.common.constraints;
 
 public class AlgebricksCountPartitionConstraint extends AlgebricksPartitionConstraint {
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs2.dataflow;
+package org.apache.hyracks.hdfs2.dataflow;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @SuppressWarnings("rawtypes")
 public class FileSplitsFactory implements Serializable {

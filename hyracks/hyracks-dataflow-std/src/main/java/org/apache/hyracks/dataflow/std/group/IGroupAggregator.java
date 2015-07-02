@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package org.apache.hyracks.dataflow.std.group;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataflow.IDataReader;
-import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.dataflow.IDataReader;
+import org.apache.hyracks.api.dataflow.IDataWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IGroupAggregator extends Serializable {
     public void aggregate(IDataReader<Object[]> reader, IDataWriter<Object[]> writer) throws HyracksDataException;

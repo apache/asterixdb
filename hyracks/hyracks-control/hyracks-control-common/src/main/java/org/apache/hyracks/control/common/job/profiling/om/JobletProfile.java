@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.job.profiling.om;
+package org.apache.hyracks.control.common.job.profiling.om;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -25,7 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
 
 public class JobletProfile extends AbstractProfile {
     private static final long serialVersionUID = 1L;

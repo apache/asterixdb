@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.application;
+package org.apache.hyracks.api.application;
 
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
-import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
-import edu.uci.ics.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
+import org.apache.hyracks.api.messages.IMessageBroker;
 
 /**
  * Base class of the {@link ICCApplicationContext} and the {@link INCApplicationContext}.

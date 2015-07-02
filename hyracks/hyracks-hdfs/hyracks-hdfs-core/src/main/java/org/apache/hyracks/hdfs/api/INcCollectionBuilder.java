@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.hdfs.api;
+package org.apache.hyracks.hdfs.api;
 
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.client.NodeControllerInfo;
 
 /**
  * NC collections

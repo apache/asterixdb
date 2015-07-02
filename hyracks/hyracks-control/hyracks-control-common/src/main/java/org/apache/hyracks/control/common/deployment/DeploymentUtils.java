@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.common.deployment;
+package org.apache.hyracks.control.common.deployment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,13 +30,13 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import edu.uci.ics.hyracks.api.application.IApplicationContext;
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializer;
-import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
-import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
-import edu.uci.ics.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.api.application.IApplicationContext;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.IJobSerializerDeserializer;
+import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
+import org.apache.hyracks.api.util.JavaSerializationUtils;
+import org.apache.hyracks.control.common.context.ServerContext;
 
 /**
  * A utility class which is in charge of the actual work of deployments.

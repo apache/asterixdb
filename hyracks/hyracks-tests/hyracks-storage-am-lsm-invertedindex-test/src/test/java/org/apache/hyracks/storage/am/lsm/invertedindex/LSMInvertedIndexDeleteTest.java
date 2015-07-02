@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex;
+package org.apache.hyracks.storage.am.lsm.invertedindex;
 
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexDeleteTest;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+import org.apache.hyracks.storage.am.lsm.invertedindex.common.AbstractInvertedIndexDeleteTest;
+import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 
 public class LSMInvertedIndexDeleteTest extends AbstractInvertedIndexDeleteTest {
 

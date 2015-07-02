@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.config;
+package org.apache.hyracks.storage.am.config;
 
 /**
  * Global parameters used for executing access method JUnit tests.

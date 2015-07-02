@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.tcp;
+package org.apache.hyracks.net.protocols.tcp;
 
 import java.net.InetSocketAddress;
 

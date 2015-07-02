@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.frames;
+package org.apache.hyracks.storage.am.btree.frames;
 
 public enum BTreeLeafFrameType {
     REGULAR_NSM,

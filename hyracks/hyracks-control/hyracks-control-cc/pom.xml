@@ -17,7 +17,7 @@
   <artifactId>hyracks-control-cc</artifactId>
   <name>hyracks-control-cc</name>
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-control</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -38,7 +38,7 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-common</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>

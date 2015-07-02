@@ -13,13 +13,13 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.util;
+package org.apache.hyracks.dataflow.std.sort.util;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAppender;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.comm.IFrameTupleAppender;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Basically it a union of the {@link IFrameTupleAccessor} and {@link IFrameTupleAppender}.

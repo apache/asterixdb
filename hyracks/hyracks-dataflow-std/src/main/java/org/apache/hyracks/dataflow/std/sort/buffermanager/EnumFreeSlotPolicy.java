@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
 public enum EnumFreeSlotPolicy {
     SMALLEST_FIT,

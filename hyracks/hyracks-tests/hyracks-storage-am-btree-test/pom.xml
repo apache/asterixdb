@@ -18,7 +18,7 @@
   <name>hyracks-storage-am-btree-test</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -39,14 +39,14 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-am-btree</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>

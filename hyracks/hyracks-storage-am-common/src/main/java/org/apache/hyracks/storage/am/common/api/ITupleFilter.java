@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.am.common.api;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public interface ITupleFilter {
 	public boolean accept(IFrameTupleReference tuple) throws Exception;

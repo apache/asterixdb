@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.hadoop.mapreduce;
+package org.apache.hyracks.dataflow.hadoop.mapreduce;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IInputSplitProviderFactory extends Serializable {
     public IInputSplitProvider createInputSplitProvider(int id) throws HyracksDataException;

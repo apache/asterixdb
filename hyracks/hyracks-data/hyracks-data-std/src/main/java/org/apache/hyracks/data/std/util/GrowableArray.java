@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.data.std.util;
+package org.apache.hyracks.data.std.util;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 public class GrowableArray implements IDataOutputProvider {
     private final ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();

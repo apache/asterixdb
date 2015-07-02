@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.metadata;
+package org.apache.hyracks.algebricks.examples.piglet.metadata;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.AbstractFunctionInfo;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class PigletFunction extends AbstractFunctionInfo {
     private static final long serialVersionUID = 1L;

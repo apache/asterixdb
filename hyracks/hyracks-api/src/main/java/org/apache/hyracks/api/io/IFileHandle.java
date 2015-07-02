@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.io;
+package org.apache.hyracks.api.io;
 
 /**
  * IFileHandle is an interface that exists only for Java compilers to perform static typing

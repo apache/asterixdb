@@ -13,17 +13,17 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 public interface ITupleBufferManager {
     /**
      * Reset the counters and flags to initial status. This method should not release the pre-allocated resources
      *
-     * @throws edu.uci.ics.hyracks.api.exceptions.HyracksDataException
+     * @throws org.apache.hyracks.api.exceptions.HyracksDataException
      */
     void reset() throws HyracksDataException;
 

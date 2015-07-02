@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.dataflow.value;
+package org.apache.hyracks.api.dataflow.value;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 
 /*
  * Compares two tuples to make sure that records, whose comparison keys are NULL do not pass comparator filter  

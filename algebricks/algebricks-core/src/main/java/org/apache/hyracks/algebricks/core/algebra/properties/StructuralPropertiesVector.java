@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.properties;
+package org.apache.hyracks.algebricks.core.algebra.properties;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.EquivalenceClass;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class StructuralPropertiesVector implements IPhysicalPropertiesVector {
     private List<ILocalStructuralProperty> propsLocal;

@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.server.drivers;
+package org.apache.hyracks.server.drivers;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
-import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
-import edu.uci.ics.hyracks.server.process.HyracksCCProcess;
-import edu.uci.ics.hyracks.server.process.HyracksNCProcess;
+import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.server.process.HyracksCCProcess;
+import org.apache.hyracks.server.process.HyracksNCProcess;
 
 public class VirtualClusterDriver {
     private static class Options {

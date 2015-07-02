@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.runtime;
+package org.apache.hyracks.control.nc.runtime;
 
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class RootHyracksContext implements IHyracksRootContext {
     private final NodeControllerService ncs;

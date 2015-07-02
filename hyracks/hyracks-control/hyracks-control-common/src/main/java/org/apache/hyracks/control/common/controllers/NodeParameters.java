@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.controllers;
+package org.apache.hyracks.control.common.controllers;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
 
 public class NodeParameters implements Serializable {
     private static final long serialVersionUID = 1L;

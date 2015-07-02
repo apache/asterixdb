@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.dataflow;
+package org.apache.hyracks.storage.am.common.dataflow;
 
 import java.util.HashMap;
 

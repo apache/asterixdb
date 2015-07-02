@@ -13,11 +13,11 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.data.marshalling;
+package org.apache.hyracks.dataflow.common.data.marshalling;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 
 import java.io.DataInput;
 import java.io.DataOutput;

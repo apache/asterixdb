@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.constraints.expressions;
+package org.apache.hyracks.api.constraints.expressions;
 
 public abstract class LValueConstraintExpression extends ConstraintExpression {
     private static final long serialVersionUID = 1L;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.hadoop;
+package org.apache.hyracks.dataflow.hadoop;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -34,26 +34,26 @@ import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.IDataReader;
-import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.hadoop.data.RawComparingComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.hadoop.util.DatatypeHelper;
-import edu.uci.ics.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
-import edu.uci.ics.hyracks.dataflow.hadoop.util.MRContextUtil;
-import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
-import edu.uci.ics.hyracks.dataflow.std.group.DeserializedPreclusteredGroupOperator;
-import edu.uci.ics.hyracks.dataflow.std.group.IGroupAggregator;
-import edu.uci.ics.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
-import edu.uci.ics.hyracks.hdfs.ContextFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IDataReader;
+import org.apache.hyracks.api.dataflow.IDataWriter;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.value.IComparator;
+import org.apache.hyracks.api.dataflow.value.IComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.hadoop.data.KeyComparatorFactory;
+import org.apache.hyracks.dataflow.hadoop.data.RawComparingComparatorFactory;
+import org.apache.hyracks.dataflow.hadoop.util.DatatypeHelper;
+import org.apache.hyracks.dataflow.hadoop.util.IHadoopClassFactory;
+import org.apache.hyracks.dataflow.hadoop.util.MRContextUtil;
+import org.apache.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
+import org.apache.hyracks.dataflow.std.group.DeserializedPreclusteredGroupOperator;
+import org.apache.hyracks.dataflow.std.group.IGroupAggregator;
+import org.apache.hyracks.dataflow.std.util.DeserializedOperatorNodePushable;
+import org.apache.hyracks.hdfs.ContextFactory;
 
 public class HadoopReducerOperatorDescriptor<K2, V2, K3, V3> extends AbstractHadoopOperatorDescriptor {
     private class ReducerAggregator implements IGroupAggregator {

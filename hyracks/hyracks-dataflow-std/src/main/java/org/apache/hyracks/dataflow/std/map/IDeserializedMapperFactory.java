@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.map;
+package org.apache.hyracks.dataflow.std.map;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IDeserializedMapperFactory extends Serializable {
     public IDeserializedMapper createMapper() throws HyracksDataException;

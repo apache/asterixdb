@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.job;
+package org.apache.hyracks.control.cc.job;
 
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
+import org.apache.hyracks.api.dataflow.ActivityId;
 
 public class ActivityClusterPlan {
     private final Map<ActivityId, ActivityPlan> activityPlanMap;

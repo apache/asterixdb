@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package org.apache.hyracks.api.context;
 
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.io.IIOManager;
 
 public interface IHyracksRootContext {
     public IIOManager getIOManager();

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.client.stats.impl;
+package org.apache.hyracks.client.stats.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,11 +29,11 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.client.stats.AggregateCounter;
-import edu.uci.ics.hyracks.client.stats.Counters;
-import edu.uci.ics.hyracks.client.stats.IClusterCounterContext;
-import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
+import org.apache.hyracks.client.stats.AggregateCounter;
+import org.apache.hyracks.client.stats.Counters;
+import org.apache.hyracks.client.stats.IClusterCounterContext;
+import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 /**
  * @author yingyib

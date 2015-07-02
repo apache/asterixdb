@@ -13,17 +13,17 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.comm.io;
+package org.apache.hyracks.dataflow.common.comm.io;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.comm.IFrame;
-import edu.uci.ics.hyracks.api.comm.IFrameAppender;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
+import org.apache.hyracks.api.comm.FrameConstants;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameAppender;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 
 public class AbstractFrameAppender implements IFrameAppender {
     protected IFrame frame;

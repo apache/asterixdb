@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.partition.range;
+package org.apache.hyracks.dataflow.common.data.partition.range;
 
-import edu.uci.ics.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.api.IPointable;
 
 public interface IRangeMap {
     public IPointable getFieldSplit(int columnIndex, int splitIndex);

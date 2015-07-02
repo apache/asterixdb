@@ -13,11 +13,11 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.context;
+package org.apache.hyracks.api.context;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IHyracksFrameMgrContext {
     int getInitialFrameSize();

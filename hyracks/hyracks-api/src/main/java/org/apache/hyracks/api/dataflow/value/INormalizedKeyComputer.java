@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow.value;
+package org.apache.hyracks.api.dataflow.value;
 
 public interface INormalizedKeyComputer {
     public int normalize(byte[] bytes, int start, int length);

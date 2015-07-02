@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.constraints.expressions;
+package org.apache.hyracks.api.constraints.expressions;
 
 import java.util.Collection;
 
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 
 public final class PartitionLocationExpression extends LValueConstraintExpression {
     private static final long serialVersionUID = 1L;

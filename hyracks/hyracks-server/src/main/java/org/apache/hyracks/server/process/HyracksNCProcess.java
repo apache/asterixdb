@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.server.process;
+package org.apache.hyracks.server.process;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
-import edu.uci.ics.hyracks.control.nc.NCDriver;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.NCDriver;
 
 public class HyracksNCProcess extends HyracksServerProcess {
     private NCConfig config;

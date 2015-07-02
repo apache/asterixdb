@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.web;
+package org.apache.hyracks.control.cc.web;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,8 +31,8 @@ import org.eclipse.jetty.http.HttpMethods;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class ApplicationInstallationHandler extends AbstractHandler {
     private ClusterControllerService ccs;

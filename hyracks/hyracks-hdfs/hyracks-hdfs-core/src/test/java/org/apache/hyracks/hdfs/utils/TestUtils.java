@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.utils;
+package org.apache.hyracks.hdfs.utils;
 
 import java.io.BufferedReader;
 import java.io.File;

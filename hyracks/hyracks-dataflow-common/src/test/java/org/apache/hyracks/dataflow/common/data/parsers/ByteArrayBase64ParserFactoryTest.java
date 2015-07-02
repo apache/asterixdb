@@ -13,10 +13,10 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.data.parsers;
+package org.apache.hyracks.dataflow.common.data.parsers;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import junit.framework.TestCase;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.Arrays;
 
-import static edu.uci.ics.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactoryTest.subArray;
+import static org.apache.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactoryTest.subArray;
 
 public class ByteArrayBase64ParserFactoryTest extends TestCase {
 

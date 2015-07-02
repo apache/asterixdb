@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.ipc.api;
+package org.apache.hyracks.ipc.api;
 
 public interface IResponseCallback {
     public void callback(IIPCHandle handle, Object response, Exception exception);

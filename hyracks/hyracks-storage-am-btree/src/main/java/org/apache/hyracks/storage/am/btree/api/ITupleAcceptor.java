@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.api;
+package org.apache.hyracks.storage.am.btree.api;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ITupleAcceptor {
     public boolean accept(ITupleReference tuple);

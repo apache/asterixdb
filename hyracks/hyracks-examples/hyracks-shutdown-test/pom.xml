@@ -14,12 +14,12 @@
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>edu.uci.ics.hyracks.examples.text</groupId>
+  <groupId>org.apache.hyracks.examples.text</groupId>
   <artifactId>hyracks-shutdown-test</artifactId>
   <name>hyracks-shutdown-test</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -35,11 +35,11 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+                  <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
                   <name>hyrackscc</name>
                 </program>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+                  <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
                   <name>hyracksnc</name>
                 </program>
               </programs>
@@ -72,7 +72,7 @@
       </plugin>
 
       <plugin>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-virtualcluster-maven-plugin</artifactId>
       <version>0.2.16-SNAPSHOT</version>
         <configuration>
@@ -152,27 +152,27 @@
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>texthelper</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-cc</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>textclient</artifactId>
       <version>0.2.16-SNAPSHOT</version>
       <type>jar</type>

@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.scheduler;
+package org.apache.hyracks.control.cc.scheduler;
 
-import edu.uci.ics.hyracks.control.cc.job.TaskCluster;
+import org.apache.hyracks.control.cc.job.TaskCluster;
 
 public class RankedRunnableTaskCluster implements Comparable<RankedRunnableTaskCluster> {
     private final int rank;

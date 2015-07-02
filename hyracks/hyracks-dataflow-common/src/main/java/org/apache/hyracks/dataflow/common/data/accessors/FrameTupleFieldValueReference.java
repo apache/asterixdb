@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.common.data.accessors;
+package org.apache.hyracks.dataflow.common.data.accessors;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 public class FrameTupleFieldValueReference implements IValueReference {
     private IFrameTupleAccessor fta;

@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.map;
+package org.apache.hyracks.dataflow.std.map;
 
 import java.util.Random;
 
-import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.dataflow.IDataWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SamplerDeserializedMapperFactory implements IDeserializedMapperFactory {
     private static final long serialVersionUID = 1L;

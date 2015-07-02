@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree;
+package org.apache.hyracks.storage.am.rtree;
 
-import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
+import org.apache.hyracks.storage.am.common.CheckTuple;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class RTreeCheckTuple<T> extends CheckTuple {

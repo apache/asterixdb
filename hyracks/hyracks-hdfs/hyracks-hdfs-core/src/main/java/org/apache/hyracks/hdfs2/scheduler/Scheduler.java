@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs2.scheduler;
+package org.apache.hyracks.hdfs2.scheduler;
 
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.topology.ClusterTopology;
-import edu.uci.ics.hyracks.hdfs.api.INcCollectionBuilder;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.topology.ClusterTopology;
+import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
 
 /**
  * The scheduler conduct data-local scheduling for data reading on HDFS.
@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.hdfs.api.INcCollectionBuilder;
 @SuppressWarnings("deprecation")
 public class Scheduler {
 
-    private edu.uci.ics.hyracks.hdfs.scheduler.Scheduler scheduler;
+    private org.apache.hyracks.hdfs.scheduler.Scheduler scheduler;
 
     /**
      * The constructor of the scheduler
@@ -42,7 +42,7 @@ public class Scheduler {
      * @throws HyracksException
      */
     public Scheduler(String ipAddress, int port) throws HyracksException {
-        scheduler = new edu.uci.ics.hyracks.hdfs.scheduler.Scheduler(ipAddress, port);
+        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ipAddress, port);
     }
 
     /**
@@ -53,7 +53,7 @@ public class Scheduler {
      * @throws HyracksException
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
-        scheduler = new edu.uci.ics.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos);
+        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos);
     }
 
     /**
@@ -66,7 +66,7 @@ public class Scheduler {
      * @throws HyracksException
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology) throws HyracksException {
-        scheduler = new edu.uci.ics.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos, topology);
+        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos, topology);
     }
 
     /**
@@ -78,7 +78,7 @@ public class Scheduler {
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, INcCollectionBuilder builder)
             throws HyracksException {
-        scheduler = new edu.uci.ics.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos, builder);
+        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos, builder);
     }
 
     /**

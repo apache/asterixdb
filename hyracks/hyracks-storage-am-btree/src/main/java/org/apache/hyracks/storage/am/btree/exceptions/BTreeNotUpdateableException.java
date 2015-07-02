@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.exceptions;
+package org.apache.hyracks.storage.am.btree.exceptions;
 
 public class BTreeNotUpdateableException extends BTreeException {
     private static final long serialVersionUID = 1L;

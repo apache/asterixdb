@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.client.dataset;
+package org.apache.hyracks.client.dataset;
 
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
+import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 
 public class DatasetClientContext extends FrameManager implements IHyracksCommonContext {
     private final int frameSize;

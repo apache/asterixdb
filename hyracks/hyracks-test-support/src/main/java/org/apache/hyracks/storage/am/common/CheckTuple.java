@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common;
+package org.apache.hyracks.storage.am.common;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {

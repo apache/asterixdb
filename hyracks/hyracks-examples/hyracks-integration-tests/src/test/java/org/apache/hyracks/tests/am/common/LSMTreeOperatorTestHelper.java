@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.am.common;
+package org.apache.hyracks.tests.am.common;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Date;
 
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
-import edu.uci.ics.hyracks.test.support.TestVirtualBufferCacheProvider;
+import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
+import org.apache.hyracks.test.support.TestVirtualBufferCacheProvider;
 
 public class LSMTreeOperatorTestHelper extends TreeOperatorTestHelper {
     protected static int DEFAULT_MEM_PAGE_SIZE = 32768;

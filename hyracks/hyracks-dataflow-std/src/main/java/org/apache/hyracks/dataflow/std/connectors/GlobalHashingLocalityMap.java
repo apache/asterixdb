@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.connectors;
+package org.apache.hyracks.dataflow.std.connectors;
 
 public class GlobalHashingLocalityMap implements ILocalityMap {
 
@@ -21,7 +21,7 @@ public class GlobalHashingLocalityMap implements ILocalityMap {
     private int[] consumers;
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.examples.text.client.aggregation.helpers.ILocalityMap#getConsumers(int)
+     * @see org.apache.hyracks.examples.text.client.aggregation.helpers.ILocalityMap#getConsumers(int)
      */
     @Override
     public int[] getConsumers(int senderID, int nConsumerPartitions) {
@@ -35,7 +35,7 @@ public class GlobalHashingLocalityMap implements ILocalityMap {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.examples.text.client.aggregation.helpers.ILocalityMap#getConsumerPartitionCount()
+     * @see org.apache.hyracks.examples.text.client.aggregation.helpers.ILocalityMap#getConsumerPartitionCount()
      */
     @Override
     public int getConsumerPartitionCount(int nConsumerPartitions) {

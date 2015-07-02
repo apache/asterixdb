@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.application;
+package org.apache.hyracks.api.application;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.ICCContext;
-import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
+import org.apache.hyracks.api.context.ICCContext;
+import org.apache.hyracks.api.job.IJobLifecycleListener;
 
 /**
  * Application Context at the Cluster Controller for an application.

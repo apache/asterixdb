@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.file;
+package org.apache.hyracks.dataflow.std.file;
 
 public class ConstantFileSplitProvider implements IFileSplitProvider {
     private static final long serialVersionUID = 1L;

@@ -17,7 +17,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>hyracks</artifactId>
-		<groupId>edu.uci.ics.hyracks</groupId>
+		<groupId>org.apache.hyracks</groupId>
 		<version>0.2.16-SNAPSHOT</version>
 	</parent>
 

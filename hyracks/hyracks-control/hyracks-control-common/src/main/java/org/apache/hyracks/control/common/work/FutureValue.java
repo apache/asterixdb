@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.work;
+package org.apache.hyracks.control.common.work;
 
 public class FutureValue<T> implements IResultCallback<T> {
     private boolean done;

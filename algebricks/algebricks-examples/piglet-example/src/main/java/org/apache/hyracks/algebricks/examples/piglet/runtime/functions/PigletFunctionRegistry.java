@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.runtime.functions;
+package org.apache.hyracks.algebricks.examples.piglet.runtime.functions;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.examples.piglet.exceptions.PigletException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.examples.piglet.exceptions.PigletException;
+import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 
 public class PigletFunctionRegistry {
     private static final Map<FunctionIdentifier, IPigletFunctionEvaluatorFactoryBuilder> builderMap;

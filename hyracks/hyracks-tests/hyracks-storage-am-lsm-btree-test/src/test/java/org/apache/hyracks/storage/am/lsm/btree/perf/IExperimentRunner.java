@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.perf;
+package org.apache.hyracks.storage.am.lsm.btree.perf;
 
-import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
+import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 
 public interface IExperimentRunner {
     public static int DEFAULT_MAX_OUTSTANDING = 100000;

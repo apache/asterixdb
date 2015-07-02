@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.algebra.metadata;
+package org.apache.hyracks.algebricks.core.algebra.metadata;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 
 public interface IDataSink {
     public Object getId();

@@ -12,23 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.rtree;
+package org.apache.hyracks.storage.am.rtree;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.common.AbstractIndexLifecycleTest;
-import edu.uci.ics.hyracks.storage.am.common.CheckTuple;
-import edu.uci.ics.hyracks.storage.am.common.IIndexTestContext;
-import edu.uci.ics.hyracks.storage.am.common.TreeIndexTestUtils;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.RTree;
-import edu.uci.ics.hyracks.storage.am.rtree.util.RTreeUtils;
-import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.utils.RTreeTestHarness;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.storage.am.common.AbstractIndexLifecycleTest;
+import org.apache.hyracks.storage.am.common.CheckTuple;
+import org.apache.hyracks.storage.am.common.IIndexTestContext;
+import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.storage.am.rtree.impls.RTree;
+import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.apache.hyracks.storage.am.rtree.utils.RTreeTestContext;
+import org.apache.hyracks.storage.am.rtree.utils.RTreeTestHarness;
 
 public class RTreeLifecycleTest extends AbstractIndexLifecycleTest {
     private final RTreeTestHarness harness = new RTreeTestHarness();

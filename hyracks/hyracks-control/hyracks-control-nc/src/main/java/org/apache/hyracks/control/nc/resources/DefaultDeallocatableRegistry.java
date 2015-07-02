@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.resources;
+package org.apache.hyracks.control.nc.resources;
 
 import java.util.List;
 import java.util.Vector;
 
-import edu.uci.ics.hyracks.api.resources.IDeallocatable;
-import edu.uci.ics.hyracks.api.resources.IDeallocatableRegistry;
+import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.resources.IDeallocatableRegistry;
 
 public class DefaultDeallocatableRegistry implements IDeallocatableRegistry {
     private final List<IDeallocatable> deallocatables;

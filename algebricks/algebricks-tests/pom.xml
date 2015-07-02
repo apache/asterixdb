@@ -18,7 +18,7 @@
   <name>algebricks-tests</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -54,7 +54,7 @@
             <configuration>
               <tasks>
                 <ant antfile="build-script.xml" target="build">
-                  <property name="main.class" value="edu.uci.ics.hyracks.algebricks.tests.script.IdentityStreamingScript" />
+                  <property name="main.class" value="org.apache.hyracks.algebricks.tests.script.IdentityStreamingScript" />
                   <property name="script.classpath" refid="maven.compile.classpath" />
                   <property name="jvm.params" value="" />
                   <property name="program.params" value="" />
@@ -112,22 +112,22 @@
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-compiler</artifactId>
       <version>0.2.16-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-cc</artifactId>
       <version>0.2.16-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
       <version>0.2.16-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>edu.uci.ics.hyracks</groupId>
+      <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-data-std</artifactId>
       <version>0.2.16-SNAPSHOT</version>
     </dependency>

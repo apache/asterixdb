@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.bloomfilter.impls;
+package org.apache.hyracks.storage.am.bloomfilter.impls;
 
 public final class BloomFilterSpecification {
     private final int numHashes;

@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree;
+package org.apache.hyracks.storage.am.lsm.rtree;
 
 import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.config.AccessMethodTestsConfig;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeBulkLoadTest;
-import edu.uci.ics.hyracks.storage.am.rtree.AbstractRTreeTestContext;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
+import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestContext;
+import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
+import org.apache.hyracks.storage.am.rtree.AbstractRTreeBulkLoadTest;
+import org.apache.hyracks.storage.am.rtree.AbstractRTreeTestContext;
+import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 @SuppressWarnings("rawtypes")
 public class LSMRTreeBulkLoadTest extends AbstractRTreeBulkLoadTest {

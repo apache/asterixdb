@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.exceptions;
+package org.apache.hyracks.api.exceptions;
 
 public class HyracksDataException extends HyracksException {
     private static final long serialVersionUID = 1L;

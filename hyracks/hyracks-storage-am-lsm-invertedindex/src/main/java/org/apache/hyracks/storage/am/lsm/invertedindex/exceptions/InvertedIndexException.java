@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions;
+package org.apache.hyracks.storage.am.lsm.invertedindex.exceptions;
 
-import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.common.api.IndexException;
 
 public class InvertedIndexException extends IndexException {
     private static final long serialVersionUID = 1L;

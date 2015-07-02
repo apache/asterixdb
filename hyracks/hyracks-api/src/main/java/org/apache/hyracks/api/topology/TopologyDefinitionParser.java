@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.topology;
+package org.apache.hyracks.api.topology;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import edu.uci.ics.hyracks.api.topology.NetworkEndpoint.EndpointType;
+import org.apache.hyracks.api.topology.NetworkEndpoint.EndpointType;
 
 public class TopologyDefinitionParser {
     private final Stack<ElementStackEntry> stack;

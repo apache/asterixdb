@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.client.stats;
+package org.apache.hyracks.client.stats;
 
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
+import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 
 public interface IClusterCounterContext extends ICounterContext {
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.impls;
+package org.apache.hyracks.storage.am.rtree.impls;
 
 import java.util.Arrays;
 import java.util.Collections;

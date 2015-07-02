@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.resources.memory;
+package org.apache.hyracks.control.nc.resources.memory;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
+import org.apache.hyracks.api.resources.memory.IMemoryManager;
 
 public class MemoryManager implements IMemoryManager {
     private final long maxMemory;

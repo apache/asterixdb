@@ -13,9 +13,9 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.comm;
+package org.apache.hyracks.api.comm;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * The IFrameFieldAppender is used to append the data into frame field by field.

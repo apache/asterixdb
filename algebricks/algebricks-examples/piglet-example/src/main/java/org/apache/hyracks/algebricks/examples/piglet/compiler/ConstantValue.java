@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.compiler;
+package org.apache.hyracks.algebricks.examples.piglet.compiler;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
-import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Type;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
+import org.apache.hyracks.algebricks.examples.piglet.types.Type;
 
 public final class ConstantValue implements IAlgebricksConstantValue {
     private final Type type;

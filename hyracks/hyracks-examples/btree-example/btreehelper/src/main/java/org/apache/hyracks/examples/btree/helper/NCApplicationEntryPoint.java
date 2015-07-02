@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.examples.btree.helper;
+package org.apache.hyracks.examples.btree.helper;
 
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.application.INCApplicationEntryPoint;
+import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.INCApplicationEntryPoint;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     @Override

@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.rtree.linearize;
+package org.apache.hyracks.storage.am.rtree.linearize;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparator;
-import edu.uci.ics.hyracks.data.std.primitive.DoublePointable;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.DoubleArrayList;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparator;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.storage.am.common.ophelpers.DoubleArrayList;
 
 /*
  * This compares two points based on the z curve. For doubles, we cannot use

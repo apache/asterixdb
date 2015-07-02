@@ -13,31 +13,31 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort;
+package org.apache.hyracks.dataflow.std.sort;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.comm.IFrame;
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.comm.VSizeFrame;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.ITupleBufferAccessor;
-import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.ITupleBufferManager;
-import edu.uci.ics.hyracks.dataflow.std.structures.IResetableComparable;
-import edu.uci.ics.hyracks.dataflow.std.structures.IResetableComparableFactory;
-import edu.uci.ics.hyracks.dataflow.std.structures.MaxHeap;
-import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.comm.VSizeFrame;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.std.sort.buffermanager.ITupleBufferAccessor;
+import org.apache.hyracks.dataflow.std.sort.buffermanager.ITupleBufferManager;
+import org.apache.hyracks.dataflow.std.structures.IResetableComparable;
+import org.apache.hyracks.dataflow.std.structures.IResetableComparableFactory;
+import org.apache.hyracks.dataflow.std.structures.MaxHeap;
+import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 public class TupleSorterHeapSort implements ITupleSorter {
 

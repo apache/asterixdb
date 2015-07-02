@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.metadata;
+package org.apache.hyracks.algebricks.examples.piglet.metadata;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.FileSplitDomain;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSink;
+import org.apache.hyracks.algebricks.core.algebra.properties.FileSplitDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class PigletFileDataSink implements IDataSink {
     private String file;

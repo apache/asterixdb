@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.adminconsole.pages;
+package org.apache.hyracks.control.cc.adminconsole.pages;
 
 import org.apache.wicket.markup.html.WebPage;
 
-import edu.uci.ics.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
+import org.apache.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
 
 public class AbstractPage extends WebPage {
     private static final long serialVersionUID = 1L;

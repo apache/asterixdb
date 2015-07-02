@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.runtime.base;
+package org.apache.hyracks.algebricks.runtime.base;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public interface ICopySerializableAggregateFunction {
     /**

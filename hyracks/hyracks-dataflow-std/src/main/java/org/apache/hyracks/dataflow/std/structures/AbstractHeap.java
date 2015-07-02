@@ -13,11 +13,11 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.structures;
+package org.apache.hyracks.dataflow.std.structures;
 
 import java.util.Arrays;
 
-import edu.uci.ics.hyracks.dataflow.std.util.MathUtil;
+import org.apache.hyracks.dataflow.std.util.MathUtil;
 
 public abstract class AbstractHeap implements IHeap<IResetableComparable> {
     protected static final int NOT_EXIST = -1;

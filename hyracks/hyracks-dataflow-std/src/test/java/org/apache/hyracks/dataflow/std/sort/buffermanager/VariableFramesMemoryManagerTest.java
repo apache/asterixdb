@@ -13,11 +13,11 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.BUDGET;
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.MIN_FRAME_SIZE;
-import static edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.Common.NUM_MIN_FRAME;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.BUDGET;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.MIN_FRAME_SIZE;
+import static org.apache.hyracks.dataflow.std.sort.buffermanager.Common.NUM_MIN_FRAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -31,15 +31,15 @@ import java.util.Random;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.comm.FixedSizeFrame;
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.comm.IFrame;
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAppender;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.api.comm.FixedSizeFrame;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameTupleAppender;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
 public class VariableFramesMemoryManagerTest {
     VariableFrameMemoryManager framesMemoryManager;

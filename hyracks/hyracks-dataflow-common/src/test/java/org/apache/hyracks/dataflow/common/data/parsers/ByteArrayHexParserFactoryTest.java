@@ -13,9 +13,9 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.common.data.parsers;
+package org.apache.hyracks.dataflow.common.data.parsers;
 
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;

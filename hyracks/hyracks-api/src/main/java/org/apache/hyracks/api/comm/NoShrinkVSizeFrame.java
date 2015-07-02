@@ -13,10 +13,10 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.comm;
+package org.apache.hyracks.api.comm;
 
-import edu.uci.ics.hyracks.api.context.IHyracksFrameMgrContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class NoShrinkVSizeFrame extends VSizeFrame {
     public NoShrinkVSizeFrame(IHyracksFrameMgrContext ctx) throws HyracksDataException {

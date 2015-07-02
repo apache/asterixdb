@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.frames;
+package org.apache.hyracks.storage.am.common.frames;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
-import edu.uci.ics.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 // all meta pages of this kind have a negative level
 // the first meta page has level -1, all other meta pages have level -2

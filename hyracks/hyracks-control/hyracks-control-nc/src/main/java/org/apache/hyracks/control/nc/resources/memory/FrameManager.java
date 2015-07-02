@@ -13,14 +13,14 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.nc.resources.memory;
+package org.apache.hyracks.control.nc.resources.memory;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.comm.FrameConstants;
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.context.IHyracksFrameMgrContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.comm.FrameConstants;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FrameManager implements IHyracksFrameMgrContext {
 

@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.test.support;
+package org.apache.hyracks.test.support;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounterContext;
-import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
+import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
+import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 public class CounterContext implements ICounterContext {
     private final String contextName;

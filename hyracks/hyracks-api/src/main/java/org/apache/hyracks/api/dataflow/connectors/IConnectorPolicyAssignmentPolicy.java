@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow.connectors;
+package org.apache.hyracks.api.dataflow.connectors;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 
 public interface IConnectorPolicyAssignmentPolicy extends Serializable {
     public IConnectorPolicy getConnectorPolicyAssignment(IConnectorDescriptor c, int nProducers, int nConsumers,

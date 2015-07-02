@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.dataflow.value;
+package org.apache.hyracks.api.dataflow.value;
 
 import java.io.Serializable;
 

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.exceptions.NetException;
 
 class MuxDemuxCommand {
     static final int MAX_CHANNEL_ID = Integer.MAX_VALUE - 1;

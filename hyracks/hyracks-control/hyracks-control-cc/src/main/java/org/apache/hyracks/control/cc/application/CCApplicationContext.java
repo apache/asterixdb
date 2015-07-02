@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.application;
+package org.apache.hyracks.control.cc.application;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -22,16 +22,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.application.IClusterLifecycleListener;
-import edu.uci.ics.hyracks.api.context.ICCContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
-import edu.uci.ics.hyracks.api.job.IJobLifecycleListener;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
-import edu.uci.ics.hyracks.control.common.context.ServerContext;
-import edu.uci.ics.hyracks.control.common.work.IResultCallback;
+import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.IClusterLifecycleListener;
+import org.apache.hyracks.api.context.ICCContext;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
+import org.apache.hyracks.api.job.IJobLifecycleListener;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.common.application.ApplicationContext;
+import org.apache.hyracks.control.common.context.ServerContext;
+import org.apache.hyracks.control.common.work.IResultCallback;
 
 public class CCApplicationContext extends ApplicationContext implements ICCApplicationContext {
     private final ICCContext ccContext;

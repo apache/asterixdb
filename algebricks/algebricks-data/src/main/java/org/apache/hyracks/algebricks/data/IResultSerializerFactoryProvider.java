@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.data;
+package org.apache.hyracks.algebricks.data;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IResultSerializerFactory;
+import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 
 public interface IResultSerializerFactoryProvider extends Serializable {
     /**

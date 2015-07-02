@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.hadoop.util;
+package org.apache.hyracks.dataflow.hadoop.util;
 
 import java.util.Properties;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import edu.uci.ics.hyracks.api.dataflow.IDataWriter;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.map.IDeserializedMapper;
+import org.apache.hyracks.api.dataflow.IDataWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.map.IDeserializedMapper;
 
 public class PreappendLongWritableMapper implements IDeserializedMapper {
 

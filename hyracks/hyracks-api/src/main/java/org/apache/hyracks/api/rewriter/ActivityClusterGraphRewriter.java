@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.rewriter;
+package org.apache.hyracks.api.rewriter;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,15 +26,15 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.uci.ics.hyracks.api.dataflow.ActivityId;
-import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
-import edu.uci.ics.hyracks.api.dataflow.IActivity;
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.ActivityCluster;
-import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
-import edu.uci.ics.hyracks.api.job.ActivityClusterId;
-import edu.uci.ics.hyracks.api.rewriter.runtime.SuperActivity;
+import org.apache.hyracks.api.dataflow.ActivityId;
+import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
+import org.apache.hyracks.api.dataflow.IActivity;
+import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.job.ActivityCluster;
+import org.apache.hyracks.api.job.ActivityClusterGraph;
+import org.apache.hyracks.api.job.ActivityClusterId;
+import org.apache.hyracks.api.rewriter.runtime.SuperActivity;
 
 /**
  * This class rewrite the AcivityClusterGraph to eliminate
@@ -46,7 +46,7 @@ import edu.uci.ics.hyracks.api.rewriter.runtime.SuperActivity;
  * @author yingyib
  */
 public class ActivityClusterGraphRewriter {
-    private static String ONE_TO_ONE_CONNECTOR = "edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor";
+    private static String ONE_TO_ONE_CONNECTOR = "org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor";
 
     /**
      * rewrite an activity cluster graph to eliminate

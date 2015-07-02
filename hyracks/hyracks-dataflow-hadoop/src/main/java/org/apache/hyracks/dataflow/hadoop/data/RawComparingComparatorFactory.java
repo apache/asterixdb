@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.hadoop.data;
+package org.apache.hyracks.dataflow.hadoop.data;
 
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IComparatorFactory;
-import edu.uci.ics.hyracks.dataflow.common.util.ReflectionUtils;
+import org.apache.hyracks.api.dataflow.value.IComparator;
+import org.apache.hyracks.api.dataflow.value.IComparatorFactory;
+import org.apache.hyracks.dataflow.common.util.ReflectionUtils;
 
 public class RawComparingComparatorFactory<T> implements IComparatorFactory<WritableComparable<T>> {
     private Class<? extends RawComparator> klass;

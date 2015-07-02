@@ -12,22 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.client.dataset;
+package org.apache.hyracks.client.dataset;
 
 import java.net.InetSocketAddress;
 
-import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
-import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
-import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
-import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceInterface;
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
-import edu.uci.ics.hyracks.ipc.api.RPCInterface;
-import edu.uci.ics.hyracks.ipc.impl.IPCSystem;
-import edu.uci.ics.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
+import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
+import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
+import org.apache.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
+import org.apache.hyracks.api.dataset.IHyracksDatasetDirectoryServiceInterface;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.ipc.api.IIPCHandle;
+import org.apache.hyracks.ipc.api.RPCInterface;
+import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 
-//TODO(madhusudancs): Should this implementation be moved to edu.uci.ics.hyracks.client?
+//TODO(madhusudancs): Should this implementation be moved to org.apache.hyracks.client?
 public class HyracksDatasetDirectoryServiceConnection implements IHyracksDatasetDirectoryServiceConnection {
     private final IPCSystem ipc;
     private final IHyracksDatasetDirectoryServiceInterface ddsi;

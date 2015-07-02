@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.job;
+package org.apache.hyracks.api.job;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.context.IHyracksJobletContext;
+import org.apache.hyracks.api.context.IHyracksJobletContext;
 
 public interface IGlobalJobDataFactory extends Serializable {
     public Object createGlobalJobData(IHyracksJobletContext ctx);

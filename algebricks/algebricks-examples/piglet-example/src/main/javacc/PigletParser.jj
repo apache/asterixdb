@@ -20,12 +20,12 @@ options {
 
 PARSER_BEGIN(PigletParser)
 
-package edu.uci.ics.hyracks.algebricks.examples.piglet.parser;
+package org.apache.hyracks.algebricks.examples.piglet.parser;
 
 import java.util.*;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.examples.piglet.ast.*;
-import edu.uci.ics.hyracks.algebricks.examples.piglet.types.*;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.examples.piglet.ast.*;
+import org.apache.hyracks.algebricks.examples.piglet.types.*;
 
 public class PigletParser {
     private ExpressionNode createFunction(FunctionTag fTag, String fName, ExpressionNode... arguments) {

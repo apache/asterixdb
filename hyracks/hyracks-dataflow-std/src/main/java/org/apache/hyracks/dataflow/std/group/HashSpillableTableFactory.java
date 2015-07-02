@@ -12,31 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package org.apache.hyracks.dataflow.std.group;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.comm.IFrame;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.comm.VSizeFrame;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
-import edu.uci.ics.hyracks.dataflow.std.structures.ISerializableTable;
-import edu.uci.ics.hyracks.dataflow.std.structures.SerializableHashTable;
-import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.comm.VSizeFrame;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTuplePairComparator;
+import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
+import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
+import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 
 public class HashSpillableTableFactory implements ISpillableTableFactory {
 
@@ -53,14 +53,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
      * (non-Javadoc)
      *
      * @see
-     * edu.uci.ics.hyracks.dataflow.std.aggregations.ISpillableTableFactory#
-     * buildSpillableTable(edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
-     * int[], edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory[],
-     * edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory,
+     * org.apache.hyracks.dataflow.std.aggregations.ISpillableTableFactory#
+     * buildSpillableTable(org.apache.hyracks.api.context.IHyracksTaskContext,
+     * int[], org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory[],
+     * org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory,
      * edu.
      * uci.ics.hyracks.dataflow.std.aggregations.IFieldAggregateDescriptorFactory
-     * [], edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int)
+     * [], org.apache.hyracks.api.dataflow.value.RecordDescriptor,
+     * org.apache.hyracks.api.dataflow.value.RecordDescriptor, int)
      */
     @Override
     public ISpillableTable buildSpillableTable(final IHyracksTaskContext ctx, final int[] keyFields,

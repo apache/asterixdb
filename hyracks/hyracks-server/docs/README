@@ -60,7 +60,7 @@ Steps:
 2. Download dcache-client-0.0.1.jar from the Downloads page at http://code.google.com/p/hyracks/downloads/list
 3. Run the following command: (Replacing /path/to/file with the path to the dcache-client jar file).
 
- mvn install:install-file -DgroupId=edu.uci.ics.dcache -DartifactId=dcache-client -Dversion=0.0.1 -Dpackaging=jar -Dfile=/path/to/file/dcache-client-0.0.1.jar
+ mvn install:install-file -DgroupId=org.apache.dcache -DartifactId=dcache-client -Dversion=0.0.1 -Dpackaging=jar -Dfile=/path/to/file/dcache-client-0.0.1.jar
 
 4. Download jol.jar from the Downloads page at http://code.google.com/p/hyracks/downloads/list
 5. Run the following command: (Replacing /path/to/file with the path to the jol jar file).

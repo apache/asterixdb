@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.client.stats;
+package org.apache.hyracks.client.stats;
 
 import java.util.Arrays;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.api.job.profiling.counters.ICounter;
-import edu.uci.ics.hyracks.client.stats.impl.ClientCounterContext;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
+import org.apache.hyracks.client.stats.impl.ClientCounterContext;
 
 public class ClientCounterContextTest {
 

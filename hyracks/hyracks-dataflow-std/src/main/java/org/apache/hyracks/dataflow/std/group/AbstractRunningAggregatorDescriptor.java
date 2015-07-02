@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package org.apache.hyracks.dataflow.std.group;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public abstract class AbstractRunningAggregatorDescriptor implements IAggregatorDescriptor {
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor#outputPartialResult(edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder, edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor, int, edu.uci.ics.hyracks.dataflow.std.group.AggregateState)
+     * @see org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor#outputPartialResult(org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder, org.apache.hyracks.api.comm.IFrameTupleAccessor, int, org.apache.hyracks.dataflow.std.group.AggregateState)
      */
     @Override
     public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
@@ -30,7 +30,7 @@ public abstract class AbstractRunningAggregatorDescriptor implements IAggregator
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor#outputFinalResult(edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder, edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor, int, edu.uci.ics.hyracks.dataflow.std.group.AggregateState)
+     * @see org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor#outputFinalResult(org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder, org.apache.hyracks.api.comm.IFrameTupleAccessor, int, org.apache.hyracks.dataflow.std.group.AggregateState)
      */
     @Override
     public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,

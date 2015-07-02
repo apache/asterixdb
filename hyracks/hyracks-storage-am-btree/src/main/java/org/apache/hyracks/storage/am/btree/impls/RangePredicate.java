@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.impls;
+package org.apache.hyracks.storage.am.btree.impls;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.impls.AbstractSearchPredicate;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.impls.AbstractSearchPredicate;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 
 public class RangePredicate extends AbstractSearchPredicate {
 

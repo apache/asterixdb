@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.ipc.impl;
+package org.apache.hyracks.ipc.impl;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
-import edu.uci.ics.hyracks.ipc.api.IIPCI;
-import edu.uci.ics.hyracks.ipc.api.IPCPerformanceCounters;
-import edu.uci.ics.hyracks.ipc.api.IPayloadSerializerDeserializer;
-import edu.uci.ics.hyracks.ipc.exceptions.IPCException;
+import org.apache.hyracks.ipc.api.IIPCHandle;
+import org.apache.hyracks.ipc.api.IIPCI;
+import org.apache.hyracks.ipc.api.IPCPerformanceCounters;
+import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class IPCSystem {
     private final IPCConnectionManager cMgr;

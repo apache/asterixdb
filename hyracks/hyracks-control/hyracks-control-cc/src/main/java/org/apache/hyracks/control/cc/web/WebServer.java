@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.web;
+package org.apache.hyracks.control.cc.web;
 
 import java.util.EnumSet;
 import java.util.logging.Logger;
@@ -34,10 +34,10 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
-import edu.uci.ics.hyracks.control.cc.web.util.JSONOutputRequestHandler;
-import edu.uci.ics.hyracks.control.cc.web.util.RoutingHandler;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.adminconsole.HyracksAdminConsoleApplication;
+import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
+import org.apache.hyracks.control.cc.web.util.RoutingHandler;
 
 public class WebServer {
     private final static Logger LOGGER = Logger.getLogger(WebServer.class.getName());

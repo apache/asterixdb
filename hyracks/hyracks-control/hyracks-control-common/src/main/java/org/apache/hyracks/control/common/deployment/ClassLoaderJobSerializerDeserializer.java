@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.common.deployment;
+package org.apache.hyracks.control.common.deployment;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializer;
-import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.IJobSerializerDeserializer;
+import org.apache.hyracks.api.util.JavaSerializationUtils;
 
 /**
  * This is the IJobSerializerDeserializer implementation for jobs with dynamic deployed jars.

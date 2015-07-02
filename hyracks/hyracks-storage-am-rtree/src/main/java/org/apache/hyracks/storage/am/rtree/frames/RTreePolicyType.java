@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.frames;
+package org.apache.hyracks.storage.am.rtree.frames;
 
 public enum RTreePolicyType {
     RTREE, RSTARTREE

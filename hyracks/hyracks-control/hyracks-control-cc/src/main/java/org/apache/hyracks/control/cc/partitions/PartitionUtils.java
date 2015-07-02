@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.partitions;
+package org.apache.hyracks.control.cc.partitions;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.common.base.INodeController;
-import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
-import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
+import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.common.base.INodeController;
+import org.apache.hyracks.control.common.job.PartitionDescriptor;
+import org.apache.hyracks.control.common.job.PartitionRequest;
 
 public class PartitionUtils {
     public static void reportPartitionMatch(ClusterControllerService ccs, final PartitionId pid,

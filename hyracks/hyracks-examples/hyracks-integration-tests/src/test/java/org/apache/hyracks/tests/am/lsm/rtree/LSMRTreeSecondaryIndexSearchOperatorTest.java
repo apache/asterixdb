@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.am.lsm.rtree;
+package org.apache.hyracks.tests.am.lsm.rtree;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreePolicyType;
-import edu.uci.ics.hyracks.test.support.TestStorageManagerComponentHolder;
-import edu.uci.ics.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
-import edu.uci.ics.hyracks.tests.am.rtree.RTreeSecondaryIndexSearchOperatorTest;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
+import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
+import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
+import org.apache.hyracks.tests.am.rtree.RTreeSecondaryIndexSearchOperatorTest;
 
 public class LSMRTreeSecondaryIndexSearchOperatorTest extends RTreeSecondaryIndexSearchOperatorTest {
     public LSMRTreeSecondaryIndexSearchOperatorTest() {

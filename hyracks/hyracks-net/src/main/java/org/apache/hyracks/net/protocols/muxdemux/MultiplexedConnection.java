@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -22,9 +22,9 @@ import java.util.BitSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.net.exceptions.NetException;
-import edu.uci.ics.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
-import edu.uci.ics.hyracks.net.protocols.tcp.TCPConnection;
+import org.apache.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
+import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 
 /**
  * A {@link MultiplexedConnection} can be used by clients to create multiple "channels"

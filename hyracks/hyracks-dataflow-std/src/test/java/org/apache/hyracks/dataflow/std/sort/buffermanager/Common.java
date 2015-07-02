@@ -13,9 +13,9 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
-import edu.uci.ics.hyracks.control.nc.resources.memory.FrameManager;
+import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 
 public class Common {
     static int MIN_FRAME_SIZE = 256;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.adminconsole.pages;
+package org.apache.hyracks.control.cc.adminconsole.pages;
 
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 

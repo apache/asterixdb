@@ -12,18 +12,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.sort.buffermanager;
+package org.apache.hyracks.dataflow.std.sort.buffermanager;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IFrameBufferManager {
 
     /**
      * Reset the counters and flags to initial status. This method should not release the pre-allocated resources
      *
-     * @throws edu.uci.ics.hyracks.api.exceptions.HyracksDataException
+     * @throws org.apache.hyracks.api.exceptions.HyracksDataException
      */
     void reset() throws HyracksDataException;
 

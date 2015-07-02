@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.datagen;
+package org.apache.hyracks.storage.am.common.datagen;
 
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 
 /**
  * Quick & dirty data generator for multi-thread testing.

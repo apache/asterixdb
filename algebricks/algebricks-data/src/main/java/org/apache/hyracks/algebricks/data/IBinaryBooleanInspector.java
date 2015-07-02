@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.data;
+package org.apache.hyracks.algebricks.data;
 
 public interface IBinaryBooleanInspector {
     public boolean getBooleanValue(byte[] bytes, int offset, int length);

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.am.common.api;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ITreeIndexTupleWriter {
     public int writeTuple(ITupleReference tuple, ByteBuffer targetBuf, int targetOff);

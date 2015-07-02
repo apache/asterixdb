@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.runtime.base;
+package org.apache.hyracks.algebricks.runtime.base;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class AlgebricksPipeline implements Serializable {
 

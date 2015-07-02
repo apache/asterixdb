@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.nc.dataset;
+package org.apache.hyracks.control.nc.dataset;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -21,8 +21,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.partitions.ResultSetPartitionId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.partitions.ResultSetPartitionId;
 
 public class DatasetMemoryManager {
     private int availableMemory;

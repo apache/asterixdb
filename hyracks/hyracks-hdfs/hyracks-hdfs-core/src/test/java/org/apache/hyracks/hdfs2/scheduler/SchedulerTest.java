@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs2.scheduler;
+package org.apache.hyracks.hdfs2.scheduler;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -28,9 +28,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.client.NodeStatus;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.comm.NetworkAddress;
 
 /**
  * Test case for the new HDFS API scheduler

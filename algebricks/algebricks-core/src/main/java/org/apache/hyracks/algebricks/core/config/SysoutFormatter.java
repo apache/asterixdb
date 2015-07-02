@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.core.config;
+package org.apache.hyracks.algebricks.core.config;
 
 import java.util.logging.Formatter;
 import java.util.logging.Handler;

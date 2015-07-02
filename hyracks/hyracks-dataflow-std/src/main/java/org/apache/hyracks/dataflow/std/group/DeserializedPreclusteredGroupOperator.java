@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package org.apache.hyracks.dataflow.std.group;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.dataflow.IOpenableDataReader;
-import edu.uci.ics.hyracks.api.dataflow.IOpenableDataWriter;
-import edu.uci.ics.hyracks.api.dataflow.value.IComparator;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
+import org.apache.hyracks.api.dataflow.IOpenableDataReader;
+import org.apache.hyracks.api.dataflow.IOpenableDataWriter;
+import org.apache.hyracks.api.dataflow.value.IComparator;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.base.IOpenableDataWriterOperator;
 
 public class DeserializedPreclusteredGroupOperator implements IOpenableDataWriterOperator {
     private final int[] groupFields;

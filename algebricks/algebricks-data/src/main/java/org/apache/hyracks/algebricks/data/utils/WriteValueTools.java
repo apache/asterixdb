@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.data.utils;
+package org.apache.hyracks.algebricks.data.utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public final class WriteValueTools {
 

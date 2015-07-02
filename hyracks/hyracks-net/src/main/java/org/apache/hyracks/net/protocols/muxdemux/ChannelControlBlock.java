@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.protocols.muxdemux;
+package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.net.buffers.IBufferAcceptor;
-import edu.uci.ics.hyracks.net.buffers.ICloseableBufferAcceptor;
-import edu.uci.ics.hyracks.net.exceptions.NetException;
+import org.apache.hyracks.net.buffers.IBufferAcceptor;
+import org.apache.hyracks.net.buffers.ICloseableBufferAcceptor;
+import org.apache.hyracks.net.exceptions.NetException;
 
 /**
  * Handle to a channel that represents a logical full-duplex communication end-point.

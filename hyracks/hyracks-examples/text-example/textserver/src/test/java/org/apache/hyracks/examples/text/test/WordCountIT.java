@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.examples.text.test;
+package org.apache.hyracks.examples.text.test;
 
 import java.io.File;
 
 import org.junit.Test;
 
-import edu.uci.ics.hyracks.examples.text.client.WordCountMain;
+import org.apache.hyracks.examples.text.client.WordCountMain;
 
 public class WordCountIT {
     @Test

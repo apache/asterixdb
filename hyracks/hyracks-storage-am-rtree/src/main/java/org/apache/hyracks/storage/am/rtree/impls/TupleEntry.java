@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.impls;
+package org.apache.hyracks.storage.am.rtree.impls;
 
-import edu.uci.ics.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
+import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 
 public class TupleEntry implements Comparable<TupleEntry> {
 	private int tupleIndex;

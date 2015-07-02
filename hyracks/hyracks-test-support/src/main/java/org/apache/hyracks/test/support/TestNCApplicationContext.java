@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.test.support;
+package org.apache.hyracks.test.support;
 
 import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.application.IStateDumpHandler;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
-import edu.uci.ics.hyracks.api.messages.IMessageBroker;
-import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
+import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.application.IStateDumpHandler;
+import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.hyracks.api.messages.IMessageBroker;
+import org.apache.hyracks.api.resources.memory.IMemoryManager;
 
 public class TestNCApplicationContext implements INCApplicationContext {
     private final ILifeCycleComponentManager lccm;

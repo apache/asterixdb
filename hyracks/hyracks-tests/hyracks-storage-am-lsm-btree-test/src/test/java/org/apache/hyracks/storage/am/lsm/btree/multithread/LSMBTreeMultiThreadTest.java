@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.btree.multithread;
+package org.apache.hyracks.storage.am.lsm.btree.multithread;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
-import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector.TestOperation;
-import edu.uci.ics.hyracks.storage.am.common.TestWorkloadConf;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
-import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
-import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.storage.am.btree.OrderedIndexMultiThreadTest;
+import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
+import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
+import org.apache.hyracks.storage.am.common.TestWorkloadConf;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
+import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
+import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
 
 public class LSMBTreeMultiThreadTest extends OrderedIndexMultiThreadTest {
 

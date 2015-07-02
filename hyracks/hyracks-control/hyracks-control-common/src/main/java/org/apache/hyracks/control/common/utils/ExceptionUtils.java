@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.common.utils;
+package org.apache.hyracks.control.common.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * @author yingyib

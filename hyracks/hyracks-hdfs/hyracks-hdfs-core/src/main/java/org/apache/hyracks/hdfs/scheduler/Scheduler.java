@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.scheduler;
+package org.apache.hyracks.hdfs.scheduler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,14 +31,14 @@ import java.util.logging.Logger;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
 
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.topology.ClusterTopology;
-import edu.uci.ics.hyracks.hdfs.api.INcCollection;
-import edu.uci.ics.hyracks.hdfs.api.INcCollectionBuilder;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.topology.ClusterTopology;
+import org.apache.hyracks.hdfs.api.INcCollection;
+import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
 
 /**
  * The scheduler conduct data-local scheduling for data reading on HDFS. This

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.base;
+package org.apache.hyracks.dataflow.std.base;
 
 import java.util.BitSet;
 
-import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
+import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 
 public abstract class AbstractMToNConnectorDescriptor extends AbstractConnectorDescriptor {
     private static final long serialVersionUID = 1L;

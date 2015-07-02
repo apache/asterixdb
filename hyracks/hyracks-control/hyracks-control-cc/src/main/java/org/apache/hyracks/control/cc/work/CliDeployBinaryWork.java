@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.cc.work;
+package org.apache.hyracks.control.cc.work;
 
 import java.net.URL;
 import java.util.List;
@@ -22,13 +22,13 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.NodeControllerState;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
-import edu.uci.ics.hyracks.control.common.work.IPCResponder;
-import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.common.deployment.DeploymentRun;
+import org.apache.hyracks.control.common.deployment.DeploymentUtils;
+import org.apache.hyracks.control.common.work.IPCResponder;
+import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 /***
  * This is the work happens on the CC for a dynamic deployment.

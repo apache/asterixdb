@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.btree;
+package org.apache.hyracks.storage.am.btree;
 
-import edu.uci.ics.hyracks.dataflow.common.util.SerdeUtils;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeTestHarness;
-import edu.uci.ics.hyracks.storage.am.btree.util.BTreeUtils;
+import org.apache.hyracks.dataflow.common.util.SerdeUtils;
+import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
+import org.apache.hyracks.storage.am.btree.util.BTreeTestHarness;
+import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 
 public class BTreeModificationOperationCallbackTest extends AbstractModificationOperationCallbackTest {
     private final BTreeTestHarness harness;

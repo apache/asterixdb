@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.nc.io.profiling;
+package org.apache.hyracks.control.nc.io.profiling;
 
 public class IOCounterFactory {
 

@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.server.process;
+package org.apache.hyracks.server.process;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.control.cc.CCDriver;
-import edu.uci.ics.hyracks.control.common.controllers.CCConfig;
+import org.apache.hyracks.control.cc.CCDriver;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 
 public class HyracksCCProcess extends HyracksServerProcess {
     private CCConfig config;

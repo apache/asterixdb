@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.cc.work;
+package org.apache.hyracks.control.cc.work;
 
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.deployment.DeploymentRun;
+import org.apache.hyracks.control.common.deployment.DeploymentStatus;
 
 /***
  * This is the work happens on the CC when CC gets a deployment or undeployment notification status message from one NC.

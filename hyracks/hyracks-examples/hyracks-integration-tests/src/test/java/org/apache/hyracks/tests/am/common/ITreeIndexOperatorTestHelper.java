@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.am.common;
+package org.apache.hyracks.tests.am.common;
 
 public interface ITreeIndexOperatorTestHelper {
     public String getPrimaryIndexName();

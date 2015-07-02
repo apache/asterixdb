@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.lifecycle;
+package org.apache.hyracks.api.lifecycle;
 
 import java.io.File;
 import java.io.FileOutputStream;

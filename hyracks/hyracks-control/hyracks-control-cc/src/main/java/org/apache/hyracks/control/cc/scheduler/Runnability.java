@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.scheduler;
+package org.apache.hyracks.control.cc.scheduler;
 
 public final class Runnability {
     private final Tag tag;

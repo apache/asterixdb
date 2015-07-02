@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.ast;
+package org.apache.hyracks.algebricks.examples.piglet.ast;
 
-import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Type;
+import org.apache.hyracks.algebricks.examples.piglet.types.Type;
 
 public class LiteralExpressionNode extends ExpressionNode {
     private String image;

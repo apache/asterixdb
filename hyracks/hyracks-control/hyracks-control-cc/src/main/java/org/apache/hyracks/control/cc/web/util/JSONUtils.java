@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.web.util;
+package org.apache.hyracks.control.cc.web.util;
 
 import java.util.ArrayList;
 import java.util.List;

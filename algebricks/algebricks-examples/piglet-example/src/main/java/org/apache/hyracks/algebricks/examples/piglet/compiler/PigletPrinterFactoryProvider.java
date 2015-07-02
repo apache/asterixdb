@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.compiler;
+package org.apache.hyracks.algebricks.examples.piglet.compiler;
 
 import java.io.IOException;
 import java.io.PrintStream;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
-import edu.uci.ics.hyracks.algebricks.data.impl.IntegerPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
-import edu.uci.ics.hyracks.algebricks.examples.piglet.types.Type;
-import edu.uci.ics.hyracks.data.std.primitive.FloatPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
+import org.apache.hyracks.algebricks.data.impl.IntegerPrinterFactory;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.algebricks.examples.piglet.types.Type;
+import org.apache.hyracks.data.std.primitive.FloatPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 
 public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
 

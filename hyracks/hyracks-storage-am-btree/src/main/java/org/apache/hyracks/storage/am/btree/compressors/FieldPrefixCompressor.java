@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.btree.compressors;
+package org.apache.hyracks.storage.am.btree.compressors;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.btree.api.IPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
-import edu.uci.ics.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrame;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.btree.api.IPrefixSlotManager;
+import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
+import org.apache.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
+import org.apache.hyracks.storage.am.btree.impls.FieldPrefixTupleReference;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
+import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
 public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 

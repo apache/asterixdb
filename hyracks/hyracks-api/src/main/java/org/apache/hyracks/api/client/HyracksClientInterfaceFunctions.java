@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.client;
+package org.apache.hyracks.api.client;
 
 import java.io.Serializable;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.api.job.JobFlag;
-import edu.uci.ics.hyracks.api.job.JobId;
+import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
 
 public class HyracksClientInterfaceFunctions {
     public enum FunctionId {

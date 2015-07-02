@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.aggregators;
+package org.apache.hyracks.dataflow.std.group.aggregators;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -20,16 +20,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
-import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
-import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
+import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.std.group.AggregateState;
+import org.apache.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
+import org.apache.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 
 /**
  *
@@ -54,10 +54,10 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
      * (non-Javadoc)
      * 
      * @see
-     * edu.uci.ics.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory
-     * #createAggregator(edu.uci.ics.hyracks.api.context.IHyracksTaskContext,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
-     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, int[])
+     * org.apache.hyracks.dataflow.std.aggregators.IAggregatorDescriptorFactory
+     * #createAggregator(org.apache.hyracks.api.context.IHyracksTaskContext,
+     * org.apache.hyracks.api.dataflow.value.RecordDescriptor,
+     * org.apache.hyracks.api.dataflow.value.RecordDescriptor, int[])
      */
     @Override
     public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,

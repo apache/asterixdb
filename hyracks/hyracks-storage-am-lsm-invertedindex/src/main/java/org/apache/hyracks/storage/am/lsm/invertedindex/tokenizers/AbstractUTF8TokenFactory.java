@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers;
+package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 public abstract class AbstractUTF8TokenFactory implements ITokenFactory {
 	private static final long serialVersionUID = 1L;

@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.file;
+package org.apache.hyracks.dataflow.std.file;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 
 public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDescriptor {
     private static final long serialVersionUID = 1L;

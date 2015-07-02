@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.bloomfilter.util;
+package org.apache.hyracks.storage.am.bloomfilter.util;
 
 import java.util.Random;
 import java.util.logging.Logger;
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractBloomFilterTest {
     protected final Logger LOGGER = Logger.getLogger(BloomFilterTestHarness.class.getName());

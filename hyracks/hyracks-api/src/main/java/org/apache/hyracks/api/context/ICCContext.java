@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.context;
+package org.apache.hyracks.api.context;
 
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.hyracks.api.client.ClusterControllerInfo;
-import edu.uci.ics.hyracks.api.topology.ClusterTopology;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
+import org.apache.hyracks.api.topology.ClusterTopology;
 
 public interface ICCContext {
     public ClusterControllerInfo getClusterControllerInfo();

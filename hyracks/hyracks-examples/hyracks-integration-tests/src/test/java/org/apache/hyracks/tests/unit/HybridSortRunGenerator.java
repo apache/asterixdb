@@ -13,12 +13,12 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.tests.unit;
+package org.apache.hyracks.tests.unit;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
-import edu.uci.ics.hyracks.dataflow.std.sort.HybridTopKSortRunGenerator;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.sort.AbstractSortRunGenerator;
+import org.apache.hyracks.dataflow.std.sort.HybridTopKSortRunGenerator;
 
 public class HybridSortRunGenerator extends AbstractRunGeneratorTest {
     @Override

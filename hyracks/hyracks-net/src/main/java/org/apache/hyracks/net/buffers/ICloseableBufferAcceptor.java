@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.buffers;
+package org.apache.hyracks.net.buffers;
 
 /**
  * A buffer acceptor that can be closed to indicate end of transmission or an error code

@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.adminconsole;
+package org.apache.hyracks.control.cc.adminconsole;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.protocol.http.WebApplication;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.adminconsole.pages.IndexPage;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.adminconsole.pages.IndexPage;
 
 public class HyracksAdminConsoleApplication extends WebApplication {
     private ClusterControllerService ccs;

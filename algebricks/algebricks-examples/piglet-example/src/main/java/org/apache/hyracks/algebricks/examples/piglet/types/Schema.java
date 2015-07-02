@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.types;
+package org.apache.hyracks.algebricks.examples.piglet.types;
 
 import java.util.List;
 
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class Schema {
     private List<Pair<String, Type>> schema;

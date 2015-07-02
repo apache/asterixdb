@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.web;
+package org.apache.hyracks.control.cc.web;
 
 import java.util.Map;
 
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
-import edu.uci.ics.hyracks.control.cc.work.GatherStateDumpsWork;
-import edu.uci.ics.hyracks.control.cc.work.GatherStateDumpsWork.StateDumpRun;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
+import org.apache.hyracks.control.cc.work.GatherStateDumpsWork;
+import org.apache.hyracks.control.cc.work.GatherStateDumpsWork.StateDumpRun;
 
 public class StateDumpRESTAPIFunction implements IJSONOutputFunction {
     private final ClusterControllerService ccs;

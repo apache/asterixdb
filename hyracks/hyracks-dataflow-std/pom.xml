@@ -18,7 +18,7 @@
   <name>hyracks-dataflow-std</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -49,14 +49,14 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-api</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-common</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
@@ -67,7 +67,7 @@
   		<artifactId>commons-io</artifactId>
   	</dependency>
       <dependency>
-          <groupId>edu.uci.ics.hyracks</groupId>
+          <groupId>org.apache.hyracks</groupId>
           <artifactId>hyracks-control-nc</artifactId>
           <version>0.2.16-SNAPSHOT</version>
           <scope>test</scope>

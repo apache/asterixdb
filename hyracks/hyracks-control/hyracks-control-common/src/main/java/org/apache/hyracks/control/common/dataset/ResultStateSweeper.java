@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.common.dataset;
+package org.apache.hyracks.control.common.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.dataset.IDatasetManager;
-import edu.uci.ics.hyracks.api.job.JobId;
+import org.apache.hyracks.api.dataset.IDatasetManager;
+import org.apache.hyracks.api.job.JobId;
 
 /**
  * Sweeper to clean up the stale result distribution files and result states.

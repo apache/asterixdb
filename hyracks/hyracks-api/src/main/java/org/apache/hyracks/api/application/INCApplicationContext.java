@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.application;
+package org.apache.hyracks.api.application;
 
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
-import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
+import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.resources.memory.IMemoryManager;
 
 /**
  * Application Context at the Node Controller for an application.

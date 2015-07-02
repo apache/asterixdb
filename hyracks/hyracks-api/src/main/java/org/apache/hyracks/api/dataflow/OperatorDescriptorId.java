@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow;
+package org.apache.hyracks.api.dataflow;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.io.IWritable;
+import org.apache.hyracks.api.io.IWritable;
 
 public final class OperatorDescriptorId implements IWritable, Serializable {
     private static final long serialVersionUID = 1L;

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common;
+package org.apache.hyracks.storage.am.common;
 
-import edu.uci.ics.hyracks.storage.am.common.datagen.ProbabilityHelper;
+import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 
 
 public class TestOperationSelector {

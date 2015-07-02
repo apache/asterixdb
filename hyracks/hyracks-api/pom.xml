@@ -17,7 +17,7 @@
   <artifactId>hyracks-api</artifactId>
   <name>hyracks-api</name>
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -68,7 +68,7 @@
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-ipc</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   	</dependency>

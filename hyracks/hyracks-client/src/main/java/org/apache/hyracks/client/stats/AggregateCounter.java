@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.client.stats;
+package org.apache.hyracks.client.stats;
 
-import edu.uci.ics.hyracks.control.common.job.profiling.counters.Counter;
+import org.apache.hyracks.control.common.job.profiling.counters.Counter;
 
 public class AggregateCounter extends Counter {
 

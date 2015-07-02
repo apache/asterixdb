@@ -17,20 +17,20 @@
   <artifactId>tpchclient</artifactId>
   <name>tpchclient</name>
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>tpch-example</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
 
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-data-std</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   	</dependency>
@@ -56,7 +56,7 @@
             <configuration>
               <programs>
                 <program>
-                  <mainClass>edu.uci.ics.hyracks.examples.tpch.client.Sort</mainClass>
+                  <mainClass>org.apache.hyracks.examples.tpch.client.Sort</mainClass>
                   <name>tpchclient</name>
                 </program>
               </programs>

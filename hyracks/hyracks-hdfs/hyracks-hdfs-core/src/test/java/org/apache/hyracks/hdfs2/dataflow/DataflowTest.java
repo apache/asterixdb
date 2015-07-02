@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs2.dataflow;
+package org.apache.hyracks.hdfs2.dataflow;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -37,31 +37,31 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.hdfs.MiniDFSClusterFactory;
-import edu.uci.ics.hyracks.hdfs.lib.RawBinaryComparatorFactory;
-import edu.uci.ics.hyracks.hdfs.lib.RawBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.hdfs.lib.TextKeyValueParserFactory;
-import edu.uci.ics.hyracks.hdfs.lib.TextTupleWriterFactory;
-import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
-import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
-import edu.uci.ics.hyracks.hdfs2.scheduler.Scheduler;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
+import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import org.apache.hyracks.hdfs.MiniDFSClusterFactory;
+import org.apache.hyracks.hdfs.lib.RawBinaryComparatorFactory;
+import org.apache.hyracks.hdfs.lib.RawBinaryHashFunctionFactory;
+import org.apache.hyracks.hdfs.lib.TextKeyValueParserFactory;
+import org.apache.hyracks.hdfs.lib.TextTupleWriterFactory;
+import org.apache.hyracks.hdfs.utils.HyracksUtils;
+import org.apache.hyracks.hdfs.utils.TestUtils;
+import org.apache.hyracks.hdfs2.scheduler.Scheduler;
 
 /**
- * Test the edu.uci.ics.hyracks.hdfs2.dataflow package,
+ * Test the org.apache.hyracks.hdfs2.dataflow package,
  * the operators for the Hadoop new API.
  */
 public class DataflowTest extends TestCase {

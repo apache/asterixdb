@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.dataflow.connectors;
+package org.apache.hyracks.api.dataflow.connectors;
 
 public final class SendSideMaterializedReceiveSideMaterializedPipeliningConnectorPolicy implements IConnectorPolicy {
     private static final long serialVersionUID = 1L;

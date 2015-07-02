@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.rtree.tuples;
+package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 
 public class LSMRTreeTupleReference extends TypeAwareTupleReference implements ILSMTreeTupleReference {
 

@@ -17,7 +17,7 @@
   <artifactId>hyracks-control-nc</artifactId>
   <name>hyracks-control-nc</name>
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-control</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -38,19 +38,19 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-common</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-net</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-comm</artifactId>
   		<version>0.2.16-SNAPSHOT</version>
   	</dependency>

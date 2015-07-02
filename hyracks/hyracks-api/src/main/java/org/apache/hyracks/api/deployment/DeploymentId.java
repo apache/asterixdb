@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.api.deployment;
+package org.apache.hyracks.api.deployment;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.io.IWritable;
+import org.apache.hyracks.api.io.IWritable;
 
 /**
  * The representation of a deployment id

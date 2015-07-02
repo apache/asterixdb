@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.impls;
+package org.apache.hyracks.storage.am.rtree.impls;
 
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.LongArrayList;
+import org.apache.hyracks.storage.am.common.ophelpers.IntArrayList;
+import org.apache.hyracks.storage.am.common.ophelpers.LongArrayList;
 
 public class PathList {
     private IntArrayList pageIds;

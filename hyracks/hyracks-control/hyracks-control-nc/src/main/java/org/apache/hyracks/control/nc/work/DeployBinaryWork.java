@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.nc.work;
+package org.apache.hyracks.control.nc.work;
 
 import java.net.URL;
 import java.util.List;
 
-import edu.uci.ics.hyracks.api.deployment.DeploymentId;
-import edu.uci.ics.hyracks.control.common.base.IClusterController;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
-import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.control.common.base.IClusterController;
+import org.apache.hyracks.control.common.deployment.DeploymentStatus;
+import org.apache.hyracks.control.common.deployment.DeploymentUtils;
+import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.hyracks.control.nc.NodeControllerService;
 
 /**
  * Deploy binary work that happens at each NC

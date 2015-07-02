@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.exceptions;
+package org.apache.hyracks.storage.am.lsm.invertedindex.exceptions;
 
 
 

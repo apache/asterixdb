@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.control.cc.web;
+package org.apache.hyracks.control.cc.web;
 
 import org.json.JSONObject;
 
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.cc.web.util.IJSONOutputFunction;
-import edu.uci.ics.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
-import edu.uci.ics.hyracks.control.cc.work.GetJobRunJSONWork;
-import edu.uci.ics.hyracks.control.cc.work.GetJobSummariesJSONWork;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
+import org.apache.hyracks.control.cc.work.GetActivityClusterGraphJSONWork;
+import org.apache.hyracks.control.cc.work.GetJobRunJSONWork;
+import org.apache.hyracks.control.cc.work.GetJobSummariesJSONWork;
 
 public class JobsRESTAPIFunction implements IJSONOutputFunction {
     private ClusterControllerService ccs;

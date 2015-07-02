@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.rtree.multithread;
+package org.apache.hyracks.storage.am.rtree.multithread;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.AbstractIndexTestWorker;
-import edu.uci.ics.hyracks.storage.am.common.IIndexTestWorkerFactory;
-import edu.uci.ics.hyracks.storage.am.common.TestOperationSelector;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndex;
-import edu.uci.ics.hyracks.storage.am.common.datagen.DataGenThread;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.AbstractIndexTestWorker;
+import org.apache.hyracks.storage.am.common.IIndexTestWorkerFactory;
+import org.apache.hyracks.storage.am.common.TestOperationSelector;
+import org.apache.hyracks.storage.am.common.api.IIndex;
+import org.apache.hyracks.storage.am.common.datagen.DataGenThread;
 
 public class RTreeTestWorkerFactory implements IIndexTestWorkerFactory {
     @Override

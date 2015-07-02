@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.client.stats;
+package org.apache.hyracks.client.stats;
 
 public class Counters {
     public static final String NUM_PROCESSOR = "num-processors";

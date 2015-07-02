@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.ophelpers;
+package org.apache.hyracks.storage.am.common.ophelpers;
 
 public enum FindTupleMode {
 	INCLUSIVE, EXCLUSIVE, EXCLUSIVE_ERROR_IF_EXISTS, EXACT

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.api.resources.memory;
+package org.apache.hyracks.api.resources.memory;
 
 public interface IMemoryManager {
     public long getMaximumMemory();

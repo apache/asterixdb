@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.hyracks.dataflow.std.util;
+package org.apache.hyracks.dataflow.std.util;
 
 import static org.junit.Assert.assertTrue;
 

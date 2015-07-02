@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.ipc.impl;
+package org.apache.hyracks.ipc.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,7 +21,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.ipc.api.IPayloadSerializerDeserializer;
+import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 
 public class JavaSerializationBasedPayloadSerializerDeserializer implements IPayloadSerializerDeserializer {
     @Override

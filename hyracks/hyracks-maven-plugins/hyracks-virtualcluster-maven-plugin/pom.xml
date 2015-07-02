@@ -19,7 +19,7 @@
   <name>Hyracks VirtualCluster Maven Plugin</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-maven-plugins</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.bloomfilter.impls;
+package org.apache.hyracks.storage.am.bloomfilter.impls;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
  * The idea of this class is borrowed from http://murmurhash.googlepages.com/ and cassandra source code.

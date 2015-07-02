@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.common.exceptions;
+package org.apache.hyracks.algebricks.common.exceptions;
 
 public class AlgebricksException extends Exception {
     private static final long serialVersionUID = 1L;

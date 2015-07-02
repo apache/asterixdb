@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.test.support;
+package org.apache.hyracks.test.support;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,12 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.context.IHyracksRootContext;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.control.nc.io.IOManager;
 
 public class TestRootContext implements IHyracksRootContext {
     private IOManager ioManager;

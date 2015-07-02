@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.algebricks.examples.piglet.types;
+package org.apache.hyracks.algebricks.examples.piglet.types;
 
 public class FloatType extends Type {
     public static final Type INSTANCE = new FloatType();

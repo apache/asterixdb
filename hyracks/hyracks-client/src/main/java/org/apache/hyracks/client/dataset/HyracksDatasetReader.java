@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.client.dataset;
+package org.apache.hyracks.client.dataset;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -23,23 +23,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.channels.IInputChannel;
-import edu.uci.ics.hyracks.api.comm.FrameHelper;
-import edu.uci.ics.hyracks.api.comm.IFrame;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
-import edu.uci.ics.hyracks.api.dataset.DatasetJobRecord.Status;
-import edu.uci.ics.hyracks.api.dataset.IDatasetInputChannelMonitor;
-import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
-import edu.uci.ics.hyracks.api.dataset.IHyracksDatasetReader;
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.client.net.ClientNetworkManager;
-import edu.uci.ics.hyracks.comm.channels.DatasetNetworkInputChannel;
+import org.apache.hyracks.api.channels.IInputChannel;
+import org.apache.hyracks.api.comm.FrameHelper;
+import org.apache.hyracks.api.comm.IFrame;
+import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
+import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
+import org.apache.hyracks.api.dataset.IDatasetInputChannelMonitor;
+import org.apache.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
+import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
+import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.client.net.ClientNetworkManager;
+import org.apache.hyracks.comm.channels.DatasetNetworkInputChannel;
 
-// TODO(madhusudancs): Should this implementation be moved to edu.uci.ics.hyracks.client?
+// TODO(madhusudancs): Should this implementation be moved to org.apache.hyracks.client?
 public class HyracksDatasetReader implements IHyracksDatasetReader {
     private static final Logger LOGGER = Logger.getLogger(HyracksDatasetReader.class.getName());
 

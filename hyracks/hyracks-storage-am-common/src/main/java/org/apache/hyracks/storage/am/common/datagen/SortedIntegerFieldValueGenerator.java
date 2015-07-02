@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.storage.am.common.datagen;
+package org.apache.hyracks.storage.am.common.datagen;
 
 public class SortedIntegerFieldValueGenerator implements IFieldValueGenerator<Integer> {
     private int val = 0;

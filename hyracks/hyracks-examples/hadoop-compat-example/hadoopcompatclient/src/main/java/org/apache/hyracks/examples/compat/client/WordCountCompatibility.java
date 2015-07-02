@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.examples.compat.client;
+package org.apache.hyracks.examples.compat.client;
 
-import edu.uci.ics.hyracks.hadoop.compat.driver.CompatibilityLayer;
+import org.apache.hyracks.hadoop.compat.driver.CompatibilityLayer;
 
 public class WordCountCompatibility {
     public static void main(String[] args) throws Exception {

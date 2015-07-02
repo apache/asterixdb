@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.ipc.impl;
+package org.apache.hyracks.ipc.impl;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.ipc.api.IPayloadSerializerDeserializer;
+import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 
 class Message {
     private static final int MSG_SIZE_SIZE = 4;

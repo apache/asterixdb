@@ -18,7 +18,7 @@
   <name>algebricks-core</name>
 
   <parent>
-    <groupId>edu.uci.ics.hyracks</groupId>
+    <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks</artifactId>
     <version>0.2.16-SNAPSHOT</version>
   </parent>
@@ -49,27 +49,27 @@
   </build>
   <dependencies>
   <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
+  	<groupId>org.apache.hyracks</groupId>
   	<artifactId>hyracks-storage-am-btree</artifactId>
   	<version>0.2.16-SNAPSHOT</version>
   </dependency>
   <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
+  	<groupId>org.apache.hyracks</groupId>
   	<artifactId>hyracks-storage-am-rtree</artifactId>
   	<version>0.2.16-SNAPSHOT</version>
   </dependency>
   <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
+  	<groupId>org.apache.hyracks</groupId>
   	<artifactId>hyracks-dataflow-std</artifactId>
   	<version>0.2.16-SNAPSHOT</version>
   </dependency>
   <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
+  	<groupId>org.apache.hyracks</groupId>
   	<artifactId>algebricks-runtime</artifactId>
   	<version>0.2.16-SNAPSHOT</version>
   </dependency>
   <dependency>
-  	<groupId>edu.uci.ics.hyracks</groupId>
+  	<groupId>org.apache.hyracks</groupId>
   	<artifactId>algebricks-common</artifactId>
   	<version>0.2.16-SNAPSHOT</version>
   </dependency>

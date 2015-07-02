@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.net.buffers;
+package org.apache.hyracks.net.buffers;
 
 import java.nio.ByteBuffer;
 
