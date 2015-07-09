@@ -16,8 +16,6 @@ package edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IPrinter;
 

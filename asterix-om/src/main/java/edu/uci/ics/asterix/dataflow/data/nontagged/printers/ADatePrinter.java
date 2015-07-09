@@ -36,14 +36,8 @@ public class ADatePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
-
         ps.print("date(\"");
-        try {
-            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, Fields.YEAR, Fields.DAY, false);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
+        printString(b, s, l, ps);
         ps.print("\")");
     }
 

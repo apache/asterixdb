@@ -1,0 +1,10 @@
+/*
+* Description  : Testing get-record-fields under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse TinySocial;
+
+for $user in dataset FacebookUsersAlternate
+where $user.id = 8
+return get-record-fields($user);

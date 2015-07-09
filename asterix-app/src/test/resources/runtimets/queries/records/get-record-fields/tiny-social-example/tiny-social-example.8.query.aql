@@ -1,0 +1,10 @@
+/*
+* Description  : Testing get-record-fields under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse TinySocial;
+
+for $r in dataset TweetMessages
+order by $r.tweetid
+return get-record-fields($r);

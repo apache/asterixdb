@@ -1,0 +1,13 @@
+/*
+* Description  : Testing get-record-field-value under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse TinySocial;
+
+for $r in dataset TweetMessages
+for $f in get-record-fields($r)
+where $f.field-type = "STRING"
+let $result := get-record-field-value($r, $f.field-name)
+order by $result
+return $result

@@ -115,6 +115,10 @@ public class AObjectPrinter implements IPrinter {
                 APolygonPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case RECTANGLE: {
+                ARectanglePrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             case CIRCLE: {
                 ACirclePrinter.INSTANCE.print(b, s, l, ps);
                 break;
@@ -150,9 +154,20 @@ public class AObjectPrinter implements IPrinter {
                 ShortWithoutTypeInfoPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
-            default: {
+            case ANY:
+            case BITARRAY:
+            case ENUM:
+            case SPARSERECORD:
+            case SYSTEM_NULL:
+            case TYPE:
+            case UINT16:
+            case UINT32:
+            case UINT64:
+            case UINT8:
+            case UNION:
+            case UUID_STRING:
+                // These are internal types and do not need a printer.
                 throw new NotImplementedException("No printer for type " + typeTag);
-            }
         }
     }
 }

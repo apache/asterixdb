@@ -9,6 +9,7 @@
 * [Similarity Functions](#SimilarityFunctions)
 * [Tokenizing Functions](#TokenizingFunctions)
 * [Temporal Functions](#TemporalFunctions)
+* [Record Functions](#RecordFunctions)
 * [Other Functions](#OtherFunctions)
 
 Asterix provides various classes of functions to support operations on numeric, string, spatial, and temporal data. This document explains how to use these functions.
@@ -2219,6 +2220,66 @@ See the [Allen's Relations](allens.html).
         { "timebins": [ interval-time("17:00:00.000Z, 17:30:00.000Z"), interval-time("17:30:00.000Z, 18:00:00.000Z"), interval-time("18:00:00.000Z, 18:30:00.000Z"), interval-time("18:30:00.000Z, 19:00:00.000Z") ], 
           "datebins": [ interval-date("1970-01-01, 1990-01-01"), interval-date("1990-01-01, 2010-01-01"), interval-date("2010-01-01, 2030-01-01") ], 
           "datetimebins": [ interval-datetime("1800-01-01T00:00:00.000Z, 1900-01-01T00:00:00.000Z"), interval-datetime("1900-01-01T00:00:00.000Z, 2000-01-01T00:00:00.000Z"), interval-datetime("2000-01-01T00:00:00.000Z, 2100-01-01T00:00:00.000Z") ] }
+
+
+## <a id="RecordFunctions">Record Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+
+
+### get-record-fields ###
+ * Syntax:
+
+        get-record-fields(record_expression)
+
+ * Access the record field names, type and open status for a given record.
+ * Arguments:
+    * `record_expression` : a record value.
+ * Return Value:
+    * An order list of `record` values that include the field-name `string`, field-type `string`, is-open `boolean` and optional nested `orderedList` for the values of a nested record.
+
+ * Example:
+
+        let $r1 := {"id": 1, 
+            "project": "AsterixDB", 
+            "address": {"city": "Irvine", "state": "CA"}, 
+            "related": ["Hivestrix", "Preglix", "Apache VXQuery"] }
+        return get-record-fields($r1)
+
+ * The expected result is:
+
+        [ { "field-name": "id", "field-type": "INT64", "is-open": false }, 
+          { "field-name": "project", "field-type": "STRING", "is-open": false }, 
+          { "field-name": "address", "field-type": "RECORD", "is-open": false, "nested": [ 
+            { "field-name": "city", "field-type": "STRING", "is-open": false }, 
+            { "field-name": "state", "field-type": "STRING", "is-open": false } ] }, 
+          { "field-name": "related", "field-type": "ORDEREDLIST", "is-open": false, "list": [ 
+            { "field-type": "STRING" }, 
+            { "field-type": "STRING" }, 
+            { "field-type": "STRING" } ] } ]
+
+ ]
+### get-record-field-value ###
+ * Syntax:
+
+        get-record-field-value(record_expression, string_expression)
+
+ * Access the field name given in the `string_expression` from the `record_expression`.
+ * Arguments:
+    * `record_expression` : A `record` value.
+    * `string_expression` : A `string` representing the top level field name.
+ * Return Value:
+    * An `any` value saved in the designated field of the record.
+
+ * Example:
+
+        let $r1 := {"id": 1, 
+            "project": "AsterixDB", 
+            "address": {"city": "Irvine", "state": "CA"}, 
+            "related": ["Hivestrix", "Preglix", "Apache VXQuery"] }
+        return get-record-field-value($r1, "project")
+
+ * The expected result is:
+
+        "AsterixDB"
 
 
 ## <a id="OtherFunctions">Other Functions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##

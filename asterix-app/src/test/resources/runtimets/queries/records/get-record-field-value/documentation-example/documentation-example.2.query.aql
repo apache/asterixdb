@@ -1,0 +1,10 @@
+/*
+* Description  : Testing get-record-field-value under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+        let $r1 := {"id":1, 
+            "project":"AsterixDB", 
+            "address":{"city":"Irvine", "state":"CA"}, 
+            "related":["Hivestrix", "Preglix", "Apache VXQuery"] }
+        return get-record-field-value($r1, "address")

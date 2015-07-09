@@ -1,0 +1,63 @@
+/*
+* Description  : Testing get-record-fields under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse TinySocial;
+
+load dataset FacebookUsers using localfs
+(("path"="nc1://data/tinysocial/fbu.adm"),("format"="adm"));
+
+load dataset FacebookMessages using localfs
+(("path"="nc1://data/tinysocial/fbm.adm"),("format"="adm"));
+
+load dataset TwitterUsers using localfs
+(("path"="nc1://data/tinysocial/twu.adm"),("format"="adm"));
+
+load dataset TweetMessages using localfs
+(("path"="nc1://data/tinysocial/twm.adm"),("format"="adm"));
+
+
+// Alternate datasets
+insert into dataset TwitterUsersAlternate(
+    for $r in dataset TwitterUsers
+    return {
+        "screen-name" : $r.screen-name,
+        "lang" : $r.lang,
+        "friends_count" : $r.friends_count,
+        "statuses_count" : $r.statuses_count
+    }
+);
+
+insert into dataset TweetMessagesAlternate(
+    for $r in dataset TweetMessages
+    return {
+        "tweetid" : $r.tweetid,
+        "user" : $r.user,
+        "sender-location" : $r.sender-location,
+        "send-time" : $r.send-time,
+        "message-text" : $r.message-text
+    }
+);
+
+insert into dataset FacebookUsersAlternate(
+    for $r in dataset FacebookUsers
+    return {
+        "id" : $r.id,
+        "alias" : $r.alias,
+        "name" : $r.name,
+        "user-since" : $r.user-since,
+        "employment" : $r.employment[0]
+    }
+);
+
+insert into dataset FacebookMessagesAlternate(
+    for $r in dataset FacebookMessages
+    return {
+        "message-id" : $r.message-id,
+        "author-id" : $r.author-id,
+        "in-response-to" : $r.in-response-to,
+        "sender-location" : $r.sender-location,
+        "message" : $r.message
+    }
+);

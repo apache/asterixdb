@@ -1,0 +1,47 @@
+/*
+* Description  : Testing get-record-fields under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int64,
+        statuses_count: int64
+}
+
+create type TweetMessageType as closed {
+        tweetid: string,
+        user: TwitterUserType,
+        sender-location: point?,
+        send-time: datetime,
+        referred-topics: {{ string }},
+        message-text: string
+}
+
+create type EmploymentType as open {
+        organization-name: string,
+        start-date: date,
+        end-date: date?
+}
+
+create type FacebookUserType as closed {
+        id: int64,
+        alias: string,
+        name: string,
+        user-since: datetime,
+        friend-ids: {{ int64 }},
+        employment: [EmploymentType]
+}
+
+create type FacebookMessageType as closed {
+        message-id: int64,
+        author-id: int64,
+        in-response-to: int64?,
+        sender-location: point?,
+        message: string
+}

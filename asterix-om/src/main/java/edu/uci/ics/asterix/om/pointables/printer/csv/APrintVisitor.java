@@ -44,8 +44,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AStringPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ATimePrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinter;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListPointable;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -64,12 +64,12 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
     private int level = 0;
 
     @Override
-    public Void visit(AListPointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
+    public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
         throw new AsterixException("'List' type unsupported for CSV output");
     }
 
     @Override
-    public Void visit(ARecordPointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
+    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
         ARecordPrinter printer = raccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = new ARecordPrinter();

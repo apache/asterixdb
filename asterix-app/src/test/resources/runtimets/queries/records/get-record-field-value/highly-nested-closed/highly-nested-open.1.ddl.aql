@@ -1,0 +1,63 @@
+/*
+* Description  : Testing get-record-field-value under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type S as closed{
+    id: int64,
+    Species: string
+}
+
+create type GS as closed{
+    id: int64,
+    Genus: string,
+    lower: S
+}
+
+create type FGS as closed{
+    id: int64,
+    Family: string,
+    lower:GS
+}
+
+create type OFGS as closed{
+    id: int64,
+    Order: string,
+    lower: FGS
+}
+
+create type COFGS as closed{
+    id: int64,
+    Class: string,
+    lower: OFGS
+}
+
+create type PCOFGS as closed{
+    id: int64,
+    Phylum: string,
+    lower: COFGS
+}
+
+create type KPCOFGS as closed{
+    id: int64,
+    Kingdom: string,
+    lower: PCOFGS
+}
+
+create type Classification as closed{
+    id: int64,
+    fullClassification:KPCOFGS
+}
+
+create type Animal as closed{
+    id: int64,
+    class: Classification
+}
+
+create dataset Animals(Animal)
+primary key id;

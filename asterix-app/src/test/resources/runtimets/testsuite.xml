@@ -12,6 +12,11 @@
  ! See the License for the specific language governing permissions and
  ! limitations under the License.
  !-->
+<!DOCTYPE test-suite [
+
+<!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
+
+]>
 <test-suite
         xmlns="urn:xml.testframework.asterix.ics.uci.edu"
         ResultOffsetPath="results"
@@ -4343,65 +4348,7 @@
         </test-case>
     </test-group>
     <test-group name="records">
-        <test-case FilePath="records">
-            <compilation-unit name="closed-record-constructor_01">
-                <output-dir compare="Text">closed-record-constructor_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="closed-record-constructor_02">
-                <output-dir compare="Text">closed-record-constructor_02</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="closed-record-constructor_03">
-                <output-dir compare="Text">closed-record-constructor_03</output-dir>
-            </compilation-unit>
-        </test-case>
-        -->
-        <test-case FilePath="records">
-            <compilation-unit name="expFieldName">
-                <output-dir compare="Text">expFieldName</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="field-access-by-index_01">
-                <output-dir compare="Text">field-access-by-index_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="field-access-on-open-field">
-                <output-dir compare="Text">field-access-on-open-field</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="open-record-constructor_01">
-                <output-dir compare="Text">open-record-constructor_01</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="open-record-constructor_02">
-                <output-dir compare="Text">open-record-constructor_02</output-dir>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="closed-closed-fieldname-conflict_issue173">
-                <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="open-closed-fieldname-conflict_issue173">
-                <output-dir compare="Text">open-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
-            </compilation-unit>
-        </test-case>
-        <test-case FilePath="records">
-            <compilation-unit name="open-open-fieldname-conflict_issue173">
-                <output-dir compare="Text">open-open-fieldname-conflict_issue173</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
-            </compilation-unit>
-        </test-case>
+        &RecordsQueries;
     </test-group>
     <test-group name="scan">
         <test-case FilePath="scan">

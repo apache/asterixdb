@@ -20,7 +20,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.AListPointable;
+import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -45,7 +45,7 @@ class AListPrinter {
         }
     }
 
-    public void printList(AListPointable listAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
+    public void printList(AListVisitablePointable listAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
             AsterixException {
         List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();

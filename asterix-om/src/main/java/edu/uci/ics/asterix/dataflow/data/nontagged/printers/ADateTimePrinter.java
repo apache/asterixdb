@@ -35,16 +35,8 @@ public class ADateTimePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long chrononTime = AInt64SerializerDeserializer.getLong(b, s + 1);
-
         ps.print("datetime(\"");
-
-        try {
-            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, Fields.YEAR, Fields.MILLISECOND, true);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-
+        printString(b, s, l, ps);
         ps.print("\")");
     }
 

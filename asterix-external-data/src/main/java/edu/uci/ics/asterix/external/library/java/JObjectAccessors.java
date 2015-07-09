@@ -16,7 +16,6 @@ package edu.uci.ics.asterix.external.library.java;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -72,8 +71,8 @@ import edu.uci.ics.asterix.om.base.APoint3D;
 import edu.uci.ics.asterix.om.base.APolygon;
 import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListPointable;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -448,14 +447,14 @@ public class JObjectAccessors {
         }
 
         @Override
-        public JRecord access(ARecordPointable pointable, IObjectPool<IJObject, IAType> objectPool,
+        public JRecord access(ARecordVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
                 ARecordType recordType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             try {
                 jRecord.reset();
             } catch (AlgebricksException e) {
                 throw new HyracksDataException(e);
             }
-            ARecordPointable recordPointable = (ARecordPointable) pointable;
+            ARecordVisitablePointable recordPointable = (ARecordVisitablePointable) pointable;
             List<IVisitablePointable> fieldPointables = recordPointable.getFieldValues();
             List<IVisitablePointable> fieldTypeTags = recordPointable.getFieldTypeTags();
             List<IVisitablePointable> fieldNames = recordPointable.getFieldNames();
@@ -473,7 +472,7 @@ public class JObjectAccessors {
                     typeInfo.reset(fieldType, typeTag);
                     switch (typeTag) {
                         case RECORD:
-                            fieldObject = pointableVisitor.visit((ARecordPointable) fieldPointable, typeInfo);
+                            fieldObject = pointableVisitor.visit((ARecordVisitablePointable) fieldPointable, typeInfo);
                             break;
                         case ORDEREDLIST:
                         case UNORDEREDLIST:
@@ -481,7 +480,7 @@ public class JObjectAccessors {
                                 // value is null
                                 fieldObject = null;
                             } else {
-                                fieldObject = pointableVisitor.visit((AListPointable) fieldPointable, typeInfo);
+                                fieldObject = pointableVisitor.visit((AListVisitablePointable) fieldPointable, typeInfo);
                             }
                             break;
                         case ANY:
@@ -530,7 +529,7 @@ public class JObjectAccessors {
         }
 
         @Override
-        public IJObject access(AListPointable pointable, IObjectPool<IJObject, IAType> objectPool, IAType listType,
+        public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool, IAType listType,
                 JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
             List<IVisitablePointable> itemTags = pointable.getItemTags();
@@ -546,11 +545,11 @@ public class JObjectAccessors {
                     typeInfo.reset(listType.getType(), listType.getTypeTag());
                     switch (itemTypeTag) {
                         case RECORD:
-                            listItem = pointableVisitor.visit((ARecordPointable) itemPointable, typeInfo);
+                            listItem = pointableVisitor.visit((ARecordVisitablePointable) itemPointable, typeInfo);
                             break;
                         case UNORDEREDLIST:
                         case ORDEREDLIST:
-                            listItem = pointableVisitor.visit((AListPointable) itemPointable, typeInfo);
+                            listItem = pointableVisitor.visit((AListVisitablePointable) itemPointable, typeInfo);
                             break;
                         case ANY:
                             throw new IllegalArgumentException("Cannot parse list item of type "

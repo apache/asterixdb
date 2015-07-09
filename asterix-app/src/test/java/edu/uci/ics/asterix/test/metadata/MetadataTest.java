@@ -73,13 +73,13 @@ public class MetadataTest {
         }
 
         // clean up the files written by the ASTERIX storage manager
-        for (String d : AsterixHyracksIntegrationUtil.ASTERIX_DATA_DIRS) {
+        for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
             TestsUtils.deleteRec(new File(d));
         }
     }
 
     private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
             File log = new File(txnProperties.getLogDirectory(ncId));
             if (log.exists()) {
                 FileUtils.deleteDirectory(log);

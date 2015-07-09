@@ -38,7 +38,7 @@ public class ADurationPrinter implements IPrinter {
         ps.print("{ \"duration\": { ");
         ps.print("\"months\": ");
         ps.print(months);
-        ps.print("\"millis\": ");
+        ps.print(", \"millis\": ");
         ps.print(milliseconds);
         ps.print("} }");
     }
