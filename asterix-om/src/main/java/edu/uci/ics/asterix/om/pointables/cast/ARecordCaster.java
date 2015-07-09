@@ -27,7 +27,7 @@ import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.common.exceptions.TypeException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.AqlNullWriterFactory;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.PointableAllocator;
 import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
@@ -108,7 +108,7 @@ class ARecordCaster {
         }
     }
 
-    public void castRecord(ARecordPointable recordAccessor, IVisitablePointable resultAccessor, ARecordType reqType,
+    public void castRecord(ARecordVisitablePointable recordAccessor, IVisitablePointable resultAccessor, ARecordType reqType,
             ACastVisitor visitor) throws IOException, TypeException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();

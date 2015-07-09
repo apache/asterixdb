@@ -22,8 +22,8 @@ import edu.uci.ics.asterix.external.library.TypeInfo;
 import edu.uci.ics.asterix.external.library.java.JObjectAccessors.JListAccessor;
 import edu.uci.ics.asterix.external.library.java.JObjectAccessors.JRecordAccessor;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListPointable;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -37,7 +37,7 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
     private final Map<IVisitablePointable, IJListAccessor> laccessorToPrinter = new HashMap<IVisitablePointable, IJListAccessor>();
 
     @Override
-    public IJObject visit(AListPointable accessor, TypeInfo arg) throws AsterixException {
+    public IJObject visit(AListVisitablePointable accessor, TypeInfo arg) throws AsterixException {
         IJObject result = null;
         IJListAccessor jListAccessor = laccessorToPrinter.get(accessor);
         if (jListAccessor == null) {
@@ -53,7 +53,7 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
     }
 
     @Override
-    public IJObject visit(ARecordPointable accessor, TypeInfo arg) throws AsterixException {
+    public IJObject visit(ARecordVisitablePointable accessor, TypeInfo arg) throws AsterixException {
         IJObject result = null;
         IJRecordAccessor jRecordAccessor = raccessorToJObject.get(accessor);
         if (jRecordAccessor == null) {

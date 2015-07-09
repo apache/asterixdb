@@ -134,8 +134,6 @@ import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalMonthAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalSecondAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.accessors.TemporalYearAccessor;
 import edu.uci.ics.asterix.runtime.evaluators.common.CreateMBREvalFactory;
-import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessByIndexEvalFactory;
-import edu.uci.ics.asterix.runtime.evaluators.common.FieldAccessNestedEvalFactory;
 import edu.uci.ics.asterix.runtime.evaluators.common.FunctionManagerImpl;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ABinaryBase64StringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ABinaryHexStringConstructorDescriptor;
@@ -166,11 +164,12 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.ARectangleConstructor
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AStringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.OpenRecordConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AndDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CastListDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CastRecordDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.ClosedRecordConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.ContainsDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
@@ -189,9 +188,6 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceListIsFilter
 import edu.uci.ics.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterable;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EmbedTypeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.EndsWithDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByIndexDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessByNameDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.FieldAccessNestedDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FlowRecordDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.FuzzyEqDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.GetItemDescriptor;
@@ -218,11 +214,9 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2D
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericSubDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.OpenRecordConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OrDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.OrderedListConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.PrefixLenJaccardDescriptor;
-import edu.uci.ics.asterix.runtime.evaluators.functions.RecordMergeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.RegExpDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
@@ -263,6 +257,14 @@ import edu.uci.ics.asterix.runtime.evaluators.functions.binary.ParseBinaryDescri
 import edu.uci.ics.asterix.runtime.evaluators.functions.binary.PrintBinaryDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.binary.SubBinaryFromDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.binary.SubBinaryFromToDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.FieldAccessByIndexDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.FieldAccessByIndexEvalFactory;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.FieldAccessByNameDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.FieldAccessNestedDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.FieldAccessNestedEvalFactory;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.GetRecordFieldValueDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.GetRecordFieldsDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.functions.records.RecordMergeDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
@@ -409,6 +411,9 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(FieldAccessByIndexDescriptor.FACTORY);
         temp.add(FieldAccessByNameDescriptor.FACTORY);
         temp.add(FieldAccessNestedDescriptor.FACTORY);
+        temp.add(GetRecordFieldsDescriptor.FACTORY);
+        temp.add(GetRecordFieldValueDescriptor.FACTORY);
+        temp.add(FieldAccessByNameDescriptor.FACTORY);
         temp.add(GetItemDescriptor.FACTORY);
         temp.add(NumericUnaryMinusDescriptor.FACTORY);
         temp.add(OpenRecordConstructorDescriptor.FACTORY);
@@ -759,13 +764,10 @@ public class NonTaggedDataFormat implements IDataFormat {
                     throw new AlgebricksException(e);
                 }
             }
-            ICopyEvaluatorFactory fldNameEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
-                    abvs.getLength()));
             ICopyEvaluatorFactory[] factories = new ICopyEvaluatorFactory[2];
             factories[0] = recordEvalFactory;
-            factories[1] = fldNameEvalFactory;
             if (fldName.size() > 1) {
-                evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, fldNameEvalFactory, recType, fldName);
+                evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, recType, fldName);
             } else {
                 evalFactory = FieldAccessByNameDescriptor.FACTORY.createFunctionDescriptor().createEvaluatorFactory(
                         factories);
@@ -861,10 +863,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }
-            ICopyEvaluatorFactory fldNameEvalFactory = new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(),
-                    abvs.getLength()));
-            ICopyEvaluatorFactory evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, fldNameEvalFactory,
-                    recType, fldName);
+            ICopyEvaluatorFactory evalFactory = new FieldAccessNestedEvalFactory(recordEvalFactory, recType, fldName);
             IFunctionInfo finfoAccess = AsterixBuiltinFunctions
                     .getAsterixFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_NESTED);
 
@@ -1002,6 +1001,26 @@ public class NonTaggedDataFormat implements IDataFormat {
                 default: {
                     throw new NotImplementedException("field-access-nested for data of type " + t);
                 }
+            }
+        }
+        if (fd.getIdentifier().equals(AsterixBuiltinFunctions.GET_RECORD_FIELDS)) {
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
+            if (t.getTypeTag().equals(ATypeTag.RECORD)) {
+                ARecordType recType = (ARecordType) t;
+                ((GetRecordFieldsDescriptor) fd).reset(recType);
+            } else {
+                throw new NotImplementedException("get-record-fields for data of type " + t);
+            }
+        }
+        if (fd.getIdentifier().equals(AsterixBuiltinFunctions.GET_RECORD_FIELD_VALUE)) {
+            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
+            if (t.getTypeTag().equals(ATypeTag.RECORD)) {
+                ARecordType recType = (ARecordType) t;
+                ((GetRecordFieldValueDescriptor) fd).reset(recType);
+            } else {
+                throw new NotImplementedException("get-record-field-value for data of type " + t);
             }
         }
     }

@@ -36,9 +36,9 @@ public class PointableAllocator {
     private IObjectPool<IVisitablePointable, IAType> flatValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
             AFlatValuePointable.FACTORY);
     private IObjectPool<IVisitablePointable, IAType> recordValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
-            ARecordPointable.FACTORY);
+            ARecordVisitablePointable.FACTORY);
     private IObjectPool<IVisitablePointable, IAType> listValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
-            AListPointable.FACTORY);
+            AListVisitablePointable.FACTORY);
     private IObjectPool<AOrderedListType, IAType> orederedListTypeAllocator = new ListObjectPool<AOrderedListType, IAType>(
             new IObjectFactory<AOrderedListType, IAType>() {
                 @Override

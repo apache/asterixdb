@@ -30,7 +30,6 @@ public class ADayTimeDurationPrinter implements IPrinter {
 
     @Override
     public void init() throws AlgebricksException {
-        // TODO Auto-generated method stub
 
     }
 

@@ -1,0 +1,11 @@
+/*
+* Description  : Access a records nested records at each level.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse test;
+
+for $test in dataset Animals
+let $result := $test.class
+order by $result.id
+return $result;

@@ -35,16 +35,8 @@ public class ATimePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        int time = AInt32SerializerDeserializer.getInt(b, s + 1);
-
         ps.print("time(\"");
-
-        try {
-            gCalInstance.getExtendStringRepUntilField(time, 0, ps, Fields.HOUR, Fields.MILLISECOND, true);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-
+        printString(b,s,l, ps);
         ps.print("\")");
     }
 

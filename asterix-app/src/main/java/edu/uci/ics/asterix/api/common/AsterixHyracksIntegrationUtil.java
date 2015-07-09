@@ -32,16 +32,15 @@ import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 
 public class AsterixHyracksIntegrationUtil {
 
-    public static final String[] NC_IDS = { "nc1", "nc2" };
-    public static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
+    public static final int NODES = 2;
+    public static final int PARTITONS = 2;
 
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
     private static ClusterControllerService cc;
-    private static NodeControllerService nc1;
-    private static NodeControllerService nc2;
+    private static NodeControllerService[] ncs = new NodeControllerService[NODES];
     private static IHyracksClientConnection hcc;
 
     public static void init() throws Exception {
@@ -58,37 +57,49 @@ public class AsterixHyracksIntegrationUtil {
         cc = new ClusterControllerService(ccConfig);
         cc.start();
 
-        NCConfig ncConfig1 = new NCConfig();
-        ncConfig1.ccHost = "localhost";
-        ncConfig1.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
-        ncConfig1.clusterNetIPAddress = "127.0.0.1";
-        ncConfig1.dataIPAddress = "127.0.0.1";
-        ncConfig1.resultIPAddress = "127.0.0.1";
-        ncConfig1.nodeId = NC_IDS[0];
-        ncConfig1.resultTTL = 30000;
-        ncConfig1.resultSweepThreshold = 1000;
-        ncConfig1.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice0" + ","
-                + System.getProperty("java.io.tmpdir") + File.separator + "nc1/iodevice1";
-        ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
-        nc1 = new NodeControllerService(ncConfig1);
-        nc1.start();
-
-        NCConfig ncConfig2 = new NCConfig();
-        ncConfig2.ccHost = "localhost";
-        ncConfig2.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
-        ncConfig2.clusterNetIPAddress = "127.0.0.1";
-        ncConfig2.dataIPAddress = "127.0.0.1";
-        ncConfig2.resultIPAddress = "127.0.0.1";
-        ncConfig2.nodeId = NC_IDS[1];
-        ncConfig2.resultTTL = 30000;
-        ncConfig2.resultSweepThreshold = 1000;
-        ncConfig2.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice0" + ","
-                + System.getProperty("java.io.tmpdir") + File.separator + "nc2/iodevice1";
-        ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
-        nc2 = new NodeControllerService(ncConfig2);
-        nc2.start();
+        int n = 0;
+        for (String ncName : getNcNames()) {
+            NCConfig ncConfig1 = new NCConfig();
+            ncConfig1.ccHost = "localhost";
+            ncConfig1.ccPort = DEFAULT_HYRACKS_CC_CLUSTER_PORT;
+            ncConfig1.clusterNetIPAddress = "127.0.0.1";
+            ncConfig1.dataIPAddress = "127.0.0.1";
+            ncConfig1.resultIPAddress = "127.0.0.1";
+            ncConfig1.nodeId = ncName;
+            ncConfig1.resultTTL = 30000;
+            ncConfig1.resultSweepThreshold = 1000;
+            for (int p = 0; p < PARTITONS; ++p) {
+                if (p == 0) {
+                    ncConfig1.ioDevices = System.getProperty("java.io.tmpdir") + File.separator + ncConfig1.nodeId
+                            + "/iodevice" + p;
+                } else {
+                    ncConfig1.ioDevices += "," + System.getProperty("java.io.tmpdir") + File.separator
+                            + ncConfig1.nodeId + "/iodevice" + p;
+                }
+            }
+            ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
+            ncs[n] = new NodeControllerService(ncConfig1);
+            ncs[n].start();
+            ++n;
+        }
 
         hcc = new HyracksConnection(cc.getConfig().clientNetIpAddress, cc.getConfig().clientNetPort);
+    }
+
+    public static String[] getNcNames() {
+        String[] names = new String[NODES];
+        for (int n = 0; n < NODES; ++n) {
+            names[n] = "nc" + (n + 1);
+        }
+        return names;
+    }
+
+    public static String[] getDataDirs() {
+        String[] names = new String[NODES];
+        for (int n = 0; n < NODES; ++n) {
+            names[n] = "nc" + (n + 1) + "data";
+        }
+        return names;
     }
 
     public static IHyracksClientConnection getHyracksClientConnection() {
@@ -96,10 +107,11 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     public static void deinit() throws Exception {
-        if (nc2 != null)
-            nc2.stop();
-        if (nc1 != null)
-            nc1.stop();
+        for (int n = 0; n < ncs.length; ++n) {
+            if (ncs[n] != null)
+                ncs[n].stop();
+
+        }
         if (cc != null)
             cc.stop();
     }

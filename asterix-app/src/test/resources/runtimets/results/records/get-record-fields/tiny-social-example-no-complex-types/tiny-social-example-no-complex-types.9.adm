@@ -1,0 +1,5 @@
+[ { "count": 12, "field-name": "message-text", "field-type": "STRING" }
+, { "count": 12, "field-name": "send-time", "field-type": "DATETIME" }
+, { "count": 12, "field-name": "sender-location", "field-type": "POINT" }
+, { "count": 12, "field-name": "tweetid", "field-type": "STRING" }
+ ]

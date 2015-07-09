@@ -46,8 +46,8 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AYearMonthDurationPrinter;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListPointable;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import edu.uci.ics.asterix.om.types.ATypeTag;
@@ -65,7 +65,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
     private final Map<IVisitablePointable, AListPrinter> laccessorToPrinter = new HashMap<IVisitablePointable, AListPrinter>();
 
     @Override
-    public Void visit(AListPointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
+    public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
         AListPrinter printer = laccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = new AListPrinter(accessor.ordered());
@@ -80,7 +80,7 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
     }
 
     @Override
-    public Void visit(ARecordPointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
+    public Void visit(ARecordVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
         ARecordPrinter printer = raccessorToPrinter.get(accessor);
         if (printer == null) {
             printer = new ARecordPrinter();

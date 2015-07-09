@@ -28,6 +28,7 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt16PrinterFac
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt32PrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt64PrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt8PrinterFactory;
+import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AIntervalPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ALinePrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ANullPrinterFactory;
 import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ANullableFieldPrinterFactory;
@@ -62,8 +63,6 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
 
         if (aqlType != null) {
             switch (aqlType.getTypeTag()) {
-            // case ANYTYPE:
-            // return AAnyTypePrinterFactory.INSTANCE;
                 case INT8:
                     return AInt8PrinterFactory.INSTANCE;
                 case INT16:
@@ -92,6 +91,8 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return AYearMonthDurationPrinterFactory.INSTANCE;
                 case DAYTIMEDURATION:
                     return ADayTimeDurationPrinterFactory.INSTANCE;
+                case INTERVAL:
+                    return AIntervalPrinterFactory.INSTANCE;
                 case POINT:
                     return APointPrinterFactory.INSTANCE;
                 case POINT3D:
@@ -123,6 +124,20 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                 }
                 case SHORTWITHOUTTYPEINFO:
                     return ShortWithoutTypeInfoPrinterFactory.INSTANCE;
+                case ANY:
+                case BINARY:
+                case BITARRAY:
+                case ENUM:
+                case SPARSERECORD:
+                case SYSTEM_NULL:
+                case TYPE:
+                case UINT16:
+                case UINT32:
+                case UINT64:
+                case UINT8:
+                case UUID_STRING:
+                    // These types are not intended to be printed to the user.
+                    break;
             }
         }
         return AObjectPrinterFactory.INSTANCE;

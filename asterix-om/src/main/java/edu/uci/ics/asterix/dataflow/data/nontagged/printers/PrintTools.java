@@ -14,11 +14,10 @@
  */
 package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
 
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
-
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class PrintTools {
     public static enum CASE {

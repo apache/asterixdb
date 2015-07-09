@@ -20,7 +20,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.EnumDeserializer;
@@ -41,7 +41,7 @@ class ARecordPrinter {
 
     }
 
-    public void printRecord(ARecordPointable recordAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
+    public void printRecord(ARecordVisitablePointable recordAccessor, PrintStream ps, APrintVisitor visitor) throws IOException,
             AsterixException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTags = recordAccessor.getFieldTypeTags();

@@ -1,0 +1,2 @@
+[ [ { "field-name": "id", "field-type": "INT64", "is-open": false }, { "field-name": "project", "field-type": "STRING", "is-open": false }, { "field-name": "address", "field-type": "RECORD", "is-open": false, "nested": [ { "field-name": "city", "field-type": "STRING", "is-open": false }, { "field-name": "state", "field-type": "STRING", "is-open": false } ] }, { "field-name": "related", "field-type": "ORDEREDLIST", "is-open": false, "list": [ { "field-type": "STRING" }, { "field-type": "STRING" }, { "field-type": "STRING" } ] } ]
+ ]

@@ -93,6 +93,9 @@ public class AObjectPrinter implements IPrinter {
                 ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case INTERVAL:
+                AIntervalPrinter.INSTANCE.print(b, s, l, ps);
+                break;
             case POINT: {
                 APointPrinter.INSTANCE.print(b, s, l, ps);
                 break;
@@ -113,6 +116,9 @@ public class AObjectPrinter implements IPrinter {
                 ACirclePrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
+            case RECTANGLE:
+                ARectanglePrinter.INSTANCE.print(b, s, l, ps);
+                break;
             case STRING: {
                 AStringPrinter.INSTANCE.print(b, s, l, ps);
                 break;
@@ -122,9 +128,24 @@ public class AObjectPrinter implements IPrinter {
                 recordPrinter.print(b, s, l, ps);
                 break;
             }
-            default: {
+            case ANY:
+            case BINARY:
+            case BITARRAY:
+            case ENUM:
+            case ORDEREDLIST:
+            case SHORTWITHOUTTYPEINFO:
+            case SPARSERECORD:
+            case SYSTEM_NULL:
+            case TYPE:
+            case UINT16:
+            case UINT32:
+            case UINT64:
+            case UINT8:
+            case UNION:
+            case UNORDEREDLIST:
+            case UUID:
+            case UUID_STRING:
                 throw new NotImplementedException("No printer for type " + typeTag);
-            }
         }
     }
 }

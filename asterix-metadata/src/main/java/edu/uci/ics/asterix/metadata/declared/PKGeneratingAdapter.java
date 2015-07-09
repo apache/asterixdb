@@ -21,7 +21,7 @@ import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
 import edu.uci.ics.asterix.om.base.AMutableUUID;
 import edu.uci.ics.asterix.om.base.AUUID;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.PointableAllocator;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -75,7 +75,7 @@ public class PKGeneratingAdapter implements IDatasourceAdapter {
         private final byte AUUIDTag = ATypeTag.UUID.serialize();
         private final byte[] serializedUUID = new byte[16];
         private final PointableAllocator pa = new PointableAllocator();
-        private final ARecordPointable recordPointable;
+        private final ARecordVisitablePointable recordPointable;
         private final IAType[] outClosedTypes;
 
         private final RecordBuilder recBuilder;
@@ -85,7 +85,7 @@ public class PKGeneratingAdapter implements IDatasourceAdapter {
             this.outRecType = outRecType;
             this.tb = new ArrayTupleBuilder(2);
             this.recBuilder = new RecordBuilder();
-            this.recordPointable = (ARecordPointable) pa.allocateRecordValue(inRecType);
+            this.recordPointable = (ARecordVisitablePointable) pa.allocateRecordValue(inRecType);
             this.outClosedTypes = outRecType.getFieldTypes();
         }
 

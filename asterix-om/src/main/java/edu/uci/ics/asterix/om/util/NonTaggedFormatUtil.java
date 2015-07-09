@@ -47,6 +47,7 @@ public final class NonTaggedFormatUtil {
             case RECORD:
             case ORDEREDLIST:
             case UNORDEREDLIST:
+            case POLYGON:
             case ANY:
                 return false;
             case UNION:

@@ -22,8 +22,8 @@ import java.util.Map;
 
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListPointable;
-import edu.uci.ics.asterix.om.pointables.ARecordPointable;
+import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
+import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
 import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
 import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
@@ -54,7 +54,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<IVisitablePointable, AListCaster>();
 
     @Override
-    public Void visit(AListPointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
+    public Void visit(AListVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
             throws AsterixException {
         AListCaster caster = laccessorToCaster.get(accessor);
         if (caster == null) {
@@ -73,7 +73,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     }
 
     @Override
-    public Void visit(ARecordPointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
+    public Void visit(ARecordVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
             throws AsterixException {
         ARecordCaster caster = raccessorToCaster.get(accessor);
         if (caster == null) {

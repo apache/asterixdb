@@ -1,0 +1,11 @@
+/*
+* Description  : Testing get-record-field-value under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse test;
+
+for $test in dataset Animals
+let $result := get-record-field-value($test, "class")
+order by $result.id
+return $result;

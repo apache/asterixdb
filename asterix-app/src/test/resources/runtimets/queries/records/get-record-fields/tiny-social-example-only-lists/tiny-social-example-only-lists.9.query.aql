@@ -1,0 +1,13 @@
+/*
+* Description  : Testing get-record-fields under different queries.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+use dataverse TinySocial;
+
+for $r in dataset TweetMessagesAlternate
+for $f in get-record-fields($r)
+group by $n:=$f.field-name, $t:=$f.field-type with $r
+let $count:=count($r)
+order by $n, $t
+return {"field-name":$n, "field-type":$t, "count":$count};

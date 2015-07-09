@@ -89,7 +89,7 @@ public class OptimizerTest {
     }
 
     private static void deleteTransactionLogs() throws Exception {
-        for (String ncId : AsterixHyracksIntegrationUtil.NC_IDS) {
+        for (String ncId : AsterixHyracksIntegrationUtil.getNcNames()) {
             File log = new File(txnProperties.getLogDirectory(ncId));
             if (log.exists()) {
                 FileUtils.deleteDirectory(log);
