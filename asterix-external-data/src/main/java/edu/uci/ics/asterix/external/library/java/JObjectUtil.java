@@ -14,10 +14,6 @@
  */
 package edu.uci.ics.asterix.external.library.java;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
@@ -56,7 +52,38 @@ import edu.uci.ics.asterix.om.util.container.IObjectPool;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class JObjectUtil {
+
+    /**
+     *  Normalize an input string by removing linebreaks, and replace them with space
+     *  Also remove non-readable special characters
+     *
+     * @param originalString
+     *      The input String
+     * @return
+     *      String - the normalized string
+     */
+    public static String getNormalizedString(String originalString) {
+        int len = originalString.length();
+        char asciiBuff[] = new char[len];
+        int j = 0;
+        for (int i = 0; i < len; i++) {
+            char c = originalString.charAt(i);
+            if (c == '\n' || c == '\t' || c == '\r') {
+                asciiBuff[j] = ' ';
+                j++;
+            } else if (c > 0 && c <= 0x7f) {
+                asciiBuff[j] = c;
+                j++;
+            }
+        }
+
+        return new String(asciiBuff).trim();
+    }
 
     public static IJObject getJType(ATypeTag typeTag, IAType type, ByteArrayAccessibleDataInputStream dis,
             IObjectPool<IJObject, IAType> objectPool) throws IOException, AsterixException {

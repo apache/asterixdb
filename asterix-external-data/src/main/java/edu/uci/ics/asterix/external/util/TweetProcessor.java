@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.asterix.external.util;
 
+import edu.uci.ics.asterix.external.library.java.JObjectUtil;
 import twitter4j.Status;
 import twitter4j.User;
 import edu.uci.ics.asterix.om.base.AMutableDouble;
@@ -43,11 +44,11 @@ public class TweetProcessor {
 
     public AMutableRecord processNextTweet(Status tweet) {
         User user = tweet.getUser();
-        ((AMutableString) mutableUserFields[0]).setValue(getNormalizedString(user.getScreenName()));
-        ((AMutableString) mutableUserFields[1]).setValue(getNormalizedString(user.getLang()));
+        ((AMutableString) mutableUserFields[0]).setValue(JObjectUtil.getNormalizedString(user.getScreenName()));
+        ((AMutableString) mutableUserFields[1]).setValue(JObjectUtil.getNormalizedString(user.getLang()));
         ((AMutableInt32) mutableUserFields[2]).setValue(user.getFriendsCount());
         ((AMutableInt32) mutableUserFields[3]).setValue(user.getStatusesCount());
-        ((AMutableString) mutableUserFields[4]).setValue(getNormalizedString(user.getName()));
+        ((AMutableString) mutableUserFields[4]).setValue(JObjectUtil.getNormalizedString(user.getName()));
         ((AMutableInt32) mutableUserFields[5]).setValue(user.getFollowersCount());
 
         ((AMutableString) mutableTweetFields[0]).setValue(tweet.getId() + "");
@@ -62,20 +63,15 @@ public class TweetProcessor {
             ((AMutableDouble) mutableTweetFields[2]).setValue(0);
             ((AMutableDouble) mutableTweetFields[3]).setValue(0);
         }
-        ((AMutableString) mutableTweetFields[4]).setValue(getNormalizedString(tweet.getCreatedAt().toString()));
-        ((AMutableString) mutableTweetFields[5]).setValue(getNormalizedString(tweet.getText()));
+        ((AMutableString) mutableTweetFields[4]).setValue(JObjectUtil.getNormalizedString(
+                tweet.getCreatedAt().toString()));
+        ((AMutableString) mutableTweetFields[5]).setValue(JObjectUtil.getNormalizedString(tweet.getText()));
 
         for (int i = 0; i < 6; i++) {
             mutableRecord.setValueAtPos(i, mutableTweetFields[i]);
         }
 
         return mutableRecord;
-
-    }
-
-    public static String getNormalizedString(String originalString) {
-        String asciiText = originalString.replaceAll("[^\\x00-\\x7F]", "").replaceAll("\n", " ");
-        return asciiText.trim();
 
     }
 

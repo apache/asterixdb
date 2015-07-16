@@ -14,18 +14,6 @@
  */
 package edu.uci.ics.asterix.external.library.java;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import edu.uci.ics.asterix.builders.IAsterixListBuilder;
 import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.builders.UnorderedListBuilder;
@@ -77,6 +65,7 @@ import edu.uci.ics.asterix.om.base.AMutableRectangle;
 import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AMutableTime;
 import edu.uci.ics.asterix.om.base.AMutableUnorderedList;
+import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.base.APoint;
 import edu.uci.ics.asterix.om.base.ARectangle;
 import edu.uci.ics.asterix.om.base.AString;
@@ -89,6 +78,18 @@ import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class JObjects {
 
@@ -109,6 +110,47 @@ public class JObjects {
         @Override
         public IAObject getIAObject() {
             return value;
+        }
+
+    }
+
+    /*
+     *  This class is necessary to be able to serialize null objects
+      *  in cases of setting "null" results
+     *
+     *
+     */
+    public static class JNull implements IJObject {
+        public final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
+
+        public final static JNull INSTANCE = new JNull();
+
+        private JNull() {
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.NULL;
+        }
+
+        @Override
+        public IAObject getIAObject() {
+            return ANull.NULL;
+        }
+
+        @Override
+        public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+            if (writeTypeTag) {
+                try {
+                    dataOutput.writeByte(SER_NULL_TYPE_TAG);
+                } catch (IOException e) {
+                    throw new HyracksDataException(e);
+                }
+            }
+        }
+
+        @Override
+        public void reset() {
         }
 
     }
@@ -1024,6 +1066,10 @@ public class JObjects {
 
         public IJObject[] getFields() {
             return fields;
+        }
+
+        public Map<String, IJObject> getOpenFields() {
+            return this.openFields;
         }
 
         public RecordBuilder getRecordBuilder() {

@@ -15,10 +15,12 @@
 package edu.uci.ics.asterix.external.library;
 
 import edu.uci.ics.asterix.om.functions.IExternalFunctionInfo;
+import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ExternalFunctionProvider {
@@ -38,6 +40,8 @@ public class ExternalFunctionProvider {
 }
 
 class ExternalScalarFunction extends ExternalFunction implements IExternalScalarFunction, ICopyEvaluator {
+    private final static byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
+    private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
 
     public ExternalScalarFunction(IExternalFunctionInfo finfo, ICopyEvaluatorFactory args[],
             IDataOutputProvider outputProvider) throws AlgebricksException {
@@ -57,12 +61,22 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
             functionHelper.reset();
         } catch (Exception e) {
             e.printStackTrace();
-            //throw new AlgebricksException(e);
+            throw new AlgebricksException(e);
         }
     }
 
     public void evaluate(IFunctionHelper argumentProvider) throws Exception {
         ((IExternalScalarFunction) externalFunction).evaluate(argumentProvider);
+        /*
+         * Make sure that if "setResult" is not called,
+         * or the result object is null we let Hyracks storage manager know
+         * we want to discard a null object
+         */
+        byte byteOutput = ((ArrayBackedValueStorage) out).getByteArray()[0];
+        if (!argumentProvider.isValidResult() || byteOutput == SER_NULL_TYPE_TAG) {
+            out.getDataOutput().writeByte(SER_NULL_TYPE_TAG);
+        }
     }
+
 
 }

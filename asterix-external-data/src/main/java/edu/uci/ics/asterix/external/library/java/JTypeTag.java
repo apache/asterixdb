@@ -22,5 +22,6 @@ public enum JTypeTag {
     DOUBLE,
     FLOAT,
     LIST,
-    OBJECT
+    OBJECT,
+    NULL
 }
