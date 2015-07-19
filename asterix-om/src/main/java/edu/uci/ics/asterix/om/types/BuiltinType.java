@@ -51,7 +51,7 @@ public abstract class BuiltinType implements IAType {
 
         @Override
         public String getTypeName() {
-            return "atype";
+            return "ASTERIX_TYPE";
         }
 
         @Override
@@ -62,7 +62,7 @@ public abstract class BuiltinType implements IAType {
         @Override
         public JSONObject toJSON() throws JSONException {
             JSONObject type = new JSONObject();
-            type.put("type", "AsterixType");
+            type.put("type", "ASTERIX_TYPE");
             return type;
         }
     };
@@ -305,7 +305,7 @@ public abstract class BuiltinType implements IAType {
         @Override
         public JSONObject toJSON() throws JSONException {
             JSONObject type = new JSONObject();
-            type.put("type", "Null");
+            type.put("type", "ANULL");
             return type;
         }
     };

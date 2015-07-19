@@ -50,7 +50,7 @@ public class AOrderedListType extends AbstractCollectionType {
     public boolean equals(Object obj) {
         if (obj instanceof AOrderedListType) {
             AOrderedListType type = (AOrderedListType) obj;
-            return this.itemType == type.itemType;
+            return this.itemType.equals(type.itemType);
         }
         return false;
     }
@@ -73,7 +73,8 @@ public class AOrderedListType extends AbstractCollectionType {
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject type = new JSONObject();
-        type.put("type", itemType);
+        type.put("type", AOrderedListType.class.getName());
+        type.put("item-type", itemType.toJSON());
         return type;
     }
 }

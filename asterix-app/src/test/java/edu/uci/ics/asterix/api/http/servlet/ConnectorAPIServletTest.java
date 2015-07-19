@@ -36,17 +36,26 @@ import junit.extensions.PA;
 import junit.framework.Assert;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 
+import edu.uci.ics.asterix.feeds.CentralFeedManager;
+import edu.uci.ics.asterix.metadata.MetadataManager;
+import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
+import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
+import edu.uci.ics.asterix.metadata.entities.Dataset;
+import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
+import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.JSONDeserializerForTypes;
 import edu.uci.ics.asterix.test.runtime.ExecutionTest;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 
+@SuppressWarnings("deprecation")
 public class ConnectorAPIServletTest {
 
     @Test
@@ -90,6 +99,13 @@ public class ConnectorAPIServletTest {
                 new ByteArrayInputStream(outputStream.toByteArray())));
         JSONObject actualResponse = new JSONObject(tokener);
 
+        // Checks the data type of the dataset.
+        String primaryKey = actualResponse.getString("keys");
+        Assert.assertEquals("DataverseName,DatasetName", primaryKey);
+        ARecordType recordType = (ARecordType) JSONDeserializerForTypes.convertFromJSON((JSONObject) actualResponse
+                .get("type"));
+        Assert.assertEquals(getMetadataRecordType("Metadata", "Dataset"), recordType);
+
         // Checks the correctness of results.
         JSONArray splits = actualResponse.getJSONArray("splits");
         String path = ((JSONObject) splits.get(0)).getString("path");
@@ -100,7 +116,7 @@ public class ConnectorAPIServletTest {
     }
 
     @Test
-    public void testFormResponseObject() throws JSONException {
+    public void testFormResponseObject() throws Exception {
         ConnectorAPIServlet servlet = new ConnectorAPIServlet();
         JSONObject actualResponse = new JSONObject();
         FileSplit[] splits = new FileSplit[2];
@@ -114,15 +130,23 @@ public class ConnectorAPIServletTest {
         when(mockInfo1.getNetworkAddress()).thenReturn(new NetworkAddress("127.0.0.1", 3099));
         when(mockInfo2.getNetworkAddress()).thenReturn(new NetworkAddress("127.0.0.2", 3099));
 
+        String[] fieldNames = new String[] { "a1", "a2" };
+        IAType[] fieldTypes = new IAType[] { BuiltinType.ABOOLEAN, BuiltinType.ADAYTIMEDURATION };
+        ARecordType recordType = new ARecordType("record", fieldNames, fieldTypes, true);
+        String primaryKey = "a1";
+
         // Calls ConnectorAPIServlet.formResponseObject.
         nodeMap.put("nc1", mockInfo1);
         nodeMap.put("nc2", mockInfo2);
         PA.invokeMethod(servlet,
                 "formResponseObject(org.json.JSONObject, edu.uci.ics.hyracks.dataflow.std.file.FileSplit[], "
-                        + "java.util.Map)", actualResponse, splits, nodeMap);
+                        + "edu.uci.ics.asterix.om.types.ARecordType, java.lang.String, java.util.Map)", actualResponse,
+                splits, recordType, primaryKey, nodeMap);
 
         // Constructs expected response.
         JSONObject expectedResponse = new JSONObject();
+        expectedResponse.put("keys", primaryKey);
+        expectedResponse.put("type", recordType.toJSON());
         JSONArray splitsArray = new JSONArray();
         JSONObject element1 = new JSONObject();
         element1.put("ip", "127.0.0.1");
@@ -136,5 +160,17 @@ public class ConnectorAPIServletTest {
 
         // Checks results.
         Assert.assertEquals(actualResponse.toString(), expectedResponse.toString());
+    }
+
+    private ARecordType getMetadataRecordType(String dataverseName, String datasetName) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        // Retrieves file splits of the dataset.
+        AqlMetadataProvider metadataProvider = new AqlMetadataProvider(null, CentralFeedManager.getInstance());
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        ARecordType recordType = (ARecordType) metadataProvider.findType(dataverseName, dataset.getItemTypeName());
+        // Metadata transaction commits.
+        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        return recordType;
     }
 }

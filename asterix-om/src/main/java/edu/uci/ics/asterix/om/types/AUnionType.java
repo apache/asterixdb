@@ -122,10 +122,9 @@ public class AUnionType extends AbstractComplexType {
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject type = new JSONObject();
-        type.put("type", "UNION");
+        type.put("type", AUnionType.class.getName());
 
         JSONArray fields = new JSONArray();
-
         Iterator<IAType> iter = unionList.iterator();
         if (iter.hasNext()) {
             IAType t0 = iter.next();

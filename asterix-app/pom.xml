@@ -219,11 +219,13 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.10.19</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.e-movimento.tinytools</groupId>
             <artifactId>privilegedaccessor</artifactId>
             <version>1.2.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
