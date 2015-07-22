@@ -18,10 +18,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
@@ -33,14 +33,15 @@ public class TextFileLookupReader implements ILookupReader {
     private boolean skipFile = false;
     private ExternalFile file = new ExternalFile(null, null, 0, null, null, 0L, ExternalFilePendingOp.PENDING_NO_OP);
     private ExternalFileIndexAccessor filesIndexAccessor;
-    private FSDataInputStream reader;
+    private HDFSSeekableLineReader lineReader;
+    private Text value = new Text();
 
     public TextFileLookupReader(ExternalFileIndexAccessor filesIndexAccessor, Configuration conf) throws IOException {
-        fs = FileSystem.get(conf);
+        this.fs = FileSystem.get(conf);
         this.filesIndexAccessor = filesIndexAccessor;
+        this.lineReader = new HDFSSeekableLineReader();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public String read(int fileNumber, long recordOffset) throws Exception {
         if (fileNumber != this.fileNumber) {
@@ -67,24 +68,26 @@ public class TextFileLookupReader implements ILookupReader {
         } else if (skipFile) {
             return null;
         }
-        reader.seek(recordOffset);
-        return reader.readLine();
+        lineReader.seek(recordOffset);
+        lineReader.readLine(value);
+        return value.toString();
     }
 
     private void openFile(String FileName) throws IOException {
-        if (reader != null) {
-            reader.close();
+        if(lineReader.getReader() != null){
+            lineReader.getReader().close();
         }
-        reader = fs.open(new Path(FileName));
+        lineReader.resetReader(fs.open(new Path(FileName)));
     }
 
     public void close() {
-        if (reader != null)
+        if (lineReader.getReader() != null){
             try {
-                reader.close();
+                lineReader.getReader().close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
     }
 
 }

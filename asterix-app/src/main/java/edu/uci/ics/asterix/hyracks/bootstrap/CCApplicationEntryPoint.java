@@ -124,6 +124,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         webServer.stop();
         jsonAPIServer.stop();
+        feedServer.stop();
     }
 
     private IHyracksClientConnection getNewHyracksClientConnection() throws Exception {

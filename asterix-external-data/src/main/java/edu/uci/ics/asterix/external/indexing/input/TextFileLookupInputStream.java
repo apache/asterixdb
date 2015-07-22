@@ -16,41 +16,46 @@ package edu.uci.ics.asterix.external.indexing.input;
 
 import java.io.IOException;
 
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.asterix.metadata.external.ExternalFileIndexAccessor;
 
+public class TextFileLookupInputStream extends AbstractHDFSLookupInputStream {
 
-@SuppressWarnings("deprecation")
-public class TextFileLookupInputStream extends AbstractHDFSLookupInputStream{
+    private HDFSSeekableLineReader lineReader = new HDFSSeekableLineReader();
+    private Text value = new Text();
 
-    private FSDataInputStream reader;
-    public TextFileLookupInputStream(ExternalFileIndexAccessor filesIndexAccessor, JobConf conf) throws IOException{
+    public TextFileLookupInputStream(ExternalFileIndexAccessor filesIndexAccessor, JobConf conf) throws IOException {
         super(filesIndexAccessor, conf);
     }
+
     @Override
-    protected void openFile(String fileName) throws IOException {
-        if (reader != null) {
-            reader.close();
+    public void openFile(String FileName) throws IOException {
+        if (lineReader.getReader() != null) {
+            lineReader.getReader().close();
         }
-        reader = fs.open(new Path(fileName));
+        lineReader.resetReader(fs.open(new Path(FileName)));
     }
-    
+
     @Override
-    public void close() throws IOException {
-        if (reader != null) {
-            reader.close();
+    public void close() {
+        if (lineReader.getReader() != null) {
+            try {
+                lineReader.getReader().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        super.close();
     }
-    
+
     @Override
     protected boolean read(long recordOffset) {
         try {
-            reader.seek(recordOffset);
-            pendingValue = reader.readLine();
+            lineReader.seek(recordOffset);
+            lineReader.readLine(value);
+            pendingValue = value.toString();
             return true;
         } catch (IOException e) {
             // file was opened and then when trying to seek and read, an error occurred <- should we throw an exception ???->

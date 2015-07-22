@@ -6089,6 +6089,11 @@
 
     </test-group>
     <test-group name="hdfs">
+    	<test-case FilePath="hdfs">
+            <compilation-unit name="hdfs_shortcircuit">
+                <output-dir compare="Text">hdfs_shortcircuit</output-dir>
+            </compilation-unit>
+        </test-case>
         <test-case FilePath="hdfs">
             <compilation-unit name="issue_245_hdfs">
                 <output-dir compare="Text">issue_245_hdfs</output-dir>

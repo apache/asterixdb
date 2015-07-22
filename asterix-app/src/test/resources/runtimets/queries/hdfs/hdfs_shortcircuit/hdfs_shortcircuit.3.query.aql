@@ -1,0 +1,15 @@
+/*
+* Description  : Create an external dataset that contains a tuples, the lines from a (*sequence*) file in HDFS.
+                 Perform a word-count over the data in the dataset.
+                 The external dataset is set to perform local reads (but this is not checked)
+* Expected Res : Success
+* Date         : 6th Mar 2015
+*/
+use dataverse test;
+
+for $line in dataset('TextDataset')
+let $tokens := word-tokens($line.content)
+for $token in $tokens
+group by $tok := $token with $token
+order by $tok
+return { "word": $tok, "count": count($token) }

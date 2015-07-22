@@ -73,6 +73,20 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
     public static final String INPUT_FORMAT_RC = "rc-input-format";
     public static final String FORMAT_BINARY = "binary";
 
+    public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
+
+    // Hadoop property names constants
+    public static final String CLASS_NAME_TEXT_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
+    public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = "org.apache.hadoop.mapred.SequenceFileInputFormat";
+    public static final String CLASS_NAME_RC_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
+    public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
+    public static final String KEY_HADOOP_FILESYSTEM_URI = "fs.defaultFS";
+    public static final String KEY_HADOOP_FILESYSTEM_CLASS = "fs.hdfs.impl";
+    public static final String KEY_HADOOP_INPUT_DIR = "mapred.input.dir";
+    public static final String KEY_HADOOP_INPUT_FORMAT = "mapred.input.format.class";
+    public static final String KEY_HADOOP_SHORT_CIRCUIT = "dfs.client.read.shortcircuit";
+    public static final String KEY_HADOOP_SOCKET_PATH = "dfs.domain.socket.path";
+
     private transient AlgebricksPartitionConstraint clusterLocations;
     private String[] readSchedule;
     private boolean executed[];
@@ -100,9 +114,9 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
 
     protected static Map<String, String> initInputFormatMap() {
         Map<String, String> formatClassNames = new HashMap<String, String>();
-        formatClassNames.put(INPUT_FORMAT_TEXT, "org.apache.hadoop.mapred.TextInputFormat");
-        formatClassNames.put(INPUT_FORMAT_SEQUENCE, "org.apache.hadoop.mapred.SequenceFileInputFormat");
-        formatClassNames.put(INPUT_FORMAT_RC, "org.apache.hadoop.hive.ql.io.RCFileInputFormat");
+        formatClassNames.put(INPUT_FORMAT_TEXT, CLASS_NAME_TEXT_INPUT_FORMAT);
+        formatClassNames.put(INPUT_FORMAT_SEQUENCE, CLASS_NAME_SEQUENCE_INPUT_FORMAT);
+        formatClassNames.put(INPUT_FORMAT_RC, CLASS_NAME_RC_INPUT_FORMAT);
         return formatClassNames;
     }
 
@@ -128,14 +142,21 @@ public class HDFSAdapterFactory extends StreamBasedAdapterFactory implements IAd
     public static JobConf configureJobConf(Map<String, String> configuration) throws Exception {
         JobConf conf = new JobConf();
         String formatClassName = (String) formatClassNames.get(((String) configuration.get(KEY_INPUT_FORMAT)).trim());
+        String localShortCircuitSocketPath = (String) configuration.get(KEY_LOCAL_SOCKET_PATH);
         if (formatClassName == null) {
             formatClassName = ((String) configuration.get(KEY_INPUT_FORMAT)).trim();
         }
-        conf.set("fs.default.name", ((String) configuration.get(KEY_HDFS_URL)).trim());
-        conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+        conf.set(KEY_HADOOP_FILESYSTEM_URI, ((String) configuration.get(KEY_HDFS_URL)).trim());
+        conf.set(KEY_HADOOP_FILESYSTEM_CLASS, CLASS_NAME_HDFS_FILESYSTEM);
         conf.setClassLoader(HDFSAdapter.class.getClassLoader());
-        conf.set("mapred.input.dir", ((String) configuration.get(KEY_PATH)).trim());
-        conf.set("mapred.input.format.class", formatClassName);
+        conf.set(KEY_HADOOP_INPUT_DIR, ((String) configuration.get(KEY_PATH)).trim());
+        conf.set(KEY_HADOOP_INPUT_FORMAT, formatClassName);
+
+        // Enable local short circuit reads if user supplied the parameters
+        if (localShortCircuitSocketPath != null) {
+            conf.set(KEY_HADOOP_SHORT_CIRCUIT, "true");
+            conf.set(KEY_HADOOP_SOCKET_PATH, localShortCircuitSocketPath.trim());
+        }
         return conf;
     }
 
