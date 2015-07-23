@@ -96,6 +96,14 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
         ctx.getComponentsToBeMerged().addAll(components);
         lsmHarness.scheduleMerge(ctx, callback);
     }
+    
+    @Override
+    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload) throws HyracksDataException {
+        ctx.setOperation(IndexOperation.REPLICATE);
+        ctx.getComponentsToBeReplicated().clear();
+        ctx.getComponentsToBeReplicated().addAll(lsmComponents);
+        lsmHarness.scheduleReplication(ctx, lsmComponents, bulkload);
+    }
 
     @Override
     public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {
@@ -171,4 +179,5 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
             throws HyracksDataException, IndexException {
         throw new UnsupportedOperationException("Cannot open inverted list cursor on lsm inverted index.");
     }
+
 }

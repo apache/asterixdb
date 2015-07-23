@@ -32,6 +32,7 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
     private MultiComparator buddyBTreeCmp;
     public final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
+    private final List<ILSMComponent> componentsToBeReplicated;
     public final ISearchOperationCallback searchCallback;
     private final int targetIndexVersion;
     public ISearchPredicate searchPredicate;
@@ -42,6 +43,7 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
 
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
+        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
         this.searchCallback = searchCallback;
         this.targetIndexVersion = targetIndexVersion;
         this.bTreeCmp = MultiComparator.create(btreeCmpFactories);
@@ -62,6 +64,7 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
     public void reset() {
         componentHolder.clear();
         componentsToBeMerged.clear();
+        componentsToBeReplicated.clear();
     }
 
     @Override
@@ -110,5 +113,10 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
     @Override
     public ISearchPredicate getSearchPredicate() {
         return searchPredicate;
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentsToBeReplicated() {
+        return componentsToBeReplicated;
     }
 }

@@ -30,4 +30,5 @@ public interface IIndexLifecycleManager {
     public void close(long resourceID) throws HyracksDataException;
 
     public List<IIndex> getOpenIndexes();
+    
 }

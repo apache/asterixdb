@@ -38,6 +38,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     private IndexOperation op;
     private final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
+    private final List<ILSMComponent> componentsToBeReplicated;
 
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
@@ -64,6 +65,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
             int[] invertedIndexFields, int[] filterFields) throws HyracksDataException {
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
+        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
 
@@ -105,6 +107,7 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     public void reset() {
         componentHolder.clear();
         componentsToBeMerged.clear();
+        componentsToBeReplicated.clear();
     }
 
     @Override
@@ -153,5 +156,10 @@ public class LSMInvertedIndexOpContext implements ILSMIndexOperationContext {
     @Override
     public ISearchPredicate getSearchPredicate() {
         return searchPredicate;
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentsToBeReplicated() {
+        return componentsToBeReplicated;
     }
 }

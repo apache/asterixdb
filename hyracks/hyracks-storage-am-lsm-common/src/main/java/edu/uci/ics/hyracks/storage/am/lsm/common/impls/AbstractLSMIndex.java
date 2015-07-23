@@ -15,13 +15,18 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
+import edu.uci.ics.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndex;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -32,6 +37,7 @@ import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexInternal;
+import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -85,7 +91,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.filterFields = filterFields;
         this.inactiveDiskComponents = new LinkedList<ILSMComponent>();
         this.durable = durable;
-        lsmHarness = new LSMHarness(this, mergePolicy, opTracker);
+        lsmHarness = new LSMHarness(this, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled());
         isActivated = false;
         diskComponents = new ArrayList<ILSMComponent>();
         memoryComponents = new ArrayList<ILSMComponent>();
@@ -108,7 +114,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         this.ioScheduler = ioScheduler;
         this.ioOpCallback = ioOpCallback;
         this.durable = durable;
-        lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker);
+        lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled());
         isActivated = false;
         diskComponents = new LinkedList<ILSMComponent>();
         this.inactiveDiskComponents = new LinkedList<ILSMComponent>();
@@ -292,5 +298,36 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     @Override
     public void addInactiveDiskComponent(ILSMComponent diskComponent) {
         inactiveDiskComponents.add(diskComponent);
+    }
+    
+    public abstract Set<String> getLSMComponentPhysicalFiles(ILSMComponent newComponent);
+
+    @Override
+    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
+            ReplicationOperation operation) throws HyracksDataException {
+        //get set of files to be replicated for this component
+        Set<String> componentFiles = new HashSet<String>();
+
+        //get set of files to be replicated for each component
+        for (ILSMComponent lsmComponent : lsmComponents) {
+            componentFiles.addAll(getLSMComponentPhysicalFiles(lsmComponent));
+        }
+
+        ReplicationExecutionType executionType;
+        if (bulkload) {
+            executionType = ReplicationExecutionType.SYNC;
+        } else {
+            executionType = ReplicationExecutionType.ASYNC;
+        }
+
+        //create replication job and submit it
+        LSMIndexReplicationJob job = new LSMIndexReplicationJob(this, ctx, componentFiles, operation,
+                executionType);
+        try {
+            diskBufferCache.getIIOReplicationManager().submitJob(job);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+
     }
 }

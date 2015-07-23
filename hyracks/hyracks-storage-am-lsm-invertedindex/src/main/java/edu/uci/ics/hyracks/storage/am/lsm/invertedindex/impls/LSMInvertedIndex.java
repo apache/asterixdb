@@ -16,7 +16,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
@@ -323,6 +325,9 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 break;
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
+                break;
+            case REPLICATE:
+                operationalComponents.addAll(ctx.getComponentsToBeReplicated());
                 break;
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
@@ -933,5 +938,20 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public boolean isPrimaryIndex() {
         return false;
+    }
+
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
+        Set<String> files = new HashSet<String>();
+
+        LSMInvertedIndexDiskComponent invIndexComponent = (LSMInvertedIndexDiskComponent) lsmComponent;
+        OnDiskInvertedIndex invIndex = (OnDiskInvertedIndex) invIndexComponent.getInvIndex();
+
+        files.add(invIndex.getInvListsFile().toString());
+        files.add(invIndex.getBTree().toString());
+        files.add(invIndexComponent.getBloomFilter().getFileReference().toString());
+        files.add(invIndexComponent.getDeletedKeysBTree().getFileReference().toString());
+
+        return files;
     }
 }

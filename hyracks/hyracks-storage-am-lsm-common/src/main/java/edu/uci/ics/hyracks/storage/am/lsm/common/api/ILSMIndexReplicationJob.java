@@ -12,13 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
-public enum LSMOperationType {
-    SEARCH,
-    MODIFICATION,
-    FORCE_MODIFICATION,
-    FLUSH,
-    MERGE,
-    REPLICATE
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.replication.IReplicationJob;
+
+public interface ILSMIndexReplicationJob extends IReplicationJob {
+
+    public void endReplication() throws HyracksDataException;
 }

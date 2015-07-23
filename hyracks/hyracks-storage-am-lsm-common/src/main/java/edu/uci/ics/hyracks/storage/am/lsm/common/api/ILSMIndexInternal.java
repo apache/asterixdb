@@ -18,6 +18,7 @@ package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
@@ -80,5 +81,8 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
+    
+    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
+            ReplicationOperation operation) throws HyracksDataException;
 
 }

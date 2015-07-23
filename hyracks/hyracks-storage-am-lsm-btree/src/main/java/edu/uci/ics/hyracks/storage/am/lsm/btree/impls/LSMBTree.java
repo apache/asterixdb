@@ -17,7 +17,9 @@ package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -331,6 +333,9 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 break;
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
+                break;
+            case REPLICATE:
+                operationalComponents.addAll(ctx.getComponentsToBeReplicated());
                 break;
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
@@ -844,5 +849,17 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     @Override
     public boolean isPrimaryIndex() {
         return needKeyDupCheck;
+    }
+
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
+
+        Set<String> files = new HashSet<String>();
+        LSMBTreeDiskComponent component = (LSMBTreeDiskComponent) lsmComponent;
+
+        files.add(component.getBTree().getFileReference().toString());
+        files.add(component.getBloomFilter().getFileReference().toString());
+        
+        return files;
     }
 }

@@ -26,5 +26,6 @@ public enum IndexOperation {
     NOOP,
     MERGE,
     FULL_MERGE,
-    FLUSH
+    FLUSH,
+    REPLICATE
 }

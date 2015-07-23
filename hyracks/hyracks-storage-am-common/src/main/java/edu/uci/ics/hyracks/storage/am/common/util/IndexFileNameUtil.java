@@ -19,7 +19,9 @@ import java.io.File;
 
 public class IndexFileNameUtil {
 
+    public static final String IO_DEVICE_NAME_PREFIX = "device_id_";
+    
     public static String prepareFileName(String path, int ioDeviceId) {
-        return path + File.separator + "device_id_" + ioDeviceId;
+        return path + File.separator + IO_DEVICE_NAME_PREFIX + ioDeviceId;
     }
 }

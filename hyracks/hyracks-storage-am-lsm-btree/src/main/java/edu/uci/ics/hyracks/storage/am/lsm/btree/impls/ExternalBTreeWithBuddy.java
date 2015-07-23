@@ -15,8 +15,10 @@
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -479,6 +481,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 break;
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
+            case REPLICATE:
+                operationalComponents.addAll(ctx.getComponentsToBeReplicated());
                 break;
             case FLUSH:
                 // Do nothing. this is left here even though the index never
@@ -877,5 +881,17 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     @Override
     public boolean isPrimaryIndex() {
         return false;
+    }
+    
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
+        Set<String> files = new HashSet<String>();
+
+        LSMBTreeWithBuddyDiskComponent component = (LSMBTreeWithBuddyDiskComponent) lsmComponent;
+        files.add(component.getBTree().getFileReference().toString());
+        files.add(component.getBuddyBTree().getFileReference().toString());
+        files.add(component.getBloomFilter().getFileReference().toString());
+
+        return files;
     }
 }

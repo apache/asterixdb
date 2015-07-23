@@ -15,6 +15,8 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.common.api;
 
+import java.util.List;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
@@ -52,4 +54,10 @@ public interface ILSMHarness {
     public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException;
 
     public ILSMOperationTracker getOperationTracker();
+    
+    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload)
+            throws HyracksDataException;
+    
+    public void endReplication(ILSMIndexOperationContext ctx) throws HyracksDataException;
+
 }

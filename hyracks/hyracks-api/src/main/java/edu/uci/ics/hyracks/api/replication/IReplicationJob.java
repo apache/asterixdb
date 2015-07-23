@@ -12,13 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.api.replication;
 
-public enum LSMOperationType {
-    SEARCH,
-    MODIFICATION,
-    FORCE_MODIFICATION,
-    FLUSH,
-    MERGE,
-    REPLICATE
+import java.util.Set;
+
+public interface IReplicationJob {
+
+    public enum ReplicationJobType {
+        LSM_COMPONENT,
+        METADATA
+    }
+
+    public enum ReplicationOperation {
+        REPLICATE,
+        DELETE,
+        STOP
+    }
+
+    public enum ReplicationExecutionType {
+        ASYNC,
+        SYNC
+    }
+
+    public ReplicationJobType getJobType();
+
+    public ReplicationOperation getOperation();
+
+    public ReplicationExecutionType getExecutionType();
+
+    public Set<String> getJobFiles();
+
 }

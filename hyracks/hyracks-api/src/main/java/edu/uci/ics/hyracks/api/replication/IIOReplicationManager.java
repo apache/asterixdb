@@ -12,13 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.storage.am.lsm.common.impls;
+package edu.uci.ics.hyracks.api.replication;
 
-public enum LSMOperationType {
-    SEARCH,
-    MODIFICATION,
-    FORCE_MODIFICATION,
-    FLUSH,
-    MERGE,
-    REPLICATE
+import java.io.IOException;
+
+import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
+
+public interface IIOReplicationManager extends ILifeCycleComponent {
+
+    public void submitJob(IReplicationJob job) throws IOException;
+
+    public boolean isReplicationEnabled();
+
 }

@@ -16,7 +16,9 @@
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -617,4 +619,18 @@ public class LSMRTree extends AbstractLSMRTree {
         forceFlushDirtyPages(component.getBTree());
         markAsValidInternal(component.getBTree());
     }
+
+    @Override
+    public Set<String> getLSMComponentPhysicalFiles(ILSMComponent lsmComponent) {
+        Set<String> files = new HashSet<String>();
+
+        LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) lsmComponent;
+
+        files.add(component.getBTree().getFileReference().toString());
+        files.add(component.getRTree().getFileReference().toString());
+        files.add(component.getBloomFilter().getFileReference().toString());
+
+        return files;
+    }
+
 }

@@ -41,7 +41,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     // We store the page id that will be used to store the information of the the filter that is associated with a disk component.
     // It is only set in the first meta page other meta pages (i.e., with level -2) have junk in the max page field.
     private static final int additionalFilteringPageOff = validOff + 4; // 29
-    protected static final int lsnOff = additionalFilteringPageOff + 4; // 33
+    public static final int lsnOff = additionalFilteringPageOff + 4; // 33
 
     protected ICachedPage page = null;
     protected ByteBuffer buf = null;

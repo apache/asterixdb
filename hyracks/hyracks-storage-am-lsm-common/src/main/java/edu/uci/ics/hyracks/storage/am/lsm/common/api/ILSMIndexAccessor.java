@@ -114,4 +114,6 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
+    
+    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload) throws HyracksDataException;
 }

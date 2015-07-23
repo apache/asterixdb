@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.replication.IIOReplicationManager;
 
 /**
  * Implementation of an IBufferCache that counts the number of pins/unpins,
@@ -192,5 +193,14 @@ public class DebugBufferCache implements IBufferCache {
     public int getFileReferenceCount(int fileId) {
         return bufferCache.getFileReferenceCount(fileId);
     }
+    
+    @Override
+    public boolean isReplicationEnabled() {
+        return false;
+    }
 
+    @Override
+    public IIOReplicationManager getIIOReplicationManager() {
+        return null;
+    }
 }

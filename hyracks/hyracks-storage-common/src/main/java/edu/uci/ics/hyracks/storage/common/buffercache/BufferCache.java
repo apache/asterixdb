@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
 import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponent;
+import edu.uci.ics.hyracks.api.replication.IIOReplicationManager;
 import edu.uci.ics.hyracks.storage.common.file.BufferedFileHandle;
 import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
 
@@ -55,9 +56,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final CleanerThread cleanerThread;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
     private final Set<Integer> virtualFiles;
-
+    private IIOReplicationManager ioReplicationManager;
     private List<ICachedPageInternal> cachedPages = new ArrayList<ICachedPageInternal>();
-
     private boolean closed;
 
     public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
@@ -81,6 +81,15 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         cleanerThread = new CleanerThread();
         executor.execute(cleanerThread);
         closed = false;
+    }
+
+    //this constructor is used when replication is enabled to pass the IIOReplicationManager
+    public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
+            IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
+            ThreadFactory threadFactory, IIOReplicationManager ioReplicationManager) {
+
+        this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, threadFactory);
+        this.ioReplicationManager = ioReplicationManager;
     }
 
     @Override
@@ -366,7 +375,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         buffer.append("Buffer cache state\n");
         buffer.append("Page Size: ").append(pageSize).append('\n');
         buffer.append("Number of physical pages: ").append(pageReplacementStrategy.getMaxAllowedNumPages())
-        .append('\n');
+                .append('\n');
         buffer.append("Hash table size: ").append(pageMap.length).append('\n');
         buffer.append("Page Map:\n");
         int nCachedPages = 0;
@@ -379,10 +388,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     buffer.append("   ").append(i).append('\n');
                     while (cp != null) {
                         buffer.append("      ").append(cp.cpid).append(" -> [")
-                        .append(BufferedFileHandle.getFileId(cp.dpid)).append(':')
-                        .append(BufferedFileHandle.getPageId(cp.dpid)).append(", ").append(cp.pinCount.get())
-                        .append(", ").append(cp.valid ? "valid" : "invalid").append(", ")
-                        .append(cp.dirty.get() ? "dirty" : "clean").append("]\n");
+                                .append(BufferedFileHandle.getFileId(cp.dpid)).append(':')
+                                .append(BufferedFileHandle.getPageId(cp.dpid)).append(", ").append(cp.pinCount.get())
+                                .append(", ").append(cp.valid ? "valid" : "invalid").append(", ")
+                                .append(cp.dirty.get() ? "dirty" : "clean").append("]\n");
                         cp = cp.next;
                         ++nCachedPages;
                     }
@@ -807,5 +816,18 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     @Override
     public void dumpState(OutputStream os) throws IOException {
         os.write(dumpState().getBytes());
+    }
+
+    @Override
+    public boolean isReplicationEnabled() {
+        if (ioReplicationManager != null) {
+            return ioReplicationManager.isReplicationEnabled();
+        }
+        return false;
+    }
+
+    @Override
+    public IIOReplicationManager getIIOReplicationManager() {
+        return ioReplicationManager;
     }
 }

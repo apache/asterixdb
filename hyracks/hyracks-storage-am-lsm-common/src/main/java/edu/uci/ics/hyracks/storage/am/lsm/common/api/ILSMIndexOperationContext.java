@@ -35,4 +35,6 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
     public void setSearchPredicate(ISearchPredicate searchPredicate);
 
     public ISearchPredicate getSearchPredicate();
+    
+    public List<ILSMComponent> getComponentsToBeReplicated();
 }

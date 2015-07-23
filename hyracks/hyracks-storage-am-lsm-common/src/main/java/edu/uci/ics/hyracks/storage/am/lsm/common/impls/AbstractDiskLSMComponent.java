@@ -37,6 +37,7 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
         switch (opType) {
             case FORCE_MODIFICATION:
             case MODIFICATION:
+            case REPLICATE:
             case SEARCH:
                 readerCount++;
                 break;
@@ -68,6 +69,7 @@ public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
                 }
             case FORCE_MODIFICATION:
             case MODIFICATION:
+            case REPLICATE:
             case SEARCH:
                 readerCount--;
                 if (readerCount == 0 && state == ComponentState.READABLE_MERGING) {

@@ -440,6 +440,9 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
                 break;
+            case REPLICATE:
+                operationalComponents.addAll(ctx.getComponentsToBeReplicated());
+                break;
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }

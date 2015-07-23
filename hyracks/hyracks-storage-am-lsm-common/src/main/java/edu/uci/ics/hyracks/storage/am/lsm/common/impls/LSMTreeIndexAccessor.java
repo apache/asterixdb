@@ -126,6 +126,14 @@ public abstract class LSMTreeIndexAccessor implements ILSMIndexAccessorInternal 
         ctx.getComponentsToBeMerged().addAll(components);
         lsmHarness.scheduleMerge(ctx, callback);
     }
+    
+    @Override
+    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload) throws HyracksDataException {
+        ctx.setOperation(IndexOperation.REPLICATE);
+        ctx.getComponentsToBeReplicated().clear();
+        ctx.getComponentsToBeReplicated().addAll(lsmComponents);
+        lsmHarness.scheduleReplication(ctx, lsmComponents, bulkload);
+    }
 
     @Override
     public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException, IndexException {

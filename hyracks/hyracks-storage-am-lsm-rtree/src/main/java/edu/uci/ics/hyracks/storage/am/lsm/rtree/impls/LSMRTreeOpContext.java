@@ -51,6 +51,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     private IndexOperation op;
     public final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
+    private final List<ILSMComponent> componentsToBeReplicated;
     public final IModificationOperationCallback modificationCallback;
     public final ISearchOperationCallback searchCallback;
     public final PermutingTupleReference indexTuple;
@@ -86,6 +87,7 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
         currentBTreeOpContext = btreeOpContexts[0];
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
+        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
         this.modificationCallback = modificationCallback;
         this.searchCallback = searchCallback;
 
@@ -161,5 +163,10 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public ISearchPredicate getSearchPredicate() {
         return searchPredicate;
+    }
+
+    @Override
+    public List<ILSMComponent> getComponentsToBeReplicated() {
+        return componentsToBeReplicated;
     }
 }

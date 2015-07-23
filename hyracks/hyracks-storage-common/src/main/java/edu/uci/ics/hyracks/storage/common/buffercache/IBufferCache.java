@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
+import edu.uci.ics.hyracks.api.replication.IIOReplicationManager;
 
 public interface IBufferCache {
     public void createFile(FileReference fileRef) throws HyracksDataException;
@@ -51,4 +52,9 @@ public interface IBufferCache {
     public int getFileReferenceCount(int fileId);
 
     public void close() throws HyracksDataException;
+    
+    public boolean isReplicationEnabled();
+
+    public IIOReplicationManager getIIOReplicationManager();
+
 }

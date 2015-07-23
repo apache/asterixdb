@@ -483,6 +483,9 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             case FULL_MERGE:
                 operationalComponents.addAll(immutableComponents);
                 break;
+            case REPLICATE:
+                operationalComponents.addAll(ctx.getComponentsToBeReplicated());
+                break;
             case FLUSH:
                 // Do nothing. this is left here even though the index never
                 // performs flushes because a flush is triggered by

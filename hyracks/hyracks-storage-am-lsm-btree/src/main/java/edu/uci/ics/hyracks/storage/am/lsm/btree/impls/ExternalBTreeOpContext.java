@@ -39,6 +39,7 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
     public final ISearchOperationCallback searchCallback;
     private final List<ILSMComponent> componentHolder;
     private final List<ILSMComponent> componentsToBeMerged;
+    private final List<ILSMComponent> componentsToBeReplicated;
     private final int targetIndexVersion;
     public ISearchPredicate searchPredicate;
 
@@ -63,6 +64,7 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
         }
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
+        this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
         this.searchCallback = searchCallback;
         this.targetIndexVersion = targetIndexVersion;
     }
@@ -77,6 +79,7 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
     public void reset() {
         componentHolder.clear();
         componentsToBeMerged.clear();
+        componentsToBeReplicated.clear();
     }
 
     public IndexOperation getOperation() {
@@ -122,6 +125,11 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public ISearchPredicate getSearchPredicate() {
         return searchPredicate;
+    }
+    
+    @Override
+    public List<ILSMComponent> getComponentsToBeReplicated() {
+        return componentsToBeReplicated;
     }
 
 }
