@@ -34,7 +34,7 @@ public class Integer64NormalizedKeyComputerFactory implements INormalizedKeyComp
             public int normalize(byte[] bytes, int start, int length) {
                 long value = LongPointable.getLong(bytes, start);
                 int highValue = (int) (value >> 32);
-                if (highValue > 0) {
+                if (value > Integer.MAX_VALUE) {
                     /**
                      * larger than Integer.MAX
                      */
@@ -42,7 +42,7 @@ public class Integer64NormalizedKeyComputerFactory implements INormalizedKeyComp
                     highNmk >>= 2;
                     highNmk |= POSTIVE_LONG_MASK;
                     return highNmk;
-                } else if (highValue == 0) {
+                } else if (value >=0 && value <= Integer.MAX_VALUE) {
                     /**
                      * smaller than Integer.MAX but >=0
                      */
