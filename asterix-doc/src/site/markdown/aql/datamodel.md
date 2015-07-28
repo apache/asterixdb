@@ -18,6 +18,7 @@
     * [Datetime](#PrimitiveTypesDateTime)
     * [Duration/Year-month-duration/Day-time-duration](#PrimitiveTypesDuration)
     * [Interval](#PrimitiveTypesInterval)
+    * [UUID](#PrimitiveTypesUUID)
 * [Derived Types](#DerivedTypes)
     * [Record](#DerivedTypesRecord)
     * [OrderedList](#DerivedTypesOrderedList)
@@ -282,6 +283,19 @@ Note that a canonical representation of the duration is always returned, regardl
  * The expected result is:
 
         { "v1": interval-date("2013-01-01, 2013-05-05"), "v2": interval-time("00:01:01.000Z, 13:39:01.049Z"), "v3": interval-datetime("2013-01-01T00:01:01.000Z, 2013-05-05T13:39:01.049Z") }
+
+### <a id="PrimitiveTypesUUID">UUID</a><font size="4"><a href="#toc">[Back to TOC]</a></font> ###
+`uuid` represents a UUID value, which stands for Universally unique identifier. It is defined by a canonical format using hexadecimal text with inserted hyphen characters. (E.g.: 5a28ce1e-6a74-4201-9e8f-683256e5706f). This type is generally used to store auto-generated primary key values.
+
+ * Example:
+
+        let $v1 := uuid("5c848e5c-6b6a-498f-8452-8847a2957421")
+        return { "v1":$v1 }
+
+
+ * The expected result is:
+
+        { "v1": uuid("5c848e5c-6b6a-498f-8452-8847a2957421") }
 
 
 ## <a id="DerivedTypes">Derived Types</a><font size="4"><a href="#toc">[Back to TOC]</a></font> ##

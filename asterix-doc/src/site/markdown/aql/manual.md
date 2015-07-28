@@ -6,7 +6,7 @@
 * [2. Expressions](#Expressions)
 * [3. Statements](#Statements)
 
-## <a id="Introduction">1. Introduction</a><font size="4"> <a href="#toc">[Back to TOC]</a></font> 
+## <a id="Introduction">1. Introduction</a><font size="4"> <a href="#toc">[Back to TOC]</a></font>
 
 This document is intended as a reference guide to the full syntax
 and semantics of the Asterix Query Language (AQL), the language for talking to AsterixDB.
@@ -16,17 +16,17 @@ its support for queries and data modification, as well as its data definition la
  New AsterixDB users are encouraged to read and work through the (friendlier) guide
 "AsterixDB 101: An ADM and AQL Primer" before attempting to make use of this document.
 In addition, readers are advised to read and understand the Asterix Data Model (ADM)
-reference guide since a basic understanding of ADM concepts is a prerequisite to understanding AQL.  
+reference guide since a basic understanding of ADM concepts is a prerequisite to understanding AQL.
 In what follows, we detail the features of the AQL language in a grammar-guided manner:
-We list and briefly explain each of the productions in the AQL grammar, offering 
+We list and briefly explain each of the productions in the AQL grammar, offering
 examples for clarity in cases where doing so seems needed or helpful.
 
-## <a id="Expressions">2. Expressions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> 
+## <a id="Expressions">2. Expressions</a> <font size="4"><a href="#toc">[Back to TOC]</a></font>
 
     Query ::= Expression
 
 An AQL query can be any legal AQL expression.
-    
+
     Expression ::= ( OperatorExpr | IfThenElse | FLWOR | QuantifiedExpression )
 
 AQL is a fully composable expression language.
@@ -78,7 +78,7 @@ or a newly constructed ADM record.
                      | "." <DIGITS> ( "f" | "F" )
     DoubleLiteral  ::= <DIGITS>
                      | <DIGITS> ( "." <DIGITS> )?
-                     | "." <DIGITS>                      
+                     | "." <DIGITS>
 
 Literals (constants) in AQL can be strings, integers, floating point values,
 double values, boolean constants, or the constant value null.
@@ -155,7 +155,7 @@ Data access in a query expression is accomplished via a DatasetAccessExpression.
 Dataset access expressions are most commonly used in FLWOR expressions, where variables
 are bound to their contents.
 
-Note that the Identifier that identifies a dataset (or any other Identifier in AQL) can also be a StringLiteral. 
+Note that the Identifier that identifies a dataset (or any other Identifier in AQL) can also be a StringLiteral.
 This is especially useful to avoid conficts with AQL keywords (e.g. "dataset", "null", or "type").
 
 The following are three examples of legal dataset access expressions.
@@ -205,7 +205,7 @@ or they can come from query variable references or even arbitrarily complex AQL 
 
 ##### Note
 
-When constructing nested records there needs to be a space between the closing braces to avoid confusion with the `}}` token that ends an unordered list constructor: 
+When constructing nested records there needs to be a space between the closing braces to avoid confusion with the `}}` token that ends an unordered list constructor:
 `{ "a" : { "b" : "c" }}` will fail to parse while `{ "a" : { "b" : "c" } }` will work.
 
 ### Path Expressions
@@ -282,7 +282,7 @@ The example below evaluates to 25.
     ForClause      ::= ("for"|"from") Variable ( "at" Variable )? "in" ( Expression )
     LetClause      ::= ("let"|"with") Variable ":=" Expression
     WhereClause    ::= "where" Expression
-    OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )? 
+    OrderbyClause  ::= "order" "by" Expression ( ( "asc" ) | ( "desc" ) )?
                        ( "," Expression ( ( "asc" ) | ( "desc" ) )? )*
     GroupClause    ::= "group" "by" ( Variable ":=" )? Expression ( "," ( Variable ":=" )? Expression )*
                        ("with"|"keeping") VariableRef ( "," VariableRef )*
@@ -341,7 +341,7 @@ The query returns one record per user, with result records containing the user's
 ##### Example
 
     for $user in dataset FacebookUsers
-    let $messages := 
+    let $messages :=
       for $message in dataset FacebookMessages
       where $message.author-id = $user.id
       return $message.message
@@ -435,10 +435,10 @@ The following example illustrates the form of a conditional expression.
 
     QuantifiedExpression ::= ( ( "some" ) | ( "every" ) ) Variable "in" Expression
                              ( "," Variable "in" Expression )* "satisfies" Expression
-      
+
 Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
 
-The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the set [1, 2, 3] of integers is less than three. 
+The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the set [1, 2, 3] of integers is less than three.
 The first example yields `false` and second example yields `true`.
 
 It is useful to note that if the set were instead the empty set, the first expression would yield `true`
@@ -450,7 +450,7 @@ It is useful to note that if the set were instead the empty set, the first expre
     every $x in [ 1, 2, 3 ] satisfies $x < 3
     some $x in [ 1, 2, 3 ] satisfies $x < 3
 
-## <a id="Statements">3. Statements</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> 
+## <a id="Statements">3. Statements</a> <font size="4"><a href="#toc">[Back to TOC]</a></font>
 
     Statement ::= ( SingleStatement ( ";" )? )* <EOF>
     SingleStatement ::= DataverseDeclaration
@@ -461,7 +461,7 @@ It is useful to note that if the set were instead the empty set, the first expre
                       | SetStatement
                       | InsertStatement
                       | DeleteStatement
-                      | Query                      
+                      | Query
 
 In addition to expresssions for queries, AQL supports a variety of statements for data
 definition and manipulation purposes as well as controlling the context to be used in
@@ -470,7 +470,7 @@ evaluating AQL expressions. AQL supports record-level ACID transactions that beg
 This section details the statements supported in the AQL language.
 
 ### Declarations
- 
+
     DataverseDeclaration ::= "use" "dataverse" Identifier
 
 The world of data in an AsterixDB cluster is organized into data namespaces called dataverses.
@@ -481,9 +481,9 @@ As an example, the following statement sets the default dataverse to be TinySoci
 ##### Example
 
     use dataverse TinySocial;
-    
+
 The set statement in AQL is used to control aspects of the expression evalation context for queries.
-    
+
     SetStatement ::= "set" Identifier StringLiteral
 
 As an example, the following set statements request that Jaccard similarity with a similarity threshold 0.6
@@ -492,7 +492,7 @@ be used for set similarity matching when the ~= operator is used in a query expr
 ##### Example
 
     set simfunction "jaccard";
-    set simthreshold "0.6f"; 
+    set simthreshold "0.6f";
 
 When writing a complex AQL query, it can sometimes be helpful to define one or more
 auxilliary functions that each address a sub-piece of the overall query.
@@ -504,7 +504,7 @@ The declare function statement supports the creation of such helper functions.
 The following is a very simple example of a temporary AQL function definition.
 
 ##### Example
-    
+
     declare function add($a, $b) {
       $a + $b
     };
@@ -578,24 +578,34 @@ The employment field is an ordered list of instances of another named record typ
       "employment" : [ EmploymentType ]
     }
 
+The next example creates a new ADM record type called FbUserType. Note that the type of the id field is UUID. You need to use this field type if you want to have this field be an autogenerated-PK field. Refer to the Datasets section later for more details.
+
+##### Example
+
+    create type FbUserType as closed {
+      "id" :         uuid,
+      "alias" :      string,
+      "name" :       string
+    }
+
 #### Datasets
 
     DatasetSpecification ::= "internal"? "dataset" QualifiedName "(" Identifier ")" IfNotExists
                              PrimaryKey ( "on" Identifier )? ( "hints" Properties )?
-                             ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )? 
+                             ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )?
                              ( "with filter on" Identifier )?
-                           | "external" "dataset" QualifiedName "(" Identifier ")" IfNotExists 
+                           | "external" "dataset" QualifiedName "(" Identifier ")" IfNotExists
                              "using" AdapterName Configuration ( "hints" Properties )?
-                             ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )? 
+                             ( "using" "compaction" "policy" CompactionPolicy ( Configuration )? )?
     AdapterName          ::= Identifier
     Configuration        ::= "(" ( KeyValuePair ( "," KeyValuePair )* )? ")"
     KeyValuePair         ::= "(" StringLiteral "=" StringLiteral ")"
     Properties           ::= ( "(" Property ( "," Property )* ")" )?
     Property             ::= Identifier "=" ( StringLiteral | IntegerLiteral )
     FunctionSignature    ::= FunctionOrTypeName "@" IntegerLiteral
-    PrimaryKey           ::= "primary" "key" NestedField ( "," NestedField )*
+    PrimaryKey           ::= "primary" "key" NestedField ( "," NestedField )* ( "autogenerated ")?
     CompactionPolicy     ::= Identifier
-    PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )*
+    PrimaryKey           ::= "primary" "key" Identifier ( "," Identifier )* ( "autogenerated ")?
 
 The create dataset statement is used to create a new dataset.
 Datasets are named, unordered collections of ADM record instances; they
@@ -603,7 +613,7 @@ are where data lives persistently and are the targets for queries in AsterixDB.
 Datasets are typed, and AsterixDB will ensure that their contents conform to their type definitions.
 An Internal dataset (the default) is a dataset that is stored in and managed by AsterixDB.
 It must have a specified unique primary key that can be used to partition data across nodes of an AsterixDB cluster.
-The primary key is also used in secondary indexes to uniquely identify the indexed primary data records.
+The primary key is also used in secondary indexes to uniquely identify the indexed primary data records. Random primary key (UUID) values can be auto-generated by declaring the field to be UUID and putting "autogenerated" after the "primary key" identifier. In this case, values for the auto-generated PK field should not be provided by the user since it will be auto-generated by AsterixDB.
 Optionally, a filter can be created on a field to further optimize range queries with predicates on the filter's field.
 (Refer to [Filter-Based LSM Index Acceleration](filters.html) for more information about filters.)
 
@@ -643,6 +653,12 @@ It specifies that their id field is their primary key.
 ##### Example
     create internal dataset FacebookUsers(FacebookUserType) primary key id;
 
+The following example creates an internal dataset for storing FbUserType records.
+It specifies that their id field is their primary key. It also specifies that the id field is an auto-generated field, meaning that a randomly generated UUID value will be assigned to each record by the system. (A user should therefore not proivde a value for this field.) Note that the id field should be UUID.
+
+##### Example
+    create internal dataset FbMsgs(FbUserType) primary key id autogenerated;
+
 The next example creates an external dataset for storing LineitemType records.
 The choice of the `hdfs` adapter means that its data will reside in HDFS.
 The create statement provides parameters used by the hdfs adapter:
@@ -655,10 +671,10 @@ the URL and path needed to locate the data in HDFS and a description of the data
       ("input-format"="text-input-format"),
       ("format"="delimited-text"),
       ("delimiter"="|"));
-      
+
 #### Indices
 
-    IndexSpecification ::= "index" Identifier IfNotExists "on" QualifiedName 
+    IndexSpecification ::= "index" Identifier IfNotExists "on" QualifiedName
                            "(" ( OpenField ) ( "," OpenField )* ")" ( "type" IndexType )? ( "enforced" )?
     IndexType          ::= "btree"
                          | "rtree"
@@ -671,7 +687,7 @@ Supported index types include `btree` for totally ordered datatypes,
 Index could be created on arbitrary nested fields by providing valid path expression as an indexed field identifier.
 An index field is not required to be part of the datatype associated with a dataset if that datatype is declared as
 open, field type is provided along with it's type and `enforced` keyword is specified in the end of index definition.
-`Enforcing` an open field will introduce a load-time check, which will make sure that the actual type of an indexed 
+`Enforcing` an open field will introduce a load-time check, which will make sure that the actual type of an indexed
 field (if such field exists in the record) matches the specified field type.
 
 The following example creates a btree index called fbAuthorIdx on the author-id field of the FacebookMessages dataset.
@@ -681,7 +697,7 @@ This index can be useful for accelerating exact-match queries, range search quer
 
     create index fbAuthorIdx on FacebookMessages(author-id) type btree enforced;
 
-The following example creates an open btree index called fbSendTimeIdx on the open send-time field of the 
+The following example creates an open btree index called fbSendTimeIdx on the open send-time field of the
 FacebookMessages dataset having datetime type.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the send-time field.
 
@@ -700,7 +716,7 @@ This index can be useful for accelerating exact-match queries, range search quer
 
 The following example creates an rtree index called fbSenderLocIdx on the sender-location field of the FacebookMessages dataset.
 This index can be useful for accelerating queries that use the
-[`spatial-intersect` function](functions.html#spatial-intersect) in a predicate involving the 
+[`spatial-intersect` function](functions.html#spatial-intersect) in a predicate involving the
 sender-location field.
 
 ##### Example
@@ -733,13 +749,13 @@ The body of a function can be any AQL expression involving the function's parame
 The following is a very simple example of a create function statement.
 It differs from the declare function example shown previously in that it results in a function that is
 persistently registered by name in the specified dataverse.
-    
+
 ##### Example
-    
+
     create function add($a, $b) {
       $a + $b
     };
-    
+
 #### Removal
 
     DropStatement       ::= "drop" ( "dataverse" Identifier IfExists
@@ -753,7 +769,7 @@ The drop statement in AQL is the inverse of the create statement.
 It can be used to drop dataverses, datatypes, datasets, indexes, and functions.
 
 The following examples illustrate uses of the drop statement.
- 
+
 ##### Example
 
     drop dataset FacebookUsers if exists;
@@ -761,7 +777,7 @@ The following examples illustrate uses of the drop statement.
     drop index fbSenderLocIndex;
 
     drop type FacebookUserType;
-    
+
     drop dataverse TinySocial;
 
     drop function add;
@@ -769,11 +785,12 @@ The following examples illustrate uses of the drop statement.
 ### Import/Export Statements
 
     LoadStatement  ::= "load" "dataset" QualifiedName "using" AdapterName Configuration ( "pre-sorted" )?
-    
+
 The load statement is used to initially populate a dataset via bulk loading of data from an external file.
 An appropriate adapter must be selected to handle the nature of the desired external data.
 The load statement accepts the same adapters and the same parameters as external datasets.
 (See the [guide to external data](externaldata.html) for more information on the available adapters.)
+If a dataset has an auto-generated primary key field, a file to be imported should not include that field in it.
 
 The following example shows how to bulk load the FacebookUsers dataset from an external file containing
 data that has been prepared in ADM format.
@@ -797,10 +814,10 @@ being the insertion of a single object plus its affiliated secondary index entri
 If the query part of an insert returns a single object, then the insert statement itself will
 be a single, atomic transaction.
 If the query part returns multiple objects, then each object inserted will be handled independently
-as a tranaction.
+as a tranaction. If a dataset has an auto-generated primary key field, an insert statement should not include a value for that field in it. (The system will automatically extend the provided record with this additional field and a corresponding value.)
 
 The following example illustrates a query-based insertion.
-    
+
 ##### Example
 
     insert into dataset UsersCopy (for $user in dataset FacebookUsers return $user)
@@ -822,13 +839,13 @@ as a transaction.
 The following example illustrates a single-object deletion.
 
 ##### Example
-    
+
     delete $user from dataset FacebookUsers where $user.id = 8;
 
 We close this guide to AQL with one final example of a query expression.
-    
+
 ##### Example
-    
+
     for $praise in {{ "great", "brilliant", "awesome" }}
     return
        string-concat(["AsterixDB is ", $praise])

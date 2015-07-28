@@ -132,11 +132,12 @@ public abstract class AbstractDataParser implements IDataParser {
     protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
-    // For UUID, we assume that the format is the string representation of UUID         
-    // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.         
+    // For UUID, we assume that the format is the string representation of UUID
+    // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.
+    // Thus, we need to call UUID.fromStringToAMuatbleUUID() to convert it to the internal representation (two long values).
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AUUID> uuidSerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AUUID_STRING);
+            .getSerializerDeserializer(BuiltinType.AUUID);
 
     // To avoid race conditions, the serdes for temporal and spatial data types needs to be one per parser
     @SuppressWarnings("unchecked")

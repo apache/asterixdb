@@ -762,6 +762,7 @@ public class AsterixBuiltinFunctions {
         addFunction(CREATE_POLYGON, OptionalAPolygonTypeComputer.INSTANCE, true);
         addFunction(CREATE_RECTANGLE, OptionalARectangleTypeComputer.INSTANCE, true);
         addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
+        addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
 
         addFunction(DATE_CONSTRUCTOR, OptionalADateTypeComputer.INSTANCE, true);
         addFunction(DATETIME_CONSTRUCTOR, OptionalADateTimeTypeComputer.INSTANCE, true);
@@ -986,9 +987,9 @@ public class AsterixBuiltinFunctions {
         addFunction(INTERVAL_COVERED_BY, OptionalABooleanTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_ENDS, OptionalABooleanTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_ENDED_BY, OptionalABooleanTypeComputer.INSTANCE, true);
-        addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE, true);
-        addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE, true);
-        addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, true);
+        addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE, false);
+        addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE, false);
+        addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, false);
         addPrivateFunction(DAY_TIME_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, OptionalABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, OptionalABooleanTypeComputer.INSTANCE, true);

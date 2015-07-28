@@ -144,8 +144,7 @@ with each instance---making for more bits on disk and longer times for operation
 data size (e.g., dataset scans).
 The only fields that _must_ be specified a priori are the primary key and any fields that you
 would like to build indexes on.
-(AsterixDB does not yet support auto-generated keys or indexes on the unspecified "open" fields
-of its data instances).
+
 
 ### Creating Datasets and Indexes ###
 

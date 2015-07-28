@@ -268,7 +268,7 @@ class ARecordCaster {
                 IAType t = cachedReqType.getFieldTypes()[i];
                 if (!(t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t))) {
                     // no matched field in the input for a required closed field
-                    throw new IllegalStateException("type mismatch: miss a required closed field "
+                    throw new IllegalStateException("type mismatch: missing a required closed field "
                             + cachedReqType.getFieldNames()[i] + ":" + t.getTypeName());
                 }
             }

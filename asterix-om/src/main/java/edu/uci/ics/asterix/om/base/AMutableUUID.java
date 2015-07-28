@@ -32,6 +32,12 @@ public class AMutableUUID extends AUUID {
         lsb = uuidBits[1];
     }
 
+    // Set the most significant bits and the least significant bits.
+    public void setValue(long msb, long lsb) {
+        this.msb = msb;
+        this.lsb = lsb;
+    }
+
     // Since AUUID is a wrapper of java.util.uuid,
     // we can use the same method that creates a UUID from a String.
     public void fromStringToAMuatbleUUID(String value) {

@@ -1,0 +1,6 @@
+use dataverse test;
+
+insert into dataset DBLP ({"dblpid": "books/acm/kim95/Blakeley95",
+"title": "OQL[C++]  Extending C++ with an Object Query Capability.",
+"authors": "José A. Blakeley",
+"misc": "2002-01-03 69-88 Modern Database Systems db/books/collections/kim95.html#Blakeley95 1995" });

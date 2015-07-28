@@ -163,6 +163,7 @@ import edu.uci.ics.asterix.runtime.evaluators.constructors.APolygonConstructorDe
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ARectangleConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AStringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
+import edu.uci.ics.asterix.runtime.evaluators.constructors.AUUIDFromStringConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
 import edu.uci.ics.asterix.runtime.evaluators.constructors.OpenRecordConstructorDescriptor;
@@ -554,6 +555,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(ADurationConstructorDescriptor.FACTORY);
         temp.add(AYearMonthDurationConstructorDescriptor.FACTORY);
         temp.add(ADayTimeDurationConstructorDescriptor.FACTORY);
+        temp.add(AUUIDFromStringConstructorDescriptor.FACTORY);
 
         temp.add(CreateUUIDDescriptor.FACTORY);
         // Spatial

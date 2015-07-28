@@ -148,10 +148,7 @@ the information about other fields that are "just there" in instances of open da
 with each instance---making for more bits on disk and longer times for operations affected by
 data size (e.g., dataset scans).
 The only fields that _must_ be specified a priori are the primary key.
-(AsterixDB does not yet support auto-generated keys).
-Indexes could be build on fields, which don't belong to fixed part of datatype's schema, as long as field's type is 
-specified and _enforced_ keyword is provided in the end of index definition.
-Index fields could also be nested arbitrarily deep in datatype definition.
+Indexes can be built on fields that don't belong to the pre-specified part of datatype's schema as long as their type is specified at index create time and and the _enforced_ keyword is provided at the end of the index definition.  (The _enforced_ keyword asks the system to ensure that the indexed field or fields conform to this specified type in all of the dataset's record instances where they are present.)  Additionally, indexed fields may be nested arbitrarily deep within a dataset's records as long as the nesting does not go pass through a list (be it ordered or unordered) along the way.
 
 ### Creating Datasets and Indexes ###
 
