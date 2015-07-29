@@ -1,10 +1,11 @@
-# REST API to AsterixDB #
+# HTTP API to AsterixDB #
 
 ## <a id="toc">Table of Contents</a>
 
 * [DDL API](#DdlApi)
 * [Update API](#UpdateApi)
 * [Query API](#QueryApi)
+* [Mixed API](#AnyApi)
 * [Asynchronous Result API](#AsynchronousResultApi)
 * [Query Status API](#QueryStatusApi)
 * [Error Codes](#ErrorCodes)
@@ -177,6 +178,35 @@ Payload
         {
             "handle": [45,0]
         }
+
+
+## <a id="AnyApi">Mixed API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
+
+*End point for any/mixed statement*
+
+Endpoint: _/aql_
+
+Parameters:
+
+<table>
+<tr>
+  <td>Parameter</td>
+  <td>Description</td>
+  <td>Required?</td>
+</tr>
+<tr>
+  <td>query</td>
+  <td>Query string to pass to ASTERIX for execution</td>
+  <td>Yes</td>
+</tr>
+<tr>
+  <td>mode</td>
+  <td>Indicate if call should be synchronous or asynchronous. mode = synchronous blocks the call until results are available; mode = asynchronous returns immediately with a handle that can be used later to check the query’s status and to fetch results when available</td>
+  <td>No. default mode = synchronous</td>
+</tr>
+</table>
+
+Similar to *_/update_* but allows any arbitrary AQL statement rather than only modifications.
 
 
 ## <a id="AsynchronousResultApi">Asynchronous Result API</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
