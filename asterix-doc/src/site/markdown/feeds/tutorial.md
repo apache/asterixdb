@@ -14,7 +14,8 @@ continuous data arrive into a BDMS from external sources and incrementally popul
 used to live outside, and we show how it improves users’ lives and system performance.
 
 ### <a id="DataFeedBasics">Data Feed Basics</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ###
- ####Collecting Data: Feed Adaptors####
+
+####Collecting Data: Feed Adaptors####
 The functionality of establishing a connection with a data source
 and receiving, parsing and translating its data into ADM records
 (for storage inside AsterixDB) is contained in a feed adaptor. A
@@ -66,7 +67,7 @@ Next we make use of the create feed AQL statement to define our example data fee
 Note that the create feed statement does not initiate the flow of data from Twitter into our AsterixDB instance. Instead, the create feed statement only results in registering the feed with AsterixDB. The flow of data along a feed is initiated when it is connected
 to a target dataset using the connect feed statement (which we shall revisit later).
 
- ####Preprocessing Collected Data####
+####Preprocessing Collected Data####
 A feed definition may optionally include the specification of a
 user-defined function that is to be applied to each feed record prior
 to persistence. Examples of pre-processing might include adding
@@ -250,7 +251,7 @@ A Java UDF in AsterixDB is required to implement an prescribe interface. We shal
         list = new JUnorderedList(functionHelper.getObject(JTypeTag.STRING));
     }
 
- @Override
+    @Override
     public void deinitialize() {
     }
 
