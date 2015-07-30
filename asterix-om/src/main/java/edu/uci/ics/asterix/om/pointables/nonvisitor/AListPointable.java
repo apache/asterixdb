@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 
 /*
  * This class interprets the binary data representation of a list.
- * 
+ *
  * List {
  *   byte type;
  *   int length;
@@ -71,12 +71,13 @@ public class AListPointable extends AbstractPointable {
         }
     };
 
-    public static final IObjectFactory<IPointable, String> ALLOCATOR = new IObjectFactory<IPointable, String>() {
-        public IPointable create(String id) {
+    public static final IObjectFactory<IPointable, ATypeTag> ALLOCATOR = new IObjectFactory<IPointable, ATypeTag>() {
+        @Override
+        public IPointable create(ATypeTag type) {
             return new AListPointable();
         }
     };
-    
+
     private static final int TAG_SIZE = 1;
     private static final int TYPE_SIZE = 1;
     private static final int LENGTH_SIZE = 4;
@@ -129,6 +130,7 @@ public class AListPointable extends AbstractPointable {
         return false;
     }
 
+    @Override
     public int getLength() {
         return IntegerPointable.getInteger(bytes, getLengthOffset());
     }

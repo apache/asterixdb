@@ -62,11 +62,11 @@ public class ADMDataParser extends AbstractDataParser {
     private int nullableFieldId = 0;
     private ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
-    private IObjectPool<IARecordBuilder, String> recordBuilderPool = new ListObjectPool<IARecordBuilder, String>(
+    private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<IARecordBuilder, ATypeTag>(
             new RecordBuilderFactory());
-    private IObjectPool<IAsterixListBuilder, String> listBuilderPool = new ListObjectPool<IAsterixListBuilder, String>(
+    private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool = new ListObjectPool<IAsterixListBuilder, ATypeTag>(
             new ListBuilderFactory());
-    private IObjectPool<IMutableValueStorage, String> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, String>(
+    private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, ATypeTag>(
             new AbvsBuilderFactory());
 
     private String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
@@ -101,6 +101,7 @@ public class ADMDataParser extends AbstractDataParser {
             this.column = column;
         }
 
+        @Override
         public String getMessage() {
             StringBuilder msg = new StringBuilder("Parse error");
             if (filename != null) {
@@ -128,7 +129,8 @@ public class ADMDataParser extends AbstractDataParser {
     @Override
     public boolean parse(DataOutput out) throws AsterixException {
         try {
-            return parseAdmInstance((IAType) recordType, datasetRec, out);
+            resetPools();
+            return parseAdmInstance(recordType, datasetRec, out);
         } catch (IOException e) {
             throw new ParseException(e, filename, admLexer.getLine(), admLexer.getColumn());
         } catch (AdmLexerException e) {
@@ -760,19 +762,19 @@ public class ADMDataParser extends AbstractDataParser {
     }
 
     private IARecordBuilder getRecordBuilder() {
-        return (RecordBuilder) recordBuilderPool.allocate("record");
+        return recordBuilderPool.allocate(ATypeTag.RECORD);
     }
 
     private IAsterixListBuilder getOrderedListBuilder() {
-        return listBuilderPool.allocate("ordered");
+        return listBuilderPool.allocate(ATypeTag.ORDEREDLIST);
     }
 
     private IAsterixListBuilder getUnorderedListBuilder() {
-        return listBuilderPool.allocate("unordered");
+        return listBuilderPool.allocate(ATypeTag.UNORDEREDLIST);
     }
 
     private ArrayBackedValueStorage getTempBuffer() {
-        return (ArrayBackedValueStorage) abvsBuilderPool.allocate("buffer");
+        return (ArrayBackedValueStorage) abvsBuilderPool.allocate(ATypeTag.BINARY);
     }
 
     private void parseToBinaryTarget(int lexerToken, String tokenImage, DataOutput out) throws ParseException,
@@ -1085,5 +1087,15 @@ public class ADMDataParser extends AbstractDataParser {
 
         aInt64.setValue(value);
         int64Serde.serialize(aInt64, out);
+    }
+
+    /**
+     * Resets the pools before parsing a top-level record.
+     * In this way the elements in those pools can be re-used.
+     */
+    private void resetPools() {
+        listBuilderPool.reset();
+        recordBuilderPool.reset();
+        abvsBuilderPool.reset();
     }
 }
