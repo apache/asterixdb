@@ -41,7 +41,7 @@
         <optimizer.tests>**/optimizer/**/*Test.java</optimizer.tests>
         <metadata.tests>**/metadata/*Test.java</metadata.tests>
         <execution.tests>**/ExecutionTest.java</execution.tests>
-        <repeated.tests>**/ExecutionTest.java</repeated.tests>
+        <repeated.tests>**/RepeatedTest.java</repeated.tests>
         <invalid.tests>**/DmlTest.java</invalid.tests>
         <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
         <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests},${repeated.tests}</global.test.excludes>

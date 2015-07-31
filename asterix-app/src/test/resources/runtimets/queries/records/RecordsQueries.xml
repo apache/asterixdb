@@ -52,11 +52,11 @@
                 <output-dir compare="Text">documentation-example</output-dir>
             </compilation-unit>
         </test-case>
-        <test-case FilePath="records/get-record-fields">
+        <!--test-case FilePath="records/get-record-fields">
             <compilation-unit name="tiny-social-example">
                 <output-dir compare="Text">tiny-social-example</output-dir>
             </compilation-unit>
-        </test-case>
+        </test-case!-->
         <test-case FilePath="records/get-record-fields">
             <compilation-unit name="tiny-social-example-no-complex-types">
                 <output-dir compare="Text">tiny-social-example-no-complex-types</output-dir>
