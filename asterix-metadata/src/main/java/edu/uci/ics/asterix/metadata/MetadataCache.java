@@ -47,7 +47,7 @@ import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 public class MetadataCache {
 
     // Default life time period of a temp dataset. It is 30 days.
-    private final static long TEMP_DATASET_INACTIVE_TIME_THRESHOLD = 3600 * 24 * 30 * 1000;
+    private final static long TEMP_DATASET_INACTIVE_TIME_THRESHOLD = 3600 * 24 * 30 * 1000L;
     // Key is dataverse name.
     protected final Map<String, Dataverse> dataverses = new HashMap<String, Dataverse>();
     // Key is dataverse name. Key of value map is dataset name.
