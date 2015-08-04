@@ -67,7 +67,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         this.pageSize = pageReplacementStrategy.getPageSize();
         this.maxOpenFiles = maxOpenFiles;
         pageReplacementStrategy.setBufferCache(this);
-        pageMap = new CacheBucket[pageReplacementStrategy.getMaxAllowedNumPages() * MAP_FACTOR];
+        pageMap = new CacheBucket[pageReplacementStrategy.getMaxAllowedNumPages() * MAP_FACTOR + 1];
         for (int i = 0; i < pageMap.length; ++i) {
             pageMap[i] = new CacheBucket();
         }
@@ -441,7 +441,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     private int hash(long dpid) {
-        return (int) (dpid % pageMap.length);
+        int hashValue = (int) (dpid ^ (dpid >>> 32));
+        return hashValue % pageMap.length;
     }
 
     private static class CacheBucket {
