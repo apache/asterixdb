@@ -441,7 +441,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     private int hash(long dpid) {
-        int hashValue = (int) (dpid ^ (dpid >>> 32));
+        int hashValue = (int) dpid ^ (Integer.reverse((int) (dpid >>> 32)) >>> 1);
         return hashValue % pageMap.length;
     }
 

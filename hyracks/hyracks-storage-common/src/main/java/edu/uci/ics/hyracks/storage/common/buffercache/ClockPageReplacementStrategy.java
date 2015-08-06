@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +15,19 @@
 package edu.uci.ics.hyracks.storage.common.buffercache;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 3;
 
-    private final Lock lock;
     private IBufferCacheInternal bufferCache;
     private int clockPtr;
     private ICacheMemoryAllocator allocator;
-    private int numPages = 0;
+    private AtomicInteger numPages = new AtomicInteger(0);
     private final int pageSize;
     private final int maxAllowedNumPages;
 
     public ClockPageReplacementStrategy(ICacheMemoryAllocator allocator, int pageSize, int maxAllowedNumPages) {
-        this.lock = new ReentrantLock();
         this.allocator = allocator;
         this.pageSize = pageSize;
         this.maxAllowedNumPages = maxAllowedNumPages;
@@ -59,16 +56,13 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
 
     @Override
     public ICachedPageInternal findVictim() {
-        lock.lock();
         ICachedPageInternal cachedPage = null;
-        try {
-            if (numPages >= maxAllowedNumPages) {
-                cachedPage = findVictimByEviction();
-            } else {
-                cachedPage = allocatePage();
-            }
-        } finally {
-            lock.unlock();
+        int pageCount = getNumPages();
+        // pageCount is a lower-bound of numPages.
+        if (pageCount >= maxAllowedNumPages) {
+            cachedPage = findVictimByEviction();
+        } else {
+            cachedPage = allocatePage();
         }
         return cachedPage;
     }
@@ -93,7 +87,10 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
                     return cPage;
                 }
             }
-            clockPtr = (clockPtr + 1) % numPages;
+            /**
+             * The clockPtr may miss the last added pages in this round.
+             */
+            clockPtr = (clockPtr + 1) % getNumPages();
             if (clockPtr == startClockPtr) {
                 ++cycleCount;
             }
@@ -101,22 +98,22 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         return null;
     }
 
+    /**
+     * The number returned here could only be smaller or equal to the actual number
+     * of pages, because numPages is monotonically incremented.
+     */
     @Override
     public int getNumPages() {
-        int retNumPages = 0;
-        lock.lock();
-        try {
-            retNumPages = numPages;
-        } finally {
-            lock.unlock();
-        }
-        return retNumPages;
+        return numPages.get();
     }
 
     private ICachedPageInternal allocatePage() {
-        CachedPage cPage = new CachedPage(numPages, allocator.allocate(pageSize, 1)[0], this);
-        bufferCache.addPage(cPage);
-        numPages++;
+        CachedPage cPage = null;
+        synchronized (this) {
+            cPage = new CachedPage(numPages.get(), allocator.allocate(pageSize, 1)[0], this);
+            bufferCache.addPage(cPage);
+            numPages.incrementAndGet();
+        }
         AtomicBoolean accessedFlag = getPerPageObject(cPage);
         if (!accessedFlag.compareAndSet(true, false)) {
             if (cPage.pinIfGoodVictim()) {
