@@ -80,4 +80,9 @@ public class AOrderedListBinaryTokenizer implements IBinaryTokenizer {
     protected int getNumberOfItems(byte[] data, int start) {
         return AOrderedListSerializerDeserializer.getNumberOfItems(data, start);
     }
+
+    @Override
+    public short getTokensCount() {
+        return (short) listLength;
+    }
 }
