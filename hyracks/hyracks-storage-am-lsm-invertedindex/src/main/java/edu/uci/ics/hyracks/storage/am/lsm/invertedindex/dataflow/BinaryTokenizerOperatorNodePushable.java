@@ -31,8 +31,7 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 
-public class BinaryTokenizerOperatorNodePushable extends
-        AbstractUnaryInputUnaryOutputOperatorNodePushable {
+public class BinaryTokenizerOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
     private final IHyracksTaskContext ctx;
     private final IBinaryTokenizer tokenizer;
@@ -48,9 +47,8 @@ public class BinaryTokenizerOperatorNodePushable extends
     private GrowableArray builderData;
     private FrameTupleAppender appender;
 
-    public BinaryTokenizerOperatorNodePushable(IHyracksTaskContext ctx,
-            RecordDescriptor inputRecDesc, RecordDescriptor outputRecDesc,
-            IBinaryTokenizer tokenizer, int docField, int[] keyFields,
+    public BinaryTokenizerOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
+            RecordDescriptor outputRecDesc, IBinaryTokenizer tokenizer, int docField, int[] keyFields,
             boolean addNumTokensKey, boolean writeKeyFieldsFirst) {
         this.ctx = ctx;
         this.tokenizer = tokenizer;
@@ -78,26 +76,16 @@ public class BinaryTokenizerOperatorNodePushable extends
 
         for (int i = 0; i < tupleCount; i++) {
             short numTokens = 0;
-            if (addNumTokensKey) {
-                // Run through the tokens to get the total number of tokens.
-                tokenizer.reset(
-                        accessor.getBuffer().array(),
-                        accessor.getTupleStartOffset(i)
-                                + accessor.getFieldSlotsLength()
-                                + accessor.getFieldStartOffset(i, docField),
-                        accessor.getFieldLength(i, docField));
-                while (tokenizer.hasNext()) {
-                    tokenizer.next();
-                    numTokens++;
-                }
-            }
 
             tokenizer.reset(
                     accessor.getBuffer().array(),
-                    accessor.getTupleStartOffset(i)
-                            + accessor.getFieldSlotsLength()
-                            + accessor.getFieldStartOffset(i, docField),
-                    accessor.getFieldLength(i, docField));
+                    accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
+                            + accessor.getFieldStartOffset(i, docField), accessor.getFieldLength(i, docField));
+
+            if (addNumTokensKey) {
+                // Get the total number of tokens.
+                numTokens = tokenizer.getTokensCount();
+            }
 
             // Write token and data into frame by following the order specified
             // in the writeKeyFieldsFirst field.
@@ -151,8 +139,8 @@ public class BinaryTokenizerOperatorNodePushable extends
 
                 }
 
-                FrameUtils.appendToWriter(writer, appender, builder.getFieldEndOffsets(),
-                        builder.getByteArray(), 0, builder.getSize());
+                FrameUtils.appendToWriter(writer, appender, builder.getFieldEndOffsets(), builder.getByteArray(), 0,
+                        builder.getSize());
 
             }
 

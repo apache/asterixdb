@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,11 +16,14 @@
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 public interface IBinaryTokenizer {
-	public IToken getToken();
+    public IToken getToken();
 
-	public boolean hasNext();
+    public boolean hasNext();
 
-	public void next();
+    public void next();
 
-	public void reset(byte[] data, int start, int length);
+    public void reset(byte[] data, int start, int length);
+
+    // Get the total number of tokens
+    public short getTokensCount();
 }

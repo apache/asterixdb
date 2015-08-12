@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,5 +73,25 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
 
         // set token
         token.reset(data, currentTokenStart, index, tokenLength, tokenCount);
+    }
+
+    @Override
+    public short getTokensCount() {
+        if (!tokenCountCalculated) {
+            tokenCount = 0;
+            boolean previousCharIsSeparator = true;
+            while (originalIndex < length) {
+                if (isSeparator(UTF8StringPointable.charAt(data, originalIndex))) {
+                    previousCharIsSeparator = true;
+                } else {
+                    if (previousCharIsSeparator) {
+                        tokenCount++;
+                        previousCharIsSeparator = false;
+                    }
+                }
+                originalIndex += UTF8StringPointable.charSize(data, originalIndex);
+            }
+        }
+        return tokenCount;
     }
 }
