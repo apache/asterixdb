@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2014 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,19 +30,43 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import edu.uci.ics.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.AbstractDecorrelationRule;
 
+/**
+ * The rule searches for operators that can be moved outside the subplan.
+ *
+ * <pre>
+ * Before
+ * 
+ *   %PARENT_PLAN
+ *   SUBPLAN{
+ *     %NESTED_OPERATORS_B+
+ *     ASSIGN || %SUBPLAN
+ *     %NESTED_OPERATORS_A*
+ *     NESTEDTUPLESOURCE
+ *   }
+ *   %CHILD_PLAN
+ * 
+ *   where
+ *     %SUBPLAN has one nested plan with a root AGGREGATE operator.
+ * 
+ * After
+ * 
+ *   %PARENT_PLAN
+ *   SUBPLAN{
+ *     %NESTED_OPERATORS_B+
+ *     %NESTED_OPERATORS_A*
+ *     NESTEDTUPLESOURCE
+ *   }
+ *   ASSIGN || %SUBPLAN
+ *   %CHILD_PLAN
+ * </pre>
+ */
 public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelationRule {
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        /*
-         * This rule looks for an assign within a subplan that uses only 
-         * variables from outside of the subplan
-         * 
-         * It moves this assign outside of the subplan
-         * 
-         */
         AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getValue();
         if (op0.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;
@@ -90,11 +114,38 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
 
             //Get its used variables
             Set<LogicalVariable> used = new HashSet<LogicalVariable>();
-            VariableUtilities.getUsedVariables(op2, used);
 
-            //not movable if the operator is not an assign
+            //not movable if the operator is not an assign or subplan
             //Might be helpful in the future for other operations in the future
-            if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+            if (movableOperator(op2.getOperatorTag())) {
+                if (op2.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                    VariableUtilities.getUsedVariables(op2, used);
+                } else if (op2.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
+                    // Nested plan must have an aggregate root.
+                    ListIterator<ILogicalPlan> subplansIter = ((SubplanOperator) op2).getNestedPlans().listIterator();
+                    ILogicalPlan plan = null;
+                    while (subplansIter.hasNext()) {
+                        plan = subplansIter.next();
+                    }
+                    if (plan == null) {
+                        return false;
+                    }
+                    if (plan.getRoots().size() != 1) {
+                        return false;
+                    }
+                    ILogicalOperator op3 = plan.getRoots().get(0).getValue();
+                    if (op3.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+                        return false;
+                    }
+                    // Used variables do not include ones created in the subplan.
+                    VariableUtilities.getUsedVariables(op2, used);
+                    Set<LogicalVariable> subplanProducedAndDown = new HashSet<LogicalVariable>();
+                    VariableUtilities.getProducedVariablesInDescendantsAndSelf(op3, subplanProducedAndDown);
+                    used.removeAll(subplanProducedAndDown);
+                } else {
+                    notApplicable = true;
+                }
+            } else {
                 notApplicable = true;
             }
 
@@ -126,4 +177,7 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
         return false;
     }
 
+    protected boolean movableOperator(LogicalOperatorTag operatorTag) {
+        return (operatorTag == LogicalOperatorTag.ASSIGN || operatorTag == LogicalOperatorTag.SUBPLAN);
+    }
 }
