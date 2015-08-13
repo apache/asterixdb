@@ -43,7 +43,7 @@ to convert strings to sets, and the
 
 ## <a id="SimilaritySelectionQueries">Similarity Selection Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
-The following [query](functions.html#edit-distance)
+The following query
 asks for all the Facebook users whose name is similar to
 `Suzanna Tilson`, i.e., their edit distance is at most 2.
 
@@ -55,14 +55,14 @@ asks for all the Facebook users whose name is similar to
         return $user
 
 
-The following [query](functions.html#similarity-jaccard)
+The following query
 asks for all the Facebook users whose set of friend ids is
-similar to `[1,5,9]`, i.e., their Jaccard similarity is at least 0.6.
+similar to `[1,5,9,10]`, i.e., their Jaccard similarity is at least 0.6.
 
         use dataverse TinySocial;
 
         for $user in dataset('FacebookUsers')
-        let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
+        let $sim := similarity-jaccard($user.friend-ids, [1,5,9,10])
         where $sim >= 0.6f
         return $user
 
@@ -78,7 +78,7 @@ equivalently written as:
         set simthreshold "0.6f";
 
         for $user in dataset('FacebookUsers')
-        where $user.friend-ids ~= [1,5,9]
+        where $user.friend-ids ~= [1,5,9,10]
         return $user
 
 
@@ -170,7 +170,7 @@ lists of the grams in the query string.
         use dataverse TinySocial;
 
         for $user in dataset('FacebookUsers')
-        let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
+        let $sim := similarity-jaccard($user.friend-ids, [1,5,9,10])
         where $sim >= 0.6f
         return $user
 
@@ -179,8 +179,8 @@ lists of the grams in the query string.
         use dataverse TinySocial;
 
         for $user in dataset('FacebookUsers')
-        let $sim := similarity-jaccard($user.friend-ids, [1,5,9])
-        where $sim >= 0.6f
+        let $sim := similarity-jaccard-check($user.friend-ids, [1,5,9,10], 0.6f)
+        where $sim[0]
         return $user
 
 #### NGram Index usage case - [contains()]((functions.html#contains)) ####
@@ -203,6 +203,7 @@ records with this token.  The following two examples show how to create keyword 
 
         use dataverse TinySocial;
 
+        drop index FacebookMessages.fbMessageIdx if exists;
         create index fbMessageIdx on FacebookMessages(message) type keyword;
 
         for $o in dataset('FacebookMessages')
