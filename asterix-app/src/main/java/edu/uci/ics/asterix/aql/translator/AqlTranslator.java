@@ -187,6 +187,7 @@ import edu.uci.ics.hyracks.api.dataset.ResultSetId;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -2129,10 +2130,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
             // All Metadata checks have passed. Feed connect request is valid. //
 
             FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(feedPolicy.getProperties());
-            Pair<FeedConnectionRequest, Boolean> p = getFeedConnectionRequest(dataverseName, feed,
+            Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> triple = getFeedConnectionRequest(dataverseName, feed,
                     cbfs.getDatasetName(), feedPolicy, mdTxnCtx);
-            FeedConnectionRequest connectionRequest = p.first;
-            boolean createFeedIntakeJob = p.second;
+            FeedConnectionRequest connectionRequest = triple.first;
+            boolean createFeedIntakeJob = triple.second;
 
             FeedLifecycleListener.INSTANCE.registerFeedEventSubscriber(feedConnId, eventSubscriber);
             subscriberRegistered = true;
@@ -2142,6 +2143,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         feedId.getDataverse(), feedId.getFeedName());
                 Pair<JobSpecification, IFeedAdapterFactory> pair = FeedOperations.buildFeedIntakeJobSpec(primaryFeed,
                         metadataProvider, policyAccessor);
+                // adapter configuration are valid at this stage
+                // register the feed joints (these are auto-de-registered)
+                for (IFeedJoint fj : triple.third){
+                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);   
+                }
                 runJob(hcc, pair.first, false);
                 IFeedAdapterFactory adapterFactory = pair.second;
                 if (adapterFactory.isRecordTrackingEnabled()) {
@@ -2149,6 +2155,10 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             adapterFactory.createIntakeProgressTracker());
                 }
                 eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_INTAKE_STARTED);
+            } else {
+                for (IFeedJoint fj : triple.third){
+                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);   
+                }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -2193,7 +2203,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
      * @return
      * @throws MetadataException
      */
-    private Pair<FeedConnectionRequest, Boolean> getFeedConnectionRequest(String dataverse, Feed feed, String dataset,
+    private Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse, Feed feed, String dataset,
             FeedPolicy feedPolicy, MetadataTransactionContext mdTxnCtx) throws MetadataException {
         IFeedJoint sourceFeedJoint = null;
         FeedConnectionRequest request = null;
@@ -2235,9 +2245,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         ConnectionLocation.SOURCE_FEED_COMPUTE_STAGE, FeedJointType.COMPUTE, connectionId);
                 jointsToRegister.add(computeFeedJoint);
             }
-            for (IFeedJoint joint : jointsToRegister) {
-                FeedLifecycleListener.INSTANCE.registerFeedJoint(joint);
-            }
         } else {
             sourceFeedJoint = FeedLifecycleListener.INSTANCE.getFeedJoint(feedJointKey);
             connectionLocation = sourceFeedJoint.getConnectionLocation();
@@ -2250,7 +2257,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 dataset, feedPolicy.getPolicyName(), feedPolicy.getProperties(), feed.getFeedId());
 
         sourceFeedJoint.addConnectionRequest(request);
-        return new Pair<FeedConnectionRequest, Boolean>(request, needIntakeJob);
+        return new Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>>(request, needIntakeJob, jointsToRegister);
     }
     
     /*

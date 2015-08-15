@@ -32,7 +32,7 @@ public class RSSFeedAdapter extends ClientBasedFeedAdapter implements IFeedAdapt
 
     private static final long serialVersionUID = 1L;
 
-    private static final String KEY_RSS_URL = "rss_url";
+    private static final String KEY_RSS_URL = "url";
 
     private List<String> feedURLs = new ArrayList<String>();
     private String id_prefix = "";
@@ -46,6 +46,7 @@ public class RSSFeedAdapter extends ClientBasedFeedAdapter implements IFeedAdapt
         super(configuration, ctx);
         id_prefix = ctx.getJobletContext().getApplicationContext().getNodeId();
         this.recordType = recordType;
+        reconfigure(configuration);
     }
 
     private void initializeFeedURLs(String rssURLProperty) {
