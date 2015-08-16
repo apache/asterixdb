@@ -1,0 +1,11 @@
+/*
+ * Description    : Test concat-string function with nulls in the list which is passed as an argument.
+ * Success        : Yes
+ */
+
+use dataverse test;
+
+let $k := [{"a":1, "b":"hello"}, {"a":2, "b":{"k": [1,2,2]}}]
+for $x in $k
+where $x.a = 1
+return string-concat([$x.b, " world"])

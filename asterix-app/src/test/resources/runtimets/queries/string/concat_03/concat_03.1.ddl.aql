@@ -1,0 +1,8 @@
+/*
+ * Description    : Test concat-string function with heterogenous elements in a list
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+

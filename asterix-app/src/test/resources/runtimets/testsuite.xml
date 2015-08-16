@@ -4741,6 +4741,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
+            <compilation-unit name="concat_03">
+                <output-dir compare="Text">concat_03</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="string">
             <compilation-unit name="constructor">
                 <output-dir compare="Text">constructor</output-dir>
             </compilation-unit>
