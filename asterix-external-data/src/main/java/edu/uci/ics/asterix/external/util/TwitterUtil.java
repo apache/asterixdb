@@ -31,7 +31,6 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 
 public class TwitterUtil {
 
-
     private static Logger LOGGER = Logger.getLogger(TwitterUtil.class.getName());
 
     public static class ConfigurationConstants {
@@ -83,20 +82,20 @@ public class TwitterUtil {
     public static Twitter getTwitterService(Map<String, String> configuration) {
         ConfigurationBuilder cb = getAuthConfiguration(configuration);
         TwitterFactory tf = null;
-        try{
-          tf = new TwitterFactory(cb.build());
-        } catch (Exception e){
-         if (LOGGER.isLoggable(Level.WARNING)){
-            StringBuilder builder = new StringBuilder();
-            builder.append("Twitter Adapter requires the following config parameters\n");
-            builder.append(AuthenticationConstants.OAUTH_CONSUMER_KEY + "\n");
-            builder.append(AuthenticationConstants.OAUTH_CONSUMER_SECRET + "\n");
-            builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
-            builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
-            LOGGER.warning(builder.toString()); 
-            LOGGER.warning("Unable to configure Twitter adapter due to incomplete/incorrect authentication credentials");
-            LOGGER.warning("For details on how to obtain OAuth authentication token, visit https://dev.twitter.com/oauth/overview/application-owner-access-tokens");
-         }  
+        try {
+            tf = new TwitterFactory(cb.build());
+        } catch (Exception e) {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                StringBuilder builder = new StringBuilder();
+                builder.append("Twitter Adapter requires the following config parameters\n");
+                builder.append(AuthenticationConstants.OAUTH_CONSUMER_KEY + "\n");
+                builder.append(AuthenticationConstants.OAUTH_CONSUMER_SECRET + "\n");
+                builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
+                builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
+                LOGGER.warning(builder.toString());
+                LOGGER.warning("Unable to configure Twitter adapter due to incomplete/incorrect authentication credentials");
+                LOGGER.warning("For details on how to obtain OAuth authentication token, visit https://dev.twitter.com/oauth/overview/application-owner-access-tokens");
+            }
         }
         Twitter twitter = tf.getInstance();
         return twitter;
@@ -152,9 +151,9 @@ public class TwitterUtil {
                     break;
             }
         } catch (Exception e) {
-            if(LOGGER.isLoggable(Level.WARNING)){
-                LOGGER.warning("unable to load authentication credentials from auth.properties file" + 
-             "credential information will be obtained from adapter's configuration");
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("unable to load authentication credentials from auth.properties file"
+                        + "credential information will be obtained from adapter's configuration");
             }
         }
     }

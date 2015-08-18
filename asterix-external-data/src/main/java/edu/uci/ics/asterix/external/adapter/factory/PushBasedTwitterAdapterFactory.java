@@ -64,14 +64,14 @@ public class PushBasedTwitterAdapterFactory implements IFeedAdapterFactory {
         this.configuration = configuration;
         TwitterUtil.initializeConfigurationWithAuthInfo(configuration);
         boolean requiredParamsSpecified = validateConfiguration(configuration);
-        if(!requiredParamsSpecified){
-           StringBuilder builder = new StringBuilder();
-           builder.append("One or more parameters are missing from adapter configuration\n");
-           builder.append(AuthenticationConstants.OAUTH_CONSUMER_KEY + "\n");
-           builder.append(AuthenticationConstants.OAUTH_CONSUMER_SECRET + "\n");
-           builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
-           builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
-           throw new Exception(builder.toString());
+        if (!requiredParamsSpecified) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("One or more parameters are missing from adapter configuration\n");
+            builder.append(AuthenticationConstants.OAUTH_CONSUMER_KEY + "\n");
+            builder.append(AuthenticationConstants.OAUTH_CONSUMER_SECRET + "\n");
+            builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN + "\n");
+            builder.append(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET + "\n");
+            throw new Exception(builder.toString());
         }
     }
 
@@ -79,7 +79,6 @@ public class PushBasedTwitterAdapterFactory implements IFeedAdapterFactory {
     public ARecordType getAdapterOutputType() {
         return outputType;
     }
-    
 
     @Override
     public boolean isRecordTrackingEnabled() {
@@ -92,12 +91,12 @@ public class PushBasedTwitterAdapterFactory implements IFeedAdapterFactory {
     }
 
     private boolean validateConfiguration(Map<String, String> configuration) {
-        String consumerKey  = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_KEY);
-        String consumerSecret  = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_SECRET);
-        String accessToken  = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN);
-        String tokenSecret  = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET);
-        
-        if(consumerKey == null  || consumerSecret == null || accessToken == null || tokenSecret == null){
+        String consumerKey = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_KEY);
+        String consumerSecret = configuration.get(AuthenticationConstants.OAUTH_CONSUMER_SECRET);
+        String accessToken = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN);
+        String tokenSecret = configuration.get(AuthenticationConstants.OAUTH_ACCESS_TOKEN_SECRET);
+
+        if (consumerKey == null || consumerSecret == null || accessToken == null || tokenSecret == null) {
             return false;
         }
         return true;

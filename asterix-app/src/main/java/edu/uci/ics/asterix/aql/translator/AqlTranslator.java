@@ -2120,8 +2120,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
             // All Metadata checks have passed. Feed connect request is valid. //
 
             FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(feedPolicy.getProperties());
-            Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> triple = getFeedConnectionRequest(dataverseName, feed,
-                    cbfs.getDatasetName(), feedPolicy, mdTxnCtx);
+            Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> triple = getFeedConnectionRequest(dataverseName,
+                    feed, cbfs.getDatasetName(), feedPolicy, mdTxnCtx);
             FeedConnectionRequest connectionRequest = triple.first;
             boolean createFeedIntakeJob = triple.second;
 
@@ -2135,8 +2135,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         metadataProvider, policyAccessor);
                 // adapter configuration are valid at this stage
                 // register the feed joints (these are auto-de-registered)
-                for (IFeedJoint fj : triple.third){
-                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);   
+                for (IFeedJoint fj : triple.third) {
+                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);
                 }
                 runJob(hcc, pair.first, false);
                 IFeedAdapterFactory adapterFactory = pair.second;
@@ -2146,8 +2146,8 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
                 eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_INTAKE_STARTED);
             } else {
-                for (IFeedJoint fj : triple.third){
-                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);   
+                for (IFeedJoint fj : triple.third) {
+                    FeedLifecycleListener.INSTANCE.registerFeedJoint(fj);
                 }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2193,8 +2193,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
      * @return
      * @throws MetadataException
      */
-    private Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse, Feed feed, String dataset,
-            FeedPolicy feedPolicy, MetadataTransactionContext mdTxnCtx) throws MetadataException {
+    private Triple<FeedConnectionRequest, Boolean, List<IFeedJoint>> getFeedConnectionRequest(String dataverse,
+            Feed feed, String dataset, FeedPolicy feedPolicy, MetadataTransactionContext mdTxnCtx)
+            throws MetadataException {
         IFeedJoint sourceFeedJoint = null;
         FeedConnectionRequest request = null;
         List<String> functionsToApply = new ArrayList<String>();
