@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -51,10 +48,7 @@ public class UnaryBooleanOrNullFunctionTypeComputer implements IResultTypeComput
             return BuiltinType.ANULL;
         }
         if (TypeHelper.canBeNull(t0)) {
-            List<IAType> unionList = new ArrayList<IAType>();
-            unionList.add(BuiltinType.ANULL);
-            unionList.add(BuiltinType.ABOOLEAN);
-            return new AUnionType(unionList, "OptionalBoolean");
+            return AUnionType.createNullableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
         }
         return BuiltinType.ABOOLEAN;
     }

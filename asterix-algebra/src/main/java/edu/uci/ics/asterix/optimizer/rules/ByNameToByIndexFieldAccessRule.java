@@ -114,7 +114,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
                     case UNION: {
                         AUnionType unionT = (AUnionType) t;
                         if (unionT.isNullableType()) {
-                            IAType t2 = unionT.getUnionList().get(1);
+                            IAType t2 = unionT.getNullableType();
                             if (t2.getTypeTag() == ATypeTag.RECORD) {
                                 ARecordType recType = (ARecordType) t2;
                                 ILogicalExpression fai = createFieldAccessByIndex(recType, fce);

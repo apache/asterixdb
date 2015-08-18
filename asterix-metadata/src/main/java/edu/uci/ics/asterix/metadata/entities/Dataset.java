@@ -34,6 +34,9 @@ public class Dataset implements IMetadataEntity {
     private final String datasetName;
     // Type of items stored in this dataset.
     private final String itemTypeName;
+    private final String nodeGroupName;
+    private final String compactionPolicy;
+    private final Map<String, String> compactionPolicyProperties;
     private final DatasetType datasetType;
     private final IDatasetDetails datasetDetails;
     // Hints related to cardinatlity of dataset, avg size of tuples etc.
@@ -42,11 +45,15 @@ public class Dataset implements IMetadataEntity {
     // Type of pending operations with respect to atomic DDL operation
     private int pendingOp;
 
-    public Dataset(String dataverseName, String datasetName, String itemTypeName, IDatasetDetails datasetDetails,
+    public Dataset(String dataverseName, String datasetName, String itemTypeName, String nodeGroupName,
+            String compactionPolicy, Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails,
             Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.itemTypeName = itemTypeName;
+        this.nodeGroupName = nodeGroupName;
+        this.compactionPolicy = compactionPolicy;
+        this.compactionPolicyProperties = compactionPolicyProperties;
         this.datasetType = datasetType;
         this.datasetDetails = datasetDetails;
         this.datasetId = datasetId;
@@ -64,6 +71,18 @@ public class Dataset implements IMetadataEntity {
 
     public String getItemTypeName() {
         return itemTypeName;
+    }
+
+    public String getNodeGroupName() {
+        return nodeGroupName;
+    }
+
+    public String getCompactionPolicy() {
+        return compactionPolicy;
+    }
+
+    public Map<String, String> getCompactionPolicyProperties() {
+        return compactionPolicyProperties;
     }
 
     public DatasetType getDatasetType() {

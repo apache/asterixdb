@@ -22,9 +22,9 @@ import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
 import edu.uci.ics.asterix.metadata.MetadataCache;
 import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
 import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 
@@ -130,13 +130,9 @@ public class Index implements IMetadataEntity, Comparable<Index> {
 
     public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) throws AlgebricksException {
         boolean nullable = false;
-        if (keyType.getTypeTag() == ATypeTag.UNION) {
-            AUnionType unionType = (AUnionType) keyType;
-            if (unionType.isNullableType()) {
-                // The non-null type is always at index 1.
-                keyType = unionType.getUnionList().get(1);
-                nullable = true;
-            }
+        if (NonTaggedFormatUtil.isOptional(keyType)) {
+            keyType = ((AUnionType) keyType).getNullableType();
+            nullable = true;
         }
         return new Pair<IAType, Boolean>(keyType, nullable);
     }

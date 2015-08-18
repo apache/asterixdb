@@ -27,7 +27,6 @@ import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.ANull;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -113,7 +112,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
             recBuilder.reset(recordType);
             recBuilder.init();
             areAllNullFields = true;
-            
+
             for (int i = 0; i < valueParsers.length; ++i) {
                 if (!cursor.nextField()) {
                     break;
@@ -125,8 +124,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IDataPars
                     // if the field is empty and the type is optional, insert
                     // NULL. Note that string type can also process empty field as an
                     // empty string
-                    if (recordType.getFieldTypes()[i].getTypeTag() != ATypeTag.UNION
-                            || !NonTaggedFormatUtil.isOptionalField((AUnionType) recordType.getFieldTypes()[i])) {
+                    if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
                         throw new AsterixException("At record: " + cursor.recordCount + " - Field " + cursor.fieldCount
                                 + " is not an optional type so it cannot accept null value. ");
                     }

@@ -94,11 +94,9 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
 
-                if (fieldTypes[i].getTypeTag() == ATypeTag.UNION
-                        && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i]))
+                if (NonTaggedFormatUtil.isOptional(fieldTypes[i]))
                     // optional field: add the embedded non-null type tag
-                    ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
-                            .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                    ftypeTag = ((AUnionType) fieldTypes[i]).getNullableType().getTypeTag();
 
                 // add type tag Reference
                 int tagStart = typeBos.size();
@@ -204,9 +202,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
                     IAType fieldType = fieldTypes[fieldNumber];
                     if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
-                        if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[fieldNumber])) {
-                            fieldType = ((AUnionType) fieldTypes[fieldNumber]).getUnionList().get(
-                                    AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                        if (((AUnionType) fieldTypes[fieldNumber]).isNullableType()) {
+                            fieldType = ((AUnionType) fieldTypes[fieldNumber]).getNullableType();
                             typeTag = fieldType.getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
                                     typeTag, false);

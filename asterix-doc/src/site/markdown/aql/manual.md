@@ -695,7 +695,7 @@ This index can be useful for accelerating exact-match queries, range search quer
 
 ##### Example
 
-    create index fbAuthorIdx on FacebookMessages(author-id) type btree enforced;
+    create index fbAuthorIdx on FacebookMessages(author-id) type btree;
 
 The following example creates an open btree index called fbSendTimeIdx on the open send-time field of the
 FacebookMessages dataset having datetime type.
@@ -703,7 +703,7 @@ This index can be useful for accelerating exact-match queries, range search quer
 
 ##### Example
 
-    create index fbSendTimeIdx on FacebookMessages(send-time:datetime) type btree;
+    create index fbSendTimeIdx on FacebookMessages(send-time:datetime) type btree enforced;
 
 The following example creates a btree index called twUserScrNameIdx on the screen-name field, which is a nested field
 of the user field in the TweetMessages dataset.

@@ -15,9 +15,6 @@
 
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ARecordType;
@@ -37,12 +34,9 @@ public class NonTaggedLocalAvgTypeComputer implements IResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
-        unionList.add(BuiltinType.ADOUBLE);
         try {
             return new ARecordType(null, new String[] { "sum", "count" }, new IAType[] {
-                    new AUnionType(unionList, "OptionalDouble"), BuiltinType.AINT32 }, false);
+                    AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"), BuiltinType.AINT32 }, false);
         } catch (AsterixException | HyracksDataException e) {
             throw new AlgebricksException(e);
         }

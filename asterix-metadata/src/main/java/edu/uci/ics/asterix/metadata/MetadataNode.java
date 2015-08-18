@@ -43,7 +43,6 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.entities.ExternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.ExternalFile;
 import edu.uci.ics.asterix.metadata.entities.Feed;
 import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
@@ -178,6 +177,10 @@ public class MetadataNode implements IMetadataNode {
             DatasetTupleTranslator tupleReaderWriter = new DatasetTupleTranslator(true);
             ITupleReference datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
+            // Add an entry for the node group
+            ITupleReference nodeGroupTuple = createTuple(dataset.getNodeGroupName(), dataset.getDataverseName(),
+                    dataset.getDatasetName());
+            insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
@@ -186,16 +189,6 @@ public class MetadataNode implements IMetadataNode {
                         true, dataset.getPendingOp());
 
                 addIndex(jobId, primaryIndex);
-                // Add an entry for the node group
-                ITupleReference nodeGroupTuple = createTuple(id.getNodeGroupName(), dataset.getDataverseName(),
-                        dataset.getDatasetName());
-                insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
-            } else if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-                //added for external data
-                ExternalDatasetDetails id = (ExternalDatasetDetails) dataset.getDatasetDetails();
-                ITupleReference nodeGroupTuple = createTuple(id.getNodeGroupName(), dataset.getDataverseName(),
-                        dataset.getDatasetName());
-                insertTupleIntoIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, nodeGroupTuple);
             }
             // Add entry in datatype secondary index.
             ITupleReference dataTypeTuple = createTuple(dataset.getDataverseName(), dataset.getItemTypeName(),
@@ -426,61 +419,61 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference searchKey = createTuple(dataverseName, datasetName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'dataset' dataset.
+            ITupleReference datasetTuple = null;
             try {
-                ITupleReference datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATASET_DATASET,
-                        searchKey);
-                deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
-            } catch (TreeIndexException tie) {
-                // ignore this exception and continue deleting all relevant
-                // artifacts.
-            }
+                datasetTuple = getTupleToBeDeleted(jobId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey);
 
-            // Delete entry from secondary index 'group'.
-            ITupleReference groupNameSearchKey = createTuple(dataset.getDatasetDetails().getNodeGroupName(),
-                    dataverseName, datasetName);
-            // Searches the index for the tuple to be deleted. Acquires an S
-            // lock on the GROUPNAME_ON_DATASET_INDEX index.
-            try {
-                ITupleReference groupNameTuple = getTupleToBeDeleted(jobId,
-                        MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameSearchKey);
-                deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
-            } catch (TreeIndexException tie) {
-                // ignore this exception and continue deleting all relevant
-                // artifacts.
-            }
-
-            // Delete entry from secondary index 'type'.
-            ITupleReference dataTypeSearchKey = createTuple(dataverseName, dataset.getItemTypeName(), datasetName);
-            // Searches the index for the tuple to be deleted. Acquires an S
-            // lock on the DATATYPENAME_ON_DATASET_INDEX index.
-            try {
-                ITupleReference dataTypeTuple = getTupleToBeDeleted(jobId,
-                        MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeSearchKey);
-                deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
-            } catch (TreeIndexException tie) {
-                // ignore this exception and continue deleting all relevant
-                // artifacts.
-            }
-
-            // Delete entry(s) from the 'indexes' dataset.
-            List<Index> datasetIndexes = getDatasetIndexes(jobId, dataverseName, datasetName);
-            if (datasetIndexes != null) {
-                for (Index index : datasetIndexes) {
-                    dropIndex(jobId, dataverseName, datasetName, index.getIndexName());
+                // Delete entry from secondary index 'group'.
+                ITupleReference groupNameSearchKey = createTuple(dataset.getNodeGroupName(), dataverseName, datasetName);
+                // Searches the index for the tuple to be deleted. Acquires an S
+                // lock on the GROUPNAME_ON_DATASET_INDEX index.
+                try {
+                    ITupleReference groupNameTuple = getTupleToBeDeleted(jobId,
+                            MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameSearchKey);
+                    deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX, groupNameTuple);
+                } catch (TreeIndexException tie) {
+                    // ignore this exception and continue deleting all relevant
+                    // artifacts.
                 }
-            }
 
-            if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-                // Delete External Files
-                // As a side effect, acquires an S lock on the 'ExternalFile' dataset
-                // on behalf of txnId.
-                List<ExternalFile> datasetFiles = getExternalFiles(jobId, dataset);
-                if (datasetFiles != null && datasetFiles.size() > 0) {
-                    // Drop all external files in this dataset.
-                    for (ExternalFile file : datasetFiles) {
-                        dropExternalFile(jobId, dataverseName, file.getDatasetName(), file.getFileNumber());
+                // Delete entry from secondary index 'type'.
+                ITupleReference dataTypeSearchKey = createTuple(dataverseName, dataset.getItemTypeName(), datasetName);
+                // Searches the index for the tuple to be deleted. Acquires an S
+                // lock on the DATATYPENAME_ON_DATASET_INDEX index.
+                try {
+                    ITupleReference dataTypeTuple = getTupleToBeDeleted(jobId,
+                            MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeSearchKey);
+                    deleteTupleFromIndex(jobId, MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX, dataTypeTuple);
+                } catch (TreeIndexException tie) {
+                    // ignore this exception and continue deleting all relevant
+                    // artifacts.
+                }
+
+                // Delete entry(s) from the 'indexes' dataset.
+                List<Index> datasetIndexes = getDatasetIndexes(jobId, dataverseName, datasetName);
+                if (datasetIndexes != null) {
+                    for (Index index : datasetIndexes) {
+                        dropIndex(jobId, dataverseName, datasetName, index.getIndexName());
                     }
                 }
+
+                if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+                    // Delete External Files
+                    // As a side effect, acquires an S lock on the 'ExternalFile' dataset
+                    // on behalf of txnId.
+                    List<ExternalFile> datasetFiles = getExternalFiles(jobId, dataset);
+                    if (datasetFiles != null && datasetFiles.size() > 0) {
+                        // Drop all external files in this dataset.
+                        for (ExternalFile file : datasetFiles) {
+                            dropExternalFile(jobId, dataverseName, file.getDatasetName(), file.getFileNumber());
+                        }
+                    }
+                }
+            } catch (TreeIndexException tie) {
+                // ignore this exception and continue deleting all relevant
+                // artifacts.
+            } finally {
+                deleteTupleFromIndex(jobId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
             }
 
         } catch (Exception e) {

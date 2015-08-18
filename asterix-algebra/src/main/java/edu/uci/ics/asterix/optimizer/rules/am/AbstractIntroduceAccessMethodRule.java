@@ -188,6 +188,16 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             boolean foundKeyField = false;
             matchedExpressions.clear();
             numMatchedKeys = 0;
+
+            // Remove the candidate if the dataset is a metadata dataset and the index is secondary
+            // TODO: fix the way secondary metadata indexes are implemented and remove this check
+            if (accessMethod.matchPrefixIndexExprs()) {
+                if (index.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
+                        && !index.isPrimaryIndex()) {
+                    indexExprAndVarIt.remove();
+                    continue;
+                }
+            }
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 List<String> keyField = index.getKeyFieldNames().get(i);
                 final IAType keyType = index.getKeyFieldTypes().get(i);
@@ -294,12 +304,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
             // A prefix of the index exprs may have been matched.
             if (accessMethod.matchPrefixIndexExprs()) {
-                // Remove the candidate if the dataset is a metadata dataset and the index is secondary
-                if (index.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
-                        && !index.isPrimaryIndex()) {
-                    indexExprAndVarIt.remove();
-                    continue;
-                }
                 if (lastFieldMatched < 0) {
                     indexExprAndVarIt.remove();
                     continue;

@@ -22,6 +22,7 @@ import java.util.Map;
 import edu.uci.ics.asterix.common.transactions.JobId;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataNode;
+import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 
@@ -65,15 +66,18 @@ public class AsterixBuiltinTypeMap {
     }
 
     public static IAType getTypeFromTypeName(MetadataNode metadataNode, JobId jobId, String dataverseName,
-            String typeName) throws MetadataException {
+            String typeName, boolean isNullable) throws MetadataException {
         IAType type = AsterixBuiltinTypeMap.getBuiltinTypes().get(typeName);
         if (type == null) {
             try {
-                type = metadataNode.getDatatype(jobId, dataverseName, typeName).getDatatype();
+                Datatype dt = metadataNode.getDatatype(jobId, dataverseName, typeName);
+                type = dt.getDatatype();
             } catch (RemoteException e) {
                 throw new MetadataException(e);
             }
         }
+        if (isNullable)
+            type = AUnionType.createNullableType(type);
         return type;
     }
 }

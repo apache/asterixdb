@@ -607,11 +607,9 @@ public class ADMDataParser extends AbstractDataParser {
                         if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
                             recBuilder.addField(fieldNameBuffer, fieldValueBuffer);
                         }
-                    } else if (recType.getFieldTypes()[fieldId].getTypeTag() == ATypeTag.UNION) {
-                        if (NonTaggedFormatUtil.isOptionalField((AUnionType) recType.getFieldTypes()[fieldId])) {
-                            if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
-                                recBuilder.addField(fieldId, fieldValueBuffer);
-                            }
+                    } else if (NonTaggedFormatUtil.isOptional(recType)) {
+                        if (fieldValueBuffer.getByteArray()[0] != ATypeTag.NULL.serialize()) {
+                            recBuilder.addField(fieldId, fieldValueBuffer);
                         }
                     } else {
                         recBuilder.addField(fieldId, fieldValueBuffer);

@@ -570,7 +570,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         // condition.
         for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
             IAType secondaryKeyType = (IAType) typeEnv.getVarType(secondaryKeyVar);
-            if (!isNullableType(secondaryKeyType) && !forceFilter) {
+            if (!NonTaggedFormatUtil.isOptional(secondaryKeyType) && !forceFilter) {
                 continue;
             }
             ScalarFunctionCallExpression isNullFuncExpr = new ScalarFunctionCallExpression(
@@ -594,12 +594,5 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             filterExpression = filterExpressions.get(0);
         }
         return filterExpression;
-    }
-
-    private boolean isNullableType(IAType type) {
-        if (type.getTypeTag() == ATypeTag.UNION) {
-            return ((AUnionType) type).isNullableType();
-        }
-        return false;
     }
 }

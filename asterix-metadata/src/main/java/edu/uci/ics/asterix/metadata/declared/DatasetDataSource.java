@@ -81,7 +81,7 @@ public class DatasetDataSource extends AqlDataSource {
             schemaTypes[i] = recordType.getSubFieldType(partitioningKeys.get(i));
         }
         schemaTypes[n] = itemType;
-        domain = new DefaultNodeGroupDomain(DatasetUtils.getNodegroupName(dataset));
+        domain = new DefaultNodeGroupDomain(dataset.getNodeGroupName());
     }
 
     private void initExternalDataset(IAType itemType) {

@@ -123,9 +123,8 @@ public class MetadataBootstrap {
                 MetadataPrimaryIndexes.INDEX_DATASET, MetadataPrimaryIndexes.NODE_DATASET,
                 MetadataPrimaryIndexes.NODEGROUP_DATASET, MetadataPrimaryIndexes.FUNCTION_DATASET,
                 MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, MetadataPrimaryIndexes.FEED_DATASET,
-                MetadataPrimaryIndexes.FEED_POLICY_DATASET,
-                MetadataPrimaryIndexes.LIBRARY_DATASET, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET,
-                MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
+                MetadataPrimaryIndexes.FEED_POLICY_DATASET, MetadataPrimaryIndexes.LIBRARY_DATASET,
+                MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET };
 
         secondaryIndexes = new IMetadataIndex[] { MetadataSecondaryIndexes.GROUPNAME_ON_DATASET_INDEX,
                 MetadataSecondaryIndexes.DATATYPENAME_ON_DATASET_INDEX,
@@ -237,13 +236,12 @@ public class MetadataBootstrap {
         for (int i = 0; i < primaryIndexes.length; i++) {
             IDatasetDetails id = new InternalDatasetDetails(FileStructure.BTREE, PartitioningStrategy.HASH,
                     primaryIndexes[i].getPartitioningExpr(), primaryIndexes[i].getPartitioningExpr(),
-                    primaryIndexes[i].getPartitioningExprType(), primaryIndexes[i].getNodeGroupName(), false,
-                    GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME, GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES,
-                    null, false);
+                    primaryIndexes[i].getPartitioningExprType(), false, null, false);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(primaryIndexes[i].getDataverseName(),
                     primaryIndexes[i].getIndexedDatasetName(), primaryIndexes[i].getPayloadRecordType().getTypeName(),
-                    id, new HashMap<String, String>(), DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(),
-                    IMetadataEntity.PENDING_NO_OP));
+                    primaryIndexes[i].getNodeGroupName(), GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME,
+                    GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<String, String>(),
+                    DatasetType.INTERNAL, primaryIndexes[i].getDatasetId().getId(), IMetadataEntity.PENDING_NO_OP));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datasets.");

@@ -9,4 +9,5 @@ use dataverse test;
 
 for $emp in dataset EmployeeDataset
 where $emp.age = 22
+order by $emp.id
 return $emp;

@@ -45,18 +45,19 @@ public class MetadataSecondaryIndexes {
         }
 
         GROUPNAME_ON_DATASET_INDEX = new MetadataIndex("Dataset", "GroupName", 3, new IAType[] { BuiltinType.ASTRING,
-                BuiltinType.ASTRING, BuiltinType.ASTRING },
-                (Arrays.asList(Arrays.asList("GroupName"),Arrays.asList("DataverseName"),Arrays.asList("DatasetName"))), 1, null,
+                BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("GroupName"),
+                Arrays.asList("DataverseName"), Arrays.asList("DatasetName"))), 1, null,
                 MetadataPrimaryIndexes.DATASET_DATASET_ID, false, new int[] { 1, 2 });
 
         DATATYPENAME_ON_DATASET_INDEX = new MetadataIndex("Dataset", "DatatypeName", 3, new IAType[] {
-                BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"),Arrays.asList(
-                "DatatypeName"),Arrays.asList("DatasetName"))), 2, null, MetadataPrimaryIndexes.DATASET_DATASET_ID, false, new int[] {
-                0, 2 });
+                BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(
+                Arrays.asList("DataverseName"), Arrays.asList("DatatypeName"), Arrays.asList("DatasetName"))), 2, null,
+                MetadataPrimaryIndexes.DATASET_DATASET_ID, false, new int[] { 0, 2 });
 
         DATATYPENAME_ON_DATATYPE_INDEX = new MetadataIndex("Datatype", "DatatypeName", 3, new IAType[] {
-                BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(Arrays.asList("DataverseName"),Arrays.asList(
-                "NestedDatatypeName"),Arrays.asList("TopDatatypeName"))), 2, null, MetadataPrimaryIndexes.DATATYPE_DATASET_ID, false,
+                BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("NestedDatatypeName"),
+                        Arrays.asList("TopDatatypeName"))), 2, null, MetadataPrimaryIndexes.DATATYPE_DATASET_ID, false,
                 new int[] { 0, 2 });
 
     }

@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -58,15 +55,13 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
         }
 
         ATypeTag tag1, tag2;
-        if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1))
-            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
-                    .getTypeTag();
+        if (NonTaggedFormatUtil.isOptional(t1))
+            tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
         else
             tag1 = t1.getTypeTag();
 
-        if (t2.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t2))
-            tag2 = ((AUnionType) t2).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
-                    .getTypeTag();
+        if (NonTaggedFormatUtil.isOptional(t2))
+            tag2 = ((AUnionType) t2).getNullableType().getTypeTag();
         else
             tag2 = t2.getTypeTag();
 
@@ -74,8 +69,7 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             return BuiltinType.ANULL;
         }
 
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
+        IAType type;
 
         switch (tag1) {
             case DOUBLE: {
@@ -86,7 +80,7 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                     case INT64:
                     case FLOAT:
                     case DOUBLE:
-                        unionList.add(BuiltinType.ADOUBLE);
+                        type = BuiltinType.ADOUBLE;
                         break;
                     case ANY:
                         return BuiltinType.ANY;
@@ -103,10 +97,10 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                     case INT32:
                     case INT64:
                     case FLOAT:
-                        unionList.add(BuiltinType.AFLOAT);
+                        type = BuiltinType.AFLOAT;
                         break;
                     case DOUBLE:
-                        unionList.add(BuiltinType.ADOUBLE);
+                        type = BuiltinType.ADOUBLE;
                         break;
                     case ANY:
                         return BuiltinType.ANY;
@@ -122,13 +116,13 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                     case INT16:
                     case INT32:
                     case INT64:
-                        unionList.add(BuiltinType.AINT64);
+                        type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
-                        unionList.add(BuiltinType.AFLOAT);
+                        type = BuiltinType.AFLOAT;
                         break;
                     case DOUBLE:
-                        unionList.add(BuiltinType.ADOUBLE);
+                        type = BuiltinType.ADOUBLE;
                         break;
                     case ANY:
                         return BuiltinType.ANY;
@@ -143,16 +137,16 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                     case INT8:
                     case INT16:
                     case INT32:
-                        unionList.add(BuiltinType.AINT32);
+                        type = BuiltinType.AINT32;
                         break;
                     case INT64:
-                        unionList.add(BuiltinType.AINT64);
+                        type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
-                        unionList.add(BuiltinType.AFLOAT);
+                        type = BuiltinType.AFLOAT;
                         break;
                     case DOUBLE:
-                        unionList.add(BuiltinType.ADOUBLE);
+                        type = BuiltinType.ADOUBLE;
                         break;
                     case ANY:
                         return BuiltinType.ANY;
@@ -166,19 +160,19 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                 switch (tag2) {
                     case INT8:
                     case INT16:
-                        unionList.add(BuiltinType.AINT16);
+                        type = BuiltinType.AINT16;
                         break;
                     case INT32:
-                        unionList.add(BuiltinType.AINT32);
+                        type = BuiltinType.AINT32;
                         break;
                     case INT64:
-                        unionList.add(BuiltinType.AINT64);
+                        type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
-                        unionList.add(BuiltinType.AFLOAT);
+                        type = BuiltinType.AFLOAT;
                         break;
                     case DOUBLE:
-                        unionList.add(BuiltinType.ADOUBLE);
+                        type = BuiltinType.ADOUBLE;
                         break;
                     case ANY:
                         return BuiltinType.ANY;
@@ -191,22 +185,22 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case INT8: {
                 switch (tag2) {
                     case INT8:
-                        unionList.add(BuiltinType.AINT8);
+                        type = BuiltinType.AINT8;
                         break;
                     case INT16:
-                        unionList.add(BuiltinType.AINT16);
+                        type = BuiltinType.AINT16;
                         break;
                     case INT32:
-                        unionList.add(BuiltinType.AINT32);
+                        type = BuiltinType.AINT32;
                         break;
                     case INT64:
-                        unionList.add(BuiltinType.AINT64);
+                        type = BuiltinType.AINT64;
                         break;
                     case FLOAT:
-                        unionList.add(BuiltinType.AFLOAT);
+                        type = BuiltinType.AFLOAT;
                         break;
                     case DOUBLE:
-                        unionList.add(BuiltinType.ADOUBLE);
+                        type = BuiltinType.ADOUBLE;
                         break;
                     case ANY:
                         return BuiltinType.ANY;
@@ -234,12 +228,12 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case DATE: {
                 switch (tag2) {
                     case DATE:
-                        unionList.add(BuiltinType.ADURATION);
+                        type = BuiltinType.ADURATION;
                         break;
                     case YEARMONTHDURATION:
                     case DAYTIMEDURATION:
                     case DURATION:
-                        unionList.add(BuiltinType.ADATE);
+                        type = BuiltinType.ADATE;
                         break;
                     default: {
                         throw new NotImplementedException(errMsg + tag2);
@@ -250,12 +244,12 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case TIME: {
                 switch (tag2) {
                     case TIME:
-                        unionList.add(BuiltinType.ADURATION);
+                        type = BuiltinType.ADURATION;
                         break;
                     case YEARMONTHDURATION:
                     case DAYTIMEDURATION:
                     case DURATION:
-                        unionList.add(BuiltinType.ATIME);
+                        type = BuiltinType.ATIME;
                         break;
                     default: {
                         throw new NotImplementedException(errMsg + tag2);
@@ -266,12 +260,12 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case DATETIME: {
                 switch (tag2) {
                     case DATETIME:
-                        unionList.add(BuiltinType.ADURATION);
+                        type = BuiltinType.ADURATION;
                         break;
                     case YEARMONTHDURATION:
                     case DAYTIMEDURATION:
                     case DURATION:
-                        unionList.add(BuiltinType.ADATETIME);
+                        type = BuiltinType.ADATETIME;
                         break;
                     default: {
                         throw new NotImplementedException(errMsg + tag2);
@@ -282,13 +276,13 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case DURATION: {
                 switch (tag2) {
                     case DATE:
-                        unionList.add(BuiltinType.ADATE);
+                        type = BuiltinType.ADATE;
                         break;
                     case TIME:
-                        unionList.add(BuiltinType.ATIME);
+                        type = BuiltinType.ATIME;
                         break;
                     case DATETIME:
-                        unionList.add(BuiltinType.ADATETIME);
+                        type = BuiltinType.ADATETIME;
                         break;
                     default: {
                         throw new NotImplementedException(errMsg + tag2);
@@ -299,16 +293,16 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case YEARMONTHDURATION: {
                 switch (tag2) {
                     case DATE:
-                        unionList.add(BuiltinType.ADATE);
+                        type = BuiltinType.ADATE;
                         break;
                     case TIME:
-                        unionList.add(BuiltinType.ATIME);
+                        type = BuiltinType.ATIME;
                         break;
                     case DATETIME:
-                        unionList.add(BuiltinType.ADATETIME);
+                        type = BuiltinType.ADATETIME;
                         break;
                     case YEARMONTHDURATION:
-                        unionList.add(BuiltinType.AYEARMONTHDURATION);
+                        type = BuiltinType.AYEARMONTHDURATION;
                         break;
                     default: {
                         throw new NotImplementedException(errMsg + tag2);
@@ -319,16 +313,16 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
             case DAYTIMEDURATION: {
                 switch (tag2) {
                     case DATE:
-                        unionList.add(BuiltinType.ADATE);
+                        type = BuiltinType.ADATE;
                         break;
                     case TIME:
-                        unionList.add(BuiltinType.ATIME);
+                        type = BuiltinType.ATIME;
                         break;
                     case DATETIME:
-                        unionList.add(BuiltinType.ADATETIME);
+                        type = BuiltinType.ADATETIME;
                         break;
                     case DAYTIMEDURATION:
-                        unionList.add(BuiltinType.ADAYTIMEDURATION);
+                        type = BuiltinType.ADAYTIMEDURATION;
                         break;
                     default: {
                         throw new NotImplementedException(errMsg + tag2);
@@ -340,6 +334,6 @@ public class NonTaggedNumericAddSubMulDivTypeComputer implements IResultTypeComp
                 throw new NotImplementedException(errMsg + tag1);
             }
         }
-        return new AUnionType(unionList, "ArithemitcResult");
+        return AUnionType.createNullableType(type, "ArithemitcResult");
     }
 }

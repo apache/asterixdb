@@ -25,13 +25,83 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
-      <compilation-unit name="meta03">
-        <output-dir compare="Text">meta03</output-dir>
+      <compilation-unit name="meta03_builtin_type">
+        <output-dir compare="Text">meta03/builtin_type</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">
-      <compilation-unit name="meta04">
-        <output-dir compare="Text">meta04</output-dir>
+      <compilation-unit name="meta03_builtin_type_nullable">
+        <output-dir compare="Text">meta03/builtin_type_nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03_ordered_list">
+        <output-dir compare="Text">meta03/complex_type/ordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03_ordered_list_nullable">
+        <output-dir compare="Text">meta03/complex_type/ordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03_record">
+        <output-dir compare="Text">meta03/complex_type/record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03_record_nullable">
+        <output-dir compare="Text">meta03/complex_type/record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03_unordered_list">
+        <output-dir compare="Text">meta03/complex_type/unordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta03_unordered_list_nullable">
+        <output-dir compare="Text">meta03/complex_type/unordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_builtin_type">
+        <output-dir compare="Text">meta04/builtin_type</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_builtin_type_nullable">
+        <output-dir compare="Text">meta04/builtin_type_nullable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_ordered_list">
+        <output-dir compare="Text">meta04/complex_type/ordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_ordered_list_nullable">
+        <output-dir compare="Text">meta04/complex_type/ordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_record">
+        <output-dir compare="Text">meta04/complex_type/record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_record_nullable">
+        <output-dir compare="Text">meta04/complex_type/record</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_unordered_list">
+        <output-dir compare="Text">meta04/complex_type/unordered_list</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="basic">
+      <compilation-unit name="meta04_unordered_list_nullable">
+        <output-dir compare="Text">meta04/complex_type/unordered_list</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="basic">

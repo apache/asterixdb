@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -50,8 +49,8 @@ public class OrderedListConstructorResultType implements IResultTypeComputer {
         ArrayList<IAType> types = new ArrayList<IAType>();
         for (int k = 0; k < f.getArguments().size(); k++) {
             IAType type = (IAType) env.getType(f.getArguments().get(k).getValue());
-            if (type.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) type))
-                type = ((AUnionType) type).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            if (NonTaggedFormatUtil.isOptional(type))
+                type = ((AUnionType) type).getNullableType();
             if (types.indexOf(type) < 0) {
                 types.add(type);
             }

@@ -49,6 +49,10 @@ public class AUnionType extends AbstractComplexType {
         return unionList.size() == 2 && unionList.get(0).equals(BuiltinType.ANULL);
     }
 
+    public IAType getNullableType() {
+        return unionList.get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+    }
+
     @Override
     public String getDisplayName() {
         return "AUnion";
@@ -85,12 +89,29 @@ public class AUnionType extends AbstractComplexType {
         return BuiltinType.ASTERIX_TYPE;
     }
 
-    public static AUnionType createNullableType(IAType t) {
+    public static AUnionType createNullableType(IAType type, String typeName) {
         List<IAType> unionList = new ArrayList<IAType>();
         unionList.add(BuiltinType.ANULL);
-        unionList.add(t);
-        String s = t.getDisplayName();
-        return new AUnionType(unionList, s == null ? null : s + "?");
+        unionList.add(type);
+        return new AUnionType(unionList, typeName);
+    }
+
+    public static AUnionType createNullableType(IAType t) {
+        String s = t != null ? t.getTypeName() : null;
+        return createNullableType(t, s == null ? null : s + "?");
+    }
+
+    @Override
+    public void generateNestedDerivedTypeNames() {
+        if (isNullableType()) {
+            IAType nullableType = getNullableType();
+            if (nullableType.getTypeTag().isDerivedType() && nullableType.getTypeName() == null) {
+                AbstractComplexType derivedType = (AbstractComplexType) nullableType;
+                derivedType.setTypeName(getTypeName());
+                derivedType.generateNestedDerivedTypeNames();
+            }
+
+        }
     }
 
     @Override

@@ -66,9 +66,9 @@ public class UnaryStringInt64OrNullTypeComputer implements IResultTypeComputer {
         }
 
         if (t0.getTypeTag() == ATypeTag.STRING || t0.getTypeTag().equals(ATypeTag.UNION)) {
-            unionList.add(BuiltinType.AINT64);
+            return AUnionType.createNullableType(BuiltinType.AINT64, "String-length-Result");
         }
 
-        return new AUnionType(unionList, "String-length-Result");
+        throw new AlgebricksException("Cannot compute type");
     }
 }

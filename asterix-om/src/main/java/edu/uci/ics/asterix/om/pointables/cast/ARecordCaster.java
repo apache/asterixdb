@@ -163,11 +163,9 @@ class ARecordCaster {
             String fname = fieldNames[i];
 
             // add type tag pointable
-            if (fieldTypes[i].getTypeTag() == ATypeTag.UNION
-                    && NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[i])) {
+            if (NonTaggedFormatUtil.isOptional(fieldTypes[i])) {
                 // optional field: add the embedded non-null type tag
-                ftypeTag = ((AUnionType) fieldTypes[i]).getUnionList()
-                        .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                ftypeTag = ((AUnionType) fieldTypes[i]).getNullableType().getTypeTag();
                 optionalFields[i] = true;
             }
             int tagStart = bos.size();
@@ -266,7 +264,7 @@ class ARecordCaster {
         for (int i = 0; i < fieldPermutation.length; i++) {
             if (fieldPermutation[i] < 0) {
                 IAType t = cachedReqType.getFieldTypes()[i];
-                if (!(t.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t))) {
+                if (!NonTaggedFormatUtil.isOptional(t)) {
                     // no matched field in the input for a required closed field
                     throw new IllegalStateException("type mismatch: missing a required closed field "
                             + cachedReqType.getFieldNames()[i] + ":" + t.getTypeName());
@@ -301,8 +299,7 @@ class ARecordCaster {
                     //the field is optional in the input record
                     nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(0);
                 } else {
-                    nestedVisitorArg.second = ((AUnionType) fType).getUnionList().get(
-                            AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                    nestedVisitorArg.second = ((AUnionType) fType).getNullableType();
                 }
             }
             field.accept(visitor, nestedVisitorArg);

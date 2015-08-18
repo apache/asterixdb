@@ -34,7 +34,6 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 
     protected Map<String, String> configuration;
     protected ITupleParserFactory parserFactory;
-   
 
     public abstract InputDataFormat getInputDataFormat();
 
@@ -43,5 +42,4 @@ public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 
     }
 
-  
 }

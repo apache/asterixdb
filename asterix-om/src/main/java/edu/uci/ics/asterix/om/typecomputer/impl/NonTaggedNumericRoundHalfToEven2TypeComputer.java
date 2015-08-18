@@ -59,15 +59,13 @@ public class NonTaggedNumericRoundHalfToEven2TypeComputer implements IResultType
         unionList.add(BuiltinType.ANULL);
 
         ATypeTag tag1, tag2;
-        if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1))
-            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
-                    .getTypeTag();
+        if (NonTaggedFormatUtil.isOptional(t1))
+            tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
         else
             tag1 = t1.getTypeTag();
 
-        if (t2.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t2))
-            tag2 = ((AUnionType) t2).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
-                    .getTypeTag();
+        if (NonTaggedFormatUtil.isOptional(t2))
+            tag2 = ((AUnionType) t2).getNullableType().getTypeTag();
         else
             tag2 = t2.getTypeTag();
 
@@ -81,24 +79,25 @@ public class NonTaggedNumericRoundHalfToEven2TypeComputer implements IResultType
                 throw new AlgebricksException("Argument $precision cannot be type " + t2.getTypeName());
         }
 
+        IAType type;
         switch (tag1) {
             case INT8:
-                unionList.add(BuiltinType.AINT8);
+                type = BuiltinType.AINT8;
                 break;
             case INT16:
-                unionList.add(BuiltinType.AINT16);
+                type = BuiltinType.AINT16;
                 break;
             case INT32:
-                unionList.add(BuiltinType.AINT32);
+                type = BuiltinType.AINT32;
                 break;
             case INT64:
-                unionList.add(BuiltinType.AINT64);
+                type = BuiltinType.AINT64;
                 break;
             case FLOAT:
-                unionList.add(BuiltinType.AFLOAT);
+                type = BuiltinType.AFLOAT;
                 break;
             case DOUBLE:
-                unionList.add(BuiltinType.ADOUBLE);
+                type = BuiltinType.ADOUBLE;
                 break;
             case NULL:
                 return BuiltinType.ANULL;
@@ -107,6 +106,6 @@ public class NonTaggedNumericRoundHalfToEven2TypeComputer implements IResultType
             }
         }
 
-        return new AUnionType(unionList, "NumericFuncionsResult");
+        return AUnionType.createNullableType(type, "NumericFuncionsResult");
     }
 }

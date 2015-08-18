@@ -15,13 +15,17 @@
 
 package edu.uci.ics.asterix.metadata.utils;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.asterix.builders.IARecordBuilder;
+import edu.uci.ics.asterix.builders.RecordBuilder;
 import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
 import edu.uci.ics.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.formats.nontagged.AqlTypeTraitProvider;
 import edu.uci.ics.asterix.metadata.MetadataException;
 import edu.uci.ics.asterix.metadata.MetadataManager;
@@ -31,7 +35,10 @@ import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
 import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.external.IndexingConstants;
+import edu.uci.ics.asterix.om.base.AMutableString;
+import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.ARecordType;
+import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
@@ -39,7 +46,10 @@ import edu.uci.ics.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 public class DatasetUtils {
@@ -122,18 +132,12 @@ public class DatasetUtils {
         typeTraits[numKeys] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(itemType);
         return typeTraits;
     }
-    
-    
 
     public static List<List<String>> getPartitioningKeys(Dataset dataset) {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return IndexingConstants.getRIDKeys(dataset);
         }
         return ((InternalDatasetDetails) dataset.getDatasetDetails()).getPartitioningKey();
-    }
-
-    public static String getNodegroupName(Dataset dataset) {
-        return (((InternalDatasetDetails) dataset.getDatasetDetails())).getNodeGroupName();
     }
 
     public static List<String> getFilterField(Dataset dataset) {
@@ -220,7 +224,7 @@ public class DatasetUtils {
     public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {
         List<List<String>> partitioningKeys = DatasetUtils.getPartitioningKeys(dataset);
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            if (partitioningKeys.get(i).size() == 1 &&  partitioningKeys.get(i).get(0).equals(fieldExpr)) {
+            if (partitioningKeys.get(i).size() == 1 && partitioningKeys.get(i).get(0).equals(fieldExpr)) {
                 return i;
             }
         }
@@ -229,7 +233,7 @@ public class DatasetUtils {
 
     public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException, MetadataException {
-        String policyName = dataset.getDatasetDetails().getCompactionPolicy();
+        String policyName = dataset.getCompactionPolicy();
         CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
                 MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
         String compactionPolicyFactoryClassName = compactionPolicy.getClassName();
@@ -242,7 +246,36 @@ public class DatasetUtils {
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new AlgebricksException(e);
         }
-        Map<String, String> properties = dataset.getDatasetDetails().getCompactionPolicyProperties();
+        Map<String, String> properties = dataset.getCompactionPolicyProperties();
         return new Pair<ILSMMergePolicyFactory, Map<String, String>>(mergePolicyFactory, properties);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void writePropertyTypeRecord(String name, String value, DataOutput out, ARecordType recordType)
+            throws HyracksDataException {
+        IARecordBuilder propertyRecordBuilder = new RecordBuilder();
+        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
+        propertyRecordBuilder.reset(recordType);
+        AMutableString aString = new AMutableString("");
+        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+                .getSerializerDeserializer(BuiltinType.ASTRING);
+
+        // write field 0
+        fieldValue.reset();
+        aString.setValue(name);
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        propertyRecordBuilder.addField(0, fieldValue);
+
+        // write field 1
+        fieldValue.reset();
+        aString.setValue(value);
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        propertyRecordBuilder.addField(1, fieldValue);
+
+        try {
+            propertyRecordBuilder.write(out, true);
+        } catch (IOException | AsterixException e) {
+            throw new HyracksDataException(e);
+        }
     }
 }

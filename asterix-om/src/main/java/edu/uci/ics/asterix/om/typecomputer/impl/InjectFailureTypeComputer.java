@@ -42,14 +42,12 @@ public class InjectFailureTypeComputer implements IResultTypeComputer {
         IAType t0 = (IAType) env.getType(fce.getArguments().get(0).getValue());
         IAType t1 = (IAType) env.getType(fce.getArguments().get(0).getValue());
         ATypeTag tag1 = t1.getTypeTag();
-        if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1))
-            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
-                    .getTypeTag();
+        if (NonTaggedFormatUtil.isOptional(t1))
+            tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
 
         if (tag1 != ATypeTag.BOOLEAN)
             throw new AlgebricksException(errMsg2);
 
         return t0;
     }
-
 }

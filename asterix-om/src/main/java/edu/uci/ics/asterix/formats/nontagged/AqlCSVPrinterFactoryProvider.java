@@ -45,7 +45,6 @@ import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurati
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
 import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
@@ -114,7 +113,7 @@ public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case UNORDEREDLIST:
                     throw new AlgebricksException("'Unorderedlist' type unsupported for CSV output");
                 case UNION: {
-                    if (NonTaggedFormatUtil.isOptionalField((AUnionType) aqlType))
+                    if (((AUnionType) aqlType).isNullableType())
                         return new ANullableFieldPrinterFactory((AUnionType) aqlType);
                     else
                         return new AUnionPrinterFactory((AUnionType) aqlType);

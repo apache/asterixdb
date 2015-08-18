@@ -108,9 +108,8 @@ public class FieldAccessByIndexEvalFactory implements ICopyEvaluatorFactory {
 
                     fieldValueType = recordType.getFieldTypes()[fieldIndex];
                     if (fieldValueType.getTypeTag().equals(ATypeTag.UNION)) {
-                        if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldValueType)) {
-                            fieldValueTypeTag = ((AUnionType) fieldValueType).getUnionList()
-                                    .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                        if (((AUnionType) fieldValueType).isNullableType()) {
+                            fieldValueTypeTag = ((AUnionType) fieldValueType).getNullableType().getTypeTag();
                             fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset,
                                     fieldValueTypeTag, false);
                             out.writeByte(fieldValueTypeTag.serialize());

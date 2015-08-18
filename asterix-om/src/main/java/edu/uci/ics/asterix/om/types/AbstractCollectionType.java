@@ -50,6 +50,14 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
         visitor.visitAType(this);
     }
 
+    @Override
+    public void generateNestedDerivedTypeNames() {
+        if (itemType.getTypeTag().isDerivedType() && itemType.getTypeName() == null) {
+            AbstractComplexType nestedType = ((AbstractComplexType) itemType);
+            nestedType.setTypeName(getTypeName() + "_Item");
+            nestedType.generateNestedDerivedTypeNames();
+        }
+    }
     // public void serialize(DataOutput out) throws IOException {
     // out.writeBoolean(isTyped());
     // }

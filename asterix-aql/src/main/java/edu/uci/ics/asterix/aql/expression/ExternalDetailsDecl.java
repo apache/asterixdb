@@ -19,9 +19,6 @@ import java.util.Map;
 public class ExternalDetailsDecl implements IDatasetDetailsDecl {
     private Map<String, String> properties;
     private String adapter;
-    private Identifier nodegroupName;
-    private String compactionPolicy;
-    private Map<String, String> compactionPolicyProperties;
 
     public void setAdapter(String adapter) {
         this.adapter = adapter;
@@ -40,34 +37,8 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
     }
 
     @Override
-    public Identifier getNodegroupName() {
-        return nodegroupName;
-    }
-
-    public void setNodegroupName(Identifier nodegroupName) {
-        this.nodegroupName = nodegroupName;
-    }
-
-    @Override
-    public String getCompactionPolicy() {
-        return compactionPolicy;
-    }
-
-    public void setCompactionPolicy(String compactionPolicy) {
-        this.compactionPolicy = compactionPolicy;
-    }
-
-    @Override
-    public Map<String, String> getCompactionPolicyProperties() {
-        return compactionPolicyProperties;
-    }
-
-    @Override
     public boolean isTemp() {
         return false;
     }
 
-    public void setCompactionPolicyProperties(Map<String, String> compactionPolicyProperties) {
-        this.compactionPolicyProperties = compactionPolicyProperties;
-    }
 }

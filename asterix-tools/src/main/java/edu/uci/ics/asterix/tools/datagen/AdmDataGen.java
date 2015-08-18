@@ -61,6 +61,7 @@ import edu.uci.ics.asterix.om.types.AbstractCollectionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.tools.translator.ADGenDmlTranslator;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -665,12 +666,9 @@ public class AdmDataGen {
                 nullable = new boolean[m];
                 for (int i = 0; i < m; i++) {
                     IAType ti = recType.getFieldTypes()[i];
-                    if (ti.getTypeTag() == ATypeTag.UNION) {
-                        AUnionType ut = (AUnionType) ti;
-                        if (ut.isNullableType()) {
-                            ti = ut.getUnionList().get(1);
-                            nullable[i] = true;
-                        }
+                    if (NonTaggedFormatUtil.isOptional(ti)) {
+                        ti = ((AUnionType) ti).getNullableType();
+                        nullable[i] = true;
                     }
                     IRecordFieldDataGen rfdg = annot.getDeclaredFieldsDatagen()[i];
                     if (rfdg == null) {

@@ -366,9 +366,8 @@ public class JObjectUtil {
 
                         IAType fieldType = fieldTypes[fieldNumber];
                         if (fieldTypes[fieldNumber].getTypeTag() == ATypeTag.UNION) {
-                            if (NonTaggedFormatUtil.isOptionalField((AUnionType) fieldTypes[fieldNumber])) {
-                                fieldType = ((AUnionType) fieldTypes[fieldNumber]).getUnionList().get(
-                                        AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                            if (((AUnionType) fieldTypes[fieldNumber]).isNullableType()) {
+                                fieldType = ((AUnionType) fieldTypes[fieldNumber]).getNullableType();
                                 fieldValueTypeTag = fieldType.getTypeTag();
                                 //                      fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(recordBits,
                                 //                              fieldOffsets[fieldNumber], typeTag, false);

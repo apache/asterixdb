@@ -40,6 +40,7 @@ import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.AbstractCollectionType;
+import edu.uci.ics.asterix.om.types.AbstractComplexType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.types.TypeSignature;
@@ -65,6 +66,9 @@ public class TypeTranslator {
         secondPass(mdTxnCtx, typeMap, incompleteFieldTypes, incompleteItemTypes, incompleteTopLevelTypeReferences,
                 typeDataverse);
 
+        for (IAType type : typeMap.values())
+            if (type.getTypeTag().isDerivedType())
+                ((AbstractComplexType) type).generateNestedDerivedTypeNames();
         return typeMap;
     }
 
@@ -341,12 +345,12 @@ public class TypeTranslator {
                         if (!rtd.getNullableFields().get(j)) { // not nullable
                             fldTypes[j] = tref;
                         } else { // nullable
-                            fldTypes[j] = makeUnionWithNull(null, tref);
+                            fldTypes[j] = AUnionType.createNullableType(tref);
                         }
                     } else {
                         addIncompleteFieldTypeReference(recType, j, tre, incompleteFieldTypes);
                         if (rtd.getNullableFields().get(j)) {
-                            fldTypes[j] = makeUnionWithNull(null, null);
+                            fldTypes[j] = AUnionType.createNullableType(null);
                         }
                     }
                     break;
@@ -358,7 +362,7 @@ public class TypeTranslator {
                     if (!rtd.getNullableFields().get(j)) { // not nullable
                         fldTypes[j] = t2;
                     } else { // nullable
-                        fldTypes[j] = makeUnionWithNull(null, t2);
+                        fldTypes[j] = AUnionType.createNullableType(t2);
                     }
                     break;
                 }
@@ -366,14 +370,14 @@ public class TypeTranslator {
                     OrderedListTypeDefinition oltd = (OrderedListTypeDefinition) texpr;
                     IAType t2 = computeOrderedListType(null, oltd, typeMap, incompleteItemTypes, incompleteFieldTypes,
                             defaultDataverse);
-                    fldTypes[j] = (rtd.getNullableFields().get(j)) ? makeUnionWithNull(null, t2) : t2;
+                    fldTypes[j] = (rtd.getNullableFields().get(j)) ? AUnionType.createNullableType(t2) : t2;
                     break;
                 }
                 case UNORDEREDLIST: {
                     UnorderedListTypeDefinition ultd = (UnorderedListTypeDefinition) texpr;
                     IAType t2 = computeUnorderedListType(null, ultd, typeMap, incompleteItemTypes,
                             incompleteFieldTypes, defaultDataverse);
-                    fldTypes[j] = (rtd.getNullableFields().get(j)) ? makeUnionWithNull(null, t2) : t2;
+                    fldTypes[j] = (rtd.getNullableFields().get(j)) ? AUnionType.createNullableType(t2) : t2;
                     break;
                 }
                 default: {
@@ -384,12 +388,5 @@ public class TypeTranslator {
         }
 
         return recType;
-    }
-
-    private static AUnionType makeUnionWithNull(String unionTypeName, IAType type) {
-        ArrayList<IAType> unionList = new ArrayList<IAType>(2);
-        unionList.add(BuiltinType.ANULL);
-        unionList.add(type);
-        return new AUnionType(unionList, unionTypeName);
     }
 }

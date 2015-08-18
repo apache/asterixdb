@@ -112,8 +112,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     List<LogicalVariable> payloadVars = new ArrayList<LogicalVariable>();
                     expr.getUsedVariables(payloadVars);
                     recordVar = payloadVars.get(0);
-                }
-                else {
+                } else {
                     return false;
                 }
 
@@ -133,13 +132,15 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 // of the singular input operator of the DISTRIBUTE_RESULT
                 if (op.getInputs().size() > 1) {
                     // Hopefully not possible?
-                    throw new AlgebricksException("output-record-type defined for expression with multiple input operators");
+                    throw new AlgebricksException(
+                            "output-record-type defined for expression with multiple input operators");
                 }
                 AbstractLogicalOperator input = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
                 List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
                 VariableUtilities.getLiveVariables(input, liveVars);
                 if (liveVars.size() > 1) {
-                    throw new AlgebricksException("Expression with multiple fields cannot be cast to output-record-type!");
+                    throw new AlgebricksException(
+                            "Expression with multiple fields cannot be cast to output-record-type!");
                 }
                 recordVar = liveVars.get(0);
 
@@ -156,10 +157,9 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
         /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
         boolean checkNull = false;
-        while (isOptional(inputRecordType)) {
+        while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
             /** while-loop for the case there is a nested multi-level union */
-            inputRecordType = ((AUnionType) inputRecordType).getUnionList().get(
-                    AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            inputRecordType = ((AUnionType) inputRecordType).getNullableType();
             checkNull = true;
         }
 
@@ -167,12 +167,10 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         boolean cast = !compatible(requiredRecordType, inputRecordType);
 
         if (checkNull) {
-            recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context,
-                    AsterixBuiltinFunctions.NOT_NULL);
+            recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.NOT_NULL);
         }
         if (cast) {
-            addWrapperFunction(requiredRecordType, recordVar, op, context,
-                    AsterixBuiltinFunctions.CAST_RECORD);
+            addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.CAST_RECORD);
         }
         return cast || checkNull;
     }
@@ -270,33 +268,21 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 return false;
             }
             IAType reqTypeInside = reqTypes[i];
-            if (isOptional(reqTypes[i])) {
-                reqTypeInside = ((AUnionType) reqTypes[i]).getUnionList().get(
-                        AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            if (NonTaggedFormatUtil.isOptional(reqTypes[i])) {
+                reqTypeInside = ((AUnionType) reqTypes[i]).getNullableType();
             }
             IAType inputTypeInside = inputTypes[i];
-            if (isOptional(inputTypes[i])) {
-                if (!isOptional(reqTypes[i])) {
+            if (NonTaggedFormatUtil.isOptional(inputTypes[i])) {
+                if (!NonTaggedFormatUtil.isOptional(reqTypes[i])) {
                     /** if the required type is not optional, the two types are incompatible */
                     return false;
                 }
-                inputTypeInside = ((AUnionType) inputTypes[i]).getUnionList().get(
-                        AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                inputTypeInside = ((AUnionType) inputTypes[i]).getNullableType();
             }
             if (inputTypeInside.getTypeTag() != ATypeTag.NULL && !reqTypeInside.equals(inputTypeInside)) {
                 return false;
             }
         }
         return true;
-    }
-
-    /**
-     * Decide whether a type is an optional type
-     *
-     * @param type
-     * @return true if it is optional; false otherwise
-     */
-    public static boolean isOptional(IAType type) {
-        return type.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) type);
     }
 }

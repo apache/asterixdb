@@ -80,7 +80,7 @@ public class NonTaggedFieldAccessByNameResultType implements IResultTypeComputer
             case UNION: {
                 AUnionType u = (AUnionType) type0;
                 if (u.isNullableType()) {
-                    IAType t1 = u.getUnionList().get(1);
+                    IAType t1 = u.getNullableType();
                     if (t1.getTypeTag() == ATypeTag.RECORD) {
                         return (ARecordType) t1;
                     }

@@ -1,0 +1,3 @@
+[ { "DataverseName": "testdv", "DatatypeName": "testtype", "Derived": { "Tag": "RECORD", "IsAnonymous": false, "Record": { "IsOpen": true, "Fields": [ { "FieldName": "id", "FieldType": "int32", "IsNullable": false }, { "FieldName": "test", "FieldType": "testtype_list", "IsNullable": true } ] }, "UnorderedList": null, "OrderedList": null }, "Timestamp": "Sat Nov 24 14:27:13 PST 2012" }
+, { "DataverseName": "testdv", "DatatypeName": "testtype_list", "Derived": { "Tag": "ORDEREDLIST", "IsAnonymous": false, "Record": null, "UnorderedList": null, "OrderedList": string }, "Timestamp": "Sat Nov 24 14:27:13 PST 2012" }
+ ]

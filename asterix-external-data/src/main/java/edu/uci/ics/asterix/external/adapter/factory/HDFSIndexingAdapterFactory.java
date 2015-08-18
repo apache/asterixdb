@@ -17,7 +17,6 @@ package edu.uci.ics.asterix.external.adapter.factory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.mapred.InputSplit;
@@ -33,6 +32,7 @@ import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
 import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
 import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -158,11 +158,10 @@ public class HDFSIndexingAdapterFactory extends HDFSAdapterFactory {
         for (int i = 0; i < n; i++) {
             ATypeTag tag = null;
             if (recordType.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
-                List<IAType> unionTypes = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList();
-                if (unionTypes.size() != 2 && unionTypes.get(0).getTypeTag() != ATypeTag.NULL) {
+                if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
                     throw new NotImplementedException("Non-optional UNION type is not supported.");
                 }
-                tag = unionTypes.get(1).getTypeTag();
+                tag = ((AUnionType) recordType.getFieldTypes()[i]).getNullableType().getTypeTag();
             } else {
                 tag = recordType.getFieldTypes()[i].getTypeTag();
             }

@@ -44,8 +44,8 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
             public void init() throws AlgebricksException {
                 nullPrinter = (AqlJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
                         .createPrinter();
-                fieldPrinter = (AqlJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList()
-                        .get(1))).createPrinter();
+                fieldPrinter = (AqlJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getNullableType()))
+                        .createPrinter();
             }
 
             @Override

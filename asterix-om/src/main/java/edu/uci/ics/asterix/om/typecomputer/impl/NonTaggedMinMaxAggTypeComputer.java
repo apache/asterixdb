@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -49,52 +46,50 @@ public class NonTaggedMinMaxAggTypeComputer implements IResultTypeComputer {
         }
 
         ATypeTag tag1;
-        if (t1.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) t1)) {
-            tag1 = ((AUnionType) t1).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST)
-                    .getTypeTag();
+        if (NonTaggedFormatUtil.isOptional(t1)) {
+            tag1 = ((AUnionType) t1).getNullableType().getTypeTag();
         } else {
             tag1 = t1.getTypeTag();
         }
 
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
+        IAType type;
 
         switch (tag1) {
             case DOUBLE:
-                unionList.add(BuiltinType.ADOUBLE);
+                type = BuiltinType.ADOUBLE;
                 break;
             case FLOAT:
-                unionList.add(BuiltinType.AFLOAT);
+                type = BuiltinType.AFLOAT;
                 break;
             case INT64:
-                unionList.add(BuiltinType.AINT64);
+                type = BuiltinType.AINT64;
                 break;
             case INT32:
-                unionList.add(BuiltinType.AINT32);
+                type = BuiltinType.AINT32;
                 break;
             case INT16:
-                unionList.add(BuiltinType.AINT16);
+                type = BuiltinType.AINT16;
                 break;
             case INT8:
-                unionList.add(BuiltinType.AINT8);
+                type = BuiltinType.AINT8;
                 break;
             case STRING:
-                unionList.add(BuiltinType.ASTRING);
+                type = BuiltinType.ASTRING;
                 break;
             case DATE:
-                unionList.add(BuiltinType.ADATE);
+                type = BuiltinType.ADATE;
                 break;
             case TIME:
-                unionList.add(BuiltinType.ATIME);
+                type = BuiltinType.ATIME;
                 break;
             case DATETIME:
-                unionList.add(BuiltinType.ADATETIME);
+                type = BuiltinType.ADATETIME;
                 break;
             case YEARMONTHDURATION:
-                unionList.add(BuiltinType.AYEARMONTHDURATION);
+                type = BuiltinType.AYEARMONTHDURATION;
                 break;
             case DAYTIMEDURATION:
-                unionList.add(BuiltinType.ADAYTIMEDURATION);
+                type = BuiltinType.ADAYTIMEDURATION;
                 break;
             case ANY:
                 return BuiltinType.ANY;
@@ -102,6 +97,6 @@ public class NonTaggedMinMaxAggTypeComputer implements IResultTypeComputer {
                 throw new NotImplementedException(errMsg + tag1);
             }
         }
-        return new AUnionType(unionList, "SumResult");
+        return AUnionType.createNullableType(type, "SumResult");
     }
 }

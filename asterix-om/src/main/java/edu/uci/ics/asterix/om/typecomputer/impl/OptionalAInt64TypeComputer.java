@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
 import edu.uci.ics.asterix.om.typecomputer.base.TypeComputerUtilities;
 import edu.uci.ics.asterix.om.types.AUnionType;
@@ -38,10 +35,7 @@ public class OptionalAInt64TypeComputer implements IResultTypeComputer {
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         if (TypeComputerUtilities.inputInferednullableType(expression, env)) {
-            List<IAType> unionList = new ArrayList<IAType>();
-            unionList.add(BuiltinType.ANULL);
-            unionList.add(BuiltinType.AINT64);
-            return new AUnionType(unionList, "OptionalInt64");
+            return AUnionType.createNullableType(BuiltinType.AINT64, "OptionalInt64");
         } else {
             return BuiltinType.AINT64;
         }

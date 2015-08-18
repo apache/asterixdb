@@ -1,0 +1,11 @@
+/*
+ * Description  : Create open type & query Metadata dataset Datatype to verify.
+ * Expected Res : Success
+ * Date         : 15 Sep 2012
+ */
+
+
+for $l in dataset('Metadata.Datatype')
+where $l.DataverseName='testdv' and $l.DatatypeName='testtype'
+return $l
+

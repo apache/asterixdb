@@ -109,7 +109,7 @@ public class FieldAccessUtil {
             for (; i < abvsFields.length; i++) {
                 if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                     //enforced SubType
-                    subType = ((AUnionType) subType).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                    subType = ((AUnionType) subType).getNullableType();
                     if (subType.getTypeTag().serialize() != SER_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type " + subTypeTag);
                     }
@@ -130,9 +130,8 @@ public class FieldAccessUtil {
                 }
                 subType = ((ARecordType) subType).getFieldTypes()[subFieldIndex];
                 if (subType.getTypeTag().equals(ATypeTag.UNION)) {
-                    if (NonTaggedFormatUtil.isOptionalField((AUnionType) subType)) {
-                        subTypeTag = ((AUnionType) subType).getUnionList()
-                                .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST).getTypeTag();
+                    if (((AUnionType) subType).isNullableType()) {
+                        subTypeTag = ((AUnionType) subType).getNullableType().getTypeTag();
                         subFieldLength = NonTaggedFormatUtil.getFieldValueLength(subRecord, subFieldOffset, subTypeTag,
                                 false);
                     } else {

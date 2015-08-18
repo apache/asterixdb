@@ -14,13 +14,9 @@
  */
 package edu.uci.ics.asterix.dataflow.data.common;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -52,10 +48,7 @@ public class AqlPartialAggregationTypeComputer implements IPartialAggregationTyp
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
         if (ck != null) {
-            List<IAType> unionList = new ArrayList<IAType>();
-            unionList.add(BuiltinType.ANULL);
-            unionList.add(BuiltinType.ABOOLEAN);
-            return new AUnionType(unionList, "OptionalBoolean");
+            return AUnionType.createNullableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
         }
         return AsterixBuiltinFunctions.getResultTypeComputer(fi).computeType(expr, env, metadataProvider);
     }

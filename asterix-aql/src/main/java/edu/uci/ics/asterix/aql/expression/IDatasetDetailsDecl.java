@@ -14,15 +14,8 @@
  */
 package edu.uci.ics.asterix.aql.expression;
 
-import java.util.Map;
 
 public interface IDatasetDetailsDecl {
-
-    public Identifier getNodegroupName();
-
-    public String getCompactionPolicy();
-
-    public Map<String, String> getCompactionPolicyProperties();
 
     public boolean isTemp();
 

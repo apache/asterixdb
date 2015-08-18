@@ -34,6 +34,8 @@ public abstract class AbstractComplexType implements IAType {
         this.typeName = typeName;
     }
 
+    public abstract void generateNestedDerivedTypeNames();
+
     @Override
     public boolean equals(Object object) {
         return this.deepEqual((IAObject) object);

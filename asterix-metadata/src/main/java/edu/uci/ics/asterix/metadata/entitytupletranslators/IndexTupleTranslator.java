@@ -42,6 +42,7 @@ import edu.uci.ics.asterix.om.base.ARecord;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.base.IACursor;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
+import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -124,12 +125,17 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         List<IAType> searchKeyType = new ArrayList<IAType>(searchKey.size());
         while (fieldTypeCursor.next()) {
             String typeName = ((AString) fieldTypeCursor.get()).getStringValue();
-            IAType fieldType = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dvName, typeName);
+            IAType fieldType = AsterixBuiltinTypeMap.getTypeFromTypeName(metadataNode, jobId, dvName, typeName, false);
             searchKeyType.add(fieldType);
         }
+        // index key type information is not persisted, thus we extract type information from the record metadata
         if (searchKeyType.isEmpty()) {
-            for (int i = 0; i < searchKey.size(); i++)
-                searchKeyType.add(BuiltinType.ANULL);
+            String datatypeName = metadataNode.getDataset(jobId, dvName, dsName).getItemTypeName();
+            ARecordType recordDt = (ARecordType) metadataNode.getDatatype(jobId, dvName, datatypeName).getDatatype();
+            for (int i = 0; i < searchKey.size(); i++) {
+                IAType fieldType = recordDt.getSubFieldType(searchKey.get(i));
+                searchKeyType.add(fieldType);
+            }
         }
         int isEnforcedFieldPos = rec.getType().findFieldPosition(INDEX_ISENFORCED_FIELD_NAME);
         Boolean isEnforcingKeys = false;
@@ -243,10 +249,10 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
         }
 
-        // write optional field 9
-        OrderedListBuilder typeListBuilder = new OrderedListBuilder();
-        typeListBuilder.reset(new AOrderedListType(BuiltinType.ASTRING, null));
-        if (instance.getKeyFieldTypes() != null) {
+        if (instance.isEnforcingKeyFileds()) {
+            // write optional field 9
+            OrderedListBuilder typeListBuilder = new OrderedListBuilder();
+            typeListBuilder.reset(new AOrderedListType(BuiltinType.ASTRING, null));
             ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
             nameValue.reset();
             aString.setValue(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
@@ -267,12 +273,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             } catch (AsterixException e) {
                 throw new MetadataException(e);
             }
-        }
 
-        // write optional field 10
-        if (instance.isEnforcingKeyFileds()) {
+            // write optional field 10
             fieldValue.reset();
-            ArrayBackedValueStorage nameValue = new ArrayBackedValueStorage();
             nameValue.reset();
             aString.setValue(INDEX_ISENFORCED_FIELD_NAME);
 

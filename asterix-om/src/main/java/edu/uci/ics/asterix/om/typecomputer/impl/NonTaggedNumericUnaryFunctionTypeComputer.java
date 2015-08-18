@@ -19,11 +19,7 @@
  */
 package edu.uci.ics.asterix.om.typecomputer.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
-import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.asterix.om.types.IAType;
@@ -53,32 +49,30 @@ public class NonTaggedNumericUnaryFunctionTypeComputer implements IResultTypeCom
         ILogicalExpression arg1 = fce.getArguments().get(0).getValue();
 
         IAType t = (IAType) env.getType(arg1);
-        ATypeTag tag = t.getTypeTag();
 
-        if (tag == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) env.getType(arg1))) {
+        if (NonTaggedFormatUtil.isOptional(t)) {
             return (IAType) env.getType(arg1);
         }
 
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
-        switch (tag) {
+        IAType type;
+        switch (t.getTypeTag()) {
             case INT8:
-                unionList.add(BuiltinType.AINT8);
+                type = BuiltinType.AINT8;
                 break;
             case INT16:
-                unionList.add(BuiltinType.AINT16);
+                type = BuiltinType.AINT16;
                 break;
             case INT32:
-                unionList.add(BuiltinType.AINT32);
+                type = BuiltinType.AINT32;
                 break;
             case INT64:
-                unionList.add(BuiltinType.AINT64);
+                type = BuiltinType.AINT64;
                 break;
             case FLOAT:
-                unionList.add(BuiltinType.AFLOAT);
+                type = BuiltinType.AFLOAT;
                 break;
             case DOUBLE:
-                unionList.add(BuiltinType.ADOUBLE);
+                type = BuiltinType.ADOUBLE;
                 break;
             case NULL:
                 return BuiltinType.ANULL;
@@ -89,6 +83,6 @@ public class NonTaggedNumericUnaryFunctionTypeComputer implements IResultTypeCom
             }
         }
 
-        return new AUnionType(unionList, "NumericUnaryFuncionsResult");
+        return AUnionType.createNullableType(type, "NumericUnaryFuncionsResult");
     }
 }

@@ -14,9 +14,6 @@
  */
 package edu.uci.ics.asterix.dataflow.data.common;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.uci.ics.asterix.common.functions.FunctionSignature;
 import edu.uci.ics.asterix.om.constants.AsterixConstantValue;
 import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
@@ -69,10 +66,7 @@ public class AqlExpressionTypeComputer implements IExpressionTypeComputer {
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
         if (ck != null) {
-            List<IAType> unionList = new ArrayList<IAType>();
-            unionList.add(BuiltinType.ANULL);
-            unionList.add(BuiltinType.ABOOLEAN);
-            return new AUnionType(unionList, "OptionalBoolean");
+            return AUnionType.createNullableType(BuiltinType.ABOOLEAN, "OptionalBoolean");
         }
         // Note: built-in functions + udfs
         IResultTypeComputer rtc = null;

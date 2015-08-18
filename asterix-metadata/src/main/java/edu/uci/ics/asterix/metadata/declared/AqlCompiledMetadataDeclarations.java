@@ -34,7 +34,6 @@ import edu.uci.ics.asterix.metadata.entities.Dataset;
 import edu.uci.ics.asterix.metadata.entities.Datatype;
 import edu.uci.ics.asterix.metadata.entities.Dataverse;
 import edu.uci.ics.asterix.metadata.entities.Index;
-import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
 import edu.uci.ics.asterix.metadata.entities.NodeGroup;
 import edu.uci.ics.asterix.om.types.IAType;
 import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
@@ -225,10 +224,9 @@ public class AqlCompiledMetadataDeclarations {
         if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             throw new AlgebricksException("Not an internal dataset");
         }
-        InternalDatasetDetails datasetDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
-        List<String> nodeGroup = findNodeGroupNodeNames(datasetDetails.getNodeGroupName());
+        List<String> nodeGroup = findNodeGroupNodeNames(dataset.getNodeGroupName());
         if (nodeGroup == null) {
-            throw new AlgebricksException("Couldn't find node group " + datasetDetails.getNodeGroupName());
+            throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
         }
 
         List<FileSplit> splitArray = new ArrayList<FileSplit>();

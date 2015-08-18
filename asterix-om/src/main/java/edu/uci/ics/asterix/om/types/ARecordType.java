@@ -252,8 +252,7 @@ public class ARecordType extends AbstractComplexType {
             }
             if (subRecordType.getTypeTag().equals(ATypeTag.UNION)) {
                 //enforced SubType
-                subRecordType = ((AUnionType) subRecordType).getUnionList().get(
-                        AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                subRecordType = ((AUnionType) subRecordType).getNullableType();
                 if (subRecordType.getTypeTag().serialize() != ATypeTag.RECORD.serialize()) {
                     throw new IOException("Field accessor is not defined for values of type "
                             + subRecordType.getTypeTag());
@@ -563,6 +562,18 @@ public class ARecordType extends AbstractComplexType {
     @Override
     public IAType getType() {
         return BuiltinType.ASTERIX_TYPE;
+    }
+
+    @Override
+    public void generateNestedDerivedTypeNames() {
+        for (int i = 0; i < fieldTypes.length; i++) {
+            IAType fieldType = fieldTypes[i];
+            if (fieldType.getTypeTag().isDerivedType() && fieldType.getTypeName() == null) {
+                AbstractComplexType nestedType = ((AbstractComplexType) fieldType);
+                nestedType.setTypeName(getTypeName() + "_" + fieldNames[i]);
+                nestedType.generateNestedDerivedTypeNames();
+            }
+        }
     }
 
     @Override

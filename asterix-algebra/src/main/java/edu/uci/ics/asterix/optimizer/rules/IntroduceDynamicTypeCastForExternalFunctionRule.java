@@ -25,6 +25,7 @@ import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
 import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -117,10 +118,9 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
 
         /** the input record type can be an union type -- for the case when it comes from a subplan or left-outer join */
         boolean checkNull = false;
-        while (IntroduceDynamicTypeCastRule.isOptional(inputRecordType)) {
+        while (NonTaggedFormatUtil.isOptional(inputRecordType)) {
             /** while-loop for the case there is a nested multi-level union */
-            inputRecordType = ((AUnionType) inputRecordType).getUnionList().get(
-                    AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+            inputRecordType = ((AUnionType) inputRecordType).getNullableType();
             checkNull = true;
         }
 

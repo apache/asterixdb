@@ -104,7 +104,10 @@ public class RecordBuilder implements IARecordBuilder {
     public void reset(ARecordType recType) {
         this.recType = recType;
         this.closedPartOutputStream.reset();
+        this.openPartOutputStream.reset();
         this.numberOfClosedFields = 0;
+        this.numberOfOpenFields = 0;
+        this.offsetPosition = 0;
         if (recType != null) {
             this.isOpen = recType.isOpen();
             this.isNullable = NonTaggedFormatUtil.hasNullableField(recType);
@@ -155,7 +158,7 @@ public class RecordBuilder implements IARecordBuilder {
             nullBitMap[id / 8] |= (byte) (1 << (7 - (id % 8)));
         }
     }
-    
+
     public void addField(int id, byte[] value) {
         closedPartOffsets[id] = closedPartOutputStream.size();
         // We assume the tag is not included (closed field)

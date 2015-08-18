@@ -71,8 +71,8 @@ public class CheckFilterExpressionTypeRule implements IAlgebraicRewriteRule {
      * @return true if it is; false otherwise.
      */
     private boolean isPossibleBoolean(IAType type) {
-        while (type.getTypeTag() == ATypeTag.UNION && NonTaggedFormatUtil.isOptionalField((AUnionType) type)) {
-            type = ((AUnionType) type).getUnionList().get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+        while (NonTaggedFormatUtil.isOptional(type)) {
+            type = ((AUnionType) type).getNullableType();
             if (type.getTypeTag() == ATypeTag.BOOLEAN || type.getTypeTag() == ATypeTag.ANY) {
                 return true;
             }

@@ -29,12 +29,12 @@ import edu.uci.ics.asterix.common.exceptions.AsterixException;
 import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import edu.uci.ics.asterix.metadata.IDatasetDetails;
 import edu.uci.ics.asterix.metadata.bootstrap.MetadataRecordTypes;
+import edu.uci.ics.asterix.metadata.utils.DatasetUtils;
 import edu.uci.ics.asterix.om.base.ADateTime;
 import edu.uci.ics.asterix.om.base.AInt32;
 import edu.uci.ics.asterix.om.base.AMutableString;
 import edu.uci.ics.asterix.om.base.AString;
 import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ARecordType;
 import edu.uci.ics.asterix.om.types.BuiltinType;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -45,24 +45,17 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     private static final long serialVersionUID = 1L;
     private final String adapter;
     private final Map<String, String> properties;
-    private final String nodeGroupName;
     private final long addToCacheTime;
     private Date lastRefreshTime;
     private ExternalDatasetTransactionState state;
-    protected String compactionPolicy;
-    protected Map<String, String> compactionPolicyProperties;
 
-    public ExternalDatasetDetails(String adapter, Map<String, String> properties, String nodeGroupName,
-            Date lastRefreshTime, ExternalDatasetTransactionState state, String compactionPolicy,
-            Map<String, String> compactionPolicyProperties) {
+    public ExternalDatasetDetails(String adapter, Map<String, String> properties, Date lastRefreshTime,
+            ExternalDatasetTransactionState state) {
         this.properties = properties;
         this.adapter = adapter;
-        this.nodeGroupName = nodeGroupName;
         this.addToCacheTime = System.currentTimeMillis();
         this.lastRefreshTime = lastRefreshTime;
         this.state = state;
-        this.compactionPolicy = compactionPolicy;
-        this.compactionPolicyProperties = compactionPolicyProperties;
     }
 
     public String getAdapter() {
@@ -108,7 +101,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
             String name = property.getKey();
             String value = property.getValue();
             itemValue.reset();
-            writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
+            DatasetUtils.writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
                     MetadataRecordTypes.DATASOURCE_ADAPTER_PROPERTIES_RECORDTYPE);
             listBuilder.addItem(itemValue);
         }
@@ -118,84 +111,21 @@ public class ExternalDatasetDetails implements IDatasetDetails {
 
         // write field 2
         fieldValue.reset();
-        aString.setValue(getNodeGroupName());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
-
-        // write field 3
-        fieldValue.reset();
         dateTimeSerde.serialize(new ADateTime(lastRefreshTime.getTime()), fieldValue.getDataOutput());
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_LAST_REFRESH_TIME_FIELD_INDEX,
                 fieldValue);
 
-        // write field 4
+        // write field 3
         fieldValue.reset();
         intSerde.serialize(new AInt32(state.ordinal()), fieldValue.getDataOutput());
         externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_TRANSACTION_STATE_FIELD_INDEX,
                 fieldValue);
-
-        // write field 6
-        fieldValue.reset();
-        aString.setValue(getCompactionPolicy().toString());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        externalRecordBuilder.addField(MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_FIELD_INDEX,
-                fieldValue);
-
-        // write field 7
-        listBuilder
-                .reset((AOrderedListType) MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE.getFieldTypes()[MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX]);
-        for (Map.Entry<String, String> property : compactionPolicyProperties.entrySet()) {
-            String name = property.getKey();
-            String value = property.getValue();
-            itemValue.reset();
-            writePropertyTypeRecord(name, value, itemValue.getDataOutput(),
-                    MetadataRecordTypes.COMPACTION_POLICY_PROPERTIES_RECORDTYPE);
-            listBuilder.addItem(itemValue);
-        }
-        fieldValue.reset();
-        listBuilder.write(fieldValue.getDataOutput(), true);
-        externalRecordBuilder.addField(
-                MetadataRecordTypes.EXTERNAL_DETAILS_ARECORD_COMPACTION_POLICY_PROPERTIES_FIELD_INDEX, fieldValue);
         try {
             externalRecordBuilder.write(out, true);
         } catch (IOException | AsterixException e) {
             throw new HyracksDataException(e);
         }
 
-    }
-
-    @SuppressWarnings("unchecked")
-    protected void writePropertyTypeRecord(String name, String value, DataOutput out, ARecordType recordType)
-            throws HyracksDataException {
-        IARecordBuilder propertyRecordBuilder = new RecordBuilder();
-        ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
-        propertyRecordBuilder.reset(recordType);
-        AMutableString aString = new AMutableString("");
-        ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
-
-        // write field 0
-        fieldValue.reset();
-        aString.setValue(name);
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        propertyRecordBuilder.addField(0, fieldValue);
-
-        // write field 1
-        fieldValue.reset();
-        aString.setValue(value);
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        propertyRecordBuilder.addField(1, fieldValue);
-
-        try {
-            propertyRecordBuilder.write(out, true);
-        } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
-        }
-    }
-
-    @Override
-    public String getNodeGroupName() {
-        return nodeGroupName;
     }
 
     @Override
@@ -222,15 +152,5 @@ public class ExternalDatasetDetails implements IDatasetDetails {
 
     public void setState(ExternalDatasetTransactionState state) {
         this.state = state;
-    }
-
-    @Override
-    public String getCompactionPolicy() {
-        return compactionPolicy;
-    }
-
-    @Override
-    public Map<String, String> getCompactionPolicyProperties() {
-        return compactionPolicyProperties;
     }
 }

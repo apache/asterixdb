@@ -50,12 +50,13 @@ import edu.uci.ics.asterix.om.types.ATypeTag;
 import edu.uci.ics.asterix.om.types.AUnionType;
 import edu.uci.ics.asterix.om.types.AUnorderedListType;
 import edu.uci.ics.asterix.om.types.IAType;
+import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 
 @SuppressWarnings("deprecation")
-public class HiveObjectParser implements IAsterixHDFSRecordParser{
+public class HiveObjectParser implements IAsterixHDFSRecordParser {
 
     private static final String KEY_HIVE_SERDE = "hive-serde";
     private ARecordType aRecord;
@@ -73,8 +74,9 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    public void initialize(ARecordType record, Map<String, String> arguments, Configuration hadoopConfig) throws Exception {
-        if(!initialized){
+    public void initialize(ARecordType record, Map<String, String> arguments, Configuration hadoopConfig)
+            throws Exception {
+        if (!initialized) {
             this.aRecord = record;
             int n = record.getFieldNames().length;
             fieldTypes = record.getFieldTypes();
@@ -84,7 +86,7 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
             tbl.put(Constants.LIST_COLUMNS, getCommaDelimitedColNames(record));
             tbl.put(Constants.LIST_COLUMN_TYPES, getColTypes(record));
             String hiveSerdeClassName = (String) arguments.get(KEY_HIVE_SERDE);
-            if(hiveSerdeClassName == null){
+            if (hiveSerdeClassName == null) {
                 throw new IllegalArgumentException("no hive serde provided for hive deserialized records");
             }
             hiveSerde = (SerDe) Class.forName(hiveSerdeClassName).newInstance();
@@ -105,20 +107,19 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         }
     }
 
-    private Object getColTypes(ARecordType record) throws Exception{
+    private Object getColTypes(ARecordType record) throws Exception {
         int n = record.getFieldTypes().length;
-        if(n < 1){
+        if (n < 1) {
             throw new HyracksDataException("Failed to get columns of record");
         }
         ATypeTag tag = null;
 
         //First Column
         if (record.getFieldTypes()[0].getTypeTag() == ATypeTag.UNION) {
-            List<IAType> unionTypes = ((AUnionType) record.getFieldTypes()[0]).getUnionList();
-            if (unionTypes.size() != 2 && unionTypes.get(0).getTypeTag() != ATypeTag.NULL) {
+            if (NonTaggedFormatUtil.isOptional(record.getFieldTypes()[0])) {
                 throw new NotImplementedException("Non-optional UNION type is not supported.");
             }
-            tag = unionTypes.get(1).getTypeTag();
+            tag = ((AUnionType) record.getFieldTypes()[0]).getNullableType().getTypeTag();
         } else {
             tag = record.getFieldTypes()[0].getTypeTag();
         }
@@ -130,11 +131,10 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         for (int i = 1; i < n; i++) {
             tag = null;
             if (record.getFieldTypes()[i].getTypeTag() == ATypeTag.UNION) {
-                List<IAType> unionTypes = ((AUnionType) record.getFieldTypes()[i]).getUnionList();
-                if (unionTypes.size() != 2 && unionTypes.get(0).getTypeTag() != ATypeTag.NULL) {
+                if (NonTaggedFormatUtil.isOptional(record.getFieldTypes()[i])) {
                     throw new NotImplementedException("Non-optional UNION type is not supported.");
                 }
-                tag = unionTypes.get(1).getTypeTag();
+                tag = ((AUnionType) record.getFieldTypes()[i]).getNullableType().getTypeTag();
             } else {
                 tag = record.getFieldTypes()[i].getTypeTag();
             }
@@ -147,52 +147,53 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
     }
 
     private String getCommaDelimitedColNames(ARecordType record) throws Exception {
-        if(record.getFieldNames().length < 1){
+        if (record.getFieldNames().length < 1) {
             throw new HyracksDataException("Can't deserialize hive records with no closed columns");
         }
 
         String cols = record.getFieldNames()[0];
-        for(int i=1; i<record.getFieldNames().length; i++){
+        for (int i = 1; i < record.getFieldNames().length; i++) {
             cols = cols + "," + record.getFieldNames()[i];
         }
         return cols;
     }
 
-    private String getHiveTypeString(ATypeTag tag) throws Exception{
-        switch(tag){
-        case BOOLEAN:
-            return Constants.BOOLEAN_TYPE_NAME;
-        case DATE:
-            return Constants.DATE_TYPE_NAME;
-        case DATETIME:
-            return Constants.DATETIME_TYPE_NAME;
-        case DOUBLE:
-            return Constants.DOUBLE_TYPE_NAME;
-        case FLOAT:
-            return Constants.FLOAT_TYPE_NAME;
-        case INT16:
-            return Constants.SMALLINT_TYPE_NAME;
-        case INT32:
-            return Constants.INT_TYPE_NAME;
-        case INT64:
-            return Constants.BIGINT_TYPE_NAME;
-        case INT8:
-            return Constants.TINYINT_TYPE_NAME;
-        case ORDEREDLIST:
-            return Constants.LIST_TYPE_NAME;
-        case STRING:
-            return Constants.STRING_TYPE_NAME;
-        case TIME:
-            return Constants.DATETIME_TYPE_NAME;
-        case UNORDEREDLIST:
-            return Constants.LIST_TYPE_NAME;
-        default:
-            throw new HyracksDataException("Can't get hive type for field of type " + tag);
+    private String getHiveTypeString(ATypeTag tag) throws Exception {
+        switch (tag) {
+            case BOOLEAN:
+                return Constants.BOOLEAN_TYPE_NAME;
+            case DATE:
+                return Constants.DATE_TYPE_NAME;
+            case DATETIME:
+                return Constants.DATETIME_TYPE_NAME;
+            case DOUBLE:
+                return Constants.DOUBLE_TYPE_NAME;
+            case FLOAT:
+                return Constants.FLOAT_TYPE_NAME;
+            case INT16:
+                return Constants.SMALLINT_TYPE_NAME;
+            case INT32:
+                return Constants.INT_TYPE_NAME;
+            case INT64:
+                return Constants.BIGINT_TYPE_NAME;
+            case INT8:
+                return Constants.TINYINT_TYPE_NAME;
+            case ORDEREDLIST:
+                return Constants.LIST_TYPE_NAME;
+            case STRING:
+                return Constants.STRING_TYPE_NAME;
+            case TIME:
+                return Constants.DATETIME_TYPE_NAME;
+            case UNORDEREDLIST:
+                return Constants.LIST_TYPE_NAME;
+            default:
+                throw new HyracksDataException("Can't get hive type for field of type " + tag);
         }
     }
+
     @Override
     public void parse(Object object, DataOutput output) throws Exception {
-        if(object == null){
+        if (object == null) {
             throw new HyracksDataException("Hive parser can't parse null objects");
         }
         Object hiveObject = hiveSerde.deserialize((Writable) object);
@@ -200,53 +201,58 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         List<Object> attributesValues = oi.getStructFieldsDataAsList(hiveObject);
         recBuilder.reset(aRecord);
         recBuilder.init();
-        for(int i=0;i<n;i++){
+        for (int i = 0; i < n; i++) {
             fieldValueBuffer.reset();
             fieldValueBuffer.getDataOutput().writeByte(fieldTypeTags[i]);
             ObjectInspector foi = fieldRefs.get(i).getFieldObjectInspector();
             //get field type
-            switch(fieldTypes[i].getTypeTag()){
-            case BOOLEAN:
-                parseBoolean(attributesValues.get(i), (BooleanObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case TIME:
-                parseTime(attributesValues.get(i), (TimestampObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case DATE:
-                parseDate(attributesValues.get(i), (TimestampObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case DATETIME:
-                parseDateTime(attributesValues.get(i), (TimestampObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case DOUBLE:
-                parseDouble(attributesValues.get(i), (DoubleObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case FLOAT:
-                parseFloat(attributesValues.get(i), (FloatObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case INT8:
-                parseInt8(attributesValues.get(i), (ByteObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case INT16:
-                parseInt16(attributesValues.get(i), (ShortObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case INT32:
-                parseInt32(attributesValues.get(i), (IntObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case INT64:
-                parseInt64(attributesValues.get(i), (LongObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case STRING:
-                parseString(attributesValues.get(i), (StringObjectInspector)foi, fieldValueBuffer.getDataOutput());
-                break;
-            case ORDEREDLIST:
-                parseOrderedList((AOrderedListType)fieldTypes[i], attributesValues.get(i), (ListObjectInspector)foi);
-                break;
-            case UNORDEREDLIST:
-                parseUnorderedList((AUnorderedListType)fieldTypes[i], attributesValues.get(i), (ListObjectInspector)foi);
-                break;
-            default:
-                throw new HyracksDataException("Can't get hive type for field of type " + fieldTypes[i].getTypeTag());
+            switch (fieldTypes[i].getTypeTag()) {
+                case BOOLEAN:
+                    parseBoolean(attributesValues.get(i), (BooleanObjectInspector) foi,
+                            fieldValueBuffer.getDataOutput());
+                    break;
+                case TIME:
+                    parseTime(attributesValues.get(i), (TimestampObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case DATE:
+                    parseDate(attributesValues.get(i), (TimestampObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case DATETIME:
+                    parseDateTime(attributesValues.get(i), (TimestampObjectInspector) foi,
+                            fieldValueBuffer.getDataOutput());
+                    break;
+                case DOUBLE:
+                    parseDouble(attributesValues.get(i), (DoubleObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case FLOAT:
+                    parseFloat(attributesValues.get(i), (FloatObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case INT8:
+                    parseInt8(attributesValues.get(i), (ByteObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case INT16:
+                    parseInt16(attributesValues.get(i), (ShortObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case INT32:
+                    parseInt32(attributesValues.get(i), (IntObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case INT64:
+                    parseInt64(attributesValues.get(i), (LongObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case STRING:
+                    parseString(attributesValues.get(i), (StringObjectInspector) foi, fieldValueBuffer.getDataOutput());
+                    break;
+                case ORDEREDLIST:
+                    parseOrderedList((AOrderedListType) fieldTypes[i], attributesValues.get(i),
+                            (ListObjectInspector) foi);
+                    break;
+                case UNORDEREDLIST:
+                    parseUnorderedList((AUnorderedListType) fieldTypes[i], attributesValues.get(i),
+                            (ListObjectInspector) foi);
+                    break;
+                default:
+                    throw new HyracksDataException("Can't get hive type for field of type "
+                            + fieldTypes[i].getTypeTag());
             }
             recBuilder.addField(i, fieldValueBuffer);
         }
@@ -258,7 +264,7 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
     }
 
     private void parseInt32(Object obj, IntObjectInspector foi, DataOutput dataOutput) throws IOException {
-        if(obj == null){
+        if (obj == null) {
             throw new HyracksDataException("can't parse null field");
         }
         dataOutput.writeInt(foi.get(obj));
@@ -277,7 +283,7 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
     }
 
     private void parseDateTime(Object obj, TimestampObjectInspector foi, DataOutput dataOutput) throws IOException {
-        dataOutput.writeLong(foi.getPrimitiveJavaObject(obj).getTime()) ;
+        dataOutput.writeLong(foi.getPrimitiveJavaObject(obj).getTime());
     }
 
     private void parseDate(Object obj, TimestampObjectInspector foi, DataOutput dataOutput) throws IOException {
@@ -301,12 +307,12 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         dataOutput.writeUTF(foi.getPrimitiveJavaObject(obj));
     }
 
-    private void parseTime(Object obj,
-            TimestampObjectInspector foi, DataOutput dataOutput) throws IOException {
-        dataOutput.writeInt((int)(foi.getPrimitiveJavaObject(obj).getTime() % 86400000));   
+    private void parseTime(Object obj, TimestampObjectInspector foi, DataOutput dataOutput) throws IOException {
+        dataOutput.writeInt((int) (foi.getPrimitiveJavaObject(obj).getTime() % 86400000));
     }
 
-    private void parseOrderedList(AOrderedListType aOrderedListType, Object obj, ListObjectInspector foi) throws IOException {
+    private void parseOrderedList(AOrderedListType aOrderedListType, Object obj, ListObjectInspector foi)
+            throws IOException {
         OrderedListBuilder orderedListBuilder = getOrderedListBuilder();
         IAType itemType = null;
         if (aOrderedListType != null)
@@ -314,10 +320,10 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         orderedListBuilder.reset(aOrderedListType);
 
         int n = foi.getListLength(obj);
-        for(int i=0; i<n;i++){
+        for (int i = 0; i < n; i++) {
             Object element = foi.getListElement(obj, i);
             ObjectInspector eoi = foi.getListElementObjectInspector();
-            if(element == null){
+            if (element == null) {
                 throw new HyracksDataException("can't parse hive list with null values");
             }
 
@@ -327,7 +333,8 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         orderedListBuilder.write(fieldValueBuffer.getDataOutput(), true);
     }
 
-    private void parseUnorderedList(AUnorderedListType uoltype, Object obj, ListObjectInspector oi) throws IOException, AsterixException {
+    private void parseUnorderedList(AUnorderedListType uoltype, Object obj, ListObjectInspector oi) throws IOException,
+            AsterixException {
         UnorderedListBuilder unorderedListBuilder = getUnorderedListBuilder();
         IAType itemType = null;
         if (uoltype != null)
@@ -336,10 +343,10 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         unorderedListBuilder.reset(uoltype);
 
         int n = oi.getListLength(obj);
-        for(int i=0; i<n;i++){
+        for (int i = 0; i < n; i++) {
             Object element = oi.getListElement(obj, i);
             ObjectInspector eoi = oi.getListElementObjectInspector();
-            if(element == null){
+            if (element == null) {
                 throw new HyracksDataException("can't parse hive list with null values");
             }
             listItemBuffer.reset();
@@ -350,52 +357,52 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
         unorderedListBuilder.write(fieldValueBuffer.getDataOutput(), true);
     }
 
-    private void parseHiveListItem(Object obj, ObjectInspector eoi,
-            ArrayBackedValueStorage fieldValueBuffer, IAType itemType) throws IOException {
+    private void parseHiveListItem(Object obj, ObjectInspector eoi, ArrayBackedValueStorage fieldValueBuffer,
+            IAType itemType) throws IOException {
         //get field type
-        switch(itemType.getTypeTag()){
-        case BOOLEAN:
-            parseBoolean(obj, (BooleanObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case TIME:
-            parseTime(obj, (TimestampObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case DATE:
-            parseDate(obj, (TimestampObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case DATETIME:
-            parseDateTime(obj, (TimestampObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case DOUBLE:
-            parseDouble(obj, (DoubleObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case FLOAT:
-            parseFloat(obj, (FloatObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case INT8:
-            parseInt8(obj, (ByteObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case INT16:
-            parseInt16(obj, (ShortObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case INT32:
-            parseInt32(obj, (IntObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case INT64:
-            parseInt64(obj, (LongObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        case STRING:
-            parseString(obj, (StringObjectInspector)eoi, fieldValueBuffer.getDataOutput());
-            break;
-        default:
-            throw new HyracksDataException("doesn't support hive data with list of non-primitive types");
+        switch (itemType.getTypeTag()) {
+            case BOOLEAN:
+                parseBoolean(obj, (BooleanObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case TIME:
+                parseTime(obj, (TimestampObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case DATE:
+                parseDate(obj, (TimestampObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case DATETIME:
+                parseDateTime(obj, (TimestampObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case DOUBLE:
+                parseDouble(obj, (DoubleObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case FLOAT:
+                parseFloat(obj, (FloatObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case INT8:
+                parseInt8(obj, (ByteObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case INT16:
+                parseInt16(obj, (ShortObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case INT32:
+                parseInt32(obj, (IntObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case INT64:
+                parseInt64(obj, (LongObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            case STRING:
+                parseString(obj, (StringObjectInspector) eoi, fieldValueBuffer.getDataOutput());
+                break;
+            default:
+                throw new HyracksDataException("doesn't support hive data with list of non-primitive types");
         }
     }
 
     private OrderedListBuilder getOrderedListBuilder() {
         if (orderedListBuilder != null)
             return orderedListBuilder;
-        else{
+        else {
             orderedListBuilder = new OrderedListBuilder();
             return orderedListBuilder;
         }
@@ -404,7 +411,7 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser{
     private UnorderedListBuilder getUnorderedListBuilder() {
         if (unorderedListBuilder != null)
             return unorderedListBuilder;
-        else{
+        else {
             unorderedListBuilder = new UnorderedListBuilder();
             return unorderedListBuilder;
         }

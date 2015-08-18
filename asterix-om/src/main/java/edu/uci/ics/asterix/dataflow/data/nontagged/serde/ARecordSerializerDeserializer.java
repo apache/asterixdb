@@ -67,12 +67,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 IAType t = recordType.getFieldTypes()[i];
                 IAType t2;
                 if (t.getTypeTag() == ATypeTag.UNION) {
-                    if (NonTaggedFormatUtil.isOptionalField((AUnionType) t)) {
-                        t2 = ((AUnionType) recordType.getFieldTypes()[i]).getUnionList().get(
-                                AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
+                    if (((AUnionType) t).isNullableType()) {
+                        t2 = ((AUnionType) recordType.getFieldTypes()[i]).getNullableType();
                         serializers[i] = AqlSerializerDeserializerProvider.INSTANCE
-                                .getSerializerDeserializer(((AUnionType) recordType.getFieldTypes()[i]).getUnionList()
-                                        .get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST));
+                                .getSerializerDeserializer(((AUnionType) recordType.getFieldTypes()[i])
+                                        .getNullableType());
                     } else {
                         // union .. the general case
                         throw new NotImplementedException();

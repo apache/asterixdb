@@ -27,9 +27,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionC
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class UnaryBinaryInt64OrNullTypeComputer implements IResultTypeComputer {
     public static final UnaryBinaryInt64OrNullTypeComputer INSTANCE = new UnaryBinaryInt64OrNullTypeComputer();
 
@@ -37,7 +34,8 @@ public class UnaryBinaryInt64OrNullTypeComputer implements IResultTypeComputer {
 
     }
 
-    @Override public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
+    @Override
+    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
         if (fce.getArguments().size() != 1) {
@@ -49,21 +47,17 @@ public class UnaryBinaryInt64OrNullTypeComputer implements IResultTypeComputer {
         if (t0.getTypeTag() != ATypeTag.NULL
                 && t0.getTypeTag() != ATypeTag.BINARY
                 && (t0.getTypeTag() == ATypeTag.UNION && !((AUnionType) t0).getUnionList()
-                .contains(BuiltinType.ABINARY))) {
+                        .contains(BuiltinType.ABINARY))) {
             throw new NotImplementedException("Expects Binary Type.");
         }
 
-        List<IAType> unionList = new ArrayList<IAType>();
-        unionList.add(BuiltinType.ANULL);
         if (t0.getTypeTag() == ATypeTag.NULL) {
             return BuiltinType.ANULL;
         }
 
         if (t0.getTypeTag() == ATypeTag.BINARY || t0.getTypeTag().equals(ATypeTag.UNION)) {
-            unionList.add(BuiltinType.AINT64);
+            return AUnionType.createNullableType(BuiltinType.AINT64, "binary-length-Result");
         }
-
-        return new AUnionType(unionList, "binary-length-Result");
-
+        throw new AlgebricksException("Cannot compute type");
     }
 }

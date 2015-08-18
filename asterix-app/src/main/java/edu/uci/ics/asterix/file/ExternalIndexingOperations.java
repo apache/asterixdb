@@ -390,11 +390,11 @@ public class ExternalIndexingOperations {
     public static Dataset createTransactionDataset(Dataset dataset) {
         ExternalDatasetDetails originalDsd = (ExternalDatasetDetails) dataset.getDatasetDetails();
         ExternalDatasetDetails dsd = new ExternalDatasetDetails(originalDsd.getAdapter(), originalDsd.getProperties(),
-                originalDsd.getNodeGroupName(), originalDsd.getTimestamp(), ExternalDatasetTransactionState.BEGIN,
-                originalDsd.getCompactionPolicy(), originalDsd.getCompactionPolicyProperties());
+                originalDsd.getTimestamp(), ExternalDatasetTransactionState.BEGIN);
         Dataset transactionDatset = new Dataset(dataset.getDataverseName(), dataset.getDatasetName(),
-                dataset.getItemTypeName(), dsd, dataset.getHints(), DatasetType.EXTERNAL, dataset.getDatasetId(),
-                dataset.getPendingOp());
+                dataset.getItemTypeName(), dataset.getNodeGroupName(), dataset.getCompactionPolicy(),
+                dataset.getCompactionPolicyProperties(), dsd, dataset.getHints(), DatasetType.EXTERNAL,
+                dataset.getDatasetId(), dataset.getPendingOp());
         return transactionDatset;
     }
 
