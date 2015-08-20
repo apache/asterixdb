@@ -19,8 +19,8 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.ABinaryBase64Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.ABinaryHexPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryBase64Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;

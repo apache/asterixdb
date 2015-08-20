@@ -16,30 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.json;
+package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
-import java.io.IOException;
-import java.io.PrintStream;
-
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.PrintTools;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
-public class AStringPrinter implements IPrinter {
+public class AYearMonthDurationPrinterFactory implements IPrinterFactory {
 
-    public static final AStringPrinter INSTANCE = new AStringPrinter();
+    private static final long serialVersionUID = 1L;
+    public static final AYearMonthDurationPrinterFactory INSTANCE = new AYearMonthDurationPrinterFactory();
 
+    /* (non-Javadoc)
+     * @see org.apache.hyracks.algebricks.data.IPrinterFactory#createPrinter()
+     */
     @Override
-    public void init() {
-
+    public IPrinter createPrinter() {
+        return AYearMonthDurationPrinter.INSTANCE;
     }
 
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        try {
-            PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
-        } catch (IOException e) {
-            throw new AlgebricksException(e);
-        }
-    }
 }

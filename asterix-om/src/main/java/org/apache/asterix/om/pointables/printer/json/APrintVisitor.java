@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.printers.ABinaryHexPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.ACirclePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.ADatePrinter;

@@ -21,7 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.PrintTools;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 

@@ -16,18 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.json;
+package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.PrintTools;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 
-public class AStringPrinter implements IPrinter {
+public class ShortWithoutTypeInfoPrinter implements IPrinter {
 
-    public static final AStringPrinter INSTANCE = new AStringPrinter();
+    public static final ShortWithoutTypeInfoPrinter INSTANCE = new ShortWithoutTypeInfoPrinter();
 
     @Override
     public void init() {
@@ -36,8 +37,9 @@ public class AStringPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        short d = ShortPointable.getShort(b, s);
         try {
-            PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
+            WriteValueTools.writeInt((int)d, ps);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;

@@ -16,18 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.json;
+package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.PrintTools;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem.Fields;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 
-public class AStringPrinter implements IPrinter {
+public class ADatePrinter implements IPrinter {
 
-    public static final AStringPrinter INSTANCE = new AStringPrinter();
+    private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
+    public static final ADatePrinter INSTANCE = new ADatePrinter();
+    private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
 
     @Override
     public void init() {
@@ -36,8 +40,16 @@ public class AStringPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        ps.print("date(\"");
+        printString(b, s, l, ps);
+        ps.print("\")");
+    }
+
+    public void printString(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
+
         try {
-            PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
+            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, Fields.YEAR, Fields.DAY, false);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

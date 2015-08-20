@@ -19,36 +19,36 @@
 package org.apache.asterix.formats.nontagged;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABooleanPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ACirclePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADatePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADateTimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADayTimeDurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADoublePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AFloatPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt16PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt32PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt64PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt8PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AIntervalPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ALinePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ANullPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ANullableFieldPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AObjectPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AOrderedlistPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.APoint3DPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.APointPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.APolygonPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ARecordPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ARectanglePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AStringPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ATimePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUnionPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUnorderedlistPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AYearMonthDurationPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ACirclePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ADatePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ADateTimePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ADayTimeDurationPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ADoublePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ADurationPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AFloatPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt16PrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt32PrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt64PrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt8PrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AIntervalPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ALinePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ANullPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ANullableFieldPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AObjectPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AOrderedlistPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.APoint3DPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.APointPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.APolygonPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ARecordPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ARectanglePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AStringPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.ATimePrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AUnionPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AUnorderedlistPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinterFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -58,11 +58,11 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 
-public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
+public class AqlADMPrinterFactoryProvider implements IPrinterFactoryProvider {
 
-    public static final AqlJSONPrinterFactoryProvider INSTANCE = new AqlJSONPrinterFactoryProvider();
+    public static final AqlADMPrinterFactoryProvider INSTANCE = new AqlADMPrinterFactoryProvider();
 
-    private AqlJSONPrinterFactoryProvider() {
+    private AqlADMPrinterFactoryProvider() {
     }
 
     @Override
@@ -95,10 +95,10 @@ public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
                     return ADateTimePrinterFactory.INSTANCE;
                 case DURATION:
                     return ADurationPrinterFactory.INSTANCE;
-                case YEARMONTHDURATION:
-                    return AYearMonthDurationPrinterFactory.INSTANCE;
                 case DAYTIMEDURATION:
                     return ADayTimeDurationPrinterFactory.INSTANCE;
+                case YEARMONTHDURATION:
+                    return AYearMonthDurationPrinterFactory.INSTANCE;
                 case INTERVAL:
                     return AIntervalPrinterFactory.INSTANCE;
                 case POINT:
@@ -150,5 +150,6 @@ public class AqlJSONPrinterFactoryProvider implements IPrinterFactoryProvider {
             }
         }
         return AObjectPrinterFactory.INSTANCE;
+
     }
 }

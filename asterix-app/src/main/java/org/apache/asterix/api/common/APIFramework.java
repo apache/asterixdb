@@ -331,7 +331,7 @@ public class APIFramework {
                 builder.setPrinterProvider(format.getCSVPrinterFactoryProvider());
                 break;
             case ADM:
-                builder.setPrinterProvider(format.getPrinterFactoryProvider());
+                builder.setPrinterProvider(format.getADMPrinterFactoryProvider());
                 break;
             default:
                 throw new RuntimeException("Unexpected OutputFormat!");

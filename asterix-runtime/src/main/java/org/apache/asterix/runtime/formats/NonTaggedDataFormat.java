@@ -32,7 +32,7 @@ import org.apache.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlJSONPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlNormalizedKeyComputerFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlPredicateEvaluatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.om.base.ABoolean;
@@ -1053,8 +1053,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public IPrinterFactoryProvider getPrinterFactoryProvider() {
-        return AqlPrinterFactoryProvider.INSTANCE;
+    public IPrinterFactoryProvider getADMPrinterFactoryProvider() {
+        return AqlADMPrinterFactoryProvider.INSTANCE;
     }
 
     @Override

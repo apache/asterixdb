@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
-import org.apache.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADatePrinterFactory;

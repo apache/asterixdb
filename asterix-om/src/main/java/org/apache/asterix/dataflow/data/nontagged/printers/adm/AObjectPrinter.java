@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.json;
+package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -104,7 +103,7 @@ public class AObjectPrinter implements IPrinter {
                 AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
-             case POINT: {
+            case POINT: {
                 APointPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
@@ -120,12 +119,12 @@ public class AObjectPrinter implements IPrinter {
                 APolygonPrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
-            case CIRCLE: {
-                ACirclePrinter.INSTANCE.print(b, s, l, ps);
-                break;
-            }
             case RECTANGLE: {
                 ARectanglePrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
+            case CIRCLE: {
+                ACirclePrinter.INSTANCE.print(b, s, l, ps);
                 break;
             }
             case STRING: {
@@ -151,10 +150,17 @@ public class AObjectPrinter implements IPrinter {
                 unorderedListPrinter.print(b, s, l, ps);
                 break;
             }
+            case UUID: {
+                AUUIDPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
+            case SHORTWITHOUTTYPEINFO: {
+                ShortWithoutTypeInfoPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             case ANY:
             case BITARRAY:
             case ENUM:
-            case SHORTWITHOUTTYPEINFO:
             case SPARSERECORD:
             case SYSTEM_NULL:
             case TYPE:
@@ -163,8 +169,8 @@ public class AObjectPrinter implements IPrinter {
             case UINT64:
             case UINT8:
             case UNION:
-            case UUID:
             case UUID_STRING:
+                // These are internal types and do not need a printer.
                 throw new NotImplementedException("No printer for type " + typeTag);
         }
     }

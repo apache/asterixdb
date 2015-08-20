@@ -17,36 +17,34 @@
  * under the License.
  */
 
-package org.apache.asterix.om.pointables.printer.csv;
-
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
+package org.apache.asterix.om.pointables.printer.adm;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABooleanPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ACirclePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADatePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADateTimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADayTimeDurationPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADoublePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ADurationPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AFloatPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt16Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt32Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt64Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AInt8Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AIntervalPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ALinePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ANullPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.APoint3DPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.APointPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.APolygonPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ARectanglePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AStringPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.ATimePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.adm.AYearMonthDurationPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADatePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADateTimePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADayTimeDurationPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADoublePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADurationPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AFloatPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt16Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt32Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt64Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt8Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ALinePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.APointPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AStringPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.ATimePrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinter;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -56,20 +54,33 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
  * visit a given record, list or flat value of a given type, and print it to a
- * PrintStream in CSV format.
+ * PrintStream in adm format.
  */
 public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<PrintStream, ATypeTag>> {
 
     private final Map<IVisitablePointable, ARecordPrinter> raccessorToPrinter = new HashMap<IVisitablePointable, ARecordPrinter>();
-
-    private int level = 0;
+    private final Map<IVisitablePointable, AListPrinter> laccessorToPrinter = new HashMap<IVisitablePointable, AListPrinter>();
 
     @Override
     public Void visit(AListVisitablePointable accessor, Pair<PrintStream, ATypeTag> arg) throws AsterixException {
-        throw new AsterixException("'List' type unsupported for CSV output");
+        AListPrinter printer = laccessorToPrinter.get(accessor);
+        if (printer == null) {
+            printer = new AListPrinter(accessor.ordered());
+            laccessorToPrinter.put(accessor, printer);
+        }
+        try {
+            printer.printList(accessor, arg.first, this);
+        } catch (Exception e) {
+            throw new AsterixException(e);
+        }
+        return null;
     }
 
     @Override
@@ -79,14 +90,8 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
             printer = new ARecordPrinter();
             raccessorToPrinter.put(accessor, printer);
         }
-        if (level > 0) {
-            throw new AsterixException("Nested 'Record' instances unsupported for CSV output");
-        }
-
         try {
-            level++;
             printer.printRecord(accessor, arg.first, this);
-            level--;
         } catch (Exception e) {
             throw new AsterixException(e);
         }
@@ -150,6 +155,14 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                     ADurationPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
+                case YEARMONTHDURATION: {
+                    AYearMonthDurationPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case DAYTIMEDURATION: {
+                    ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
                 case POINT: {
                     APointPrinter.INSTANCE.print(b, s, l, ps);
                     break;
@@ -178,12 +191,12 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                     AStringPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
-                case YEARMONTHDURATION: {
-                    AYearMonthDurationPrinter.INSTANCE.print(b, s, l, ps);
+                case BINARY: {
+                    ABinaryHexPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
-                case DAYTIMEDURATION: {
-                    ADayTimeDurationPrinter.INSTANCE.print(b, s, l, ps);
+                case INTERVAL: {
+                    AIntervalPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 case UUID: {
