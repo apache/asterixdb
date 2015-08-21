@@ -1,8 +1,2 @@
-[ { "orderedlist": [ { "int64":
-1
-}
-, { "int64":
-2
-}
- ] }
+[ { "orderedlist": [ { "int64": 1 }, { "int64": 2 } ] }
  ]

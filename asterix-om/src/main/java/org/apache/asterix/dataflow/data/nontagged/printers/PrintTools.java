@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.adm;
+package org.apache.asterix.dataflow.data.nontagged.printers;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,7 +24,8 @@ import java.io.OutputStream;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class PrintTools {
-    public static enum CASE {
+
+    public enum CASE {
         LOWER_CASE,
         UPPER_CASE,
     }
@@ -146,7 +147,16 @@ public class PrintTools {
         os.write(hex(c & 0x0f, CASE.LOWER_CASE));
     }
 
-    static byte hex(int i, CASE c) {
+    public static Appendable printHexString(byte[] bytes, int start, int length, Appendable appendable)
+            throws IOException {
+        for (int i = 0; i < length; ++i) {
+            appendable.append((char) hex((bytes[start + i] >>> 4) & 0x0f, CASE.UPPER_CASE));
+            appendable.append((char) hex((bytes[start + i] & 0x0f), CASE.UPPER_CASE));
+        }
+        return appendable;
+    }
+
+    public static byte hex(int i, CASE c) {
         switch (c) {
             case LOWER_CASE:
                 return (byte) (i < 10 ? i + '0' : i + ('a' - 10));

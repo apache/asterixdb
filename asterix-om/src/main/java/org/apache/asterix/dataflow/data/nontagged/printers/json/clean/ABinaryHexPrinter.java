@@ -16,30 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
+
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
+import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
 
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.data.IPrinter;
+public class ABinaryHexPrinter implements IPrinter {
+    private ABinaryHexPrinter() {
+    }
 
-public class AStringPrinter implements IPrinter {
+    public static final ABinaryHexPrinter INSTANCE = new ABinaryHexPrinter();
 
-    public static final AStringPrinter INSTANCE = new AStringPrinter();
-
-    @Override
-    public void init() {
+    @Override public void init() throws AlgebricksException {
 
     }
 
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+    @Override public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        int validLength = ABinarySerializerDeserializer.getLength(b, s + 1);
+        int start = s + 1 + ABinarySerializerDeserializer.SIZE_OF_LENGTH;
         try {
-            PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
+            ps.print("\"");
+            PrintTools.printHexString(b, start, validLength, ps);
+            ps.print("\"");
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
     }
+
 }

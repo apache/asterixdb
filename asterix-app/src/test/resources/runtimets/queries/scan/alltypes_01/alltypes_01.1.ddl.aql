@@ -29,26 +29,32 @@ create type AddressType as open {
 
 create type AllType as open {
   id: int64,
-  name: string,
-  age: float,
-  salary: double,
-  married: boolean,
-  interests: {{string}},
-  children: [string],
-  address: AddressType,
-  dob: date,
+  string: string,
+  float: float,
+  double: double,
+  boolean: boolean,
+  int8: int8,
+  int16: int16,
+  int32: int32,
+  int64: int64,
+  unorderedList: {{string}},
+  orderedList: [string],
+  record: AddressType,
+  date: date,
   time: time,
   datetime: datetime,
   duration: duration,
-  location2d: point,
-  location3d: point3d,
+  point: point,
+  point3d: point3d,
   line: line,
+  rectangle: rectangle,
   polygon: polygon,
   circle: circle,
-  binary: binary
+  binary: binary,
+  uuid: uuid
   // union
 }
 
 create external dataset All(AllType)
 using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/nontagged/allData.json"),("format"="adm"));
+(("path"="nc1://data/nontagged/allData.adm"),("format"="adm"));

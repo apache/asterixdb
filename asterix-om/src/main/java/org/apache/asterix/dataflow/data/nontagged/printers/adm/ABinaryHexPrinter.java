@@ -19,6 +19,7 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
@@ -41,19 +42,10 @@ public class ABinaryHexPrinter implements IPrinter {
         int start = s + 1 + ABinarySerializerDeserializer.SIZE_OF_LENGTH;
         try {
             ps.print("hex(\"");
-            printHexString(b, start, validLength, ps);
+            PrintTools.printHexString(b, start, validLength, ps);
             ps.print("\")");
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
-    }
-
-    public static Appendable printHexString(byte[] bytes, int start, int length, Appendable appendable)
-            throws IOException {
-        for (int i = 0; i < length; ++i) {
-            appendable.append((char) PrintTools.hex((bytes[start + i] >>> 4) & 0x0f, PrintTools.CASE.UPPER_CASE));
-            appendable.append((char) PrintTools.hex((bytes[start + i] & 0x0f), PrintTools.CASE.UPPER_CASE));
-        }
-        return appendable;
     }
 }

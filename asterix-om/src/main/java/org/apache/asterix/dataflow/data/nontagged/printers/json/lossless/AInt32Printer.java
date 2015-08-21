@@ -37,8 +37,8 @@ public class AInt32Printer implements IPrinter {
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         int d = AInt32SerializerDeserializer.getInt(b, s + 1);
 
-        ps.println("{ \"int32\": ");
-        ps.println(d);
-        ps.println("}");
+        ps.print("{ \"int32\": ");
+        ps.print(d);
+        ps.print(" }");
     }
 }

@@ -19,8 +19,8 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryBase64Printer;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -84,7 +84,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                             int lengthFormat = UTF8StringPointable.getUTFLength(formatBytes, 1);
                             stringBuilder.setLength(0);
                             if (isCaseIgnoreEqual(HEX_FORMAT, formatBytes, 3, lengthFormat)) {
-                                ABinaryHexPrinter
+                                PrintTools
                                         .printHexString(binaryBytes, 3, lengthBinary, stringBuilder);
 
                             } else if (isCaseIgnoreEqual(BASE64_FORMAT, formatBytes, 3, lengthFormat)) {

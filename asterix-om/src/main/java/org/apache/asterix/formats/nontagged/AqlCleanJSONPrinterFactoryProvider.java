@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.formats.nontagged;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABinaryPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABooleanPrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ACirclePrinterFactory;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ADatePrinterFactory;

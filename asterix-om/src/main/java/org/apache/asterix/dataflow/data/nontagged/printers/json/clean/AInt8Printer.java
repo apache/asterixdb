@@ -36,9 +36,6 @@ public class AInt8Printer implements IPrinter {
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
         byte o = AInt8SerializerDeserializer.getByte(b, s + 1);
-
-        ps.println("{ \"int8\": ");
-        ps.println(o);
-        ps.println("}");
+        ps.print(o);
     }
 }

@@ -20,7 +20,6 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -151,6 +150,10 @@ public class AObjectPrinter implements IPrinter {
                 unorderedListPrinter.print(b, s, l, ps);
                 break;
             }
+            case UUID: {
+                AUUIDPrinter.INSTANCE.print(b, s, l, ps);
+                break;
+            }
             case ANY:
             case BITARRAY:
             case ENUM:
@@ -163,7 +166,6 @@ public class AObjectPrinter implements IPrinter {
             case UINT64:
             case UINT8:
             case UNION:
-            case UUID:
             case UUID_STRING:
                 throw new NotImplementedException("No printer for type " + typeTag);
         }

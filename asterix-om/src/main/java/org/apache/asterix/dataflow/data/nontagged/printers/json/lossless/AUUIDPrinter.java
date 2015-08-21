@@ -16,26 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
+
+package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
+
+import org.apache.asterix.om.base.AMutableUUID;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.data.std.primitive.LongPointable;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.data.IPrinter;
+public class AUUIDPrinter implements IPrinter {
 
-public class AInt32Printer implements IPrinter {
-
-    public static final AInt32Printer INSTANCE = new AInt32Printer();
+    public static final AUUIDPrinter INSTANCE = new AUUIDPrinter();
+    // We use mutable UUID not to create a UUID object multiple times.
+    AMutableUUID uuid = new AMutableUUID(0, 0);
 
     @Override
-    public void init() {
-
+    public void init() throws AlgebricksException {
     }
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        int d = AInt32SerializerDeserializer.getInt(b, s + 1);
-        ps.print(d);
+        long msb = LongPointable.getLong(b, s + 1);
+        long lsb = LongPointable.getLong(b, s + 9);
+        uuid.setValue(msb, lsb);
+
+        ps.print("\"" + uuid.toStringLiteralOnly() + "\"");
     }
+
 }

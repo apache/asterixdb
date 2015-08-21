@@ -19,14 +19,9 @@
 
 package org.apache.asterix.om.pointables.printer.json.lossless;
 
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ABinaryHexPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ABooleanPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ACirclePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ADatePrinter;
@@ -47,6 +42,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.APolygo
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ARectanglePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AStringPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ATimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AUUIDPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AYearMonthDurationPrinter;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
@@ -56,6 +52,10 @@ import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively

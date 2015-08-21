@@ -16,26 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
-import java.io.PrintStream;
+package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
-public class AInt32Printer implements IPrinter {
+public class ABinaryPrinterFactory implements IPrinterFactory {
 
-    public static final AInt32Printer INSTANCE = new AInt32Printer();
-
-    @Override
-    public void init() {
-
+    private ABinaryPrinterFactory() {
     }
 
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        int d = AInt32SerializerDeserializer.getInt(b, s + 1);
-        ps.print(d);
+    public static final ABinaryPrinterFactory INSTANCE = new ABinaryPrinterFactory();
+
+    @Override public IPrinter createPrinter() {
+        return ABinaryHexPrinter.INSTANCE;
     }
 }
