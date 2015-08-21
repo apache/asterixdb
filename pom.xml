@@ -20,7 +20,13 @@
   <version>0.2.16-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
-  
+
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>LATEST</version>
+  </parent>
+
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -192,21 +198,11 @@
   </build>
 
   <scm>
-    <connection>scm:git:https://code.google.com/p/hyracks/</connection>
+    <connection>scm:git:https://github.com/apache/incubator-asterixdb-hyracks</connection>
     <developerConnection>scm:git:ssh://fulliautomatix.ics.uci.edu:29418/hyracks</developerConnection>
-    <url>https://code.google.com/p/hyracks/source/browse/</url>
+    <url>https://github.com/apache/incubator-asterixdb-hyracks</url>
   </scm>
 
-  <distributionManagement>
-    <repository>
-      <id>hyracks-releases</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>hyracks-snapshots</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <profiles>
     <profile>
