@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -45,26 +46,21 @@ public class AIntervalPrinter implements IPrinter {
 
         short typetag = AInt8SerializerDeserializer.getByte(b, s + 1 + 8 * 2);
 
-        IPrinter timeInstancePrinter;
-
         if (typetag == ATypeTag.DATE.serialize()) {
             ps.print("-date(\"");
-            timeInstancePrinter = ADatePrinter.INSTANCE;
-            ((ADatePrinter) timeInstancePrinter).printString(b, s + 4, 4, ps);
+            PrintTools.printDateString(b, s + 4, 4, ps);
             ps.print(", ");
-            ((ADatePrinter) timeInstancePrinter).printString(b, s + 12, 4, ps);
+            PrintTools.printDateString(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.TIME.serialize()) {
             ps.print("-time(\"");
-            timeInstancePrinter = ATimePrinter.INSTANCE;
-            ((ATimePrinter) timeInstancePrinter).printString(b, s + 4, 4, ps);
+            PrintTools.printTimeString(b, s + 4, 4, ps);
             ps.print(", ");
-            ((ATimePrinter) timeInstancePrinter).printString(b, s + 12, 4, ps);
+            PrintTools.printTimeString(b, s + 12, 4, ps);
         } else if (typetag == ATypeTag.DATETIME.serialize()) {
             ps.print("-datetime(\"");
-            timeInstancePrinter = ADateTimePrinter.INSTANCE;
-            ((ADateTimePrinter) timeInstancePrinter).printString(b, s, 8, ps);
+            PrintTools.printDateTimeString(b, s, 8, ps);
             ps.print(", ");
-            ((ADateTimePrinter) timeInstancePrinter).printString(b, s + 8, 8, ps);
+            PrintTools.printDateTimeString(b, s + 8, 8, ps);
         } else {
             throw new AlgebricksException("Unsupport internal time types in interval: " + typetag);
         }

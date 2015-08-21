@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.json.lossless;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
@@ -35,10 +36,8 @@ public class ADayTimeDurationPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        long milliseconds = AInt64SerializerDeserializer.getLong(b, s + 1);
-
         ps.print("{ \"day-time-duration\": ");
-        ps.print(milliseconds);
+        PrintTools.printDayTimeDurationString(b, s, l, ps);
         ps.print("}");
     }
 
