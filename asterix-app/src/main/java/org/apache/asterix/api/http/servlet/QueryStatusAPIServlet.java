@@ -68,7 +68,7 @@ public class QueryStatusAPIServlet extends HttpServlet {
             JobId jobId = new JobId(handle.getLong(0));
             ResultSetId rsId = new ResultSetId(handle.getLong(1));
 
-            /* TODO(madhusudancs): We need to find a way to JSON serialize default format obtained from
+            /* TODO(madhusudancs): We need to find a way to LOSSLESS_JSON serialize default format obtained from
              * metadataProvider in the AQLTranslator and store it as part of the result handle.
              */
             ResultReader resultReader = new ResultReader(hcc, hds);

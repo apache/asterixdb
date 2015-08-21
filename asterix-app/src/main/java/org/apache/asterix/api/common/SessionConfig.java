@@ -32,7 +32,7 @@ import java.util.Map;
  * <li> It also allows you to request additional output for optional
  * out-of-band data about the execution (query plan, etc).
  * <li> It allows you to specify the output format for the primary
- * execution output - JSON, CSV, etc.
+ * execution output - LOSSLESS_JSON, CSV, etc.
  * <li> It allows you to specify output format-specific parameters.
  */
 
@@ -42,8 +42,9 @@ public class SessionConfig {
      */
     public enum OutputFormat {
         ADM,
-        JSON,
-        CSV
+        CSV,
+        CLEAN_JSON,
+        LOSSLESS_JSON
     };
 
     /**

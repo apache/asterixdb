@@ -63,9 +63,11 @@ public interface IDataFormat {
     // QQQ Refactor: Make this accept an APIFramework.OutputFormat parameter
     public IPrinterFactoryProvider getADMPrinterFactoryProvider();
 
-    public IPrinterFactoryProvider getJSONPrinterFactoryProvider();
+    public IPrinterFactoryProvider getLosslessJSONPrinterFactoryProvider();
 
     public IPrinterFactoryProvider getCSVPrinterFactoryProvider();
+
+    public IPrinterFactoryProvider getCleanJSONPrinterFactoryProvider();
 
     public INullWriterFactory getNullWriterFactory();
 

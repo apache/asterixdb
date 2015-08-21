@@ -69,9 +69,11 @@ public class APIServlet extends HttpServlet {
         } else if (output.equals("CSV-Header")) {
             format = OutputFormat.CSV;
             csv_and_header = true;
+        } else if (output.equals("LOSSLESS_JSON")) {
+            format = OutputFormat.LOSSLESS_JSON;
         } else {
             // Default output format
-            format = OutputFormat.JSON;
+            format = OutputFormat.CLEAN_JSON;
         }
 
         String query = request.getParameter("query");

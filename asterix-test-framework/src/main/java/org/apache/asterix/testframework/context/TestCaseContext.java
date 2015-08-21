@@ -39,7 +39,8 @@ public class TestCaseContext {
     public enum OutputFormat {
         NONE  ("", ""),
         ADM   ("adm", "application/x-adm"),
-        JSON  ("json", "application/json"),
+        LOSSLESS_JSON("json", "application/json; lossless=true"),
+        CLEAN_JSON ("json", "application/json"),
         CSV   ("csv", "text/csv"),
         CSV_HEADER ("csv-header", "text/csv; header=present");
 
@@ -63,8 +64,10 @@ public class TestCaseContext {
             switch (cUnit.getOutputDir().getCompare()) {
             case TEXT:
                 return OutputFormat.ADM;
-            case JSON:
-                return OutputFormat.JSON;
+            case LOSSLESS_JSON:
+                return OutputFormat.LOSSLESS_JSON;
+            case CLEAN_JSON:
+                return OutputFormat.CLEAN_JSON;
             case CSV:
                 return OutputFormat.CSV;
             case CSV_HEADER:

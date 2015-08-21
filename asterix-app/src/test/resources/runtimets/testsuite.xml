@@ -6675,7 +6675,14 @@
     <test-group name="json">
         <test-case FilePath="json">
             <compilation-unit name="int01">
-                <output-dir compare="JSON">int01</output-dir>
+                <output-dir compare="Lossless-JSON">int01-losslessjson</output-dir>
+            </compilation-unit>
+        </test-case>
+    </test-group>
+    <test-group name="cleanjson">
+        <test-case FilePath="json">
+            <compilation-unit name="int01">
+                <output-dir compare="Clean-JSON">int01-cleanjson</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>

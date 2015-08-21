@@ -52,12 +52,12 @@ public class ShutdownAPIServlet extends HttpServlet {
         response.setCharacterEncoding("utf-8");
 
         PrintWriter out = response.getWriter();
-        OutputFormat format = OutputFormat.JSON;
+        OutputFormat format = OutputFormat.LOSSLESS_JSON;
         String accept = request.getHeader("Accept");
         if ((accept == null) || (accept.contains("application/x-adm"))) {
             format = OutputFormat.ADM;
         } else if (accept.contains("application/json")) {
-            format = OutputFormat.JSON;
+            format = OutputFormat.LOSSLESS_JSON;
         }
         StringWriter sw = new StringWriter();
         IOUtils.copy(request.getInputStream(), sw, StandardCharsets.UTF_8.name());

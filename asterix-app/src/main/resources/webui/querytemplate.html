@@ -77,7 +77,7 @@ $(document).ready(function() {
             var errorPattern = /<div class="accordion" id="errorblock">/g;
             var sectionsSeparator = '<h4>';
             var resultPat = 'Results:</h4>';
-            
+
             if (errorPattern.test(data)) {
                 $('#output-heading').html('Error');
                 $('#output-heading').addClass('error');
@@ -210,7 +210,7 @@ $(document).ready(function() {
               <label class="query">Query</label>
               <textarea rows="10" id="qry" name="query" class="query" value="%s" placeholder="Type your AQL query ..."></textarea>
             </div>
-            
+
             <div class="btn-group">
               <button id="checkboxes-on" class="btn">
                   <i id="opts" class="icon-ok" style="display:none;"></i>Select Options</button>
@@ -225,7 +225,8 @@ $(document).ready(function() {
                   <option selected value="ADM">ADM</option>
                   <option value="CSV">CSV (no header)</option>
                   <option value="CSV-Header">CSV (with header)</option>
-                  <option value="JSON">JSON</option>
+                  <option value="CLEAN_JSON">JSON</option>
+                  <option value="LOSSLESS_JSON">JSON (lossless)</option>
                 </select>
               </label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
@@ -260,4 +261,3 @@ $(document).ready(function() {
   </div>
 </body>
 </html>
-

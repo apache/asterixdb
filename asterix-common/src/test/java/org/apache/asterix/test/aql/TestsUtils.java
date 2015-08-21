@@ -436,7 +436,7 @@ public class TestsUtils {
                                 resultStream = executeAnyAQLAsync(statement, true, fmt);
 
                             if (queryCount >= expectedResultFileCtxs.size()) {
-                                throw new IllegalStateException("no result file for " + testFile.toString());
+                                throw new IllegalStateException("no result file for " + testFile.toString() + "; queryCount: " + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
                             }
                             expectedResultFile = expectedResultFileCtxs.get(queryCount).getFile();
 

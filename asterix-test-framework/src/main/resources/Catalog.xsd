@@ -186,7 +186,8 @@
          <xs:enumeration value="Text"/>
          <xs:enumeration value="Inspect"/>
          <xs:enumeration value="Ignore"/>
-         <xs:enumeration value="JSON"/>
+         <xs:enumeration value="Clean-JSON"/>
+         <xs:enumeration value="Lossless-JSON"/>
          <xs:enumeration value="CSV"/>
          <xs:enumeration value="CSV_Header"/>
       </xs:restriction>
@@ -217,5 +218,5 @@
          <xs:pattern value="\*|([A-Z]{4}[0-9]{4})"/>
       </xs:restriction>
    </xs:simpleType>
-   
+
 </xs:schema>

@@ -46,7 +46,7 @@ import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 /***
  * The REST API that takes a dataverse name and a dataset name as the input
- * and returns an array of file splits (IP, file-path) of the dataset in JSON.
+ * and returns an array of file splits (IP, file-path) of the dataset in LOSSLESS_JSON.
  * It is mostly used by external runtime, e.g., Pregelix or IMRU to pull data
  * in parallel from existing AsterixDB datasets.
  *

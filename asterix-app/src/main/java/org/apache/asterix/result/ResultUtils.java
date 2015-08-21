@@ -117,9 +117,10 @@ public class ResultUtils {
             case CSV:
                 need_commas = false;
                 break;
-            case JSON:
+            case LOSSLESS_JSON:
+            case CLEAN_JSON:
             case ADM:
-                // Conveniently, JSON and ADM have the same syntax for an
+                // Conveniently, LOSSLESS_JSON and ADM have the same syntax for an
                 // "ordered list", and our representation of the result of a
                 // statement is an ordered list of instances.
                 conf.out().print("[ ");
@@ -167,7 +168,8 @@ public class ResultUtils {
         conf.out().flush();
 
         switch (conf.fmt()) {
-            case JSON:
+            case LOSSLESS_JSON:
+            case CLEAN_JSON:
             case ADM:
                 conf.out().println(" ]");
                 break;

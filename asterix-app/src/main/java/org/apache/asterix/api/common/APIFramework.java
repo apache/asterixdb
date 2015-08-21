@@ -324,14 +324,17 @@ public class APIFramework {
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
 
         switch (conf.fmt()) {
-            case JSON:
-                builder.setPrinterProvider(format.getJSONPrinterFactoryProvider());
+            case LOSSLESS_JSON:
+                builder.setPrinterProvider(format.getLosslessJSONPrinterFactoryProvider());
                 break;
             case CSV:
                 builder.setPrinterProvider(format.getCSVPrinterFactoryProvider());
                 break;
             case ADM:
                 builder.setPrinterProvider(format.getADMPrinterFactoryProvider());
+                break;
+            case CLEAN_JSON:
+                builder.setPrinterProvider(format.getCleanJSONPrinterFactoryProvider());
                 break;
             default:
                 throw new RuntimeException("Unexpected OutputFormat!");

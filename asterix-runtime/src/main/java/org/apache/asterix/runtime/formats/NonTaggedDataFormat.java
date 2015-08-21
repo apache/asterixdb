@@ -29,7 +29,8 @@ import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFactoryProvider
 import org.apache.asterix.formats.nontagged.AqlBinaryHashFunctionFamilyProvider;
 import org.apache.asterix.formats.nontagged.AqlBinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlLosslessJSONPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlNormalizedKeyComputerFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlPredicateEvaluatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlADMPrinterFactoryProvider;
@@ -1058,8 +1059,13 @@ public class NonTaggedDataFormat implements IDataFormat {
     }
 
     @Override
-    public IPrinterFactoryProvider getJSONPrinterFactoryProvider() {
-        return AqlJSONPrinterFactoryProvider.INSTANCE;
+    public IPrinterFactoryProvider getLosslessJSONPrinterFactoryProvider() {
+        return AqlLosslessJSONPrinterFactoryProvider.INSTANCE;
+    }
+
+    @Override
+    public IPrinterFactoryProvider getCleanJSONPrinterFactoryProvider() {
+        return AqlCleanJSONPrinterFactoryProvider.INSTANCE;
     }
 
     @Override
