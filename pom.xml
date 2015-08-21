@@ -18,7 +18,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>edu.uci.ics.asterix</groupId>
+    <groupId>org.apache.asterix</groupId>
     <artifactId>asterix</artifactId>
     <version>0.8.7-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -331,87 +331,87 @@
                 <version>${hadoop.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>algebricks-compiler</artifactId>
                 <version>${algebricks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-api</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-dataflow-std</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-control-cc</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-control-nc</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-server</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-cli</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-dataflow-hadoop</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-btree</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-rtree</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-invertedindex</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-common</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-client</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-lsm-common</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-lsm-btree</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-lsm-rtree</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>
             <dependency>
-                <groupId>edu.uci.ics.hyracks</groupId>
+                <groupId>org.apache.hyracks</groupId>
                 <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
                 <version>${hyracks.version}</version>
             </dependency>

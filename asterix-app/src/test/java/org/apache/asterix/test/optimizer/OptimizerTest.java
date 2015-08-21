@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.optimizer;
+package org.apache.asterix.test.optimizer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,16 +34,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
-import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
-import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
-import edu.uci.ics.asterix.test.base.AsterixTestHelper;
-import edu.uci.ics.asterix.test.common.TestHelper;
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.test.common.TestHelper;
 
 @RunWith(Parameterized.class)
 public class OptimizerTest {

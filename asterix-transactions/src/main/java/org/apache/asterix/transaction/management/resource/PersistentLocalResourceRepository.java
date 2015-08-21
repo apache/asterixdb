@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.resource;
+package org.apache.asterix.transaction.management.resource;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,11 +28,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
-import edu.uci.ics.hyracks.storage.common.file.LocalResource;
-import edu.uci.ics.hyracks.storage.common.file.ResourceIdFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.file.LocalResource;
+import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 

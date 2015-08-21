@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8StringBinaryTokenizer;
 
 // TODO: Should be moved into Hyracks with the rest of the tokenizer code.
 public class NGramUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFactory {

@@ -8,11 +8,11 @@ The ADM parser inside Asterix is composed by two different components:
 
 These two classes belong to the package:
 
-    edu.uci.ics.asterix.runtime.operators.file
+    org.apache.asterix.runtime.operators.file
 
 The Parser is loaded through a factory (*AdmSchemafullRecordParserFactory*) by
 
-    edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter extends AbstractDatasourceAdapter
+    org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter extends AbstractDatasourceAdapter
 
 
 How to add a new datatype

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.file;
+package org.apache.asterix.file;
 
-import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.asterix.common.config.AsterixCompilerProperties;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class JobSpecificationUtils {
     public static JobSpecification createJobSpecification() {

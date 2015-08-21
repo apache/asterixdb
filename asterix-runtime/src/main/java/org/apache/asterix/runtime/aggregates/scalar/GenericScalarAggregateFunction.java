@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.aggregates.scalar;
+package org.apache.asterix.runtime.aggregates.scalar;
 
-import edu.uci.ics.asterix.runtime.aggregates.base.SingleFieldFrameTupleReference;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluator;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
-import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.asterix.runtime.aggregates.base.SingleFieldFrameTupleReference;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
+import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunction;
+import org.apache.hyracks.algebricks.runtime.base.ICopyUnnestingFunctionFactory;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * Implements scalar aggregates by iterating over a collection with the ScanCollection unnesting function,

@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.optimizer.rules;
+package org.apache.asterix.optimizer.rules;
 
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 
 public class AsterixInlineVariablesRule extends InlineVariablesRule {
 

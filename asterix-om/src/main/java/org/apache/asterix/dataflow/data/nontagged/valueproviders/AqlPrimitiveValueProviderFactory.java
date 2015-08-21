@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.valueproviders;
+package org.apache.asterix.dataflow.data.nontagged.valueproviders;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProvider;
-import edu.uci.ics.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.FloatPrimitiveValueProviderFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.impls.IntegerPrimitiveValueProviderFactory;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
+import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.rtree.impls.DoublePrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.rtree.impls.FloatPrimitiveValueProviderFactory;
+import org.apache.hyracks.storage.am.rtree.impls.IntegerPrimitiveValueProviderFactory;
 
 public class AqlPrimitiveValueProviderFactory implements IPrimitiveValueProviderFactory {
 

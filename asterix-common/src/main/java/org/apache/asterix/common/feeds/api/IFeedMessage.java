@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.api;
+package org.apache.asterix.common.feeds.api;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.api.dataflow.value.JSONSerializable;
+import org.apache.hyracks.api.dataflow.value.JSONSerializable;
 
 /**
  * A control message exchanged between {@Link IFeedManager} and {@Link CentralFeedManager} that requests for an action or reporting of an event

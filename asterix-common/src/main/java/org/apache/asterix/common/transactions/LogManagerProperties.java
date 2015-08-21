@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.transactions;
+package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.AsterixTransactionProperties;
 
 public class LogManagerProperties implements Serializable {
 

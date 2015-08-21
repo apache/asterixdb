@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.functions;
+package org.apache.asterix.common.functions;
 
 import java.io.Serializable;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionSignature implements Serializable {
     private String namespace;

@@ -31,7 +31,7 @@ if not defined HADOOP_LIBEXEC_DIR (
 
 :main
 
-  set CLASS=edu.uci.ics.asterix.aoya.AsterixYARNClient
+  set CLASS=org.apache.asterix.aoya.AsterixYARNClient
 
   @rem JAVA and JAVA_HEAP_MAX and set in hadoop-config.cmd
 

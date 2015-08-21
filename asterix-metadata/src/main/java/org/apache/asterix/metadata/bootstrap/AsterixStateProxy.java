@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.bootstrap;
+package org.apache.asterix.metadata.bootstrap;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
-import edu.uci.ics.asterix.metadata.api.IMetadataNode;
+import org.apache.asterix.metadata.api.IAsterixStateProxy;
+import org.apache.asterix.metadata.api.IMetadataNode;
 
 /**
  * Contains Asterix distributed state such as the AsterixProperties.

@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package org.apache.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.java.IJObject;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.container.IObjectPool;
+import org.apache.asterix.external.library.java.IJObject;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.container.IObjectPool;
 
 public class TypeInfo {
 

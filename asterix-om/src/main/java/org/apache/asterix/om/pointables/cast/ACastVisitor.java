@@ -13,29 +13,29 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables.cast;
+package org.apache.asterix.om.pointables.cast;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.types.hierachy.ATypeHierarchy;
-import edu.uci.ics.asterix.om.types.hierachy.ITypeConvertComputer;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
-import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.AFlatValuePointable;
+import org.apache.asterix.om.pointables.AListVisitablePointable;
+import org.apache.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively

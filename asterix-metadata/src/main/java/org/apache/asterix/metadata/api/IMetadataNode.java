@@ -13,30 +13,30 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.api;
+package org.apache.asterix.metadata.api;
 
 import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
-import edu.uci.ics.asterix.metadata.entities.Datatype;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.entities.Feed;
-import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.entities.Function;
-import edu.uci.ics.asterix.metadata.entities.Index;
-import edu.uci.ics.asterix.metadata.entities.Library;
-import edu.uci.ics.asterix.metadata.entities.Node;
-import edu.uci.ics.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.DatasourceAdapter;
+import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.Library;
+import org.apache.asterix.metadata.entities.Node;
+import org.apache.asterix.metadata.entities.NodeGroup;
 
 /**
  * A metadata node stores metadata in its local storage structures (currently

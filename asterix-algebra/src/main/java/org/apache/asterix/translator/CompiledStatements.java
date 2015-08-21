@@ -12,36 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.translator;
+package org.apache.asterix.translator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.aql.base.Clause;
-import edu.uci.ics.asterix.aql.base.Expression;
-import edu.uci.ics.asterix.aql.base.Statement.Kind;
-import edu.uci.ics.asterix.aql.expression.CallExpr;
-import edu.uci.ics.asterix.aql.expression.FLWOGRExpression;
-import edu.uci.ics.asterix.aql.expression.FieldAccessor;
-import edu.uci.ics.asterix.aql.expression.FieldBinding;
-import edu.uci.ics.asterix.aql.expression.ForClause;
-import edu.uci.ics.asterix.aql.expression.Identifier;
-import edu.uci.ics.asterix.aql.expression.LiteralExpr;
-import edu.uci.ics.asterix.aql.expression.Query;
-import edu.uci.ics.asterix.aql.expression.RecordConstructor;
-import edu.uci.ics.asterix.aql.expression.VariableExpr;
-import edu.uci.ics.asterix.aql.expression.WhereClause;
-import edu.uci.ics.asterix.aql.literal.StringLiteral;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionRequest;
-import edu.uci.ics.asterix.common.functions.FunctionConstants;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.aql.base.Clause;
+import org.apache.asterix.aql.base.Expression;
+import org.apache.asterix.aql.base.Statement.Kind;
+import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.FLWOGRExpression;
+import org.apache.asterix.aql.expression.FieldAccessor;
+import org.apache.asterix.aql.expression.FieldBinding;
+import org.apache.asterix.aql.expression.ForClause;
+import org.apache.asterix.aql.expression.Identifier;
+import org.apache.asterix.aql.expression.LiteralExpr;
+import org.apache.asterix.aql.expression.Query;
+import org.apache.asterix.aql.expression.RecordConstructor;
+import org.apache.asterix.aql.expression.VariableExpr;
+import org.apache.asterix.aql.expression.WhereClause;
+import org.apache.asterix.aql.literal.StringLiteral;
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.common.functions.FunctionConstants;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
  * An AQL statement instance is translated into an instance of type CompileX

@@ -8,6 +8,6 @@
 use dataverse OpenSocialNetworkData;
 
 load dataset TweetMessages
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/tw_messages.adm"),("format"="adm"));
 

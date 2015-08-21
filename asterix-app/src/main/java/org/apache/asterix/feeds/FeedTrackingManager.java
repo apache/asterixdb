@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.util.Arrays;
 import java.util.BitSet;
@@ -24,12 +24,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedTupleCommitAckMessage;
-import edu.uci.ics.asterix.common.feeds.FeedTupleCommitResponseMessage;
-import edu.uci.ics.asterix.common.feeds.api.IFeedTrackingManager;
-import edu.uci.ics.asterix.file.FeedOperations;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedTupleCommitAckMessage;
+import org.apache.asterix.common.feeds.FeedTupleCommitResponseMessage;
+import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
+import org.apache.asterix.file.FeedOperations;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedTrackingManager implements IFeedTrackingManager {
 

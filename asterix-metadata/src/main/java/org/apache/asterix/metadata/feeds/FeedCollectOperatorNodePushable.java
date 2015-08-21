@@ -12,33 +12,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.feeds.CollectionRuntime;
-import edu.uci.ics.asterix.common.feeds.FeedCollectRuntimeInputHandler;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedFrameCollector.State;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeInputHandler;
-import edu.uci.ics.asterix.common.feeds.SubscribableFeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.Mode;
-import edu.uci.ics.asterix.common.feeds.api.ISubscribableRuntime;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.feeds.CollectionRuntime;
+import org.apache.asterix.common.feeds.FeedCollectRuntimeInputHandler;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedFrameCollector.State;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
+import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
+import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 /**
  * The runtime for @see{FeedIntakeOperationDescriptor}

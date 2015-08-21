@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.lexergenerator.rules.Rule;
-import edu.uci.ics.asterix.lexergenerator.rules.RuleChar;
-import edu.uci.ics.asterix.lexergenerator.rules.RuleEpsilon;
-import edu.uci.ics.asterix.lexergenerator.rules.RulePartial;
+import org.apache.asterix.lexergenerator.rules.Rule;
+import org.apache.asterix.lexergenerator.rules.RuleChar;
+import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
+import org.apache.asterix.lexergenerator.rules.RulePartial;
 
 public class LexerNode {
     private static String TOKEN_PREFIX = "TOKEN_";

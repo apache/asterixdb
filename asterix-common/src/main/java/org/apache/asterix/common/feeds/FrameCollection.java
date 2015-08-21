@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedMemoryComponent;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMemoryManager;
+import org.apache.asterix.common.feeds.api.IFeedMemoryComponent;
+import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
 
 /**
  * Represents an expandable collection of frames.

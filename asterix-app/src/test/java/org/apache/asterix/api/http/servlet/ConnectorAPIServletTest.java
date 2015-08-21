@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.api.http.servlet;
+package org.apache.asterix.api.http.servlet;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -40,20 +40,20 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 
-import edu.uci.ics.asterix.feeds.CentralFeedManager;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.JSONDeserializerForTypes;
-import edu.uci.ics.asterix.test.runtime.ExecutionTest;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
-import edu.uci.ics.hyracks.api.comm.NetworkAddress;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.JSONDeserializerForTypes;
+import org.apache.asterix.test.runtime.ExecutionTest;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 @SuppressWarnings("deprecation")
 public class ConnectorAPIServletTest {
@@ -139,8 +139,8 @@ public class ConnectorAPIServletTest {
         nodeMap.put("nc1", mockInfo1);
         nodeMap.put("nc2", mockInfo2);
         PA.invokeMethod(servlet,
-                "formResponseObject(org.json.JSONObject, edu.uci.ics.hyracks.dataflow.std.file.FileSplit[], "
-                        + "edu.uci.ics.asterix.om.types.ARecordType, java.lang.String, java.util.Map)", actualResponse,
+                "formResponseObject(org.json.JSONObject, org.apache.hyracks.dataflow.std.file.FileSplit[], "
+                        + "org.apache.asterix.om.types.ARecordType, java.lang.String, java.util.Map)", actualResponse,
                 splits, recordType, primaryKey, nodeMap);
 
         // Constructs expected response.

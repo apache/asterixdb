@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.runtime;
+package org.apache.asterix.test.runtime;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,14 +29,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
-import edu.uci.ics.asterix.common.config.AsterixPropertiesAccessor;
-import edu.uci.ics.asterix.common.config.AsterixTransactionProperties;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import edu.uci.ics.asterix.external.util.IdentitiyResolverFactory;
-import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.testframework.context.TestCaseContext;
 
 /**
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.

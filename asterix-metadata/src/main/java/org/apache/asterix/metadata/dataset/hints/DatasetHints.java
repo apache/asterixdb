@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.dataset.hints;
+package org.apache.asterix.metadata.dataset.hints;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Collection of hints supported by create dataset statement.

@@ -16,7 +16,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-tools</artifactId>
@@ -56,7 +56,7 @@
 							<classifier>aqlclient</classifier>
 							<archive>
 								<manifest>
-									<MainClass>edu.uci.ics.asterix.tools.aqlclient.AqlClient</MainClass>
+									<MainClass>org.apache.asterix.tools.aqlclient.AqlClient</MainClass>
 								</manifest>
 							</archive>
 							<includes>
@@ -75,11 +75,11 @@
 						<configuration>
 							<programs>
 								<program>
-									<mainClass>edu.uci.ics.asterix.tools.TblToAdm</mainClass>
+									<mainClass>org.apache.asterix.tools.TblToAdm</mainClass>
 									<name>tbl2adm</name>
 								</program>
 								<program>
-									<mainClass>edu.uci.ics.asterix.tools.datagen.AdgClientDriver</mainClass>
+									<mainClass>org.apache.asterix.tools.datagen.AdgClientDriver</mainClass>
 									<name>adg</name>
 								</program>
 							</programs>
@@ -144,37 +144,37 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-aql</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-algebra</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-external-data</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>

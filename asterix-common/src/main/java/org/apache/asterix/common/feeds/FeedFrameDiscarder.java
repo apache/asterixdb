@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class FeedFrameDiscarder {
 

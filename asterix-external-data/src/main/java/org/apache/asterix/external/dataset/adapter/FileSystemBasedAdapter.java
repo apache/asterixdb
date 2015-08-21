@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.dataset.adapter;
+package org.apache.asterix.external.dataset.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.file.ITupleParser;
+import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public abstract class FileSystemBasedAdapter implements IDatasourceAdapter {
 

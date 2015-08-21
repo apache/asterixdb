@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.aoya;
+package org.apache.asterix.aoya;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -76,12 +76,12 @@ import org.apache.hadoop.yarn.util.Records;
 
 import com.google.common.collect.ImmutableMap;
 
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.common.configuration.Coredump;
-import edu.uci.ics.asterix.common.configuration.Store;
-import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Cluster;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Node;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.common.configuration.Coredump;
+import org.apache.asterix.common.configuration.Store;
+import org.apache.asterix.common.configuration.TransactionLogDir;
+import org.apache.asterix.event.schema.yarnCluster.Cluster;
+import org.apache.asterix.event.schema.yarnCluster.Node;
 
 @InterfaceAudience.Public
 @InterfaceStability.Unstable
@@ -147,7 +147,7 @@ public class AsterixYARNClient {
     private int amMemory = 1000;
 
     // Main class to invoke application master
-    private final String appMasterMainClass = "edu.uci.ics.asterix.aoya.AsterixApplicationMaster";
+    private final String appMasterMainClass = "org.apache.asterix.aoya.AsterixApplicationMaster";
 
     //instance name
     private String instanceName = "";
@@ -1301,7 +1301,7 @@ public class AsterixYARNClient {
      */
     private void readConfigParams(AsterixConfiguration configuration){
         //this is the "base" config that is inside the zip, we start here
-        for (edu.uci.ics.asterix.common.configuration.Property property : configuration.getProperty()) {
+        for (org.apache.asterix.common.configuration.Property property : configuration.getProperty()) {
             if (property.getName().equalsIgnoreCase(CC_JAVA_OPTS_KEY)) {
                 ccJavaOpts = property.getValue();
             } else if (property.getName().equalsIgnoreCase(NC_JAVA_OPTS_KEY)) {

@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.common.transactions;
+package org.apache.asterix.common.transactions;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.bloomfilter.impls.MurmurHash128Bit;
 
 public abstract class AbstractOperationCallback {
 

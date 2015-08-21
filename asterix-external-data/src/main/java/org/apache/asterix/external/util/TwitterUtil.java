@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.util;
+package org.apache.asterix.external.util;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import twitter4j.TwitterFactory;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public class TwitterUtil {
 

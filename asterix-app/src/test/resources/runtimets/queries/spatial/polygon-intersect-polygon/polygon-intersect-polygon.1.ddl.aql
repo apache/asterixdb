@@ -9,5 +9,5 @@ create type MyRecord as open {
 }
 
 create external dataset MyData(MyRecord)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialData.json"),("format"="adm"));

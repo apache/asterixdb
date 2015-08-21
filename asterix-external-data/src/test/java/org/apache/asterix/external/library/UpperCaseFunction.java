@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package org.apache.asterix.external.library;
 
 import java.util.Random;
 
-import edu.uci.ics.asterix.external.library.java.JObjects.JInt;
-import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
-import edu.uci.ics.asterix.external.library.java.JObjects.JString;
-import edu.uci.ics.asterix.external.library.java.JTypeTag;
+import org.apache.asterix.external.library.java.JObjects.JInt;
+import org.apache.asterix.external.library.java.JObjects.JRecord;
+import org.apache.asterix.external.library.java.JObjects.JString;
+import org.apache.asterix.external.library.java.JTypeTag;
 
 /**
  * Accepts an input record of type Open{ id: int32, text: string }

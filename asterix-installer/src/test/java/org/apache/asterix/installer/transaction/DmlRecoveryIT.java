@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.transaction;
+package org.apache.asterix.installer.transaction;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -33,10 +33,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext;
-import edu.uci.ics.asterix.testframework.context.TestFileContext;
-import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 
 @RunWith(Parameterized.class)
 public class DmlRecoveryIT {

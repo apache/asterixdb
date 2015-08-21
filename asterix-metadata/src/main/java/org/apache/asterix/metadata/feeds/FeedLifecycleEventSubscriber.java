@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
 
 public class FeedLifecycleEventSubscriber implements IFeedLifecycleEventSubscriber {
 

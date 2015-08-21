@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.api;
+package org.apache.asterix.common.feeds.api;
 
 import java.io.IOException;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntime;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeManager;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedRuntime;
+import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.FeedRuntimeManager;
 
 /**
  * Handle (de)registration of feeds for delivery of control messages.

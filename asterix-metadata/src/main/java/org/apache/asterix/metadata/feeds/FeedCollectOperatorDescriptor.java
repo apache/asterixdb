@@ -12,30 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.IngestionRuntime;
-import edu.uci.ics.asterix.common.feeds.SubscribableFeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedSubscriptionManager;
-import edu.uci.ics.asterix.common.feeds.api.ISubscribableRuntime;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
-import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.IngestionRuntime;
+import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
 /**
  * FeedCollectOperatorDescriptor is responsible for ingesting data from an external source. This

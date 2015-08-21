@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base.temporal;
+package org.apache.asterix.om.base.temporal;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AsterixTemporalTypeParseException extends HyracksDataException {
 

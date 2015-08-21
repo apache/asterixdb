@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.model;
+package org.apache.asterix.event.model;
 
 import java.io.Serializable;
 import java.util.List;

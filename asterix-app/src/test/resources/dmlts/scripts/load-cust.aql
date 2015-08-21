@@ -27,5 +27,5 @@ create dataset Customers(CustomerType)
   primary key cid on group1;
 
 load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm")) pre-sorted;

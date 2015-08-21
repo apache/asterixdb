@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.common.transactions;
+package org.apache.asterix.common.transactions;
 
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.common.context.ITransactionSubsystemProvider;
-import edu.uci.ics.asterix.common.transactions.JobId;
+import org.apache.asterix.common.context.ITransactionSubsystemProvider;
+import org.apache.asterix.common.transactions.JobId;
 
 public abstract class AbstractOperationCallbackFactory implements Serializable {
     private static final long serialVersionUID = 1L;

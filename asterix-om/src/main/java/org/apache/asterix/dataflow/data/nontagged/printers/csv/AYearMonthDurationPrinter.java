@@ -12,27 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv;
+package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
 
 public class AYearMonthDurationPrinter implements IPrinter {
 
     public static final AYearMonthDurationPrinter INSTANCE = new AYearMonthDurationPrinter();
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.algebricks.data.IPrinter#init()
+     * @see org.apache.hyracks.algebricks.data.IPrinter#init()
      */
     @Override
     public void init() throws AlgebricksException {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
+     * @see org.apache.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
      */
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {

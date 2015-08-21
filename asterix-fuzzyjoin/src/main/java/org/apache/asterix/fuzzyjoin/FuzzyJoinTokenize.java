@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin;
+package org.apache.asterix.fuzzyjoin;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -32,11 +32,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.fuzzyjoin.tokenizer.Tokenizer;
-import edu.uci.ics.asterix.fuzzyjoin.tokenizer.TokenizerFactory;
-import edu.uci.ics.asterix.fuzzyjoin.tokenorder.TokenLoad;
-import edu.uci.ics.asterix.fuzzyjoin.tokenorder.TokenRank;
-import edu.uci.ics.asterix.fuzzyjoin.tokenorder.TokenRankFrequency;
+import org.apache.asterix.fuzzyjoin.tokenizer.Tokenizer;
+import org.apache.asterix.fuzzyjoin.tokenizer.TokenizerFactory;
+import org.apache.asterix.fuzzyjoin.tokenorder.TokenLoad;
+import org.apache.asterix.fuzzyjoin.tokenorder.TokenRank;
+import org.apache.asterix.fuzzyjoin.tokenorder.TokenRankFrequency;
 
 public class FuzzyJoinTokenize {
     public static class TokenCount implements Comparable {

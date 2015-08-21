@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
 import java.util.HashMap;
 
-import edu.uci.ics.asterix.lexergenerator.rulegenerators.*;
+import org.apache.asterix.lexergenerator.rulegenerators.*;
 
 public class NodeChainFactory {
     static private HashMap<String, RuleGenerator> ruleGenerators = new HashMap<String, RuleGenerator>();

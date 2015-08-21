@@ -16,5 +16,5 @@ create dataset Spatial2(SpatialType)
 	primary key id;
 
 load dataset Spatial2 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/spatialData.txt"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

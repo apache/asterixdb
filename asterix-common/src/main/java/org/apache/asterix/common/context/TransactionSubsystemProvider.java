@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.common.context;
+package org.apache.asterix.common.context;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.transactions.ITransactionSubsystem;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 /**
  * The purpose of this provider is to work around a cyclic dependency between asterix-common and asterix-transactions.

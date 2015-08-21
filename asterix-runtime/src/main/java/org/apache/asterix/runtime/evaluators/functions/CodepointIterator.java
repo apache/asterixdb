@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.evaluators.functions;
+package org.apache.asterix.runtime.evaluators.functions;
 
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class CodepointIterator {
     public void reset(byte[] buf, int startPos) {

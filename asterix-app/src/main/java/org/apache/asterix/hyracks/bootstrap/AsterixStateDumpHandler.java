@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.hyracks.bootstrap;
+package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,8 +21,8 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import edu.uci.ics.hyracks.api.application.IStateDumpHandler;
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.application.IStateDumpHandler;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 
 public class AsterixStateDumpHandler implements IStateDumpHandler {
     private final String nodeId;

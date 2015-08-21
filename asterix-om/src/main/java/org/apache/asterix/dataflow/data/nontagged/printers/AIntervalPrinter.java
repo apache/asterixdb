@@ -12,28 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
+package org.apache.asterix.dataflow.data.nontagged.printers;
 
 import java.io.PrintStream;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
 
 public class AIntervalPrinter implements IPrinter {
 
     public static final AIntervalPrinter INSTANCE = new AIntervalPrinter();
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.algebricks.data.IPrinter#init()
+     * @see org.apache.hyracks.algebricks.data.IPrinter#init()
      */
     @Override
     public void init() throws AlgebricksException {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
+     * @see org.apache.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
      */
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {

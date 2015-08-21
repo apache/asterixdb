@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.declared;
+package org.apache.asterix.metadata.declared;
 
-import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.dataset.ResultSetId;
 
 public class ResultSetSinkId {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.api.IMessageReceiver;
+import org.apache.asterix.common.feeds.api.IMessageReceiver;
 
 public abstract class MessageReceiver<T> implements IMessageReceiver<T> {
 

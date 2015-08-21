@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin.tokenorder;
+package org.apache.asterix.fuzzyjoin.tokenorder;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.fuzzyjoin.FuzzyJoinConfig;
+import org.apache.asterix.fuzzyjoin.FuzzyJoinConfig;
 
 public class TokenLoad implements Serializable {
     private final String path;

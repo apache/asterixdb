@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin;
+package org.apache.asterix.fuzzyjoin;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -30,9 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.fuzzyjoin.invertedlist.InvertedListLengthList;
-import edu.uci.ics.asterix.fuzzyjoin.invertedlist.InvertedListsLengthList;
-import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
+import org.apache.asterix.fuzzyjoin.invertedlist.InvertedListLengthList;
+import org.apache.asterix.fuzzyjoin.invertedlist.InvertedListsLengthList;
+import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 
 public class FuzzyJoinMemory {
     public static void main(String[] args) {

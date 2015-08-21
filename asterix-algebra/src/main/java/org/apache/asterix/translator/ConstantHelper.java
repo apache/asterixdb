@@ -12,22 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.translator;
+package org.apache.asterix.translator;
 
-import edu.uci.ics.asterix.aql.base.Literal;
-import edu.uci.ics.asterix.aql.literal.DoubleLiteral;
-import edu.uci.ics.asterix.aql.literal.FloatLiteral;
-import edu.uci.ics.asterix.aql.literal.IntegerLiteral;
-import edu.uci.ics.asterix.aql.literal.LongIntegerLiteral;
-import edu.uci.ics.asterix.aql.literal.StringLiteral;
-import edu.uci.ics.asterix.om.base.ABoolean;
-import edu.uci.ics.asterix.om.base.ADouble;
-import edu.uci.ics.asterix.om.base.AFloat;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AInt64;
-import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.AString;
-import edu.uci.ics.asterix.om.base.IAObject;
+import org.apache.asterix.aql.base.Literal;
+import org.apache.asterix.aql.literal.DoubleLiteral;
+import org.apache.asterix.aql.literal.FloatLiteral;
+import org.apache.asterix.aql.literal.IntegerLiteral;
+import org.apache.asterix.aql.literal.LongIntegerLiteral;
+import org.apache.asterix.aql.literal.StringLiteral;
+import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 
 public final class ConstantHelper {
 

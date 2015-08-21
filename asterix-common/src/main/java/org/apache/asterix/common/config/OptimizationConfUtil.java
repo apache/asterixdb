@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.config;
+package org.apache.asterix.common.config;
 
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 
 public class OptimizationConfUtil {
 

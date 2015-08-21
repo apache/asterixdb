@@ -12,26 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package org.apache.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.java.JObjects.JBoolean;
-import edu.uci.ics.asterix.external.library.java.JObjects.JCircle;
-import edu.uci.ics.asterix.external.library.java.JObjects.JDate;
-import edu.uci.ics.asterix.external.library.java.JObjects.JDateTime;
-import edu.uci.ics.asterix.external.library.java.JObjects.JDouble;
-import edu.uci.ics.asterix.external.library.java.JObjects.JDuration;
-import edu.uci.ics.asterix.external.library.java.JObjects.JFloat;
-import edu.uci.ics.asterix.external.library.java.JObjects.JInt;
-import edu.uci.ics.asterix.external.library.java.JObjects.JLine;
-import edu.uci.ics.asterix.external.library.java.JObjects.JOrderedList;
-import edu.uci.ics.asterix.external.library.java.JObjects.JPoint;
-import edu.uci.ics.asterix.external.library.java.JObjects.JPoint3D;
-import edu.uci.ics.asterix.external.library.java.JObjects.JPolygon;
-import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
-import edu.uci.ics.asterix.external.library.java.JObjects.JString;
-import edu.uci.ics.asterix.external.library.java.JObjects.JTime;
-import edu.uci.ics.asterix.external.library.java.JObjects.JUnorderedList;
-import edu.uci.ics.asterix.external.library.java.JTypeTag;
+import org.apache.asterix.external.library.java.JObjects.JBoolean;
+import org.apache.asterix.external.library.java.JObjects.JCircle;
+import org.apache.asterix.external.library.java.JObjects.JDate;
+import org.apache.asterix.external.library.java.JObjects.JDateTime;
+import org.apache.asterix.external.library.java.JObjects.JDouble;
+import org.apache.asterix.external.library.java.JObjects.JDuration;
+import org.apache.asterix.external.library.java.JObjects.JFloat;
+import org.apache.asterix.external.library.java.JObjects.JInt;
+import org.apache.asterix.external.library.java.JObjects.JLine;
+import org.apache.asterix.external.library.java.JObjects.JOrderedList;
+import org.apache.asterix.external.library.java.JObjects.JPoint;
+import org.apache.asterix.external.library.java.JObjects.JPoint3D;
+import org.apache.asterix.external.library.java.JObjects.JPolygon;
+import org.apache.asterix.external.library.java.JObjects.JRecord;
+import org.apache.asterix.external.library.java.JObjects.JString;
+import org.apache.asterix.external.library.java.JObjects.JTime;
+import org.apache.asterix.external.library.java.JObjects.JUnorderedList;
+import org.apache.asterix.external.library.java.JTypeTag;
 
 public class AllTypesFunction implements IExternalScalarFunction {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.adapter.factory;
+package org.apache.asterix.external.adapter.factory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,27 +30,27 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
-import edu.uci.ics.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactory;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.api.context.ICCContext;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
-import edu.uci.ics.hyracks.hdfs.dataflow.InputSplitsFactory;
-import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
+import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
+import org.apache.asterix.external.indexing.dataflow.HDFSObjectTupleParserFactory;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.api.context.ICCContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.hdfs.dataflow.ConfFactory;
+import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
+import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
 /**
  * A factory class for creating an instance of HDFSAdapter

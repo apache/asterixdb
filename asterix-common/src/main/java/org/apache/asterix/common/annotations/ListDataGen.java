@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.annotations;
+package org.apache.asterix.common.annotations;
 
 public class ListDataGen implements IRecordFieldDataGen {
 

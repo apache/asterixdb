@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.test;
+package org.apache.asterix.tools.test;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,8 +30,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import edu.uci.ics.asterix.test.base.AsterixTestHelper;
-import edu.uci.ics.asterix.tools.datagen.AdmDataGen;
+import org.apache.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.tools.datagen.AdmDataGen;
 
 @RunWith(Parameterized.class)
 public class AdmDataGenTest {

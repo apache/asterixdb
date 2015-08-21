@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.declared;
+package org.apache.asterix.metadata.declared;
 
 public class AqlMetadataImplConfig {
     private final boolean useInstantLock;

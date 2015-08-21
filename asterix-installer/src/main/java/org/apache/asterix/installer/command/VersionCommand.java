@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import java.io.File;
 
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.installer.driver.InstallerDriver;
 
 public class VersionCommand extends AbstractCommand {
 

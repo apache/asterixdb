@@ -33,7 +33,7 @@ declare type AddressType as open {
 
 declare nodegroup group1 on nc1, nc2;
 
-set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset All(ExampleType)
   primary key id on group1;

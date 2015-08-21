@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,17 +24,17 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.AsterixFeedProperties;
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessageService;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.Mode;
-import edu.uci.ics.asterix.common.feeds.api.IFrameEventCallback;
-import edu.uci.ics.asterix.common.feeds.api.IFrameEventCallback.FrameEvent;
-import edu.uci.ics.asterix.common.feeds.message.FeedReportMessage;
-import edu.uci.ics.asterix.common.feeds.message.ScaleInReportMessage;
-import edu.uci.ics.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedMessageService;
+import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
+import org.apache.asterix.common.feeds.api.IFrameEventCallback;
+import org.apache.asterix.common.feeds.api.IFrameEventCallback.FrameEvent;
+import org.apache.asterix.common.feeds.message.FeedReportMessage;
+import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
+import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
 
 public class MonitoredBufferTimerTasks {
 

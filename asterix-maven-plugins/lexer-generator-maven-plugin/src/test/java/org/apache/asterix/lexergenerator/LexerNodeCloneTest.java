@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.createRule;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.ruleA;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.ruleB;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token2_name;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_name;
+import static org.apache.asterix.lexergenerator.Fixtures.createRule;
+import static org.apache.asterix.lexergenerator.Fixtures.ruleA;
+import static org.apache.asterix.lexergenerator.Fixtures.ruleB;
+import static org.apache.asterix.lexergenerator.Fixtures.token2_name;
+import static org.apache.asterix.lexergenerator.Fixtures.token_name;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 

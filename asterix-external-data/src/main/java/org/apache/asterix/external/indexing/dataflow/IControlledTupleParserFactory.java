@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.dataflow;
+package org.apache.asterix.external.indexing.dataflow;
 
 public interface IControlledTupleParserFactory {
     public IControlledTupleParser createTupleParser();

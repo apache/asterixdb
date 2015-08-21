@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package org.apache.asterix.transaction.management.service.locking;
 
 import java.util.HashMap;
 
-import edu.uci.ics.asterix.common.transactions.DatasetId;
-import edu.uci.ics.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.DatasetId;
+import org.apache.asterix.common.transactions.JobId;
 
 /**
  * @author pouria, kisskys Performing a BFS search, upon adding each waiter to a waiting

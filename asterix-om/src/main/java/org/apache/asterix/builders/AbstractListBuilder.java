@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.builders;
+package org.apache.asterix.builders;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
-import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
-import edu.uci.ics.hyracks.data.std.util.GrowableArray;
-import edu.uci.ics.hyracks.storage.am.common.ophelpers.IntArrayList;
+import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.storage.am.common.ophelpers.IntArrayList;
 
 public abstract class AbstractListBuilder implements IAsterixListBuilder {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.util;
+package org.apache.asterix.external.util;
 
 /**
  * Identity resolver simply resolves a value to itself and is useful when value being resolved

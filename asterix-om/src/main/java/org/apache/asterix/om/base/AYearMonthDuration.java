@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.visitors.IOMVisitor;
 
 /**
  * AYearMonthDuration represents the duration in the unit of months.
@@ -43,7 +43,7 @@ public class AYearMonthDuration implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.api.dataflow.value.JSONSerializable#toJSON()
+     * @see org.apache.hyracks.api.dataflow.value.JSONSerializable#toJSON()
      */
     @Override
     public JSONObject toJSON() throws JSONException {
@@ -57,7 +57,7 @@ public class AYearMonthDuration implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#getType()
+     * @see org.apache.asterix.om.base.IAObject#getType()
      */
     @Override
     public IAType getType() {
@@ -65,7 +65,7 @@ public class AYearMonthDuration implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#accept(edu.uci.ics.asterix.om.visitors.IOMVisitor)
+     * @see org.apache.asterix.om.base.IAObject#accept(org.apache.asterix.om.visitors.IOMVisitor)
      */
     @Override
     public void accept(IOMVisitor visitor) throws AsterixException {
@@ -73,7 +73,7 @@ public class AYearMonthDuration implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#deepEqual(edu.uci.ics.asterix.om.base.IAObject)
+     * @see org.apache.asterix.om.base.IAObject#deepEqual(org.apache.asterix.om.base.IAObject)
      */
     @Override
     public boolean deepEqual(IAObject obj) {
@@ -81,7 +81,7 @@ public class AYearMonthDuration implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#hash()
+     * @see org.apache.asterix.om.base.IAObject#hash()
      */
     @Override
     public int hash() {

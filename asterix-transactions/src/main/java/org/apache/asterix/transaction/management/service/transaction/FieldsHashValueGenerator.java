@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.service.transaction;
+package org.apache.asterix.transaction.management.service.transaction;
 
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class FieldsHashValueGenerator {
     public static int computeFieldsHashValue(ITupleReference tuple, int[] fieldIndexes,

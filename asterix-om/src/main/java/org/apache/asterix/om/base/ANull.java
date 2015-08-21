@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.visitors.IOMVisitor;
 
 // We should avoid representing nulls explicitly. This class is for cases when it is
 // harder not to.

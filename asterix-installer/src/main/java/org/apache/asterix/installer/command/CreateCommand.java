@@ -12,26 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import java.io.File;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
-import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.event.util.PatternCreator;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.event.error.VerificationUtil;
+import org.apache.asterix.event.management.AsterixEventServiceClient;
+import org.apache.asterix.event.management.EventUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixRuntimeState;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.event.util.PatternCreator;
+import org.apache.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.installer.driver.InstallerUtil;
 
 public class CreateCommand extends AbstractCommand {
 

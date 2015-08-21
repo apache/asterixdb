@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.valueextractors;
+package org.apache.asterix.metadata.valueextractors;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.api.IValueExtractor;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
-import edu.uci.ics.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.api.IValueExtractor;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
+import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
 /**
  * Returns a copy of the given input tuple.

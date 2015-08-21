@@ -14,12 +14,12 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Alexander Behm <abehm (at) ics.uci.edu>
+ * Author: Alexander Behm <abehm (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin.similarity;
+package org.apache.asterix.fuzzyjoin.similarity;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IListIterator {
     public int compare(IListIterator cmpIter) throws HyracksDataException;

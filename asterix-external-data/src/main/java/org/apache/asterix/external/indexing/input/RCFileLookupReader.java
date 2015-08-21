@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.input;
+package org.apache.asterix.external.indexing.input;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,9 +26,9 @@ import org.apache.hadoop.hive.serde2.columnar.BytesRefArrayWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.external.ExternalFileIndexAccessor;
+import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
 
 public class RCFileLookupReader {
     private FileSystem fs;

@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
+package org.apache.asterix.dataflow.data.nontagged.printers;
 
 import java.io.PrintStream;
 import java.util.List;
 
-import edu.uci.ics.asterix.formats.nontagged.AqlPrinterFactoryProvider;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.asterix.formats.nontagged.AqlPrinterFactoryProvider;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
 public class AUnionPrinterFactory implements IPrinterFactory {
 

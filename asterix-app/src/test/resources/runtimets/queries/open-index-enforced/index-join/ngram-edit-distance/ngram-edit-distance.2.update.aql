@@ -7,11 +7,11 @@
 use dataverse test;
 
 load dataset Customerstmp
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
 
 load dataset Customers2
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/semistructured/co1k_olist/customer.adm"),("format"="adm"));
 
 insert into dataset Customers

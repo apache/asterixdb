@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.constants;
+package org.apache.asterix.om.constants;
 
-import edu.uci.ics.asterix.om.base.ABoolean;
-import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
+import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 
 public class AsterixConstantValue implements IAlgebricksConstantValue {
 

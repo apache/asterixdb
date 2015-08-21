@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.test;
+package org.apache.asterix.installer.test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,16 +28,16 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.installer.command.CommandHandler;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.schema.conf.Configuration;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import org.apache.asterix.event.error.VerificationUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.model.AsterixRuntimeState;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.installer.command.CommandHandler;
+import org.apache.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.installer.schema.conf.Configuration;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 
 public class AsterixInstallerIntegrationUtil {
 

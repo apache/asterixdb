@@ -13,10 +13,10 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
+package org.apache.asterix.dataflow.data.nontagged.printers;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;
 
 import javax.xml.bind.DatatypeConverter;

@@ -4,6 +4,6 @@ set import-private-functions 'true';
 for $l in [1]
 return subset-collection([1, 2, 3, 4], 1, 2)
 /*
-edu.uci.ics.asterix.common.exceptions.AsterixException: Trying to create an aggregate from a scalar function descriptor. (fid=subset-collection@3)
-        at edu.uci.ics.asterix.algebra.expressions.FunctionCallExpression.createEvaluatorFactory(FunctionCallExpression.java:85)
+org.apache.asterix.common.exceptions.AsterixException: Trying to create an aggregate from a scalar function descriptor. (fid=subset-collection@3)
+        at org.apache.asterix.algebra.expressions.FunctionCallExpression.createEvaluatorFactory(FunctionCallExpression.java:85)
 */

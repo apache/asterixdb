@@ -15,7 +15,7 @@
 /**
  *
  */
-package edu.uci.ics.asterix.aql.expression;
+package org.apache.asterix.aql.expression;
 
 public class AdmSplitInfo {
     public Identifier nodeName;

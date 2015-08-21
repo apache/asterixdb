@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.utils;
+package org.apache.asterix.metadata.utils;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import edu.uci.ics.asterix.om.base.AMutableInt32;
+import org.apache.asterix.om.base.AMutableInt32;
 
 public class DatasetLock {
 

@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.context;
+package org.apache.asterix.aql.context;
 
-import edu.uci.ics.asterix.aql.parser.ScopeChecker;
+import org.apache.asterix.aql.parser.ScopeChecker;
 
 public class RootScopeFactory {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.dataset.adapter;
+package org.apache.asterix.external.dataset.adapter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,17 +24,17 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 
-import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
-import edu.uci.ics.asterix.external.indexing.input.GenericFileAwareRecordReader;
-import edu.uci.ics.asterix.external.indexing.input.GenericRecordReader;
-import edu.uci.ics.asterix.external.indexing.input.TextualDataReader;
-import edu.uci.ics.asterix.external.indexing.input.TextualFullScanDataReader;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
+import org.apache.asterix.external.indexing.input.GenericFileAwareRecordReader;
+import org.apache.asterix.external.indexing.input.GenericRecordReader;
+import org.apache.asterix.external.indexing.input.TextualDataReader;
+import org.apache.asterix.external.indexing.input.TextualFullScanDataReader;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 /**
  * Provides functionality for fetching external data stored in an HDFS instance.

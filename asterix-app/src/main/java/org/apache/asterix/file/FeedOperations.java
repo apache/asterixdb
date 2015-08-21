@@ -12,40 +12,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.file;
+package org.apache.asterix.file;
 
 import java.util.Collection;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.FeedConnectJobInfo;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedConstants;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
-import edu.uci.ics.asterix.common.feeds.FeedTupleCommitResponseMessage;
-import edu.uci.ics.asterix.common.feeds.api.IFeedJoint;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessage;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.message.EndFeedMessage;
-import edu.uci.ics.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
-import edu.uci.ics.asterix.feeds.FeedLifecycleListener;
-import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.entities.PrimaryFeed;
-import edu.uci.ics.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.PrepareStallMessage;
-import edu.uci.ics.asterix.metadata.feeds.TerminateDataFlowMessage;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.FeedConnectJobInfo;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConstants;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.feeds.FeedTupleCommitResponseMessage;
+import org.apache.asterix.common.feeds.api.IFeedJoint;
+import org.apache.asterix.common.feeds.api.IFeedMessage;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.message.EndFeedMessage;
+import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
+import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.PrimaryFeed;
+import org.apache.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
+import org.apache.asterix.metadata.feeds.PrepareStallMessage;
+import org.apache.asterix.metadata.feeds.TerminateDataFlowMessage;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 
 /**
  * Provides helper method(s) for creating JobSpec for operations on a feed.

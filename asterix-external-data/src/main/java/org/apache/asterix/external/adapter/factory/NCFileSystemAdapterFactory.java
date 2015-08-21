@@ -12,31 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.adapter.factory;
+package org.apache.asterix.external.adapter.factory;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.api.IDatasourceAdapter;
-import edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter;
-import edu.uci.ics.asterix.external.util.DNSResolverFactory;
-import edu.uci.ics.asterix.external.util.INodeResolver;
-import edu.uci.ics.asterix.external.util.INodeResolverFactory;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.api.IDatasourceAdapter;
+import org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter;
+import org.apache.asterix.external.util.DNSResolverFactory;
+import org.apache.asterix.external.util.INodeResolver;
+import org.apache.asterix.external.util.INodeResolverFactory;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 /**
  * Factory class for creating an instance of NCFileSystemAdapter. An

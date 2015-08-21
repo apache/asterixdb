@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.util;
+package org.apache.asterix.om.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +22,13 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.JSONDeserializerForTypes;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.JSONDeserializerForTypes;
 
 @SuppressWarnings("deprecation")
 public class JSONDeserializerForTypesTest {

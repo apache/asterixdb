@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package org.apache.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.IExternalScalarFunction;
-import edu.uci.ics.asterix.external.library.IFunctionHelper;
-import edu.uci.ics.asterix.external.library.java.JObjects.JInt;
+import org.apache.asterix.external.library.IExternalScalarFunction;
+import org.apache.asterix.external.library.IFunctionHelper;
+import org.apache.asterix.external.library.java.JObjects.JInt;
 
 public class SumFunction implements IExternalScalarFunction {
 

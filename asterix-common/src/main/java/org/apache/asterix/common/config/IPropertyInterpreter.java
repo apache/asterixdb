@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.config;
+package org.apache.asterix.common.config;
 
-import edu.uci.ics.asterix.common.configuration.Property;
+import org.apache.asterix.common.configuration.Property;
 
 public interface IPropertyInterpreter<T> {
     public T interpret(Property p) throws IllegalArgumentException;

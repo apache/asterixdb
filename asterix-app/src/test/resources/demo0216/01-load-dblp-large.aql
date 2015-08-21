@@ -15,5 +15,5 @@ declare dataset DBLP(DBLPType)
  primary key id on group1;
 
 load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="rainbow-01:///home/hyracks/demo-data/dblp-id.txt"),("format"="delimited-text"),("delimiter"=":") pre-sorted;

@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin;
+package org.apache.asterix.fuzzyjoin;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;

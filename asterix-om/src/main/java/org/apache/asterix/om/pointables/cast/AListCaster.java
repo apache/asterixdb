@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables.cast;
+package org.apache.asterix.om.pointables.cast;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-import edu.uci.ics.asterix.builders.OrderedListBuilder;
-import edu.uci.ics.asterix.builders.UnorderedListBuilder;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.PointableAllocator;
-import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.ResettableByteArrayOutputStream;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.builders.UnorderedListBuilder;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.AListVisitablePointable;
+import org.apache.asterix.om.pointables.PointableAllocator;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.ResettableByteArrayOutputStream;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 
 /**
  * This class is to do the runtime type cast for a list. It is ONLY visible to

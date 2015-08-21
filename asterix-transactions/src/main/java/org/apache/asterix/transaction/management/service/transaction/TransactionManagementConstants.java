@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.transaction;
+package org.apache.asterix.transaction.management.service.transaction;
 
 /**
  * Represents a umbrella class containing constant that are used by transaction

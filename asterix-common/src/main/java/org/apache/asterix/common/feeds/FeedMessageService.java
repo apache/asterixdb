@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.config.AsterixFeedProperties;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessage;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessageService;
+import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.feeds.api.IFeedMessage;
+import org.apache.asterix.common.feeds.api.IFeedMessageService;
 
 /**
  * Sends feed report messages on behalf of an operator instance

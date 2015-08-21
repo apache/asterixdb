@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.optimizer.handle;
+package org.apache.asterix.optimizer.handle;
 
 /**
  * A handle is a way of accessing an ADM instance or a collection of ADM

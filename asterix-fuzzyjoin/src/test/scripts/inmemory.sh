@@ -21,7 +21,7 @@ FUZZYJOIN="/home/rares/fuzzyjoin/fuzzyjoin-core/target/fuzzyjoin-core-0.0.2-SNAP
 
 echo "-- - Step 0: Project and append length - --"
 
-# java -cp $FUZZYJOIN edu.uci.ics.fuzzyjoin.FuzzyJoinAppendLength $DATA/part-00000 $DATA/part-00000-len
+# java -cp $FUZZYJOIN org.apache.fuzzyjoin.FuzzyJoinAppendLength $DATA/part-00000 $DATA/part-00000-len
 
 date
 
@@ -33,11 +33,11 @@ echo "-- - Step 1: Sort by length - --"
 
 echo "-- - Step 2: Tokenize - --"
 
-# time java -cp $FUZZYJOIN edu.uci.ics.fuzzyjoin.FuzzyJoinTokenize $DATA/part-00000-len-sorted $DATA/part-00000-tokens $DATA/part-00000-tokenized
+# time java -cp $FUZZYJOIN org.apache.fuzzyjoin.FuzzyJoinTokenize $DATA/part-00000-len-sorted $DATA/part-00000-tokens $DATA/part-00000-tokenized
 
 echo "-- - Step 3: RID pairs - --"
 
-time java -Xmx8g -cp $FUZZYJOIN edu.uci.ics.fuzzyjoin.FuzzyJoinMemory .8 $DATA/part-00000-tokenized > $DATA/part-00000-ridpairs
+time java -Xmx8g -cp $FUZZYJOIN org.apache.fuzzyjoin.FuzzyJoinMemory .8 $DATA/part-00000-tokenized > $DATA/part-00000-ridpairs
 
 echo "== END =="
 

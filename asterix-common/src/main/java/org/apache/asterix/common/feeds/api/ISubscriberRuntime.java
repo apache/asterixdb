@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.api;
+package org.apache.asterix.common.feeds.api;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.feeds.FeedFrameCollector;
+import org.apache.asterix.common.feeds.FeedFrameCollector;
 
 public interface ISubscriberRuntime {
 

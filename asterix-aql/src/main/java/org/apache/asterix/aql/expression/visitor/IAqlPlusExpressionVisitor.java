@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.expression.visitor;
+package org.apache.asterix.aql.expression.visitor;
 
-import edu.uci.ics.asterix.aql.expression.JoinClause;
-import edu.uci.ics.asterix.aql.expression.MetaVariableClause;
-import edu.uci.ics.asterix.aql.expression.MetaVariableExpr;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.aql.expression.JoinClause;
+import org.apache.asterix.aql.expression.MetaVariableClause;
+import org.apache.asterix.aql.expression.MetaVariableExpr;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public interface IAqlPlusExpressionVisitor<R, T> extends IAqlExpressionVisitor<R, T> {
     R visitJoinClause(JoinClause c, T arg) throws AsterixException;

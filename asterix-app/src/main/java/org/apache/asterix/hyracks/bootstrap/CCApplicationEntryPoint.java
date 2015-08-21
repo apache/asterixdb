@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.hyracks.bootstrap;
+package org.apache.asterix.hyracks.bootstrap;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,37 +22,37 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 
-import edu.uci.ics.asterix.api.http.servlet.APIServlet;
-import edu.uci.ics.asterix.api.http.servlet.AQLAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.ConnectorAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.DDLAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.FeedServlet;
-import edu.uci.ics.asterix.api.http.servlet.QueryAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.QueryResultAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.QueryStatusAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.ShutdownAPIServlet;
-import edu.uci.ics.asterix.api.http.servlet.UpdateAPIServlet;
-import edu.uci.ics.asterix.common.api.AsterixThreadFactory;
-import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
-import edu.uci.ics.asterix.common.feeds.api.ICentralFeedManager;
-import edu.uci.ics.asterix.feeds.CentralFeedManager;
-import edu.uci.ics.asterix.feeds.FeedLifecycleListener;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.api.IAsterixStateProxy;
-import edu.uci.ics.asterix.metadata.bootstrap.AsterixStateProxy;
-import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.api.application.ICCApplicationEntryPoint;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.asterix.api.http.servlet.APIServlet;
+import org.apache.asterix.api.http.servlet.AQLAPIServlet;
+import org.apache.asterix.api.http.servlet.ConnectorAPIServlet;
+import org.apache.asterix.api.http.servlet.DDLAPIServlet;
+import org.apache.asterix.api.http.servlet.FeedServlet;
+import org.apache.asterix.api.http.servlet.QueryAPIServlet;
+import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
+import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
+import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
+import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
+import org.apache.asterix.common.api.AsterixThreadFactory;
+import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.feeds.api.ICentralFeedManager;
+import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.api.IAsterixStateProxy;
+import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
+import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 
 public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
 
-    private static final String HYRACKS_CONNECTION_ATTR = "edu.uci.ics.asterix.HYRACKS_CONNECTION";
+    private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
 
     private Server webServer;
     private Server jsonAPIServer;

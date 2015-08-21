@@ -44,6 +44,6 @@ create dataset test1.t3(testtype) primary key id;
 create dataset test2.t4(testtype) primary key id;
 
 create external dataset test1.TwitterData(Tweet)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
 

@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.declared;
+package org.apache.asterix.metadata.declared;
 
 import java.util.ArrayList;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlanAndMetadata;
 
 public class AqlLogicalPlanAndMetadataImpl implements ILogicalPlanAndMetadata {
 

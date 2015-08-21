@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.evaluators.functions;
+package org.apache.asterix.runtime.evaluators.functions;
 
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
-import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
 
@@ -32,7 +32,7 @@ public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
     };
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateInteger(long, long)
+     * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateInteger(long, long)
      */
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
@@ -47,7 +47,7 @@ public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateDouble(double, double)
+     * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateDouble(double, double)
      */
     @Override
     protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
@@ -55,7 +55,7 @@ public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.functions.AbstractFunctionDescriptor#getIdentifier()
+     * @see org.apache.asterix.om.functions.AbstractFunctionDescriptor#getIdentifier()
      */
     @Override
     public FunctionIdentifier getIdentifier() {

@@ -13,5 +13,5 @@ create type SpatialType as open {
 }
 
 create external dataset Spatial(SpatialType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/spatialData.json"),("format"="adm"));

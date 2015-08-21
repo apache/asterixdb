@@ -13,7 +13,7 @@ declare dataset Visitors(VisitorType)
   primary key vid on group1;
 
 load dataset Visitors 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///asterix/asterix-app/data/users-visitors-small/visitors.json"),("format"="asm")) pre-sorted;
 
 

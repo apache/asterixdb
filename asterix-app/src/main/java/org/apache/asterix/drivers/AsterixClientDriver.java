@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.drivers;
+package org.apache.asterix.drivers;
 
 import java.io.FileReader;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.asterix.api.common.AsterixClientConfig;
-import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
+import org.apache.asterix.api.common.AsterixClientConfig;
+import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 
 public class AsterixClientDriver {
 

@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 
@@ -53,7 +53,7 @@
 							<schemaIncludes>
 								<include>library.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.external.library</generatePackage>
+							<generatePackage>org.apache.asterix.external.library</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
 						</configuration>
 					</execution>
@@ -103,28 +103,28 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-runtime</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
@@ -168,7 +168,7 @@
 			<version>1.0.1-modified-01</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
 			<version>${hyracks.version}</version>
 		</dependency>
@@ -178,7 +178,7 @@
 			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 		</dependency>

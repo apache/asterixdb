@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.util.container;
+package org.apache.asterix.om.util.container;
 
 /**
  * A factory interface to create objects.

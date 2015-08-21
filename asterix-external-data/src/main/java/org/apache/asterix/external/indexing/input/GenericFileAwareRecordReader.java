@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.input;
+package org.apache.asterix.external.indexing.input;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,7 +24,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.entities.ExternalFile;
 /**
  * This is a generic reader used for indexing external dataset or for performing full scan for external dataset with
  * a stored snapshot

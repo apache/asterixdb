@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import edu.uci.ics.asterix.lexergenerator.LexerNode;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.*;
+import org.apache.asterix.lexergenerator.LexerNode;
+import static org.apache.asterix.lexergenerator.Fixtures.*;
 
 public class LexerNodeAppendRuleTest {    
     @Test

@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.api;
+package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.feeds.CollectionRuntime;
-import edu.uci.ics.asterix.common.feeds.DistributeFeedFrameWriter;
-import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.asterix.common.feeds.CollectionRuntime;
+import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
+import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 /**
  * Represent a feed runtime whose output can be routed along other parallel path(s).

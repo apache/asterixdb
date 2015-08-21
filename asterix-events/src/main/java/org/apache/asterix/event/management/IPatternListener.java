@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.management;
+package org.apache.asterix.event.management;
 
 public interface IPatternListener {
 

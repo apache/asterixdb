@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.util;
+package org.apache.asterix.external.util;
 
 /**
  * Factory for creating an instance of @see {IdentityResolver}.

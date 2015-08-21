@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.opcallbacks;
+package org.apache.asterix.transaction.management.opcallbacks;
 
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
+import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 
 public class SecondaryIndexSearchOperationCallbackFactory implements ISearchOperationCallbackFactory {
 

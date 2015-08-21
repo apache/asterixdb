@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.testframework.xml;
+package org.apache.asterix.testframework.xml;
 
 import java.io.File;
 
@@ -22,8 +22,8 @@ public class TestSuiteParser {
     public TestSuiteParser() {
     }
 
-    public edu.uci.ics.asterix.testframework.xml.TestSuite parse(File testSuiteCatalog) throws Exception {
-        JAXBContext ctx = JAXBContext.newInstance(edu.uci.ics.asterix.testframework.xml.TestSuite.class);
-        return (edu.uci.ics.asterix.testframework.xml.TestSuite) ctx.createUnmarshaller().unmarshal(testSuiteCatalog);
+    public org.apache.asterix.testframework.xml.TestSuite parse(File testSuiteCatalog) throws Exception {
+        JAXBContext ctx = JAXBContext.newInstance(org.apache.asterix.testframework.xml.TestSuite.class);
+        return (org.apache.asterix.testframework.xml.TestSuite) ctx.createUnmarshaller().unmarshal(testSuiteCatalog);
     }
 }

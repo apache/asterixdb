@@ -8,11 +8,11 @@ declare type MyRecord as open {
 
 declare nodegroup group1 on nc1, nc2;
 
-set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset MyData(MyRecord)
   primary key id on group1;
 
 load dataset MyData 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///tmp/data.json"),("format"="adm")) pre-sorted;

@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.parser;
+package org.apache.asterix.aql.parser;
 
 import java.util.List;
 import java.util.Stack;
 
-import edu.uci.ics.asterix.aql.context.Scope;
-import edu.uci.ics.asterix.aql.expression.Identifier;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.Counter;
+import org.apache.asterix.aql.context.Scope;
+import org.apache.asterix.aql.expression.Identifier;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
 public abstract class ScopeChecker {
 

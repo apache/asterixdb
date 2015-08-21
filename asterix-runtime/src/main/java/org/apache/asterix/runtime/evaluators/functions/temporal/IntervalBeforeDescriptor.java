@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
+package org.apache.asterix.runtime.evaluators.functions.temporal;
 
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.asterix.om.functions.IFunctionDescriptor;
-import edu.uci.ics.asterix.om.functions.IFunctionDescriptorFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class IntervalBeforeDescriptor extends AbstractIntervalLogicFuncDescriptor {
 
@@ -33,7 +33,7 @@ public class IntervalBeforeDescriptor extends AbstractIntervalLogicFuncDescripto
     };
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.functions.IFunctionDescriptor#getIdentifier()
+     * @see org.apache.asterix.om.functions.IFunctionDescriptor#getIdentifier()
      */
     @Override
     public FunctionIdentifier getIdentifier() {

@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.utils;
+package org.apache.asterix.common.utils;
 
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 public class UTF8CharSequence implements CharSequence {
 

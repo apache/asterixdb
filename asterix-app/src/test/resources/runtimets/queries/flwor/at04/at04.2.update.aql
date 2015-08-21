@@ -7,5 +7,5 @@
 use dataverse test;
 
 load dataset Orders 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/orders-part1.tbl,nc2://data/tpch0.001/orders-part2.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

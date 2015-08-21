@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.util;
+package org.apache.asterix.external.util;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 /**
  * A policy for resolving a name to a node controller id.

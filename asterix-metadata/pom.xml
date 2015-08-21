@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-metadata</artifactId>
@@ -42,25 +42,25 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-runtime</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>compile</scope>
@@ -72,19 +72,19 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
 		</dependency>
                 <dependency>
-                        <groupId>edu.uci.ics.hyracks</groupId>
+                        <groupId>org.apache.hyracks</groupId>
                         <artifactId>hyracks-hdfs-core</artifactId>
                         <version>${hyracks.version}</version>
                 </dependency>

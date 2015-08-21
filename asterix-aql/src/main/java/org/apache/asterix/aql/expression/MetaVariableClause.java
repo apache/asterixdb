@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.expression;
+package org.apache.asterix.aql.expression;
 
-import edu.uci.ics.asterix.aql.base.Clause;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlPlusExpressionVisitor;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.aql.base.Clause;
+import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
+import org.apache.asterix.aql.expression.visitor.IAqlPlusExpressionVisitor;
+import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 public class MetaVariableClause implements Clause {
     private VarIdentifier var;

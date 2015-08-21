@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.api;
+package org.apache.asterix.metadata.api;
 
 import java.io.Serializable;
 import java.rmi.Remote;

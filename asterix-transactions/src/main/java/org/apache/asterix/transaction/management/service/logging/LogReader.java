@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.logging;
+package org.apache.asterix.transaction.management.service.logging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.transactions.ILogReader;
-import edu.uci.ics.asterix.common.transactions.ILogRecord;
-import edu.uci.ics.asterix.common.transactions.LogRecord;
-import edu.uci.ics.asterix.common.transactions.MutableLong;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.ILogReader;
+import org.apache.asterix.common.transactions.ILogRecord;
+import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.MutableLong;
 
 public class LogReader implements ILogReader {
 

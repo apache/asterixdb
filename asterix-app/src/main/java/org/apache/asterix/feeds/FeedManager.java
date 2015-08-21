@@ -12,28 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.config.AsterixFeedProperties;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.FeedMemoryManager;
-import edu.uci.ics.asterix.common.feeds.FeedMessageService;
-import edu.uci.ics.asterix.common.feeds.FeedMetricCollector;
-import edu.uci.ics.asterix.common.feeds.NodeLoadReportService;
-import edu.uci.ics.asterix.common.feeds.api.IFeedConnectionManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMemoryManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessageService;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMetadataManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMetricCollector;
-import edu.uci.ics.asterix.common.feeds.api.IFeedSubscriptionManager;
-import edu.uci.ics.asterix.metadata.feeds.FeedConnectionManager;
-import edu.uci.ics.asterix.metadata.feeds.FeedSubscriptionManager;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.FeedMemoryManager;
+import org.apache.asterix.common.feeds.FeedMessageService;
+import org.apache.asterix.common.feeds.FeedMetricCollector;
+import org.apache.asterix.common.feeds.NodeLoadReportService;
+import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
+import org.apache.asterix.common.feeds.api.IFeedMessageService;
+import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
+import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
+import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.asterix.metadata.feeds.FeedConnectionManager;
+import org.apache.asterix.metadata.feeds.FeedSubscriptionManager;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An implementation of the IFeedManager interface.

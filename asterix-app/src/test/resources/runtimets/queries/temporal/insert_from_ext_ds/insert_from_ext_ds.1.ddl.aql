@@ -20,5 +20,5 @@ create type testtype as open {
 }
 
 create external dataset testds(testtype)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/temporal/temporalData.json"),("format"="adm"));

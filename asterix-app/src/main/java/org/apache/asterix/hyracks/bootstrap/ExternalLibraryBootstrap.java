@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.hyracks.bootstrap;
+package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -29,21 +29,21 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.external.library.ExternalLibrary;
-import edu.uci.ics.asterix.external.library.LibraryAdapter;
-import edu.uci.ics.asterix.external.library.LibraryFunction;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter.AdapterType;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
-import edu.uci.ics.asterix.metadata.functions.ExternalLibraryManager;
-import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.external.library.ExternalLibrary;
+import org.apache.asterix.external.library.LibraryAdapter;
+import org.apache.asterix.external.library.LibraryFunction;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.entities.DatasourceAdapter;
+import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.feeds.AdapterIdentifier;
+import org.apache.asterix.metadata.functions.ExternalLibraryManager;
+import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class ExternalLibraryBootstrap {
 
@@ -106,24 +106,24 @@ public class ExternalLibraryBootstrap {
                 return false;
             }
 
-            edu.uci.ics.asterix.metadata.entities.Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx,
+            org.apache.asterix.metadata.entities.Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx,
                     dataverse, libraryName);
             if (library == null) {
                 return false;
             }
 
-            List<edu.uci.ics.asterix.metadata.entities.Function> functions = MetadataManager.INSTANCE
+            List<org.apache.asterix.metadata.entities.Function> functions = MetadataManager.INSTANCE
                     .getDataverseFunctions(mdTxnCtx, dataverse);
-            for (edu.uci.ics.asterix.metadata.entities.Function function : functions) {
+            for (org.apache.asterix.metadata.entities.Function function : functions) {
                 if (function.getName().startsWith(libraryName + "#")) {
                     MetadataManager.INSTANCE.dropFunction(mdTxnCtx, new FunctionSignature(dataverse,
                             function.getName(), function.getArity()));
                 }
             }
 
-            List<edu.uci.ics.asterix.metadata.entities.DatasourceAdapter> adapters = MetadataManager.INSTANCE
+            List<org.apache.asterix.metadata.entities.DatasourceAdapter> adapters = MetadataManager.INSTANCE
                     .getDataverseAdapters(mdTxnCtx, dataverse);
-            for (edu.uci.ics.asterix.metadata.entities.DatasourceAdapter adapter : adapters) {
+            for (org.apache.asterix.metadata.entities.DatasourceAdapter adapter : adapters) {
                 if (adapter.getAdapterIdentifier().getName().startsWith(libraryName + "#")) {
                     MetadataManager.INSTANCE.dropAdapter(mdTxnCtx, dataverse, adapter.getAdapterIdentifier().getName());
                 }
@@ -152,7 +152,7 @@ public class ExternalLibraryBootstrap {
         MetadataManager.INSTANCE.acquireWriteLatch();
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            edu.uci.ics.asterix.metadata.entities.Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(
+            org.apache.asterix.metadata.entities.Library libraryInMetadata = MetadataManager.INSTANCE.getLibrary(
                     mdTxnCtx, dataverse, libraryName);
             if (libraryInMetadata != null && !wasUninstalled) {
                 return;
@@ -185,7 +185,7 @@ public class ExternalLibraryBootstrap {
                     for (String arg : fargs) {
                         args.add(arg);
                     }
-                    edu.uci.ics.asterix.metadata.entities.Function f = new edu.uci.ics.asterix.metadata.entities.Function(
+                    org.apache.asterix.metadata.entities.Function f = new org.apache.asterix.metadata.entities.Function(
                             dataverse, libraryName + "#" + function.getName().trim(), args.size(), args, function
                                     .getReturnType().trim(), function.getDefinition().trim(), library.getLanguage()
                                     .trim(), function.getFunctionType().trim());
@@ -217,7 +217,7 @@ public class ExternalLibraryBootstrap {
                 LOGGER.info("Installed adapters contain in library :" + libraryName);
             }
 
-            MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new edu.uci.ics.asterix.metadata.entities.Library(dataverse,
+            MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new org.apache.asterix.metadata.entities.Library(dataverse,
                     libraryName));
 
             if (LOGGER.isLoggable(Level.INFO)) {

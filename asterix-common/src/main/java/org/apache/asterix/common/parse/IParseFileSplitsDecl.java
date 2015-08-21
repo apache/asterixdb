@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.parse;
+package org.apache.asterix.common.parse;
 
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public interface IParseFileSplitsDecl {
     public boolean isDelimitedFileFormat();

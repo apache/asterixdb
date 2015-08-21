@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package org.apache.asterix.transaction.management.service.locking;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
+import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 
 /**
  * EntityLockInfoManager provides EntityLockInfo arrays backed by ByteBuffer.

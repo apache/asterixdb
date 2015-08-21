@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.testframework.context;
+package org.apache.asterix.testframework.context;
 
 import java.io.File;
 

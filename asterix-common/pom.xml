@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-common</artifactId>
@@ -68,7 +68,7 @@
 							<schemaIncludes>
 								<include>asterix-conf.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.common.configuration</generatePackage>
+							<generatePackage>org.apache.asterix.common.configuration</generatePackage>
 							<bindingDirectory>src/main/resources/schema</bindingDirectory>
 							<bindingIncludes>
 								<bindingInclude>jaxb-bindings.xjb</bindingInclude>
@@ -102,7 +102,7 @@
 							<schemaIncludes>
 								<include>cluster.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.event.schema.cluster</generatePackage>
+							<generatePackage>org.apache.asterix.event.schema.cluster</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/cluster</generateDirectory>
 							<bindingDirectory>src/main/resources/schema</bindingDirectory>
 							<bindingIncludes>
@@ -136,7 +136,7 @@
 							<schemaIncludes>
 								<include>yarn_cluster.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.event.schema.yarnCluster</generatePackage>
+							<generatePackage>org.apache.asterix.event.schema.yarnCluster</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/yarn_cluster</generateDirectory>
 							<bindingDirectory>src/main/resources/schema</bindingDirectory>
 							<bindingIncludes>
@@ -177,43 +177,43 @@
 			<version>3.0.1</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>algebricks-compiler</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>
 				hyracks-storage-am-lsm-invertedindex
 			</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
 		</dependency>
 		<dependency>

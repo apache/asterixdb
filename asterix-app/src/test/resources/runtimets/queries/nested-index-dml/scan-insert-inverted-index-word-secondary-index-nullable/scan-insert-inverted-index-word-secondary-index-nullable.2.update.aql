@@ -8,7 +8,7 @@
 use dataverse test;
 
 
-load dataset DBLPtmp using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+load dataset DBLPtmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 
 (("path"="nc1://data/dblp-small/dblp-small-nulls.adm"),("format"="adm"));
 

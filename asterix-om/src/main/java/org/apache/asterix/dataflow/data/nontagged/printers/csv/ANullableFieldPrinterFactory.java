@@ -12,17 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv;
+package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
-import edu.uci.ics.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.asterix.formats.nontagged.AqlCSVPrinterFactoryProvider;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
 public class ANullableFieldPrinterFactory implements IPrinterFactory {
 

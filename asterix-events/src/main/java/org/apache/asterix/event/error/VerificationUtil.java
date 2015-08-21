@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.error;
+package org.apache.asterix.event.error;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.event.model.ProcessInfo;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.model.AsterixRuntimeState;
+import org.apache.asterix.event.model.ProcessInfo;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
 
 public class VerificationUtil {
 

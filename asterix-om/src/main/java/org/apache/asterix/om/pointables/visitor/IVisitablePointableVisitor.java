@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables.visitor;
+package org.apache.asterix.om.pointables.visitor;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.AFlatValuePointable;
+import org.apache.asterix.om.pointables.AListVisitablePointable;
+import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 
 /**
  * This interface is a visitor for all the three different IVisitablePointable

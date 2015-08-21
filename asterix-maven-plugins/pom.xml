@@ -14,7 +14,7 @@
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>edu.uci.ics.asterix</groupId>
+  <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-maven-plugins</artifactId>
   <packaging>pom</packaging>
 
@@ -30,7 +30,7 @@
 
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 

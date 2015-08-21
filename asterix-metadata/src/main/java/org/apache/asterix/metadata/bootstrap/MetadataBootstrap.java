@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.bootstrap;
+package org.apache.asterix.metadata.bootstrap;
 
 import java.io.File;
 import java.rmi.RemoteException;
@@ -26,65 +26,65 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.IAsterixAppRuntimeContext;
-import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
-import edu.uci.ics.asterix.common.config.AsterixMetadataProperties;
-import edu.uci.ics.asterix.common.config.DatasetConfig.DatasetType;
-import edu.uci.ics.asterix.common.config.DatasetConfig.IndexType;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.config.IAsterixPropertiesProvider;
-import edu.uci.ics.asterix.common.context.BaseOperationTracker;
-import edu.uci.ics.asterix.common.context.DatasetLifecycleManager;
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import edu.uci.ics.asterix.metadata.IDatasetDetails;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
-import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
-import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
-import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
-import edu.uci.ics.asterix.metadata.entities.Datatype;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.entities.ExternalFile;
-import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.entities.Index;
-import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails;
-import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
-import edu.uci.ics.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
-import edu.uci.ics.asterix.metadata.entities.Node;
-import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
-import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
-import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.formats.NonTaggedDataFormat;
-import edu.uci.ics.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
-import edu.uci.ics.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
-import edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
-import edu.uci.ics.hyracks.api.application.INCApplicationContext;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManager;
-import edu.uci.ics.hyracks.storage.am.common.util.IndexFileNameUtil;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.impls.LSMBTree;
-import edu.uci.ics.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
-import edu.uci.ics.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import edu.uci.ics.hyracks.storage.common.buffercache.IBufferCache;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapProvider;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceRepository;
-import edu.uci.ics.hyracks.storage.common.file.LocalResource;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.ILocalResourceMetadata;
+import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.context.DatasetLifecycleManager;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.metadata.IDatasetDetails;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.api.IMetadataIndex;
+import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.DatasourceAdapter;
+import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.ExternalFile;
+import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.entities.Node;
+import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.metadata.feeds.AdapterIdentifier;
+import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.asterix.transaction.management.resource.LSMBTreeLocalResourceMetadata;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceFactoryProvider;
+import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
+import org.apache.hyracks.api.application.INCApplicationContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
+import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
+import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.file.IFileMapProvider;
+import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
+import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
+import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
+import org.apache.hyracks.storage.common.file.LocalResource;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -316,18 +316,18 @@ public class MetadataBootstrap {
 
     private static void insertInitialAdapters(MetadataTransactionContext mdTxnCtx) throws Exception {
         String[] builtInAdapterClassNames = new String[] {
-                "edu.uci.ics.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.NCFileSystemAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.HiveAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.PushBasedTwitterAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.RSSFeedAdapterFactory",
-                "edu.uci.ics.asterix.external.adapter.factory.CNNFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
-                "edu.uci.ics.asterix.tools.external.data.SocketClientAdapterFactory" };
+                "org.apache.asterix.external.adapter.factory.PullBasedAzureTwitterAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.NCFileSystemAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.HDFSAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.HiveAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.PullBasedTwitterAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.PushBasedTwitterAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.RSSFeedAdapterFactory",
+                "org.apache.asterix.external.adapter.factory.CNNFeedAdapterFactory",
+                "org.apache.asterix.tools.external.data.RateControlledFileSystemBasedAdapterFactory",
+                "org.apache.asterix.tools.external.data.TwitterFirehoseFeedAdapterFactory",
+                "org.apache.asterix.tools.external.data.GenericSocketFeedAdapterFactory",
+                "org.apache.asterix.tools.external.data.SocketClientAdapterFactory" };
         DatasourceAdapter adapter;
         for (String adapterClassName : builtInAdapterClassNames) {
             adapter = getAdapter(adapterClassName);
@@ -349,10 +349,10 @@ public class MetadataBootstrap {
 
     private static void insertInitialCompactionPolicies(MetadataTransactionContext mdTxnCtx) throws Exception {
         String[] builtInCompactionPolicyClassNames = new String[] {
-                "edu.uci.ics.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory",
-                "edu.uci.ics.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory",
-                "edu.uci.ics.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory",
-                "edu.uci.ics.asterix.common.context.CorrelatedPrefixMergePolicyFactory" };
+                "org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory",
+                "org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory",
+                "org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory",
+                "org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory" };
         CompactionPolicy compactionPolicy;
         for (String policyClassName : builtInCompactionPolicyClassNames) {
             compactionPolicy = getCompactionPolicyEntity(policyClassName);

@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.hash.AMurmurHash3BinaryHashFunctionFamily;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
+import org.apache.asterix.dataflow.data.nontagged.hash.AMurmurHash3BinaryHashFunctionFamily;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 
 /**
  * We use a binary hash function that promotes numeric types (INT8,INT16,INT32,INT64,FLOAT) to DOUBLE if requested.

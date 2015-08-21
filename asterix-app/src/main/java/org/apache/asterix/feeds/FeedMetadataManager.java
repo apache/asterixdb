@@ -12,25 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMetadataManager;
-import edu.uci.ics.asterix.hyracks.bootstrap.FeedBootstrap;
-import edu.uci.ics.asterix.metadata.feeds.XAQLFeedMessage;
-import edu.uci.ics.asterix.om.base.ARecord;
-import edu.uci.ics.asterix.om.base.AString;
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
+import org.apache.asterix.hyracks.bootstrap.FeedBootstrap;
+import org.apache.asterix.metadata.feeds.XAQLFeedMessage;
+import org.apache.asterix.om.base.ARecord;
+import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FeedMetadataManager implements IFeedMetadataManager {
 

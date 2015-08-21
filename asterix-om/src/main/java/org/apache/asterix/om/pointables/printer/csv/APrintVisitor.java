@@ -13,44 +13,44 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables.printer.csv;
+package org.apache.asterix.om.pointables.printer.csv;
 
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADatePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADateTimePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADayTimeDurationPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADoublePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADurationPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AFloatPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt16Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt32Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt64Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt8Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ALinePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ANullPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.APointPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AStringPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ATimePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinter;
-import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADatePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADateTimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADayTimeDurationPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADoublePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADurationPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AFloatPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt16Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt32Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt64Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt8Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ALinePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.APointPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AStringPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ATimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinter;
+import org.apache.asterix.om.pointables.AFlatValuePointable;
+import org.apache.asterix.om.pointables.AListVisitablePointable;
+import org.apache.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively

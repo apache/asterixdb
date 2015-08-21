@@ -1,11 +1,11 @@
 use dataverse test;
 
 load dataset UserOpen
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/adm-load/usermd5.adm"),("format"="adm")) ;
 
 load dataset UserCopyClose
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/adm-load/usermd5copy.adm"),("format"="adm")) ;
 
 

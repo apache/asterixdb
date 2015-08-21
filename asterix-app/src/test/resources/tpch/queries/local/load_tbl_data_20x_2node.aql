@@ -105,33 +105,33 @@ declare dataset PartSupp(PartSuppType)
   primary key ps_partkey, ps_suppkey on group1;  
 
 load dataset LineItems 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/lineitem.tbl.1,nc1:///opt/tpch/twentygigs/lineitem.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/orders.tbl.1,nc1:///opt/tpch/twentygigs/orders.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/customer.tbl.1,nc1:///opt/tpch/twentygigs/customer.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/supplier.tbl.1,nc1:///opt/tpch/twentygigs/supplier.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/nation.tbl.1"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/region.tbl.1"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/part.tbl.1,nc2:///opt/tpch/twentygigs/part.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/twentygigs/partsupp.tbl.1,nc2:///opt/tpch/twentygigs/partsupp.tbl.2"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;

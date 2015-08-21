@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.cluster;
+package org.apache.asterix.metadata.cluster;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,24 +25,24 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.common.api.IClusterEventsSubscriber;
-import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.pattern.Pattern;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.event.service.ILookupService;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.event.util.PatternCreator;
-import edu.uci.ics.asterix.installer.schema.conf.Configuration;
-import edu.uci.ics.asterix.metadata.api.IClusterManager;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.common.api.IClusterEventsSubscriber;
+import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.event.management.AsterixEventServiceClient;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.pattern.Pattern;
+import org.apache.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ILookupService;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.event.util.PatternCreator;
+import org.apache.asterix.installer.schema.conf.Configuration;
+import org.apache.asterix.metadata.api.IClusterManager;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
 
 public class ClusterManager implements IClusterManager {
 

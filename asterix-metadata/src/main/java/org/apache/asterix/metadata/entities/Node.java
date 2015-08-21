@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.entities;
+package org.apache.asterix.metadata.entities;
 
 import java.io.Serializable;
 

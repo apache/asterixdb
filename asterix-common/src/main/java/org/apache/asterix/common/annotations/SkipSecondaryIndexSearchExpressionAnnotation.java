@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.annotations;
+package org.apache.asterix.common.annotations;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
 public class SkipSecondaryIndexSearchExpressionAnnotation implements IExpressionAnnotation {
 

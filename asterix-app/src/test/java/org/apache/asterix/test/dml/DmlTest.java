@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.dml;
+package org.apache.asterix.test.dml;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,11 +23,11 @@ import java.io.Reader;
 
 import org.junit.Test;
 
-import edu.uci.ics.asterix.api.common.AsterixHyracksIntegrationUtil;
-import edu.uci.ics.asterix.api.java.AsterixJavaClient;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.test.base.AsterixTestHelper;
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.test.base.AsterixTestHelper;
 
 public class DmlTest {
 

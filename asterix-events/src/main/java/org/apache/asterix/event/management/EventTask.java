@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.management;
+package org.apache.asterix.event.management;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,11 +23,11 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.event.Event;
-import edu.uci.ics.asterix.event.schema.pattern.Pattern;
-import edu.uci.ics.asterix.event.schema.pattern.Period;
+import org.apache.asterix.event.driver.EventDriver;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.event.Event;
+import org.apache.asterix.event.schema.pattern.Pattern;
+import org.apache.asterix.event.schema.pattern.Period;
 
 public class EventTask extends TimerTask {
 

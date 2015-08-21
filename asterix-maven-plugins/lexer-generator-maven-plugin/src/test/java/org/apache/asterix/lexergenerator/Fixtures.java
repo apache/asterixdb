@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
-import edu.uci.ics.asterix.lexergenerator.rules.Rule;
-import edu.uci.ics.asterix.lexergenerator.rules.RuleChar;
+import org.apache.asterix.lexergenerator.rules.Rule;
+import org.apache.asterix.lexergenerator.rules.RuleChar;
 
 public class Fixtures {
     static  String token_name       = "MYTOKEN";

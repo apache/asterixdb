@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.evaluators.common;
+package org.apache.asterix.runtime.evaluators.common;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.util.NonTaggedFormatUtil;
 
 /**
  * Utility class for accessing serialized unordered and ordered lists.

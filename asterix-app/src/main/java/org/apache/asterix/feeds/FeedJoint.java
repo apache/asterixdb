@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionRequest;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.FeedJointKey;
-import edu.uci.ics.asterix.common.feeds.api.IFeedJoint;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedJointKey;
+import org.apache.asterix.common.feeds.api.IFeedJoint;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
 
 public class FeedJoint implements IFeedJoint {
 

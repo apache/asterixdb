@@ -32,4 +32,4 @@ for jar in `ls $MANAGIX_HOME/lib/*.jar`
 done
 
 MANAGIX_CLASSPATH=$MANAGIX_CLASSPATH:$MANAGIX_HOME/conf/log4j.properties
-java $JAVA_OPTS -Dlog4j.configuration=file:$MANAGIX_HOME/conf/log4j.properties -cp $MANAGIX_CLASSPATH edu.uci.ics.asterix.installer.driver.InstallerDriver $@
+java $JAVA_OPTS -Dlog4j.configuration=file:$MANAGIX_HOME/conf/log4j.properties -cp $MANAGIX_CLASSPATH org.apache.asterix.installer.driver.InstallerDriver $@

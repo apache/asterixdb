@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.transactions;
+package org.apache.asterix.common.transactions;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Provides API for failure recovery. Failure could be at application level and

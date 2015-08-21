@@ -12,10 +12,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
-	<groupId>edu.uci.ics.asterix</groupId>
+	<groupId>org.apache.asterix</groupId>
 	<artifactId>asterix-events</artifactId>
 	<version>0.8.7-SNAPSHOT</version>
 
@@ -75,7 +75,7 @@
 							<schemaIncludes>
 								<include>event.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.event.schema.event</generatePackage>
+							<generatePackage>org.apache.asterix.event.schema.event</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/event</generateDirectory>
 						</configuration>
 					</execution>
@@ -105,7 +105,7 @@
 							<schemaIncludes>
 								<include>installer-conf.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.installer.schema.conf</generatePackage>
+							<generatePackage>org.apache.asterix.installer.schema.conf</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
 						</configuration>
 					</execution>
@@ -135,7 +135,7 @@
 							<schemaIncludes>
 								<include>pattern.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.event.schema.pattern</generatePackage>
+							<generatePackage>org.apache.asterix.event.schema.pattern</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/pattern</generateDirectory>
 						</configuration>
 					</execution>
@@ -195,7 +195,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>jar</type>

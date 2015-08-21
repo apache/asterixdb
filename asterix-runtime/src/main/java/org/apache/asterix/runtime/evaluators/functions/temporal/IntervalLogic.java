@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.evaluators.functions.temporal;
+package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 public class IntervalLogic {
 

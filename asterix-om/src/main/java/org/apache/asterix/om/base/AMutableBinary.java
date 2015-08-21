@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 public class AMutableBinary extends ABinary {
 

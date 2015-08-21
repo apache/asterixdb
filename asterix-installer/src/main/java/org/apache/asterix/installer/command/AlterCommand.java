@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import java.util.Date;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.event.service.ILookupService;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.driver.InstallerUtil;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ILookupService;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.installer.driver.InstallerUtil;
 
 public class AlterCommand extends AbstractCommand {
 

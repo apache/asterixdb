@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.recordmanagergenerator;
+package org.apache.asterix.recordmanagergenerator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import edu.uci.ics.asterix.recordmanagergenerator.RecordType.Field;
+import org.apache.asterix.recordmanagergenerator.RecordType.Field;
 
 public class Generator {
     

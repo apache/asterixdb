@@ -12,38 +12,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.expression;
+package org.apache.asterix.aql.expression;
 
 import java.io.StringReader;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import edu.uci.ics.asterix.aql.parser.AQLParser;
-import edu.uci.ics.asterix.aql.parser.ParseException;
-import edu.uci.ics.asterix.aql.util.FunctionUtils;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.FeedActivity;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionRequest;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter.AdapterType;
-import edu.uci.ics.asterix.metadata.entities.Feed;
-import edu.uci.ics.asterix.metadata.entities.Function;
-import edu.uci.ics.asterix.metadata.entities.PrimaryFeed;
-import edu.uci.ics.asterix.metadata.entities.SecondaryFeed;
-import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
-import edu.uci.ics.asterix.metadata.feeds.IFeedAdapterFactory;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Triple;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
+import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
+import org.apache.asterix.aql.parser.AQLParser;
+import org.apache.asterix.aql.parser.ParseException;
+import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.FeedActivity;
+import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
+import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.entities.PrimaryFeed;
+import org.apache.asterix.metadata.entities.SecondaryFeed;
+import org.apache.asterix.metadata.feeds.FeedUtil;
+import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 
 /**
  * Represents the AQL statement for subscribing to a feed.

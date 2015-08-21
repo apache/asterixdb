@@ -19,11 +19,11 @@ Maven Plugin (to put inside pom.xml)
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>edu.uci.ics.asterix</groupId>
+                <groupId>org.apache.asterix</groupId>
                 <artifactId>lexer-generator-maven-plugin</artifactId>
                 <version>0.1-SNAPSHOT</version>
                 <configuration>
-                    <grammarFile>src/main/java/edu/uci/ics/asterix/runtime/operators/file/adm/adm.grammar</grammarFile>
+                    <grammarFile>src/main/java/org.apache/asterix/runtime/operators/file/adm/adm.grammar</grammarFile>
                     <outputDir>${project.build.directory}/generated-sources</outputDir>
                 </configuration>
                 <executions>
@@ -66,7 +66,7 @@ The four configuration keys are listed below:
     # Place *first* the generic configuration
     # then list your grammar.
 
-    PACKAGE:          edu.uci.ics.asterix.admfast.parser
+    PACKAGE:          org.apache.asterix.admfast.parser
     LEXER_NAME:       AdmLexer
     OUTPUT_DIR:       output/
 

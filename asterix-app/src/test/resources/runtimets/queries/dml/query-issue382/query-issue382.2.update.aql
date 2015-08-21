@@ -1,6 +1,6 @@
 use dataverse SocialNetworkData;
 
-load dataset FacebookUsers using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+load dataset FacebookUsers using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/fbu-dml-insert-shuffled.adm"),("format"="adm"));
 
 insert into dataset HandbookUsers (

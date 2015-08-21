@@ -12,30 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.translator;
+package org.apache.asterix.translator;
 
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.DatasetDecl;
-import edu.uci.ics.asterix.aql.expression.DataverseDropStatement;
-import edu.uci.ics.asterix.aql.expression.DeleteStatement;
-import edu.uci.ics.asterix.aql.expression.DropStatement;
-import edu.uci.ics.asterix.aql.expression.InsertStatement;
-import edu.uci.ics.asterix.aql.expression.NodeGroupDropStatement;
-import edu.uci.ics.asterix.common.api.IClusterManagementWork.ClusterState;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.bootstrap.MetadataConstants;
-import edu.uci.ics.asterix.metadata.dataset.hints.DatasetHints;
-import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.expression.DatasetDecl;
+import org.apache.asterix.aql.expression.DataverseDropStatement;
+import org.apache.asterix.aql.expression.DeleteStatement;
+import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.InsertStatement;
+import org.apache.asterix.aql.expression.NodeGroupDropStatement;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.metadata.bootstrap.MetadataConstants;
+import org.apache.asterix.metadata.dataset.hints.DatasetHints;
+import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Base class for AQL translators. Contains the common validation logic for AQL

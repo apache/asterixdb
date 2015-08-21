@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package org.apache.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
-import edu.uci.ics.asterix.external.library.java.JObjects.JString;
-import edu.uci.ics.asterix.external.library.java.JObjects.JUnorderedList;
-import edu.uci.ics.asterix.external.library.java.JTypeTag;
+import org.apache.asterix.external.library.java.JObjects.JRecord;
+import org.apache.asterix.external.library.java.JObjects.JString;
+import org.apache.asterix.external.library.java.JObjects.JUnorderedList;
+import org.apache.asterix.external.library.java.JTypeTag;
 
 public class ParseTweetFunction implements IExternalScalarFunction {
 

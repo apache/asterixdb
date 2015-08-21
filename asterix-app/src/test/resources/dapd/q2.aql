@@ -40,7 +40,7 @@ declare dataset Event(EventType)
   primary key event_id on group1;
 
 load dataset Event 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///home/nicnic/Work/Asterix/adg/event.adm"),("format"="adm"));
 
 write output to nc1:"/tmp/dapd_q2.adm";

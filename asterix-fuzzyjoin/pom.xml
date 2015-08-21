@@ -2,10 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
           <artifactId>asterix</artifactId>
-          <groupId>edu.uci.ics.asterix</groupId>
+          <groupId>org.apache.asterix</groupId>
           <version>0.8.7-SNAPSHOT</version>
   </parent>
-  <groupId>edu.uci.ics.asterix</groupId>
+  <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-fuzzyjoin</artifactId>
   <version>0.8.7-SNAPSHOT</version>
 
@@ -58,7 +58,7 @@
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
-        <groupId>edu.uci.ics.hyracks</groupId>
+        <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-api</artifactId>
     </dependency>
   </dependencies>

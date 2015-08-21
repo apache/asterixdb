@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.dataset.adapter;
+package org.apache.asterix.external.dataset.adapter;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public interface IFeedClient {
 

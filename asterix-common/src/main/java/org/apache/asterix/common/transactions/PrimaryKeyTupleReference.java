@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.transactions;
+package org.apache.asterix.common.transactions;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class PrimaryKeyTupleReference implements ITupleReference {
     private byte[] fieldData;

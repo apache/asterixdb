@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata;
+package org.apache.asterix.metadata;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
-import edu.uci.ics.asterix.metadata.entities.CompactionPolicy;
-import edu.uci.ics.asterix.metadata.entities.Dataset;
-import edu.uci.ics.asterix.metadata.entities.DatasourceAdapter;
-import edu.uci.ics.asterix.metadata.entities.Datatype;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.metadata.entities.Feed;
-import edu.uci.ics.asterix.metadata.entities.Feed.FeedType;
-import edu.uci.ics.asterix.metadata.entities.FeedPolicy;
-import edu.uci.ics.asterix.metadata.entities.Function;
-import edu.uci.ics.asterix.metadata.entities.Index;
-import edu.uci.ics.asterix.metadata.entities.Library;
-import edu.uci.ics.asterix.metadata.entities.NodeGroup;
-import edu.uci.ics.asterix.metadata.entities.PrimaryFeed;
-import edu.uci.ics.asterix.metadata.entities.SecondaryFeed;
-import edu.uci.ics.asterix.metadata.feeds.AdapterIdentifier;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.DatasourceAdapter;
+import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.metadata.entities.Feed.FeedType;
+import org.apache.asterix.metadata.entities.FeedPolicy;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.Library;
+import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.metadata.entities.PrimaryFeed;
+import org.apache.asterix.metadata.entities.SecondaryFeed;
+import org.apache.asterix.metadata.feeds.AdapterIdentifier;
 
 /**
  * Used to implement serializable transactions against the MetadataCache.

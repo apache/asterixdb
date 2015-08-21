@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.dataflow;
+package org.apache.asterix.external.indexing.dataflow;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -22,26 +22,26 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.asterix.external.adapter.factory.HDFSAdapterFactory;
-import edu.uci.ics.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
-import edu.uci.ics.asterix.external.adapter.factory.StreamBasedAdapterFactory;
-import edu.uci.ics.asterix.external.indexing.input.RCFileLookupReader;
-import edu.uci.ics.asterix.external.indexing.input.SequenceFileLookupInputStream;
-import edu.uci.ics.asterix.external.indexing.input.SequenceFileLookupReader;
-import edu.uci.ics.asterix.external.indexing.input.TextFileLookupInputStream;
-import edu.uci.ics.asterix.external.indexing.input.TextFileLookupReader;
-import edu.uci.ics.asterix.metadata.external.ExternalFileIndexAccessor;
-import edu.uci.ics.asterix.metadata.external.IControlledAdapter;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.ADMDataParser;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.DelimitedDataParser;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.INullWriterFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.external.adapter.factory.HDFSAdapterFactory;
+import org.apache.asterix.external.adapter.factory.HDFSIndexingAdapterFactory;
+import org.apache.asterix.external.adapter.factory.StreamBasedAdapterFactory;
+import org.apache.asterix.external.indexing.input.RCFileLookupReader;
+import org.apache.asterix.external.indexing.input.SequenceFileLookupInputStream;
+import org.apache.asterix.external.indexing.input.SequenceFileLookupReader;
+import org.apache.asterix.external.indexing.input.TextFileLookupInputStream;
+import org.apache.asterix.external.indexing.input.TextFileLookupReader;
+import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
+import org.apache.asterix.metadata.external.IControlledAdapter;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.operators.file.ADMDataParser;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.asterix.runtime.operators.file.DelimitedDataParser;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.INullWriterFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class HDFSLookupAdapter implements IControlledAdapter, Serializable {
 

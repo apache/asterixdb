@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.exceptions;
+package org.apache.asterix.common.exceptions;
 
 public class TypeException extends AsterixException {
 

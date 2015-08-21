@@ -13,10 +13,10 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
+package org.apache.asterix.dataflow.data.nontagged.printers;
 
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
 public class AUUIDPrinterFactory implements IPrinterFactory {
 

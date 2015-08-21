@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.runtime.aggregates.std;
+package org.apache.asterix.runtime.aggregates.std;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
+import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SqlAvgAggregateFunction extends AbstractAvgAggregateFunction {
 

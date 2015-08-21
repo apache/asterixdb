@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.parse;
+package org.apache.asterix.common.parse;
 
 import java.util.Map;
 
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParser;
+import org.apache.hyracks.dataflow.std.file.ITupleParser;
 
 public interface IAsterixTupleParser extends ITupleParser{
 

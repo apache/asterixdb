@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.util;
+package org.apache.asterix.event.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,24 +23,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.BackupInfo;
-import edu.uci.ics.asterix.event.model.BackupInfo.BackupType;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.pattern.Delay;
-import edu.uci.ics.asterix.event.schema.pattern.Event;
-import edu.uci.ics.asterix.event.schema.pattern.Nodeid;
-import edu.uci.ics.asterix.event.schema.pattern.Pattern;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
-import edu.uci.ics.asterix.event.schema.pattern.Value;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.event.service.ILookupService;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.installer.schema.conf.Backup;
+import org.apache.asterix.event.driver.EventDriver;
+import org.apache.asterix.event.error.VerificationUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.BackupInfo;
+import org.apache.asterix.event.model.BackupInfo.BackupType;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.pattern.Delay;
+import org.apache.asterix.event.schema.pattern.Event;
+import org.apache.asterix.event.schema.pattern.Nodeid;
+import org.apache.asterix.event.schema.pattern.Pattern;
+import org.apache.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.schema.pattern.Value;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ILookupService;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.installer.schema.conf.Backup;
 
 public class PatternCreator {
 

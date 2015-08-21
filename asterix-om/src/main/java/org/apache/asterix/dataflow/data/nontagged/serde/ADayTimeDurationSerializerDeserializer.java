@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.serde;
+package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import edu.uci.ics.asterix.om.base.ADayTimeDuration;
-import edu.uci.ics.asterix.om.base.AMutableDayTimeDuration;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory;
-import edu.uci.ics.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
+import org.apache.asterix.om.base.ADayTimeDuration;
+import org.apache.asterix.om.base.AMutableDayTimeDuration;
+import org.apache.asterix.om.base.temporal.ADurationParserFactory;
+import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ADayTimeDurationSerializerDeserializer implements ISerializerDeserializer<ADayTimeDuration> {
 

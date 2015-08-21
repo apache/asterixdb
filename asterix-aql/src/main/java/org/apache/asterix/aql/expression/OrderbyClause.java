@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.expression;
+package org.apache.asterix.aql.expression;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.aql.base.Clause;
-import edu.uci.ics.asterix.aql.base.Expression;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.asterix.aql.base.Clause;
+import org.apache.asterix.aql.base.Expression;
+import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
+import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class OrderbyClause implements Clause {
     private List<Expression> orderbyList;

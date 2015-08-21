@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.printers;
+package org.apache.asterix.dataflow.data.nontagged.printers;
 
 import java.io.IOException;
 import java.io.PrintStream;
 
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinter;
-import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
-import edu.uci.ics.hyracks.data.std.primitive.ShortPointable;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 
 public class ShortWithoutTypeInfoPrinter implements IPrinter {
 

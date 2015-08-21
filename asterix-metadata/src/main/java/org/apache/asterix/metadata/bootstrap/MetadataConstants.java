@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.bootstrap;
+package org.apache.asterix.metadata.bootstrap;
 
 public class MetadataConstants {
 

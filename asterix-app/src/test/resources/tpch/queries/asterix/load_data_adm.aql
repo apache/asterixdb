@@ -107,33 +107,33 @@ declare dataset PartSupp(PartSuppType)
 
 
 load dataset LineItems 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/lineitem.adm"),("format"="adm")) pre-sorted;
 
 load dataset Orders 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/orders.adm"),("format"="adm")) pre-sorted;
 
 load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/customer.adm"),("format"="adm")) pre-sorted;
 
 load dataset Suppliers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/supplier.adm"),("format"="adm")) pre-sorted;
 
 load dataset Nations 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/nation.adm"),("format"="adm")) pre-sorted;
 
 load dataset Regions 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/region.adm"),("format"="adm")) pre-sorted;
 
 load dataset Parts 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/part.adm"),("format"="adm")) pre-sorted;
 
 load dataset PartSupp 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="asterix-001:///home/ubuntu/nick/data/tpch/partsupp.adm"),("format"="adm")) pre-sorted;

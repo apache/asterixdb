@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedJoint;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.asterix.common.feeds.api.IFeedJoint;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedIntakeInfo extends FeedJobInfo {
 

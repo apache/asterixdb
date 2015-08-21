@@ -7,7 +7,7 @@
 use dataverse test;
 
 load dataset DBLP
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000")) pre-sorted;
 
 insert into dataset DBLPOpen(
@@ -28,6 +28,6 @@ insert into dataset DBLPOpen(
 );
 
 load dataset CSX
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000"));
 

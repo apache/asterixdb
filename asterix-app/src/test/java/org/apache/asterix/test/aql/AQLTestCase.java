@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.aql;
+package org.apache.asterix.test.aql;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,12 +29,12 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.parser.AQLParser;
-import edu.uci.ics.asterix.aql.parser.ParseException;
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.parser.AQLParser;
+import org.apache.asterix.aql.parser.ParseException;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class AQLTestCase extends TestCase {
 

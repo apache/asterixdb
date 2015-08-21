@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.config;
+package org.apache.asterix.common.config;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,12 +29,12 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.common.configuration.Coredump;
-import edu.uci.ics.asterix.common.configuration.Property;
-import edu.uci.ics.asterix.common.configuration.Store;
-import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.common.configuration.Coredump;
+import org.apache.asterix.common.configuration.Property;
+import org.apache.asterix.common.configuration.Store;
+import org.apache.asterix.common.configuration.TransactionLogDir;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public class AsterixPropertiesAccessor {
     private static final Logger LOGGER = Logger.getLogger(AsterixPropertiesAccessor.class.getName());

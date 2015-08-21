@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin.invertedlist;
+package org.apache.asterix.fuzzyjoin.invertedlist;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -14,7 +14,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>asterix</artifactId>
-        <groupId>edu.uci.ics.asterix</groupId>
+        <groupId>org.apache.asterix</groupId>
         <version>0.8.7-SNAPSHOT</version>
     </parent>
     <artifactId>asterix-app</artifactId>
@@ -49,15 +49,15 @@
                         <configuration>
                             <programs>
                                 <program>
-                                    <mainClass>edu.uci.ics.asterix.drivers.AsterixWebServer</mainClass>
+                                    <mainClass>org.apache.asterix.drivers.AsterixWebServer</mainClass>
                                     <name>asterix-web</name>
                                 </program>
                                 <program>
-                                    <mainClass>edu.uci.ics.asterix.drivers.AsterixClientDriver</mainClass>
+                                    <mainClass>org.apache.asterix.drivers.AsterixClientDriver</mainClass>
                                     <name>asterix-cmd</name>
                                 </program>
                                 <program>
-                                    <mainClass>edu.uci.ics.asterix.drivers.AsterixCLI</mainClass>
+                                    <mainClass>org.apache.asterix.drivers.AsterixCLI</mainClass>
                                     <name>asterix-cli</name>
                                 </program>
                             </programs>
@@ -112,64 +112,64 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.hyracks</groupId>
+            <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-control-cc</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.hyracks</groupId>
+            <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-control-nc</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.hyracks</groupId>
+            <groupId>org.apache.hyracks</groupId>
             <artifactId>algebricks-compiler</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.hyracks</groupId>
+            <groupId>org.apache.hyracks</groupId>
             <artifactId>hyracks-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-algebra</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-aql</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-metadata</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-tools</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <type>test-jar</type>
@@ -179,7 +179,7 @@
 			<artifactId>org-apache-commons-io</artifactId> <version>1.3.1-201002241208</version> 
 			<scope>test</scope> </dependency> -->
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-transactions</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <scope>compile</scope>
@@ -210,7 +210,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-test-framework</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <scope>test</scope>

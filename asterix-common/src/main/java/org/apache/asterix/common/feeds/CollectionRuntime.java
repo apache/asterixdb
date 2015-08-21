@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.feeds.FeedFrameCollector.State;
-import edu.uci.ics.asterix.common.feeds.api.ISubscribableRuntime;
-import edu.uci.ics.asterix.common.feeds.api.ISubscriberRuntime;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.asterix.common.feeds.FeedFrameCollector.State;
+import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
+import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * Represents the feed runtime that collects feed tuples from another feed.

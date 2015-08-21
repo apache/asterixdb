@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata;
+package org.apache.asterix.metadata;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public class MetadataException extends AsterixException {
     private static final long serialVersionUID = 1L;

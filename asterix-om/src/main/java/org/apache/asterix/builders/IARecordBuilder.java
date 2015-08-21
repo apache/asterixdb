@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.builders;
+package org.apache.asterix.builders;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
  * A record builder helps to construct Asterix Records in a serialized format.

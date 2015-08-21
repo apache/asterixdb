@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.entities;
+package org.apache.asterix.metadata.entities;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataNode;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataNode;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 
 /**
  * Maps from a string representation of an Asterix type to an Asterix type.

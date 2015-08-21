@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.management;
+package org.apache.asterix.event.management;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -23,13 +23,13 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
-import edu.uci.ics.asterix.common.config.AsterixStorageProperties;
-import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.cluster.Property;
-import edu.uci.ics.asterix.event.schema.pattern.Pattern;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.common.config.AsterixStorageProperties;
+import org.apache.asterix.event.driver.EventDriver;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.cluster.Property;
+import org.apache.asterix.event.schema.pattern.Pattern;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
 
 public class EventExecutor {
 

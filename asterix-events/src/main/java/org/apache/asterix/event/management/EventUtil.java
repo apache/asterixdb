@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.management;
+package org.apache.asterix.event.management;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,13 +25,13 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.management.ValueType.Type;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.event.Event;
-import edu.uci.ics.asterix.event.schema.event.Events;
-import edu.uci.ics.asterix.event.schema.pattern.Pattern;
+import org.apache.asterix.event.driver.EventDriver;
+import org.apache.asterix.event.management.ValueType.Type;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.event.Event;
+import org.apache.asterix.event.schema.event.Events;
+import org.apache.asterix.event.schema.pattern.Pattern;
 
 public class EventUtil {
 

@@ -15,5 +15,5 @@ create type NumericType as open {
 }
 
 create external dataset Numeric(NumericType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/numericData.json"),("format"="adm"));

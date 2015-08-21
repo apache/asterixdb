@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
-import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
-import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
+import org.apache.asterix.metadata.external.IAdapterFactory;
 
 public interface IFeedAdapterFactory extends IAdapterFactory {
 

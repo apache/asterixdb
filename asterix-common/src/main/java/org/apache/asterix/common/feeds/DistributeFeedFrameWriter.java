@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,14 +20,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
-import edu.uci.ics.asterix.common.feeds.api.IFeedOperatorOutputSideHandler.Type;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
+import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler.Type;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * Provides mechanism for distributing the frames, as received from an operator to a

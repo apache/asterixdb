@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.io.IOException;
 import java.util.Map;
@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedConnectionManager;
+import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
 
 public class FeedRuntimeManager {
 

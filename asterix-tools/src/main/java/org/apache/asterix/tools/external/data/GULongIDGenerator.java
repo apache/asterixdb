@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.external.data;
+package org.apache.asterix.tools.external.data;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;

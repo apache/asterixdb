@@ -13,15 +13,15 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.typecomputer.impl;
+package org.apache.asterix.om.typecomputer.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 
 class TypeCompatibilityChecker {
     private final List<IAType> possibleTypes;

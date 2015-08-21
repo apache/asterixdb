@@ -12,24 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.translator;
+package org.apache.asterix.tools.translator;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.DataverseDecl;
-import edu.uci.ics.asterix.aql.expression.TypeDecl;
-import edu.uci.ics.asterix.common.annotations.TypeDataGen;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.types.TypeSignature;
-import edu.uci.ics.asterix.translator.AbstractAqlTranslator;
-import edu.uci.ics.asterix.translator.TypeTranslator;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.expression.DataverseDecl;
+import org.apache.asterix.aql.expression.TypeDecl;
+import org.apache.asterix.common.annotations.TypeDataGen;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeSignature;
+import org.apache.asterix.translator.AbstractAqlTranslator;
+import org.apache.asterix.translator.TypeTranslator;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class ADGenDmlTranslator extends AbstractAqlTranslator {
 

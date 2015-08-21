@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 import java.io.IOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.base.temporal.GregorianCalendarSystem;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.visitors.IOMVisitor;
 
 public class AInterval implements IAObject {
 
@@ -39,7 +39,7 @@ public class AInterval implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#getType()
+     * @see org.apache.asterix.om.base.IAObject#getType()
      */
     @Override
     public IAType getType() {
@@ -75,7 +75,7 @@ public class AInterval implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#accept(edu.uci.ics.asterix.om.visitors.IOMVisitor)
+     * @see org.apache.asterix.om.base.IAObject#accept(org.apache.asterix.om.visitors.IOMVisitor)
      */
     @Override
     public void accept(IOMVisitor visitor) throws AsterixException {
@@ -83,7 +83,7 @@ public class AInterval implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#deepEqual(edu.uci.ics.asterix.om.base.IAObject)
+     * @see org.apache.asterix.om.base.IAObject#deepEqual(org.apache.asterix.om.base.IAObject)
      */
     @Override
     public boolean deepEqual(IAObject obj) {
@@ -91,7 +91,7 @@ public class AInterval implements IAObject {
     }
 
     /* (non-Javadoc)
-     * @see edu.uci.ics.asterix.om.base.IAObject#hash()
+     * @see org.apache.asterix.om.base.IAObject#hash()
      */
     @Override
     public int hash() {

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.driver;
+package org.apache.asterix.installer.driver;
 
 import java.io.File;
 
@@ -21,12 +21,12 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.ILookupService;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.installer.command.CommandHandler;
-import edu.uci.ics.asterix.installer.command.ConfigureCommand;
-import edu.uci.ics.asterix.installer.schema.conf.Configuration;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.ILookupService;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.installer.command.CommandHandler;
+import org.apache.asterix.installer.command.ConfigureCommand;
+import org.apache.asterix.installer.schema.conf.Configuration;
 
 public class InstallerDriver {
 

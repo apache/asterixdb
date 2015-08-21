@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.entities;
+package org.apache.asterix.metadata.entities;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.metadata.api.IMetadataEntity;
 
 /**
  * A primary feed is one that derives its data from an external source via an adaptor.

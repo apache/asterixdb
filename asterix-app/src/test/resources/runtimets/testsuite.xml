@@ -18,7 +18,7 @@
 
 ]>
 <test-suite
-        xmlns="urn:xml.testframework.asterix.ics.uci.edu"
+        xmlns="urn:xml.testframework.asterix.apache.org"
         ResultOffsetPath="results"
         QueryOffsetPath="queries"
         QueryFileExtension=".aql">
@@ -105,19 +105,19 @@
         <test-case FilePath="aggregate">
             <compilation-unit name="avg_mixed">
                 <output-dir compare="Text">avg_mixed</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="aggregate">
             <compilation-unit name="sum_mixed">
                 <output-dir compare="Text">sum_mixed</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="aggregate">
             <compilation-unit name="min_mixed">
                 <output-dir compare="Text">min_mixed</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="aggregate">
@@ -541,19 +541,19 @@
         <test-case FilePath="aggregate-sql">
             <compilation-unit name="avg_mixed">
                 <output-dir compare="Text">avg_mixed</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="aggregate-sql">
             <compilation-unit name="sum_mixed">
                 <output-dir compare="Text">sum_mixed</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="aggregate-sql">
             <compilation-unit name="min_mixed">
                 <output-dir compare="Text">min_mixed</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="aggregate-sql">
@@ -1030,43 +1030,43 @@
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_duration">
                 <output-dir compare="Text">issue363_inequality_duration</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_interval">
                 <output-dir compare="Text">issue363_inequality_interval</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_point">
                 <output-dir compare="Text">issue363_inequality_point</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_line">
                 <output-dir compare="Text">issue363_inequality_line</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_polygon">
                 <output-dir compare="Text">issue363_inequality_polygon</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_rectangle">
                 <output-dir compare="Text">issue363_inequality_rectangle</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
             <compilation-unit name="issue363_inequality_circle">
                 <output-dir compare="Text">issue363_inequality_circle</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="comparison">
@@ -1495,7 +1495,7 @@
         <test-case FilePath="dml">
             <compilation-unit name="insert-duplicated-keys">
                 <output-dir compare="Text">insert-duplicated-keys</output-dir>
-                <expected-error>edu.uci.ics.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException
+                <expected-error>org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException
                 </expected-error>
             </compilation-unit>
         </test-case>
@@ -1519,7 +1519,7 @@
         <test-case FilePath="dml">
             <compilation-unit name="insert-with-autogenerated-pk_adm_02">
                 <output-dir compare="Text">insert-with-autogenerated-pk_adm_02</output-dir>
-                <expected-error>edu.uci.ics.asterix.runtime.operators.file.ADMDataParser.ParseException</expected-error>
+                <expected-error>org.apache.asterix.runtime.operators.file.ADMDataParser.ParseException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">
@@ -1540,13 +1540,13 @@
         <test-case FilePath="dml">
             <compilation-unit name="load-with-autogenerated-pk_adm_02">
                 <output-dir compare="Text">load-with-autogenerated-pk_adm_02</output-dir>
-                <expected-error>edu.uci.ics.asterix.runtime.operators.file.ADMDataParser.ParseException</expected-error>
+                <expected-error>org.apache.asterix.runtime.operators.file.ADMDataParser.ParseException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">
             <compilation-unit name="load-with-autogenerated-pk_adm_03">
                 <output-dir compare="Text">load-with-autogenerated-pk_adm_03</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">
@@ -1562,7 +1562,7 @@
         <test-case FilePath="dml">
             <compilation-unit name="load-with-autogenerated-pk_csv_02">
                 <output-dir compare="Text">load-with-autogenerated-pk_csv_02</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="dml">
@@ -2316,7 +2316,7 @@
         <test-case FilePath="fuzzyjoin">
             <compilation-unit name="dblp-aqlplus_2">
                 <output-dir compare="Text">dblp-aqlplus_2</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="fuzzyjoin">
@@ -2848,7 +2848,7 @@
         <test-case FilePath="misc">
             <compilation-unit name="partition-by-nonexistent-field">
                 <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="misc">
@@ -2926,27 +2926,27 @@
             <test-case FilePath="open-index-enforced/error-checking">
                 <compilation-unit name="enforced-field-name-collision">
                     <output-dir compare="Text">enforced-field-name-collision</output-dir>
-                    <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException
+                    <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException
                     </expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
                 <compilation-unit name="enforced-field-type-collision">
                     <output-dir compare="Text">enforced-field-type-collision</output-dir>
-                    <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                    <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
                 <compilation-unit name="missing-enforce-statement">
                     <output-dir compare="Text">missing-enforce-statement</output-dir>
-                    <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException
+                    <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException
                     </expected-error>
                 </compilation-unit>
             </test-case>
             <test-case FilePath="open-index-enforced/error-checking">
                 <compilation-unit name="index-on-closed-type">
                     <output-dir compare="Text">index-on-closed-type</output-dir>
-                    <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException
+                    <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException
                     </expected-error>
                 </compilation-unit>
             </test-case>
@@ -3995,7 +3995,7 @@
         <test-case FilePath="numeric">
             <compilation-unit name="query-issue355">
                 <output-dir compare="Text">query-issue355</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
     </test-group>
@@ -4231,7 +4231,7 @@
         <test-case FilePath="open-closed">
             <compilation-unit name="query-issue410">
                 <output-dir compare="Text">query-issue410</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="open-closed">
@@ -4272,13 +4272,13 @@
         <test-case FilePath="open-closed">
             <compilation-unit name="query-issue442">
                 <output-dir compare="Text">query-issue442</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="open-closed">
             <compilation-unit name="query-issue487">
                 <output-dir compare="Text">query-issue487</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="open-closed">
@@ -4363,13 +4363,13 @@
         <test-case FilePath="range-hints">
             <compilation-unit name="order-by-exception_01">
                 <output-dir compare="Text">order-by</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="range-hints">
             <compilation-unit name="order-by-exception_02">
                 <output-dir compare="Text">order-by</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
     </test-group>
@@ -5646,7 +5646,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv13">
                 <output-dir compare="Text">cross-dv13</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="cross-dataverse">
@@ -5662,7 +5662,7 @@
         <test-case FilePath="cross-dataverse">
             <compilation-unit name="cross-dv16">
                 <output-dir compare="Text">cross-dv16</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
@@ -5724,7 +5724,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="query-issue455">
                 <output-dir compare="Text">query-issue455</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -5868,7 +5868,7 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf26">
                 <output-dir compare="Text">udf26</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -5889,19 +5889,19 @@
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="udf30">
                 <output-dir compare="Text">udf30</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="f01">
                 <output-dir compare="Text">f01</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
             <compilation-unit name="invoke-private-function">
                 <output-dir compare="Text">invoke-private-function</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
     </test-group>
@@ -5929,19 +5929,19 @@
         <test-case FilePath="load">
             <compilation-unit name="csv_05">
                 <output-dir compare="Text">csv_05</output-dir>
-                <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="csv_06">
                 <output-dir compare="Text">csv_06</output-dir>
-                <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="csv_07">
                 <output-dir compare="Text">csv_07</output-dir>
-                <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksDataException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksDataException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
@@ -5962,13 +5962,13 @@
         <test-case FilePath="load">
             <compilation-unit name="issue14_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
             <compilation-unit name="issue315_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
@@ -5979,7 +5979,7 @@
         <test-case FilePath="load">
             <compilation-unit name="issue650_query">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">
@@ -6000,7 +6000,7 @@
         <test-case FilePath="load">
             <compilation-unit name="escapes-err-1">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
@@ -6011,7 +6011,7 @@
         <test-case FilePath="load">
             <compilation-unit name="duplicate-key-error">
                 <output-dir compare="Text">none</output-dir>
-                <expected-error>edu.uci.ics.hyracks.api.exceptions.HyracksException</expected-error>
+                <expected-error>org.apache.hyracks.api.exceptions.HyracksException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="load">

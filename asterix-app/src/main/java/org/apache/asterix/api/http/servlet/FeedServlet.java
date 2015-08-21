@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.api.http.servlet;
+package org.apache.asterix.api.http.servlet;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -28,13 +28,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.uci.ics.asterix.common.feeds.FeedActivity;
-import edu.uci.ics.asterix.common.feeds.FeedActivity.FeedActivityDetails;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLoadManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.common.feeds.FeedActivity;
+import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.api.IFeedLoadManager;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.feeds.CentralFeedManager;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;

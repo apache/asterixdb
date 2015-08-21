@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.input;
+package org.apache.asterix.external.indexing.input;
 
 import java.io.IOException;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 /**
  * This class can be used by any input format to perform full scan operations

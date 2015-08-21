@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -30,46 +30,46 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.uci.ics.asterix.api.common.FeedWorkCollection.SubscribeFeedWork;
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.feeds.FeedActivity;
-import edu.uci.ics.asterix.common.feeds.FeedConnectJobInfo;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionRequest;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.FeedIntakeInfo;
-import edu.uci.ics.asterix.common.feeds.FeedJobInfo;
-import edu.uci.ics.asterix.common.feeds.FeedJobInfo.FeedJobState;
-import edu.uci.ics.asterix.common.feeds.FeedJobInfo.JobType;
-import edu.uci.ics.asterix.common.feeds.FeedJointKey;
-import edu.uci.ics.asterix.common.feeds.FeedPolicyAccessor;
-import edu.uci.ics.asterix.common.feeds.api.IFeedJoint;
-import edu.uci.ics.asterix.common.feeds.api.IFeedJoint.State;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
-import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
-import edu.uci.ics.asterix.common.feeds.message.StorageReportFeedMessage;
-import edu.uci.ics.asterix.feeds.FeedLifecycleListener.Message;
-import edu.uci.ics.asterix.metadata.feeds.BuiltinFeedPolicies;
-import edu.uci.ics.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedWorkManager;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
-import edu.uci.ics.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.dataflow.OperatorDescriptorId;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobInfo;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.api.job.JobStatus;
-import edu.uci.ics.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
+import org.apache.asterix.api.common.FeedWorkCollection.SubscribeFeedWork;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.feeds.FeedActivity;
+import org.apache.asterix.common.feeds.FeedConnectJobInfo;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedIntakeInfo;
+import org.apache.asterix.common.feeds.FeedJobInfo;
+import org.apache.asterix.common.feeds.FeedJobInfo.FeedJobState;
+import org.apache.asterix.common.feeds.FeedJobInfo.JobType;
+import org.apache.asterix.common.feeds.FeedJointKey;
+import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.feeds.api.IFeedJoint;
+import org.apache.asterix.common.feeds.api.IFeedJoint.State;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
+import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
+import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.feeds.FeedLifecycleListener.Message;
+import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.FeedWorkManager;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
+import org.apache.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobInfo;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 
 public class FeedJobNotificationHandler implements Runnable {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.algebra.base;
+package org.apache.asterix.algebra.base;
 
 public interface AsterixOperatorAnnotations {
     public static final String FIELD_ACCESS = "FIELD_ACCESS";

@@ -8,5 +8,5 @@
 use dataverse temp;
 
 load dataset testds
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/adm-load/binary_type.adm"),("format"="adm"));

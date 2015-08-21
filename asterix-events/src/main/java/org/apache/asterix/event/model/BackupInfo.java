@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.model;
+package org.apache.asterix.event.model;
 
 import java.io.Serializable;
 import java.util.Date;
 
-import edu.uci.ics.asterix.installer.schema.conf.Backup;
-import edu.uci.ics.asterix.installer.schema.conf.Hdfs;
+import org.apache.asterix.installer.schema.conf.Backup;
+import org.apache.asterix.installer.schema.conf.Hdfs;
 
 public class BackupInfo implements Serializable {
 

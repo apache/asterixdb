@@ -3,7 +3,7 @@
 # Place *first* the generic configuration
 # then list your grammar.
 
-PACKAGE:          edu.uci.ics.asterix.runtime.operators.file.adm
+PACKAGE:          org.apache.asterix.runtime.operators.file.adm
 LEXER_NAME:       AdmLexer
 
 TOKENS:

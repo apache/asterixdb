@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.logging;
+package org.apache.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.LogRecord;
 
 public class LogPageReader {
 

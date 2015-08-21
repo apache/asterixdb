@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -29,43 +29,43 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.api.common.SessionConfig;
-import edu.uci.ics.asterix.api.common.SessionConfig.OutputFormat;
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.DataverseDecl;
-import edu.uci.ics.asterix.aql.expression.DisconnectFeedStatement;
-import edu.uci.ics.asterix.aql.expression.Identifier;
-import edu.uci.ics.asterix.aql.translator.AqlTranslator;
-import edu.uci.ics.asterix.common.api.IClusterManagementWork;
-import edu.uci.ics.asterix.common.api.IClusterManagementWork.ClusterState;
-import edu.uci.ics.asterix.common.api.IClusterManagementWorkResponse;
-import edu.uci.ics.asterix.common.feeds.FeedConnectJobInfo;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionRequest;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.FeedIntakeInfo;
-import edu.uci.ics.asterix.common.feeds.FeedJobInfo;
-import edu.uci.ics.asterix.common.feeds.FeedJobInfo.FeedJobState;
-import edu.uci.ics.asterix.common.feeds.FeedJointKey;
-import edu.uci.ics.asterix.common.feeds.api.IFeedJoint;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLifecycleListener;
-import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
-import edu.uci.ics.asterix.common.feeds.message.StorageReportFeedMessage;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
-import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
-import edu.uci.ics.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
-import edu.uci.ics.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.asterix.api.common.SessionConfig;
+import org.apache.asterix.api.common.SessionConfig.OutputFormat;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.expression.DataverseDecl;
+import org.apache.asterix.aql.expression.DisconnectFeedStatement;
+import org.apache.asterix.aql.expression.Identifier;
+import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.api.IClusterManagementWorkResponse;
+import org.apache.asterix.common.feeds.FeedConnectJobInfo;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedIntakeInfo;
+import org.apache.asterix.common.feeds.FeedJobInfo;
+import org.apache.asterix.common.feeds.FeedJobInfo.FeedJobState;
+import org.apache.asterix.common.feeds.FeedJointKey;
+import org.apache.asterix.common.feeds.api.IFeedJoint;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
+import org.apache.asterix.common.feeds.api.IFeedLifecycleListener;
+import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
+import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.cluster.AddNodeWork;
+import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
 /**
  * A listener that subscribes to events associated with cluster membership

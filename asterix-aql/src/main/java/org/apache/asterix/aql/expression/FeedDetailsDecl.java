@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.expression;
+package org.apache.asterix.aql.expression;
 
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.functions.FunctionSignature;
 
 public class FeedDetailsDecl extends InternalDetailsDecl {
     private final Map<String, String> configuration;

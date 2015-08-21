@@ -23,7 +23,7 @@
         {
             "name" : "max mode",
             "type" : "INT",
-            "initial" : "edu.uci.ics.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode.NL"
+            "initial" : "org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode.NL"
         },
         {
             "name" : "dataset id",

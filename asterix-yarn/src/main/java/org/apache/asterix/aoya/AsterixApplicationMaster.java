@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.aoya;
+package org.apache.asterix.aoya;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -74,11 +74,11 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Cluster;
-import edu.uci.ics.asterix.event.schema.yarnCluster.MasterNode;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Node;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.event.schema.yarnCluster.Cluster;
+import org.apache.asterix.event.schema.yarnCluster.MasterNode;
+import org.apache.asterix.event.schema.yarnCluster.Node;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -102,10 +102,10 @@ public class AsterixApplicationMaster {
     private static final int NC_MEMORY_MBS_DEFAULT = 1536;
     private static final String EXTERNAL_CC_JAVA_OPTS_DEFAULT = "-Xmx" + CC_MEMORY_MBS_DEFAULT + "m";
     private static final String EXTERNAL_NC_JAVA_OPTS_DEFAULT = "-Xmx" + NC_MEMORY_MBS_DEFAULT + "m";
-    private static final String OBLITERATOR_CLASSNAME = "edu.uci.ics.asterix.aoya.Deleter";
-    private static final String HDFS_BACKUP_CLASSNAME = "edu.uci.ics.asterix.aoya.HDFSBackup";
-    private static final String NC_CLASSNAME = "edu.uci.ics.hyracks.control.nc.NCDriver";
-    private static final String CC_CLASSNAME = "edu.uci.ics.hyracks.control.cc.CCDriver";
+    private static final String OBLITERATOR_CLASSNAME = "org.apache.asterix.aoya.Deleter";
+    private static final String HDFS_BACKUP_CLASSNAME = "org.apache.asterix.aoya.HDFSBackup";
+    private static final String NC_CLASSNAME = "org.apache.hyracks.control.nc.NCDriver";
+    private static final String CC_CLASSNAME = "org.apache.hyracks.control.cc.CCDriver";
     private static final String JAVA_HOME = System.getProperty("java.home");
     private boolean doneAllocating = false;
 
@@ -1025,7 +1025,7 @@ public class AsterixApplicationMaster {
                 //get our java opts
                 vargs.add(ccJavaOpts);
                 vargs.add(CC_CLASSNAME);
-                vargs.add("-app-cc-main-class edu.uci.ics.asterix.hyracks.bootstrap.CCApplicationEntryPoint");
+                vargs.add("-app-cc-main-class org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint");
                 vargs.add("-cluster-net-ip-address " + cC.getClusterIp());
                 vargs.add("-client-net-ip-address " + cC.getClientIp());
                 ccStarted.set(true);
@@ -1045,7 +1045,7 @@ public class AsterixApplicationMaster {
                     String storagePath = iodevice + File.separator + storageSuffix;
                     vargs.add(ncJavaOpts);
                     vargs.add(NC_CLASSNAME);
-                    vargs.add("-app-nc-main-class edu.uci.ics.asterix.hyracks.bootstrap.NCApplicationEntryPoint");
+                    vargs.add("-app-nc-main-class org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint");
                     vargs.add("-node-id " + local.getId());
                     vargs.add("-cc-host " + cC.getClusterIp());
                     vargs.add("-iodevices " + storagePath);

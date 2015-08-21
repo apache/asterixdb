@@ -64,8 +64,8 @@
     <dependencySets>
         <dependencySet>
             <includes>
-                <include>edu.uci.ics.asterix:asterix-yarn</include>
-                <include>edu.uci.ics.asterix:asterix-common</include>
+                <include>org.apache.asterix:asterix-yarn</include>
+                <include>org.apache.asterix:asterix-common</include>
                 <include>log4j:log4j</include>
                 <include>org.slf4j:slf4j-api</include>
                 <include>org.slf4j:slf4j-simple</include>

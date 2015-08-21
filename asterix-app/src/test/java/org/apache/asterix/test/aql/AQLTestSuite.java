@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.aql;
+package org.apache.asterix.test.aql;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,7 +23,7 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.uci.ics.asterix.aql.parser.ParseException;
+import org.apache.asterix.aql.parser.ParseException;
 
 public class AQLTestSuite extends TestSuite {
     private static String AQLTS_PATH = StringUtils.join(new String[] { "src", "test", "resources", "AQLTS",

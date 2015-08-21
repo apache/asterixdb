@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base.temporal;
+package org.apache.asterix.om.base.temporal;
 
 public interface ICalendarSystem {
 

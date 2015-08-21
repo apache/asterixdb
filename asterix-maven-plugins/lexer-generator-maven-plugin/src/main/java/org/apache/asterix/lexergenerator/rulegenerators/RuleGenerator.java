@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator.rulegenerators;
+package org.apache.asterix.lexergenerator.rulegenerators;
 
-import edu.uci.ics.asterix.lexergenerator.LexerNode;
+import org.apache.asterix.lexergenerator.LexerNode;
 
 public interface RuleGenerator {
     public LexerNode generate(String input) throws Exception;

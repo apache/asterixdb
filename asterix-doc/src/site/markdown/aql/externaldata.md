@@ -102,7 +102,7 @@ Please substitute SOURCE_PATH with the absolute path to the source file on the l
 
 An incorrect value for the path parameter will give the following exception message when the dataset is used in a query.
 
-        edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException: edu.uci.ics.hyracks.api.exceptions.HyracksDataException: edu.uci.ics.hyracks.api.exceptions.HyracksDataException: Job failed.
+        org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: org.apache.hyracks.api.exceptions.HyracksDataException: org.apache.hyracks.api.exceptions.HyracksDataException: Job failed.
 
 
 Verify the correctness of the path parameter provided to the localfs adapter. Note that the path parameter must be an absolute path to the data file. For e.g. if you saved your file in your home directory (assume it to be /home/joe), then the path value should be
@@ -148,7 +148,7 @@ The expected parameters are described below:
 </tr>
 <tr>
   <td> parser </td>
-  <td> The parser used to parse HDFS records if the format is 'binary'. Use 'hive- parser' for data deserialized by a Hive Serde (AsterixDB can understand deserialized Hive objects) or a fully qualified class name of user- implemented parser that implements the interface edu.uci.ics.asterix.external.input.InputParser. </td>
+  <td> The parser used to parse HDFS records if the format is 'binary'. Use 'hive- parser' for data deserialized by a Hive Serde (AsterixDB can understand deserialized Hive objects) or a fully qualified class name of user- implemented parser that implements the interface org.apache.asterix.external.input.InputParser. </td>
 </tr>
 <tr>
   <td> hive-serde </td>

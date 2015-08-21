@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.external.data;
+package org.apache.asterix.tools.external.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,9 +23,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.tools.external.data.DataGenerator.InitializationInfo;
-import edu.uci.ics.asterix.tools.external.data.DataGenerator.TweetMessage;
-import edu.uci.ics.asterix.tools.external.data.DataGenerator.TweetMessageIterator;
+import org.apache.asterix.tools.external.data.DataGenerator.InitializationInfo;
+import org.apache.asterix.tools.external.data.DataGenerator.TweetMessage;
+import org.apache.asterix.tools.external.data.DataGenerator.TweetMessageIterator;
 
 public class TweetGenerator {
 

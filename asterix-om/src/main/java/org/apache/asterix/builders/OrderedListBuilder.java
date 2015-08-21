@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.builders;
+package org.apache.asterix.builders;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 
 public class OrderedListBuilder extends AbstractListBuilder {
 

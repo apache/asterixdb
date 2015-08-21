@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.types.hierachy;
+package org.apache.asterix.om.types.hierachy;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.ATypeTag;
 
 public abstract class AbstractIntegerTypeConvertComputer implements ITypeConvertComputer {
 

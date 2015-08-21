@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.expression;
+package org.apache.asterix.aql.expression;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import edu.uci.ics.asterix.common.annotations.IRecordFieldDataGen;
-import edu.uci.ics.asterix.common.annotations.UndeclaredFieldsDataGen;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
+import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
+import org.apache.asterix.common.annotations.IRecordFieldDataGen;
+import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public class RecordTypeDefinition extends TypeExpression {
 

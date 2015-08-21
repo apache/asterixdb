@@ -14,7 +14,7 @@ declare dataset CSXSmall(CSXType)
   primary key id on group1;
 
 load dataset CSXSmall
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/fuzzyjoin/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000")) pre-sorted;
 
 

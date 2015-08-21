@@ -36,7 +36,7 @@ declare type PartSuppType as closed {
 
 declare nodegroup group1 on nc1, nc2;
 
-set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 declare dataset LineItems(LineItemType)
   primary key l_orderkey, l_linenumber on group1;

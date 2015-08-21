@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.base;
+package org.apache.asterix.aql.base;
 
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import edu.uci.ics.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
+import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public interface IAqlExpression {
     public <R, T> R accept(IAqlExpressionVisitor<R, T> visitor, T arg) throws AsterixException;

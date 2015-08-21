@@ -13,13 +13,13 @@
  *  limitations under the License.
  */
 
-package edu.uci.ics.asterix.dataflow.data.nontagged.serde;
+package org.apache.asterix.dataflow.data.nontagged.serde;
 
-import edu.uci.ics.asterix.om.base.ABinary;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
+import org.apache.asterix.om.base.ABinary;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
 
 import java.io.DataInput;
 import java.io.DataOutput;

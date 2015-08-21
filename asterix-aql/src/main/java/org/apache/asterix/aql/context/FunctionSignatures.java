@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.context;
+package org.apache.asterix.aql.context;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.functions.FunctionSignature;
 
 public class FunctionSignatures {
     private final Map<FunctionSignature, FunctionExpressionMap> functionMap;

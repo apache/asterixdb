@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.management;
+package org.apache.asterix.event.management;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,17 +28,17 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.event.Events;
-import edu.uci.ics.asterix.event.schema.pattern.Event;
-import edu.uci.ics.asterix.event.schema.pattern.Nodeid;
-import edu.uci.ics.asterix.event.schema.pattern.Pattern;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
-import edu.uci.ics.asterix.event.schema.pattern.Value;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.installer.schema.conf.Configuration;
+import org.apache.asterix.event.driver.EventDriver;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.event.Events;
+import org.apache.asterix.event.schema.pattern.Event;
+import org.apache.asterix.event.schema.pattern.Nodeid;
+import org.apache.asterix.event.schema.pattern.Pattern;
+import org.apache.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.schema.pattern.Value;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.installer.schema.conf.Configuration;
 
 public class AsterixEventServiceClient {
 

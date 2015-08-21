@@ -1,6 +1,6 @@
 use dataverse metadata;
 
-set format "edu.uci.ics.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
+set format "org.apache.asterix.runtime.formats.nontagged.NonTaggedDataFormat";
 
 write output to nc1:"/home/yasser/Dropbox/metadata.adm";
 

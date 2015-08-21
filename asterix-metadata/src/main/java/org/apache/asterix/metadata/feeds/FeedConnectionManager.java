@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,11 +22,11 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntime;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedConnectionManager;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedRuntime;
+import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.FeedRuntimeManager;
+import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
 
 /**
  * An implementation of the IFeedManager interface.

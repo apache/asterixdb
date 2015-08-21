@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.api.ISubscribableRuntime;
-import edu.uci.ics.asterix.common.feeds.api.ISubscriberRuntime;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
+import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class SubscribableRuntime extends FeedRuntime implements ISubscribableRuntime {
 

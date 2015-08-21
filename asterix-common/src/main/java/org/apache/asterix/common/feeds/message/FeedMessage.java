@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.message;
+package org.apache.asterix.common.feeds.message;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessage;
-import edu.uci.ics.hyracks.api.dataflow.value.JSONSerializable;
+import org.apache.asterix.common.feeds.api.IFeedMessage;
+import org.apache.hyracks.api.dataflow.value.JSONSerializable;
 
 /**
  * A control message that can be sent to the runtime instance of a

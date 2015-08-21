@@ -1,6 +1,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-   xmlns:test="urn:xml.testframework.asterix.ics.uci.edu"
-   targetNamespace="urn:xml.testframework.asterix.ics.uci.edu" elementFormDefault="qualified">
+   xmlns:test="urn:xml.testframework.asterix.apache.org"
+   targetNamespace="urn:xml.testframework.asterix.apache.org" elementFormDefault="qualified">
 
    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
    <!-- test-suite - top level element                                       -->

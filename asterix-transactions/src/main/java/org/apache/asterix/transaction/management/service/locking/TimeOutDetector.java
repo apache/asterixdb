@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package org.apache.asterix.transaction.management.service.locking;
 
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.ACIDException;
 
 /**
  * @author pouria, kisskys

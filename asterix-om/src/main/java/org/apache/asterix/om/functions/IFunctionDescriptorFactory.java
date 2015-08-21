@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.functions;
+package org.apache.asterix.om.functions;
 
 public interface IFunctionDescriptorFactory {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.external.data;
+package org.apache.asterix.tools.external.data;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,9 +21,9 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class SocketClientAdapter implements IFeedAdapter {
 

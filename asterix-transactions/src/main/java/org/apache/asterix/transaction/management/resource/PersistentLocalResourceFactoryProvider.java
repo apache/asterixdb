@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.resource;
+package org.apache.asterix.transaction.management.resource;
 
-import edu.uci.ics.asterix.common.api.ILocalResourceMetadata;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactory;
-import edu.uci.ics.hyracks.storage.common.file.ILocalResourceFactoryProvider;
+import org.apache.asterix.common.api.ILocalResourceMetadata;
+import org.apache.hyracks.storage.common.file.ILocalResourceFactory;
+import org.apache.hyracks.storage.common.file.ILocalResourceFactoryProvider;
 
 public class PersistentLocalResourceFactoryProvider implements ILocalResourceFactoryProvider {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.datagen;
+package org.apache.asterix.tools.datagen;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -30,42 +30,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.parser.AQLParser;
-import edu.uci.ics.asterix.aql.parser.ParseException;
-import edu.uci.ics.asterix.common.annotations.AutoDataGen;
-import edu.uci.ics.asterix.common.annotations.DateBetweenYearsDataGen;
-import edu.uci.ics.asterix.common.annotations.DatetimeAddRandHoursDataGen;
-import edu.uci.ics.asterix.common.annotations.DatetimeBetweenYearsDataGen;
-import edu.uci.ics.asterix.common.annotations.FieldIntervalDataGen;
-import edu.uci.ics.asterix.common.annotations.FieldValFileDataGen;
-import edu.uci.ics.asterix.common.annotations.FieldValFileSameIndexDataGen;
-import edu.uci.ics.asterix.common.annotations.IRecordFieldDataGen;
-import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation;
-import edu.uci.ics.asterix.common.annotations.IRecordTypeAnnotation.Kind;
-import edu.uci.ics.asterix.common.annotations.InsertRandIntDataGen;
-import edu.uci.ics.asterix.common.annotations.ListDataGen;
-import edu.uci.ics.asterix.common.annotations.ListValFileDataGen;
-import edu.uci.ics.asterix.common.annotations.RecordDataGenAnnotation;
-import edu.uci.ics.asterix.common.annotations.TypeDataGen;
-import edu.uci.ics.asterix.common.annotations.UndeclaredFieldsDataGen;
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.types.TypeSignature;
-import edu.uci.ics.asterix.om.util.NonTaggedFormatUtil;
-import edu.uci.ics.asterix.tools.translator.ADGenDmlTranslator;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.data.utils.WriteValueTools;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.parser.AQLParser;
+import org.apache.asterix.aql.parser.ParseException;
+import org.apache.asterix.common.annotations.AutoDataGen;
+import org.apache.asterix.common.annotations.DateBetweenYearsDataGen;
+import org.apache.asterix.common.annotations.DatetimeAddRandHoursDataGen;
+import org.apache.asterix.common.annotations.DatetimeBetweenYearsDataGen;
+import org.apache.asterix.common.annotations.FieldIntervalDataGen;
+import org.apache.asterix.common.annotations.FieldValFileDataGen;
+import org.apache.asterix.common.annotations.FieldValFileSameIndexDataGen;
+import org.apache.asterix.common.annotations.IRecordFieldDataGen;
+import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
+import org.apache.asterix.common.annotations.IRecordTypeAnnotation.Kind;
+import org.apache.asterix.common.annotations.InsertRandIntDataGen;
+import org.apache.asterix.common.annotations.ListDataGen;
+import org.apache.asterix.common.annotations.ListValFileDataGen;
+import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
+import org.apache.asterix.common.annotations.TypeDataGen;
+import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeSignature;
+import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.asterix.tools.translator.ADGenDmlTranslator;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
 
 public class AdmDataGen {
 

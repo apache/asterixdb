@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.test;
+package org.apache.asterix.installer.test;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,14 +27,14 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
 
-import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.installer.command.CommandHandler;
-import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.event.error.VerificationUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.model.AsterixRuntimeState;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.installer.command.CommandHandler;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.testframework.context.TestCaseContext;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 

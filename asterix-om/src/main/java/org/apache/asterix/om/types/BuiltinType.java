@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.types;
+package org.apache.asterix.om.types;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.asterix.om.visitors.IOMVisitor;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.visitors.IOMVisitor;
 
 public abstract class BuiltinType implements IAType {
 

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.evaluators.functions;
+package org.apache.asterix.runtime.evaluators.functions;
 
 import java.util.regex.Pattern;
 
-import edu.uci.ics.asterix.om.base.AString;
+import org.apache.asterix.om.base.AString;
 
 public class StringEvaluatorUtils {
 

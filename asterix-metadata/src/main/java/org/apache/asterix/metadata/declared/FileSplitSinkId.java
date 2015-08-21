@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.declared;
+package org.apache.asterix.metadata.declared;
 
-import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
+import org.apache.hyracks.dataflow.std.file.FileSplit;
 
 public class FileSplitSinkId {
 

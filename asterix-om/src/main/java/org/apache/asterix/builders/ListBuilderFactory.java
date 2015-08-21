@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.builders;
+package org.apache.asterix.builders;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.util.container.IObjectFactory;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.util.container.IObjectFactory;
 
 public class ListBuilderFactory implements IObjectFactory<IAsterixListBuilder, ATypeTag> {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.service;
+package org.apache.asterix.event.service;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -47,19 +47,19 @@ import javax.xml.bind.Marshaller;
 
 import org.apache.commons.io.IOUtils;
 
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.common.configuration.Coredump;
-import edu.uci.ics.asterix.common.configuration.Store;
-import edu.uci.ics.asterix.common.configuration.TransactionLogDir;
-import edu.uci.ics.asterix.event.driver.EventDriver;
-import edu.uci.ics.asterix.event.error.EventException;
-import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Env;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.cluster.Property;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.common.configuration.Coredump;
+import org.apache.asterix.common.configuration.Store;
+import org.apache.asterix.common.configuration.TransactionLogDir;
+import org.apache.asterix.event.driver.EventDriver;
+import org.apache.asterix.event.error.EventException;
+import org.apache.asterix.event.management.EventUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Env;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.cluster.Property;
 
 public class AsterixEventServiceUtil {
 
@@ -107,7 +107,7 @@ public class AsterixEventServiceUtil {
 
         String ccJavaOpts = null;
         String ncJavaOpts = null;
-        for (edu.uci.ics.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
+        for (org.apache.asterix.common.configuration.Property property : asterixConfiguration.getProperty()) {
             if (property.getName().equalsIgnoreCase(EventUtil.CC_JAVA_OPTS)) {
                 ccJavaOpts = property.getValue();
             } else if (property.getName().equalsIgnoreCase(EventUtil.NC_JAVA_OPTS)) {
@@ -339,9 +339,9 @@ public class AsterixEventServiceUtil {
             conf.append(asterixInstanceName + "_" + node.getId() + "." + TXN_LOG_DIR_KEY_SUFFIX + "=" + txnLogDir
                     + "\n");
         }
-        List<edu.uci.ics.asterix.common.configuration.Property> properties = asterixInstance.getAsterixConfiguration()
+        List<org.apache.asterix.common.configuration.Property> properties = asterixInstance.getAsterixConfiguration()
                 .getProperty();
-        for (edu.uci.ics.asterix.common.configuration.Property p : properties) {
+        for (org.apache.asterix.common.configuration.Property p : properties) {
             if (p.getName().trim().toLowerCase().contains("log")) {
                 conf.append(p.getValue() + "=" + p.getValue());
             }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.recovery;
+package org.apache.asterix.transaction.management.service.recovery;
 
 import java.io.Serializable;
 

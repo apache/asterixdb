@@ -15,6 +15,6 @@ declare dataset Orders(OrderType)
   primary key oid on group1;
 
 load dataset Orders from nc1:"/tmp/orderData.json";
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///tmp/orderData.json"),("format"="adm")) pre-sorted;
 

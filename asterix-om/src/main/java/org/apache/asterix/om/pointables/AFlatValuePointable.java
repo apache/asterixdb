@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables;
+package org.apache.asterix.om.pointables;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.util.container.IObjectFactory;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.util.container.IObjectFactory;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
  * This class represents a flat field, e.g., int field, string field, and

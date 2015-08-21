@@ -12,26 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.util.logging.Level;
 
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.feeds.FeedConstants;
-import edu.uci.ics.asterix.common.feeds.FeedTupleCommitAckMessage;
-import edu.uci.ics.asterix.common.feeds.MessageReceiver;
-import edu.uci.ics.asterix.common.feeds.NodeLoadReport;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLoadManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessage.MessageType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedTrackingManager;
-import edu.uci.ics.asterix.common.feeds.message.FeedCongestionMessage;
-import edu.uci.ics.asterix.common.feeds.message.FeedReportMessage;
-import edu.uci.ics.asterix.common.feeds.message.ScaleInReportMessage;
-import edu.uci.ics.asterix.common.feeds.message.StorageReportFeedMessage;
-import edu.uci.ics.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
-import edu.uci.ics.asterix.feeds.CentralFeedManager.AQLExecutor;
-import edu.uci.ics.asterix.hyracks.bootstrap.FeedBootstrap;
+import org.apache.asterix.common.feeds.FeedConstants;
+import org.apache.asterix.common.feeds.FeedTupleCommitAckMessage;
+import org.apache.asterix.common.feeds.MessageReceiver;
+import org.apache.asterix.common.feeds.NodeLoadReport;
+import org.apache.asterix.common.feeds.api.IFeedLoadManager;
+import org.apache.asterix.common.feeds.api.IFeedMessage.MessageType;
+import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
+import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
+import org.apache.asterix.common.feeds.message.FeedReportMessage;
+import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
+import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
+import org.apache.asterix.feeds.CentralFeedManager.AQLExecutor;
+import org.apache.asterix.hyracks.bootstrap.FeedBootstrap;
 
 public class FeedMessageReceiver extends MessageReceiver<String> {
 

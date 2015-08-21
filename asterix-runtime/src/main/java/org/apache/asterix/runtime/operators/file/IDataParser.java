@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.operators.file;
+package org.apache.asterix.runtime.operators.file;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.types.ARecordType;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.types.ARecordType;
 
 /**
  * Interface implemented by a parser

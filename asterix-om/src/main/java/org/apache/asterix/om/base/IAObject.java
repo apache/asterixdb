@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.visitors.IOMVisitor;
-import edu.uci.ics.hyracks.api.dataflow.value.JSONSerializable;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.visitors.IOMVisitor;
+import org.apache.hyracks.api.dataflow.value.JSONSerializable;
 
 /**
  * Represents an object in Asterix.

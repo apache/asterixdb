@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.api;
+package org.apache.asterix.common.api;
 
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.api.application.ICCApplicationContext;
 
 public class AsterixContextInfo implements IAsterixContextInfo {
 

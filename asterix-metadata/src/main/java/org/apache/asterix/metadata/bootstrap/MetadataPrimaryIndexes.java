@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.bootstrap;
+package org.apache.asterix.metadata.bootstrap;
 
 import java.util.Arrays;
 
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.api.IMetadataIndex;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.api.IMetadataIndex;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 
 /**
  * Contains static primary-index descriptors of all metadata datasets.

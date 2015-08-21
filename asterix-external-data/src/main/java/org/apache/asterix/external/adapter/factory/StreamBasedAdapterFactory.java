@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.adapter.factory;
+package org.apache.asterix.external.adapter.factory;
 
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.external.util.INodeResolver;
-import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory;
-import edu.uci.ics.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
-import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
+import org.apache.asterix.external.util.INodeResolver;
+import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory;
+import org.apache.asterix.runtime.operators.file.AsterixTupleParserFactory.InputDataFormat;
+import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
 
 public abstract class StreamBasedAdapterFactory implements IAdapterFactory {
 

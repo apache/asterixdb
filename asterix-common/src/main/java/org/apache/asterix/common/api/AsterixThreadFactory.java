@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.api;
+package org.apache.asterix.common.api;
 
 import java.util.concurrent.ThreadFactory;
 
-import edu.uci.ics.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 
 public class AsterixThreadFactory implements ThreadFactory {
 

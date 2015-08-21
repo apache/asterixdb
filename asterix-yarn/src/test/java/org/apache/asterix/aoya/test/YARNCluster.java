@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.aoya.test;
+package org.apache.asterix.aoya.test;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 
-import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
+import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
 
 /**
  * Manages a Mini (local VM) YARN cluster with a configured number of NodeManager(s).

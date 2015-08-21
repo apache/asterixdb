@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.DistributeFeedFrameWriter;
-import edu.uci.ics.asterix.common.feeds.FeedId;
-import edu.uci.ics.asterix.common.feeds.IngestionRuntime;
-import edu.uci.ics.asterix.common.feeds.api.IAdapterRuntimeManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedAdapter;
-import edu.uci.ics.asterix.common.feeds.api.IIntakeProgressTracker;
+import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
+import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.IngestionRuntime;
+import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
+import org.apache.asterix.common.feeds.api.IFeedAdapter;
+import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 
 public class AdapterRuntimeManager implements IAdapterRuntimeManager {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessageService;
-import edu.uci.ics.asterix.common.feeds.api.IFeedService;
-import edu.uci.ics.asterix.common.feeds.message.NodeReportMessage;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedMessageService;
+import org.apache.asterix.common.feeds.api.IFeedService;
+import org.apache.asterix.common.feeds.message.NodeReportMessage;
 
 public class NodeLoadReportService implements IFeedService {
 

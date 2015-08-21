@@ -12,42 +12,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADatePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADateTimePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADayTimeDurationPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADoublePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ADurationPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AFloatPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt16PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt32PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt64PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AInt8PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AIntervalPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ALinePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ANullPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ANullableFieldPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AObjectPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.APointPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ARecordPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AStringPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.ATimePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AUnionPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinterFactory;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
+import org.apache.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADatePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADateTimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADayTimeDurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADoublePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AFloatPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt16PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt32PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt64PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AInt8PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AIntervalPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ALinePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ANullableFieldPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AObjectPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.APoint3DPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.APointPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARecordPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AStringPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ATimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AUnionPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinterFactory;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 
 public class AqlCSVPrinterFactoryProvider implements IPrinterFactoryProvider {
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.recordmanagergenerator;
+package org.apache.asterix.recordmanagergenerator;
 
 import java.io.Reader;
 import java.util.ArrayList;

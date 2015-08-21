@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.CmdLineParser;

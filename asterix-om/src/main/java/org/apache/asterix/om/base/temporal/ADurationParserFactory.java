@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base.temporal;
+package org.apache.asterix.om.base.temporal;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.om.base.AMutableDayTimeDuration;
-import edu.uci.ics.asterix.om.base.AMutableDuration;
-import edu.uci.ics.asterix.om.base.AMutableYearMonthDuration;
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParser;
-import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
+import org.apache.asterix.om.base.AMutableDayTimeDuration;
+import org.apache.asterix.om.base.AMutableDuration;
+import org.apache.asterix.om.base.AMutableYearMonthDuration;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
+import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 
 public class ADurationParserFactory implements IValueParserFactory {
 

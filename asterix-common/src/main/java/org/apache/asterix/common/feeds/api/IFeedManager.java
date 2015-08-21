@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.api;
+package org.apache.asterix.common.feeds.api;
 
-import edu.uci.ics.asterix.common.config.AsterixFeedProperties;
-import edu.uci.ics.asterix.common.feeds.api.IFeedConnectionManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMemoryManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessageService;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMetadataManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMetricCollector;
-import edu.uci.ics.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
+import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
+import org.apache.asterix.common.feeds.api.IFeedMessageService;
+import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
+import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
+import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 
 /**
  * Provides access to services related to feed management within a node controller

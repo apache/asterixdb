@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Alexander Behm <abehm (at) ics.uci.edu>
+ * Author: Alexander Behm <abehm (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin.tokenizer;
+package org.apache.asterix.fuzzyjoin.tokenizer;
 
 public class UTF8NGramTokenFactory extends AbstractUTF8TokenFactory {
 

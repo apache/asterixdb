@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 public class AMutableInt32 extends AInt32 {
 

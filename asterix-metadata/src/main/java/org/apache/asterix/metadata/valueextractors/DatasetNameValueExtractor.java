@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.valueextractors;
+package org.apache.asterix.metadata.valueextractors;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.api.IValueExtractor;
-import edu.uci.ics.asterix.om.base.AString;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.api.IValueExtractor;
+import org.apache.asterix.om.base.AString;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
  * Extracts the value of field 'DatasetName' from an ITupleReference that

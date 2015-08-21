@@ -12,18 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
-import edu.uci.ics.asterix.dataflow.data.common.AListElementTokenFactory;
-import edu.uci.ics.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
-import edu.uci.ics.asterix.dataflow.data.common.AUnorderedListBinaryTokenizerFactory;
-import edu.uci.ics.asterix.dataflow.data.common.IBinaryTokenizerFactoryProvider;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.HashedUTF8WordTokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
-import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
+import org.apache.asterix.dataflow.data.common.AListElementTokenFactory;
+import org.apache.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
+import org.apache.asterix.dataflow.data.common.AUnorderedListBinaryTokenizerFactory;
+import org.apache.asterix.dataflow.data.common.IBinaryTokenizerFactoryProvider;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.HashedUTF8WordTokenFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 
 public class AqlBinaryTokenizerFactoryProvider implements IBinaryTokenizerFactoryProvider {
 

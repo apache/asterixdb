@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aoya.test;
+package org.apache.asterix.aoya.test;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,19 +41,19 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
 
-import edu.uci.ics.asterix.aoya.AsterixYARNClient;
-import edu.uci.ics.asterix.aoya.Utils;
-import edu.uci.ics.asterix.event.error.VerificationUtil;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.model.AsterixRuntimeState;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Cluster;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Node;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.aoya.test.YARNCluster;
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.aoya.AsterixYARNClient;
+import org.apache.asterix.aoya.Utils;
+import org.apache.asterix.event.error.VerificationUtil;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.model.AsterixRuntimeState;
+import org.apache.asterix.event.schema.yarnCluster.Cluster;
+import org.apache.asterix.event.schema.yarnCluster.Node;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.aoya.test.YARNCluster;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.testframework.context.TestCaseContext;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AsterixYARNLifecycleIT {

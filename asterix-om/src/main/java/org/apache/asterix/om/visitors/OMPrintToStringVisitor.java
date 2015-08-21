@@ -12,44 +12,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.visitors;
+package org.apache.asterix.om.visitors;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.base.ABinary;
-import edu.uci.ics.asterix.om.base.ABitArray;
-import edu.uci.ics.asterix.om.base.ABoolean;
-import edu.uci.ics.asterix.om.base.ACircle;
-import edu.uci.ics.asterix.om.base.ACollectionCursor;
-import edu.uci.ics.asterix.om.base.ADate;
-import edu.uci.ics.asterix.om.base.ADateTime;
-import edu.uci.ics.asterix.om.base.ADayTimeDuration;
-import edu.uci.ics.asterix.om.base.ADouble;
-import edu.uci.ics.asterix.om.base.ADuration;
-import edu.uci.ics.asterix.om.base.AFloat;
-import edu.uci.ics.asterix.om.base.AInt16;
-import edu.uci.ics.asterix.om.base.AInt32;
-import edu.uci.ics.asterix.om.base.AInt64;
-import edu.uci.ics.asterix.om.base.AInt8;
-import edu.uci.ics.asterix.om.base.AInterval;
-import edu.uci.ics.asterix.om.base.ALine;
-import edu.uci.ics.asterix.om.base.ANull;
-import edu.uci.ics.asterix.om.base.AOrderedList;
-import edu.uci.ics.asterix.om.base.APoint;
-import edu.uci.ics.asterix.om.base.APoint3D;
-import edu.uci.ics.asterix.om.base.APolygon;
-import edu.uci.ics.asterix.om.base.ARecord;
-import edu.uci.ics.asterix.om.base.ARectangle;
-import edu.uci.ics.asterix.om.base.AString;
-import edu.uci.ics.asterix.om.base.ATime;
-import edu.uci.ics.asterix.om.base.AUUID;
-import edu.uci.ics.asterix.om.base.AUnorderedList;
-import edu.uci.ics.asterix.om.base.AYearMonthDuration;
-import edu.uci.ics.asterix.om.base.IACursor;
-import edu.uci.ics.asterix.om.base.IAObject;
-import edu.uci.ics.asterix.om.base.ShortWithoutTypeInfo;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.base.ABinary;
+import org.apache.asterix.om.base.ABitArray;
+import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ACircle;
+import org.apache.asterix.om.base.ACollectionCursor;
+import org.apache.asterix.om.base.ADate;
+import org.apache.asterix.om.base.ADateTime;
+import org.apache.asterix.om.base.ADayTimeDuration;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.ADuration;
+import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AInt16;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.AInterval;
+import org.apache.asterix.om.base.ALine;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AOrderedList;
+import org.apache.asterix.om.base.APoint;
+import org.apache.asterix.om.base.APoint3D;
+import org.apache.asterix.om.base.APolygon;
+import org.apache.asterix.om.base.ARecord;
+import org.apache.asterix.om.base.ARectangle;
+import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.ATime;
+import org.apache.asterix.om.base.AUUID;
+import org.apache.asterix.om.base.AUnorderedList;
+import org.apache.asterix.om.base.AYearMonthDuration;
+import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.base.ShortWithoutTypeInfo;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 
 public class OMPrintToStringVisitor implements IOMVisitor {
 

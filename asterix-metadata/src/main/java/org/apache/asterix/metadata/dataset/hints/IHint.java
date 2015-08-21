@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.dataset.hints;
+package org.apache.asterix.metadata.dataset.hints;
 
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * Represents a hint provided as part of an AQL statement.

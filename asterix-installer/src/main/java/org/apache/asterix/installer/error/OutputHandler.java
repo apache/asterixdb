@@ -12,16 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.error;
+package org.apache.asterix.installer.error;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import edu.uci.ics.asterix.event.management.IOutputHandler;
-import edu.uci.ics.asterix.event.management.OutputAnalysis;
-import edu.uci.ics.asterix.event.model.EventList.EventType;
-import edu.uci.ics.asterix.event.schema.pattern.Event;
+import org.apache.asterix.event.management.IOutputHandler;
+import org.apache.asterix.event.management.OutputAnalysis;
+import org.apache.asterix.event.model.EventList.EventType;
+import org.apache.asterix.event.schema.pattern.Event;
 
 public class OutputHandler implements IOutputHandler {
 

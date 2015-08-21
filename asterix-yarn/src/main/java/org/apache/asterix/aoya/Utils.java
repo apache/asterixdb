@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aoya;
+package org.apache.asterix.aoya;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,9 +45,9 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 
-import edu.uci.ics.asterix.common.configuration.AsterixConfiguration;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Cluster;
-import edu.uci.ics.asterix.event.schema.yarnCluster.Node;
+import org.apache.asterix.common.configuration.AsterixConfiguration;
+import org.apache.asterix.event.schema.yarnCluster.Cluster;
+import org.apache.asterix.event.schema.yarnCluster.Node;
 
 public class Utils {
 

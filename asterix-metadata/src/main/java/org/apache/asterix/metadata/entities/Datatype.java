@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.entities;
+package org.apache.asterix.metadata.entities;
 
-import edu.uci.ics.asterix.metadata.MetadataCache;
-import edu.uci.ics.asterix.metadata.api.IMetadataEntity;
-import edu.uci.ics.asterix.om.types.IAType;
+import org.apache.asterix.metadata.MetadataCache;
+import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.om.types.IAType;
 
 /**
  * Metadata describing a datatype.

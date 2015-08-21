@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.functions;
+package org.apache.asterix.metadata.functions;
 
 import java.util.List;
 
-import edu.uci.ics.asterix.om.functions.AsterixExternalFunctionInfo;
-import edu.uci.ics.asterix.om.functions.AsterixFunction;
-import edu.uci.ics.asterix.om.typecomputer.base.IResultTypeComputer;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
+import org.apache.asterix.om.functions.AsterixExternalFunctionInfo;
+import org.apache.asterix.om.functions.AsterixFunction;
+import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 
 public class AsterixExternalScalarFunctionInfo extends AsterixExternalFunctionInfo {
 

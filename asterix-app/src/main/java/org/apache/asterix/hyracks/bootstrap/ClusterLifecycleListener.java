@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.hyracks.bootstrap;
+package org.apache.asterix.hyracks.bootstrap;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,19 +23,19 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.api.IClusterEventsSubscriber;
-import edu.uci.ics.asterix.common.api.IClusterManagementWork;
-import edu.uci.ics.asterix.common.api.IClusterManagementWorkResponse;
-import edu.uci.ics.asterix.common.api.IClusterManagementWorkResponse.Status;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.metadata.cluster.AddNodeWork;
-import edu.uci.ics.asterix.metadata.cluster.AddNodeWorkResponse;
-import edu.uci.ics.asterix.metadata.cluster.ClusterManager;
-import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWork;
-import edu.uci.ics.asterix.metadata.cluster.RemoveNodeWorkResponse;
-import edu.uci.ics.asterix.om.util.AsterixClusterProperties;
-import edu.uci.ics.hyracks.api.application.IClusterLifecycleListener;
+import org.apache.asterix.common.api.IClusterEventsSubscriber;
+import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IClusterManagementWorkResponse;
+import org.apache.asterix.common.api.IClusterManagementWorkResponse.Status;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.metadata.cluster.AddNodeWork;
+import org.apache.asterix.metadata.cluster.AddNodeWorkResponse;
+import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.metadata.cluster.RemoveNodeWork;
+import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.hyracks.api.application.IClusterLifecycleListener;
 
 public class ClusterLifecycleListener implements IClusterLifecycleListener {
 

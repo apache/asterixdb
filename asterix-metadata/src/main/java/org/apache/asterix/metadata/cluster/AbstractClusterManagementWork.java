@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.cluster;
+package org.apache.asterix.metadata.cluster;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.asterix.common.api.IClusterEventsSubscriber;
-import edu.uci.ics.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IClusterEventsSubscriber;
+import org.apache.asterix.common.api.IClusterManagementWork;
 
 public abstract class AbstractClusterManagementWork implements IClusterManagementWork {
 

@@ -17,7 +17,7 @@
   <artifactId>asterix-server</artifactId>
   <name>asterix-server</name>
   <parent>
-    <groupId>edu.uci.ics.asterix</groupId>
+    <groupId>org.apache.asterix</groupId>
     <artifactId>asterix</artifactId>
     <version>0.8.7-SNAPSHOT</version>
   </parent>
@@ -48,10 +48,10 @@
                 <platform>unix</platform>
               </platforms>
               <name>asterixcc</name>
-              <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+              <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
               <commandLineArguments>
                  <commandLineArgument>-app-cc-main-class</commandLineArgument>
-                 <commandLineArgument>edu.uci.ics.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
+                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </program>
             <program>
@@ -59,34 +59,34 @@
                 <platform>unix</platform>
               </platforms>
               <name>asterixnc</name>
-              <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+              <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
               <commandLineArguments>
                 <commandLineArgument>-app-nc-main-class</commandLineArgument>
-                <commandLineArgument>edu.uci.ics.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </program>
           </programs>
           <daemons>
             <daemon>
               <id>asterixcc</id>
-              <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+              <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
               <platforms>
               	<platform>booter-windows</platform>
               </platforms>
               <commandLineArguments>
                  <commandLineArgument>-app-cc-main-class</commandLineArgument>
-                 <commandLineArgument>edu.uci.ics.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
+                 <commandLineArgument>org.apache.asterix.hyracks.bootstrap.CCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </daemon>
             <daemon>
               <id>asterixnc</id>
-              <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+              <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
               <platforms>
               	<platform>booter-windows</platform>
               </platforms>
               <commandLineArguments>
                 <commandLineArgument>-app-nc-main-class</commandLineArgument>
-                <commandLineArgument>edu.uci.ics.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+                <commandLineArgument>org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint</commandLineArgument>
               </commandLineArguments>
             </daemon>
           </daemons>
@@ -122,19 +122,19 @@
   </build>
   <dependencies>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-cc</artifactId>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.hyracks</groupId>
+  		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
-  		<groupId>edu.uci.ics.asterix</groupId>
+  		<groupId>org.apache.asterix</groupId>
   		<artifactId>asterix-app</artifactId>
   		<version>0.8.7-SNAPSHOT</version>
   	</dependency>

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.transaction.management.service.transaction;
+package org.apache.asterix.transaction.management.service.transaction;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.ics.asterix.common.transactions.JobId;
+import org.apache.asterix.common.transactions.JobId;
 
 /**
  * Represents a factory to generate unique transaction IDs.

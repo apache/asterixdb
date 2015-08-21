@@ -16,7 +16,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-transactions</artifactId>
@@ -43,17 +43,17 @@
 				</configuration>
 			</plugin>
             <plugin>
-                <groupId>edu.uci.ics.asterix</groupId>
+                <groupId>org.apache.asterix</groupId>
                 <artifactId>record-manager-generator-maven-plugin</artifactId>
                 <version>0.8.7-SNAPSHOT</version>
                 <configuration>
                     <debug>false</debug>
                     <inputFiles>
-                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Job.json</param>
-                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Resource.json</param>
-                        <param>src/main/java/edu/uci/ics/asterix/transaction/management/service/locking/Request.json</param>
+                        <param>src/main/java/org/apache/asterix/transaction/management/service/locking/Job.json</param>
+                        <param>src/main/java/org/apache/asterix/transaction/management/service/locking/Resource.json</param>
+                        <param>src/main/java/org/apache/asterix/transaction/management/service/locking/Request.json</param>
                     </inputFiles>
-                    <packageName>edu.uci.ics.asterix.transaction.management.service.locking</packageName>
+                    <packageName>org.apache.asterix.transaction.management.service.locking</packageName>
                 </configuration>
                 <executions>
                     <execution>
@@ -90,23 +90,23 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-common</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-btree</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-rtree</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
+			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
 		</dependency>
                 <dependency>
-                        <groupId>edu.uci.ics.asterix</groupId>
+                        <groupId>org.apache.asterix</groupId>
                         <artifactId>asterix-common</artifactId>
                         <version>0.8.7-SNAPSHOT</version>
                         <type>jar</type>

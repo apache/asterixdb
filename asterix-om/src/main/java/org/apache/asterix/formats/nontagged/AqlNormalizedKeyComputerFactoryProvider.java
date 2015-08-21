@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers.AWrappedAscNormalizedKeyComputerFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers.AWrappedDescNormalizedKeyComputerFactory;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.normalizers.ByteArrayNormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.normalizers.DoubleNormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.normalizers.FloatNormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.normalizers.Integer64NormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.normalizers.IntegerNormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.normalizers.UTF8StringNormalizedKeyComputerFactory;
+import org.apache.asterix.dataflow.data.nontagged.keynormalizers.AWrappedAscNormalizedKeyComputerFactory;
+import org.apache.asterix.dataflow.data.nontagged.keynormalizers.AWrappedDescNormalizedKeyComputerFactory;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.data.INormalizedKeyComputerFactoryProvider;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.dataflow.common.data.normalizers.ByteArrayNormalizedKeyComputerFactory;
+import org.apache.hyracks.dataflow.common.data.normalizers.DoubleNormalizedKeyComputerFactory;
+import org.apache.hyracks.dataflow.common.data.normalizers.FloatNormalizedKeyComputerFactory;
+import org.apache.hyracks.dataflow.common.data.normalizers.Integer64NormalizedKeyComputerFactory;
+import org.apache.hyracks.dataflow.common.data.normalizers.IntegerNormalizedKeyComputerFactory;
+import org.apache.hyracks.dataflow.common.data.normalizers.UTF8StringNormalizedKeyComputerFactory;
 
 public class AqlNormalizedKeyComputerFactoryProvider implements INormalizedKeyComputerFactoryProvider {
 

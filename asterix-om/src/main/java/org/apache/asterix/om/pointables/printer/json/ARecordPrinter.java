@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables.printer.json;
+package org.apache.asterix.om.pointables.printer.json;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * This class is to print the content of a record. It is ONLY visible to

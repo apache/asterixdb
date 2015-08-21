@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.aql;
+package org.apache.asterix.test.aql;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -43,11 +43,11 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.config.GlobalConfig;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext.OutputFormat;
-import edu.uci.ics.asterix.testframework.context.TestFileContext;
-import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
+import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 
 public class TestsUtils {
 
@@ -324,7 +324,7 @@ public class TestsUtils {
     public static void executeManagixCommand(String command) throws ClassNotFoundException, NoSuchMethodException,
             SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (managixExecuteMethod == null) {
-            Class<?> clazz = Class.forName("edu.uci.ics.asterix.installer.test.AsterixInstallerIntegrationUtil");
+            Class<?> clazz = Class.forName("org.apache.asterix.installer.test.AsterixInstallerIntegrationUtil");
             managixExecuteMethod = clazz.getMethod("executeCommand", String.class);
         }
         managixExecuteMethod.invoke(null, command);

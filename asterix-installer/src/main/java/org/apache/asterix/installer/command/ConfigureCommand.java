@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,12 +24,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
-import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.cluster.WorkingDir;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.schema.conf.Configuration;
+import org.apache.asterix.event.management.EventUtil;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.cluster.WorkingDir;
+import org.apache.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.installer.schema.conf.Configuration;
 
 public class ConfigureCommand extends AbstractCommand {
 

@@ -16,7 +16,7 @@ create dataset DBLP(DBLPType)
   primary key id on group1;
 
 load dataset DBLP 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/dblp-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":")) pre-sorted;
 
 write output to nc1:"rttest/consolidate-complex-selects.aql";

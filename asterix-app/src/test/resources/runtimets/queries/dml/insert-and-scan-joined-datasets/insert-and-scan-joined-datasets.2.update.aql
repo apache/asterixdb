@@ -10,11 +10,11 @@
 use dataverse test;
 
 load dataset myData 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/odd-numbers.adm"),("format"="adm"))pre-sorted;
 
 load dataset myData2 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/odd-numbers-2.adm"),("format"="adm"))pre-sorted;
 
 insert into dataset myData (

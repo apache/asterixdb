@@ -12,23 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import java.util.Date;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.model.BackupInfo;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.event.service.ServiceProvider;
-import edu.uci.ics.asterix.event.util.PatternCreator;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.schema.conf.Backup;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.model.BackupInfo;
+import org.apache.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ServiceProvider;
+import org.apache.asterix.event.util.PatternCreator;
+import org.apache.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.installer.schema.conf.Backup;
 
 public class BackupCommand extends AbstractCommand {
 

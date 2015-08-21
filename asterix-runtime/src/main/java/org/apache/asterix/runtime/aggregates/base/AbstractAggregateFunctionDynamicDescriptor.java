@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.runtime.aggregates.base;
+package org.apache.asterix.runtime.aggregates.base;
 
-import edu.uci.ics.asterix.common.functions.FunctionDescriptorTag;
-import edu.uci.ics.asterix.om.functions.AbstractFunctionDescriptor;
+import org.apache.asterix.common.functions.FunctionDescriptorTag;
+import org.apache.asterix.om.functions.AbstractFunctionDescriptor;
 
 public abstract class AbstractAggregateFunctionDynamicDescriptor extends AbstractFunctionDescriptor {
     private static final long serialVersionUID = 1L;

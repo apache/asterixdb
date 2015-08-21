@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.testframework.context;
+package org.apache.asterix.testframework.context;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,12 +20,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.asterix.testframework.xml.CategoryEnum;
-import edu.uci.ics.asterix.testframework.xml.TestCase;
-import edu.uci.ics.asterix.testframework.xml.TestCase.CompilationUnit;
-import edu.uci.ics.asterix.testframework.xml.TestGroup;
-import edu.uci.ics.asterix.testframework.xml.TestSuite;
-import edu.uci.ics.asterix.testframework.xml.TestSuiteParser;
+import org.apache.asterix.testframework.xml.CategoryEnum;
+import org.apache.asterix.testframework.xml.TestCase;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.asterix.testframework.xml.TestSuite;
+import org.apache.asterix.testframework.xml.TestSuiteParser;
 
 public class TestCaseContext {
 

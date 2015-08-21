@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.common;
+package org.apache.asterix.dataflow.data.common;
 
 public final class SerializationUtil {
 

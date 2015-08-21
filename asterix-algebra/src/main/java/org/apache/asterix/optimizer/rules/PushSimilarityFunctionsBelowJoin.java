@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.optimizer.rules;
+package org.apache.asterix.optimizer.rules;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.rewriter.rules.PushFunctionsBelowJoin;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.rewriter.rules.PushFunctionsBelowJoin;
 
 /**
  * Pushes similarity function-call expressions below a join if possible.

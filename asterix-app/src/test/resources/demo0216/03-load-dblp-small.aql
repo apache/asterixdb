@@ -15,6 +15,6 @@ declare dataset DBLPSmall(DBLPType)
  primary key id on group1;
 
 load dataset DBLPSmall 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="rainbow-01:///home/hyracks/demo-data/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":") pre-sorted;
 

@@ -1,11 +1,11 @@
 use dataverse test;
 
 load dataset Customers2 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/custord-tiny/customer-tiny.adm"),("format"="adm"));
 
 load dataset Orders2 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/custord-tiny/order-tiny.adm"),("format"="adm"));
 
 insert into dataset CustomerOrders2 (

@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.declared;
+package org.apache.asterix.metadata.declared;
 
-import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSink;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
-import edu.uci.ics.hyracks.algebricks.core.algebra.properties.ResultSetDomain;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSink;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.ResultSetDomain;
 
 public class ResultSetDataSink implements IDataSink {
 

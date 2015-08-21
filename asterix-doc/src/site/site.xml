@@ -21,7 +21,7 @@
   <bannerLeft>
     <name>AsterixDB</name>
     <src>images/asterixlogo.png</src>
-    <href>http://asterixdb.ics.uci.edu/</href>
+    <href>http://asterixdb.apache.org/</href>
   </bannerLeft>
 
   <version position="right"/>

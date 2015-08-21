@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base.temporal;
+package org.apache.asterix.om.base.temporal;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.TimeZone;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * {@link DateTimeFormatUtils} provides the utility methods to parse and print a date/time/datetime

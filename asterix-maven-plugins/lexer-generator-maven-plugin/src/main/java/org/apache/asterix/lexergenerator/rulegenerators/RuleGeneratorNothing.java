@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator.rulegenerators;
+package org.apache.asterix.lexergenerator.rulegenerators;
 
-import edu.uci.ics.asterix.lexergenerator.LexerNode;
-import edu.uci.ics.asterix.lexergenerator.rules.RuleEpsilon;
+import org.apache.asterix.lexergenerator.LexerNode;
+import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
 
 public class RuleGeneratorNothing implements RuleGenerator {
 

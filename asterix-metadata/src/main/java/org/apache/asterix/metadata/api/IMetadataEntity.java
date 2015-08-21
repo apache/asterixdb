@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.api;
+package org.apache.asterix.metadata.api;
 
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.metadata.MetadataCache;
+import org.apache.asterix.metadata.MetadataCache;
 
 public interface IMetadataEntity extends Serializable {
 

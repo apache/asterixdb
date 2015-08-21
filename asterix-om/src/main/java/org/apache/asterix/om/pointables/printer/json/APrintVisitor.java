@@ -13,45 +13,45 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables.printer.json;
+package org.apache.asterix.om.pointables.printer.json;
 
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABinaryHexPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ACirclePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADatePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADateTimePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADayTimeDurationPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADoublePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ADurationPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AFloatPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AInt16Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AInt32Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AInt64Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AInt8Printer;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ALinePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ANullPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.APoint3DPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.APointPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.APolygonPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ARectanglePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AStringPrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.ATimePrinter;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinter;
-import edu.uci.ics.asterix.om.pointables.AFlatValuePointable;
-import edu.uci.ics.asterix.om.pointables.AListVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.ARecordVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.pointables.visitor.IVisitablePointableVisitor;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.nontagged.printers.ABinaryHexPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.AUUIDPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ABooleanPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ACirclePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ADatePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ADateTimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ADayTimeDurationPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ADoublePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ADurationPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AFloatPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt16Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt32Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt64Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AInt8Printer;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ALinePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ANullPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.APoint3DPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.APointPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.APolygonPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ARectanglePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AStringPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.ATimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.AYearMonthDurationPrinter;
+import org.apache.asterix.om.pointables.AFlatValuePointable;
+import org.apache.asterix.om.pointables.AListVisitablePointable;
+import org.apache.asterix.om.pointables.ARecordVisitablePointable;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively

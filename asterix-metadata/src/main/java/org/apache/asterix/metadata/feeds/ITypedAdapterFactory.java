@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.feeds;
+package org.apache.asterix.metadata.feeds;
 
 import java.util.Map;
 
-import edu.uci.ics.asterix.metadata.external.IAdapterFactory;
-import edu.uci.ics.asterix.om.types.ARecordType;
+import org.apache.asterix.metadata.external.IAdapterFactory;
+import org.apache.asterix.om.types.ARecordType;
 
 public interface ITypedAdapterFactory extends IAdapterFactory {
 

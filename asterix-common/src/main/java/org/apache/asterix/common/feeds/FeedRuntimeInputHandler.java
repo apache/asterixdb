@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,20 +20,20 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.feeds.DataBucket.ContentType;
-import edu.uci.ics.asterix.common.feeds.api.IExceptionHandler;
-import edu.uci.ics.asterix.common.feeds.api.IFeedManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMemoryComponent;
-import edu.uci.ics.asterix.common.feeds.api.IFeedMessage;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.Mode;
-import edu.uci.ics.asterix.common.feeds.message.FeedCongestionMessage;
-import edu.uci.ics.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.asterix.common.feeds.DataBucket.ContentType;
+import org.apache.asterix.common.feeds.api.IExceptionHandler;
+import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IFeedMemoryComponent;
+import org.apache.asterix.common.feeds.api.IFeedMessage;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
+import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
+import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 /**
  * Provides for error-handling and input-side buffering for a feed runtime.

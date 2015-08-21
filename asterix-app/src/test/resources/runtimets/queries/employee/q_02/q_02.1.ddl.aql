@@ -18,5 +18,5 @@ create type EmpType as open {
 }
 
 create external dataset Emp(EmpType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/nontagged/employee.json"),("format"="adm"));

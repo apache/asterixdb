@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.runtime;
+package org.apache.asterix.test.runtime;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,9 +28,9 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
-import edu.uci.ics.asterix.test.aql.TestsUtils;
-import edu.uci.ics.asterix.test.runtime.RepeatRule.Repeat;
-import edu.uci.ics.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.test.runtime.RepeatRule.Repeat;
+import org.apache.asterix.testframework.context.TestCaseContext;
 
 /**
  * Runs runtime test cases that have been identified in the repeatedtestsuite.xml.

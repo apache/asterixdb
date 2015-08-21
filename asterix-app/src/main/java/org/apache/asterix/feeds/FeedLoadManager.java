@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.feeds;
+package org.apache.asterix.feeds;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,28 +26,28 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.feeds.FeedActivity;
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedJobInfo.FeedJobState;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.NodeLoadReport;
-import edu.uci.ics.asterix.common.feeds.api.IFeedLoadManager;
-import edu.uci.ics.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import edu.uci.ics.asterix.common.feeds.api.IFeedTrackingManager;
-import edu.uci.ics.asterix.common.feeds.message.FeedCongestionMessage;
-import edu.uci.ics.asterix.common.feeds.message.FeedReportMessage;
-import edu.uci.ics.asterix.common.feeds.message.ScaleInReportMessage;
-import edu.uci.ics.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
-import edu.uci.ics.asterix.file.FeedOperations;
-import edu.uci.ics.asterix.metadata.feeds.FeedUtil;
-import edu.uci.ics.asterix.metadata.feeds.PrepareStallMessage;
-import edu.uci.ics.asterix.metadata.feeds.TerminateDataFlowMessage;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.FeedActivity;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedJobInfo.FeedJobState;
+import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.NodeLoadReport;
+import org.apache.asterix.common.feeds.api.IFeedLoadManager;
+import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
+import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
+import org.apache.asterix.common.feeds.message.FeedReportMessage;
+import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
+import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
+import org.apache.asterix.file.FeedOperations;
+import org.apache.asterix.metadata.feeds.FeedUtil;
+import org.apache.asterix.metadata.feeds.PrepareStallMessage;
+import org.apache.asterix.metadata.feeds.TerminateDataFlowMessage;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedLoadManager implements IFeedLoadManager {
 

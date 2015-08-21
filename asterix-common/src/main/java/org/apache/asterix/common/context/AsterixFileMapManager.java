@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.context;
+package org.apache.asterix.common.context;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.storage.common.file.IFileMapManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class AsterixFileMapManager implements IFileMapManager {
 

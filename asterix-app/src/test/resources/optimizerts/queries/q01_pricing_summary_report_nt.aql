@@ -25,7 +25,7 @@ create dataset LineItem(LineItemType)
   primary key l_orderkey, l_linenumber;
 
 load dataset LineItem 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
 
 write output to nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";

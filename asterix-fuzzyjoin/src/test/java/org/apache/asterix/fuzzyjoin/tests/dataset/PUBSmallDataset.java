@@ -14,10 +14,10 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin.tests.dataset;
+package org.apache.asterix.fuzzyjoin.tests.dataset;
 
 public class PUBSmallDataset extends PublicationsDataset {
     public PUBSmallDataset() {

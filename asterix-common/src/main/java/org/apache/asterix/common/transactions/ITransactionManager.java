@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.transactions;
+package org.apache.asterix.common.transactions;
 
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.ACIDException;
 
 /**
  * Provides APIs for managing life cycle of a transaction, that is beginning a
@@ -69,7 +69,7 @@ public interface ITransactionManager {
      * @param PKHashVal
      *            TODO
      * @throws ACIDException
-     * @see ITransactionContextimport edu.uci.ics.hyracks.api.job.JobId;
+     * @see ITransactionContextimport org.apache.hyracks.api.job.JobId;
      * @see ACIDException
      */
     public void commitTransaction(ITransactionContext txnContext, DatasetId datasetId, int PKHashVal)

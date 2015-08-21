@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.message;
+package org.apache.asterix.common.feeds.message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.common.feeds.FeedConnectionId;
-import edu.uci.ics.asterix.common.feeds.FeedConstants;
-import edu.uci.ics.asterix.common.feeds.FeedConstants.MessageConstants;
-import edu.uci.ics.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConstants;
+import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
+import org.apache.asterix.common.feeds.FeedId;
 
 /**
  * A feed control message sent from a storage runtime of a feed pipeline to report the intake timestamp corresponding

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.test.runtime;
+package org.apache.asterix.test.runtime;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.asterix.external.dataset.adapter.HDFSAdapter;
+import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
 
 /**
  * Manages a Mini (local VM) HDFS cluster with a configured number of datanodes.

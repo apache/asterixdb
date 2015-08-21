@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds;
+package org.apache.asterix.common.feeds;
 
 import java.util.logging.Level;
 
-import edu.uci.ics.asterix.common.feeds.api.IAdapterRuntimeManager;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class IngestionRuntime extends SubscribableRuntime {
 

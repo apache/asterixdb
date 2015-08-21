@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.aql.context;
+package org.apache.asterix.aql.context;
 
 import java.util.HashMap;
 
-import edu.uci.ics.asterix.aql.expression.Identifier;
-import edu.uci.ics.asterix.aql.expression.VarIdentifier;
-import edu.uci.ics.asterix.aql.parser.ScopeChecker;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.aql.expression.Identifier;
+import org.apache.asterix.aql.expression.VarIdentifier;
+import org.apache.asterix.aql.parser.ScopeChecker;
+import org.apache.asterix.common.functions.FunctionSignature;
 
 public final class Scope {
     private Scope parent;

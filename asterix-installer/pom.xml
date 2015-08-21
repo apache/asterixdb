@@ -16,7 +16,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>asterix</artifactId>
-		<groupId>edu.uci.ics.asterix</groupId>
+		<groupId>org.apache.asterix</groupId>
 		<version>0.8.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-installer</artifactId>
@@ -77,7 +77,7 @@
 							<schemaIncludes>
 								<include>installer-conf.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.installer.schema.conf</generatePackage>
+							<generatePackage>org.apache.asterix.installer.schema.conf</generatePackage>
 							<generateDirectory>${project.build.directory}/generated-sources/configuration</generateDirectory>
 						</configuration>
 					</execution>
@@ -91,7 +91,7 @@
 							<schemaIncludes>
 								<include>cluster.xsd</include>
 							</schemaIncludes>
-							<generatePackage>edu.uci.ics.asterix.installer.schema.cluster</generatePackage>
+							<generatePackage>org.apache.asterix.installer.schema.cluster</generatePackage>
 							<bindingDirectory>src/main/resources/schema</bindingDirectory>
 							<bindingIncludes>
 								<bindingInclude>jaxb-bindings.xjb</bindingInclude>
@@ -245,28 +245,28 @@
 			<artifactId>commons-io</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-server</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<type>zip</type>
 			<classifier>binary-assembly</classifier>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.asterix</groupId>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>test</scope>

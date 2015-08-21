@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.installer.command;
+package org.apache.asterix.installer.command;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -21,15 +21,15 @@ import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
-import edu.uci.ics.asterix.event.model.AsterixInstance;
-import edu.uci.ics.asterix.event.model.AsterixInstance.State;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
-import edu.uci.ics.asterix.event.service.AsterixEventService;
-import edu.uci.ics.asterix.event.service.AsterixEventServiceUtil;
-import edu.uci.ics.asterix.event.util.PatternCreator;
-import edu.uci.ics.asterix.installer.driver.InstallerDriver;
-import edu.uci.ics.asterix.installer.error.InstallerException;
+import org.apache.asterix.event.management.AsterixEventServiceClient;
+import org.apache.asterix.event.model.AsterixInstance;
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.service.AsterixEventService;
+import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.util.PatternCreator;
+import org.apache.asterix.installer.driver.InstallerDriver;
+import org.apache.asterix.installer.error.InstallerException;
 
 public class LogCommand extends AbstractCommand {
 

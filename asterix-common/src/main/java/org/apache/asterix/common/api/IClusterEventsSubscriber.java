@@ -1,4 +1,4 @@
-package edu.uci.ics.asterix.common.api;
+package org.apache.asterix.common.api;
 
 /*
  * Copyright 2009-2013 by The Regents of the University of California
@@ -16,7 +16,7 @@ package edu.uci.ics.asterix.common.api;
  */
 import java.util.Set;
 
-import edu.uci.ics.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 
 public interface IClusterEventsSubscriber {
 

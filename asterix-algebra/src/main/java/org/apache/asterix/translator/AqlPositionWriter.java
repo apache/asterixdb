@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.translator;
+package org.apache.asterix.translator;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.runtime.base.IUnnestingPositionWriter;
 
 public class AqlPositionWriter implements IUnnestingPositionWriter, Serializable {
     private static final long serialVersionUID = 1L;

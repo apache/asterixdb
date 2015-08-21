@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables;
+package org.apache.asterix.om.pointables;
 
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
  * This class implements several "routine" methods in IVisitablePointable

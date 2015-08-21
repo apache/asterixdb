@@ -25,6 +25,6 @@ create type UserType as open {
 }
 
 create external dataset User(UserType)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/events/tiny/user.adm"),("format"="adm"));
 

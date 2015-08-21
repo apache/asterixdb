@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.declared;
+package org.apache.asterix.metadata.declared;
 
-import edu.uci.ics.asterix.metadata.entities.Index;
-import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSource;
-import edu.uci.ics.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
+import org.apache.asterix.metadata.entities.Index;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 
 public class AqlIndex implements IDataSourceIndex<String, AqlSourceId> {
 

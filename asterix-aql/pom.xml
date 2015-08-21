@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>asterix</artifactId>
-        <groupId>edu.uci.ics.asterix</groupId>
+        <groupId>org.apache.asterix</groupId>
         <version>0.8.7-SNAPSHOT</version>
     </parent>
 
@@ -130,27 +130,21 @@
 
     <dependencies>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
             <version>0.8.7-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>edu.uci.ics.asterix</groupId>
+            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-metadata</artifactId>
             <version>0.8.7-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>edu.uci.ics.fuzzyjoin</groupId>
-            <artifactId>fuzzyjoin-core</artifactId>
-            <version>0.0.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

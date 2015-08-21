@@ -12,21 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2_action;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2_match;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule2_name;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule_action;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule_match;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.rule_name;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token2_name;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token2_return;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_name;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_return;
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.token_tostring;
+import static org.apache.asterix.lexergenerator.Fixtures.rule;
+import static org.apache.asterix.lexergenerator.Fixtures.rule2;
+import static org.apache.asterix.lexergenerator.Fixtures.rule2_action;
+import static org.apache.asterix.lexergenerator.Fixtures.rule2_match;
+import static org.apache.asterix.lexergenerator.Fixtures.rule2_name;
+import static org.apache.asterix.lexergenerator.Fixtures.rule_action;
+import static org.apache.asterix.lexergenerator.Fixtures.rule_match;
+import static org.apache.asterix.lexergenerator.Fixtures.rule_name;
+import static org.apache.asterix.lexergenerator.Fixtures.token2_name;
+import static org.apache.asterix.lexergenerator.Fixtures.token2_return;
+import static org.apache.asterix.lexergenerator.Fixtures.token_name;
+import static org.apache.asterix.lexergenerator.Fixtures.token_return;
+import static org.apache.asterix.lexergenerator.Fixtures.token_tostring;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;

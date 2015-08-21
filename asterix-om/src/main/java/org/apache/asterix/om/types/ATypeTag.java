@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.types;
+package org.apache.asterix.om.types;
 
 import java.util.ArrayList;
 import java.util.List;

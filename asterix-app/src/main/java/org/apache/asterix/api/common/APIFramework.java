@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.api.common;
+package org.apache.asterix.api.common;
 
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
@@ -21,59 +21,59 @@ import java.util.List;
 
 import org.json.JSONException;
 
-import edu.uci.ics.asterix.api.common.Job.SubmissionMode;
-import edu.uci.ics.asterix.aql.base.Statement.Kind;
-import edu.uci.ics.asterix.aql.expression.FunctionDecl;
-import edu.uci.ics.asterix.aql.expression.Query;
-import edu.uci.ics.asterix.aql.expression.visitor.AQLPrintVisitor;
-import edu.uci.ics.asterix.aql.rewrites.AqlRewriter;
-import edu.uci.ics.asterix.common.config.AsterixCompilerProperties;
-import edu.uci.ics.asterix.common.config.AsterixExternalProperties;
-import edu.uci.ics.asterix.common.config.OptimizationConfUtil;
-import edu.uci.ics.asterix.common.exceptions.ACIDException;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.common.AqlExpressionTypeComputer;
-import edu.uci.ics.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
-import edu.uci.ics.asterix.dataflow.data.common.AqlNullableTypeComputer;
-import edu.uci.ics.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
-import edu.uci.ics.asterix.formats.base.IDataFormat;
-import edu.uci.ics.asterix.jobgen.AqlLogicalExpressionJobGen;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.declared.AqlMetadataProvider;
-import edu.uci.ics.asterix.metadata.entities.Dataverse;
-import edu.uci.ics.asterix.om.util.AsterixAppContextInfo;
-import edu.uci.ics.asterix.optimizer.base.RuleCollections;
-import edu.uci.ics.asterix.runtime.job.listener.JobEventListenerFactory;
-import edu.uci.ics.asterix.transaction.management.service.transaction.JobIdFactory;
-import edu.uci.ics.asterix.translator.AqlExpressionToPlanTranslator;
-import edu.uci.ics.asterix.translator.CompiledStatements.ICompiledDmlStatement;
-import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
-import edu.uci.ics.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
-import edu.uci.ics.hyracks.algebricks.compiler.api.ICompiler;
-import edu.uci.ics.hyracks.algebricks.compiler.api.ICompilerFactory;
-import edu.uci.ics.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
-import edu.uci.ics.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
-import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
-import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
-import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
-import edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
-import edu.uci.ics.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
+import org.apache.asterix.api.common.Job.SubmissionMode;
+import org.apache.asterix.aql.base.Statement.Kind;
+import org.apache.asterix.aql.expression.FunctionDecl;
+import org.apache.asterix.aql.expression.Query;
+import org.apache.asterix.aql.expression.visitor.AQLPrintVisitor;
+import org.apache.asterix.aql.rewrites.AqlRewriter;
+import org.apache.asterix.common.config.AsterixCompilerProperties;
+import org.apache.asterix.common.config.AsterixExternalProperties;
+import org.apache.asterix.common.config.OptimizationConfUtil;
+import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
+import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
+import org.apache.asterix.dataflow.data.common.AqlNullableTypeComputer;
+import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
+import org.apache.asterix.formats.base.IDataFormat;
+import org.apache.asterix.jobgen.AqlLogicalExpressionJobGen;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.optimizer.base.RuleCollections;
+import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
+import org.apache.asterix.translator.AqlExpressionToPlanTranslator;
+import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.compiler.api.HeuristicCompilerFactoryBuilder;
+import org.apache.hyracks.algebricks.compiler.api.ICompiler;
+import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
+import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
+import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionEvalSizeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
+import org.apache.hyracks.algebricks.core.algebra.expressions.INullableTypeComputer;
+import org.apache.hyracks.algebricks.core.algebra.expressions.LogicalExpressionJobGenToExpressionRuntimeProviderAdapter;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPlotter;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
+import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
+import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
+import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
 /**
  * Provides helper methods for compilation of a query into a JobSpec and submission
@@ -205,7 +205,7 @@ public class APIFramework {
             }
         }
 
-        edu.uci.ics.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
+        org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
         AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
                 outputDatasetName, statement);

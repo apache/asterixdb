@@ -311,12 +311,12 @@ time, which is independent from other related feeds in the hierarchy.
 
 A Java UDF in AsterixDB is required to implement an prescribe interface. We shall next write a basic UDF that extracts the hashtags contained in the tweet's text and appends each into an unordered list. The list is added as an additional attribute to the tweet to form the augment version - ProcessedTweet.
 
-    package edu.uci.ics.asterix.external.library;
+    package org.apache.asterix.external.library;
 
-    import edu.uci.ics.asterix.external.library.java.JObjects.JRecord;
-    import edu.uci.ics.asterix.external.library.java.JObjects.JString;
-    import edu.uci.ics.asterix.external.library.java.JObjects.JUnorderedList;
-    import edu.uci.ics.asterix.external.library.java.JTypeTag;
+    import org.apache.asterix.external.library.java.JObjects.JRecord;
+    import org.apache.asterix.external.library.java.JObjects.JString;
+    import org.apache.asterix.external.library.java.JObjects.JUnorderedList;
+    import org.apache.asterix.external.library.java.JTypeTag;
 
     public class HashTagsFunction implements IExternalScalarFunction {
 
@@ -377,7 +377,7 @@ We need to install our Java UDF so that we may use it in AQL statements/queries.
                     <name>addFeatures</name>
                     <arguments>Tweet</arguments>
                     <return_type>ProcessedTweet</return_type>
-                    <definition>edu.uci.ics.asterix.external.library.AddHashTagsFactory
+                    <definition>org.apache.asterix.external.library.AddHashTagsFactory
                     </definition>
                 </libraryFunction>
             </libraryFunctions>

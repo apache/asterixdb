@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.om.pointables;
+package org.apache.asterix.om.pointables;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.om.pointables.base.DefaultOpenFieldType;
-import edu.uci.ics.asterix.om.pointables.base.IVisitablePointable;
-import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.types.TypeTagUtil;
-import edu.uci.ics.asterix.om.util.container.IObjectFactory;
-import edu.uci.ics.asterix.om.util.container.IObjectPool;
-import edu.uci.ics.asterix.om.util.container.ListObjectPool;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
+import org.apache.asterix.om.util.container.IObjectFactory;
+import org.apache.asterix.om.util.container.IObjectPool;
+import org.apache.asterix.om.util.container.ListObjectPool;
 
 /**
  * This class is the ONLY place to create IVisitablePointable object instances,

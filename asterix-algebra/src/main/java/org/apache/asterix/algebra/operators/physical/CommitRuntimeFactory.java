@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.algebra.operators.physical;
+package org.apache.asterix.algebra.operators.physical;
 
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntime;
-import edu.uci.ics.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
-import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class CommitRuntimeFactory implements IPushRuntimeFactory {
 

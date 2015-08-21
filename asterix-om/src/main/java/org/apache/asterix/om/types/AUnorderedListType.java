@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.types;
+package org.apache.asterix.om.types;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.uci.ics.asterix.om.base.IAObject;
+import org.apache.asterix.om.base.IAObject;
 
 public class AUnorderedListType extends AbstractCollectionType {
 

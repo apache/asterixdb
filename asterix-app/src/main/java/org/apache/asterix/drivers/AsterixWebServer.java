@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.drivers;
+package org.apache.asterix.drivers;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.uci.ics.asterix.api.http.servlet.APIServlet;
+import org.apache.asterix.api.http.servlet.APIServlet;
 
 public class AsterixWebServer {
     public static void main(String args[]) throws Exception {

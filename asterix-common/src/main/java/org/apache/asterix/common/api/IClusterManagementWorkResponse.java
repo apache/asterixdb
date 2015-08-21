@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.api;
+package org.apache.asterix.common.api;
 
 
 public interface IClusterManagementWorkResponse {

@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.aql.util;
+package org.apache.asterix.aql.util;
 
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.asterix.aql.base.Statement;
-import edu.uci.ics.asterix.aql.expression.FunctionDecl;
-import edu.uci.ics.asterix.aql.expression.VarIdentifier;
-import edu.uci.ics.asterix.aql.parser.AQLParser;
-import edu.uci.ics.asterix.aql.parser.ParseException;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.asterix.metadata.entities.Function;
-import edu.uci.ics.asterix.om.functions.AsterixBuiltinFunctions;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.asterix.aql.base.Statement;
+import org.apache.asterix.aql.expression.FunctionDecl;
+import org.apache.asterix.aql.expression.VarIdentifier;
+import org.apache.asterix.aql.parser.AQLParser;
+import org.apache.asterix.aql.parser.ParseException;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionUtils {
 

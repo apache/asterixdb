@@ -105,33 +105,33 @@ declare dataset PartSupp(PartSuppType)
   primary key ps_partkey, ps_suppkey on group1;  
 
 load dataset LineItems 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/lineitem.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Orders
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/orders.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Customers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Suppliers 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Nations 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/customer.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Regions 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/region.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset Parts 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/part.tbl"),("delimiter"="|")) pre-sorted;
 
 load dataset PartSupp 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1:///opt/tpch/onegig/partsupp.tbl"),("delimiter"="|")) pre-sorted;

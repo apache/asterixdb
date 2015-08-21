@@ -11,7 +11,7 @@ create type Tweet as open {
 }
 
 create external dataset TwitterData(Tweet)
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/twitter/smalltweets.txt"),("format"="adm"));
 
 write output to nc1:"/tmp/count-tweets.adm";

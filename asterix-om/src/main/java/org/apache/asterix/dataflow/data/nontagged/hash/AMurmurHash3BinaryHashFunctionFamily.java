@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.dataflow.data.nontagged.hash;
+package org.apache.asterix.dataflow.data.nontagged.hash;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.asterix.om.types.EnumDeserializer;
-import edu.uci.ics.asterix.om.types.hierachy.FloatToDoubleTypeConvertComputer;
-import edu.uci.ics.asterix.om.types.hierachy.IntegerToDoubleTypeConvertComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.accessors.MurmurHash3BinaryHash;
-import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.hierachy.FloatToDoubleTypeConvertComputer;
+import org.apache.asterix.om.types.hierachy.IntegerToDoubleTypeConvertComputer;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.accessors.MurmurHash3BinaryHash;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class AMurmurHash3BinaryHashFunctionFamily implements IBinaryHashFunctionFamily {
 

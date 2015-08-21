@@ -9,7 +9,7 @@ use dataverse test;
 
 
 load dataset MyDatatmp
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter"
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
 (("path"="nc1://data/spatial/spatialDataNulls.json"),("format"="adm")) pre-sorted;
 
 

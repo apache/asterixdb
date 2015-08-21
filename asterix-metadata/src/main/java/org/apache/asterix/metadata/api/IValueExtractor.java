@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.metadata.api;
+package org.apache.asterix.metadata.api;
 
 import java.io.IOException;
 
-import edu.uci.ics.asterix.common.transactions.JobId;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.asterix.common.transactions.JobId;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
  * Extracts an object of type T from a given tuple. Implementations of this

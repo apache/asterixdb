@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
 import java.io.Serializable;
 
-import edu.uci.ics.asterix.om.types.ATypeTag;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.ILinearizeComparatorFactoryProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparator;
-import edu.uci.ics.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
-import edu.uci.ics.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.ILinearizeComparatorFactoryProvider;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparator;
+import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.rtree.linearize.HilbertDoubleComparatorFactory;
+import org.apache.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFactory;
+import org.apache.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 
 public class AqlLinearizeComparatorFactoryProvider implements ILinearizeComparatorFactoryProvider, Serializable {
 

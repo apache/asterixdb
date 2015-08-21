@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.visitors.IOMVisitor;
-import edu.uci.ics.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.visitors.IOMVisitor;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

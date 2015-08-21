@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.lexergenerator;
+package org.apache.asterix.lexergenerator;
 
-import static edu.uci.ics.asterix.lexergenerator.Fixtures.*;
+import static org.apache.asterix.lexergenerator.Fixtures.*;
 import static org.junit.Assert.*;
 
 import java.util.HashSet;
@@ -24,10 +24,10 @@ import java.util.Set;
 import org.junit.Test;
 
 
-import edu.uci.ics.asterix.lexergenerator.LexerNode;
-import edu.uci.ics.asterix.lexergenerator.Token;
-import edu.uci.ics.asterix.lexergenerator.rules.RuleEpsilon;
-import edu.uci.ics.asterix.lexergenerator.rules.RulePartial;
+import org.apache.asterix.lexergenerator.LexerNode;
+import org.apache.asterix.lexergenerator.Token;
+import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
+import org.apache.asterix.lexergenerator.rules.RulePartial;
 
 public class LexerNodeAuxFunctionsTest {
     String expectedDifferentReturn = "return TOKEN_AUX_NOT_FOUND;\n"; 

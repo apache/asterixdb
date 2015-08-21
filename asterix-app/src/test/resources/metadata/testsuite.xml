@@ -12,7 +12,7 @@
  ! See the License for the specific language governing permissions and
  ! limitations under the License.
  !-->
-<test-suite xmlns="urn:xml.testframework.asterix.ics.uci.edu" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="basic">
     <test-case FilePath="basic">
       <compilation-unit name="meta01">
@@ -369,79 +369,79 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_feed_error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

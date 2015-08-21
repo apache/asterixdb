@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.builders;
+package org.apache.asterix.builders;
 
 import java.io.DataOutput;
 
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 public interface IAsterixListBuilder {
     /**

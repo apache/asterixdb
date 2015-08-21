@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.library;
+package org.apache.asterix.external.library;
 
-import edu.uci.ics.asterix.external.library.IExternalFunction;
-import edu.uci.ics.asterix.external.library.IFunctionFactory;
+import org.apache.asterix.external.library.IExternalFunction;
+import org.apache.asterix.external.library.IFunctionFactory;
 
 public class AllTypesFactory implements IFunctionFactory {
 

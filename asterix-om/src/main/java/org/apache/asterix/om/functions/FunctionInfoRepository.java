@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.functions;
+package org.apache.asterix.om.functions;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import edu.uci.ics.asterix.common.functions.FunctionSignature;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import edu.uci.ics.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 
 public class FunctionInfoRepository {
     private final Map<FunctionSignature, IFunctionInfo> functionMap;

@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.dataflow;
+package org.apache.asterix.common.dataflow;
 
-import edu.uci.ics.hyracks.api.application.ICCApplicationContext;
-import edu.uci.ics.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
-import edu.uci.ics.hyracks.storage.common.IStorageManagerInterface;
+import org.apache.hyracks.api.application.ICCApplicationContext;
+import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
+import org.apache.hyracks.storage.common.IStorageManagerInterface;
 
 /**
  * Provides methods for obtaining the IIndexLifecycleManagerProvider, IStorageManagerInterface and

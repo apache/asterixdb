@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.optimizer.handle;
+package org.apache.asterix.optimizer.handle;
 
-import edu.uci.ics.asterix.om.types.IAType;
+import org.apache.asterix.om.types.IAType;
 
 public class FieldNameHandle implements IHandle {
 

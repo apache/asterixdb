@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.AOrderedListType;
 
 public class AMutableOrderedList extends AOrderedList {
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.config;
+package org.apache.asterix.common.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 public class GlobalConfig {
     public static final boolean DEBUG = true;
 
-    public static final String ASTERIX_LOGGER_NAME = "edu.uci.ics.asterix";
+    public static final String ASTERIX_LOGGER_NAME = "org.apache.asterix";
 
     public static final Logger ASTERIX_LOGGER = Logger.getLogger(ASTERIX_LOGGER_NAME);
 

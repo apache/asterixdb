@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.api.common;
+package org.apache.asterix.api.common;
 
 import java.io.PrintWriter;
 import java.util.HashMap;

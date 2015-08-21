@@ -12,7 +12,7 @@ use dataverse test;
 
 // drop dataset DBLPadm;
 load dataset DBLPadm 
-using "edu.uci.ics.asterix.external.dataset.adapter.NCFileSystemAdapter" 
+using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" 
 (("path"="nc1://data/dblp-small/part-00000.adm, 
  nc1://data/dblp-small/part-00001.adm"),("format"="adm"));
 

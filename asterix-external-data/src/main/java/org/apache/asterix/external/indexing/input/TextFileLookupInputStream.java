@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.input;
+package org.apache.asterix.external.indexing.input;
 
 import java.io.IOException;
 
@@ -20,7 +20,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.asterix.metadata.external.ExternalFileIndexAccessor;
+import org.apache.asterix.metadata.external.ExternalFileIndexAccessor;
 
 public class TextFileLookupInputStream extends AbstractHDFSLookupInputStream {
 

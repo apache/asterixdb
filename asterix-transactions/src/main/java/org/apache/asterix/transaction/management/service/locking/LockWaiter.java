@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.transaction.management.service.locking;
+package org.apache.asterix.transaction.management.service.locking;
 
 /**
  * LockWaiter object is used for keeping a lock waiter or a lock upgrader information on a certain resource.

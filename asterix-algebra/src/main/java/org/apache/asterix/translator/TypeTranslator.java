@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.translator;
+package org.apache.asterix.translator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,31 +21,31 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.asterix.aql.expression.OrderedListTypeDefinition;
-import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition;
-import edu.uci.ics.asterix.aql.expression.RecordTypeDefinition.RecordKind;
-import edu.uci.ics.asterix.aql.expression.TypeExpression;
-import edu.uci.ics.asterix.aql.expression.TypeReferenceExpression;
-import edu.uci.ics.asterix.aql.expression.UnorderedListTypeDefinition;
-import edu.uci.ics.asterix.common.annotations.IRecordFieldDataGen;
-import edu.uci.ics.asterix.common.annotations.RecordDataGenAnnotation;
-import edu.uci.ics.asterix.common.exceptions.AsterixException;
-import edu.uci.ics.asterix.metadata.MetadataException;
-import edu.uci.ics.asterix.metadata.MetadataManager;
-import edu.uci.ics.asterix.metadata.MetadataTransactionContext;
-import edu.uci.ics.asterix.metadata.entities.AsterixBuiltinTypeMap;
-import edu.uci.ics.asterix.metadata.entities.Datatype;
-import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.AbstractCollectionType;
-import edu.uci.ics.asterix.om.types.AbstractComplexType;
-import edu.uci.ics.asterix.om.types.BuiltinType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.asterix.om.types.TypeSignature;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.aql.expression.OrderedListTypeDefinition;
+import org.apache.asterix.aql.expression.RecordTypeDefinition;
+import org.apache.asterix.aql.expression.RecordTypeDefinition.RecordKind;
+import org.apache.asterix.aql.expression.TypeExpression;
+import org.apache.asterix.aql.expression.TypeReferenceExpression;
+import org.apache.asterix.aql.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.common.annotations.IRecordFieldDataGen;
+import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
+import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.AbstractComplexType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeSignature;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class TypeTranslator {
 

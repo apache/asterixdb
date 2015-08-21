@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.asterix.dataflow.data.nontagged.keynormalizers;
+package org.apache.asterix.dataflow.data.nontagged.keynormalizers;
 
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 
 /**
  * This class uses a decorator pattern to wrap an ASC ordered INomralizedKeyComputerFactory implementation

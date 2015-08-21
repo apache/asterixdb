@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.common.feeds.api;
+package org.apache.asterix.common.feeds.api;
 
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeId;
-import edu.uci.ics.asterix.common.feeds.FeedRuntimeInputHandler;
-import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
+import org.apache.hyracks.api.comm.IFrameWriter;
 
 public interface IFeedRuntime {
 

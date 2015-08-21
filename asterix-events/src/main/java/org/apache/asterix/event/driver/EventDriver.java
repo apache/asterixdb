@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.event.driver;
+package org.apache.asterix.event.driver;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,16 +27,16 @@ import javax.xml.bind.Unmarshaller;
 
 import org.kohsuke.args4j.CmdLineParser;
 
-import edu.uci.ics.asterix.event.management.DefaultOutputHandler;
-import edu.uci.ics.asterix.event.management.EventUtil;
-import edu.uci.ics.asterix.event.management.AsterixEventServiceClient;
-import edu.uci.ics.asterix.event.management.IOutputHandler;
-import edu.uci.ics.asterix.event.management.Randomizer;
-import edu.uci.ics.asterix.event.schema.cluster.Cluster;
-import edu.uci.ics.asterix.event.schema.cluster.Node;
-import edu.uci.ics.asterix.event.schema.cluster.Property;
-import edu.uci.ics.asterix.event.schema.event.Events;
-import edu.uci.ics.asterix.event.schema.pattern.Patterns;
+import org.apache.asterix.event.management.DefaultOutputHandler;
+import org.apache.asterix.event.management.EventUtil;
+import org.apache.asterix.event.management.AsterixEventServiceClient;
+import org.apache.asterix.event.management.IOutputHandler;
+import org.apache.asterix.event.management.Randomizer;
+import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.event.schema.cluster.Property;
+import org.apache.asterix.event.schema.event.Events;
+import org.apache.asterix.event.schema.pattern.Patterns;
 
 public class EventDriver {
 

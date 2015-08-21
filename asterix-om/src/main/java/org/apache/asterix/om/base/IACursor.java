@@ -15,7 +15,7 @@
 /**
  *
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 /**
  * @author Nicola

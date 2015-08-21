@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.tools.external.data;
+package org.apache.asterix.tools.external.data;
 
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import edu.uci.ics.asterix.external.util.Datatypes;
+import org.apache.asterix.external.util.Datatypes;
 
 public class DataGenerator {
 

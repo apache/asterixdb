@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.external.indexing.dataflow;
+package org.apache.asterix.external.indexing.dataflow;
 
 import java.io.DataOutput;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 
-import edu.uci.ics.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ARecordType;
 
 /**
  * This interface is provided for users to implements in order to support their own

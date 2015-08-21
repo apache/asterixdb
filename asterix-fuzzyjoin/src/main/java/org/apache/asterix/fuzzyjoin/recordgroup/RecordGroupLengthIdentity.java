@@ -14,15 +14,15 @@
  * specific language governing permissions and limitations under
  * the License.
  *
- * Author: Rares Vernica <rares (at) ics.uci.edu>
+ * Author: Rares Vernica <rares (at) apache.org>
  */
 
-package edu.uci.ics.asterix.fuzzyjoin.recordgroup;
+package org.apache.asterix.fuzzyjoin.recordgroup;
 
 import java.util.Collection;
 import java.util.LinkedList;
 
-import edu.uci.ics.asterix.fuzzyjoin.similarity.SimilarityFilters;
+import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 
 public class RecordGroupLengthIdentity extends RecordGroup {
 

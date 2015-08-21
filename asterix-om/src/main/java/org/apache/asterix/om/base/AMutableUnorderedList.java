@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.om.base;
+package org.apache.asterix.om.base;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.AUnorderedListType;
 
 public final class AMutableUnorderedList extends AUnorderedList {
 

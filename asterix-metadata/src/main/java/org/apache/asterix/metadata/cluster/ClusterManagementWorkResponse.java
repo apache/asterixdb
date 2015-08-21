@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.metadata.cluster;
+package org.apache.asterix.metadata.cluster;
 
-import edu.uci.ics.asterix.common.api.IClusterManagementWork;
-import edu.uci.ics.asterix.common.api.IClusterManagementWorkResponse;
+import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IClusterManagementWorkResponse;
 
 public class ClusterManagementWorkResponse implements IClusterManagementWorkResponse {
 

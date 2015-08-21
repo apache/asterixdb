@@ -110,18 +110,18 @@
         <test-case FilePath="records">
             <compilation-unit name="closed-closed-fieldname-conflict_issue173">
                 <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="records">
             <compilation-unit name="open-closed-fieldname-conflict_issue173">
                 <output-dir compare="Text">open-closed-fieldname-conflict_issue173</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>
         <test-case FilePath="records">
             <compilation-unit name="open-open-fieldname-conflict_issue173">
                 <output-dir compare="Text">open-open-fieldname-conflict_issue173</output-dir>
-                <expected-error>edu.uci.ics.asterix.common.exceptions.AsterixException</expected-error>
+                <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
             </compilation-unit>
         </test-case>

@@ -12,47 +12,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.asterix.formats.nontagged;
+package org.apache.asterix.formats.nontagged;
 
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABinaryPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ABooleanPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ACirclePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADatePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADateTimePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADayTimeDurationPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADoublePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ADurationPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AFloatPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt16PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt32PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt64PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AInt8PrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AIntervalPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ALinePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ANullPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ANullableFieldPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AObjectPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AOrderedlistPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APoint3DPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APointPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.APolygonPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARecordPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ARectanglePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AStringPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ATimePrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUnionPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AUnorderedlistPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.AYearMonthDurationPrinterFactory;
-import edu.uci.ics.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinterFactory;
-import edu.uci.ics.asterix.om.types.AOrderedListType;
-import edu.uci.ics.asterix.om.types.ARecordType;
-import edu.uci.ics.asterix.om.types.AUnionType;
-import edu.uci.ics.asterix.om.types.AUnorderedListType;
-import edu.uci.ics.asterix.om.types.IAType;
-import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactory;
-import edu.uci.ics.hyracks.algebricks.data.IPrinterFactoryProvider;
+import org.apache.asterix.dataflow.data.nontagged.printers.ABinaryPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ABooleanPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ACirclePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ADatePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ADateTimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ADayTimeDurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ADoublePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ADurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AFloatPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AInt16PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AInt32PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AInt64PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AInt8PrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AIntervalPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ALinePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ANullPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ANullableFieldPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AObjectPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AOrderedlistPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.APoint3DPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.APointPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.APolygonPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ARecordPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ARectanglePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AStringPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ATimePrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AUUIDPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AUnionPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AUnorderedlistPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.AYearMonthDurationPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.ShortWithoutTypeInfoPrinterFactory;
+import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
 
 public class AqlPrinterFactoryProvider implements IPrinterFactoryProvider {
 
