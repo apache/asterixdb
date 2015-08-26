@@ -19,6 +19,8 @@
 package org.apache.asterix.optimizer.rules;
 
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
+import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 
 public class AsterixInlineVariablesRule extends InlineVariablesRule {
@@ -39,4 +41,10 @@ public class AsterixInlineVariablesRule extends InlineVariablesRule {
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_POLYGON);
         doNotInlineFuncs.add(AsterixBuiltinFunctions.CREATE_RECTANGLE);
     }
+
+    @Override
+    protected boolean createException(ILogicalExpression expr) {
+        return AccessMethodUtils.exprCreatesConstant(expr).first;
+    }
+
 }

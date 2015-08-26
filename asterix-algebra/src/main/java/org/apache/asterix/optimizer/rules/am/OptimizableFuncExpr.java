@@ -41,15 +41,20 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final IAType[] fieldTypes;
     protected final OptimizableOperatorSubTree[] subTrees;
     protected final IAlgebricksConstantValue[] constantVals;
+    protected final IAType[] constantExpressionTypes;
+    protected final ILogicalExpression[] constantExpressions;
     protected boolean partialField;
 
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable[] logicalVars,
-            IAlgebricksConstantValue[] constantVals) {
+            IAlgebricksConstantValue[] constantVals, IAType[] constantExpressionTypes,
+            ILogicalExpression[] constantExpressions) {
         this.funcExpr = funcExpr;
         this.logicalVars = logicalVars;
         this.sourceVars = new LogicalVariable[logicalVars.length];
         this.logicalExprs = new ILogicalExpression[logicalVars.length];
         this.constantVals = constantVals;
+        this.constantExpressionTypes = constantExpressionTypes;
+        this.constantExpressions = constantExpressions;
         this.fieldNames = new ArrayList<List<String>>();
         for (int i = 0; i < logicalVars.length; i++) {
             fieldNames.add(new ArrayList<String>());
@@ -66,12 +71,14 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
 
     // Special, more convenient c'tor for simple binary functions.
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable logicalVar,
-            IAlgebricksConstantValue constantVal) {
+            IAlgebricksConstantValue constantVal, IAType constantExpressionType, ILogicalExpression constantExpression) {
         this.funcExpr = funcExpr;
         this.logicalVars = new LogicalVariable[] { logicalVar };
         this.sourceVars = new LogicalVariable[1];
         this.logicalExprs = new ILogicalExpression[1];
         this.constantVals = new IAlgebricksConstantValue[] { constantVal };
+        this.constantExpressionTypes = new IAType[] { constantExpressionType };
+        this.constantExpressions = new ILogicalExpression[] { constantExpression };
         this.fieldNames = new ArrayList<List<String>>();
         for (int i = 0; i < logicalVars.length; i++) {
             fieldNames.add(new ArrayList<String>());
@@ -138,6 +145,26 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     @Override
     public IAlgebricksConstantValue getConstantVal(int index) {
         return constantVals[index];
+    }
+
+    @Override
+    public void setConstType(int index, IAType fieldType) {
+        constantExpressionTypes[index] = fieldType;
+    }
+
+    @Override
+    public IAType getConstantType(int index) {
+        return constantExpressionTypes[index];
+    }
+
+    @Override
+    public void setConstExpr(int index, ILogicalExpression expr) {
+        constantExpressions[index] = expr;
+    }
+
+    @Override
+    public ILogicalExpression getConstantExpr(int index) {
+        return constantExpressions[index];
     }
 
     @Override
