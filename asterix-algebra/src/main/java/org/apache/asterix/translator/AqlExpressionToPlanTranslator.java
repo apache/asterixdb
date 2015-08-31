@@ -28,12 +28,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 
+import org.apache.asterix.algebra.operators.ReplaceableSinkOperator;
 import org.apache.asterix.aql.base.Clause;
 import org.apache.asterix.aql.base.Expression;
 import org.apache.asterix.aql.base.Expression.Kind;
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
 import org.apache.asterix.aql.expression.CreateFunctionStatement;
@@ -123,6 +128,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.runtime.formats.FormatUtils;
+import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -386,8 +392,65 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                             varRefsForLoading, InsertDeleteOperator.Kind.INSERT, false);
                     insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                     insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
-                    leafOperator = new SinkOperator();
-                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    if (((CompiledInsertStatement) stmt).getReturnRecord()
+                            || ((CompiledInsertStatement) stmt).getReturnField() != null) {
+                        FileSplit outputFileSplit = metadataProvider.getOutputFile();
+                        if (outputFileSplit == null) {
+                            outputFileSplit = getDefaultOutputFileLocation();
+                        }
+
+                        metadataProvider.setOutputFile(outputFileSplit);
+                        List<Mutable<ILogicalExpression>> varRefList = new ArrayList<Mutable<ILogicalExpression>>();
+
+                        varRefList.add(varRef);
+
+                        ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
+                        ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
+
+                        ReplaceableSinkOperator commitSink = new ReplaceableSinkOperator();
+                        commitSink.setPipelineEndFalse();
+                        commitSink.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+
+                        if (((CompiledInsertStatement) stmt).getReturnField() != null) {
+                            List<LogicalVariable> assignVars = new ArrayList<LogicalVariable>();
+                            List<Mutable<ILogicalExpression>> expressions = new ArrayList<Mutable<ILogicalExpression>>();
+                            Mutable<ILogicalExpression> nameRef = new MutableObject<ILogicalExpression>(
+                                    new ConstantExpression(new AsterixConstantValue(new AString(
+                                            ((CompiledInsertStatement) stmt).getReturnField().get(0)))));
+                            AbstractFunctionCallExpression func = new ScalarFunctionCallExpression(
+                                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_NAME),
+                                    varRef, nameRef);
+                            expressions.add(new MutableObject<ILogicalExpression>(func));
+                            LogicalVariable newVar = context.newVar();
+                            assignVars.add(newVar);
+
+                            varRefList = new ArrayList<Mutable<ILogicalExpression>>();
+                            Mutable<ILogicalExpression> mVarRef = new MutableObject<ILogicalExpression>(
+                                    new VariableReferenceExpression(newVar));
+                            varRefList.add(mVarRef);
+
+                            AssignOperator accessAssign = new AssignOperator(assignVars, expressions);
+                            accessAssign.getInputs().add(new MutableObject<ILogicalOperator>(commitSink));
+
+                            leafOperator = new DistributeResultOperator(varRefList, sink);
+                            leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(accessAssign));
+
+                        } else {
+                            leafOperator = new DistributeResultOperator(varRefList, sink);
+                            leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(commitSink));
+                        }
+                        // Retrieve the Output RecordType (if any) and store it on
+                        // the DistributeResultOperator
+                        IAType outputRecordType = metadataProvider.findOutputRecordType();
+                        if (outputRecordType != null) {
+                            leafOperator.getAnnotations().put("output-record-type", outputRecordType);
+                        }
+
+                    } else {
+                        leafOperator = new SinkOperator();
+                        leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    }
+
                     break;
                 }
                 case DELETE: {
@@ -408,13 +471,13 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
                     leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
                     break;
                 }
-                case SUBSCRIBE_FEED: { 
-                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,   
-                            InsertDeleteOperator.Kind.INSERT, false);   
-                    insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));  
-                    leafOperator = new SinkOperator();  
-                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));    
-                    break;  
+                case SUBSCRIBE_FEED: {
+                    ILogicalOperator insertOp = new InsertDeleteOperator(targetDatasource, varRef, varRefsForLoading,
+                            InsertDeleteOperator.Kind.INSERT, false);
+                    insertOp.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+                    leafOperator = new SinkOperator();
+                    leafOperator.getInputs().add(new MutableObject<ILogicalOperator>(insertOp));
+                    break;
                 }
             }
             topOp = leafOperator;
@@ -1562,7 +1625,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitCreatePrimaryFeedStatement(CreatePrimaryFeedStatement del,
             Mutable<ILogicalOperator> arg) throws AsterixException {
@@ -1576,7 +1639,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         // TODO Auto-generated method stub
         return null;
     }
- 
+
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitConnectFeedStatement(ConnectFeedStatement del,
             Mutable<ILogicalOperator> arg) throws AsterixException {
@@ -1597,7 +1660,7 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitCreateFeedPolicyStatement(CreateFeedPolicyStatement cfps,
             Mutable<ILogicalOperator> arg) throws AsterixException {
@@ -1609,4 +1672,33 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator impleme
             Mutable<ILogicalOperator> arg) throws AsterixException {
         return null;
     }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitCreateChannelStatement(CreateChannelStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitDropChannelStatement(ChannelDropStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitChannelSubscribeStatement(ChannelSubscribeStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

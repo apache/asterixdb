@@ -19,8 +19,12 @@
 package org.apache.asterix.aql.expression.visitor;
 
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
 import org.apache.asterix.aql.expression.CreateFeedStatement;
@@ -175,6 +179,14 @@ public interface IAqlVisitorWithVoidReturn<T> {
     void visit(FeedDropStatement stmt, T arg) throws AsterixException;
 
     void visit(FeedPolicyDropStatement stmt, T arg) throws AsterixException;
+
+    void visit(CreateChannelStatement stmt, T arg) throws AsterixException;
+
+    void visit(ChannelDropStatement stmt, T arg) throws AsterixException;
+
+    void visit(ChannelSubscribeStatement stmt, T arg) throws AsterixException;
+
+    void visit(ChannelUnsubscribeStatement stmt, T arg) throws AsterixException;
 
     void visit(CreateFunctionStatement cfs, T arg) throws AsterixException;
 

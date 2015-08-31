@@ -36,9 +36,8 @@ public class FeedConnectJobInfo extends FeedJobInfo {
     private List<String> computeLocations;
     private List<String> storageLocations;
 
-    public FeedConnectJobInfo(JobId jobId, FeedJobState state, FeedConnectionId connectionId,
-            IFeedJoint sourceFeedJoint, IFeedJoint computeFeedJoint, JobSpecification spec,
-            Map<String, String> feedPolicy) {
+    public FeedConnectJobInfo(JobId jobId, JobState state, FeedConnectionId connectionId, IFeedJoint sourceFeedJoint,
+            IFeedJoint computeFeedJoint, JobSpecification spec, Map<String, String> feedPolicy) {
         super(jobId, state, FeedJobInfo.JobType.FEED_CONNECT, spec);
         this.connectionId = connectionId;
         this.sourceFeedJoint = sourceFeedJoint;

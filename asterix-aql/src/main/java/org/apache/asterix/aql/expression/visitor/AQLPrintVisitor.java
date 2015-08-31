@@ -26,8 +26,12 @@ import org.apache.asterix.aql.base.Clause;
 import org.apache.asterix.aql.base.Expression;
 import org.apache.asterix.aql.base.Literal;
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
 import org.apache.asterix.aql.expression.CreateFeedStatement;
@@ -559,11 +563,29 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
     }
 
     @Override
-    public void visit(CompactStatement fds, Integer arg) throws AsterixException {
+    public void visit(CreateChannelStatement stmtDel, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }
-    
+
+    @Override
+    public void visit(ChannelDropStatement stmt, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(ChannelSubscribeStatement stmt, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(ChannelUnsubscribeStatement stmt, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
     @Override
     public void visit(CreateFeedPolicyStatement stmt, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
@@ -571,6 +593,12 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(FeedPolicyDropStatement stmt, Integer arg) throws AsterixException {
+    }
+
+    @Override
+    public void visit(CompactStatement fds, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
     }
 
     @Override

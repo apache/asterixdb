@@ -27,8 +27,8 @@ import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedJointKey;
+import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
 
 public class FeedJoint implements IFeedJoint {
 
@@ -105,7 +105,7 @@ public class FeedJoint implements IFeedJoint {
             FeedConnectionId connectionId = new FeedConnectionId(connectionRequest.getReceivingFeedId(),
                     connectionRequest.getTargetDataset());
             try {
-                FeedLifecycleListener.INSTANCE.submitFeedConnectionRequest(this, connectionRequest);
+                ActiveJobLifecycleListener.INSTANCE.submitFeedConnectionRequest(this, connectionRequest);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Submitted feed connection request " + connectionRequest + " at feed joint " + this);
                 }

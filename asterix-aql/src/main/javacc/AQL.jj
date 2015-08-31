@@ -35,6 +35,9 @@ import org.apache.asterix.aql.context.RootScopeFactory;
 import org.apache.asterix.aql.context.Scope;
 import org.apache.asterix.aql.expression.AbstractAccessor;
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
@@ -42,6 +45,7 @@ import org.apache.asterix.aql.expression.CreatePrimaryFeedStatement;
 import org.apache.asterix.aql.expression.CreateSecondaryFeedStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateFunctionStatement;
 import org.apache.asterix.aql.expression.CreateIndexStatement;
 import org.apache.asterix.aql.expression.DatasetDecl;
@@ -295,6 +299,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = DeleteStatement()
     | stmt = UpdateStatement()
     | stmt = FeedStatement()
+    | stmt = ChannelSubscriptionStatement()
     | stmt = CompactStatement()
     | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
@@ -337,9 +342,10 @@ Statement CreateStatement() throws ParseException:
     | stmt = DatasetSpecification()
     | stmt = IndexSpecification()
     | stmt = DataverseSpecification()
-    | stmt = FunctionSpecification()
+    | stmt = ExecutableSpecification()
     | stmt = FeedSpecification()
     | stmt = FeedPolicySpecification()
+    | stmt = ChannelSpecification()
   )
   {
     return stmt;
@@ -613,7 +619,25 @@ CreateDataverseStatement DataverseSpecification() throws ParseException :
     }
 }
 
-CreateFunctionStatement FunctionSpecification() throws ParseException:
+CreateFunctionStatement ExecutableSpecification() throws ParseException:
+{
+	CreateFunctionStatement st;
+}
+{
+  ("function" 
+  {
+  	st = FunctionSpecification(false);
+  }
+  | "procedure" 
+  {
+  	st = FunctionSpecification(true);
+  })
+  {
+  	return st;
+  }
+}
+
+CreateFunctionStatement FunctionSpecification(boolean isProcedure) throws ParseException:
 {
   FunctionSignature signature;
   boolean ifNotExists = false;
@@ -628,7 +652,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   createNewScope();
 }
 {
-  "function" fctName = FunctionName()
+  fctName = FunctionName()
   ifNotExists = IfNotExists()
   paramList = ParameterList()
   <LEFTBRACE>
@@ -643,7 +667,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       removeCurrentScope();
-      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists, isProcedure);
     }
 }
 
@@ -710,7 +734,28 @@ CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
     }
 }
 
-
+CreateChannelStatement ChannelSpecification() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;  
+  FunctionSignature appliedFunction = null;
+  CreateChannelStatement ccs = null;
+  String fqFunctionName = null;
+  Expression period = null;
+}
+{
+  (
+    "repetitive channel"  nameComponents = QualifiedName()
+    "using function" appliedFunction = FunctionSignature()
+    "period" period = FunctionCallExpr()
+    {
+    	ccs = new CreateChannelStatement(nameComponents.first,
+                                   nameComponents.second, appliedFunction, period);
+    }
+  )
+    {
+      return ccs;
+    }
+}
 
 List<VarIdentifier> ParameterList() throws ParseException:
 {
@@ -850,11 +895,19 @@ Statement DropStatement() throws ParseException:
       }
     | "function" funcSig = FunctionSignature() ifExists = IfExists()
       {
-        stmt = new FunctionDropStatement(funcSig, ifExists);
+        stmt = new FunctionDropStatement(funcSig, ifExists, false);
+      }
+    | "procedure" funcSig = FunctionSignature() ifExists = IfExists()
+      {
+        stmt = new FunctionDropStatement(funcSig, ifExists, true);
       }
     | "feed" pairId = QualifiedName() ifExists = IfExists()
       {
         stmt = new FeedDropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | "channel" pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new ChannelDropStatement(pairId.first, pairId.second, ifExists);
       }
   )
   {
@@ -879,12 +932,14 @@ boolean IfExists() throws ParseException :
 InsertStatement InsertStatement() throws ParseException:
 {
   Pair<Identifier,Identifier> nameComponents = null;
+  List<String> returnField = null;
+  boolean returnRecord = false;
   Query query;
 }
 {
-  "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query()
+    "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query() (<RETURN> "records"{returnRecord = true;} | "returning" returnField = NestedField())?
     {
-      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+            return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(), returnRecord, returnField);
     }
 }
 
@@ -1065,6 +1120,53 @@ Statement FeedStatement() throws ParseException:
     | "disconnect" "feed" feedNameComponents = QualifiedName() <FROM> <DATASET> datasetNameComponents = QualifiedName()
       {
         stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
+      }
+  )
+    {
+      return stmt;
+    }
+}
+
+Statement ChannelSubscriptionStatement() throws ParseException:
+{
+
+  Statement stmt = null;
+  Pair<Identifier,Identifier> nameComponents = null;  
+  List<Expression> argList = new ArrayList<Expression>();
+  Expression tmp = null;
+  String id = null;
+}
+{
+  (
+    "subscribe" "to" "channel" nameComponents = QualifiedName()
+    	<LEFTPAREN> (tmp = Expression()
+    	{
+      		argList.add(tmp);
+    	}
+  		(<COMMA> tmp = Expression()
+    	{
+      			argList.add(tmp);
+    	}
+  		)*)? <RIGHTPAREN>
+      {
+        stmt = new ChannelSubscribeStatement(nameComponents.first, nameComponents.second, argList, getVarCounter());
+      }
+    | "unsubscribe" "subscription" id = StringLiteral() <FROM> "channel" nameComponents = QualifiedName()
+
+      {
+        setDataverses(new ArrayList<String>());
+  		setDatasets(new ArrayList<String>());
+      	VariableExpr varExp = new VariableExpr();
+      	VarIdentifier var = new VarIdentifier();
+      	varExp.setVar(var);
+     	var.setValue("$subscriptionPlaceholder");
+     	getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
+     	List<String> dataverses = getDataverses();
+      	List<String> datasets = getDatasets();
+      	// we remove the pointer to the dataverses and datasets
+      	setDataverses(null);
+      	setDatasets(null);
+        stmt = new ChannelUnsubscribeStatement(varExp, nameComponents.first, nameComponents.second, id, getVarCounter(), dataverses, datasets);
       }
   )
     {

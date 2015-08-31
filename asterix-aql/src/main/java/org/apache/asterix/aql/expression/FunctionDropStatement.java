@@ -28,10 +28,12 @@ public class FunctionDropStatement implements Statement {
 
     private final FunctionSignature signature;
     private boolean ifExists;
+    private final boolean isProcedure;
 
-    public FunctionDropStatement(FunctionSignature signature, boolean ifExists) {
+    public FunctionDropStatement(FunctionSignature signature, boolean ifExists, boolean isProcedure) {
         this.signature = signature;
         this.ifExists = ifExists;
+        this.isProcedure = isProcedure;
     }
 
     @Override
@@ -45,6 +47,10 @@ public class FunctionDropStatement implements Statement {
 
     public boolean getIfExists() {
         return ifExists;
+    }
+
+    public boolean getIsProcedure() {
+        return this.isProcedure;
     }
 
     @Override

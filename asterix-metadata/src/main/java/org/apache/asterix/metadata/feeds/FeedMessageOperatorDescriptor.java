@@ -37,8 +37,7 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
     private final FeedConnectionId connectionId;
     private final IFeedMessage feedMessage;
 
-    public FeedMessageOperatorDescriptor(JobSpecification spec, FeedConnectionId connectionId,
-            IFeedMessage feedMessage) {
+    public FeedMessageOperatorDescriptor(JobSpecification spec, FeedConnectionId connectionId, IFeedMessage feedMessage) {
         super(spec, 0, 1);
         this.connectionId = connectionId;
         this.feedMessage = feedMessage;
@@ -47,7 +46,7 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new FeedMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition, nPartitions);
+        return new FeedMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition);
     }
 
 }

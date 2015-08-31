@@ -31,7 +31,7 @@ public class FeedIntakeInfo extends FeedJobInfo {
     private final JobSpecification spec;
     private List<String> intakeLocation;
 
-    public FeedIntakeInfo(JobId jobId, FeedJobState state, JobType jobType, FeedId feedId, IFeedJoint intakeFeedJoint,
+    public FeedIntakeInfo(JobId jobId, JobState state, JobType jobType, FeedId feedId, IFeedJoint intakeFeedJoint,
             JobSpecification spec) {
         super(jobId, state, FeedJobInfo.JobType.INTAKE, spec);
         this.feedId = feedId;

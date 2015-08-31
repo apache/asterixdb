@@ -31,6 +31,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import org.apache.asterix.common.channels.ChannelId;
+import org.apache.asterix.common.channels.ChannelRuntimeId;
+import org.apache.asterix.common.channels.api.IChannelRuntime.ChannelRuntimeType;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
@@ -44,6 +47,8 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
+import org.apache.asterix.metadata.channels.ChannelMetaOperatorDescriptor;
+import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -82,13 +87,14 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.RandomPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 
 /**
- * A utility class for providing helper functions for feeds
+ * A utility class for providing helper functions for active objects
  */
-public class FeedUtil {
+public class ActiveUtil {
 
-    private static Logger LOGGER = Logger.getLogger(FeedUtil.class.getName());
+    private static Logger LOGGER = Logger.getLogger(ActiveUtil.class.getName());
 
     public static String getFeedPointKeyRep(Feed feed, List<String> appliedFunctions) {
         StringBuilder builder = new StringBuilder();
@@ -317,6 +323,138 @@ public class FeedUtil {
 
         return altered;
 
+    }
+
+    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ChannelId channelId) {
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Original Job Spec:" + spec);
+        }
+
+        JobSpecification altered = new JobSpecification(spec.getFrameSize());
+        Map<OperatorDescriptorId, IOperatorDescriptor> operatorMap = spec.getOperatorMap();
+        // copy operators
+        String operandId = null;
+        Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
+        ChannelMetaOperatorDescriptor metaOp = null;
+        for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
+            operandId = ChannelRuntimeId.DEFAULT_OPERAND_ID;
+            IOperatorDescriptor opDesc = entry.getValue();
+            if (opDesc instanceof RepetitiveChannelOperatorDescriptor) {
+                metaOp = new ChannelMetaOperatorDescriptor(altered, channelId, opDesc, ChannelRuntimeType.REPETITIVE,
+                        ((RepetitiveChannelOperatorDescriptor) opDesc).getFunction(),
+                        ((RepetitiveChannelOperatorDescriptor) opDesc).getDuration(),
+                        ((RepetitiveChannelOperatorDescriptor) opDesc).getSubscriptionsName(),
+                        ((RepetitiveChannelOperatorDescriptor) opDesc).getResultsName());
+                oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
+            } else {
+                NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(altered);
+                oldNewOID.put(opDesc.getOperatorId(), nullSink.getOperatorId());
+            }
+        }
+
+        // copy connectors
+        Map<ConnectorDescriptorId, ConnectorDescriptorId> connectorMapping = new HashMap<ConnectorDescriptorId, ConnectorDescriptorId>();
+        for (Entry<ConnectorDescriptorId, IConnectorDescriptor> entry : spec.getConnectorMap().entrySet()) {
+            IConnectorDescriptor connDesc = entry.getValue();
+            ConnectorDescriptorId newConnId = altered.createConnectorDescriptor(connDesc);
+            connectorMapping.put(entry.getKey(), newConnId);
+        }
+
+        // make connections between operators
+        for (Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> entry : spec
+                .getConnectorOperatorMap().entrySet()) {
+            IConnectorDescriptor connDesc = altered.getConnectorMap().get(connectorMapping.get(entry.getKey()));
+            Pair<IOperatorDescriptor, Integer> leftOp = entry.getValue().getLeft();
+            Pair<IOperatorDescriptor, Integer> rightOp = entry.getValue().getRight();
+
+            IOperatorDescriptor leftOpDesc = altered.getOperatorMap().get(
+                    oldNewOID.get(leftOp.getLeft().getOperatorId()));
+            IOperatorDescriptor rightOpDesc = altered.getOperatorMap().get(
+                    oldNewOID.get(rightOp.getLeft().getOperatorId()));
+
+            altered.connect(connDesc, leftOpDesc, leftOp.getRight(), rightOpDesc, rightOp.getRight());
+        }
+
+        // prepare for setting partition constraints
+        Map<OperatorDescriptorId, List<LocationConstraint>> operatorLocations = new HashMap<OperatorDescriptorId, List<LocationConstraint>>();
+        Map<OperatorDescriptorId, Integer> operatorCounts = new HashMap<OperatorDescriptorId, Integer>();
+
+        for (Constraint constraint : spec.getUserConstraints()) {
+            LValueConstraintExpression lexpr = constraint.getLValue();
+            ConstraintExpression cexpr = constraint.getRValue();
+            OperatorDescriptorId opId;
+            switch (lexpr.getTag()) {
+                case PARTITION_COUNT:
+                    opId = ((PartitionCountExpression) lexpr).getOperatorDescriptorId();
+                    operatorCounts.put(opId, (int) ((ConstantExpression) cexpr).getValue());
+                    break;
+                case PARTITION_LOCATION:
+                    opId = ((PartitionLocationExpression) lexpr).getOperatorDescriptorId();
+
+                    IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(opId));
+                    List<LocationConstraint> locations = operatorLocations.get(opDesc.getOperatorId());
+                    if (locations == null) {
+                        locations = new ArrayList<>();
+                        operatorLocations.put(opDesc.getOperatorId(), locations);
+                    }
+                    String location = (String) ((ConstantExpression) cexpr).getValue();
+                    LocationConstraint lc = new LocationConstraint();
+                    lc.location = location;
+                    lc.partition = ((PartitionLocationExpression) lexpr).getPartition();
+                    locations.add(lc);
+                    break;
+                case CONSTANT:
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // set absolute location constraints
+        for (Entry<OperatorDescriptorId, List<LocationConstraint>> entry : operatorLocations.entrySet()) {
+            IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
+            Collections.sort(entry.getValue(), new Comparator<LocationConstraint>() {
+
+                @Override
+                public int compare(LocationConstraint o1, LocationConstraint o2) {
+                    return o1.partition - o2.partition;
+                }
+            });
+            String[] locations = new String[entry.getValue().size()];
+            for (int i = 0; i < locations.length; ++i) {
+                locations[i] = entry.getValue().get(i).location;
+            }
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(altered, opDesc, locations);
+        }
+
+        // set count constraints
+        for (Entry<OperatorDescriptorId, Integer> entry : operatorCounts.entrySet()) {
+            IOperatorDescriptor opDesc = altered.getOperatorMap().get(oldNewOID.get(entry.getKey()));
+            if (!operatorLocations.keySet().contains(entry.getKey())) {
+                PartitionConstraintHelper.addPartitionCountConstraint(altered, opDesc, entry.getValue());
+            }
+        }
+
+        // useConnectorSchedulingPolicy
+        altered.setUseConnectorPolicyForScheduling(spec.isUseConnectorPolicyForScheduling());
+
+        // connectorAssignmentPolicy
+        altered.setConnectorPolicyAssignmentPolicy(spec.getConnectorPolicyAssignmentPolicy());
+
+        // roots
+        for (OperatorDescriptorId root : spec.getRoots()) {
+            altered.addRoot(altered.getOperatorMap().get(oldNewOID.get(root)));
+        }
+
+        // jobEventListenerFactory
+        altered.setJobletEventListenerFactory(spec.getJobletEventListenerFactory());
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("New Job Spec:" + altered);
+        }
+
+        return altered;
     }
 
     public static void increaseCardinality(JobSpecification spec, FeedRuntimeType compute, int requiredCardinality,

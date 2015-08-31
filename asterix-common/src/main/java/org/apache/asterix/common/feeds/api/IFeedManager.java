@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
+import org.apache.asterix.common.channels.api.IChannelConnectionManager;
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
 import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
@@ -53,6 +54,14 @@ public interface IFeedManager {
      * @see IFeedConnectionManager
      */
     public IFeedConnectionManager getFeedConnectionManager();
+
+    /**
+     * gets the handle to the singleton instance of connection manager
+     * 
+     * @return the singleton instance of connection manager
+     * @see IChannelConnectionManager
+     */
+    public IChannelConnectionManager getChannelConnectionManager();
 
     /**
      * gets the handle to the singleton instance of memory manager

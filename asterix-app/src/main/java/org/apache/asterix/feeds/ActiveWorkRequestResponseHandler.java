@@ -29,8 +29,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
+import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
 import org.apache.asterix.common.feeds.FeedJobInfo;
@@ -51,15 +53,15 @@ import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedWorkRequestResponseHandler implements Runnable {
+public class ActiveWorkRequestResponseHandler implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedWorkRequestResponseHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveWorkRequestResponseHandler.class.getName());
 
     private final LinkedBlockingQueue<IClusterManagementWorkResponse> inbox;
 
-    private Map<Integer, Map<String, List<FeedJobInfo>>> feedsWaitingForResponse = new HashMap<Integer, Map<String, List<FeedJobInfo>>>();
+    private Map<Integer, Map<String, List<ActiveJobInfo>>> feedsWaitingForResponse = new HashMap<Integer, Map<String, List<ActiveJobInfo>>>();
 
-    public FeedWorkRequestResponseHandler(LinkedBlockingQueue<IClusterManagementWorkResponse> inbox) {
+    public ActiveWorkRequestResponseHandler(LinkedBlockingQueue<IClusterManagementWorkResponse> inbox) {
         this.inbox = inbox;
     }
 
@@ -80,7 +82,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                 case ADD_NODE:
                     AddNodeWork addNodeWork = (AddNodeWork) submittedWork;
                     int workId = addNodeWork.getWorkId();
-                    Map<String, List<FeedJobInfo>> failureAnalysis = feedsWaitingForResponse.get(workId);
+                    Map<String, List<ActiveJobInfo>> failureAnalysis = feedsWaitingForResponse.get(workId);
                     AddNodeWorkResponse resp = (AddNodeWorkResponse) response;
                     List<String> nodesAdded = resp.getNodesAdded();
                     List<String> unsubstitutedNodes = new ArrayList<String>();
@@ -119,10 +121,10 @@ public class FeedWorkRequestResponseHandler implements Runnable {
 
                     // alter failed feed intake jobs
 
-                    for (Entry<String, List<FeedJobInfo>> entry : failureAnalysis.entrySet()) {
+                    for (Entry<String, List<ActiveJobInfo>> entry : failureAnalysis.entrySet()) {
                         String failedNode = entry.getKey();
-                        List<FeedJobInfo> impactedJobInfos = entry.getValue();
-                        for (FeedJobInfo info : impactedJobInfos) {
+                        List<ActiveJobInfo> impactedJobInfos = entry.getValue();
+                        for (ActiveJobInfo info : impactedJobInfos) {
                             JobSpecification spec = info.getSpec();
                             replaceNode(spec, failedNode, nodeSubstitution.get(failedNode));
                             info.setSpec(spec);
@@ -131,16 +133,24 @@ public class FeedWorkRequestResponseHandler implements Runnable {
 
                     Set<FeedIntakeInfo> revisedIntakeJobs = new HashSet<FeedIntakeInfo>();
                     Set<FeedConnectJobInfo> revisedConnectJobInfos = new HashSet<FeedConnectJobInfo>();
+                    Set<ChannelJobInfo> revisedChannelJobInfos = new HashSet<ChannelJobInfo>();
 
-                    for (List<FeedJobInfo> infos : failureAnalysis.values()) {
-                        for (FeedJobInfo info : infos) {
-                            switch (info.getJobType()) {
-                                case INTAKE:
-                                    revisedIntakeJobs.add((FeedIntakeInfo) info);
-                                    break;
-                                case FEED_CONNECT:
-                                    revisedConnectJobInfos.add((FeedConnectJobInfo) info);
-                                    break;
+                    for (List<ActiveJobInfo> infos : failureAnalysis.values()) {
+                        for (ActiveJobInfo info : infos) {
+                            if (info instanceof FeedJobInfo) {
+                                FeedJobInfo fInfo = (FeedJobInfo) info;
+                                switch (fInfo.getJobType()) {
+                                    case INTAKE:
+                                        revisedIntakeJobs.add((FeedIntakeInfo) info);
+                                        break;
+                                    case FEED_CONNECT:
+                                        revisedConnectJobInfos.add((FeedConnectJobInfo) info);
+                                        break;
+                                }
+                            } else {
+                                ChannelJobInfo cInfo = (ChannelJobInfo) info;
+                                revisedChannelJobInfos.add(cInfo);
+
                             }
                         }
                     }
@@ -152,6 +162,10 @@ public class FeedWorkRequestResponseHandler implements Runnable {
                         }
                         Thread.sleep(2000);
                         for (FeedConnectJobInfo info : revisedConnectJobInfos) {
+                            hcc.startJob(info.getSpec());
+                            Thread.sleep(2000);
+                        }
+                        for (ChannelJobInfo info : revisedChannelJobInfos) {
                             hcc.startJob(info.getSpec());
                             Thread.sleep(2000);
                         }
@@ -261,7 +275,7 @@ public class FeedWorkRequestResponseHandler implements Runnable {
 
     }
 
-    public void registerFeedWork(int workId, Map<String, List<FeedJobInfo>> impactedJobs) {
+    public void registerWork(int workId, Map<String, List<ActiveJobInfo>> impactedJobs) {
         feedsWaitingForResponse.put(workId, impactedJobs);
     }
 }

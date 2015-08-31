@@ -211,7 +211,8 @@ public class CompiledStatements {
         private final int gramLength;
 
         public CompiledCreateIndexStatement(String indexName, String dataverseName, String datasetName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
+                IndexType indexType) {
             this.indexName = indexName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -307,12 +308,18 @@ public class CompiledStatements {
         private final String datasetName;
         private final Query query;
         private final int varCounter;
+        private final boolean returnRecord;
+        private final List<String> returnField;
 
-        public CompiledInsertStatement(String dataverseName, String datasetName, Query query, int varCounter) {
+        public CompiledInsertStatement(String dataverseName, String datasetName, Query query, int varCounter,
+                boolean returnRecord, List<String> returnField) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.query = query;
             this.varCounter = varCounter;
+            this.returnField = returnField;
+            this.returnRecord = returnRecord;
+
         }
 
         public String getDataverseName() {
@@ -329,6 +336,14 @@ public class CompiledStatements {
 
         public Query getQuery() {
             return query;
+        }
+
+        public boolean getReturnRecord() {
+            return returnRecord;
+        }
+
+        public List<String> getReturnField() {
+            return returnField;
         }
 
         @Override
@@ -390,7 +405,7 @@ public class CompiledStatements {
             return policyName;
         }
     }
-    
+
     public static class CompiledSubscribeFeedStatement implements ICompiledDmlStatement {
 
         private final FeedConnectionRequest request;
@@ -431,7 +446,6 @@ public class CompiledStatements {
         }
 
     }
-
 
     public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
@@ -592,7 +606,8 @@ public class CompiledStatements {
         private final int gramLength;
 
         public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
+                IndexType indexType) {
             super(dataverseName, datasetName);
             this.indexName = indexName;
             this.keyFields = keyFields;

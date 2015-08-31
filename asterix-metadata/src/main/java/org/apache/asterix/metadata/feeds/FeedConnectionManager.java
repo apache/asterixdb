@@ -95,7 +95,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
 
     @Override
     public String toString() {
-        return "FeedManager " + "[" + nodeId + "]";
+        return "FeedConnectionManager " + "[" + nodeId + "]";
     }
 
     @Override

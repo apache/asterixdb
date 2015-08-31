@@ -18,65 +18,27 @@
  */
 package org.apache.asterix.common.feeds;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedJobInfo {
-
-    private static final Logger LOGGER = Logger.getLogger(FeedJobInfo.class.getName());
+public class FeedJobInfo extends ActiveJobInfo {
 
     public enum JobType {
         INTAKE,
+        COLLECT,
         FEED_CONNECT
     }
 
-    public enum FeedJobState {
-        CREATED,
-        ACTIVE,
-        UNDER_RECOVERY,
-        ENDED
-    }
+    private final JobType jobType;
 
-    protected final JobId jobId;
-    protected final JobType jobType;
-    protected FeedJobState state;
-    protected JobSpecification spec;
-
-    public FeedJobInfo(JobId jobId, FeedJobState state, JobType jobType, JobSpecification spec) {
-        this.jobId = jobId;
-        this.state = state;
+    public FeedJobInfo(JobId jobId, JobState state, JobType jobType, JobSpecification spec) {
+        super(jobId, state, spec);
         this.jobType = jobType;
-        this.spec = spec;
-    }
-
-    public JobId getJobId() {
-        return jobId;
-    }
-
-    public FeedJobState getState() {
-        return state;
-    }
-
-    public void setState(FeedJobState state) {
-        this.state = state;
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(this + " is in " + state + " state.");
-        }
     }
 
     public JobType getJobType() {
         return jobType;
-    }
-
-    public JobSpecification getSpec() {
-        return spec;
-    }
-
-    public void setSpec(JobSpecification spec) {
-        this.spec = spec;
     }
 
     public String toString() {

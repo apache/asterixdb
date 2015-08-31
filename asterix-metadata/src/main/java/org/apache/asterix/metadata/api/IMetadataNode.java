@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.MetadataException;
+import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -550,7 +551,6 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public void dropFeed(JobId jobId, String dataverse, String feedName) throws MetadataException, RemoteException;
 
-   
     /**
      * @param jobId
      * @param feedPolicy
@@ -570,7 +570,47 @@ public interface IMetadataNode extends Remote, Serializable {
     public FeedPolicy getFeedPolicy(JobId jobId, String dataverse, String policy) throws MetadataException,
             RemoteException;
 
-   
+    /**
+     * get channels for a dataverse
+     * 
+     * @param jobId
+     * @param dataverseName
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public List<Channel> getDataverseChannels(JobId jobId, String dataverseName) throws MetadataException,
+            RemoteException;
+
+    /**
+     * @param jobId
+     * @param channel
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public void addChannel(JobId jobId, Channel channel) throws MetadataException, RemoteException;
+
+    /**
+     * @param jobId
+     * @param dataverse
+     * @param channelName
+     * @return
+     * @throws MetadataException
+     * @throws RemoteException
+     */
+    public Channel getChannel(JobId jobId, String dataverse, String channelName) throws MetadataException,
+            RemoteException;
+
+    /**
+     * @param jobId
+     * @param dataverse
+     * @param channelName
+     * @return
+     * @throws MetadataException
+     */
+    public void dropChannel(JobId jobId, String dataverse, String channelName) throws MetadataException,
+            RemoteException;
+
     /**
      * Removes a library , acquiring local locks on behalf of the given
      * transaction id.
@@ -730,8 +770,7 @@ public interface IMetadataNode extends Remote, Serializable {
      */
     public ExternalFile getExternalFile(JobId jobId, String dataverseName, String datasetName, Integer fileNumber)
             throws MetadataException, RemoteException;
-    
-    
+
     /**
      * update an existing dataset in the metadata, acquiring local locks on behalf
      * of the given transaction id.

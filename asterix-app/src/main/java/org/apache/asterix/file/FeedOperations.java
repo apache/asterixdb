@@ -33,7 +33,7 @@ import org.apache.asterix.common.feeds.api.IFeedMessage;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.common.feeds.message.EndFeedMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
-import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
@@ -100,7 +100,7 @@ public class FeedOperations {
         IOperatorDescriptor feedMessenger = null;
         AlgebricksPartitionConstraint messengerPc = null;
 
-        List<String> locations = FeedLifecycleListener.INSTANCE.getIntakeLocations(feedId);
+        List<String> locations = ActiveJobLifecycleListener.INSTANCE.getIntakeLocations(feedId);
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = buildDiscontinueFeedMessengerRuntime(spec, feedId,
                 locations);
 
@@ -129,7 +129,7 @@ public class FeedOperations {
         List<String> locations = null;
         FeedRuntimeType sourceRuntimeType;
         try {
-            FeedConnectJobInfo cInfo = FeedLifecycleListener.INSTANCE.getFeedConnectJobInfo(connectionId);
+            FeedConnectJobInfo cInfo = ActiveJobLifecycleListener.INSTANCE.getFeedConnectJobInfo(connectionId);
             IFeedJoint sourceFeedJoint = cInfo.getSourceFeedJoint();
             IFeedJoint computeFeedJoint = cInfo.getComputeFeedJoint();
 

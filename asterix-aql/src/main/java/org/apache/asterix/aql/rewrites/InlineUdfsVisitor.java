@@ -27,8 +27,12 @@ import org.apache.asterix.aql.base.Expression;
 import org.apache.asterix.aql.base.Expression.Kind;
 import org.apache.asterix.aql.base.IAqlExpression;
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
 import org.apache.asterix.aql.expression.CreateFunctionStatement;
@@ -406,8 +410,7 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
     }
 
     @Override
-    public Boolean visitLoadStatement(LoadStatement stmtLoad, List<FunctionDecl> arg)
-            throws AsterixException {
+    public Boolean visitLoadStatement(LoadStatement stmtLoad, List<FunctionDecl> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -559,7 +562,7 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
     public Boolean visitCreateFeedPolicyStatement(CreateFeedPolicyStatement cfps, List<FunctionDecl> arg)
             throws AsterixException {
@@ -573,4 +576,32 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public Boolean visitCreateChannelStatement(CreateChannelStatement del, List<FunctionDecl> arg)
+            throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitDropChannelStatement(ChannelDropStatement del, List<FunctionDecl> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitChannelSubscribeStatement(ChannelSubscribeStatement del, List<FunctionDecl> arg)
+            throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del, List<FunctionDecl> arg)
+            throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

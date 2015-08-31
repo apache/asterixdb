@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener.ConnectionLocation;
+import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 
 /**
  * A request for connecting a feed to a dataset.
@@ -67,7 +67,6 @@ public class FeedConnectionRequest {
 
     private final FeedId receivingFeedId;
 
-    
     public FeedConnectionRequest(FeedJointKey feedPointKey, ConnectionLocation connectionLocation,
             List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
             FeedId receivingFeedId) {

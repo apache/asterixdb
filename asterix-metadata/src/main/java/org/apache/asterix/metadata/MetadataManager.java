@@ -33,6 +33,7 @@ import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
+import org.apache.asterix.metadata.entities.Channel;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -390,7 +391,8 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         try {
-            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(),datatype.getDataverseName(),datatype.getDatatypeName()));
+            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(),
+                    datatype.getDatatypeName()));
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -718,7 +720,6 @@ public class MetadataManager implements IMetadataManager {
         }
         return adapter;
     }
-  
 
     @Override
     public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
@@ -801,7 +802,6 @@ public class MetadataManager implements IMetadataManager {
         }
         return FeedPolicy;
     }
-   
 
     @Override
     public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
@@ -836,7 +836,39 @@ public class MetadataManager implements IMetadataManager {
         ctx.addFeed(feed);
     }
 
-  
+    @Override
+    public void addChannel(MetadataTransactionContext ctx, Channel channel) throws MetadataException {
+        try {
+            metadataNode.addChannel(ctx.getJobId(), channel);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.addChannel(channel);
+    }
+
+    @Override
+    public Channel getChannel(MetadataTransactionContext ctx, String dataverse, String channelName)
+            throws MetadataException {
+        Channel channel = null;
+        try {
+            channel = metadataNode.getChannel(ctx.getJobId(), dataverse, channelName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        return channel;
+    }
+
+    @Override
+    public void dropChannel(MetadataTransactionContext ctx, String dataverse, String channelName)
+            throws MetadataException {
+        try {
+            metadataNode.dropChannel(ctx.getJobId(), dataverse, channelName);
+        } catch (RemoteException e) {
+            throw new MetadataException(e);
+        }
+        ctx.dropChannel(dataverse, channelName);
+    }
+
     public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)
             throws MetadataException {
         List<DatasourceAdapter> dataverseAdapters;
@@ -847,7 +879,7 @@ public class MetadataManager implements IMetadataManager {
         }
         return dataverseAdapters;
     }
-    
+
     public void dropFeedPolicy(MetadataTransactionContext mdTxnCtx, String dataverseName, String policyName)
             throws MetadataException {
         FeedPolicy feedPolicy = null;
@@ -859,7 +891,7 @@ public class MetadataManager implements IMetadataManager {
         }
         mdTxnCtx.dropFeedPolicy(feedPolicy);
     }
-    
+
     public List<FeedPolicy> getDataversePolicies(MetadataTransactionContext mdTxnCtx, String dataverse)
             throws MetadataException {
         List<FeedPolicy> dataverseFeedPolicies;
@@ -870,7 +902,6 @@ public class MetadataManager implements IMetadataManager {
         }
         return dataverseFeedPolicies;
     }
-
 
     @Override
     public List<ExternalFile> getDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)

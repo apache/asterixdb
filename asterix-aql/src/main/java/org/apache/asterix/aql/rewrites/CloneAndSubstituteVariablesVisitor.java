@@ -26,8 +26,12 @@ import org.apache.asterix.aql.base.Clause;
 import org.apache.asterix.aql.base.Expression;
 import org.apache.asterix.aql.base.IAqlExpression;
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
 import org.apache.asterix.aql.expression.CreateFunctionStatement;
@@ -628,7 +632,6 @@ public class CloneAndSubstituteVariablesVisitor implements
         // TODO Auto-generated method stub
         return null;
     }
-    
 
     @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitCreateFeedPolicyStatement(
@@ -641,4 +644,33 @@ public class CloneAndSubstituteVariablesVisitor implements
             List<VariableSubstitution> arg) throws AsterixException {
         return null;
     }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitCreateChannelStatement(CreateChannelStatement del,
+            List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitDropChannelStatement(ChannelDropStatement del,
+            List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitChannelSubscribeStatement(
+            ChannelSubscribeStatement del, List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitChannelUnsubscribeStatement(
+            ChannelUnsubscribeStatement del, List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

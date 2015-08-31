@@ -1,0 +1,7 @@
+use dataverse channels;
+
+subscribe to channel nearbyTweetChannel (point("30.0, 30.0"), "Live");
+
+subscribe to channel nearbyTweetChannel (point("20.0, 20.0"), "Long");
+
+subscribe to channel nearbyTweetChannel (point("10.0, 10.0"), "Prosper");

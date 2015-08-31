@@ -107,8 +107,8 @@ public class FeedTrackingManager implements IFeedTrackingManager {
 
     private void sendCommitResponseMessage(FeedConnectionId connectionId, int partition, int base) {
         FeedTupleCommitResponseMessage response = new FeedTupleCommitResponseMessage(connectionId, partition, base);
-        List<String> storageLocations = FeedLifecycleListener.INSTANCE.getStoreLocations(connectionId);
-        List<String> collectLocations = FeedLifecycleListener.INSTANCE.getCollectLocations(connectionId);
+        List<String> storageLocations = ActiveJobLifecycleListener.INSTANCE.getStoreLocations(connectionId);
+        List<String> collectLocations = ActiveJobLifecycleListener.INSTANCE.getCollectLocations(connectionId);
         String collectLocation = collectLocations.get(partition);
         Set<String> messageDestinations = new HashSet<String>();
         messageDestinations.add(collectLocation);

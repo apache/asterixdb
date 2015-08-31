@@ -72,10 +72,10 @@ public class FeedsActivator implements Runnable {
                 }
                 for (FeedCollectInfo finfo : feedsToRevive) {
                     try {
-                        JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.jobSpec);
+                        JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.getSpec());
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.info("Resumed feed :" + finfo.feedConnectionId + " job id " + jobId);
-                            LOGGER.info("Job:" + finfo.jobSpec);
+                            LOGGER.info("Job:" + finfo.getSpec());
                         }
                     } catch (Exception e) {
                         if (LOGGER.isLoggable(Level.WARNING)) {
@@ -98,7 +98,8 @@ public class FeedsActivator implements Runnable {
             statements.add(dataverseDecl);
             statements.add(stmt);
             AqlTranslator translator = new AqlTranslator(statements, pc);
-            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, AqlTranslator.ResultDelivery.SYNC);
+            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                    AqlTranslator.ResultDelivery.SYNC);
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Resumed feed: " + dataverse + ":" + dataset + " using policy " + feedPolicy);
             }

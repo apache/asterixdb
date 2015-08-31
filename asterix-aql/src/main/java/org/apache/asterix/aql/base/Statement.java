@@ -49,9 +49,13 @@ public interface Statement extends IAqlExpression {
         SUBSCRIBE_FEED,
         CREATE_FEED_POLICY,
         DROP_FEED_POLICY,
+        CREATE_CHANNEL,
+        DROP_CHANNEL,
+        SUBSCRIBE_CHANNEL,
+        UNSUBSCRIBE_CHANNEL,
         CREATE_FUNCTION,
         FUNCTION_DROP,
-        COMPACT, 
+        COMPACT,
         EXTERNAL_DATASET_REFRESH,
         RUN
     }

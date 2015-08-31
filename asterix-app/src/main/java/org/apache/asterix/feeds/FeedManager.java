@@ -21,6 +21,7 @@ package org.apache.asterix.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.channels.api.IChannelConnectionManager;
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedMemoryManager;
@@ -34,6 +35,7 @@ import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
+import org.apache.asterix.metadata.channels.ChannelConnectionManager;
 import org.apache.asterix.metadata.feeds.FeedConnectionManager;
 import org.apache.asterix.metadata.feeds.FeedSubscriptionManager;
 import org.apache.asterix.om.util.AsterixClusterProperties;
@@ -51,6 +53,8 @@ public class FeedManager implements IFeedManager {
     private final IFeedSubscriptionManager feedSubscriptionManager;
 
     private final IFeedConnectionManager feedConnectionManager;
+
+    private final IChannelConnectionManager channelConnectionManager;
 
     private final IFeedMemoryManager feedMemoryManager;
 
@@ -77,6 +81,7 @@ public class FeedManager implements IFeedManager {
         String ccClusterIp = AsterixClusterProperties.INSTANCE.getCluster() != null ? AsterixClusterProperties.INSTANCE
                 .getCluster().getMasterNode().getClusterIp() : "localhost";
         this.feedMessageService = new FeedMessageService(feedProperties, nodeId, ccClusterIp);
+        this.channelConnectionManager = new ChannelConnectionManager(nodeId);
         this.nodeLoadReportService = new NodeLoadReportService(nodeId, this);
         try {
             this.feedMessageService.start();
@@ -100,6 +105,11 @@ public class FeedManager implements IFeedManager {
     @Override
     public IFeedConnectionManager getFeedConnectionManager() {
         return feedConnectionManager;
+    }
+
+    @Override
+    public IChannelConnectionManager getChannelConnectionManager() {
+        return channelConnectionManager;
     }
 
     @Override

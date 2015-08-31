@@ -77,7 +77,7 @@ public class FeedMessageReceiver extends MessageReceiver<String> {
                 feedLoadManager.submitScaleInPossibleReport(ScaleInReportMessage.read(obj));
                 break;
             case STORAGE_REPORT:
-                FeedLifecycleListener.INSTANCE.updateTrackingInformation(StorageReportFeedMessage.read(obj));
+                ActiveJobLifecycleListener.INSTANCE.updateTrackingInformation(StorageReportFeedMessage.read(obj));
                 break;
             case COMMIT_ACK:
                 feedTrackingManager.submitAckReport(FeedTupleCommitAckMessage.read(obj));

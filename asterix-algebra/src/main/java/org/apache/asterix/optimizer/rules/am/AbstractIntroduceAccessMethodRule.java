@@ -173,7 +173,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * only require a match on a prefix of fields to be applicable. This methods
      * removes all index candidates indexExprs that are definitely not
      * applicable according to the expressions involved.
-     *
+     * 
      * @throws AlgebricksException
      */
     public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx)
@@ -408,7 +408,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Finds secondary indexes whose keys include fieldName, and adds a mapping
      * in analysisCtx.indexEsprs from that index to the a corresponding
      * optimizable function expression.
-     *
+     * 
      * @return true if a candidate index was added to foundIndexExprs, false
      *         otherwise
      * @throws AlgebricksException
@@ -608,6 +608,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return null;
+            }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
         } else {
             UnnestOperator unnestOp = (UnnestOperator) op;
@@ -620,9 +623,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 return null;
             }
             expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
-        }
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return null;
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return null;
+            }
+
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();

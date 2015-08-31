@@ -19,8 +19,12 @@
 package org.apache.asterix.aql.expression.visitor;
 
 import org.apache.asterix.aql.expression.CallExpr;
+import org.apache.asterix.aql.expression.ChannelDropStatement;
+import org.apache.asterix.aql.expression.ChannelSubscribeStatement;
+import org.apache.asterix.aql.expression.ChannelUnsubscribeStatement;
 import org.apache.asterix.aql.expression.CompactStatement;
 import org.apache.asterix.aql.expression.ConnectFeedStatement;
+import org.apache.asterix.aql.expression.CreateChannelStatement;
 import org.apache.asterix.aql.expression.CreateDataverseStatement;
 import org.apache.asterix.aql.expression.CreateFeedPolicyStatement;
 import org.apache.asterix.aql.expression.CreateFunctionStatement;
@@ -169,10 +173,18 @@ public interface IAqlExpressionVisitor<R, T> {
     R visitCreateSecondaryFeedStatement(CreateSecondaryFeedStatement csfs, T arg) throws AsterixException;
 
     R visitDropFeedStatement(FeedDropStatement del, T arg) throws AsterixException;
-    
+
     R visitDropFeedPolicyStatement(FeedPolicyDropStatement dfs, T arg) throws AsterixException;
 
     R visitCreateFeedPolicyStatement(CreateFeedPolicyStatement cfps, T arg) throws AsterixException;
+
+    R visitCreateChannelStatement(CreateChannelStatement del, T arg) throws AsterixException;
+
+    R visitDropChannelStatement(ChannelDropStatement del, T arg) throws AsterixException;
+
+    R visitChannelSubscribeStatement(ChannelSubscribeStatement del, T arg) throws AsterixException;
+
+    R visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del, T arg) throws AsterixException;
 
     R visitCallExpr(CallExpr pf, T arg) throws AsterixException;
 

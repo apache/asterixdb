@@ -30,10 +30,10 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedJobInfo.FeedJobState;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
 import org.apache.asterix.common.feeds.NodeLoadReport;
 import org.apache.asterix.common.feeds.api.IFeedLoadManager;
@@ -44,7 +44,7 @@ import org.apache.asterix.common.feeds.message.FeedReportMessage;
 import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.asterix.file.FeedOperations;
-import org.apache.asterix.metadata.feeds.FeedUtil;
+import org.apache.asterix.metadata.feeds.ActiveUtil;
 import org.apache.asterix.metadata.feeds.PrepareStallMessage;
 import org.apache.asterix.metadata.feeds.TerminateDataFlowMessage;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
@@ -82,9 +82,9 @@ public class FeedLoadManager implements IFeedLoadManager {
     @Override
     public void reportCongestion(FeedCongestionMessage message) throws AsterixException {
         FeedRuntimeId runtimeId = message.getRuntimeId();
-        FeedJobState jobState = FeedLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
+        JobState jobState = ActiveJobLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
         if (jobState == null
-                || (jobState.equals(FeedJobState.UNDER_RECOVERY))
+                || (jobState.equals(JobState.UNDER_RECOVERY))
                 || (message.getConnectionId().equals(lastModified) && System.currentTimeMillis()
                         - lastModifiedTimestamp < MIN_MODIFICATION_INTERVAL)) {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -93,11 +93,11 @@ public class FeedLoadManager implements IFeedLoadManager {
             return;
         } else {
             try {
-                FeedLifecycleListener.INSTANCE.setJobState(message.getConnectionId(), FeedJobState.UNDER_RECOVERY);
+                ActiveJobLifecycleListener.INSTANCE.setFeedJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
                 int inflowRate = message.getInflowRate();
                 int outflowRate = message.getOutflowRate();
                 List<String> currentComputeLocations = new ArrayList<String>();
-                currentComputeLocations.addAll(FeedLifecycleListener.INSTANCE.getComputeLocations(message
+                currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
                         .getConnectionId().getFeedId()));
                 int computeCardinality = currentComputeLocations.size();
                 int requiredCardinality = (int) Math
@@ -111,13 +111,13 @@ public class FeedLoadManager implements IFeedLoadManager {
                 List<String> helperComputeNodes = getNodeForSubstitution(additionalComputeNodes);
 
                 // Step 1) Alter the original feed job to adjust the cardinality
-                JobSpecification jobSpec = FeedLifecycleListener.INSTANCE.getCollectJobSpecification(message
+                JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE.getCollectJobSpecification(message
                         .getConnectionId());
                 helperComputeNodes.addAll(currentComputeLocations);
                 List<String> newLocations = new ArrayList<String>();
                 newLocations.addAll(currentComputeLocations);
                 newLocations.addAll(helperComputeNodes);
-                FeedUtil.increaseCardinality(jobSpec, FeedRuntimeType.COMPUTE, requiredCardinality, newLocations);
+                ActiveUtil.increaseCardinality(jobSpec, FeedRuntimeType.COMPUTE, requiredCardinality, newLocations);
 
                 // Step 2) send prepare to  stall message
                 gracefullyTerminateDataFlow(message.getConnectionId(), Integer.MAX_VALUE);
@@ -144,8 +144,8 @@ public class FeedLoadManager implements IFeedLoadManager {
 
     @Override
     public void submitScaleInPossibleReport(ScaleInReportMessage message) throws Exception {
-        FeedJobState jobState = FeedLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
-        if (jobState == null || (jobState.equals(FeedJobState.UNDER_RECOVERY))) {
+        JobState jobState = ActiveJobLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
+        if (jobState == null || (jobState.equals(JobState.UNDER_RECOVERY))) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("JobState information for job " + "[" + message.getConnectionId() + "]" + " not found ");
             }
@@ -154,14 +154,14 @@ public class FeedLoadManager implements IFeedLoadManager {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Processing scale-in message " + message);
             }
-            FeedLifecycleListener.INSTANCE.setJobState(message.getConnectionId(), FeedJobState.UNDER_RECOVERY);
-            JobSpecification jobSpec = FeedLifecycleListener.INSTANCE.getCollectJobSpecification(message
+            ActiveJobLifecycleListener.INSTANCE.setFeedJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
+            JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE.getCollectJobSpecification(message
                     .getConnectionId());
             int reducedCardinality = message.getReducedCardinaliy();
             List<String> currentComputeLocations = new ArrayList<String>();
-            currentComputeLocations.addAll(FeedLifecycleListener.INSTANCE.getComputeLocations(message.getConnectionId()
-                    .getFeedId()));
-            FeedUtil.decreaseComputeCardinality(jobSpec, FeedRuntimeType.COMPUTE, reducedCardinality,
+            currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
+                    .getConnectionId().getFeedId()));
+            ActiveUtil.decreaseComputeCardinality(jobSpec, FeedRuntimeType.COMPUTE, reducedCardinality,
                     currentComputeLocations);
 
             gracefullyTerminateDataFlow(message.getConnectionId(), reducedCardinality - 1);
@@ -178,9 +178,10 @@ public class FeedLoadManager implements IFeedLoadManager {
             throws Exception {
         // Step 1) send prepare to  stall message
         PrepareStallMessage stallMessage = new PrepareStallMessage(connectionId, computePartitionRetainLimit);
-        List<String> intakeLocations = FeedLifecycleListener.INSTANCE.getCollectLocations(connectionId);
-        List<String> computeLocations = FeedLifecycleListener.INSTANCE.getComputeLocations(connectionId.getFeedId());
-        List<String> storageLocations = FeedLifecycleListener.INSTANCE.getStoreLocations(connectionId);
+        List<String> intakeLocations = ActiveJobLifecycleListener.INSTANCE.getCollectLocations(connectionId);
+        List<String> computeLocations = ActiveJobLifecycleListener.INSTANCE.getComputeLocations(connectionId
+                .getFeedId());
+        List<String> storageLocations = ActiveJobLifecycleListener.INSTANCE.getStoreLocations(connectionId);
 
         Set<String> operatorLocations = new HashSet<String>();
 
@@ -265,8 +266,8 @@ public class FeedLoadManager implements IFeedLoadManager {
         System.out.println("Throttling Enabled for " + mesg.getConnectionId() + " " + mesg.getFeedRuntimeId());
         FeedConnectionId connectionId = mesg.getConnectionId();
         List<String> destinationLocations = new ArrayList<String>();
-        List<String> storageLocations = FeedLifecycleListener.INSTANCE.getStoreLocations(connectionId);
-        List<String> collectLocations = FeedLifecycleListener.INSTANCE.getCollectLocations(connectionId);
+        List<String> storageLocations = ActiveJobLifecycleListener.INSTANCE.getStoreLocations(connectionId);
+        List<String> collectLocations = ActiveJobLifecycleListener.INSTANCE.getCollectLocations(connectionId);
 
         destinationLocations.addAll(storageLocations);
         destinationLocations.addAll(collectLocations);

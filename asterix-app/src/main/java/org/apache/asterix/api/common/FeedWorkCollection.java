@@ -86,7 +86,8 @@ public class FeedWorkCollection {
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
                     AqlTranslator translator = new AqlTranslator(statements, pc);
-                    translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, AqlTranslator.ResultDelivery.SYNC);
+                    translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                            AqlTranslator.ResultDelivery.SYNC);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Submitted connection requests for execution: " + request);
                     }
@@ -180,10 +181,10 @@ public class FeedWorkCollection {
                         }
                         for (FeedCollectInfo finfo : feedsToRevive) {
                             try {
-                                JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.jobSpec);
+                                JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.getSpec());
                                 if (LOGGER.isLoggable(Level.INFO)) {
                                     LOGGER.info("Resumed feed :" + finfo.feedConnectionId + " job id " + jobId);
-                                    LOGGER.info("Job:" + finfo.jobSpec);
+                                    LOGGER.info("Job:" + finfo.getSpec());
                                 }
                             } catch (Exception e) {
                                 if (LOGGER.isLoggable(Level.WARNING)) {

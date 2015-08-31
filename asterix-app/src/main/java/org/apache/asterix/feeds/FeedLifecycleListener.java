@@ -40,6 +40,7 @@ import org.apache.asterix.aql.expression.DataverseDecl;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
@@ -49,7 +50,6 @@ import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
 import org.apache.asterix.common.feeds.FeedJobInfo;
-import org.apache.asterix.common.feeds.FeedJobInfo.FeedJobState;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
@@ -166,11 +166,11 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         }
     }
 
-    public void setJobState(FeedConnectionId connectionId, FeedJobState jobState) {
+    public void setJobState(FeedConnectionId connectionId, JobState jobState) {
         feedJobNotificationHandler.setJobState(connectionId, jobState);
     }
 
-    public FeedJobState getFeedJobState(FeedConnectionId connectionId) {
+    public JobState getFeedJobState(FeedConnectionId connectionId) {
         return feedJobNotificationHandler.getFeedJobState(connectionId);
     }
 
@@ -208,7 +208,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
                         impactedJobs.put(deadNode, infos);
                     }
                     infos.add(intakeInfo);
-                    intakeInfo.setState(FeedJobState.UNDER_RECOVERY);
+                    intakeInfo.setState(JobState.UNDER_RECOVERY);
                 }
             }
 
@@ -224,7 +224,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
                         impactedJobs.put(deadNode, infos);
                     }
                     infos.add(connectInfo);
-                    connectInfo.setState(FeedJobState.UNDER_RECOVERY);
+                    connectInfo.setState(JobState.UNDER_RECOVERY);
                     feedJobNotificationHandler.deregisterFeedActivity(connectInfo);
                 }
             }

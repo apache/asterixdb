@@ -39,7 +39,8 @@ public interface IFeedMessage extends Serializable, JSONSerializable {
         SCALE_IN_REQUEST,
         COMMIT_ACK,
         COMMIT_ACK_RESPONSE,
-        THROTTLING_ENABLED
+        THROTTLING_ENABLED,
+        DROP_CHANNEL
     }
 
     /**

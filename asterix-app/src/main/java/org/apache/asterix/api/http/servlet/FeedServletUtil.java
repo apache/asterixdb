@@ -27,7 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.feeds.FeedLifecycleListener;
+import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.feeds.RemoteSocketMessageListener;
 
 public class FeedServletUtil {
@@ -67,7 +67,7 @@ public class FeedServletUtil {
         }
 
         // register the feed subscription queue with FeedLifecycleListener
-        FeedLifecycleListener.INSTANCE.registerFeedReportQueue(feedId, outbox);
+        ActiveJobLifecycleListener.INSTANCE.registerFeedReportQueue(feedId, outbox);
         RemoteSocketMessageListener listener = new RemoteSocketMessageListener(host, feedSubscriptionPort, outbox);
         listener.start();
     }

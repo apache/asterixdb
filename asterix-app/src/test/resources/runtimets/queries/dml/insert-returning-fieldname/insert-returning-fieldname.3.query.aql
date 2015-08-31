@@ -1,0 +1,16 @@
+/*
+ * Test case Name  : insert-returning-fieldname
+ * Description     : Check fields returned on insert
+ * Expected Result : Success
+ * Date            : Mar 2015
+ */
+
+use dataverse test;
+
+insert into dataset TweetMessageuuids(
+[{ "message-text":"hello"},
+{"message-text":"goodbye"},
+{"message-text":"the end"},
+{"message-text":"what"},
+{"message-text":"good"}]
+) returning message-text;

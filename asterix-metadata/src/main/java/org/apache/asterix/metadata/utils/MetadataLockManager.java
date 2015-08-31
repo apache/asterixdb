@@ -34,6 +34,7 @@ public class MetadataLockManager {
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> nodeGroupsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> feedPolicyLocks;
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> channelsLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> compactionPolicyLocks;
     private final ConcurrentHashMap<String, ReentrantReadWriteLock> dataTypeLocks;
 
@@ -44,6 +45,7 @@ public class MetadataLockManager {
         nodeGroupsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         feedsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         feedPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
+        channelsLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         compactionPolicyLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
         dataTypeLocks = new ConcurrentHashMap<String, ReentrantReadWriteLock>();
     }
@@ -225,7 +227,7 @@ public class MetadataLockManager {
     public void releaseFeedWriteLock(String feedName) {
         feedsLocks.get(feedName).writeLock().unlock();
     }
-    
+
     public void acquireFeedPolicyWriteLock(String policyName) {
         ReentrantReadWriteLock fLock = feedPolicyLocks.get(policyName);
         if (fLock == null) {
@@ -237,6 +239,32 @@ public class MetadataLockManager {
 
     public void releaseFeedPolicyWriteLock(String policyName) {
         feedPolicyLocks.get(policyName).writeLock().unlock();
+    }
+
+    public void acquireChannelReadLock(String channelName) {
+        ReentrantReadWriteLock fLock = channelsLocks.get(channelName);
+        if (fLock == null) {
+            channelsLocks.putIfAbsent(channelName, new ReentrantReadWriteLock());
+            fLock = channelsLocks.get(channelName);
+        }
+        fLock.readLock().lock();
+    }
+
+    public void releaseChannelReadLock(String channelName) {
+        channelsLocks.get(channelName).readLock().unlock();
+    }
+
+    public void acquireChannelWriteLock(String channelName) {
+        ReentrantReadWriteLock fLock = channelsLocks.get(channelName);
+        if (fLock == null) {
+            channelsLocks.putIfAbsent(channelName, new ReentrantReadWriteLock());
+            fLock = channelsLocks.get(channelName);
+        }
+        fLock.writeLock().lock();
+    }
+
+    public void releaseChannelWriteLock(String channelName) {
+        channelsLocks.get(channelName).writeLock().unlock();
     }
 
     public void acquireCompactionPolicyReadLock(String compactionPolicyName) {
@@ -444,7 +472,7 @@ public class MetadataLockManager {
         releaseFeedWriteLock(feedFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
-    
+
     public void dropFeedPolicyBegin(String dataverseName, String policyName) {
         releaseFeedWriteLock(policyName);
         releaseDataverseReadLock(dataverseName);
@@ -486,7 +514,7 @@ public class MetadataLockManager {
         releaseFeedPolicyWriteLock(policyName);
         releaseDataverseReadLock(dataverseName);
     }
-    
+
     public void disconnectFeedBegin(String dataverseName, String datasetFullyQualifiedName,
             String feedFullyQualifiedName) {
         acquireDataverseReadLock(dataverseName);
@@ -499,17 +527,51 @@ public class MetadataLockManager {
         releaseDatasetReadLock(datasetFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
-    
-    public void subscribeFeedBegin(String dataverseName, String datasetFullyQualifiedName,
-            String feedFullyQualifiedName) {
+
+    public void subscribeFeedBegin(String dataverseName, String datasetFullyQualifiedName, String feedFullyQualifiedName) {
         acquireDataverseReadLock(dataverseName);
         acquireDatasetReadLock(datasetFullyQualifiedName);
         acquireFeedReadLock(feedFullyQualifiedName);
     }
-    
+
     public void subscribeFeedEnd(String dataverseName, String datasetFullyQualifiedName, String feedFullyQualifiedName) {
         releaseFeedReadLock(feedFullyQualifiedName);
         releaseDatasetReadLock(datasetFullyQualifiedName);
+        releaseDataverseReadLock(dataverseName);
+    }
+
+    public void createChannelBegin(String dataverseName, String channelFullyQualifiedName, String functionName,
+            String subscriptionsTypeName, String subscriptionsDatasetName, String resultsTypeName,
+            String resultsDatasetName) {
+        acquireDataverseReadLock(dataverseName);
+        acquireFunctionReadLock(functionName);
+        acquireDatasetReadLock(subscriptionsDatasetName);
+        acquireDatasetReadLock(resultsDatasetName);
+        acquireDataTypeReadLock(subscriptionsTypeName);
+        acquireDataTypeReadLock(resultsTypeName);
+        acquireChannelWriteLock(channelFullyQualifiedName);
+    }
+
+    public void createChannelEnd(String dataverseName, String channelFullyQualifiedName, String functionName,
+            String subscriptionsTypeName, String subscriptionsDatasetName, String resultsTypeName,
+            String resultsDatasetName) {
+        releaseChannelWriteLock(channelFullyQualifiedName);
+        releaseFunctionReadLock(functionName);
+        releaseDatasetReadLock(subscriptionsDatasetName);
+        releaseDatasetReadLock(resultsDatasetName);
+        releaseDataTypeReadLock(subscriptionsTypeName);
+        releaseDataTypeReadLock(resultsTypeName);
+        releaseDataverseReadLock(dataverseName);
+    }
+
+    public void dropChannelBegin(String dataverseName, String channelFullyQualifiedName) {
+        acquireDataverseReadLock(dataverseName);
+        acquireChannelWriteLock(channelFullyQualifiedName);
+
+    }
+
+    public void dropChannelEnd(String dataverseName, String channelFullyQualifiedName) {
+        releaseChannelWriteLock(channelFullyQualifiedName);
         releaseDataverseReadLock(dataverseName);
     }
 

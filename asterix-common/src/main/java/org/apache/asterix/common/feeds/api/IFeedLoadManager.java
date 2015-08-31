@@ -52,7 +52,7 @@ public interface IFeedLoadManager {
     void reportFeedActivity(FeedConnectionId connectionId, FeedActivity activity);
 
     void removeFeedActivity(FeedConnectionId connectionId);
-    
+
     public FeedActivity getFeedActivity(FeedConnectionId connectionId);
 
     public Collection<FeedActivity> getFeedActivities();

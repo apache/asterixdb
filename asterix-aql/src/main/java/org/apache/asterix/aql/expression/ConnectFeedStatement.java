@@ -18,32 +18,12 @@
  */
 package org.apache.asterix.aql.expression;
 
-import java.io.StringReader;
-import java.util.List;
-
 import org.apache.asterix.aql.base.Statement;
 import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
-import org.apache.asterix.aql.parser.AQLParser;
-import org.apache.asterix.aql.parser.ParseException;
-import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.metadata.MetadataException;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.entities.DatasourceAdapter.AdapterType;
-import org.apache.asterix.metadata.entities.Feed;
-import org.apache.asterix.metadata.entities.Function;
-import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
-import org.apache.asterix.metadata.feeds.FeedUtil;
-import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class ConnectFeedStatement implements Statement {
 

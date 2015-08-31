@@ -34,7 +34,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 /**
  * FeedMetaOperatorDescriptor is a wrapper operator that provides a sanboox like
  * environment for an hyracks operator that is part of a feed ingestion
- * pipeline. The MetaFeed operator provides an interface iden- tical to that
+ * pipeline. The MetaFeed operator provides an interface identical to that
  * offered by the underlying wrapped operator, hereafter referred to as the core
  * operator. As seen by Hyracks, the altered pipeline is identical to the
  * earlier version formed from core operators. The MetaFeed operator enhances
@@ -100,7 +100,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 nodePushable = new FeedMetaStoreNodePushable(ctx, recordDescProvider, partition, nPartitions,
                         coreOperator, feedConnectionId, feedPolicyProperties, operandId);
                 break;
-            case OTHER:
+            case OTHER://nullsink
                 nodePushable = new FeedMetaNodePushable(ctx, recordDescProvider, partition, nPartitions, coreOperator,
                         feedConnectionId, feedPolicyProperties, operandId);
                 break;

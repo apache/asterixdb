@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.feeds;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.channels.ChannelId;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.FeedCollectRuntimeInputHandler;
@@ -49,6 +51,7 @@ import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
+import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.feeds.message.EndFeedMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -74,7 +77,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private final int partition;
 
     public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId connectionId,
-            IFeedMessage feedMessage, int partition, int nPartitions) {
+            IFeedMessage feedMessage, int partition) {
         this.connectionId = connectionId;
         this.message = feedMessage;
         this.partition = partition;
@@ -116,6 +119,10 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     handleThrottlingEnabledMessage((ThrottlingEnabledFeedMessage) message);
                     break;
                 }
+                case DROP_CHANNEL: {
+                    handleDropChannelMessage((DropChannelMessage) message);
+                    break;
+                }
                 default:
                     break;
 
@@ -125,6 +132,14 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             throw new HyracksDataException(e);
         } finally {
             writer.close();
+        }
+    }
+
+    private void handleDropChannelMessage(DropChannelMessage message) throws IOException {
+        ChannelId channelId = message.getChannelId();
+        feedManager.getChannelConnectionManager().deregisterChannelRuntime(channelId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Dropped Channel " + channelId);
         }
     }
 
