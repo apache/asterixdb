@@ -18,6 +18,14 @@
  */
 package org.apache.asterix.runtime.formats;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixRuntimeException;
 import org.apache.asterix.common.parse.IParseFileSplitsDecl;
@@ -157,6 +165,7 @@ import org.apache.asterix.runtime.evaluators.constructors.APolygonConstructorDes
 import org.apache.asterix.runtime.evaluators.constructors.ARectangleConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AStringConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.AUUIDConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AUUIDFromStringConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
@@ -313,6 +322,8 @@ import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescr
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescriptor;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -352,16 +363,6 @@ import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.dataflow.std.file.ITupleParserFactory;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class NonTaggedDataFormat implements IDataFormat {
 
@@ -1131,7 +1132,6 @@ public class NonTaggedDataFormat implements IDataFormat {
         conf.put(AsterixTupleParserFactory.KEY_QUOTE, "" + quote);
         return new AsterixTupleParserFactory(conf, recType, inputFormat);
     }
-
 
     @Override
     public INullWriterFactory getNullWriterFactory() {

@@ -48,6 +48,7 @@ import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.ICentralFeedManager;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
@@ -64,6 +65,7 @@ import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
+import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.declared.AqlDataSource.AqlDataSourceType;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -81,11 +83,11 @@ import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.external.IAdapterFactory;
 import org.apache.asterix.metadata.external.IAdapterFactory.SupportedOperation;
 import org.apache.asterix.metadata.external.IndexingConstants;
+import org.apache.asterix.metadata.feeds.ActiveUtil;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.ExternalDataScanOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedUtil;
 import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
@@ -113,6 +115,7 @@ import org.apache.asterix.transaction.management.opcallbacks.TempDatasetPrimaryI
 import org.apache.asterix.transaction.management.opcallbacks.TempDatasetSecondaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.service.transaction.AsterixRuntimeComponentsProvider;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -2101,7 +2104,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
      * Calculate an estimate size of the bloom filter. Note that this is an
      * estimation which assumes that the data is going to be uniformly
      * distributed across all partitions.
-     *
+     * 
      * @param dataset
      * @return Number of elements that will be used to create a bloom filter per
      *         dataset per partition
@@ -2319,7 +2322,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     /**
      * Add HDFS scheduler and the cluster location constraint into the scheduler
-     *
+     * 
      * @param properties
      *            the original dataset properties
      * @return a new map containing the original dataset properties and the
@@ -2335,7 +2338,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
 
     /**
      * Adapt the original properties to a string-object map
-     *
+     * 
      * @param properties
      *            the original properties
      * @return the new stirng-object map
