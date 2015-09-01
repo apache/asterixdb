@@ -45,17 +45,6 @@
     </plugins>
   </build>
 
-  <distributionManagement>
-    <repository>
-      <id>hyracks-releases</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>hyracks-snapshots</id>
-      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <repositories>
     <repository>
       <id>maven-central</id>
