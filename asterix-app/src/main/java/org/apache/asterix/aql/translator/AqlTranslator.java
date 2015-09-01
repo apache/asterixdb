@@ -1962,12 +1962,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
                             + " is a procedure. use \"drop procedure\" to delete");
                 }
 
-            } else {
-                MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
-                if (function.getKind().equalsIgnoreCase("PROCEDURE")) {
-                    //Send kill message to procedure
-                }
             }
+            MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+            if (function.getKind().equalsIgnoreCase("PROCEDURE")) {
+                //Send kill message to procedure
+            }
+
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
