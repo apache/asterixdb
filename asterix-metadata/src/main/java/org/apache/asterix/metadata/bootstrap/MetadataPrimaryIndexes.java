@@ -41,7 +41,7 @@ public class MetadataPrimaryIndexes {
     public static IMetadataIndex DATASOURCE_ADAPTER_DATASET;
     public static IMetadataIndex LIBRARY_DATASET;
     public static IMetadataIndex FEED_DATASET;
-    public static IMetadataIndex FEED_ACTIVITY_DATASET;
+    public static IMetadataIndex CHANNEL_DATASET;
     public static IMetadataIndex FEED_POLICY_DATASET;
     public static IMetadataIndex COMPACTION_POLICY_DATASET;
     public static IMetadataIndex EXTERNAL_FILE_DATASET;
@@ -62,6 +62,7 @@ public class MetadataPrimaryIndexes {
     public static final int FEED_POLICY_DATASET_ID = 12;
     public static final int COMPACTION_POLICY_DATASET_ID = 13;
     public static final int EXTERNAL_FILE_DATASET_ID = 14;
+    public static final int CHANNEL_DATASET_ID = 15;
 
     public static final int FIRST_AVAILABLE_USER_DATASET_ID = 100;
 
@@ -117,6 +118,11 @@ public class MetadataPrimaryIndexes {
         FEED_DATASET = new MetadataIndex("Feed", null, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                 (Arrays.asList(Arrays.asList("DataverseName"), Arrays.asList("FeedName"))), 0,
                 MetadataRecordTypes.FEED_RECORDTYPE, FEED_DATASET_ID, true, new int[] { 0, 1 });
+
+        CHANNEL_DATASET = new MetadataIndex("Channel", null, 3,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, Arrays.asList(
+                        Arrays.asList("DataverseName"), Arrays.asList("ChannelName")), 0,
+                MetadataRecordTypes.CHANNEL_RECORDTYPE, CHANNEL_DATASET_ID, true, new int[] { 0, 1 });
 
         LIBRARY_DATASET = new MetadataIndex("Library", null, 3,
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, (Arrays.asList(

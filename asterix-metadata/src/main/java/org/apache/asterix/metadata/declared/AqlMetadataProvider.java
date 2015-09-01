@@ -647,7 +647,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IFeedAdapterFactory> buildFeedIntakeRuntime(
             JobSpecification jobSpec, PrimaryFeed primaryFeed, FeedPolicyAccessor policyAccessor) throws Exception {
         Triple<IFeedAdapterFactory, ARecordType, AdapterType> factoryOutput = null;
-        factoryOutput = FeedUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
+        factoryOutput = ActiveUtil.getPrimaryFeedFactoryAndOutput(primaryFeed, policyAccessor, mdTxnCtx);
         IFeedAdapterFactory adapterFactory = factoryOutput.first;
         FeedIntakeOperatorDescriptor feedIngestor = null;
         switch (factoryOutput.third) {
@@ -666,6 +666,15 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         AlgebricksPartitionConstraint partitionConstraint = adapterFactory.getPartitionConstraint();
         return new Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IFeedAdapterFactory>(feedIngestor,
                 partitionConstraint, adapterFactory);
+    }
+
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildChannelRuntime(JobSpecification jobSpec,
+            String dataverseName, String channelName, String duration, FunctionSignature function, String subName,
+            String resultsName) throws Exception {
+        RepetitiveChannelOperatorDescriptor channelOp = new RepetitiveChannelOperatorDescriptor(jobSpec, dataverseName,
+                channelName, duration, function, subName, resultsName);
+        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksCountPartitionConstraint(1);
+        return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(channelOp, partitionConstraint);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildBtreeRuntime(JobSpecification jobSpec,

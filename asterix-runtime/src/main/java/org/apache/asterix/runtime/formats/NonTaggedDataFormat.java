@@ -562,6 +562,8 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(AUUIDFromStringConstructorDescriptor.FACTORY);
 
         temp.add(CreateUUIDDescriptor.FACTORY);
+        temp.add(AUUIDConstructorDescriptor.FACTORY);
+
         // Spatial
         temp.add(CreatePointDescriptor.FACTORY);
         temp.add(CreateLineDescriptor.FACTORY);
