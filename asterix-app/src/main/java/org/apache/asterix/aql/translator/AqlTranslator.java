@@ -2648,7 +2648,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             partitionFields.add(fieldNames);
             Datatype subscriptionsType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName,
                     subscriptionsTypeName.getValue());
-            IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, false, null, false);
+            IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, true, null, false);
             DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseIdentifier, subscriptionsName,
                     new Identifier(subscriptionsType.getDatatypeName()), null, null, new HashMap<String, String>(),
                     new HashMap<String, String>(), DatasetType.INTERNAL, idd, true);
