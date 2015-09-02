@@ -20,20 +20,20 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>text-example</artifactId>
-    <version>0.2.16-SNAPSHOT</version>
+    <version>0.2.16-incubating</version>
   </parent>
 
   <dependencies>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.2.16-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>texthelper</artifactId>
-  		<version>0.2.16-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>

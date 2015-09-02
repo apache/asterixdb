@@ -18,7 +18,7 @@
 	<parent>
 		<artifactId>hyracks</artifactId>
 		<groupId>org.apache.hyracks</groupId>
-		<version>0.2.16-SNAPSHOT</version>
+		<version>0.2.16-incubating</version>
 	</parent>
 
   <licenses>
