@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>org.apache.hyracks</groupId>
-		<version>0.2.16-incubating</version>
+		<version>0.2.17-SNAPSHOT</version>
 	</parent>
 
 	<build>
@@ -100,7 +100,7 @@
 		<dependency>
 			<groupId>org.apache.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.16-incubating</version>
+			<version>0.2.17-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
