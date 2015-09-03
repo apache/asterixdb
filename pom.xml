@@ -52,8 +52,8 @@
         <global.test.includes>**/*TestSuite.java,**/*Test.java,${execution.tests}</global.test.includes>
         <global.test.excludes>${optimizer.tests},${metadata.tests},${invalid.tests},${repeated.tests}</global.test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-        <algebricks.version>0.2.16-SNAPSHOT</algebricks.version>
-        <hyracks.version>0.2.16-SNAPSHOT</hyracks.version>
+        <algebricks.version>0.2.16-incubating</algebricks.version>
+        <hyracks.version>0.2.16-incubating</hyracks.version>
         <hadoop.version>2.2.0</hadoop.version>
         <junit.version>4.11</junit.version>
         <commons.io.version>2.4</commons.io.version>
@@ -63,14 +63,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.2</version>
-                <configuration>
-                    <goals>package source:jar javadoc:jar deploy:deploy</goals>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -150,7 +142,31 @@
                     </includes>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                 <!-- We override the configuration plugin to override the descriptor to use for building
+                  the source release zip. Specifically, we would like to control the inclusions/exclusions.
+                  For example, we exclude the KEYS file from the zip -->
+                <executions>
+                    <execution>
+                    <!-- Use this id to match the id mentioned in the assembly plugin configuration in
+                     the apache parent POM under the apache-release profile -->
+                        <id>source-release-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+            <!-- combine.self should be override to replace the configuration in the parent POM -->
+                        <configuration combine.self="override">
+                            <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                            <descriptors>
+                                <descriptor>src/main/assembly/source.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                  </execution>
+              </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -288,6 +304,15 @@
             </snapshots>
             <id>algebricks-snapshots</id>
             <url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
+            <id>apache-staging</id>
+            <url>https://repository.apache.org/content/repositories/orgapacheasterix-1005/</url>
         </repository>
     </repositories>
     <dependencyManagement>
