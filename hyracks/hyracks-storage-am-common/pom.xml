@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.16-incubating</version>
   </parent>
 
   <licenses>
@@ -51,28 +51,28 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-api</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-common</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-dataflow-std</artifactId>
-  		<version>0.2.17-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
