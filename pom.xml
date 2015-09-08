@@ -137,32 +137,33 @@
             </licenseFamily>
           </licenseFamilies>
           <excludes>
-            <exclude>**/dist.all*</exclude>
-            <exclude>**/data/file**</exclude>
-            <exclude>**/ClusterControllerService/*</exclude>
-            <exclude>**/*.txt</exclude>
-            <exclude>**/*.tbl</exclude>
-            <exclude>**/*.tsv</exclude>
-            <exclude>**/*.ddl</exclude>
-            <exclude>**/*.out</exclude>
-            <exclude>**/*.piglet</exclude>
-            <exclude>**/*.js</exclude>
-            <exclude>**/device_id_0/*</exclude>
-            <exclude>**/part-*</exclude>
-            <exclude>**/conf/local_cluster.conf</exclude>
-            <exclude>**/wordcount/wordcount.job</exclude>
-            <exclude>**/ClusterControllerService/**</exclude>
-            <exclude>**/*.log*</exclude>
-            <exclude>**/*.xml*</exclude>
-            <exclude>**/seen_txid</exclude>
-            <exclude>**/fsimage*</exclude>
-            <exclude>**/current/VERSION</exclude>
-            <exclude>**/blk_*</exclude>
-            <exclude>**/resources/conf/*</exclude>
-            <exclude>**/target/*</exclude>
-            <exclude>**/*.iml</exclude>
-            <exclude>.*/*</exclude>
-          </excludes>
+           <exclude>**/algebricks-tests/src/test/resources/results/**</exclude>
+           <exclude>**/javascript/flot/*.js</exclude>
+           <exclude>**/javascript/jsplumb/*.js</exclude>
+           <exclude>**/javascript/jquery/*.js</exclude>
+           <exclude>**/javascript/adminconsole/*.js</exclude>
+           <exclude>**/stylesheet/jquery-ui/**</exclude>
+           <exclude>**/hyracks-dist/src/main/resources/conf/**</exclude>
+           <exclude>**/src/test/resources/data/**</exclude>
+           <exclude>**/src/test/resources/results/**</exclude>
+           <exclude>**/src/test/resources/expected/**</exclude>
+           <exclude>**/testcases/*.piglet</exclude>
+           <exclude>**/data/**/*.txt</exclude>
+           <exclude>**/data/**/*.tbl</exclude>
+           <exclude>**/data/**/*.ddl</exclude>
+           <exclude>**/data/**/*.tsv</exclude>
+           <exclude>**/actual/conf.xml</exclude>
+           <exclude>**/actual/customer_result/part-*</exclude>
+           <exclude>**/src/main/resources/conf/*</exclude>
+           <exclude>**/data/dfs/**</exclude>
+           <exclude>**/invIndex*/**</exclude>
+           <exclude>**/*.job</exclude>
+           <exclude>**/*.conf</exclude>
+           <exclude>**/src/main/resources/*.cleaned</exclude>
+           <exclude>**/ClusterControllerService/**</exclude>
+           <exclude>**/output/**</exclude>
+           <exclude>**/*.iml</exclude>
+      </excludes>
         </configuration>
       </plugin>
       <plugin>
