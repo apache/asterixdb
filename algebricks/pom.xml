@@ -16,14 +16,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
   <artifactId>algebricks</artifactId>
-  <version>0.2.16-incubating</version>
+  <version>0.2.17-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>algebricks</name>
 
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>fullstack</artifactId>
-    <version>0.2.16-incubating</version>
+    <version>0.2.17-SNAPSHOT</version>
   </parent>
 
   <licenses>
