@@ -34,6 +34,21 @@
         <include>**/pom.xml</include>
         <include>**/build*.xml</include>
         <include>**/findbugs*.xml</include>
+        <include>**/*site.xml</include>
+        <include>**/*.adm</include>
+        <include>**/*.json</include>
+        <include>**/*.aql</include>
+        <include>**/*.ddl</include>
+        <include>**/*.seq</include>
+        <include>**/*.rc</include>
+        <include>**/*.big</include>
+        <include>**/*textFileS</include>
+        <include>**/*large_text</include>
+        <include>**/*.csv*</include>
+        <include>**/*.tbl</include>
+        <include>**/*.txt</include>
+        <include>**/part-*</include>
+        <include>**/*.cleaned</include>
       </includes>
       <excludes>
         <exclude>**/${project.build.directory}/**</exclude>
