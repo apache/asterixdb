@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks-tests</artifactId>
-    <version>0.2.16-incubating</version>
+    <version>0.2.16-SNAPSHOT</version>
   </parent>
 
   <build>
@@ -41,13 +41,13 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-storage-common</artifactId>
-  		<version>0.2.16-incubating</version>
+  		<version>0.2.16-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-test-support</artifactId>
-  		<version>0.2.16-incubating</version>
+  		<version>0.2.16-SNAPSHOT</version>
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
