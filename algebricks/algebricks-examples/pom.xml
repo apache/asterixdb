@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks</artifactId>
-    <version>0.2.17-SNAPSHOT</version>
+    <version>0.2.16-incubating</version>
   </parent>
 
   <licenses>
