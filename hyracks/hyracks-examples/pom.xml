@@ -44,7 +44,7 @@
     <module>text-example</module>
     <module>btree-example</module>
     <module>hyracks-integration-tests</module>
-    <module>hadoop-compat-example</module>
+    <!--module>hadoop-compat-example</module-->
     <module>hyracks-shutdown-test</module>
   </modules>
 </project>

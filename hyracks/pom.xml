@@ -92,7 +92,7 @@
     <module>hyracks-server</module>
     <module>hyracks-examples</module>
     <module>hyracks-documentation</module>
-    <module>hyracks-hadoop-compat</module>
+    <!--module>hyracks-hadoop-compat</module-->
     <module>hyracks-maven-plugins</module>
     <module>hyracks-hdfs</module>
     <module>hyracks-dist</module>
