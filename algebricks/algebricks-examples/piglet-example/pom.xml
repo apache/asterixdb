@@ -24,7 +24,7 @@
  <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks-examples</artifactId>
-    <version>0.2.16-SNAPSHOT</version>
+    <version>0.2.16-incubating</version>
   </parent>
 
   <build>
@@ -119,7 +119,7 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-compiler</artifactId>
-      <version>0.2.16-SNAPSHOT</version>
+      <version>0.2.16-incubating</version>
     </dependency>
   </dependencies>
 </project>

@@ -22,14 +22,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
   <artifactId>fullstack</artifactId>
-  <version>0.2.16-SNAPSHOT</version>
+  <version>0.2.16-incubating</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
 
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>LATEST</version>
+    <version>17</version>
   </parent>
 
   <licenses>
@@ -224,6 +224,7 @@
     <connection>scm:git:https://github.com/apache/incubator-asterixdb-hyracks</connection>
     <developerConnection>scm:git:ssh://fulliautomatix.ics.uci.edu:29418/hyracks</developerConnection>
     <url>https://github.com/apache/incubator-asterixdb-hyracks</url>
+    <tag>fullstack-0.2.16-incubating</tag>
   </scm>
 
 

@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.2.16-SNAPSHOT</version>
+    <version>0.2.16-incubating</version>
   </parent>
 
   <licenses>
@@ -75,7 +75,7 @@
   	<dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-ipc</artifactId>
-  		<version>0.2.16-SNAPSHOT</version>
+  		<version>0.2.16-incubating</version>
   	</dependency>
   	<dependency>
   		<groupId>org.apache.commons</groupId>
