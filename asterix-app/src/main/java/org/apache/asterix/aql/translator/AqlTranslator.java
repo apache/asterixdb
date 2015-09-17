@@ -259,6 +259,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         Map<String, String> config = new HashMap<String, String>();
 
         for (Statement stmt : aqlStatements) {
+            if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
+                sessionConfig.out().println(APIFramework.HTML_STATEMENT_SEPARATOR);
+            }
             validateOperation(activeDefaultDataverse, stmt);
             AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse,
                     CentralFeedManager.getInstance());

@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
 import org.apache.asterix.aql.base.Statement;
@@ -63,15 +64,12 @@ public class APIServlet extends HttpServlet {
         String output = request.getParameter("output-format");
         if (output.equals("ADM")) {
             format = OutputFormat.ADM;
-        }
-        else if (output.equals("CSV")) {
+        } else if (output.equals("CSV")) {
             format = OutputFormat.CSV;
-        }
-        else if (output.equals("CSV-Header")) {
+        } else if (output.equals("CSV-Header")) {
             format = OutputFormat.CSV;
             csv_and_header = true;
-        }
-        else {
+        } else {
             // Default output format
             format = OutputFormat.JSON;
         }
@@ -106,8 +104,7 @@ public class APIServlet extends HttpServlet {
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csv_and_header);
             sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
-                                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam),
-                                     isSet(printJob));
+                    isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             MetadataManager.INSTANCE.init();
             AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, sessionConfig);
             double duration = 0;
@@ -115,6 +112,7 @@ public class APIServlet extends HttpServlet {
             aqlTranslator.compileAndExecute(hcc, hds, AqlTranslator.ResultDelivery.SYNC);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;
+            out.println(APIFramework.HTML_STATEMENT_SEPARATOR);
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
         } catch (ParseException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);

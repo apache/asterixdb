@@ -23,8 +23,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONException;
-
 import org.apache.asterix.api.common.Job.SubmissionMode;
 import org.apache.asterix.aql.base.Statement.Kind;
 import org.apache.asterix.aql.expression.FunctionDecl;
@@ -78,12 +76,14 @@ import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConf
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.json.JSONException;
 
 /**
  * Provides helper methods for compilation of a query into a JobSpec and submission
  * to Hyracks through the Hyracks client interface.
  */
 public class APIFramework {
+    public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultLogicalRewrites() {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
