@@ -35,8 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.xml.sax.InputSource;
-
 import org.apache.hyracks.api.application.ICCApplicationEntryPoint;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
@@ -104,6 +102,7 @@ import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
+import org.xml.sax.InputSource;
 
 public class ClusterControllerService extends AbstractRemoteService {
     private static Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
@@ -172,6 +171,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         runMapArchive = new LinkedHashMap<JobId, JobRun>() {
             private static final long serialVersionUID = 1L;
 
+            @Override
             protected boolean removeEldestEntry(Map.Entry<JobId, JobRun> eldest) {
                 return size() > ccConfig.jobHistorySize;
             }
@@ -181,11 +181,12 @@ public class ClusterControllerService extends AbstractRemoteService {
             /** history size + 1 is for the case when history size = 0 */
             private int allowedSize = 100 * (ccConfig.jobHistorySize + 1);
 
+            @Override
             protected boolean removeEldestEntry(Map.Entry<JobId, List<Exception>> eldest) {
                 return size() > allowedSize;
             }
         };
-        workQueue = new WorkQueue();
+        workQueue = new WorkQueue(Thread.MAX_PRIORITY); // WorkQueue is in charge of heartbeat as well as other events.
         this.timer = new Timer(true);
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ICCContext() {
@@ -604,7 +605,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     /**
      * Add a deployment run
-     * 
+     *
      * @param deploymentKey
      * @param nodeControllerIds
      */
@@ -614,7 +615,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     /**
      * Get a deployment run
-     * 
+     *
      * @param deploymentKey
      */
     public synchronized DeploymentRun getDeploymentRun(DeploymentId deploymentKey) {
@@ -623,7 +624,7 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     /**
      * Remove a deployment run
-     * 
+     *
      * @param deploymentKey
      */
     public synchronized void removeDeploymentRun(DeploymentId deploymentKey) {

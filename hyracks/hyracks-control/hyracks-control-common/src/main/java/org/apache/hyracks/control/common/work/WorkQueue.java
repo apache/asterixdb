@@ -36,8 +36,14 @@ public class WorkQueue {
     private boolean stopped;
     private AtomicInteger enqueueCount;
     private AtomicInteger dequeueCount;
+    private int threadPriority = Thread.MAX_PRIORITY;
 
-    public WorkQueue() {
+    public WorkQueue(int threadPriority) {
+        if (threadPriority != Thread.MAX_PRIORITY && threadPriority != Thread.NORM_PRIORITY
+                && threadPriority != Thread.MIN_PRIORITY) {
+            throw new IllegalArgumentException("Illegal thread priority number.");
+        }
+        this.threadPriority = threadPriority;
         queue = new LinkedBlockingQueue<AbstractWork>();
         thread = new WorkerThread();
         stopSemaphore = new Semaphore(1);
@@ -96,7 +102,7 @@ public class WorkQueue {
     private class WorkerThread extends Thread {
         WorkerThread() {
             setDaemon(true);
-            setPriority(MAX_PRIORITY);
+            setPriority(threadPriority);
         }
 
         @Override

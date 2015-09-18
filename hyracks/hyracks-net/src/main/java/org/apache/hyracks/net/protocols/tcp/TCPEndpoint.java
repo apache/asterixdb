@@ -106,7 +106,7 @@ public class TCPEndpoint {
         public IOThread() throws IOException {
             super("TCPEndpoint IO Thread");
             setDaemon(true);
-            setPriority(MAX_PRIORITY);
+            setPriority(Thread.NORM_PRIORITY);
             this.pendingConnections = new ArrayList<InetSocketAddress>();
             this.workingPendingConnections = new ArrayList<InetSocketAddress>();
             this.incomingConnections = new ArrayList<SocketChannel>();

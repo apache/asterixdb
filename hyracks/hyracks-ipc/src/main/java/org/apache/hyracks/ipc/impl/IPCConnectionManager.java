@@ -64,6 +64,7 @@ public class IPCConnectionManager {
     IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress) throws IOException {
         this.system = system;
         this.networkThread = new NetworkThread();
+        this.networkThread.setPriority(Thread.MAX_PRIORITY);
         this.serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.configureBlocking(false);
@@ -114,8 +115,8 @@ public class IPCConnectionManager {
                 }
             } else if (attempt < retries) {
                 if (LOGGER.isLoggable(Level.INFO)) {
-                    LOGGER.info("Connection to " + remoteAddress +
-                            " failed (Attempt " + attempt + " of " + retries + ")");
+                    LOGGER.info("Connection to " + remoteAddress + " failed (Attempt " + attempt + " of " + retries
+                            + ")");
                     attempt++;
                     Thread.sleep(5000);
                 }
@@ -308,8 +309,7 @@ public class IPCConnectionManager {
                                     if (!channel.finishConnect()) {
                                         throw new Exception("Connection did not finish");
                                     }
-                                }
-                                catch (Exception e) {
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                     handle.setState(HandleState.CONNECT_FAILED);
                                     continue;

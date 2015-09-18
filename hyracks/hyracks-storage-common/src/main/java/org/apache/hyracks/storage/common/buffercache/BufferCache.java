@@ -475,7 +475,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         private int cleanedCount = 0;
 
         public CleanerThread() {
-            setPriority(MAX_PRIORITY);
+            setPriority(Thread.NORM_PRIORITY);
             setDaemon(true);
         }
 
