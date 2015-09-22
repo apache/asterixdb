@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
-
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
@@ -124,14 +123,15 @@ public class ShuffleFrameReader implements IFrameReader {
         }
         List<RunAndMaxFrameSizePair> runs = new LinkedList<>();
         for (int i = 0; i < runFileWriters.size(); i++) {
-            runs.add(new RunAndMaxFrameSizePair(runFileWriters.get(i).createReader(), runFileMaxFrameSize.get(i)));
+            runs.add(new RunAndMaxFrameSizePair(runFileWriters.get(i).createDeleteOnCloseReader(), runFileMaxFrameSize
+                    .get(i)));
         }
         RunFileWriter rfw = new RunFileWriter(outFile, ctx.getIOManager());
-        ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, null, runs, new int[] { 0 },
-                comparators, null, recordDescriptor, framesLimit, rfw);
+        ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, null, runs, new int[] { 0 }, comparators, null,
+                recordDescriptor, framesLimit, rfw);
         merger.process();
 
-        reader = rfw.createReader();
+        reader = rfw.createDeleteOnCloseReader();
         reader.open();
     }
 

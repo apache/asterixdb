@@ -55,12 +55,11 @@ public class NestedLoopJoin {
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder nullTupleBuilder;
     private final IPredicateEvaluator predEvaluator;
-    private boolean isReversed;        //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
+    private boolean isReversed; //Added for handling correct calling for predicate-evaluator upon recursive calls (in OptimizedHybridHashJoin) that cause role-reversal
 
     public NestedLoopJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessor0, FrameTupleAccessor accessor1,
             ITuplePairComparator comparators, int memSize, IPredicateEvaluator predEval, boolean isLeftOuter,
-            INullWriter[] nullWriters1)
-            throws HyracksDataException {
+            INullWriter[] nullWriters1) throws HyracksDataException {
         this.accessorInner = accessor1;
         this.accessorOuter = accessor0;
         this.appender = new FrameTupleAppender();
@@ -166,7 +165,7 @@ public class NestedLoopJoin {
     }
 
     private boolean evaluatePredicate(int tIx1, int tIx2) {
-        if (isReversed) {        //Role Reversal Optimization is triggered
+        if (isReversed) { //Role Reversal Optimization is triggered
             return ((predEvaluator == null) || predEvaluator.evaluate(accessorInner, tIx2, accessorOuter, tIx1));
         } else {
             return ((predEvaluator == null) || predEvaluator.evaluate(accessorOuter, tIx1, accessorInner, tIx2));
@@ -194,7 +193,7 @@ public class NestedLoopJoin {
     }
 
     public void closeJoin(IFrameWriter writer) throws HyracksDataException {
-        runFileReader = runFileWriter.createReader();
+        runFileReader = runFileWriter.createDeleteOnCloseReader();
         runFileReader.open();
         while (runFileReader.nextFrame(innerBuffer)) {
             for (int i = 0; i < currentMemSize; i++) {

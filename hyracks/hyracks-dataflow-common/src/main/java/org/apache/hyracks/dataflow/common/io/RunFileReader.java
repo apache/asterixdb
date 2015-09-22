@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.dataflow.common.io;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
@@ -28,16 +29,17 @@ import org.apache.hyracks.api.io.IIOManager;
 
 public class RunFileReader implements IFrameReader {
     private final FileReference file;
+    private IFileHandle handle;
     private final IIOManager ioManager;
     private final long size;
-
-    private IFileHandle handle;
     private long readPtr;
+    private boolean deleteAfterClose;
 
-    public RunFileReader(FileReference file, IIOManager ioManager, long size) {
+    public RunFileReader(FileReference file, IIOManager ioManager, long size, boolean deleteAfterRead) {
         this.file = file;
         this.ioManager = ioManager;
         this.size = size;
+        this.deleteAfterClose = deleteAfterRead;
     }
 
     @Override
@@ -77,6 +79,9 @@ public class RunFileReader implements IFrameReader {
     @Override
     public void close() throws HyracksDataException {
         ioManager.close(handle);
+        if (deleteAfterClose) {
+            FileUtils.deleteQuietly(file.getFile());
+        }
     }
 
     public long getFileSize() {

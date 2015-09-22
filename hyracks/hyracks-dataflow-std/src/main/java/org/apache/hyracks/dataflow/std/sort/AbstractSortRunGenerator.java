@@ -66,7 +66,7 @@ public abstract class AbstractSortRunGenerator implements IRunGenerator {
         } finally {
             flushWriter.close();
         }
-        runAndMaxSizes.add(new RunAndMaxFrameSizePair(runWriter.createReader(), maxFlushedFrameSize));
+        runAndMaxSizes.add(new RunAndMaxFrameSizePair(runWriter.createDeleteOnCloseReader(), maxFlushedFrameSize));
         getSorter().reset();
     }
 

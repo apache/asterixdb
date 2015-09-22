@@ -63,8 +63,8 @@ public class ExternalSortRunMerger {
     public ExternalSortRunMerger(IHyracksTaskContext ctx, ISorter sorter, List<RunAndMaxFrameSizePair> runs,
             int[] sortFields, IBinaryComparator[] comparators, INormalizedKeyComputer nmkComputer,
             RecordDescriptor recordDesc, int framesLimit, IFrameWriter writer) {
-        this(ctx, sorter, runs, sortFields, comparators, nmkComputer, recordDesc, framesLimit,
-                Integer.MAX_VALUE, writer);
+        this(ctx, sorter, runs, sortFields, comparators, nmkComputer, recordDesc, framesLimit, Integer.MAX_VALUE,
+                writer);
     }
 
     public ExternalSortRunMerger(IHyracksTaskContext ctx, ISorter sorter, List<RunAndMaxFrameSizePair> runs,
@@ -118,8 +118,7 @@ public class ExternalSortRunMerger {
                 while (true) {
 
                     int unUsed = selectPartialRuns(maxMergeWidth * ctx.getInitialFrameSize(), runs, partialRuns,
-                            currentGenerationRunAvailable,
-                            stop);
+                            currentGenerationRunAvailable, stop);
                     prepareFrames(unUsed, inFrames, partialRuns);
 
                     if (!currentGenerationRunAvailable.isEmpty() || stop < runs.size()) {
@@ -143,7 +142,7 @@ public class ExternalSortRunMerger {
                             mergedMaxFrameSize = merge(mergeResultWriter, partialRuns);
                             mergeResultWriter.close();
 
-                            reader = mergeFileWriter.createReader();
+                            reader = mergeFileWriter.createDeleteOnCloseReader();
                         }
 
                         appendNewRuns(reader, mergedMaxFrameSize);
@@ -196,8 +195,7 @@ public class ExternalSortRunMerger {
         return budget;
     }
 
-    private void prepareFrames(int extraFreeMem, List<GroupVSizeFrame> inFrames,
-            List<RunAndMaxFrameSizePair> patialRuns)
+    private void prepareFrames(int extraFreeMem, List<GroupVSizeFrame> inFrames, List<RunAndMaxFrameSizePair> patialRuns)
             throws HyracksDataException {
         if (extraFreeMem > 0 && patialRuns.size() > 1) {
             int extraFrames = extraFreeMem / ctx.getInitialFrameSize();
@@ -246,14 +244,13 @@ public class ExternalSortRunMerger {
         return sortFields;
     }
 
-    private int merge(IFrameWriter writer, List<RunAndMaxFrameSizePair> partialRuns)
-            throws HyracksDataException {
+    private int merge(IFrameWriter writer, List<RunAndMaxFrameSizePair> partialRuns) throws HyracksDataException {
         tempRuns.clear();
         for (int i = 0; i < partialRuns.size(); i++) {
             tempRuns.add(partialRuns.get(i).run);
         }
-        RunMergingFrameReader merger = new RunMergingFrameReader(ctx, tempRuns, inFrames, getSortFields(),
-                comparators, nmkComputer, recordDesc, topK);
+        RunMergingFrameReader merger = new RunMergingFrameReader(ctx, tempRuns, inFrames, getSortFields(), comparators,
+                nmkComputer, recordDesc, topK);
         int maxFrameSize = 0;
         int io = 0;
         merger.open();

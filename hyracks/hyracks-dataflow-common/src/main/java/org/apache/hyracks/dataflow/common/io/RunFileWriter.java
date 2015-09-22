@@ -77,6 +77,13 @@ public class RunFileWriter implements IFrameWriter {
         if (failed) {
             throw new HyracksDataException("createReader() called on a failed RunFileWriter");
         }
-        return new RunFileReader(file, ioManager, size);
+        return new RunFileReader(file, ioManager, size, false);
+    }
+
+    public RunFileReader createDeleteOnCloseReader() throws HyracksDataException {
+        if (failed) {
+            throw new HyracksDataException("createReader() called on a failed RunFileWriter");
+        }
+        return new RunFileReader(file, ioManager, size, true);
     }
 }

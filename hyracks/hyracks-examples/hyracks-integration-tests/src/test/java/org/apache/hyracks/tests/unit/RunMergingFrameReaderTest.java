@@ -19,14 +19,14 @@
 
 package org.apache.hyracks.tests.unit;
 
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.ComparatorFactories;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.GRandom;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.RecordDesc;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.SortFields;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.generateRandomRecord;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.matchResult;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.prepareData;
-import static org.apache.hyracks.tests.unit.ExternalSortRunGeneratorTest.testUtils;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.ComparatorFactories;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.GRandom;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.RecordDesc;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.SortFields;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.generateRandomRecord;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.matchResult;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.prepareData;
+import static org.apache.hyracks.tests.unit.AbstractRunGeneratorTest.testUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.junit.Test;
+import junit.extensions.PA;
 
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
@@ -55,17 +55,17 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortRunGenerator;
 import org.apache.hyracks.dataflow.std.sort.RunAndMaxFrameSizePair;
 import org.apache.hyracks.dataflow.std.sort.RunMergingFrameReader;
 import org.apache.hyracks.dataflow.std.sort.util.GroupVSizeFrame;
+import org.junit.Test;
 
 public class RunMergingFrameReaderTest {
-    static IBinaryComparator[] Comparators = new IBinaryComparator[] {
-            ComparatorFactories[0].createBinaryComparator(),
-            ComparatorFactories[1].createBinaryComparator(),
-    };
+    static IBinaryComparator[] Comparators = new IBinaryComparator[] { ComparatorFactories[0].createBinaryComparator(),
+            ComparatorFactories[1].createBinaryComparator(), };
 
     static class TestFrameReader implements IFrameReader {
 
@@ -191,8 +191,8 @@ public class RunMergingFrameReaderTest {
         List<Map<Integer, String>> keyValueMapList = new ArrayList<>(numRuns);
         List<TestFrameReader> readerList = new ArrayList<>(numRuns);
         List<IFrame> frameList = new ArrayList<>(numRuns);
-        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun,
-                minRecordSize, maxRecordSize, readerList, frameList, keyValueMapList);
+        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
+                frameList, keyValueMapList);
 
         RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators,
                 null, RecordDesc);
@@ -212,8 +212,8 @@ public class RunMergingFrameReaderTest {
         List<Map<Integer, String>> keyValueMapList = new ArrayList<>(numRuns);
         List<TestFrameReader> readerList = new ArrayList<>(numRuns);
         List<IFrame> frameList = new ArrayList<>(numRuns);
-        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun,
-                minRecordSize, maxRecordSize, readerList, frameList, keyValueMapList);
+        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
+                frameList, keyValueMapList);
 
         RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators,
                 null, RecordDesc);
@@ -234,12 +234,11 @@ public class RunMergingFrameReaderTest {
             List<Map<Integer, String>> keyValueMapList = new ArrayList<>(numRuns);
             List<TestFrameReader> readerList = new ArrayList<>(numRuns);
             List<IFrame> frameList = new ArrayList<>(numRuns);
-            prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun,
-                    minRecordSize, maxRecordSize, readerList, frameList, keyValueMapList);
+            prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize,
+                    readerList, frameList, keyValueMapList);
 
             RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields,
-                    Comparators,
-                    null, RecordDesc, topK);
+                    Comparators, null, RecordDesc, topK);
             int totoalCount = testMergeSucceedInner(ctx, reader, keyValueMapList);
             int newCount = 0;
             for (Map<Integer, String> x : keyValueMapList) {
@@ -285,25 +284,23 @@ public class RunMergingFrameReaderTest {
         List<Map<Integer, String>> keyValueMap = new ArrayList<>();
         List<TestFrameReader> readerList = new ArrayList<>();
         List<IFrame> frameList = new ArrayList<>();
-        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun,
-                minRecordSize, maxRecordSize, readerList, frameList, keyValueMap);
+        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
+                frameList, keyValueMap);
 
         minRecordSize = pageSize;
         maxRecordSize = pageSize;
         numFramesPerRun = 4;
-        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun,
-                minRecordSize, maxRecordSize, readerList, frameList, keyValueMap);
+        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
+                frameList, keyValueMap);
 
         minRecordSize = pageSize * 2;
         maxRecordSize = pageSize * 2;
         numFramesPerRun = 6;
-        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun,
-                minRecordSize, maxRecordSize, readerList, frameList, keyValueMap);
+        prepareRandomInputRunList(ctx, pageSize, numRuns, numFramesPerRun, minRecordSize, maxRecordSize, readerList,
+                frameList, keyValueMap);
 
-        RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields,
-                Comparators,
-                null,
-                RecordDesc);
+        RunMergingFrameReader reader = new RunMergingFrameReader(ctx, readerList, frameList, SortFields, Comparators,
+                null, RecordDesc);
         testMergeSucceed(ctx, reader, keyValueMap);
     }
 
@@ -316,15 +313,14 @@ public class RunMergingFrameReaderTest {
         int maxRecordSize = pageSize / 2;
 
         IHyracksTaskContext ctx = testUtils.create(pageSize);
-        ExternalSortRunGenerator runGenerator = new ExternalSortRunGenerator(ctx, SortFields,
-                null, ComparatorFactories, RecordDesc, Algorithm.MERGE_SORT,
-                numFramesPerRun);
+        ExternalSortRunGenerator runGenerator = new ExternalSortRunGenerator(ctx, SortFields, null,
+                ComparatorFactories, RecordDesc, Algorithm.MERGE_SORT, numFramesPerRun);
 
         runGenerator.open();
         Map<Integer, String> keyValuePair = new HashMap<>();
         List<IFrame> frameList = new ArrayList<>();
-        prepareData(ctx, frameList, pageSize * numFramesPerRun * numRuns, minRecordSize, maxRecordSize,
-                null, keyValuePair);
+        prepareData(ctx, frameList, pageSize * numFramesPerRun * numRuns, minRecordSize, maxRecordSize, null,
+                keyValuePair);
         for (IFrame frame : frameList) {
             runGenerator.nextFrame(frame.getBuffer());
         }
@@ -333,18 +329,24 @@ public class RunMergingFrameReaderTest {
         minRecordSize = pageSize;
         maxRecordSize = pageSize;
         frameList.clear();
-        prepareData(ctx, frameList, pageSize * numFramesPerRun * numRuns, minRecordSize, maxRecordSize,
-                null, keyValuePair);
+        prepareData(ctx, frameList, pageSize * numFramesPerRun * numRuns, minRecordSize, maxRecordSize, null,
+                keyValuePair);
         for (IFrame frame : frameList) {
             runGenerator.nextFrame(frame.getBuffer());
         }
-
         runGenerator.close();
         List<IFrame> inFrame = new ArrayList<>(runGenerator.getRuns().size());
         for (RunAndMaxFrameSizePair max : runGenerator.getRuns()) {
             inFrame.add(new GroupVSizeFrame(ctx, max.maxFrameSize));
         }
+
+        // Let each run file reader not delete the run file when it is read and closed.
+        for (RunAndMaxFrameSizePair run : runGenerator.getRuns()) {
+            RunFileReader runFileReader = (RunFileReader) run.run;
+            PA.setValue(runFileReader, "deleteAfterClose", false);
+        }
         matchResult(ctx, runGenerator.getRuns(), keyValuePair);
+
         List<IFrameReader> runs = new ArrayList<>();
         for (RunAndMaxFrameSizePair run : runGenerator.getRuns()) {
             runs.add(run.run);
@@ -399,10 +401,9 @@ public class RunMergingFrameReaderTest {
         }
     }
 
-    static void prepareRandomInputRunList(IHyracksTaskContext ctx, int pageSize, int numRuns,
-            int numFramesPerRun, int minRecordSize, int maxRecordSize,
-            List<TestFrameReader> readerList, List<IFrame> frameList, List<Map<Integer, String>> keyValueMap)
-            throws HyracksDataException {
+    static void prepareRandomInputRunList(IHyracksTaskContext ctx, int pageSize, int numRuns, int numFramesPerRun,
+            int minRecordSize, int maxRecordSize, List<TestFrameReader> readerList, List<IFrame> frameList,
+            List<Map<Integer, String>> keyValueMap) throws HyracksDataException {
         for (int i = 0; i < numRuns; i++) {
             readerList.add(new TestFrameReader(pageSize, numFramesPerRun, minRecordSize, maxRecordSize));
             frameList.add(new VSizeFrame(ctx, readerList.get(readerList.size() - 1).maxFrameSize));

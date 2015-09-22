@@ -63,11 +63,15 @@
   		<artifactId>hyracks-data-std</artifactId>
   		<version>0.2.17-SNAPSHOT</version>
     </dependency>
-   	<dependency>
+       <dependency>
   		<groupId>org.apache.hyracks</groupId>
   		<artifactId>hyracks-control-nc</artifactId>
   		<version>0.2.17-SNAPSHOT</version>
         <scope>test</scope>
-  	</dependency>
+    </dependency>
+    <dependency>
+         <groupId>commons-io</groupId>
+         <artifactId>commons-io</artifactId>
+    </dependency>
   </dependencies>
 </project>

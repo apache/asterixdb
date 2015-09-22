@@ -127,7 +127,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
 
                 // build
                 if (buildWriter != null) {
-                    RunFileReader buildReader = buildWriter.createReader();
+                    RunFileReader buildReader = buildWriter.createDeleteOnCloseReader();
                     buildReader.open();
                     while (buildReader.nextFrame(buffer)) {
                         ByteBuffer copyBuffer = ctx.allocateFrame(buffer.getFrameSize());
@@ -139,7 +139,7 @@ class GraceHashJoinOperatorNodePushable extends AbstractUnaryOutputSourceOperato
                 }
 
                 // probe
-                RunFileReader probeReader = probeWriter.createReader();
+                RunFileReader probeReader = probeWriter.createDeleteOnCloseReader();
                 probeReader.open();
                 while (probeReader.nextFrame(buffer)) {
                     joiner.join(buffer.getBuffer(), writer);
