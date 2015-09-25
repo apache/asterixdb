@@ -132,11 +132,10 @@ public class PropertiesUtil {
                     case UNORDERED_PARTITIONED: {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         UnorderedPartitionedProperty ud = (UnorderedPartitionedProperty) dlvd;
-                        if (mayExpandProperties) {
-                            return isPrefixOf(ud.getColumnSet().iterator(), ur.getColumnSet().iterator());
-                        } else {
-                            return ur.getColumnSet().equals(ud.getColumnSet());
-                        }
+                        if (mayExpandProperties)
+                            return (!ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet()));
+                        else
+                            return (ud.getColumnSet().equals(ur.getColumnSet()));
                     }
                     case ORDERED_PARTITIONED: {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;

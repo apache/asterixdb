@@ -138,11 +138,16 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                     Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
                                     Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
                                     Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
+                                    Set<LogicalVariable> keysCurrent = uppreq.getColumnSet();
+                                    List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(keysCurrent)) ? keysRightBranch
+                                            : keysLeftBranch;
+                                    List<LogicalVariable> keysSecond = keysFirst == keysRightBranch ? keysLeftBranch
+                                            : keysRightBranch;
                                     for (LogicalVariable r : uppreq.getColumnSet()) {
                                         EquivalenceClass ecSnd = eqmap.get(r);
                                         boolean found = false;
                                         int j = 0;
-                                        for (LogicalVariable rvar : keysRightBranch) {
+                                        for (LogicalVariable rvar : keysFirst) {
                                             if (rvar == r || ecSnd != null && eqmap.get(rvar) == ecSnd) {
                                                 found = true;
                                                 break;
@@ -151,9 +156,9 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                         }
                                         if (!found) {
                                             throw new IllegalStateException("Did not find a variable equivalent to "
-                                                    + r + " among " + keysRightBranch);
+                                                    + r + " among " + keysFirst);
                                         }
-                                        LogicalVariable v2 = keysLeftBranch.get(j);
+                                        LogicalVariable v2 = keysSecond.get(j);
                                         EquivalenceClass ecFst = eqmap.get(v2);
                                         for (LogicalVariable vset1 : set1) {
                                             if (vset1 == v2 || ecFst != null && eqmap.get(vset1) == ecFst) {
