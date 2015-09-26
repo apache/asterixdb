@@ -94,16 +94,15 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         int did = getDIDfromRID(resourceID);
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
-            dsInfo = new DatasetInfo(did, !index.hasMemoryComponents());
-            PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) datasetOpTrackers
-                    .get(dsInfo.datasetID);
-            if (opTracker != null) {
-                opTracker.setDatasetInfo(dsInfo);
-            }
-        } else if (dsInfo.indexes.containsKey(resourceID)) {
+            dsInfo = getDatasetInfo(did);
+        }
+        if (!dsInfo.isRegistered) {
+            dsInfo.isExternal = !index.hasMemoryComponents();
+            dsInfo.isRegistered = true;
+        }
+        if (dsInfo.indexes.containsKey(resourceID)) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " already exists.");
         }
-        datasetInfos.put(did, dsInfo);
         dsInfo.indexes.put(resourceID, new IndexInfo((ILSMIndex) index));
     }
 
@@ -131,7 +130,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
 
         // TODO: use fine-grained counters, one for each index instead of a single counter per dataset.
-
         // First wait for any ongoing IO operations
         synchronized (dsInfo) {
             while (dsInfo.numActiveIOOps > 0) {
@@ -172,7 +170,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     public synchronized void open(long resourceID) throws HyracksDataException {
         int did = getDIDfromRID(resourceID);
         DatasetInfo dsInfo = datasetInfos.get(did);
-        if (dsInfo == null) {
+        if (dsInfo == null || !dsInfo.isRegistered) {
             throw new HyracksDataException("Failed to open index with resource ID " + resourceID
                     + " since it does not exist.");
         }
@@ -251,9 +249,13 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     public DatasetInfo getDatasetInfo(int datasetID) {
-
         synchronized (datasetInfos) {
-            return datasetInfos.get(datasetID);
+            DatasetInfo dsInfo = datasetInfos.get(datasetID);
+            if (dsInfo == null) {
+                dsInfo = new DatasetInfo(datasetID);
+                datasetInfos.put(datasetID, dsInfo);
+            }
+            return dsInfo;
         }
     }
 
@@ -346,13 +348,14 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         private final int datasetID;
         private long lastAccess;
         private int numActiveIOOps;
-        private final boolean isExternal;
+        private boolean isExternal;
+        private boolean isRegistered;
 
-        public DatasetInfo(int datasetID, boolean isExternal) {
+        public DatasetInfo(int datasetID) {
             this.indexes = new HashMap<Long, IndexInfo>();
             this.lastAccess = -1;
             this.datasetID = datasetID;
-            this.isExternal = isExternal;
+            this.isRegistered = false;
         }
 
         @Override
@@ -514,7 +517,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
                 // TODO: This is not efficient since we flush the indexes sequentially. 
                 // Think of a way to allow submitting the flush requests concurrently. We don't do them concurrently because this
                 // may lead to a deadlock scenario between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
-
                 flushAndWaitForIO(dsInfo, iInfo);
             }
         }
