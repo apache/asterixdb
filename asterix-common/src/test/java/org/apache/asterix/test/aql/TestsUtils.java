@@ -35,11 +35,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -56,6 +52,8 @@ import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 public class TestsUtils {
 
     private static final Logger LOGGER = Logger.getLogger(TestsUtils.class.getName());
+    //see https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
+    private static final long MAX_URL_LENGTH = 2000l;
     private static Method managixExecuteMethod = null;
 
     /**
@@ -221,11 +219,20 @@ public class TestsUtils {
     public static InputStream executeQuery(String str, OutputFormat fmt) throws Exception {
         final String url = "http://localhost:19002/query";
 
-        // Create a method instance.
-        GetMethod method = new GetMethod(url);
-        method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
-        method.setRequestHeader("Accept", fmt.mimeType());
+        HttpMethodBase method = null;
+        if(str.length() + url.length() < MAX_URL_LENGTH ){
+            //Use GET for small-ish queries
+            method = new GetMethod(url);
+            method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
+        }
+        else{
+            //Use POST for bigger ones to avoid 413 FULL_HEAD
+            method = new PostMethod(url);
+            ((PostMethod)method).setRequestEntity(new StringRequestEntity(str));
+        }
 
+        //Set accepted output response type
+        method.setRequestHeader("Accept", fmt.mimeType());
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
         executeHttpMethod(method);
