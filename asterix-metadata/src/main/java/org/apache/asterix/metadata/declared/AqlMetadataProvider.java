@@ -584,7 +584,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         iterator.remove();
                     }
                 }
-                // TODO Check this call, result of merge from master! 
+                // TODO Check this call, result of merge from master!
                 //  ((IGenericAdapterFactory) adapterFactory).setFiles(files);
             }
 
@@ -706,10 +706,11 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 for (int i = 0; i < numSecondaryKeys; i++) {
                     bloomFilterKeyFields[i] = i;
                 }
-                typeTraits = JobGenHelper.variablesToTypeTraits(outputVars, 0, outputVars.size(), typeEnv, context);
-                comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(outputVars, 0,
-                        outputVars.size(), typeEnv, context);
-
+                Pair<IBinaryComparatorFactory[], ITypeTraits[]> comparatorFactoriesAndTypeTraits = getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
+                        secondaryIndex.getIndexType(), secondaryIndex.getKeyFieldNames(),
+                        secondaryIndex.getKeyFieldTypes(), DatasetUtils.getPartitioningKeys(dataset), itemType);
+                comparatorFactories = comparatorFactoriesAndTypeTraits.first;
+                typeTraits = comparatorFactoriesAndTypeTraits.second;
                 if (filterTypeTraits != null) {
                     filterFields = new int[1];
                     filterFields[0] = numSecondaryKeys + numPrimaryKeys;
@@ -805,6 +806,42 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
         }
+    }
+
+    private Pair<IBinaryComparatorFactory[], ITypeTraits[]> getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
+            IndexType indexType, List<List<String>> sidxKeyFieldNames, List<IAType> sidxKeyFieldTypes,
+            List<List<String>> pidxKeyFieldNames, ARecordType recType) throws AlgebricksException {
+
+        IBinaryComparatorFactory[] comparatorFactories;
+        ITypeTraits[] typeTraits;
+        int sidxKeyFieldCount = sidxKeyFieldNames.size();
+        int pidxKeyFieldCount = pidxKeyFieldNames.size();
+        typeTraits = new ITypeTraits[sidxKeyFieldCount + pidxKeyFieldCount];
+        comparatorFactories = new IBinaryComparatorFactory[sidxKeyFieldCount + pidxKeyFieldCount];
+
+        int i = 0;
+        for (; i < sidxKeyFieldCount; ++i) {
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(sidxKeyFieldTypes.get(i),
+                    sidxKeyFieldNames.get(i), recType);
+            IAType keyType = keyPairType.first;
+            comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
+                    true);
+            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+        }
+
+        for (int j = 0; j < pidxKeyFieldCount; ++j, ++i) {
+            IAType keyType = null;
+            try {
+                keyType = recType.getSubFieldType(pidxKeyFieldNames.get(j));
+            } catch (IOException e) {
+                throw new AlgebricksException(e);
+            }
+            comparatorFactories[i] = AqlBinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType,
+                    true);
+            typeTraits[i] = AqlTypeTraitProvider.INSTANCE.getTypeTrait(keyType);
+        }
+
+        return new Pair<IBinaryComparatorFactory[], ITypeTraits[]>(comparatorFactories, typeTraits);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(JobSpecification jobSpec,
