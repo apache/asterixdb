@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.Mutable;
+
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -42,7 +44,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSourceType;
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -223,19 +224,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                             indexedTypes.add(optFuncExpr.getFieldType(j));
                     //add constants in case of select
                     if (indexedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1) {
-                        if (optFuncExpr.getConstantVal(0) == null) {
-                            //add type to indexTypes from current-*, if applicable
-                            IAType constantType = optFuncExpr.getConstantType(0);
-                            if (constantType != null) {
-                                indexedTypes.add(constantType);
-                                optFuncExpr.setConstType(0, constantType);
-                            }
-
-                        } else {
-                            //We are looking at an actual constant. Just add the type.
-                            indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(
-                                    new ConstantExpression(optFuncExpr.getConstantVal(0)), null, null));
-                        }
+                        indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(new ConstantExpression(
+                                optFuncExpr.getConstantVal(0)), null, null));
                     }
                     //infer type of logicalExpr based on index keyType
                     indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(

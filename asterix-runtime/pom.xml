@@ -53,7 +53,7 @@
 	        	<version>0.8.7-SNAPSHOT</version>
 	        	<configuration>
 	        	  	<grammarFile>src/main/resources/adm.grammar</grammarFile>
-	        	  	<outputDir>${project.build.directory}/generated-sources/org/apache/asterix/runtime/operators/file/adm</outputDir>
+	        	  	<outputDir>${project.build.directory}/generated-sources/org.apache/asterix/runtime/operators/file/adm</outputDir>
 	        	</configuration>
 	        	<executions>
 		          	<execution>

@@ -71,12 +71,4 @@ public interface IOptimizableFuncExpr {
     public void setSourceVar(int index, LogicalVariable var);
 
     public LogicalVariable getSourceVar(int index);
-
-    void setConstType(int index, IAType fieldType);
-
-    IAType getConstantType(int index);
-
-    ILogicalExpression getConstantExpr(int index);
-
-    void setConstExpr(int index, ILogicalExpression expr);
 }

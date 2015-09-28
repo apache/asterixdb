@@ -28,6 +28,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -36,8 +39,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -46,7 +47,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -234,8 +234,6 @@ public class BTreeAccessMethod implements IAccessMethod {
         LimitType[] highKeyLimits = new LimitType[numSecondaryKeys];
         boolean[] lowKeyInclusive = new boolean[numSecondaryKeys];
         boolean[] highKeyInclusive = new boolean[numSecondaryKeys];
-        ILogicalExpression[] constExpressions = new ILogicalExpression[numSecondaryKeys];
-        LogicalVariable[] constExprVars = new LogicalVariable[numSecondaryKeys];
 
         // TODO: For now we don't do any sophisticated analysis of the func exprs to come up with "the best" range predicate.
         // If we can't figure out how to integrate a certain funcExpr into the current predicate, we just bail by setting this flag.
@@ -269,12 +267,6 @@ public class BTreeAccessMethod implements IAccessMethod {
             Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(
                     optFuncExpr, indexSubTree, probeSubTree);
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
-            if (!(searchKeyExpr instanceof ConstantExpression)) {
-                constExpressions[keyPos] = searchKeyExpr;
-                constExprVars[keyPos] = context.newVar();
-                searchKeyExpr = new VariableReferenceExpression(constExprVars[keyPos]);
-
-            }
             realTypeConvertedToIntegerType = returnedSearchKeyExpr.second;
 
             LimitType limit = getLimitType(optFuncExpr, probeSubTree);
@@ -454,9 +446,9 @@ public class BTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> assignKeyVarList = new ArrayList<LogicalVariable>();
         ArrayList<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<Mutable<ILogicalExpression>>();
         int numLowKeys = createKeyVarsAndExprs(numSecondaryKeys, lowKeyLimits, lowKeyExprs, assignKeyVarList,
-                assignKeyExprList, keyVarList, context, constExpressions, constExprVars);
+                assignKeyExprList, keyVarList, context);
         int numHighKeys = createKeyVarsAndExprs(numSecondaryKeys, highKeyLimits, highKeyExprs, assignKeyVarList,
-                assignKeyExprList, keyVarList, context, constExpressions, constExprVars);
+                assignKeyExprList, keyVarList, context);
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, retainNull, requiresBroadcast);
@@ -534,14 +526,12 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     private int createKeyVarsAndExprs(int numKeys, LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
             ArrayList<LogicalVariable> assignKeyVarList, ArrayList<Mutable<ILogicalExpression>> assignKeyExprList,
-            ArrayList<LogicalVariable> keyVarList, IOptimizationContext context, ILogicalExpression[] constExpressions,
-            LogicalVariable[] constExprVars) {
+            ArrayList<LogicalVariable> keyVarList, IOptimizationContext context) {
         if (keyLimits[0] == null) {
             return 0;
         }
         for (int i = 0; i < numKeys; i++) {
             ILogicalExpression searchKeyExpr = searchKeyExprs[i];
-            ILogicalExpression constExpression = constExpressions[i];
             LogicalVariable keyVar = null;
             if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 keyVar = context.newVar();
@@ -549,10 +539,6 @@ public class BTreeAccessMethod implements IAccessMethod {
                 assignKeyVarList.add(keyVar);
             } else {
                 keyVar = ((VariableReferenceExpression) searchKeyExpr).getVariableReference();
-                if (constExpression != null) {
-                    assignKeyExprList.add(new MutableObject<ILogicalExpression>(constExpression));
-                    assignKeyVarList.add(constExprVars[i]);
-                }
             }
             keyVarList.add(keyVar);
         }
