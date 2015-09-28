@@ -32,10 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.StringUtils;
-
 import org.apache.asterix.api.common.FeedWorkCollection.SubscribeFeedWork;
-import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
@@ -53,13 +50,14 @@ import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
 import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
-import org.apache.asterix.feeds.ActiveJobLifecycleListener.Message;
+import org.apache.asterix.feeds.FeedLifecycleListener.Message;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedWorkManager;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -180,7 +178,7 @@ public class FeedJobNotificationHandler implements Runnable {
         }
 
         if (intakeJoint != null) {
-            FeedIntakeInfo intakeJobInfo = new FeedIntakeInfo(jobId, JobState.CREATED, FeedJobInfo.JobType.INTAKE,
+            FeedIntakeInfo intakeJobInfo = new FeedIntakeInfo(jobId, FeedJobState.CREATED, FeedJobInfo.JobType.INTAKE,
                     feedId, intakeJoint, jobSpec);
             intakeJobInfos.put(feedId, intakeJobInfo);
             jobInfos.put(jobId, intakeJobInfo);
@@ -212,8 +210,8 @@ public class FeedJobNotificationHandler implements Runnable {
         }
 
         if (cid != null) {
-            FeedConnectJobInfo cInfo = new FeedConnectJobInfo(jobId, JobState.CREATED, connectionId, sourceFeedJoint,
-                    null, jobSpec, feedPolicy);
+            FeedConnectJobInfo cInfo = new FeedConnectJobInfo(jobId, FeedJobState.CREATED, connectionId,
+                    sourceFeedJoint, null, jobSpec, feedPolicy);
             jobInfos.put(jobId, cInfo);
             connectJobInfos.put(connectionId, cInfo);
 
@@ -238,7 +236,7 @@ public class FeedJobNotificationHandler implements Runnable {
         jobInfos.remove(jobId);
         intakeJobInfos.remove(info.getFeedId());
 
-        if (!info.getState().equals(JobState.UNDER_RECOVERY)) {
+        if (!info.getState().equals(FeedJobState.UNDER_RECOVERY)) {
             List<IFeedJoint> joints = feedPipeline.get(info.getFeedId());
             joints.remove(info.getIntakeFeedJoint());
 
@@ -247,7 +245,7 @@ public class FeedJobNotificationHandler implements Runnable {
             }
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Not removing feed joint as intake job is in " + JobState.UNDER_RECOVERY + " state.");
+                LOGGER.info("Not removing feed joint as intake job is in " + FeedJobState.UNDER_RECOVERY + " state.");
             }
         }
 
@@ -308,7 +306,7 @@ public class FeedJobNotificationHandler implements Runnable {
         // intakeLocations is an ordered list; element at position i corresponds to location of i'th instance of operator
         intakeJobInfo.setIntakeLocation(intakeLocations);
         intakeJobInfo.getIntakeFeedJoint().setState(State.ACTIVE);
-        intakeJobInfo.setState(JobState.ACTIVE);
+        intakeJobInfo.setState(FeedJobState.ACTIVE);
 
         // notify event listeners 
         notifyFeedEventSubscribers(intakeJobInfo, FeedLifecycleEvent.FEED_INTAKE_STARTED);
@@ -328,7 +326,7 @@ public class FeedJobNotificationHandler implements Runnable {
                 }
             }
         }
-        cInfo.setState(JobState.ACTIVE);
+        cInfo.setState(FeedJobState.ACTIVE);
 
         // register activity in metadata
         registerFeedActivity(cInfo);
@@ -390,7 +388,7 @@ public class FeedJobNotificationHandler implements Runnable {
     public Set<FeedConnectionId> getActiveFeedConnections() {
         Set<FeedConnectionId> activeConnections = new HashSet<FeedConnectionId>();
         for (FeedConnectJobInfo cInfo : connectJobInfos.values()) {
-            if (cInfo.getState().equals(JobState.ACTIVE)) {
+            if (cInfo.getState().equals(FeedJobState.ACTIVE)) {
                 activeConnections.add(cInfo.getConnectionId());
             }
         }
@@ -400,17 +398,17 @@ public class FeedJobNotificationHandler implements Runnable {
     public boolean isFeedConnectionActive(FeedConnectionId connectionId) {
         FeedConnectJobInfo cInfo = connectJobInfos.get(connectionId);
         if (cInfo != null) {
-            return cInfo.getState().equals(JobState.ACTIVE);
+            return cInfo.getState().equals(FeedJobState.ACTIVE);
         }
         return false;
     }
 
-    public void setJobState(FeedConnectionId connectionId, JobState jobState) {
+    public void setJobState(FeedConnectionId connectionId, FeedJobState jobState) {
         FeedConnectJobInfo connectJobInfo = connectJobInfos.get(connectionId);
         connectJobInfo.setState(jobState);
     }
 
-    public JobState getFeedJobState(FeedConnectionId connectionId) {
+    public FeedJobState getFeedJobState(FeedConnectionId connectionId) {
         return connectJobInfos.get(connectionId).getState();
     }
 
@@ -440,7 +438,7 @@ public class FeedJobNotificationHandler implements Runnable {
         FeedPolicyAccessor fpa = new FeedPolicyAccessor(cInfo.getFeedPolicy());
 
         boolean removeJobHistory = !failure;
-        boolean retainSubsription = cInfo.getState().equals(JobState.UNDER_RECOVERY)
+        boolean retainSubsription = cInfo.getState().equals(FeedJobState.UNDER_RECOVERY)
                 || (failure && fpa.continueOnHardwareFailure());
 
         if (!retainSubsription) {
