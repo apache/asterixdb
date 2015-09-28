@@ -83,8 +83,8 @@ public class ChannelOperations {
                         .getChannelId().getChannelName()), terminateMessage.getChannelId().getChannelName()),
                 terminateMessage);
 
-        ChannelJobInfo cInfo = ActiveJobLifecycleListener.INSTANCE.getChannelJobInfo(new ChannelId(terminateMessage
-                .getChannelId().getDataverse(), terminateMessage.getChannelId().getChannelName()));
+        ChannelJobInfo cInfo = (ChannelJobInfo) ActiveJobLifecycleListener.INSTANCE.getActiveJobInfo(new ChannelId(
+                terminateMessage.getChannelId().getDataverse(), terminateMessage.getChannelId().getChannelName()));
 
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(cInfo
                 .getLocation().toArray(new String[] {}));

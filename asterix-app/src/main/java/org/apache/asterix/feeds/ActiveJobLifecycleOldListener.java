@@ -18,58 +18,6 @@
  */
 package org.apache.asterix.feeds;
 
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.asterix.api.common.SessionConfig;
-import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.expression.DataverseDecl;
-import org.apache.asterix.aql.expression.DisconnectFeedStatement;
-import org.apache.asterix.aql.expression.Identifier;
-import org.apache.asterix.aql.translator.AqlTranslator;
-import org.apache.asterix.common.active.ActiveJobInfo.JobState;
-import org.apache.asterix.common.api.IClusterManagementWork;
-import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
-import org.apache.asterix.common.api.IClusterManagementWorkResponse;
-import org.apache.asterix.common.feeds.FeedConnectJobInfo;
-import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.FeedId;
-import org.apache.asterix.common.feeds.FeedIntakeInfo;
-import org.apache.asterix.common.feeds.FeedJobInfo;
-import org.apache.asterix.common.feeds.FeedJointKey;
-import org.apache.asterix.common.feeds.api.IFeedJoint;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleListener;
-import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
-import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.cluster.AddNodeWork;
-import org.apache.asterix.metadata.cluster.ClusterManager;
-import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import org.apache.asterix.om.util.AsterixAppContextInfo;
-import org.apache.asterix.om.util.AsterixClusterProperties;
-import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.JobSpecification;
 
 /**
  * A listener that subscribes to events associated with cluster membership
@@ -78,46 +26,47 @@ import org.apache.hyracks.api.job.JobSpecification;
  * take any corrective action that may be required when a node involved in a
  * feed leaves the cluster.
  */
-public class FeedLifecycleListener implements IFeedLifecycleListener {
+/*
+public class ActiveJobLifecycleOldListener implements IActiveJobLifeCycleListener {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedLifecycleListener.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveJobLifecycleListener.class.getName());
 
-    public static FeedLifecycleListener INSTANCE = new FeedLifecycleListener();
+    public static ActiveJobLifecycleListener INSTANCE = new ActiveJobLifecycleListener();
 
-    private final LinkedBlockingQueue<Message> jobEventInbox;
+    private final LinkedBlockingQueue<Message> eventInbox;
     private final LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
     private final Map<FeedCollectInfo, List<String>> dependentFeeds = new HashMap<FeedCollectInfo, List<String>>();
-    private final Map<FeedConnectionId, LinkedBlockingQueue<String>> feedReportQueue;
-    private final FeedJobNotificationHandler feedJobNotificationHandler;
-    private final FeedWorkRequestResponseHandler feedWorkRequestResponseHandler;
+    private final Map<ActiveId, LinkedBlockingQueue<String>> reportQueue;
+    private final ActiveJobNotificationHandler jobNotificationHandler;
+    private final ActiveWorkRequestResponseHandler activeWorkRequestResponseHandler;
     private final ExecutorService executorService;
 
     private ClusterState state;
 
-    private FeedLifecycleListener() {
-        this.jobEventInbox = new LinkedBlockingQueue<Message>();
-        this.feedJobNotificationHandler = new FeedJobNotificationHandler(jobEventInbox);
+    private ActiveJobLifecycleListener() {
+        this.eventInbox = new LinkedBlockingQueue<Message>();
+        this.jobNotificationHandler = new ActiveJobNotificationHandler(eventInbox);
         this.responseInbox = new LinkedBlockingQueue<IClusterManagementWorkResponse>();
-        this.feedWorkRequestResponseHandler = new FeedWorkRequestResponseHandler(responseInbox);
-        this.feedReportQueue = new HashMap<FeedConnectionId, LinkedBlockingQueue<String>>();
+        this.activeWorkRequestResponseHandler = new ActiveWorkRequestResponseHandler(responseInbox);
+        this.reportQueue = new HashMap<ActiveId, LinkedBlockingQueue<String>>();
         this.executorService = Executors.newCachedThreadPool();
-        this.executorService.execute(feedJobNotificationHandler);
-        this.executorService.execute(feedWorkRequestResponseHandler);
+        this.executorService.execute(jobNotificationHandler);
+        this.executorService.execute(activeWorkRequestResponseHandler);
         ClusterManager.INSTANCE.registerSubscriber(this);
         this.state = AsterixClusterProperties.INSTANCE.getState();
     }
 
     @Override
     public void notifyJobStart(JobId jobId) throws HyracksException {
-        if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
-            jobEventInbox.add(new Message(jobId, Message.MessageKind.JOB_START));
+        if (jobNotificationHandler.isRegisteredJob(jobId)) {
+            eventInbox.add(new Message(jobId, Message.MessageKind.JOB_START));
         }
     }
 
     @Override
     public void notifyJobFinish(JobId jobId) throws HyracksException {
-        if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
-            jobEventInbox.add(new Message(jobId, Message.MessageKind.JOB_FINISH));
+        if (jobNotificationHandler.isRegisteredJob(jobId)) {
+            eventInbox.add(new Message(jobId, Message.MessageKind.JOB_FINISH));
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("NO NEED TO NOTIFY JOB FINISH!");
@@ -125,26 +74,26 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
         }
     }
 
-    public FeedConnectJobInfo getFeedConnectJobInfo(FeedConnectionId connectionId) {
-        return feedJobNotificationHandler.getFeedConnectJobInfo(connectionId);
-    }
-
     public void registerFeedIntakeProgressTracker(FeedConnectionId connectionId,
             IIntakeProgressTracker feedIntakeProgressTracker) {
-        feedJobNotificationHandler.registerFeedIntakeProgressTracker(connectionId, feedIntakeProgressTracker);
+        jobNotificationHandler.registerFeedIntakeProgressTracker(connectionId, feedIntakeProgressTracker);
     }
 
     public void deregisterFeedIntakeProgressTracker(FeedConnectionId connectionId) {
-        feedJobNotificationHandler.deregisterFeedIntakeProgressTracker(connectionId);
+        jobNotificationHandler.deregisterFeedIntakeProgressTracker(connectionId);
     }
 
     public void updateTrackingInformation(StorageReportFeedMessage srm) {
-        feedJobNotificationHandler.updateTrackingInformation(srm);
+        jobNotificationHandler.updateTrackingInformation(srm);
+    }
+
+    public ActiveJobInfo getActiveJobInfo(ActiveId activeId) {
+        return jobNotificationHandler.getActiveJobInfo(activeId);
     }
 
     /*
      * Traverse job specification to categorize job as a feed intake job or a feed collection job 
-     */
+     
     @Override
     public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
         JobSpecification spec = acggf.getJobSpecification();
@@ -154,24 +103,31 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
             if (opDesc instanceof FeedCollectOperatorDescriptor) {
                 feedConnectionId = ((FeedCollectOperatorDescriptor) opDesc).getFeedConnectionId();
                 feedPolicy = ((FeedCollectOperatorDescriptor) opDesc).getFeedPolicyProperties();
-                feedJobNotificationHandler.registerFeedCollectionJob(
+                jobNotificationHandler.registerFeedCollectionJob(
                         ((FeedCollectOperatorDescriptor) opDesc).getSourceFeedId(), feedConnectionId, jobId, spec,
                         feedPolicy);
                 break;
             } else if (opDesc instanceof FeedIntakeOperatorDescriptor) {
-                feedJobNotificationHandler.registerFeedIntakeJob(((FeedIntakeOperatorDescriptor) opDesc).getFeedId(),
+                jobNotificationHandler.registerFeedIntakeJob(((FeedIntakeOperatorDescriptor) opDesc).getFeedId(),
                         jobId, spec);
+                break;
+            } else if (opDesc instanceof ChannelMetaOperatorDescriptor) {
+                ActiveId channelId = null;
+                RepetitiveChannelOperatorDescriptor channelOp = (RepetitiveChannelOperatorDescriptor) ((ChannelMetaOperatorDescriptor) opDesc)
+                        .getCoreOperator();
+                channelId = (channelOp).getChannelId();
+                jobNotificationHandler.registerActiveJob(channelId, jobId, spec);
                 break;
             }
         }
     }
 
-    public void setJobState(FeedConnectionId connectionId, JobState jobState) {
-        feedJobNotificationHandler.setJobState(connectionId, jobState);
+    public void setJobState(ActiveId activeId, JobState jobState) {
+        jobNotificationHandler.setJobState(activeId, jobState);
     }
 
-    public JobState getFeedJobState(FeedConnectionId connectionId) {
-        return feedJobNotificationHandler.getFeedJobState(connectionId);
+    public JobState getJobState(ActiveId activeId) {
+        return jobNotificationHandler.getJobState(activeId);
     }
 
     public static class Message {
@@ -194,17 +150,17 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     public Set<IClusterManagementWork> notifyNodeFailure(Set<String> deadNodeIds) {
         Set<IClusterManagementWork> workToBeDone = new HashSet<IClusterManagementWork>();
 
-        Collection<FeedIntakeInfo> intakeInfos = feedJobNotificationHandler.getFeedIntakeInfos();
-        Collection<FeedConnectJobInfo> connectJobInfos = feedJobNotificationHandler.getFeedConnectInfos();
+        Collection<FeedIntakeInfo> intakeInfos = jobNotificationHandler.getFeedIntakeInfos();
+        Collection<FeedConnectJobInfo> connectJobInfos = jobNotificationHandler.getFeedConnectInfos();
 
-        Map<String, List<FeedJobInfo>> impactedJobs = new HashMap<String, List<FeedJobInfo>>();
+        Map<String, List<ActiveJobInfo>> impactedJobs = new HashMap<String, List<ActiveJobInfo>>();
 
         for (String deadNode : deadNodeIds) {
             for (FeedIntakeInfo intakeInfo : intakeInfos) {
                 if (intakeInfo.getIntakeLocation().contains(deadNode)) {
-                    List<FeedJobInfo> infos = impactedJobs.get(deadNode);
+                    List<ActiveJobInfo> infos = impactedJobs.get(deadNode);
                     if (infos == null) {
-                        infos = new ArrayList<FeedJobInfo>();
+                        infos = new ArrayList<ActiveJobInfo>();
                         impactedJobs.put(deadNode, infos);
                     }
                     infos.add(intakeInfo);
@@ -212,20 +168,24 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
                 }
             }
 
-            for (FeedConnectJobInfo connectInfo : connectJobInfos) {
-                if (connectInfo.getStorageLocations().contains(deadNode)) {
-                    continue;
-                }
-                if (connectInfo.getComputeLocations().contains(deadNode)
-                        || connectInfo.getCollectLocations().contains(deadNode)) {
-                    List<FeedJobInfo> infos = impactedJobs.get(deadNode);
-                    if (infos == null) {
-                        infos = new ArrayList<FeedJobInfo>();
-                        impactedJobs.put(deadNode, infos);
+            for (FeedConnectJobInfo jInfo : connectJobInfos) {
+                if (jInfo instanceof FeedConnectJobInfo) {
+                    // TODO: HANDLE OTHER ACTIVE JOBS!
+                    FeedConnectJobInfo connectInfo = (FeedConnectJobInfo) jInfo;
+                    if (connectInfo.getStorageLocations().contains(deadNode)) {
+                        continue;
                     }
-                    infos.add(connectInfo);
-                    connectInfo.setState(JobState.UNDER_RECOVERY);
-                    feedJobNotificationHandler.deregisterFeedActivity(connectInfo);
+                    if (connectInfo.getComputeLocations().contains(deadNode)
+                            || connectInfo.getCollectLocations().contains(deadNode)) {
+                        List<ActiveJobInfo> infos = impactedJobs.get(deadNode);
+                        if (infos == null) {
+                            infos = new ArrayList<ActiveJobInfo>();
+                            impactedJobs.put(deadNode, infos);
+                        }
+                        infos.add(connectInfo);
+                        connectInfo.setState(JobState.UNDER_RECOVERY);
+                        jobNotificationHandler.deregisterFeedActivity(connectInfo);
+                    }
                 }
             }
 
@@ -233,7 +193,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
 
         if (impactedJobs.size() > 0) {
             AddNodeWork addNodeWork = new AddNodeWork(deadNodeIds, deadNodeIds.size(), this);
-            feedWorkRequestResponseHandler.registerFeedWork(addNodeWork.getWorkId(), impactedJobs);
+            activeWorkRequestResponseHandler.registerWork(addNodeWork.getWorkId(), impactedJobs);
             workToBeDone.add(addNodeWork);
         }
         return workToBeDone;
@@ -356,9 +316,10 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
 
             try {
                 ctx = MetadataManager.INSTANCE.beginTransaction();
-                FeedId feedId = cInfo.getConnectionId().getFeedId();
+                ActiveId feedId = new ActiveId(cInfo.getConnectionId().getDataverse(), cInfo.getConnectionId()
+                        .getName(), cInfo.getConnectionId().getType());
                 DisconnectFeedStatement stmt = new DisconnectFeedStatement(new Identifier(feedId.getDataverse()),
-                        new Identifier(feedId.getFeedName()), new Identifier(cInfo.getConnectionId().getDatasetName()));
+                        new Identifier(feedId.getName()), new Identifier(cInfo.getConnectionId().getDatasetName()));
                 List<Statement> statements = new ArrayList<Statement>();
                 DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(feedId.getDataverse()));
                 statements.add(dataverseDecl);
@@ -392,16 +353,16 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
 
     public void submitFeedConnectionRequest(IFeedJoint feedPoint, FeedConnectionRequest subscriptionRequest)
             throws Exception {
-        feedJobNotificationHandler.submitFeedConnectionRequest(feedPoint, subscriptionRequest);
+        jobNotificationHandler.submitFeedConnectionRequest(feedPoint, subscriptionRequest);
     }
 
     @Override
-    public List<FeedConnectionId> getActiveFeedConnections(FeedId feedId) {
+    public List<FeedConnectionId> getActiveFeedConnections(ActiveId feedId) {
         List<FeedConnectionId> connections = new ArrayList<FeedConnectionId>();
-        Collection<FeedConnectionId> activeConnections = feedJobNotificationHandler.getActiveFeedConnections();
+        Collection<FeedConnectionId> activeConnections = jobNotificationHandler.getActiveFeedConnections();
         if (feedId != null) {
             for (FeedConnectionId connectionId : activeConnections) {
-                if (connectionId.getFeedId().equals(feedId)) {
+                if (connectionId.partOfFeed(feedId)) {
                     connections.add(connectionId);
                 }
             }
@@ -412,79 +373,84 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     }
 
     @Override
-    public List<String> getComputeLocations(FeedId feedId) {
-        return feedJobNotificationHandler.getFeedComputeLocations(feedId);
+    public List<String> getComputeLocations(ActiveId feedId) {
+        return jobNotificationHandler.getFeedComputeLocations(feedId);
     }
 
     @Override
-    public List<String> getIntakeLocations(FeedId feedId) {
-        return feedJobNotificationHandler.getFeedIntakeLocations(feedId);
+    public List<String> getIntakeLocations(ActiveId feedId) {
+        return jobNotificationHandler.getFeedIntakeLocations(feedId);
     }
 
     @Override
     public List<String> getStoreLocations(FeedConnectionId feedConnectionId) {
-        return feedJobNotificationHandler.getFeedStorageLocations(feedConnectionId);
+        return jobNotificationHandler.getFeedStorageLocations(feedConnectionId);
     }
 
     @Override
     public List<String> getCollectLocations(FeedConnectionId feedConnectionId) {
-        return feedJobNotificationHandler.getFeedCollectLocations(feedConnectionId);
+        return jobNotificationHandler.getFeedCollectLocations(feedConnectionId);
     }
 
     @Override
-    public boolean isFeedConnectionActive(FeedConnectionId connectionId) {
-        return feedJobNotificationHandler.isFeedConnectionActive(connectionId);
+    public boolean isActive(ActiveId activeId) {
+        return jobNotificationHandler.isActive(activeId);
     }
 
     public void reportPartialDisconnection(FeedConnectionId connectionId) {
-        feedJobNotificationHandler.removeFeedJointsPostPipelineTermination(connectionId);
+        jobNotificationHandler.removeFeedJointsPostPipelineTermination(connectionId);
     }
 
     public void registerFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
-        feedReportQueue.put(feedId, queue);
+        reportQueue.put(feedId, queue);
     }
 
     public void deregisterFeedReportQueue(FeedConnectionId feedId, LinkedBlockingQueue<String> queue) {
-        feedReportQueue.remove(feedId);
+        reportQueue.remove(feedId);
     }
 
     public LinkedBlockingQueue<String> getFeedReportQueue(FeedConnectionId feedId) {
-        return feedReportQueue.get(feedId);
+        return reportQueue.get(feedId);
     }
 
     @Override
     public IFeedJoint getAvailableFeedJoint(FeedJointKey feedJointKey) {
-        return feedJobNotificationHandler.getAvailableFeedJoint(feedJointKey);
+        return jobNotificationHandler.getAvailableFeedJoint(feedJointKey);
     }
 
     @Override
     public boolean isFeedJointAvailable(FeedJointKey feedJointKey) {
-        return feedJobNotificationHandler.isFeedPointAvailable(feedJointKey);
+        return jobNotificationHandler.isFeedPointAvailable(feedJointKey);
     }
 
     public void registerFeedJoint(IFeedJoint feedJoint) {
-        feedJobNotificationHandler.registerFeedJoint(feedJoint);
+        jobNotificationHandler.registerFeedJoint(feedJoint);
     }
 
     public IFeedJoint getFeedJoint(FeedJointKey feedJointKey) {
-        return feedJobNotificationHandler.getFeedJoint(feedJointKey);
+        return jobNotificationHandler.getFeedJoint(feedJointKey);
     }
 
-    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
-        feedJobNotificationHandler.registerFeedEventSubscriber(connectionId, subscriber);
+    public void registerFeedEventSubscriber(ActiveId connectionId, IActiveLifecycleEventSubscriber subscriber) {
+        jobNotificationHandler.registerEventSubscriber(connectionId, subscriber);
     }
 
-    public void deregisterFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
-        feedJobNotificationHandler.deregisterFeedEventSubscriber(connectionId, subscriber);
+    public void deregisterFeedEventSubscriber(ActiveId connectionId, IActiveLifecycleEventSubscriber subscriber) {
+        jobNotificationHandler.deregisterEventSubscriber(connectionId, subscriber);
 
     }
 
-    public JobSpecification getCollectJobSpecification(FeedConnectionId connectionId) {
-        return feedJobNotificationHandler.getCollectJobSpecification(connectionId);
+    public JobSpecification getActiveJobSpecification(ActiveId activeId) {
+        return jobNotificationHandler.getActiveJobSpecification(activeId);
     }
 
     public JobId getFeedCollectJobId(FeedConnectionId connectionId) {
-        return feedJobNotificationHandler.getFeedCollectJobId(connectionId);
+        return jobNotificationHandler.getJobId(connectionId);
     }
 
-}
+    @Override
+    public List<String> getLocations(ActiveId activeId) {
+        return jobNotificationHandler.getJobLocations(activeId);
+    }
+
+}*/

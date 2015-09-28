@@ -93,7 +93,7 @@ public class FeedLoadManager implements IFeedLoadManager {
             return;
         } else {
             try {
-                ActiveJobLifecycleListener.INSTANCE.setFeedJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
+                ActiveJobLifecycleListener.INSTANCE.setJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
                 int inflowRate = message.getInflowRate();
                 int outflowRate = message.getOutflowRate();
                 List<String> currentComputeLocations = new ArrayList<String>();
@@ -154,7 +154,7 @@ public class FeedLoadManager implements IFeedLoadManager {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Processing scale-in message " + message);
             }
-            ActiveJobLifecycleListener.INSTANCE.setFeedJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
+            ActiveJobLifecycleListener.INSTANCE.setJobState(message.getConnectionId(), JobState.UNDER_RECOVERY);
             JobSpecification jobSpec = ActiveJobLifecycleListener.INSTANCE.getCollectJobSpecification(message
                     .getConnectionId());
             int reducedCardinality = message.getReducedCardinaliy();

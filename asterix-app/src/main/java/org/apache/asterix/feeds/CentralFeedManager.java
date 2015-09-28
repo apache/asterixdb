@@ -97,7 +97,8 @@ public class CentralFeedManager implements ICentralFeedManager {
             statements = parser.Statement();
             SessionConfig pc = new SessionConfig(out, OutputFormat.ADM);
             AqlTranslator translator = new AqlTranslator(statements, pc);
-            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, AqlTranslator.ResultDelivery.SYNC);
+            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                    AqlTranslator.ResultDelivery.SYNC);
         }
     }
 
