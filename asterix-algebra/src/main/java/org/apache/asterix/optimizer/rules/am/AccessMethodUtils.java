@@ -125,7 +125,7 @@ public class AccessMethodUtils {
     public static boolean analyzeFuncExprArgsForOneConstAndVar(AbstractFunctionCallExpression funcExpr,
             AccessMethodAnalysisContext analysisCtx) {
         IAlgebricksConstantValue constFilterVal = null;
-        IAType constValType = null;
+        IAType constFilterType = null;
         LogicalVariable fieldVar = null;
         ILogicalExpression constValExpr = null;
         ILogicalExpression arg1 = funcExpr.getArguments().get(0).getValue();
@@ -144,10 +144,11 @@ public class AccessMethodUtils {
             if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 constExpr = (ConstantExpression) arg1;
                 constFilterVal = constExpr.getValue();
+                constFilterType = ((IAObject) constFilterVal).getType();
             } else {
                 //we are looking at a current-* so there isn't a constantvalue but we know the type
                 constFilterVal = null;
-                constValType = recursiveTypes.second;
+                constFilterType = recursiveTypes.second;
                 constValExpr = arg1;
             }
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg2;
@@ -161,10 +162,11 @@ public class AccessMethodUtils {
             if (arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 constExpr = (ConstantExpression) arg2;
                 constFilterVal = constExpr.getValue();
+                constFilterType = ((IAObject) constFilterVal).getType();
             } else {
                 //we are looking at a current-* so there isn't a constantvalue but we know the type
                 constFilterVal = null;
-                constValType = recursiveTypes.second;
+                constFilterType = recursiveTypes.second;
                 constValExpr = arg2;
             }
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg1;
@@ -172,8 +174,8 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, constFilterVal, constValType,
-                constValExpr);
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, constFilterVal,
+                constFilterType, constValExpr);
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr))
@@ -652,7 +654,7 @@ public class AccessMethodUtils {
 
     public static Pair<Boolean, IAType> exprCreatesConstant(ILogicalExpression expr) {
         Pair<Boolean, List<IAType>> allTypes = exprCreatesConstantList(expr);
-        if (allTypes.second == null || allTypes.second.size() > 1) {
+        if (allTypes.second.size() > 1) {
             return new Pair<Boolean, IAType>(false, null);
         } else if (allTypes.second.size() == 0) {
             return new Pair<Boolean, IAType>(true, null);
@@ -681,6 +683,8 @@ public class AccessMethodUtils {
                 }
                 return new Pair<Boolean, List<IAType>>(true, subTypes);
             }
+        } else if (expr instanceof VariableReferenceExpression) {
+            return new Pair<Boolean, List<IAType>>(false, null);
         } else if (expr instanceof ConstantExpression) {
             return new Pair<Boolean, List<IAType>>(true, new ArrayList<IAType>());
         } else {

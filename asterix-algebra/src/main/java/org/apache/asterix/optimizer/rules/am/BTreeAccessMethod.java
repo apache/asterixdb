@@ -269,8 +269,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(
                     optFuncExpr, indexSubTree, probeSubTree);
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
-            if (!(searchKeyExpr instanceof ConstantExpression)
-                    && !(searchKeyExpr instanceof VariableReferenceExpression)) {
+            if (!(searchKeyExpr instanceof ConstantExpression)) {
                 constExpressions[keyPos] = searchKeyExpr;
                 constExprVars[keyPos] = context.newVar();
                 searchKeyExpr = new VariableReferenceExpression(constExprVars[keyPos]);
