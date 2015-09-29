@@ -42,8 +42,8 @@ public class FeedTupleCommitResponseMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getFeedId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getFeedName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         obj.put(FeedConstants.MessageConstants.INTAKE_PARTITION, intakePartition);
         obj.put(FeedConstants.MessageConstants.MAX_WINDOW_ACKED, maxWindowAcked);
@@ -56,7 +56,7 @@ public class FeedTupleCommitResponseMessage extends FeedMessage {
     }
 
     public static FeedTupleCommitResponseMessage read(JSONObject obj) throws JSONException {
-        FeedId feedId = new FeedId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
+        ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
                 obj.getString(FeedConstants.MessageConstants.FEED));
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));
@@ -65,7 +65,7 @@ public class FeedTupleCommitResponseMessage extends FeedMessage {
         return new FeedTupleCommitResponseMessage(connectionId, intakePartition, maxWindowAcked);
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 

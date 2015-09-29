@@ -27,7 +27,7 @@ import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.FeedCollectRuntimeInputHandler;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedFrameCollector.State;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
 import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
@@ -64,7 +64,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private FeedRuntimeInputHandler inputSideHandler;
     private CollectionRuntime collectRuntime;
 
-    public FeedCollectOperatorNodePushable(IHyracksTaskContext ctx, FeedId sourceFeedId,
+    public FeedCollectOperatorNodePushable(IHyracksTaskContext ctx, ActiveId sourceFeedId,
             FeedConnectionId feedConnectionId, Map<String, String> feedPolicy, int partition, int nPartitions,
             ISubscribableRuntime sourceRuntime) {
         this.ctx = ctx;

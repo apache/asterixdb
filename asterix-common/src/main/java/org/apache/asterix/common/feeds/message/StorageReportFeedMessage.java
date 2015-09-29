@@ -20,11 +20,11 @@ package org.apache.asterix.common.feeds.message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 
 /**
  * A feed control message sent from a storage runtime of a feed pipeline to report the intake timestamp corresponding
@@ -58,7 +58,7 @@ public class StorageReportFeedMessage extends FeedMessage {
         return messageType.name() + " " + connectionId + " [" + lastPersistedTupleIntakeTimestamp + "] ";
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 
@@ -94,8 +94,8 @@ public class StorageReportFeedMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getFeedId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getFeedName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         obj.put(FeedConstants.MessageConstants.LAST_PERSISTED_TUPLE_INTAKE_TIMESTAMP, lastPersistedTupleIntakeTimestamp);
         obj.put(MessageConstants.PERSISTENCE_DELAY_WITHIN_LIMIT, persistenceDelayWithinLimit);
@@ -107,7 +107,7 @@ public class StorageReportFeedMessage extends FeedMessage {
     }
 
     public static StorageReportFeedMessage read(JSONObject obj) throws JSONException {
-        FeedId feedId = new FeedId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
+        ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
                 obj.getString(FeedConstants.MessageConstants.FEED));
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));

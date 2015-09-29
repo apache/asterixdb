@@ -27,13 +27,13 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.channels.ChannelId;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
 import org.apache.asterix.common.feeds.FeedCollectRuntimeInputHandler;
-import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedFrameCollector;
 import org.apache.asterix.common.feeds.FeedFrameCollector.State;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedRuntime;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
 import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
@@ -71,12 +71,12 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
     private static final Logger LOGGER = Logger.getLogger(FeedMessageOperatorNodePushable.class.getName());
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final IFeedMessage message;
     private final IFeedManager feedManager;
     private final int partition;
 
-    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, FeedConnectionId connectionId,
+    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId connectionId,
             IFeedMessage feedMessage, int partition) {
         this.connectionId = connectionId;
         this.message = feedMessage;
@@ -107,7 +107,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                     break;
                 }
                 case TERMINATE_FLOW: {
-                    FeedConnectionId connectionId = ((TerminateDataFlowMessage) message).getConnectionId();
+                    ActiveJobId connectionId = ((TerminateDataFlowMessage) message).getConnectionId();
                     handleTerminateFlowMessage(connectionId);
                     break;
                 }
@@ -144,7 +144,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleThrottlingEnabledMessage(ThrottlingEnabledFeedMessage throttlingMessage) {
-        FeedConnectionId connectionId = throttlingMessage.getConnectionId();
+        ActiveJobId connectionId = throttlingMessage.getConnectionId();
         FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
         Set<FeedRuntimeId> runtimes = runtimeManager.getFeedRuntimes();
         for (FeedRuntimeId runtimeId : runtimes) {
@@ -160,7 +160,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleFeedTupleCommitResponseMessage(FeedTupleCommitResponseMessage commitResponseMessage) {
-        FeedConnectionId connectionId = commitResponseMessage.getConnectionId();
+        ActiveJobId connectionId = commitResponseMessage.getConnectionId();
         FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
         Set<FeedRuntimeId> runtimes = runtimeManager.getFeedRuntimes();
         for (FeedRuntimeId runtimeId : runtimes) {
@@ -181,7 +181,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         }
 
         commitResponseMessage.getIntakePartition();
-        SubscribableFeedRuntimeId sid = new SubscribableFeedRuntimeId(connectionId.getFeedId(), FeedRuntimeType.INTAKE,
+        SubscribableFeedRuntimeId sid = new SubscribableFeedRuntimeId(connectionId.getActiveId(), FeedRuntimeType.INTAKE,
                 partition);
         IngestionRuntime ingestionRuntime = (IngestionRuntime) feedManager.getFeedSubscriptionManager()
                 .getSubscribableRuntime(sid);
@@ -193,7 +193,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         }
     }
 
-    private void handleTerminateFlowMessage(FeedConnectionId connectionId) throws HyracksDataException {
+    private void handleTerminateFlowMessage(ActiveJobId connectionId) throws HyracksDataException {
         FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
         Set<FeedRuntimeId> feedRuntimes = runtimeManager.getFeedRuntimes();
 
@@ -214,7 +214,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handlePrepareStallMessage(PrepareStallMessage prepareStallMessage) throws HyracksDataException {
-        FeedConnectionId connectionId = prepareStallMessage.getConnectionId();
+        ActiveJobId connectionId = prepareStallMessage.getConnectionId();
         int computePartitionsRetainLimit = prepareStallMessage.getComputePartitionsRetainLimit();
         FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
         Set<FeedRuntimeId> feedRuntimes = runtimeManager.getFeedRuntimes();
@@ -234,7 +234,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleDiscontinueFeedTypeMessage(EndFeedMessage endFeedMessage) throws Exception {
-        FeedId sourceFeedId = endFeedMessage.getSourceFeedId();
+        ActiveId sourceFeedId = endFeedMessage.getSourceFeedId();
         SubscribableFeedRuntimeId subscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
                 FeedRuntimeType.INTAKE, partition);
         ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager().getSubscribableRuntime(
@@ -282,7 +282,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
                 case COMPUTE:
                     // feed could be primary or secondary, doesn't matter
                     SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(
-                            connectionId.getFeedId(), FeedRuntimeType.COMPUTE, partition);
+                            connectionId.getActiveId(), FeedRuntimeType.COMPUTE, partition);
                     ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager().getSubscribableRuntime(
                             feedSubscribableRuntimeId);
                     DistributeFeedFrameWriter dWriter = (DistributeFeedFrameWriter) feedRuntime.getFeedFrameWriter();

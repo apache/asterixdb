@@ -30,11 +30,11 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class FeedJointKey {
 
-    private final FeedId primaryFeedId;
+    private final ActiveId primaryFeedId;
     private final List<String> appliedFunctions;
     private final String stringRep;
 
-    public FeedJointKey(FeedId feedId, List<String> appliedFunctions) {
+    public FeedJointKey(ActiveId feedId, List<String> appliedFunctions) {
         this.primaryFeedId = feedId;
         this.appliedFunctions = appliedFunctions;
         StringBuilder builder = new StringBuilder();
@@ -44,7 +44,7 @@ public class FeedJointKey {
         stringRep = builder.toString();
     }
 
-    public FeedId getFeedId() {
+    public ActiveId getFeedId() {
         return primaryFeedId;
     }
 

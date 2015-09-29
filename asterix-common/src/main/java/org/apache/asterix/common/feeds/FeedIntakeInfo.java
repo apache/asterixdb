@@ -26,12 +26,12 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedIntakeInfo extends FeedJobInfo {
 
-    private final FeedId feedId;
+    private final ActiveId feedId;
     private final IFeedJoint intakeFeedJoint;
     private final JobSpecification spec;
     private List<String> intakeLocation;
 
-    public FeedIntakeInfo(JobId jobId, JobState state, JobType jobType, FeedId feedId, IFeedJoint intakeFeedJoint,
+    public FeedIntakeInfo(JobId jobId, JobState state, JobType jobType, ActiveId feedId, IFeedJoint intakeFeedJoint,
             JobSpecification spec) {
         super(jobId, state, FeedJobInfo.JobType.INTAKE, spec);
         this.feedId = feedId;
@@ -39,7 +39,7 @@ public class FeedIntakeInfo extends FeedJobInfo {
         this.spec = spec;
     }
 
-    public FeedId getFeedId() {
+    public ActiveId getFeedId() {
         return feedId;
     }
 

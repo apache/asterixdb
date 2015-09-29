@@ -21,34 +21,51 @@ package org.apache.asterix.common.feeds;
 import java.io.Serializable;
 
 /**
- * A unique identifier for a data feed.
+ * A unique identifier for a an active object. There
+ * is not always a one-to-one correspondence between active
+ * objects and active jobs. In the case of feeds, one feed
+ * can have many active jobs.
  */
-public class FeedId implements Serializable {
+public class ActiveId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final String dataverse;
-    private final String feedName;
+    private final String name;
 
-    public FeedId(String dataverse, String feedName) {
+    public enum ActiveObjectType {
+        FEED,
+        CHANNEL,
+        PROCEDURE
+    }
+
+    private final ActiveObjectType type;
+
+    public ActiveId(String dataverse, String name, ActiveObjectType type) {
         this.dataverse = dataverse;
-        this.feedName = feedName;
+        this.name = name;
+        this.type = type;
     }
 
     public String getDataverse() {
         return dataverse;
     }
 
-    public String getFeedName() {
-        return feedName;
+    public String getName() {
+        return name;
+    }
+
+    public ActiveObjectType getType() {
+        return type;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FeedId)) {
+        if (o == null || !(o instanceof ActiveId)) {
             return false;
         }
-        if (this == o || ((FeedId) o).getFeedName().equals(feedName) && ((FeedId) o).getDataverse().equals(dataverse)) {
+        if (this == o || ((ActiveId) o).getName().equals(name) && ((ActiveId) o).getDataverse().equals(dataverse)
+                && ((ActiveId) o).getType().equals(type)) {
             return true;
         }
         return false;
@@ -61,6 +78,6 @@ public class FeedId implements Serializable {
 
     @Override
     public String toString() {
-        return dataverse + "." + feedName;
+        return dataverse + "." + name + "(" + type + ")";
     }
 }

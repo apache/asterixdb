@@ -80,7 +80,7 @@ public class FeedFrameSpiller {
     private void createFile() throws IOException {
         Date date = new Date();
         String dateSuffix = date.toString().replace(' ', '_');
-        String fileName = connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_"
+        String fileName = connectionId.getActiveId() + "_" + connectionId.getDatasetName() + "_"
                 + runtimeId.getFeedRuntimeType() + "_" + runtimeId.getPartition() + "_" + dateSuffix;
 
         file = new File(fileName);

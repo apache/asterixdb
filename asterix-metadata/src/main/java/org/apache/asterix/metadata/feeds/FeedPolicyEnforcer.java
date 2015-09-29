@@ -22,15 +22,15 @@ import java.rmi.RemoteException;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 
 public class FeedPolicyEnforcer {
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final FeedPolicyAccessor policyAccessor;
 
-    public FeedPolicyEnforcer(FeedConnectionId feedConnectionId, Map<String, String> feedPolicy) {
+    public FeedPolicyEnforcer(ActiveJobId feedConnectionId, Map<String, String> feedPolicy) {
         this.connectionId = feedConnectionId;
         this.policyAccessor = new FeedPolicyAccessor(feedPolicy);
     }
@@ -43,7 +43,7 @@ public class FeedPolicyEnforcer {
         return policyAccessor;
     }
 
-    public FeedConnectionId getFeedId() {
+    public ActiveJobId getFeedId() {
         return connectionId;
     }
 

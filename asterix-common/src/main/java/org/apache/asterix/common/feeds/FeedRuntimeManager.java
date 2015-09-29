@@ -33,13 +33,13 @@ public class FeedRuntimeManager {
 
     private static Logger LOGGER = Logger.getLogger(FeedRuntimeManager.class.getName());
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final IFeedConnectionManager connectionManager;
     private final Map<FeedRuntimeId, FeedRuntime> feedRuntimes;
 
     private final ExecutorService executorService;
 
-    public FeedRuntimeManager(FeedConnectionId connectionId, IFeedConnectionManager feedConnectionManager) {
+    public FeedRuntimeManager(ActiveJobId connectionId, IFeedConnectionManager feedConnectionManager) {
         this.connectionId = connectionId;
         this.feedRuntimes = new ConcurrentHashMap<FeedRuntimeId, FeedRuntime>();
         this.executorService = Executors.newCachedThreadPool();

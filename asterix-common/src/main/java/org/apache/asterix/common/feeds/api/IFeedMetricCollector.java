@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
 
 public interface IFeedMetricCollector {
@@ -38,9 +38,9 @@ public interface IFeedMetricCollector {
 
     public int getMetric(int senderId);
 
-    public int getMetric(FeedConnectionId connectionId, FeedRuntimeId runtimeId, ValueType valueType);
+    public int getMetric(ActiveJobId connectionId, FeedRuntimeId runtimeId, ValueType valueType);
 
-    int createReportSender(FeedConnectionId connectionId, FeedRuntimeId runtimeId, ValueType valueType,
+    int createReportSender(ActiveJobId connectionId, FeedRuntimeId runtimeId, ValueType valueType,
             MetricType metricType);
 
     public void removeReportSender(int senderId);

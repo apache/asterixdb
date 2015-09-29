@@ -30,7 +30,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
-
 import org.apache.asterix.common.channels.ChannelId;
 import org.apache.asterix.common.channels.ChannelRuntimeId;
 import org.apache.asterix.common.channels.api.IChannelRuntime.ChannelRuntimeType;
@@ -38,6 +37,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
@@ -575,15 +575,15 @@ public class ActiveUtil {
         return result;
     }
 
-    private static boolean preProcessingRequired(FeedConnectionId connectionId) {
+    private static boolean preProcessingRequired(ActiveJobId connectionId) {
         MetadataTransactionContext ctx = null;
         Feed feed = null;
         boolean preProcessingRequired = false;
         try {
             MetadataManager.INSTANCE.acquireReadLatch();
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getFeedId().getDataverse(), connectionId
-                    .getFeedId().getFeedName());
+            feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getActiveId().getDataverse(), connectionId
+                    .getActiveId().getName());
             preProcessingRequired = feed.getAppliedFunction() != null;
             MetadataManager.INSTANCE.commitTransaction(ctx);
         } catch (Exception e) {

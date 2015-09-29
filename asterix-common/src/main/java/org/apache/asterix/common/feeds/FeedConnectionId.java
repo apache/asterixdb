@@ -20,32 +20,26 @@ package org.apache.asterix.common.feeds;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.feeds.ActiveId.ActiveObjectType;
+
 /**
  * A unique identifier for a feed connection. A feed connection is an instance of a data feed that is flowing into a dataset.
  */
-public class FeedConnectionId implements Serializable {
+
+public class FeedConnectionId extends ActiveJobId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedId feedId;
-    private final String datasetName;
+    final String datasetName;
 
-    public FeedConnectionId(FeedId feedId, String datasetName) {
-        this.feedId = feedId;
+    public FeedConnectionId(ActiveId activeId, String datasetName) {
+        super(activeId);
         this.datasetName = datasetName;
     }
 
     public FeedConnectionId(String dataverse, String feedName, String datasetName) {
-        this.feedId = new FeedId(dataverse, feedName);
+        super(new ActiveId(dataverse, feedName, ActiveObjectType.FEED));
         this.datasetName = datasetName;
-    }
-
-    public FeedId getFeedId() {
-        return feedId;
-    }
-
-    public String getDatasetName() {
-        return datasetName;
     }
 
     @Override
@@ -53,22 +47,15 @@ public class FeedConnectionId implements Serializable {
         if (o == null || !(o instanceof FeedConnectionId)) {
             return false;
         }
-
         if (this == o
-                || (((FeedConnectionId) o).getFeedId().equals(feedId) && ((FeedConnectionId) o).getDatasetName()
+                || (((FeedConnectionId) o).getActiveId().equals(activeId) && ((FeedConnectionId) o).getDatasetName()
                         .equals(datasetName))) {
             return true;
         }
         return false;
     }
 
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return feedId.toString() + "-->" + datasetName;
+    public String getDatasetName() {
+        return datasetName;
     }
 }

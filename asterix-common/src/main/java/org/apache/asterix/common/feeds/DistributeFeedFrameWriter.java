@@ -44,7 +44,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(DistributeFeedFrameWriter.class.getName());
 
     /** A unique identifier for the feed to which the incoming tuples belong. **/
-    private final FeedId feedId;
+    private final ActiveId feedId;
 
     /** An instance of FrameDistributor that provides the mechanism for distributing a frame to multiple readers, each operating in isolation. **/
     private final FrameDistributor frameDistributor;
@@ -58,7 +58,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, FeedId feedId, IFrameWriter writer, FeedRuntimeType feedRuntimeType,
+    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveId feedId, IFrameWriter writer, FeedRuntimeType feedRuntimeType,
             int partition, FrameTupleAccessor fta, IFeedManager feedManager) throws IOException {
         this.feedId = feedId;
         this.frameDistributor = new FrameDistributor(ctx, feedId, feedRuntimeType, partition, true,
@@ -69,7 +69,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     }
 
     public FeedFrameCollector subscribeFeed(FeedPolicyAccessor fpa, IFrameWriter frameWriter,
-            FeedConnectionId connectionId) throws Exception {
+            ActiveJobId connectionId) throws Exception {
         FeedFrameCollector collector = null;
         if (!frameDistributor.isRegistered(frameWriter)) {
             collector = new FeedFrameCollector(frameDistributor, fpa, frameWriter, connectionId);

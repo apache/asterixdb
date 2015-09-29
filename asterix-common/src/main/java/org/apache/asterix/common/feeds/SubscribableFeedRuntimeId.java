@@ -22,14 +22,14 @@ import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 
 public class SubscribableFeedRuntimeId extends FeedRuntimeId {
 
-    private final FeedId feedId;
+    private final ActiveId feedId;
 
-    public SubscribableFeedRuntimeId(FeedId feedId, FeedRuntimeType runtimeType, int partition) {
+    public SubscribableFeedRuntimeId(ActiveId feedId, FeedRuntimeType runtimeType, int partition) {
         super(runtimeType, partition, FeedRuntimeId.DEFAULT_OPERAND_ID);
         this.feedId = feedId;
     }
 
-    public FeedId getFeedId() {
+    public ActiveId getFeedId() {
         return feedId;
     }
 

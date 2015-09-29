@@ -58,8 +58,8 @@ public class FeedMetadataManager implements IFeedMetadataManager {
             throws AsterixException {
         try {
             AString id = new AString("1");
-            AString dataverseValue = new AString(connectionId.getFeedId().getDataverse());
-            AString feedValue = new AString(connectionId.getFeedId().getFeedName());
+            AString dataverseValue = new AString(connectionId.getActiveId().getDataverse());
+            AString feedValue = new AString(connectionId.getActiveId().getName());
             AString targetDatasetValue = new AString(connectionId.getDatasetName());
             AString tupleValue = new AString(tuple);
             AString messageValue = new AString(message);

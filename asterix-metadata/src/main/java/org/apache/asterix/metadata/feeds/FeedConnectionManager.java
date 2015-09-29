@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedRuntime;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
@@ -48,12 +49,12 @@ public class FeedConnectionManager implements IFeedConnectionManager {
         this.nodeId = nodeId;
     }
 
-    public FeedRuntimeManager getFeedRuntimeManager(FeedConnectionId feedId) {
+    public FeedRuntimeManager getFeedRuntimeManager(ActiveJobId feedId) {
         return feedRuntimeManagers.get(feedId);
     }
 
     @Override
-    public void deregisterFeed(FeedConnectionId feedId) {
+    public void deregisterFeed(ActiveJobId feedId) {
         try {
             FeedRuntimeManager mgr = feedRuntimeManagers.get(feedId);
             if (mgr != null) {
@@ -80,7 +81,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public void deRegisterFeedRuntime(FeedConnectionId connectionId, FeedRuntimeId feedRuntimeId) {
+    public void deRegisterFeedRuntime(ActiveJobId connectionId, FeedRuntimeId feedRuntimeId) {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(connectionId);
         if (runtimeMgr != null) {
             runtimeMgr.deregisterFeedRuntime(feedRuntimeId);
@@ -88,7 +89,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public FeedRuntime getFeedRuntime(FeedConnectionId connectionId, FeedRuntimeId feedRuntimeId) {
+    public FeedRuntime getFeedRuntime(ActiveJobId connectionId, FeedRuntimeId feedRuntimeId) {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(connectionId);
         return runtimeMgr != null ? runtimeMgr.getFeedRuntime(feedRuntimeId) : null;
     }

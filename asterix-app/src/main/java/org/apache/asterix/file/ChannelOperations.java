@@ -18,7 +18,7 @@ import org.apache.asterix.common.channels.ChannelId;
 import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
@@ -79,7 +79,7 @@ public class ChannelOperations {
         JobSpecification messageJobSpec = JobSpecificationUtils.createJobSpecification();
 
         FeedMessageOperatorDescriptor feedMessenger = new FeedMessageOperatorDescriptor(messageJobSpec,
-                new FeedConnectionId(new FeedId(terminateMessage.getChannelId().getDataverse(), terminateMessage
+                new FeedConnectionId(new ActiveId(terminateMessage.getChannelId().getDataverse(), terminateMessage
                         .getChannelId().getChannelName()), terminateMessage.getChannelId().getChannelName()),
                 terminateMessage);
 

@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
@@ -64,12 +64,12 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
     private IFeedSubscriptionManager subscriptionManager;
 
     /** The source feed from which the feed derives its data from. **/
-    private final FeedId sourceFeedId;
+    private final ActiveId sourceFeedId;
 
     /** The subscription location at which the recipient feed receives tuples from the source feed **/
     private final ConnectionLocation subscriptionLocation;
 
-    public FeedCollectOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId, FeedId sourceFeedId,
+    public FeedCollectOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId, ActiveId sourceFeedId,
             ARecordType atype, RecordDescriptor rDesc, Map<String, String> feedPolicyProperties,
             ConnectionLocation subscriptionLocation) {
         super(spec, 0, 1);
@@ -141,7 +141,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
         return recordDescriptors[0];
     }
 
-    public FeedId getSourceFeedId() {
+    public ActiveId getSourceFeedId() {
         return sourceFeedId;
     }
 

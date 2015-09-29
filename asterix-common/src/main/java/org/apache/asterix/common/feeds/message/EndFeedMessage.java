@@ -20,10 +20,10 @@ package org.apache.asterix.common.feeds.message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 
 /**
@@ -34,7 +34,7 @@ public class EndFeedMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedId sourceFeedId;
+    private final ActiveId sourceFeedId;
 
     private final FeedConnectionId connectionId;
 
@@ -49,7 +49,7 @@ public class EndFeedMessage extends FeedMessage {
         DISCONTINUE_SOURCE
     }
 
-    public EndFeedMessage(FeedConnectionId connectionId, FeedRuntimeType sourceRuntimeType, FeedId sourceFeedId,
+    public EndFeedMessage(FeedConnectionId connectionId, FeedRuntimeType sourceRuntimeType, ActiveId sourceFeedId,
             boolean completeDisconnection, EndMessageType endMessageType) {
         super(MessageType.END);
         this.connectionId = connectionId;
@@ -68,7 +68,7 @@ public class EndFeedMessage extends FeedMessage {
         return sourceRuntimeType;
     }
 
-    public FeedId getSourceFeedId() {
+    public ActiveId getSourceFeedId() {
         return sourceFeedId;
     }
 
@@ -84,13 +84,13 @@ public class EndFeedMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getFeedId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getFeedId().getFeedName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         return obj;
     }
 
-    public FeedConnectionId getFeedConnectionId() {
+    public ActiveJobId getFeedConnectionId() {
         return connectionId;
     }
 

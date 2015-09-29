@@ -21,6 +21,7 @@ package org.apache.asterix.common.feeds.api;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedRuntime;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
@@ -45,7 +46,7 @@ public interface IFeedConnectionManager {
      * @param feedRuntimeId
      * @return
      */
-    public FeedRuntime getFeedRuntime(FeedConnectionId connectionId, FeedRuntimeId feedRuntimeId);
+    public FeedRuntime getFeedRuntime(ActiveJobId connectionId, FeedRuntimeId feedRuntimeId);
 
     /**
      * De-register a feed
@@ -53,7 +54,7 @@ public interface IFeedConnectionManager {
      * @param feedConnection
      * @throws IOException
      */
-    void deregisterFeed(FeedConnectionId feedConnection);
+    void deregisterFeed(ActiveJobId feedConnection);
 
     /**
      * Obtain the feed runtime manager associated with a feed.
@@ -61,14 +62,14 @@ public interface IFeedConnectionManager {
      * @param feedConnection
      * @return
      */
-    public FeedRuntimeManager getFeedRuntimeManager(FeedConnectionId feedConnection);
+    public FeedRuntimeManager getFeedRuntimeManager(ActiveJobId feedConnection);
 
     /**
      * Allows de-registration of a feed runtime.
      * 
      * @param feedRuntimeId
      */
-    void deRegisterFeedRuntime(FeedConnectionId connectionId, FeedRuntimeId feedRuntimeId);
+    void deRegisterFeedRuntime(ActiveJobId connectionId, FeedRuntimeId feedRuntimeId);
 
     public List<FeedRuntimeId> getRegisteredRuntimes();
 

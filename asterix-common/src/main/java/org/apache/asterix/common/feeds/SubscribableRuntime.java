@@ -30,12 +30,12 @@ public class SubscribableRuntime extends FeedRuntime implements ISubscribableRun
 
     protected static final Logger LOGGER = Logger.getLogger(SubscribableRuntime.class.getName());
 
-    protected final FeedId feedId;
+    protected final ActiveId feedId;
     protected final List<ISubscriberRuntime> subscribers;
     protected final RecordDescriptor recordDescriptor;
     protected final DistributeFeedFrameWriter dWriter;
 
-    public SubscribableRuntime(FeedId feedId, FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler,
+    public SubscribableRuntime(ActiveId feedId, FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler,
             DistributeFeedFrameWriter dWriter, RecordDescriptor recordDescriptor) {
         super(runtimeId, inputHandler, dWriter);
         this.feedId = feedId;
@@ -44,7 +44,7 @@ public class SubscribableRuntime extends FeedRuntime implements ISubscribableRun
         this.subscribers = new ArrayList<ISubscriberRuntime>();
     }
 
-    public FeedId getFeedId() {
+    public ActiveId getFeedId() {
         return feedId;
     }
 

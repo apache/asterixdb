@@ -46,7 +46,7 @@ public class FeedFrameHandlers {
         DISCARD
     }
 
-    public static IFeedFrameHandler getFeedFrameHandler(FrameDistributor distributor, FeedId feedId,
+    public static IFeedFrameHandler getFeedFrameHandler(FrameDistributor distributor, ActiveId feedId,
             RoutingMode routingMode, FeedRuntimeType runtimeType, int partition, int frameSize) throws IOException {
         IFeedFrameHandler handler = null;
         switch (routingMode) {
@@ -67,13 +67,13 @@ public class FeedFrameHandlers {
 
     public static class DiscardRouter implements IFeedFrameHandler {
 
-        private final FeedId feedId;
+        private final ActiveId feedId;
         private int nDiscarded;
         private final FeedRuntimeType runtimeType;
         private final int partition;
         private final FrameDistributor distributor;
 
-        public DiscardRouter(FrameDistributor distributor, FeedId feedId, FeedRuntimeType runtimeType, int partition)
+        public DiscardRouter(FrameDistributor distributor, ActiveId feedId, FeedRuntimeType runtimeType, int partition)
                 throws HyracksDataException {
             this.distributor = distributor;
             this.feedId = feedId;
@@ -162,11 +162,11 @@ public class FeedFrameHandlers {
 
     public static class DiskSpiller implements IFeedFrameHandler {
 
-        private final FeedId feedId;
+        private final ActiveId feedId;
         private FrameSpiller<ByteBuffer> receiver;
         private Iterator<ByteBuffer> iterator;
 
-        public DiskSpiller(FrameDistributor distributor, FeedId feedId, FeedRuntimeType runtimeType, int partition,
+        public DiskSpiller(FrameDistributor distributor, ActiveId feedId, FeedRuntimeType runtimeType, int partition,
                 int frameSize) throws IOException {
             this.feedId = feedId;
             receiver = new FrameSpiller<ByteBuffer>(distributor, feedId, frameSize);
@@ -180,7 +180,7 @@ public class FeedFrameHandlers {
         private static class FrameSpiller<T> extends MessageReceiver<ByteBuffer> {
 
             private final int frameSize;
-            private final FeedId feedId;
+            private final ActiveId feedId;
             private BufferedOutputStream bos;
             private final ByteBuffer reusableLengthBuffer;
             private final ByteBuffer reusableDataBuffer;
@@ -189,7 +189,7 @@ public class FeedFrameHandlers {
             private final FrameDistributor frameDistributor;
             private boolean fileCreated = false;
 
-            public FrameSpiller(FrameDistributor distributor, FeedId feedId, int frameSize) throws IOException {
+            public FrameSpiller(FrameDistributor distributor, ActiveId feedId, int frameSize) throws IOException {
                 this.feedId = feedId;
                 this.frameSize = frameSize;
                 this.frameDistributor = distributor;

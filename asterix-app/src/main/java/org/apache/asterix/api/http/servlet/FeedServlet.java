@@ -32,10 +32,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.api.IFeedLoadManager;
 import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
 import org.apache.asterix.feeds.CentralFeedManager;
@@ -128,7 +129,7 @@ public class FeedServlet extends HttpServlet {
         String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
         IFeedLoadManager loadManager = CentralFeedManager.getInstance().getFeedLoadManager();
-        FeedConnectionId connectionId = new FeedConnectionId(new FeedId(activity.getDataverseName(),
+        ActiveJobId connectionId = new FeedConnectionId(new ActiveId(activity.getDataverseName(),
                 activity.getFeedName()), activity.getDatasetName());
         int intakeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.COLLECT) * intake.split(",").length;
         int storeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.STORE) * store.split(",").length;

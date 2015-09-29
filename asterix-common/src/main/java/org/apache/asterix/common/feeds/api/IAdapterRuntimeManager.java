@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 
 public interface IAdapterRuntimeManager {
 
@@ -60,7 +60,7 @@ public interface IAdapterRuntimeManager {
     /**
      * @return feedId associated with the feed that is being ingested
      */
-    public FeedId getFeedId();
+    public ActiveId getFeedId();
 
     /**
      * @return the instance of the feed adapter (an implementation of {@code IFeedAdapter}) in use.

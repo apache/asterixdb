@@ -436,7 +436,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                                 activity = it.next();
                                 if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
                                         && activity.getFeedName()
-                                                .equals(feedDataSource.getSourceFeedId().getFeedName())) {
+                                                .equals(feedDataSource.getSourceFeedId().getName())) {
                                     locations = activity.getFeedActivityDetails().get(
                                             FeedActivityDetails.COMPUTE_LOCATIONS);
                                     locationArray = locations.split(",");
@@ -457,7 +457,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 while (it.hasNext()) {
                     activity = it.next();
                     if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
-                            && activity.getFeedName().equals(feedDataSource.getSourceFeedId().getFeedName())) {
+                            && activity.getFeedName().equals(feedDataSource.getSourceFeedId().getName())) {
                         switch (feedDataSource.getLocation()) {
                             case SOURCE_FEED_INTAKE_STAGE:
                                 locations = activity.getFeedActivityDetails()

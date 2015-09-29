@@ -34,12 +34,12 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
  */
 public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime {
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final ISubscribableRuntime sourceRuntime;
     private final Map<String, String> feedPolicy;
     private FeedFrameCollector frameCollector;
 
-    public CollectionRuntime(FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+    public CollectionRuntime(ActiveJobId connectionId, FeedRuntimeId runtimeId,
             FeedRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter,
             ISubscribableRuntime sourceRuntime, Map<String, String> feedPolicy) {
         super(runtimeId, inputSideHandler, outputSideWriter);
@@ -73,7 +73,7 @@ public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime
         return feedPolicy;
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 

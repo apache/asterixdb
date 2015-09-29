@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
-
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.NodeLoadReport;
@@ -47,13 +47,13 @@ public interface IFeedLoadManager {
 
     public void reportThrottlingEnabled(ThrottlingEnabledFeedMessage mesg) throws AsterixException, Exception;
 
-    int getOutflowRate(FeedConnectionId connectionId, FeedRuntimeType runtimeType);
+    int getOutflowRate(ActiveJobId connectionId, FeedRuntimeType runtimeType);
 
     void reportFeedActivity(FeedConnectionId connectionId, FeedActivity activity);
 
-    void removeFeedActivity(FeedConnectionId connectionId);
+    void removeFeedActivity(ActiveJobId connectionId);
 
-    public FeedActivity getFeedActivity(FeedConnectionId connectionId);
+    public FeedActivity getFeedActivity(ActiveJobId connectionId);
 
     public Collection<FeedActivity> getFeedActivities();
 

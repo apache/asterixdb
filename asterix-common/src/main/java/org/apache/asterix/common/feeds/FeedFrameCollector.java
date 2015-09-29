@@ -28,7 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FeedFrameCollector extends MessageReceiver<DataBucket> implements IMessageReceiver<DataBucket> {
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final FrameDistributor frameDistributor;
     private FeedPolicyAccessor fpa;
     private IFrameWriter frameWriter;
@@ -42,7 +42,7 @@ public class FeedFrameCollector extends MessageReceiver<DataBucket> implements I
     }
 
     public FeedFrameCollector(FrameDistributor frameDistributor, FeedPolicyAccessor feedPolicyAccessor,
-            IFrameWriter frameWriter, FeedConnectionId connectionId) {
+            IFrameWriter frameWriter, ActiveJobId connectionId) {
         super();
         this.frameDistributor = frameDistributor;
         this.fpa = feedPolicyAccessor;

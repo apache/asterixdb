@@ -106,7 +106,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
 
     @Override
     public void open() throws HyracksDataException {
-        FeedRuntimeId runtimeId = new SubscribableFeedRuntimeId(connectionId.getFeedId(), runtimeType, partition);
+        FeedRuntimeId runtimeId = new SubscribableFeedRuntimeId(connectionId.getActiveId(), runtimeType, partition);
         try {
             feedRuntime = feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
             if (feedRuntime == null) {
@@ -128,11 +128,11 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
                 policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, feedManager,
                 nPartitions);
 
-        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getFeedId(), writer,
+        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getActiveId(), writer,
                 runtimeType, partition, new FrameTupleAccessor(recordDesc), feedManager);
         coreOperator.setOutputFrameWriter(0, distributeWriter, recordDesc);
 
-        feedRuntime = new SubscribableRuntime(connectionId.getFeedId(), runtimeId, inputSideHandler, distributeWriter,
+        feedRuntime = new SubscribableRuntime(connectionId.getActiveId(), runtimeId, inputSideHandler, distributeWriter,
                 recordDesc);
         feedManager.getFeedSubscriptionManager().registerFeedSubscribableRuntime((ISubscribableRuntime) feedRuntime);
         feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, feedRuntime);
@@ -145,7 +145,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.inputSideHandler = feedRuntime.getInputHandler();
         this.inputSideHandler.setCoreOperator(coreOperator);
 
-        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getFeedId(), writer,
+        DistributeFeedFrameWriter distributeWriter = new DistributeFeedFrameWriter(ctx, connectionId.getActiveId(), writer,
                 runtimeType, partition, new FrameTupleAccessor(recordDesc), feedManager);
         coreOperator.setOutputFrameWriter(0, distributeWriter, recordDesc);
         distributeWriter.subscribeFeed(policyEnforcer.getFeedPolicyAccessor(), writer, connectionId);

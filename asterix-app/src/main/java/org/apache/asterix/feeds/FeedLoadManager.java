@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedRuntimeId;
@@ -62,7 +63,7 @@ public class FeedLoadManager implements IFeedLoadManager {
     private final Map<FeedConnectionId, FeedActivity> feedActivities;
     private final Map<String, Pair<Integer, Integer>> feedMetrics;
 
-    private FeedConnectionId lastModified;
+    private ActiveJobId lastModified;
     private long lastModifiedTimestamp;
 
     private static final int UNKNOWN = -1;
@@ -98,7 +99,7 @@ public class FeedLoadManager implements IFeedLoadManager {
                 int outflowRate = message.getOutflowRate();
                 List<String> currentComputeLocations = new ArrayList<String>();
                 currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
-                        .getConnectionId().getFeedId()));
+                        .getConnectionId().getActiveId()));
                 int computeCardinality = currentComputeLocations.size();
                 int requiredCardinality = (int) Math
                         .ceil((double) ((computeCardinality * inflowRate) / (double) outflowRate)) + 5;
@@ -160,7 +161,7 @@ public class FeedLoadManager implements IFeedLoadManager {
             int reducedCardinality = message.getReducedCardinaliy();
             List<String> currentComputeLocations = new ArrayList<String>();
             currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
-                    .getConnectionId().getFeedId()));
+                    .getConnectionId().getActiveId()));
             ActiveUtil.decreaseComputeCardinality(jobSpec, FeedRuntimeType.COMPUTE, reducedCardinality,
                     currentComputeLocations);
 
@@ -180,7 +181,7 @@ public class FeedLoadManager implements IFeedLoadManager {
         PrepareStallMessage stallMessage = new PrepareStallMessage(connectionId, computePartitionRetainLimit);
         List<String> intakeLocations = ActiveJobLifecycleListener.INSTANCE.getCollectLocations(connectionId);
         List<String> computeLocations = ActiveJobLifecycleListener.INSTANCE.getComputeLocations(connectionId
-                .getFeedId());
+                .getActiveId());
         List<String> storageLocations = ActiveJobLifecycleListener.INSTANCE.getStoreLocations(connectionId);
 
         Set<String> operatorLocations = new HashSet<String>();
@@ -221,7 +222,7 @@ public class FeedLoadManager implements IFeedLoadManager {
     }
 
     @Override
-    public int getOutflowRate(FeedConnectionId connectionId, FeedRuntimeType runtimeType) {
+    public int getOutflowRate(ActiveJobId connectionId, FeedRuntimeType runtimeType) {
         int rVal;
         String key = "" + connectionId + ":" + runtimeType;
         feedMetrics.get(key);
@@ -264,7 +265,7 @@ public class FeedLoadManager implements IFeedLoadManager {
     @Override
     public void reportThrottlingEnabled(ThrottlingEnabledFeedMessage mesg) throws AsterixException, Exception {
         System.out.println("Throttling Enabled for " + mesg.getConnectionId() + " " + mesg.getFeedRuntimeId());
-        FeedConnectionId connectionId = mesg.getConnectionId();
+        ActiveJobId connectionId = mesg.getConnectionId();
         List<String> destinationLocations = new ArrayList<String>();
         List<String> storageLocations = ActiveJobLifecycleListener.INSTANCE.getStoreLocations(connectionId);
         List<String> collectLocations = ActiveJobLifecycleListener.INSTANCE.getCollectLocations(connectionId);
@@ -287,7 +288,7 @@ public class FeedLoadManager implements IFeedLoadManager {
     }
 
     @Override
-    public FeedActivity getFeedActivity(FeedConnectionId connectionId) {
+    public FeedActivity getFeedActivity(ActiveJobId connectionId) {
         return feedActivities.get(connectionId);
     }
 
@@ -297,7 +298,7 @@ public class FeedLoadManager implements IFeedLoadManager {
     }
 
     @Override
-    public void removeFeedActivity(FeedConnectionId connectionId) {
+    public void removeFeedActivity(ActiveJobId connectionId) {
         feedActivities.remove(connectionId);
     }
 }

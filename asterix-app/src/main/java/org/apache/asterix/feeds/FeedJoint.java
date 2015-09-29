@@ -23,9 +23,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.FeedId;
+import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
@@ -44,7 +45,7 @@ public class FeedJoint implements IFeedJoint {
     private final List<FeedConnectionId> receivers;
 
     /** The feedId on which the feedPoint resides **/
-    private final FeedId ownerFeedId;
+    private final ActiveId ownerFeedId;
 
     /** A list of feed subscription requests submitted for subscribing to the FeedPoint's data **/
     private final List<FeedConnectionRequest> connectionRequests;
@@ -53,10 +54,10 @@ public class FeedJoint implements IFeedJoint {
 
     private final FeedJointType type;
 
-    private FeedConnectionId provider;
+    private ActiveJobId provider;
 
-    public FeedJoint(FeedJointKey key, FeedId ownerFeedId, ConnectionLocation subscriptionLocation, FeedJointType type,
-            FeedConnectionId provider) {
+    public FeedJoint(FeedJointKey key, ActiveId ownerFeedId, ConnectionLocation subscriptionLocation, FeedJointType type,
+            ActiveJobId provider) {
         this.key = key;
         this.ownerFeedId = ownerFeedId;
         this.type = type;
@@ -76,7 +77,7 @@ public class FeedJoint implements IFeedJoint {
         receivers.add(connectionId);
     }
 
-    public void removeReceiver(FeedConnectionId connectionId) {
+    public void removeReceiver(ActiveJobId connectionId) {
         receivers.remove(connectionId);
     }
 
@@ -121,8 +122,8 @@ public class FeedJoint implements IFeedJoint {
         connectionRequests.clear();
     }
 
-    public FeedConnectionId getReceiver(FeedConnectionId connectionId) {
-        for (FeedConnectionId cid : receivers) {
+    public ActiveJobId getReceiver(ActiveJobId connectionId) {
+        for (ActiveJobId cid : receivers) {
             if (cid.equals(connectionId)) {
                 return cid;
             }
@@ -149,7 +150,7 @@ public class FeedJoint implements IFeedJoint {
         return ((FeedJoint) o).getFeedJointKey().equals(this.key);
     }
 
-    public FeedId getOwnerFeedId() {
+    public ActiveId getOwnerFeedId() {
         return ownerFeedId;
     }
 
@@ -166,7 +167,7 @@ public class FeedJoint implements IFeedJoint {
     }
 
     @Override
-    public FeedConnectionId getProvider() {
+    public ActiveJobId getProvider() {
         return provider;
     }
 

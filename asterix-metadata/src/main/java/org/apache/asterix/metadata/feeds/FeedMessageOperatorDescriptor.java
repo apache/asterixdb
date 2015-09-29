@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.feeds;
 
-import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -34,10 +34,10 @@ public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperato
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final IFeedMessage feedMessage;
 
-    public FeedMessageOperatorDescriptor(JobSpecification spec, FeedConnectionId connectionId, IFeedMessage feedMessage) {
+    public FeedMessageOperatorDescriptor(JobSpecification spec, ActiveJobId connectionId, IFeedMessage feedMessage) {
         super(spec, 0, 1);
         this.connectionId = connectionId;
         this.feedMessage = feedMessage;

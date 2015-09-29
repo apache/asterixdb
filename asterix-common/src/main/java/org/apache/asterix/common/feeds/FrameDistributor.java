@@ -40,7 +40,7 @@ public class FrameDistributor {
     private static final long MEMORY_AVAILABLE_POLL_PERIOD = 1000; // 1 second
 
     private final IHyracksTaskContext ctx;
-    private final FeedId feedId;
+    private final ActiveId feedId;
     private final FeedRuntimeType feedRuntimeType;
     private final int partition;
     private final IFeedMemoryManager memoryManager;
@@ -73,7 +73,7 @@ public class FrameDistributor {
         INACTIVE
     }
 
-    public FrameDistributor(IHyracksTaskContext ctx, FeedId feedId, FeedRuntimeType feedRuntimeType, int partition,
+    public FrameDistributor(IHyracksTaskContext ctx, ActiveId feedId, FeedRuntimeType feedRuntimeType, int partition,
             boolean enableSynchronousTransfer, IFeedMemoryManager memoryManager, FrameTupleAccessor fta)
             throws HyracksDataException {
         this.ctx = ctx;
@@ -340,7 +340,7 @@ public class FrameDistributor {
         return registeredCollectors;
     }
 
-    public FeedId getFeedId() {
+    public ActiveId getFeedId() {
         return feedId;
     }
 

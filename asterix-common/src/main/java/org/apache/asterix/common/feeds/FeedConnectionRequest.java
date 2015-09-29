@@ -65,11 +65,11 @@ public class FeedConnectionRequest {
     /** Target dataset associated with the connection request **/
     private final String targetDataset;
 
-    private final FeedId receivingFeedId;
+    private final ActiveId receivingFeedId;
 
     public FeedConnectionRequest(FeedJointKey feedPointKey, ConnectionLocation connectionLocation,
             List<String> functionsToApply, String targetDataset, String policy, Map<String, String> policyParameters,
-            FeedId receivingFeedId) {
+            ActiveId receivingFeedId) {
         this.feedJointKey = feedPointKey;
         this.connectionLocation = connectionLocation;
         this.functionsToApply = functionsToApply;
@@ -104,7 +104,7 @@ public class FeedConnectionRequest {
         return connectionLocation;
     }
 
-    public FeedId getReceivingFeedId() {
+    public ActiveId getReceivingFeedId() {
         return receivingFeedId;
     }
 

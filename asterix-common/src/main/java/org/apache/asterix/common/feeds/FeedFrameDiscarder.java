@@ -31,13 +31,13 @@ public class FeedFrameDiscarder {
 
     private final IHyracksTaskContext ctx;
     private final FeedRuntimeInputHandler inputHandler;
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
     private final FeedRuntimeId runtimeId;
     private final FeedPolicyAccessor policyAccessor;
     private final float maxFractionDiscard;
     private int nDiscarded;
 
-    public FeedFrameDiscarder(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId, 
+    public FeedFrameDiscarder(IHyracksTaskContext ctx, ActiveJobId connectionId, FeedRuntimeId runtimeId, 
             FeedPolicyAccessor policyAccessor, FeedRuntimeInputHandler inputHandler) throws IOException {
         this.ctx = ctx;
         this.connectionId = connectionId;

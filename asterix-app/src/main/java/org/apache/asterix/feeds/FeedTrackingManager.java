@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedTupleCommitAckMessage;
 import org.apache.asterix.common.feeds.FeedTupleCommitResponseMessage;
@@ -100,7 +101,7 @@ public class FeedTrackingManager implements IFeedTrackingManager {
         }
     }
 
-    public synchronized void disableTracking(FeedConnectionId connectionId) {
+    public synchronized void disableTracking(ActiveJobId connectionId) {
         ackHistory.remove(connectionId);
         maxBaseAcked.remove(connectionId);
     }
@@ -129,11 +130,11 @@ public class FeedTrackingManager implements IFeedTrackingManager {
     }
 
     private static class AckId {
-        private FeedConnectionId connectionId;
+        private ActiveJobId connectionId;
         private int intakePartition;
         private int base;
 
-        public AckId(FeedConnectionId connectionId, int intakePartition, int base) {
+        public AckId(ActiveJobId connectionId, int intakePartition, int base) {
             this.connectionId = connectionId;
             this.intakePartition = intakePartition;
             this.base = base;
@@ -162,7 +163,7 @@ public class FeedTrackingManager implements IFeedTrackingManager {
             return toString().hashCode();
         }
 
-        public FeedConnectionId getConnectionId() {
+        public ActiveJobId getConnectionId() {
             return connectionId;
         }
 
@@ -177,7 +178,7 @@ public class FeedTrackingManager implements IFeedTrackingManager {
     }
 
     @Override
-    public void disableAcking(FeedConnectionId connectionId) {
+    public void disableAcking(ActiveJobId connectionId) {
         ackHistory.remove(connectionId);
         maxBaseAcked.remove(connectionId);
         if (LOGGER.isLoggable(Level.WARNING)) {
