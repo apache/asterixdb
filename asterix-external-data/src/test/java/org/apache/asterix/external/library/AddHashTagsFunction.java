@@ -51,7 +51,10 @@ public class AddHashTagsFunction implements IExternalScalarFunction {
 
         if (latitude != null && longitude != null) {
             location.setValue(latitude.getValue(), longitude.getValue());
+        } else {
+            location.setValue(0, 0);
         }
+
         String[] tokens = text.getValue().split(" ");
         for (String tk : tokens) {
             if (tk.startsWith("#")) {

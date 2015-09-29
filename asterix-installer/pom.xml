@@ -271,6 +271,13 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-external-data</artifactId>
+			<version>0.8.7-SNAPSHOT</version>
+			<type>zip</type>
+			<classifier>binary-assembly</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-test-framework</artifactId>
 			<version>0.8.7-SNAPSHOT</version>
 			<scope>test</scope>

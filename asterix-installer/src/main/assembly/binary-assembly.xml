@@ -124,5 +124,13 @@
 			<unpack>false</unpack>
 			<useTransitiveDependencies>false</useTransitiveDependencies>
 		</dependencySet>
+		<dependencySet>
+			<outputDirectory>extlibs</outputDirectory>
+			<includes>
+				<include>asterix-external-data:*:zip</include>
+			</includes>
+			<unpack>false</unpack>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+		</dependencySet>
 	</dependencySets>
  </assembly>

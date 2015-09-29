@@ -30,14 +30,14 @@ makes a separate request each time to receive data.
 AsterixDB currently provides built-in adaptors for several popular
 data sources such as Twitter, CNN, and RSS feeds. AsterixDB additionally
 provides a generic socket-based adaptor that can be used
-to ingest data that is directed at a prescribed socket. 
+to ingest data that is directed at a prescribed socket.
 
 
 In this tutorial, we shall describe building two example data ingestion pipelines that cover the popular scenario of ingesting data from (a) Twitter and (b) RSS Feed source.
 
 ####Ingesting Twitter Stream 
 We shall use the built-in push-based Twitter adaptor.
-As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM) and the AsterixDB Query Language (AQL). Given below are the type definition in AQL that create a Tweet datatype which is representative of a real tweet as obtained from Twitter.  
+As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM) and the AsterixDB Query Language (AQL). Given below are the type definition in AQL that create a Tweet datatype which is representative of a real tweet as obtained from Twitter.
 
         create dataverse feeds;
         use dataverse feeds;
@@ -48,7 +48,7 @@ As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM) 
             friends_count: int32,
             status_count: int32,
             name: string,
-            followers_count: string
+            followers_count: int32
         };
         create type Tweet if not exists as open{
             id: string,
@@ -59,15 +59,15 @@ As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM) 
             message_text:string
         };
 
-	    create dataset Tweets (Tweet)
+        create dataset Tweets (Tweet)
         primary key id;
 
-We also create a dataset that we shall use to persist the tweets in AsterixDB. 
-Next we make use of the `create feed` AQL statement to define our example data feed. 
+We also create a dataset that we shall use to persist the tweets in AsterixDB.
+Next we make use of the `create feed` AQL statement to define our example data feed.
 
 #####Using the "push_twitter" feed adapter#####
 The "push_twitter" adaptor requires setting up an application account with Twitter. To retrieve
-tweets, Twitter requires registering an application with Twitter. Registration involves providing a name and a brief description for the application. Each application has an associated OAuth authentication credential that includes OAuth keys and tokens. Accessing the 
+tweets, Twitter requires registering an application with Twitter. Registration involves providing a name and a brief description for the application. Each application has an associated OAuth authentication credential that includes OAuth keys and tokens. Accessing the
 Twitter API requires providing the following.
 1. Consumer Key (API Key)
 2. Consumer Secret (API Secret)
@@ -75,21 +75,21 @@ Twitter API requires providing the following.
 4. Access Token Secret
 
 The "push_twitter" adaptor takes as configuration the above mentioned
-parameters. End users are required to obtain the above authentication credentials prior to using the "push_twitter" adaptor. For further information on obtaining OAuth keys and tokens and registering an application with Twitter, please visit http://apps.twitter.com 
+parameters. End users are required to obtain the above authentication credentials prior to using the "push_twitter" adaptor. For further information on obtaining OAuth keys and tokens and registering an application with Twitter, please visit http://apps.twitter.com
 
-Given below is an example AQL statement that creates a feed called "TwitterFeed" by using the 
-"push_twitter" adaptor. 
+Given below is an example AQL statement that creates a feed called "TwitterFeed" by using the
+"push_twitter" adaptor.
 
         use dataverse feeds;
 
         create feed TwitterFeed if not exists using "push_twitter"
         (("type-name"="Tweet"),
-         ("consumer.key"="************"),  
+         ("consumer.key"="************"),
          ("consumer.secret"="**************"),
-         ("access.token"="**********"),  
+         ("access.token"="**********"),
          ("access.token.secret"="*************"));
 
-It is required that the above authentication parameters are provided valid values. 
+It is required that the above authentication parameters are provided valid values.
 Note that the `create feed` statement does not initiate the flow of data from Twitter into our AsterixDB instance. Instead, the `create feed` statement only results in registering the feed with AsterixDB. The flow of data along a feed is initiated when it is connected
 to a target dataset using the connect feed statement (which we shall revisit later).
 
@@ -119,7 +119,7 @@ The `connect feed` statement above directs AsterixDB to persist
 the `TwitterFeed` feed in the `Tweets` dataset.
 If it is required (by the high-level application) to also retain the raw
 tweets obtained from Twitter, the end user may additionally choose
-to connect TwitterFeed to a different dataset. 
+to connect TwitterFeed to a different dataset.
 
 Let the feed run for a minute, then run the following query to see the
 latest tweets that are stored into the data set.
@@ -141,36 +141,36 @@ impact other connected feeds in the lineage.
 
 ####Ingesting an RSS Feed
 
-RSS (Rich Site Summary), originally RDF Site Summary and often called Really Simple Syndication, uses a family of standard web feed formats to publish frequently updated information: blog entries, news headlines, audio, video. An RSS document (called "feed", "web feed", or "channel") includes full or summarized text, and metadata, like publishing date and author's name. RSS feeds enable publishers to syndicate data automatically. 
+RSS (Rich Site Summary), originally RDF Site Summary and often called Really Simple Syndication, uses a family of standard web feed formats to publish frequently updated information: blog entries, news headlines, audio, video. An RSS document (called "feed", "web feed", or "channel") includes full or summarized text, and metadata, like publishing date and author's name. RSS feeds enable publishers to syndicate data automatically.
 
 
 #####Using the "rss_feed" feed adapter#####
-AsterixDB provides a built-in feed adaptor that allows retrieving data given a collection of RSS end point URLs. As observed in the case of ingesting tweets, it is required to model an RSS data item using AQL.  
+AsterixDB provides a built-in feed adaptor that allows retrieving data given a collection of RSS end point URLs. As observed in the case of ingesting tweets, it is required to model an RSS data item using AQL.
 
         use dataverse feeds;
 
         create type Rss if not exists as open {
-        	id: string,
-        	title: string,
-        	description: string,
-        	link: string
+            id: string,
+            title: string,
+            description: string,
+            link: string
         };
 
         create dataset RssDataset (Rss)
-		primary key id; 
+        primary key id;
 
-Next, we define an RSS feed using our built-in adaptor "rss_feed". 
+Next, we define an RSS feed using our built-in adaptor "rss_feed".
 
         use dataverse feeds;
 
-        create feed my_feed using 
-	    rss_feed (
-	       ("type-name"="Rss"),
-	       ("url"="http://rss.cnn.com/rss/edition.rss")
-		);
+        create feed my_feed using
+        rss_feed (
+           ("type-name"="Rss"),
+           ("url"="http://rss.cnn.com/rss/edition.rss")
+        );
 
-In the above definition, the configuration parameter "url" can be a comma-separated list that reflects a collection of RSS URLs, where each URL corresponds to an RSS endpoint or a RSS feed. 
-The "rss_adaptor" retrieves data from each of the specified RSS URLs (comma separated values) in parallel. 
+In the above definition, the configuration parameter "url" can be a comma-separated list that reflects a collection of RSS URLs, where each URL corresponds to an RSS endpoint or a RSS feed.
+The "rss_adaptor" retrieves data from each of the specified RSS URLs (comma separated values) in parallel.
 
 The following statements connect the feed into the `RssDataset`:
 
@@ -221,15 +221,15 @@ appropriate value(s) for the policy parameter(s) from the table below.
 
 - *excess.records.spill*: Set to true if records that cannot be processed by an operator for lack of resources (referred to as excess records hereafter) should be persisted to the local disk for deferred processing. (Default: false)
 
-- *excess.records.discard*: Set to true if excess records should be discarded. (Default: false) 
+- *excess.records.discard*: Set to true if excess records should be discarded. (Default: false)
 
-- *excess.records.throttle*: Set to true if rate of arrival of records is required to be reduced in an adaptive manner to prevent having any excess records (Default: false) 
+- *excess.records.throttle*: Set to true if rate of arrival of records is required to be reduced in an adaptive manner to prevent having any excess records (Default: false)
 
-- *excess.records.elastic*: Set to true if the system should attempt to resolve resource bottlenecks by re-structuring and/or rescheduling the feed ingestion pipeline. (Default: false) 
+- *excess.records.elastic*: Set to true if the system should attempt to resolve resource bottlenecks by re-structuring and/or rescheduling the feed ingestion pipeline. (Default: false)
 
-- *recover.soft.failure*:  Set to true if the feed must attempt to survive any runtime exception. A false value permits an early termination of a feed in such an event. (Default: true) 
+- *recover.soft.failure*:  Set to true if the feed must attempt to survive any runtime exception. A false value permits an early termination of a feed in such an event. (Default: true)
 
-- *recover.soft.failure*:  Set to true if the feed must attempt to survive a hardware failures (loss of AsterixDB node(s)). A false value permits the early termination of a feed in the event of a hardware failure (Default: false) 
+- *recover.soft.failure*:  Set to true if the feed must attempt to survive a hardware failures (loss of AsterixDB node(s)). A false value permits the early termination of a feed in the event of a hardware failure (Default: false)
 
 Note that the end user may choose to form a custom policy.  For example,
 it is possible in AsterixDB to create a custom policy that spills excess
@@ -244,5 +244,3 @@ time, which is independent from other related feeds in the hierarchy.
 
         connect feed TwitterFeed to dataset Tweets
         using policy Basic ;
-
-

@@ -18,11 +18,6 @@
  */
 package org.apache.asterix.external.library.java;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ACircleSerializerDeserializer;
@@ -86,6 +81,13 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public class JObjectAccessors {
 
@@ -224,22 +226,27 @@ public class JObjectAccessors {
     }
 
     public static class JStringAccessor implements IJObjectAccessor {
+        private final ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
 
         @Override
         public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
-            byte[] b = pointable.getByteArray();
-            int s = pointable.getStartOffset();
-            int l = pointable.getLength();
-
-            String v = null;
-            v = AStringSerializerDeserializer.INSTANCE.deserialize(
-                    new DataInputStream(new ByteArrayInputStream(b, s+1, l-1))).getStringValue();
-            //v = new String(b, s+1, l, "UTF-8");
-            JObjectUtil.getNormalizedString(v);
-
             IJObject jObject = objectPool.allocate(BuiltinType.ASTRING);
-            ((JString) jObject).setValue(JObjectUtil.getNormalizedString(v));
+
+            try {
+                byte byteArray[] = pointable.getByteArray();
+                int len = pointable.getLength()-3;
+                int off = pointable.getStartOffset()+3;
+                baaos.reset();
+                if(off >= 0 && off <= byteArray.length && len >= 0 && off + len - byteArray.length <= 0) {
+                    baaos.write(byteArray, off, len);
+                    ((JString) jObject).setValue(JObjectUtil.getNormalizedString(baaos.toString("UTF-8")));
+                } else {
+                    ((JString) jObject).setValue("");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return jObject;
         }
     }

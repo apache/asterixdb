@@ -86,6 +86,7 @@
       <item name="AQL Support of Similarity Queries" href="aql/similarity.html"/>
       <item name="Accessing External Data" href="aql/externaldata.html"/>
       <item name="Support for Data Ingestion in AsterixDB" href="feeds/tutorial.html" />
+      <item name="Support for User Defined Functions in AsterixDB" href="udf.html" />
       <item name="Filter-Based LSM Index Acceleration" href="aql/filters.html"/>
       <item name="HTTP API to AsterixDB" href="api.html"/>
     </menu>

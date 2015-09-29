@@ -19,14 +19,20 @@
 package org.apache.asterix.external.util;
 
 import org.apache.asterix.external.library.java.JObjectUtil;
-import twitter4j.Status;
-import twitter4j.User;
+import org.apache.asterix.external.util.Datatypes.Tweet;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableRecord;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
+import twitter4j.Status;
+import twitter4j.User;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TweetProcessor {
 
@@ -35,10 +41,15 @@ public class TweetProcessor {
     private AMutableRecord mutableRecord;
     private AMutableRecord mutableUser;
 
+    private final Map<String, Integer> userFieldNameMap = new HashMap<>();
+    private final Map<String, Integer> tweetFieldNameMap = new HashMap<>();
+
+
     public TweetProcessor(ARecordType recordType) {
+        initFieldNames(recordType);
         mutableUserFields = new IAObject[] { new AMutableString(null), new AMutableString(null), new AMutableInt32(0),
                 new AMutableInt32(0), new AMutableString(null), new AMutableInt32(0) };
-        mutableUser = new AMutableRecord((ARecordType) recordType.getFieldTypes()[1], mutableUserFields);
+        mutableUser = new AMutableRecord((ARecordType) recordType.getFieldTypes()[tweetFieldNameMap.get(Tweet.USER)], mutableUserFields);
 
         mutableTweetFields = new IAObject[] { new AMutableString(null), mutableUser, new AMutableDouble(0),
                 new AMutableDouble(0), new AMutableString(null), new AMutableString(null) };
@@ -46,32 +57,56 @@ public class TweetProcessor {
 
     }
 
+    // Initialize the hashmap values for the field names and positions
+    private void initFieldNames(ARecordType recordType) {
+        String tweetFields[] = recordType.getFieldNames();
+        for (int i=0; i<tweetFields.length; i++) {
+            tweetFieldNameMap.put(tweetFields[i], i);
+            if (tweetFields[i].equals(Tweet.USER)) {
+                IAType fieldType = recordType.getFieldTypes()[i];
+                if (fieldType.getTypeTag() == ATypeTag.RECORD) {
+                    String userFields[]  = ((ARecordType)fieldType).getFieldNames();
+                    for (int j=0; j<userFields.length; j++) {
+                        userFieldNameMap.put(userFields[j], j);
+                    }
+                }
+
+            }
+        }
+    }
+
+
     public AMutableRecord processNextTweet(Status tweet) {
         User user = tweet.getUser();
-        ((AMutableString) mutableUserFields[0]).setValue(JObjectUtil.getNormalizedString(user.getScreenName()));
-        ((AMutableString) mutableUserFields[1]).setValue(JObjectUtil.getNormalizedString(user.getLang()));
-        ((AMutableInt32) mutableUserFields[2]).setValue(user.getFriendsCount());
-        ((AMutableInt32) mutableUserFields[3]).setValue(user.getStatusesCount());
-        ((AMutableString) mutableUserFields[4]).setValue(JObjectUtil.getNormalizedString(user.getName()));
-        ((AMutableInt32) mutableUserFields[5]).setValue(user.getFollowersCount());
 
-        ((AMutableString) mutableTweetFields[0]).setValue(tweet.getId() + "");
+        // Tweet user data
+        ((AMutableString) mutableUserFields[userFieldNameMap.get(Tweet.SCREEN_NAME)]).setValue(JObjectUtil.getNormalizedString(user.getScreenName()));
+        ((AMutableString) mutableUserFields[userFieldNameMap.get(Tweet.LANGUAGE)]).setValue(JObjectUtil.getNormalizedString(user.getLang()));
+        ((AMutableInt32) mutableUserFields[userFieldNameMap.get(Tweet.FRIENDS_COUNT)]).setValue(user.getFriendsCount());
+        ((AMutableInt32) mutableUserFields[userFieldNameMap.get(Tweet.STATUS_COUNT)]).setValue(user.getStatusesCount());
+        ((AMutableString) mutableUserFields[userFieldNameMap.get(Tweet.NAME)]).setValue(JObjectUtil.getNormalizedString(user.getName()));
+        ((AMutableInt32) mutableUserFields[userFieldNameMap.get(Tweet.FOLLOWERS_COUNT)]).setValue(user.getFollowersCount());
 
-        for (int i = 0; i < 6; i++) {
-            ((AMutableRecord) mutableTweetFields[1]).setValueAtPos(i, mutableUserFields[i]);
+
+        // Tweet data
+        ((AMutableString) mutableTweetFields[tweetFieldNameMap.get(Tweet.ID)]).setValue(String.valueOf(tweet.getId()));
+
+        int userPos = tweetFieldNameMap.get(Tweet.USER);
+        for (int i = 0; i < mutableUserFields.length; i++) {
+            ((AMutableRecord) mutableTweetFields[userPos]).setValueAtPos(i, mutableUserFields[i]);
         }
         if (tweet.getGeoLocation() != null) {
-            ((AMutableDouble) mutableTweetFields[2]).setValue(tweet.getGeoLocation().getLatitude());
-            ((AMutableDouble) mutableTweetFields[3]).setValue(tweet.getGeoLocation().getLongitude());
+            ((AMutableDouble) mutableTweetFields[tweetFieldNameMap.get(Tweet.LATITUDE)]).setValue(tweet.getGeoLocation().getLatitude());
+            ((AMutableDouble) mutableTweetFields[tweetFieldNameMap.get(Tweet.LONGITUDE)]).setValue(tweet.getGeoLocation().getLongitude());
         } else {
-            ((AMutableDouble) mutableTweetFields[2]).setValue(0);
-            ((AMutableDouble) mutableTweetFields[3]).setValue(0);
+            ((AMutableDouble) mutableTweetFields[tweetFieldNameMap.get(Tweet.LATITUDE)]).setValue(0);
+            ((AMutableDouble) mutableTweetFields[tweetFieldNameMap.get(Tweet.LONGITUDE)]).setValue(0);
         }
-        ((AMutableString) mutableTweetFields[4]).setValue(JObjectUtil.getNormalizedString(
+        ((AMutableString) mutableTweetFields[tweetFieldNameMap.get(Tweet.CREATED_AT)]).setValue(JObjectUtil.getNormalizedString(
                 tweet.getCreatedAt().toString()));
-        ((AMutableString) mutableTweetFields[5]).setValue(JObjectUtil.getNormalizedString(tweet.getText()));
+        ((AMutableString) mutableTweetFields[tweetFieldNameMap.get(Tweet.MESSAGE)]).setValue(JObjectUtil.getNormalizedString(tweet.getText()));
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < mutableTweetFields.length; i++) {
             mutableRecord.setValueAtPos(i, mutableTweetFields[i]);
         }
 
