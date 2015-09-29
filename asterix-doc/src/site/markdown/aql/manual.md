@@ -548,7 +548,7 @@ The following example creates a dataverse named TinySocial.
     RecordTypeDef        ::= ( "closed" | "open" )? "{" ( RecordField ( "," RecordField )* )? "}"
     RecordField          ::= Identifier ":" ( TypeExpr ) ( "?" )?
     NestedField          ::= Identifier ( "." Identifier )*
-    OpenField            ::= NestedField ( ":" TypeReference )?
+    IndexField           ::= NestedField ( ":" TypeReference )?
     TypeReference        ::= Identifier
     OrderedListTypeDef   ::= "[" ( TypeExpr ) "]"
     UnorderedListTypeDef ::= "{{" ( TypeExpr ) "}}"
@@ -675,7 +675,7 @@ the URL and path needed to locate the data in HDFS and a description of the data
 #### Indices
 
     IndexSpecification ::= "index" Identifier IfNotExists "on" QualifiedName
-                           "(" ( OpenField ) ( "," OpenField )* ")" ( "type" IndexType )? ( "enforced" )?
+                           "(" ( IndexField ) ( "," IndexField )* ")" ( "type" IndexType )? ( "enforced" )?
     IndexType          ::= "btree"
                          | "rtree"
                          | "keyword"
@@ -684,11 +684,11 @@ the URL and path needed to locate the data in HDFS and a description of the data
 The create index statement creates a secondary index on one or more fields of a specified dataset.
 Supported index types include `btree` for totally ordered datatypes,
 `rtree` for spatial data, and `keyword` and `ngram` for textual (string) data.
-Index could be created on arbitrary nested fields by providing valid path expression as an indexed field identifier.
+An index can be created on a nested field (or fields) by providing a valid path expression as an index field identifier.
 An index field is not required to be part of the datatype associated with a dataset if that datatype is declared as
-open, field type is provided along with it's type and `enforced` keyword is specified in the end of index definition.
-`Enforcing` an open field will introduce a load-time check, which will make sure that the actual type of an indexed
-field (if such field exists in the record) matches the specified field type.
+open and the field's type is provided along with its type and the `enforced` keyword is specified in the end of index definition.
+`Enforcing` an open field will introduce a check that will make sure that the actual type of an indexed
+field (if the field exists in the record) always matches this specified (open) field type.
 
 The following example creates a btree index called fbAuthorIdx on the author-id field of the FacebookMessages dataset.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the author-id field.
