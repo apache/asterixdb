@@ -309,15 +309,6 @@
             <id>algebricks-snapshots</id>
             <url>http://obelix.ics.uci.edu/nexus/content/repositories/algebricks-snapshots/</url>
         </repository>
-        <repository>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
-            <id>apache-staging</id>
-            <url>https://repository.apache.org/content/repositories/orgapacheasterix-1005/</url>
-        </repository>
     </repositories>
     <dependencyManagement>
         <dependencies>
