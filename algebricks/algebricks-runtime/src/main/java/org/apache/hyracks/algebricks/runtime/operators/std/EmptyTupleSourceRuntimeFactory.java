@@ -49,13 +49,15 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
             @Override
             public void open() throws HyracksDataException {
                 writer.open();
-                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    throw new IllegalStateException();
+                try {
+                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                        throw new IllegalStateException();
+                    }
+                    appender.flush(writer, true);
+                } finally {
+                    writer.close();
                 }
-                appender.flush(writer, true);
-                writer.close();
             }
         };
     }
-
 }
