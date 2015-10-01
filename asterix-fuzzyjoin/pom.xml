@@ -3,11 +3,11 @@
   <parent>
           <artifactId>asterix</artifactId>
           <groupId>org.apache.asterix</groupId>
-          <version>0.8.7-SNAPSHOT</version>
+          <version>0.8.7-incubating</version>
   </parent>
   <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-fuzzyjoin</artifactId>
-  <version>0.8.7-SNAPSHOT</version>
+  <version>0.8.7-incubating</version>
 
   <licenses>
     <license>
