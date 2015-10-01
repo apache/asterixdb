@@ -353,7 +353,7 @@ FLWOR is an acronym that is short for _for_-_let_-_where_-_order by_-_return_,
 naming five of the most frequently used clauses from the syntax of a full AQL query.
 AQL also includes _group by_ and _limit_ clauses, as you will see shortly.
 Roughly speaking, for SQL afficiandos, the _for_ clause in AQL is like the _from_ clause in SQL,
-the _return_ clause in AQL is like the _return_ clause in SQL (but appears at the end instead of
+the _return_ clause in AQL is like the _select_ clause in SQL (but appears at the end instead of
 the beginning of a query), the _let_ clause in AQL is like SQL's _with_ clause, and the _where_
 and _order by_ clauses in both languages are similar.
 
@@ -374,10 +374,10 @@ Suppose the user we want is the user whose id is 8:
         where $user.id = 8
         select $user;
 
-The query's _for_ clause  binds the variable `$user` incrementally to the data instances residing in
+The query's _from_ clause  binds the variable `$user` incrementally to the data instances residing in
 the dataset named FacebookUsers.
 Its _where_ clause selects only those bindings having a user id of interest, filtering out the rest.
-The _return_ clause returns the (entire) data instance for each binding that satisfies the predicate.
+The _select_ clause returns the (entire) data instance for each binding that satisfies the predicate.
 Since this dataset is indexed on user id (its primary key), this query will be done via a quick index lookup.
 
 The expected result for our sample data is as follows:
@@ -510,7 +510,7 @@ The query result for our sample data in this case is:
         { "uname": "SuzannaTillson", "message": " like iphone the voicemail-service is awesome" }
 
 
-(It is worth knowing, with respect to influencing AsterixDB's query evaluation, that nested _for_
+(It is worth knowing, with respect to influencing AsterixDB's query evaluation, that nested _from_
 clauses---a.k.a. joins--- are currently evaluated with the "outer" clause probing the data of the "inner"
 clause.)
 
@@ -707,14 +707,14 @@ For every Twitter user, the following group-by/aggregate query counts the number
         "count": count($t)
         };
 
-The _for_ clause incrementally binds $t to tweets, and the _group by_ clause groups the tweets by its
+The _from_ clause incrementally binds $t to tweets, and the _group by_ clause groups the tweets by its
 issuer's Twitter screen-name.
 Unlike SQL, where data is tabular---flat---the data model underlying AQL allows for nesting.
-Thus, following the _group by_ clause, the _return_ clause in this query sees a sequence of $t groups,
+Thus, following the _group by_ clause, the _select_ clause in this query sees a sequence of $t groups,
 with each such group having an associated $uid variable value (i.e., the tweeting user's screen name).
-In the context of the return clause, due to "... with $t ...", $uid is bound to the tweeter's id and $t
+In the context of the _select_ clause, due to "... keeping $t ...", $uid is bound to the tweeter's id and $t
 is bound to the _set_ of tweets issued by that tweeter.
-The return clause constructs a result record containing the tweeter's user id and the count of the items
+The _select_ clause constructs a result record containing the tweeter's user id and the count of the items
 in the associated tweet set.
 The query result will contain one such record per screen name.
 This query also illustrates another feature of AQL; notice that each user's screen name is accessed via a
@@ -769,7 +769,7 @@ The following AQL  query returns the top 3 Twitter users based on who has issued
 
         from $t in dataset TweetMessages
         group by $uid := $t.user.screen-name keeping $t
-        let $c := count($t)
+        with $c := count($t)
         order by $c desc
         limit 3
         select {
