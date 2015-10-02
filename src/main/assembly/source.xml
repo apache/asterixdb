@@ -53,6 +53,7 @@
         <include>**/*.txt</include>
         <include>**/part-*</include>
         <include>**/*.cleaned</include>
+        <include>**/*.md</include>
       </includes>
       <excludes>
         <exclude>**/${project.build.directory}/**</exclude>
