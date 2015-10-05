@@ -54,7 +54,9 @@
         <include>**/part-*</include>
         <include>**/*.cleaned</include>
         <include>**/*.md</include>
-        <include>**/schema</include>
+        <include>**/schemas</include>
+        <include>**/.hcli</include>
+        <include>**/.properties</include>
         <include>**/*.sh</include>
       </includes>
       <excludes>
