@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.7-incubating</version>
+		<version>0.8.8-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-transactions</artifactId>
 
@@ -49,7 +49,7 @@
             <plugin>
                 <groupId>org.apache.asterix</groupId>
                 <artifactId>record-manager-generator-maven-plugin</artifactId>
-                <version>0.8.7-incubating</version>
+                <version>0.8.8-SNAPSHOT</version>
                 <configuration>
                     <debug>false</debug>
                     <inputFiles>
@@ -112,7 +112,7 @@
                 <dependency>
                         <groupId>org.apache.asterix</groupId>
                         <artifactId>asterix-common</artifactId>
-                        <version>0.8.7-incubating</version>
+                        <version>0.8.8-SNAPSHOT</version>
                         <type>jar</type>
                         <scope>compile</scope>
                 </dependency>
