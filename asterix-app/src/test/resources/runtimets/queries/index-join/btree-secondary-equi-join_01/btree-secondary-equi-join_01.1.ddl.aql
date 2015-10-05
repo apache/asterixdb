@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
- *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint
+ /*
+ * Description    : Equi joins two datasets, DBLP and CSX, based on their authors.
+ *                  DBLP has a secondary btree index on authors, and given the 'indexnl' hint
  *                  we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */

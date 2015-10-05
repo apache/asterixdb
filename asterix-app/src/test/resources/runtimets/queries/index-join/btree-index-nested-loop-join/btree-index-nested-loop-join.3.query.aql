@@ -16,14 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
- *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint 
- *                  we expect the join to be transformed into an indexed nested-loop join.
+ /*
+ * Description    : Index Nested Loop Join on three datasets. Two index nested loop joins should be nested properly.
  * Success        : Yes
  */
+ use dataverse test;
 
-use dataverse test;
-
-create index title_index on DBLP(authors);
-
+for $tu in dataset TwitterUsers
+for $tm in dataset TweetMessages
+for $r in dataset results
+    where
+       $r.vertexid /*+ indexnl */ = $tm.tweetid
+       and
+       $tm.user  /*+ indexnl */ = $tu.screen-name
+    order by $tm.tweetid
+	return $tm.tweetid;

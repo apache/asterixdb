@@ -513,30 +513,63 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             // Try to match variables from optFuncExpr to datasourcescan if not
             // already matched in assigns.
             List<LogicalVariable> dsVarList = subTree.getDataSourceVariables();
-            for (int varIndex = 0; varIndex < dsVarList.size(); varIndex++) {
-                LogicalVariable var = dsVarList.get(varIndex);
-                int funcVarIndex = optFuncExpr.findLogicalVar(var);
-                // No matching var in optFuncExpr.
-                if (funcVarIndex == -1) {
-                    continue;
+
+            matchVarsFromOptFuncExprToDataSourceScan(optFuncExpr, optFuncExprIndex, datasetIndexes, dsVarList, subTree,
+                    analysisCtx, context, false);
+
+            // If there is one more datasource in the subtree, we need to scan that datasource, too.
+            List<LogicalVariable> additionalDsVarList = null;
+
+            if (subTree.hasIxJoinOuterAdditionalDataSource()) {
+                additionalDsVarList = new ArrayList<LogicalVariable>();
+                for (int i = 0; i < subTree.ixJoinOuterAdditionalDataSourceRefs.size(); i++) {
+                    additionalDsVarList.addAll(subTree.getIxJoinOuterAdditionalDataSourceVariables(i));
                 }
-                // The variable value is one of the partitioning fields.
-                List<String> fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
-                IAType fieldType = (IAType) context.getOutputTypeEnvironment(subTree.dataSourceRef.getValue())
-                        .getVarType(var);
-                // Set the fieldName in the corresponding matched function
-                // expression, and remember matching subtree.
-                optFuncExpr.setFieldName(funcVarIndex, fieldName);
-                optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
-                optFuncExpr.setSourceVar(funcVarIndex, var);
-                optFuncExpr.setLogicalExpr(funcVarIndex, new VariableReferenceExpression(var));
-                setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
-                if (subTree.hasDataSourceScan()) {
-                    fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, funcVarIndex,
-                            subTree, analysisCtx);
-                }
+
+                matchVarsFromOptFuncExprToDataSourceScan(optFuncExpr, optFuncExprIndex, datasetIndexes,
+                        additionalDsVarList, subTree, analysisCtx, context, true);
+
             }
+
             optFuncExprIndex++;
+        }
+    }
+
+    private void matchVarsFromOptFuncExprToDataSourceScan(IOptimizableFuncExpr optFuncExpr, int optFuncExprIndex,
+            List<Index> datasetIndexes, List<LogicalVariable> dsVarList, OptimizableOperatorSubTree subTree,
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean fromAdditionalDataSource)
+            throws AlgebricksException {
+        for (int varIndex = 0; varIndex < dsVarList.size(); varIndex++) {
+            LogicalVariable var = dsVarList.get(varIndex);
+            int funcVarIndex = optFuncExpr.findLogicalVar(var);
+            // No matching var in optFuncExpr.
+            if (funcVarIndex == -1) {
+                continue;
+            }
+            // The variable value is one of the partitioning fields.
+            List<String> fieldName = null;
+            IAType fieldType = null;
+
+            if (!fromAdditionalDataSource) {
+                fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
+                fieldType = (IAType) context.getOutputTypeEnvironment(subTree.dataSourceRef.getValue()).getVarType(var);
+            } else {
+                fieldName = DatasetUtils.getPartitioningKeys(subTree.ixJoinOuterAdditionalDatasets.get(varIndex)).get(
+                        varIndex);
+                fieldType = (IAType) context.getOutputTypeEnvironment(
+                        subTree.ixJoinOuterAdditionalDataSourceRefs.get(varIndex).getValue()).getVarType(var);
+            }
+            // Set the fieldName in the corresponding matched function
+            // expression, and remember matching subtree.
+            optFuncExpr.setFieldName(funcVarIndex, fieldName);
+            optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
+            optFuncExpr.setSourceVar(funcVarIndex, var);
+            optFuncExpr.setLogicalExpr(funcVarIndex, new VariableReferenceExpression(var));
+            setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
+            if (subTree.hasDataSourceScan()) {
+                fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, funcVarIndex,
+                        subTree, analysisCtx);
+            }
         }
     }
 
@@ -552,7 +585,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Returns the field name corresponding to the assigned variable at
      * varIndex. Returns null if the expr at varIndex does not yield to a field
      * access function after following a set of allowed functions.
-     * 
+     *
      * @throws AlgebricksException
      */
     protected List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr,
@@ -663,7 +696,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         parentFuncExpr);
 
                 if (parentFieldNames == null) {
-                    //Nested assign was not a field access. 
+                    //Nested assign was not a field access.
                     //We will not use index
                     return null;
                 }

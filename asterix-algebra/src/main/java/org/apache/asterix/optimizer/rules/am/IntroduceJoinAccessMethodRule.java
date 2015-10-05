@@ -23,10 +23,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -49,7 +48,9 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * Matches the following operator pattern:
  * (join) <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
  * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan | unnest-map)
- * The order of the join inputs does not matter.
+ * The order of the join inputs matters (left-outer relation, right-inner relation).
+ * This rule tries to utilize an index on the inner relation first.
+ * If that's not possible, it tries to use an index on the outer relation.
  * Replaces the above pattern with the following simplified plan:
  * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (datasource scan | unnest-map)
  * The sort is optional, and some access methods may choose not to sort.
@@ -134,27 +135,52 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         }
         pruneIndexCandidates(analyzedAMs);
 
-        //Remove possibly chosen indexes from left Tree
-        if (isLeftOuterJoin) {
-            Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
-            // Check applicability of indexes by access method type.
-            while (amIt.hasNext()) {
-                Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
-                AccessMethodAnalysisContext amCtx = entry.getValue();
-                Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = amCtx.indexExprsAndVars.entrySet()
-                        .iterator();
+        // Prioritize the order of index that will be applied. If the right subtree (inner branch) has indexes,
+        // those indexes will be used.
+        String innerDataset = null;
+        if (rightSubTree.dataset != null) {
+            innerDataset = rightSubTree.dataset.getDatasetName();
+        }
+
+        Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
+        while (amIt.hasNext()) {
+            Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
+            AccessMethodAnalysisContext amCtx = entry.getValue();
+            Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt = amCtx.indexExprsAndVars.entrySet()
+                    .iterator();
+
+            // Check whether we can choose the indexes from the inner relations (removing indexes from the outer relations)
+            int totalIndexCount = 0;
+            int indexCountFromTheOuterBranch = 0;
+
+            while (indexIt.hasNext()) {
+                Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
+
+                Index chosenIndex = indexEntry.getKey();
+                //Count possible indexes that can be removed from left Tree (outer branch)
+                if (!chosenIndex.getDatasetName().equals(innerDataset)) {
+                    indexCountFromTheOuterBranch++;
+                }
+                totalIndexCount++;
+            }
+
+            if (indexCountFromTheOuterBranch < totalIndexCount) {
+                indexIt = amCtx.indexExprsAndVars.entrySet().iterator();
                 while (indexIt.hasNext()) {
                     Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
 
                     Index chosenIndex = indexEntry.getKey();
-                    if (!chosenIndex.getDatasetName().equals(rightSubTree.dataset.getDatasetName())) {
+                    //Remove possibly chosen indexes from left Tree (outer branch)
+                    if (!chosenIndex.getDatasetName().equals(innerDataset)) {
                         indexIt.remove();
                     }
                 }
             }
         }
 
-        // Choose index to be applied.
+        // For the case of left-outer-join, we have to use indexes from the inner branch.
+        // For the inner-join, we try to use the indexes from the inner branch first.
+        // If no index is available, then we use the indexes from the outer branch.
         Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
         if (chosenIndex == null) {
             context.addToDontApplySet(this, join);

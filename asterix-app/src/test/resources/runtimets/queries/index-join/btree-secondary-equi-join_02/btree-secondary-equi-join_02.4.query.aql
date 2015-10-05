@@ -17,19 +17,16 @@
  * under the License.
  */
 /*
- * Description    : Equi joins two datasets, DBLP and CSX, based on their title.
- *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint
+ * Description    : Equi joins two datasets, DBLP and CSX, based on their authors.
+ *                  CSX has a secondary btree index on authors, and given the 'indexnl' hint
  *                  we expect the join to be transformed into an indexed nested-loop join.
  * Success        : Yes
  */
 
 use dataverse test;
 
-load dataset DBLP
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/dblp-small-id.txt"),("format"="delimited-text"),("delimiter"=":"));
-
-load dataset CSX
-using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"
-(("path"="nc1://data/pub-small/csx-small-id.txt"),("format"="delimited-text"),("delimiter"=":"),("quote"="\u0000"));
-
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+where $a.authors /*+ indexnl */ = $b.authors
+order by $a.id, $b.id
+return {"aid": $a.id, "bid": $b.id, "authors": $a.authors}
