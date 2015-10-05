@@ -54,6 +54,8 @@
         <include>**/part-*</include>
         <include>**/*.cleaned</include>
         <include>**/*.md</include>
+        <include>**/schema</include>
+        <include>**/*.sh</include>
       </includes>
       <excludes>
         <exclude>**/${project.build.directory}/**</exclude>
