@@ -832,7 +832,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     @Override
-    public IIOReplicationManager getIIOReplicationManager() {
+    public IIOReplicationManager getIOReplicationManager() {
         return ioReplicationManager;
     }
 }

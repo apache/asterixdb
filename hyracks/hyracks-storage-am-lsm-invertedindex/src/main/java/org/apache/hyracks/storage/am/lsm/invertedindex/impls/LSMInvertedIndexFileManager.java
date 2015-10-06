@@ -38,9 +38,9 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 // TODO: Refactor for better code sharing with other file managers.
 public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager implements IInvertedIndexFileNameMapper {
-    private static final String DICT_BTREE_SUFFIX = "b";
-    private static final String INVLISTS_SUFFIX = "i";
-    private static final String DELETED_KEYS_BTREE_SUFFIX = "d";
+    public static final String DICT_BTREE_SUFFIX = "b";
+    public static final String INVLISTS_SUFFIX = "i";
+    public static final String DELETED_KEYS_BTREE_SUFFIX = "d";
 
     // We only need a BTree factory because the inverted indexes consistency is validated against its dictionary BTree.
     private final BTreeFactory btreeFactory;

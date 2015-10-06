@@ -20,8 +20,16 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public interface ILSMIndexReplicationJob extends IReplicationJob {
 
     public void endReplication() throws HyracksDataException;
+
+    public ILSMIndexOperationContext getLSMIndexOperationContext();
+
+    public ILSMIndex getLSMIndex();
+
+    public LSMOperationType getLSMOpType();
+
 }

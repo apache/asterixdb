@@ -204,7 +204,7 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public IIOReplicationManager getIIOReplicationManager() {
+    public IIOReplicationManager getIOReplicationManager() {
         return null;
     }
 }

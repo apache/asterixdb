@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
@@ -30,6 +29,7 @@ import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public interface ILSMIndexInternal extends ILSMIndex {
     @Override
@@ -85,8 +85,8 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
-    
+
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
-            ReplicationOperation operation) throws HyracksDataException;
+            ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException;
 
 }

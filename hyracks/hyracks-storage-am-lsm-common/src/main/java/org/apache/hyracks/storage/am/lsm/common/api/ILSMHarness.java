@@ -16,15 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
 import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public interface ILSMHarness {
 
@@ -57,10 +58,10 @@ public interface ILSMHarness {
     public void addBulkLoadedComponent(ILSMComponent index) throws HyracksDataException, IndexException;
 
     public ILSMOperationTracker getOperationTracker();
-    
-    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload)
-            throws HyracksDataException;
-    
+
+    public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
+            LSMOperationType opType) throws HyracksDataException;
+
     public void endReplication(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
 }

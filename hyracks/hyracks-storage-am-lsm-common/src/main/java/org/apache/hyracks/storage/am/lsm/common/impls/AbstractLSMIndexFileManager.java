@@ -46,7 +46,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManager {
 
-    protected static final String SPLIT_STRING = "_";
+    public static final String SPLIT_STRING = "_";
     protected static final String BLOOM_FILTER_STRING = "f";
     protected static final String TRANSACTION_PREFIX = ".T";
 

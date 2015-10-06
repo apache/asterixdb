@@ -56,9 +56,9 @@ public interface IBufferCache {
     public int getFileReferenceCount(int fileId);
 
     public void close() throws HyracksDataException;
-    
+
     public boolean isReplicationEnabled();
 
-    public IIOReplicationManager getIIOReplicationManager();
+    public IIOReplicationManager getIOReplicationManager();
 
 }

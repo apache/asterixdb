@@ -40,7 +40,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
 public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
-    private static final String BTREE_STRING = "b";
+    public static final String BTREE_STRING = "b";
 
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
 

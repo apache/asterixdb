@@ -23,19 +23,19 @@ import java.util.Set;
 import org.apache.hyracks.api.replication.IReplicationJob;
 
 public abstract class AbstractReplicationJob implements IReplicationJob {
-    
     private final Set<String> filesToReplicate;
     private final ReplicationOperation operation;
     private final ReplicationExecutionType executionType;
     private final ReplicationJobType jobType;
 
-    public AbstractReplicationJob(ReplicationJobType jobType, ReplicationOperation operation, ReplicationExecutionType executionType, Set<String> filesToReplicate){
+    public AbstractReplicationJob(ReplicationJobType jobType, ReplicationOperation operation,
+            ReplicationExecutionType executionType, Set<String> filesToReplicate) {
         this.jobType = jobType;
         this.operation = operation;
         this.executionType = executionType;
         this.filesToReplicate = filesToReplicate;
     }
-    
+
     @Override
     public Set<String> getJobFiles() {
         return filesToReplicate;

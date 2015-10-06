@@ -303,12 +303,12 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
     public void addInactiveDiskComponent(ILSMComponent diskComponent) {
         inactiveDiskComponents.add(diskComponent);
     }
-    
+
     public abstract Set<String> getLSMComponentPhysicalFiles(ILSMComponent newComponent);
 
     @Override
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
-            ReplicationOperation operation) throws HyracksDataException {
+            ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException {
         //get set of files to be replicated for this component
         Set<String> componentFiles = new HashSet<String>();
 
@@ -325,13 +325,12 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         }
 
         //create replication job and submit it
-        LSMIndexReplicationJob job = new LSMIndexReplicationJob(this, ctx, componentFiles, operation,
-                executionType);
+        LSMIndexReplicationJob job = new LSMIndexReplicationJob(this, ctx, componentFiles, operation, executionType,
+                opType);
         try {
-            diskBufferCache.getIIOReplicationManager().submitJob(job);
+            diskBufferCache.getIOReplicationManager().submitJob(job);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
-
     }
 }

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
@@ -25,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 /**
  * Client handle for performing operations
@@ -118,6 +118,7 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
     public void forceInsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     public void forceDelete(ITupleReference tuple) throws HyracksDataException, IndexException;
-    
-    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload) throws HyracksDataException;
+
+    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
+            throws HyracksDataException;
 }

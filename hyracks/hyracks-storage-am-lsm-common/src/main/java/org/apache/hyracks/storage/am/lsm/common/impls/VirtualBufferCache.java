@@ -384,7 +384,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public IIOReplicationManager getIIOReplicationManager() {
+    public IIOReplicationManager getIOReplicationManager() {
         return null;
     }
 }

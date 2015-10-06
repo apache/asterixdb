@@ -22,25 +22,44 @@ import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.impl.AbstractReplicationJob;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 
 public class LSMIndexReplicationJob extends AbstractReplicationJob implements ILSMIndexReplicationJob {
 
-    private final AbstractLSMIndex lsmIndex;
-    private final ILSMIndexOperationContext ctx;
+    private final ILSMIndex lsmIndex;
+    private final ILSMIndexOperationContext operationContext;
+    private final LSMOperationType LSMOpType;
 
-    public LSMIndexReplicationJob(AbstractLSMIndex lsmIndex, ILSMIndexOperationContext ctx,
-            Set<String> filesToReplicate, ReplicationOperation operation, ReplicationExecutionType executionType) {
+    public LSMIndexReplicationJob(ILSMIndex lsmIndex, ILSMIndexOperationContext operationContext,
+            Set<String> filesToReplicate, ReplicationOperation operation, ReplicationExecutionType executionType,
+            LSMOperationType opType) {
         super(ReplicationJobType.LSM_COMPONENT, operation, executionType, filesToReplicate);
         this.lsmIndex = lsmIndex;
-        this.ctx = ctx;
+        this.operationContext = operationContext;
+        this.LSMOpType = opType;
     }
 
     @Override
     public void endReplication() throws HyracksDataException {
-        if (ctx != null) {
-            lsmIndex.lsmHarness.endReplication(ctx);
+        if (operationContext != null) {
+            ((AbstractLSMIndex) (lsmIndex)).lsmHarness.endReplication(operationContext);
         }
+    }
+
+    @Override
+    public ILSMIndex getLSMIndex() {
+        return lsmIndex;
+    }
+
+    @Override
+    public ILSMIndexOperationContext getLSMIndexOperationContext() {
+        return operationContext;
+    }
+
+    @Override
+    public LSMOperationType getLSMOpType() {
+        return LSMOpType;
     }
 }

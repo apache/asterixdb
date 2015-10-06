@@ -54,4 +54,6 @@ public interface IIOManager {
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException;
 
     public void setExecutor(Executor executor);
+
+    public void deleteWorkspaceFiles();
 }
