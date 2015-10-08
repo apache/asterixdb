@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.Test;
-
 import org.apache.hyracks.storage.am.common.api.IIndex;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
@@ -38,6 +36,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModif
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.junit.Test;
 
 public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIndexTest {
 
@@ -82,8 +81,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         List<IInvertedIndexSearchModifier> searchModifiers = new ArrayList<IInvertedIndexSearchModifier>();
         searchModifiers.add(new ConjunctiveSearchModifier());
         searchModifiers.add(new JaccardSearchModifier(1.0f));
-        searchModifiers.add(new JaccardSearchModifier(0.9f));
-        searchModifiers.add(new JaccardSearchModifier(0.7f));
+        searchModifiers.add(new JaccardSearchModifier(0.8f));
         searchModifiers.add(new JaccardSearchModifier(0.5f));
         runTest(testCtx, tupleGen, searchModifiers);
     }
@@ -93,8 +91,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         List<IInvertedIndexSearchModifier> searchModifiers = new ArrayList<IInvertedIndexSearchModifier>();
         searchModifiers.add(new ConjunctiveSearchModifier());
         searchModifiers.add(new JaccardSearchModifier(1.0f));
-        searchModifiers.add(new JaccardSearchModifier(0.9f));
-        searchModifiers.add(new JaccardSearchModifier(0.7f));
+        searchModifiers.add(new JaccardSearchModifier(0.8f));
         searchModifiers.add(new JaccardSearchModifier(0.5f));
         searchModifiers.add(new EditDistanceSearchModifier(LSMInvertedIndexTestUtils.TEST_GRAM_LENGTH, 0));
         searchModifiers.add(new EditDistanceSearchModifier(LSMInvertedIndexTestUtils.TEST_GRAM_LENGTH, 1));
@@ -105,7 +102,8 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
 
     @Test
     public void wordTokensInvIndexTest() throws IOException, IndexException {
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness, invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createWordInvIndexTestContext(harness,
+                invIndexType);
         testWordInvIndexIndex(testCtx);
     }
 
@@ -118,7 +116,8 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
 
     @Test
     public void ngramTokensInvIndexTest() throws IOException, IndexException {
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createNGramInvIndexTestContext(harness, invIndexType);
+        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestUtils.createNGramInvIndexTestContext(harness,
+                invIndexType);
         testNGramInvIndexIndex(testCtx);
     }
 
