@@ -60,10 +60,10 @@ public class RuntimeContext {
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
         bufferCache = new BufferCache(appCtx.getRootContext().getIOManager(), prs, new DelayPageCleanerPolicy(1000),
                 fileMapManager, 100, threadFactory);
-        lcManager = new IndexLifecycleManager();
         ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
         localResourceRepository = localResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
+        lcManager = new IndexLifecycleManager(localResourceRepository);
     }
 
     public void close() throws HyracksDataException {

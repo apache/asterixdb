@@ -75,7 +75,7 @@ public class TestStorageManagerComponentHolder {
 
     public synchronized static IIndexLifecycleManager getIndexLifecycleManager(IHyracksTaskContext ctx) {
         if (lcManager == null) {
-            lcManager = new IndexLifecycleManager();
+            lcManager = new IndexLifecycleManager(getLocalResourceRepository(ctx));
         }
         return lcManager;
     }

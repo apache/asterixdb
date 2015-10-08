@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.common.impls;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
@@ -33,12 +34,13 @@ public enum NoOpOperationCallbackFactory implements ISearchOperationCallbackFact
     INSTANCE;
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource, IHyracksTaskContext ctx) {
+    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx) {
         return NoOpOperationCallback.INSTANCE;
     }
 
     @Override
-    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx) {
+    public IModificationOperationCallback createModificationOperationCallback(String resourceName, long resourceId,
+            Object resource, IHyracksTaskContext ctx) throws HyracksDataException {
         return NoOpOperationCallback.INSTANCE;
     }
 }

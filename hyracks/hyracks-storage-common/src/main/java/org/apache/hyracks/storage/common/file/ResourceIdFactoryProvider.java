@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.common.file;
 
-import java.util.List;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ResourceIdFactoryProvider {
@@ -30,13 +28,7 @@ public class ResourceIdFactoryProvider {
     }
 
     public ResourceIdFactory createResourceIdFactory() throws HyracksDataException {
-        List<LocalResource> localResources = localResourceRepository.getAllResources();
-        long largestResourceId = 0;
-        for (LocalResource localResource : localResources) {
-            if (largestResourceId < localResource.getResourceId()) {
-                largestResourceId = localResource.getResourceId();
-            }
-        }
+        long largestResourceId = localResourceRepository.getMaxResourceID();
         return new ResourceIdFactory(largestResourceId);
     }
 }

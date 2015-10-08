@@ -30,8 +30,4 @@ public class ResourceIdFactory {
     public long createId() {
         return id.getAndIncrement();
     }
-    
-    public void initId(long id) {
-        this.id.set(id);
-    }
 }

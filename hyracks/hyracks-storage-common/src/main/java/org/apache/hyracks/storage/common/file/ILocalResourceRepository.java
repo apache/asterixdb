@@ -18,21 +18,15 @@
  */
 package org.apache.hyracks.storage.common.file;
 
-import java.util.List;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ILocalResourceRepository {
-
-    public LocalResource getResourceById(long id) throws HyracksDataException;
 
     public LocalResource getResourceByName(String name) throws HyracksDataException;
 
     public void insert(LocalResource resource) throws HyracksDataException;
 
-    public void deleteResourceById(long id) throws HyracksDataException;
-
     public void deleteResourceByName(String name) throws HyracksDataException;
 
-    public List<LocalResource> getAllResources() throws HyracksDataException;
+    public long getMaxResourceID() throws HyracksDataException;
 }

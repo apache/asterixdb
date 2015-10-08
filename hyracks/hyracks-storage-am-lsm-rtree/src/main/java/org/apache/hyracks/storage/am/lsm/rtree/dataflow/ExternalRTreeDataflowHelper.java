@@ -75,14 +75,8 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
         if (index != null)
             return index;
         synchronized (lcManager) {
-            long resourceID;
             try {
-                resourceID = getResourceID();
-            } catch (HyracksDataException e) {
-                return null;
-            }
-            try {
-                index = lcManager.getIndex(resourceID);
+                index = lcManager.getIndex(resourceName);
             } catch (HyracksDataException e) {
                 return null;
             }
@@ -99,11 +93,11 @@ public class ExternalRTreeDataflowHelper extends LSMRTreeDataflowHelper {
             ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields)
             throws HyracksDataException {
         try {
-            return LSMRTreeUtils.createExternalRTree(file, diskBufferCache, diskFileMapProvider, typeTraits,
-                    rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
-                    bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                    ioOpCallbackFactory.createIOOperationCallback(), linearizeCmpFactory, btreeFields, version,
-                    durable);
+            return LSMRTreeUtils
+                    .createExternalRTree(file, diskBufferCache, diskFileMapProvider, typeTraits, rtreeCmpFactories,
+                            btreeCmpFactories, valueProviderFactories, rtreePolicyType, bloomFilterFalsePositiveRate,
+                            mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory.createIOOperationCallback(),
+                            linearizeCmpFactory, btreeFields, version, durable);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }
