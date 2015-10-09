@@ -77,8 +77,15 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     @Override
-    public synchronized IIndex getIndex(long resourceID) throws HyracksDataException {
-        DatasetInfo dsInfo = datasetInfos.get(getDIDfromRID(resourceID));
+    public synchronized IIndex getIndex(String resourceName) throws HyracksDataException {
+        int datasetID = getDIDfromResourceName(resourceName);
+        long resourceID = getResourceIDfromResourceName(resourceName);
+        return getIndex(datasetID, resourceID);
+    }
+
+    @Override
+    public synchronized IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException {
+        DatasetInfo dsInfo = datasetInfos.get(datasetID);
         if (dsInfo == null) {
             return null;
         }
@@ -90,8 +97,9 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     @Override
-    public synchronized void register(long resourceID, IIndex index) throws HyracksDataException {
-        int did = getDIDfromRID(resourceID);
+    public synchronized void register(String resourceName, IIndex index) throws HyracksDataException {
+        int did = getDIDfromResourceName(resourceName);
+        long resourceID = getResourceIDfromResourceName(resourceName);
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
             dsInfo = getDatasetInfo(did);
@@ -106,17 +114,27 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         dsInfo.indexes.put(resourceID, new IndexInfo((ILSMIndex) index));
     }
 
-    private int getDIDfromRID(long resourceID) throws HyracksDataException {
-        LocalResource lr = resourceRepository.getResourceById(resourceID);
+    private int getDIDfromResourceName(String resourceName) throws HyracksDataException {
+        LocalResource lr = resourceRepository.getResourceByName(resourceName);
         if (lr == null) {
             return -1;
         }
         return ((ILocalResourceMetadata) lr.getResourceObject()).getDatasetID();
     }
 
+    private long getResourceIDfromResourceName(String resourceName) throws HyracksDataException {
+        LocalResource lr = resourceRepository.getResourceByName(resourceName);
+        if (lr == null) {
+            return -1;
+        }
+        return lr.getResourceId();
+    }
+
     @Override
-    public synchronized void unregister(long resourceID) throws HyracksDataException {
-        int did = getDIDfromRID(resourceID);
+    public synchronized void unregister(String resourceName) throws HyracksDataException {
+        int did = getDIDfromResourceName(resourceName);
+        long resourceID = getResourceIDfromResourceName(resourceName);
+
         DatasetInfo dsInfo = datasetInfos.get(did);
         IndexInfo iInfo = dsInfo.indexes.get(resourceID);
 
@@ -155,20 +173,15 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
 
         dsInfo.indexes.remove(resourceID);
         if (dsInfo.referenceCount == 0 && dsInfo.isOpen && dsInfo.indexes.isEmpty() && !dsInfo.isExternal) {
-            List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(did);
-            assert vbcs != null;
-            for (IVirtualBufferCache vbc : vbcs) {
-                used -= (vbc.getNumPages() * vbc.getPageSize());
-            }
-            datasetInfos.remove(did);
-            datasetVirtualBufferCaches.remove(did);
-            datasetOpTrackers.remove(did);
+            removeDatasetFromCache(dsInfo.datasetID);
         }
     }
 
     @Override
-    public synchronized void open(long resourceID) throws HyracksDataException {
-        int did = getDIDfromRID(resourceID);
+    public synchronized void open(String resourceName) throws HyracksDataException {
+        int did = getDIDfromResourceName(resourceName);
+        long resourceID = getResourceIDfromResourceName(resourceName);
+
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null || !dsInfo.isRegistered) {
             throw new HyracksDataException("Failed to open index with resource ID " + resourceID
@@ -260,8 +273,10 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
     }
 
     @Override
-    public synchronized void close(long resourceID) throws HyracksDataException {
-        int did = getDIDfromRID(resourceID);
+    public synchronized void close(String resourceName) throws HyracksDataException {
+        int did = getDIDfromResourceName(resourceName);
+        long resourceID = getResourceIDfromResourceName(resourceName);
+
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null) {
             throw new HyracksDataException("No index found with resourceID " + resourceID);
@@ -304,6 +319,17 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
             }
             return vbcs;
         }
+    }
+
+    private void removeDatasetFromCache(int datasetID) {
+        List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(datasetID);
+        assert vbcs != null;
+        for (IVirtualBufferCache vbc : vbcs) {
+            used -= (vbc.getNumPages() * vbc.getPageSize());
+        }
+        datasetInfos.remove(datasetID);
+        datasetVirtualBufferCaches.remove(datasetID);
+        datasetOpTrackers.remove(datasetID);
     }
 
     public ILSMOperationTracker getOperationTracker(int datasetID) {
@@ -505,7 +531,6 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
 
         if (asyncFlush) {
-
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
                 ILSMIndexAccessor accessor = iInfo.index.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
@@ -552,10 +577,7 @@ public class DatasetLifecycleManager implements IIndexLifecycleManager, ILifeCyc
         }
         dsInfo.isOpen = false;
 
-        List<IVirtualBufferCache> vbcs = getVirtualBufferCaches(dsInfo.datasetID);
-        for (IVirtualBufferCache vbc : vbcs) {
-            used -= vbc.getNumPages() * vbc.getPageSize();
-        }
+        removeDatasetFromCache(dsInfo.datasetID);
     }
 
     @Override

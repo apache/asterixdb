@@ -51,6 +51,7 @@ import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.LogType;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManager;
@@ -82,7 +83,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final LogManager logMgr;
     private final int checkpointHistory;
     private final long SHARP_CHECKPOINT_LSN = -1;
-
     /**
      * A file at a known location that contains the LSN of the last log record
      * traversed doing a successful checkpoint.
@@ -249,6 +249,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         IIndexLifecycleManager indexLifecycleManager = appRuntimeContext.getIndexLifecycleManager();
         ILocalResourceRepository localResourceRepository = appRuntimeContext.getLocalResourceRepository();
 
+        Map<Long, LocalResource> resourcesMap = ((PersistentLocalResourceRepository) localResourceRepository)
+                .loadAndGetAllResources();
         //#. set log reader to the lowWaterMarkLsn again.
         logReader.initializeScan(lowWaterMarkLSN);
         logRecord = logReader.next();
@@ -273,39 +275,38 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     }
                     if (foundWinner) {
                         resourceId = logRecord.getResourceId();
-                        localResource = localResourceRepository.getResourceById(resourceId);
+                        localResource = resourcesMap.get(resourceId);
+
+                        /*******************************************************************
+                         * [Notice]
+                         * -> Issue
+                         * Delete index may cause a problem during redo.
+                         * The index operation to be redone couldn't be redone because the corresponding index
+                         * may not exist in NC due to the possible index drop DDL operation.
+                         * -> Approach
+                         * Avoid the problem during redo.
+                         * More specifically, the problem will be detected when the localResource of
+                         * the corresponding index is retrieved, which will end up with 'null'.
+                         * If null is returned, then just go and process the next
+                         * log record.
+                         *******************************************************************/
+                        if (localResource == null) {
+                            logRecord = logReader.next();
+                            continue;
+                        }
+                        /*******************************************************************/
 
                         //get index instance from IndexLifeCycleManager
                         //if index is not registered into IndexLifeCycleManager,
                         //create the index using LocalMetadata stored in LocalResourceRepository
-                        index = (ILSMIndex) indexLifecycleManager.getIndex(resourceId);
+                        index = (ILSMIndex) indexLifecycleManager.getIndex(localResource.getResourceName());
                         if (index == null) {
-
-                            /*******************************************************************
-                             * [Notice]
-                             * -> Issue
-                             * Delete index may cause a problem during redo.
-                             * The index operation to be redone couldn't be redone because the corresponding index
-                             * may not exist in NC due to the possible index drop DDL operation.
-                             * -> Approach
-                             * Avoid the problem during redo.
-                             * More specifically, the problem will be detected when the localResource of
-                             * the corresponding index is retrieved, which will end up with 'null' return from
-                             * localResourceRepository. If null is returned, then just go and process the next
-                             * log record.
-                             *******************************************************************/
-                            if (localResource == null) {
-                                logRecord = logReader.next();
-                                continue;
-                            }
-                            /*******************************************************************/
-
                             //#. create index instance and register to indexLifeCycleManager
                             localResourceMetadata = (ILocalResourceMetadata) localResource.getResourceObject();
                             index = localResourceMetadata.createIndexInstance(appRuntimeContext,
                                     localResource.getResourceName(), localResource.getPartition());
-                            indexLifecycleManager.register(resourceId, index);
-                            indexLifecycleManager.open(resourceId);
+                            indexLifecycleManager.register(localResource.getResourceName(), index);
+                            indexLifecycleManager.open(localResource.getResourceName());
 
                             //#. get maxDiskLastLSN
                             ILSMIndex lsmIndex = (ILSMIndex) index;
@@ -342,7 +343,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //close all indexes
         Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
         for (long r : resourceIdList) {
-            indexLifecycleManager.close(r);
+            indexLifecycleManager.close(resourcesMap.get(r).getResourceName());
         }
 
         logReader.close();
@@ -356,11 +357,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     @Override
-    public synchronized long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN) throws ACIDException, HyracksDataException {
+    public synchronized long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN)
+            throws ACIDException, HyracksDataException {
 
         long minMCTFirstLSN;
         boolean nonSharpCheckpointSucceeded = false;
-        
+
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting sharp checkpoint ... ");
         }
@@ -372,7 +374,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //   right after the new checkpoint file is written.
         File[] prevCheckpointFiles = getPreviousCheckpointFiles();
 
-        DatasetLifecycleManager datasetLifecycleManager = (DatasetLifecycleManager)txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager();
+        DatasetLifecycleManager datasetLifecycleManager = (DatasetLifecycleManager) txnSubsystem
+                .getAsterixAppRuntimeContextProvider().getIndexLifecycleManager();
         //#. flush all in-memory components if it is the sharp checkpoint
         if (isSharpCheckpoint) {
 
@@ -382,11 +385,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         } else {
 
             minMCTFirstLSN = getMinFirstLSN();
-            
-            if(minMCTFirstLSN >= nonSharpCheckpointTargetLSN){
+
+            if (minMCTFirstLSN >= nonSharpCheckpointTargetLSN) {
                 nonSharpCheckpointSucceeded = true;
-            }
-            else{
+            } else {
                 //flush datasets with indexes behind target checkpoint LSN
                 datasetLifecycleManager.scheduleAsyncFlushForLaggingDatasets(nonSharpCheckpointTargetLSN);
             }
@@ -439,10 +441,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
         }
 
-        if(nonSharpCheckpointSucceeded){
+        if (nonSharpCheckpointSucceeded) {
             logMgr.deleteOldLogFiles(minMCTFirstLSN);
         }
-        
+
         if (isSharpCheckpoint && LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Completed sharp checkpoint.");
         }
@@ -451,9 +453,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return minMCTFirstLSN;
     }
 
-    public long getMinFirstLSN() throws HyracksDataException
-    {
-        IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager();
+    public long getMinFirstLSN() throws HyracksDataException {
+        IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getIndexLifecycleManager();
         List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
         long firstLSN;
         //the min first lsn can only be the current append or smaller
@@ -463,8 +465,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
             for (IIndex index : openIndexList) {
 
-                AbstractLSMIOOperationCallback ioCallback =  (AbstractLSMIOOperationCallback)((ILSMIndex) index).getIOOperationCallback();
-                if(!((AbstractLSMIndex)index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()){
+                AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) ((ILSMIndex) index)
+                        .getIOOperationCallback();
+                if (!((AbstractLSMIndex) index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()) {
                     firstLSN = ioCallback.getFirstLSN();
                     minFirstLSN = Math.min(minFirstLSN, firstLSN);
                 }
@@ -594,6 +597,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         ILogReader logReader = logMgr.getLogReader(false);
         logReader.initializeScan(firstLSN);
         ILogRecord logRecord = null;
+
         while (currentLSN < lastLSN) {
             logRecord = logReader.next();
             if (logRecord == null) {
@@ -710,7 +714,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private void undo(ILogRecord logRecord) {
         try {
             ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(logRecord.getResourceId());
+                    .getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
@@ -728,7 +732,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private void redo(ILogRecord logRecord) {
         try {
             ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(logRecord.getResourceId());
+                    .getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {

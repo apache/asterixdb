@@ -39,9 +39,9 @@ import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
 
-    AsterixThreadExecutor ate = new AsterixThreadExecutor(Executors.defaultThreadFactory());    
+    AsterixThreadExecutor ate = new AsterixThreadExecutor(Executors.defaultThreadFactory());
     IIndexLifecycleManager ilm = new IndexLifecycleManager();
-    
+
     @Override
     public AsterixThreadExecutor getThreadExecutor() {
         return ate;
@@ -108,36 +108,39 @@ class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
     }
 
     static class IndexLifecycleManager implements IIndexLifecycleManager {
-
-        @Override
-        public IIndex getIndex(long resourceID) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void register(long resourceID, IIndex index) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void unregister(long resourceID) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void open(long resourceID) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void close(long resourceID) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
         @Override
         public List<IIndex> getOpenIndexes() {
             throw new UnsupportedOperationException();
         }
-        
+
+        @Override
+        public void register(String resourceName, IIndex index) throws HyracksDataException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void open(String resourceName) throws HyracksDataException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void close(String resourceName) throws HyracksDataException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public IIndex getIndex(String resourceName) throws HyracksDataException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void unregister(String resourceName) throws HyracksDataException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException {
+            throw new UnsupportedOperationException();
+        }
     }
 }

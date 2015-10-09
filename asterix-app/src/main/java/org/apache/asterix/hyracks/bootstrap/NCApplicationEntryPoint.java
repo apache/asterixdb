@@ -112,12 +112,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("System is in a state: " + systemState);
             }
 
-            if (systemState != SystemState.NEW_UNIVERSE) {
-                PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
-                        .getLocalResourceRepository();
-                localResourceRepository.initialize(nodeId, null, false, runtimeContext.getResourceIdFactory());
-            }
-            
             if (systemState == SystemState.CORRUPTED) {
                 recoveryMgr.startRecovery(true);
             }
@@ -165,7 +159,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
-            localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0], true, null);
+            localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0]);
         }
 
         IAsterixStateProxy proxy = null;

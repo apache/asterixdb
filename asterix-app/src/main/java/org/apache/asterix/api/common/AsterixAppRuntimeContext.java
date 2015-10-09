@@ -96,7 +96,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixTransactionProperties txnProperties;
     private AsterixFeedProperties feedProperties;
 
-
     private AsterixThreadExecutor threadExecutor;
     private DatasetLifecycleManager indexLifecycleManager;
     private IFileMapManager fileMapManager;
@@ -140,7 +139,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         metadataMergePolicyFactory = new PrefixMergePolicyFactory();
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
-                ioManager);
+                ioManager, ncApplicationContext.getNodeId());
         localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
                 .createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
@@ -149,10 +148,10 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
                 txnProperties);
-        
+
         indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
-                MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID,(LogManager)txnSubsystem.getLogManager());
-        
+                MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID, (LogManager) txnSubsystem.getLogManager());
+
         isShuttingdown = false;
 
         feedManager = new FeedManager(ncApplicationContext.getNodeId(), feedProperties,
@@ -243,7 +242,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     public AsterixExternalProperties getExternalProperties() {
         return externalProperties;
     }
-    
+
     @Override
     public AsterixFeedProperties getFeedProperties() {
         return feedProperties;

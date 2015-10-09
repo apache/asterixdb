@@ -284,9 +284,10 @@ public class MetadataNode implements IMetadataNode {
     private void insertTupleIntoIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws Exception {
         long resourceID = metadataIndex.getResourceID();
-        ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
+        String resourceName = metadataIndex.getFile().toString();
+        ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceName);
         try {
-            indexLifecycleManager.open(resourceID);
+            indexLifecycleManager.open(resourceName);
 
             // prepare a Callback for logging
             IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID,
@@ -307,7 +308,7 @@ public class MetadataNode implements IMetadataNode {
         } catch (Exception e) {
             throw e;
         } finally {
-            indexLifecycleManager.close(resourceID);
+            indexLifecycleManager.close(resourceName);
         }
     }
 
@@ -633,9 +634,10 @@ public class MetadataNode implements IMetadataNode {
     private void deleteTupleFromIndex(JobId jobId, IMetadataIndex metadataIndex, ITupleReference tuple)
             throws Exception {
         long resourceID = metadataIndex.getResourceID();
-        ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceID);
+        String resourceName = metadataIndex.getFile().toString();
+        ILSMIndex lsmIndex = (ILSMIndex) indexLifecycleManager.getIndex(resourceName);
         try {
-            indexLifecycleManager.open(resourceID);
+            indexLifecycleManager.open(resourceName);
             // prepare a Callback for logging
             IModificationOperationCallback modCallback = createIndexModificationCallback(jobId, resourceID,
                     metadataIndex, lsmIndex, IndexOperation.DELETE);
@@ -653,7 +655,7 @@ public class MetadataNode implements IMetadataNode {
         } catch (Exception e) {
             throw e;
         } finally {
-            indexLifecycleManager.close(resourceID);
+            indexLifecycleManager.close(resourceName);
         }
     }
 
@@ -966,9 +968,9 @@ public class MetadataNode implements IMetadataNode {
         StringBuilder sb = new StringBuilder();
         try {
             IMetadataIndex index = MetadataPrimaryIndexes.DATAVERSE_DATASET;
-            long resourceID = index.getResourceID();
-            IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
-            indexLifecycleManager.open(resourceID);
+            String resourceName = index.getFile().toString();
+            IIndex indexInstance = indexLifecycleManager.getIndex(resourceName);
+            indexLifecycleManager.open(resourceName);
             IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
@@ -986,12 +988,11 @@ public class MetadataNode implements IMetadataNode {
             } finally {
                 rangeCursor.close();
             }
-            indexLifecycleManager.close(resourceID);
+            indexLifecycleManager.close(resourceName);
 
             index = MetadataPrimaryIndexes.DATASET_DATASET;
-            resourceID = index.getResourceID();
-            indexInstance = indexLifecycleManager.getIndex(resourceID);
-            indexLifecycleManager.open(resourceID);
+            indexInstance = indexLifecycleManager.getIndex(resourceName);
+            indexLifecycleManager.open(resourceName);
             indexAccessor = indexInstance
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
@@ -1009,12 +1010,11 @@ public class MetadataNode implements IMetadataNode {
             } finally {
                 rangeCursor.close();
             }
-            indexLifecycleManager.close(resourceID);
+            indexLifecycleManager.close(resourceName);
 
             index = MetadataPrimaryIndexes.INDEX_DATASET;
-            resourceID = index.getResourceID();
-            indexInstance = indexLifecycleManager.getIndex(resourceID);
-            indexLifecycleManager.open(resourceID);
+            indexInstance = indexLifecycleManager.getIndex(resourceName);
+            indexLifecycleManager.open(resourceName);
             indexAccessor = indexInstance
                     .createAccessor(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
             rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
@@ -1033,7 +1033,7 @@ public class MetadataNode implements IMetadataNode {
             } finally {
                 rangeCursor.close();
             }
-            indexLifecycleManager.close(resourceID);
+            indexLifecycleManager.close(resourceName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1043,9 +1043,9 @@ public class MetadataNode implements IMetadataNode {
     private <ResultType> void searchIndex(JobId jobId, IMetadataIndex index, ITupleReference searchKey,
             IValueExtractor<ResultType> valueExtractor, List<ResultType> results) throws Exception {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
-        long resourceID = index.getResourceID();
-        IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
-        indexLifecycleManager.open(resourceID);
+        String resourceName = index.getFile().toString();
+        IIndex indexInstance = indexLifecycleManager.getIndex(resourceName);
+        indexLifecycleManager.open(resourceName);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
         ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
@@ -1074,16 +1074,16 @@ public class MetadataNode implements IMetadataNode {
         } finally {
             rangeCursor.close();
         }
-        indexLifecycleManager.close(resourceID);
+        indexLifecycleManager.close(resourceName);
     }
 
     @Override
     public void initializeDatasetIdFactory(JobId jobId) throws MetadataException, RemoteException {
         int mostRecentDatasetId = MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID;
-        long resourceID = MetadataPrimaryIndexes.DATASET_DATASET.getResourceID();
         try {
-            IIndex indexInstance = indexLifecycleManager.getIndex(resourceID);
-            indexLifecycleManager.open(resourceID);
+            String resourceName = MetadataPrimaryIndexes.DATASET_DATASET.getFile().toString();
+            IIndex indexInstance = indexLifecycleManager.getIndex(resourceName);
+            indexLifecycleManager.open(resourceName);
             try {
                 IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
@@ -1110,7 +1110,7 @@ public class MetadataNode implements IMetadataNode {
                     rangeCursor.close();
                 }
             } finally {
-                indexLifecycleManager.close(resourceID);
+                indexLifecycleManager.close(resourceName);
             }
 
         } catch (Exception e) {

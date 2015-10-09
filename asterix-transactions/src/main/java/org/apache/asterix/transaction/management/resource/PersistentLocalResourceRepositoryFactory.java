@@ -24,14 +24,16 @@ import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 
 public class PersistentLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
-    private IIOManager ioManager;
+    private final IIOManager ioManager;
+    private final String nodeId;
 
-    public PersistentLocalResourceRepositoryFactory(IIOManager ioManager) {
+    public PersistentLocalResourceRepositoryFactory(IIOManager ioManager, String nodeId) {
         this.ioManager = ioManager;
+        this.nodeId = nodeId;
     }
 
     @Override
     public ILocalResourceRepository createRepository() throws HyracksDataException {
-        return new PersistentLocalResourceRepository(ioManager.getIODevices());
+        return new PersistentLocalResourceRepository(ioManager.getIODevices(), nodeId);
     }
 }

@@ -84,7 +84,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         MetadataManager.INSTANCE = new MetadataManager(proxy, metadataProperties);
 
         AsterixAppContextInfo.getInstance().getCCApplicationContext()
-        .addJobLifecycleListener(FeedLifecycleListener.INSTANCE);
+                .addJobLifecycleListener(FeedLifecycleListener.INSTANCE);
 
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);
@@ -92,16 +92,17 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
-        ExternalLibraryBootstrap.setUpExternaLibraries(false);
 
         setupFeedServer(externalProperties);
         feedServer.start();
-        centralFeedManager = CentralFeedManager.getInstance(); 
-        centralFeedManager.start();
 
         waitUntilServerStart(webServer);
         waitUntilServerStart(jsonAPIServer);
         waitUntilServerStart(feedServer);
+
+        ExternalLibraryBootstrap.setUpExternaLibraries(false);
+        centralFeedManager = CentralFeedManager.getInstance();
+        centralFeedManager.start();
 
         AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager(
                 (HyracksConnection) getNewHyracksClientConnection());
@@ -182,7 +183,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         feedServer.setHandler(context);
         context.addServlet(new ServletHolder(new FeedServlet()), "/");
-   
+
         // add paths here
     }
 }

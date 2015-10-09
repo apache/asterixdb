@@ -420,11 +420,11 @@ public class MetadataBootstrap {
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
             localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, path, 0));
-            indexLifecycleManager.register(resourceID, lsmBtree);
+            indexLifecycleManager.register(path, lsmBtree);
         } else {
             final LocalResource resource = localResourceRepository.getResourceByName(path);
             resourceID = resource.getResourceId();
-            lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resourceID);
+            lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resource.getResourceName());
             if (lsmBtree == null) {
                 lsmBtree = LSMBTreeUtils.createLSMTree(
                         virtualBufferCaches,
@@ -439,7 +439,7 @@ public class MetadataBootstrap {
                                 GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, indexLifecycleManager), opTracker,
                         runtimeContext.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
                                 .createIOOperationCallback(), index.isPrimaryIndex(), null, null, null, null, true);
-                indexLifecycleManager.register(resourceID, lsmBtree);
+                indexLifecycleManager.register(path, lsmBtree);
             }
         }
 

@@ -50,13 +50,13 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
     }
 
     @Override
-    public IModificationOperationCallback createModificationOperationCallback(long resourceId, Object resource,
-            IHyracksTaskContext ctx) throws HyracksDataException {
+    public IModificationOperationCallback createModificationOperationCallback(String resourceName, long resourceId,
+            Object resource, IHyracksTaskContext ctx) throws HyracksDataException {
 
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         IIndexLifecycleManager indexLifeCycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getIndexLifecycleManager();
-        ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourceId);
+        ILSMIndex index = (ILSMIndex) indexLifeCycleManager.getIndex(resourceName);
         if (index == null) {
             throw new HyracksDataException("Index(id:" + resourceId + ") is not registered.");
         }
