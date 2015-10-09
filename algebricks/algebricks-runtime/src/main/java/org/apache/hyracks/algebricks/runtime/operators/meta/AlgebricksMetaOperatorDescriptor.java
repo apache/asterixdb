@@ -20,9 +20,6 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 
 import java.nio.ByteBuffer;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -36,6 +33,8 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
@@ -93,10 +92,11 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
+            @Override
             public void initialize() throws HyracksDataException {
                 IFrameWriter startOfPipeline;
-                RecordDescriptor pipelineOutputRecordDescriptor = outputArity > 0 ? AlgebricksMetaOperatorDescriptor.this.recordDescriptors[0]
-                        : null;
+                RecordDescriptor pipelineOutputRecordDescriptor = outputArity > 0
+                        ? AlgebricksMetaOperatorDescriptor.this.recordDescriptors[0] : null;
 
                 PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity, null,
                         pipelineOutputRecordDescriptor);
@@ -105,8 +105,13 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                 } catch (AlgebricksException e) {
                     throw new HyracksDataException(e);
                 }
-                startOfPipeline.open();
-                startOfPipeline.close();
+                try {
+                    startOfPipeline.open();
+                } catch (HyracksDataException e) {
+                    startOfPipeline.fail();
+                } finally {
+                    startOfPipeline.close();
+                }
             }
         };
     }
@@ -120,10 +125,10 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
             @Override
             public void open() throws HyracksDataException {
                 if (startOfPipeline == null) {
-                    RecordDescriptor pipelineOutputRecordDescriptor = outputArity > 0 ? AlgebricksMetaOperatorDescriptor.this.recordDescriptors[0]
-                            : null;
-                    RecordDescriptor pipelineInputRecordDescriptor = recordDescProvider.getInputRecordDescriptor(
-                            AlgebricksMetaOperatorDescriptor.this.getActivityId(), 0);
+                    RecordDescriptor pipelineOutputRecordDescriptor = outputArity > 0
+                            ? AlgebricksMetaOperatorDescriptor.this.recordDescriptors[0] : null;
+                    RecordDescriptor pipelineInputRecordDescriptor = recordDescProvider
+                            .getInputRecordDescriptor(AlgebricksMetaOperatorDescriptor.this.getActivityId(), 0);
                     PipelineAssembler pa = new PipelineAssembler(pipeline, inputArity, outputArity,
                             pipelineInputRecordDescriptor, pipelineOutputRecordDescriptor);
                     try {
