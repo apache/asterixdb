@@ -49,7 +49,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     private final FeedConnectionId connectionId;
     private final FeedRuntimeId runtimeId;
     private final FeedPolicyAccessor feedPolicyAccessor;
-    private final boolean bufferingEnabled;
+    private boolean bufferingEnabled;
     private final IExceptionHandler exceptionHandler;
     private final FeedFrameDiscarder discarder;
     private final FeedFrameSpiller spiller;
@@ -426,5 +426,13 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
                 LOGGER.warning("Throttling " + throttlingEnabled + " for " + this.connectionId + "[" + runtimeId + "]");
             }
         }
+    }
+
+    public boolean isBufferingEnabled() {
+        return bufferingEnabled;
+    }
+
+    public void setBufferingEnabled(boolean bufferingEnabled) {
+        this.bufferingEnabled = bufferingEnabled;
     }
 }
