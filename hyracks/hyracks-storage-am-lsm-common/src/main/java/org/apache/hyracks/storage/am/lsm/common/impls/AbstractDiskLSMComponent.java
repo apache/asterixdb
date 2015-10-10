@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public abstract class AbstractDiskLSMComponent extends AbstractLSMComponent {
 

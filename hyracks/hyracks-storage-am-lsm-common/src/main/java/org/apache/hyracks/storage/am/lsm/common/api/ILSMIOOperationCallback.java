@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 public interface ILSMIOOperationCallback {
 

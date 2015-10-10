@@ -22,7 +22,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
 
 /**
  * This interface exposes methods for tracking and setting the status of operations for the purpose

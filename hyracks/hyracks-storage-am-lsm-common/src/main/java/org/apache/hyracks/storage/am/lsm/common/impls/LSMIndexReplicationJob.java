@@ -25,6 +25,7 @@ import org.apache.hyracks.api.replication.impl.AbstractReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public class LSMIndexReplicationJob extends AbstractReplicationJob implements ILSMIndexReplicationJob {
 

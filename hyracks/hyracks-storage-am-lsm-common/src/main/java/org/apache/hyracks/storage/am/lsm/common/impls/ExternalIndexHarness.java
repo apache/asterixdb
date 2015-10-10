@@ -37,6 +37,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public class ExternalIndexHarness extends LSMHarness {
     private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());

@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerProvider;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 /**
  * Operation tracker that does nothing.
