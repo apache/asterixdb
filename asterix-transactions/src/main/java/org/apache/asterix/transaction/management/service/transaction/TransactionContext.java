@@ -37,7 +37,7 @@ import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 /*
  * An object of TransactionContext is created and accessed(read/written) by multiple threads which work for
