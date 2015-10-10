@@ -62,11 +62,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final String logDir;
     private final String logFilePrefix;
     private final MutableLong flushLSN;
-    private LinkedBlockingQueue<LogPage> emptyQ;
-    private LinkedBlockingQueue<LogPage> flushQ;
+    private LinkedBlockingQueue<LogBuffer> emptyQ;
+    private LinkedBlockingQueue<LogBuffer> flushQ;
     private final AtomicLong appendLSN;
     private FileChannel appendChannel;
-    private LogPage appendPage;
+    private LogBuffer appendPage;
     private LogFlusher logFlusher;
     private Future<Object> futureLogFlusher;
     private static final long SMALLEST_LOG_FILE_ID = 0;
@@ -86,10 +86,10 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private void initializeLogManager(long nextLogFileId) {
-        emptyQ = new LinkedBlockingQueue<LogPage>(numLogPages);
-        flushQ = new LinkedBlockingQueue<LogPage>(numLogPages);
+        emptyQ = new LinkedBlockingQueue<LogBuffer>(numLogPages);
+        flushQ = new LinkedBlockingQueue<LogBuffer>(numLogPages);
         for (int i = 0; i < numLogPages; i++) {
-            emptyQ.offer(new LogPage(txnSubsystem, logPageSize, flushLSN));
+            emptyQ.offer(new LogBuffer(txnSubsystem, logPageSize, flushLSN));
         }
         appendLSN.set(initializeLogAnchor(nextLogFileId));
         flushLSN.set(appendLSN.get());
@@ -174,7 +174,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendPage.isLastPage(true);
         //[Notice]
         //the current log file channel is closed if 
-        //LogPage.flush() completely flush the last page of the file.
+        //LogBuffer.flush() completely flush the last page of the file.
     }
 
     @Override
@@ -443,15 +443,15 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
 class LogFlusher implements Callable<Boolean> {
     private static final Logger LOGGER = Logger.getLogger(LogFlusher.class.getName());
-    private final static LogPage POISON_PILL = new LogPage(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
+    private final static LogBuffer POISON_PILL = new LogBuffer(null, ILogRecord.JOB_TERMINATE_LOG_SIZE, null);
     private final LogManager logMgr;//for debugging
-    private final LinkedBlockingQueue<LogPage> emptyQ;
-    private final LinkedBlockingQueue<LogPage> flushQ;
-    private LogPage flushPage;
+    private final LinkedBlockingQueue<LogBuffer> emptyQ;
+    private final LinkedBlockingQueue<LogBuffer> flushQ;
+    private LogBuffer flushPage;
     private final AtomicBoolean isStarted;
     private final AtomicBoolean terminateFlag;
 
-    public LogFlusher(LogManager logMgr, LinkedBlockingQueue<LogPage> emptyQ, LinkedBlockingQueue<LogPage> flushQ) {
+    public LogFlusher(LogManager logMgr, LinkedBlockingQueue<LogBuffer> emptyQ, LinkedBlockingQueue<LogBuffer> flushQ) {
         this.logMgr = logMgr;
         this.emptyQ = emptyQ;
         this.flushQ = flushQ;
