@@ -101,7 +101,9 @@ import org.apache.asterix.aql.expression.WriteStatement;
 import org.apache.asterix.aql.literal.StringLiteral;
 import org.apache.asterix.aql.parser.AQLParser;
 import org.apache.asterix.aql.util.FunctionUtils;
-import org.apache.asterix.common.channels.ChannelId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.channels.ChannelRuntimeId;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -111,22 +113,20 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedJoint.FeedJointType;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber.ActiveLifecycleEvent;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
-import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.feeds.CentralActiveManager;
 import org.apache.asterix.feeds.FeedJoint;
 import org.apache.asterix.file.ChannelOperations;
 import org.apache.asterix.file.DatasetOperations;
@@ -161,7 +161,7 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
 import org.apache.asterix.metadata.entities.SecondaryFeed;
 import org.apache.asterix.metadata.feeds.ActiveUtil;
-import org.apache.asterix.metadata.feeds.FeedLifecycleEventSubscriber;
+import org.apache.asterix.metadata.feeds.ActiveLifecycleEventSubscriber;
 import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.metadata.utils.DatasetUtils;
 import org.apache.asterix.metadata.utils.ExternalDatasetsRegistry;
@@ -290,7 +290,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             }
             validateOperation(activeDefaultDataverse, stmt);
             AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse,
-                    CentralFeedManager.getInstance());
+                    CentralActiveManager.getInstance());
             metadataProvider.setWriterFactory(writerFactory);
             metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
             metadataProvider.setOutputFile(outputFile);
@@ -491,7 +491,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         validateOperation(activeDefaultDataverse, stmt);
         AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse,
-                CentralFeedManager.getInstance());
+                CentralActiveManager.getInstance());
         metadataProvider.setWriterFactory(writerFactory);
         metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
         metadataProvider.setOutputFile(outputFile);
@@ -2231,7 +2231,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            ActiveId feedId = new ActiveId(dataverseName, feedName);
+            ActiveId feedId = new ActiveId(dataverseName, feedName, ActiveObjectType.FEED);
             List<FeedConnectionId> activeConnections = ActiveJobLifecycleListener.INSTANCE
                     .getActiveFeedConnections(feedId);
             if (activeConnections != null && !activeConnections.isEmpty()) {
@@ -2300,7 +2300,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         boolean readLatchAcquired = true;
         boolean subscriberRegistered = false;
-        IFeedLifecycleEventSubscriber eventSubscriber = new FeedLifecycleEventSubscriber();
+        IActiveLifecycleEventSubscriber eventSubscriber = new ActiveLifecycleEventSubscriber();
         FeedConnectionId feedConnId = null;
 
         MetadataLockManager.INSTANCE.connectFeedBegin(dataverseName, dataverseName + "." + datasetName, dataverseName
@@ -2353,7 +2353,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     ActiveJobLifecycleListener.INSTANCE.registerFeedIntakeProgressTracker(feedConnId,
                             adapterFactory.createIntakeProgressTracker());
                 }
-                eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_INTAKE_STARTED);
+                eventSubscriber.assertEvent(ActiveLifecycleEvent.FEED_INTAKE_STARTED);
             } else {
                 for (IFeedJoint fj : triple.third) {
                     ActiveJobLifecycleListener.INSTANCE.registerFeedJoint(fj);
@@ -2362,9 +2362,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             readLatchAcquired = false;
-            eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_COLLECT_STARTED);
+            eventSubscriber.assertEvent(ActiveLifecycleEvent.FEED_COLLECT_STARTED);
             if (Boolean.valueOf(metadataProvider.getConfig().get(ConnectFeedStatement.WAIT_FOR_COMPLETION))) {
-                eventSubscriber.assertEvent(FeedLifecycleEvent.FEED_ENDED); // blocking call
+                eventSubscriber.assertEvent(ActiveLifecycleEvent.FEED_ENDED); // blocking call
             }
             String waitForCompletionParam = metadataProvider.getConfig().get(ConnectFeedStatement.WAIT_FOR_COMPLETION);
             boolean waitForCompletion = waitForCompletionParam == null ? false : Boolean
@@ -2521,7 +2521,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             runJob(hcc, jobSpec, true);
 
             if (!specDisconnectType.second) {
-                CentralFeedManager.getInstance().getFeedLoadManager().removeFeedActivity(connectionId);
+                CentralActiveManager.getInstance().getFeedLoadManager().removeActivity(connectionId);
                 ActiveJobLifecycleListener.INSTANCE.reportPartialDisconnection(connectionId);
             }
 
@@ -2762,7 +2762,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             throw e;
         } finally {
             MetadataLockManager.INSTANCE.dropChannelEnd(dataverseName, dataverseName + "." + channelName);
-            ChannelId channelId = new ChannelId(dataverseName, channelName);
+            ActiveId channelId = new ActiveId(dataverseName, channelName, ActiveObjectType.CHANNEL);
             ChannelRuntimeId channelRuntimeId = new ChannelRuntimeId(dataverseName, channelName);
             DropChannelMessage dropChannelMessage = new DropChannelMessage(channelId, channelRuntimeId);
             JobSpecification messageJobSpec = ChannelOperations.buildDropChannelMessageJob(dropChannelMessage);

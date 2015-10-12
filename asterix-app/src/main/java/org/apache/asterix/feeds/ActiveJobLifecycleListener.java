@@ -40,20 +40,20 @@ import org.apache.asterix.aql.expression.DataverseDecl;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
 import org.apache.asterix.common.feeds.FeedJointKey;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
 import org.apache.asterix.common.feeds.api.IFeedLifecycleListener;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
@@ -89,7 +89,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
     private final LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
     private final Map<FeedCollectInfo, List<String>> dependentFeeds = new HashMap<FeedCollectInfo, List<String>>();
     private final Map<FeedConnectionId, LinkedBlockingQueue<String>> feedReportQueue;
-    private final FeedJobNotificationHandler feedJobNotificationHandler;
+    private final ActiveJobNotificationHandler feedJobNotificationHandler;
     private final ActiveWorkRequestResponseHandler feedWorkRequestResponseHandler;
     private final ExecutorService executorService;
 
@@ -97,7 +97,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
 
     private ActiveJobLifecycleListener() {
         this.jobEventInbox = new LinkedBlockingQueue<Message>();
-        this.feedJobNotificationHandler = new FeedJobNotificationHandler(jobEventInbox);
+        this.feedJobNotificationHandler = new ActiveJobNotificationHandler(jobEventInbox);
         this.responseInbox = new LinkedBlockingQueue<IClusterManagementWorkResponse>();
         this.feedWorkRequestResponseHandler = new ActiveWorkRequestResponseHandler(responseInbox);
         this.feedReportQueue = new HashMap<FeedConnectionId, LinkedBlockingQueue<String>>();
@@ -110,14 +110,14 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
 
     @Override
     public void notifyJobStart(JobId jobId) throws HyracksException {
-        if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
+        if (feedJobNotificationHandler.isRegisteredJob(jobId)) {
             jobEventInbox.add(new Message(jobId, Message.MessageKind.JOB_START));
         }
     }
 
     @Override
     public void notifyJobFinish(JobId jobId) throws HyracksException {
-        if (feedJobNotificationHandler.isRegisteredFeedJob(jobId)) {
+        if (feedJobNotificationHandler.isRegisteredJob(jobId)) {
             jobEventInbox.add(new Message(jobId, Message.MessageKind.JOB_FINISH));
         } else {
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -130,8 +130,8 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
         return feedJobNotificationHandler.getFeedConnectJobInfo(connectionId);
     }
 
-    public ActiveJobInfo getActiveJobInfo(ActiveId activeId) {
-        return feedJobNotificationHandler.getActiveJobInfo(activeId);
+    public ActiveJobInfo getActiveJobInfo(ActiveJobId activeJobId) {
+        return feedJobNotificationHandler.getActiveJobInfo(activeJobId);
     }
 
     public void registerFeedIntakeProgressTracker(FeedConnectionId connectionId,
@@ -176,7 +176,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
     }
 
     public JobState getFeedJobState(ActiveJobId connectionId) {
-        return feedJobNotificationHandler.getFeedJobState(connectionId);
+        return feedJobNotificationHandler.getJobState(connectionId);
     }
 
     public static class Message {
@@ -233,7 +233,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
                         }
                         infos.add(connectInfo);
                         connectInfo.setState(JobState.UNDER_RECOVERY);
-                        feedJobNotificationHandler.deregisterFeedActivity(connectInfo);
+                        feedJobNotificationHandler.deregisterActivity(connectInfo);
                     }
                 }
             }
@@ -479,11 +479,11 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
         return feedJobNotificationHandler.getFeedJoint(feedJointKey);
     }
 
-    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
-        feedJobNotificationHandler.registerFeedEventSubscriber(connectionId, subscriber);
+    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IActiveLifecycleEventSubscriber subscriber) {
+        feedJobNotificationHandler.registerEventSubscriber(connectionId, subscriber);
     }
 
-    public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IFeedLifecycleEventSubscriber subscriber) {
+    public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IActiveLifecycleEventSubscriber subscriber) {
         feedJobNotificationHandler.deregisterFeedEventSubscriber(connectionId, subscriber);
 
     }

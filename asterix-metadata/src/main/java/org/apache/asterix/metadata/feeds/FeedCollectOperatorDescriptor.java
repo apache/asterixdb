@@ -22,13 +22,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.om.types.ARecordType;
@@ -93,7 +93,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
             case SOURCE_FEED_INTAKE_STAGE:
                 try {
                     SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
-                            FeedRuntimeType.INTAKE, partition);
+                            ActiveRuntimeType.INTAKE, partition);
                     sourceRuntime = getIntakeRuntime(feedSubscribableRuntimeId);
                     if (sourceRuntime == null) {
                         throw new HyracksDataException("Source intake task not found for source feed id "
@@ -111,12 +111,12 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
                 break;
             case SOURCE_FEED_COMPUTE_STAGE:
                 SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
-                        FeedRuntimeType.COMPUTE, partition);
+                        ActiveRuntimeType.COMPUTE, partition);
                 sourceRuntime = (ISubscribableRuntime) subscriptionManager
                         .getSubscribableRuntime(feedSubscribableRuntimeId);
                 if (sourceRuntime == null) {
                     throw new HyracksDataException("Source compute task not found for source feed id " + sourceFeedId
-                            + " " + FeedRuntimeType.COMPUTE + "[" + partition + "]");
+                            + " " + ActiveRuntimeType.COMPUTE + "[" + partition + "]");
                 }
                 nodePushable = new FeedCollectOperatorNodePushable(ctx, sourceFeedId, connectionId,
                         feedPolicyProperties, partition, nPartitions, sourceRuntime);

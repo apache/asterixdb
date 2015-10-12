@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
 
 public class FeedRuntimeManager {
@@ -35,13 +36,13 @@ public class FeedRuntimeManager {
 
     private final ActiveJobId connectionId;
     private final IFeedConnectionManager connectionManager;
-    private final Map<FeedRuntimeId, FeedRuntime> feedRuntimes;
+    private final Map<ActiveRuntimeId, ActiveRuntime> feedRuntimes;
 
     private final ExecutorService executorService;
 
     public FeedRuntimeManager(ActiveJobId connectionId, IFeedConnectionManager feedConnectionManager) {
         this.connectionId = connectionId;
-        this.feedRuntimes = new ConcurrentHashMap<FeedRuntimeId, FeedRuntime>();
+        this.feedRuntimes = new ConcurrentHashMap<ActiveRuntimeId, ActiveRuntime>();
         this.executorService = Executors.newCachedThreadPool();
         this.connectionManager = feedConnectionManager;
     }
@@ -55,15 +56,15 @@ public class FeedRuntimeManager {
         }
     }
 
-    public FeedRuntime getFeedRuntime(FeedRuntimeId runtimeId) {
+    public ActiveRuntime getFeedRuntime(ActiveRuntimeId runtimeId) {
         return feedRuntimes.get(runtimeId);
     }
 
-    public void registerFeedRuntime(FeedRuntimeId runtimeId, FeedRuntime feedRuntime) {
+    public void registerFeedRuntime(ActiveRuntimeId runtimeId, ActiveRuntime feedRuntime) {
         feedRuntimes.put(runtimeId, feedRuntime);
     }
 
-    public synchronized void deregisterFeedRuntime(FeedRuntimeId runtimeId) {
+    public synchronized void deregisterFeedRuntime(ActiveRuntimeId runtimeId) {
         feedRuntimes.remove(runtimeId);
         if (feedRuntimes.isEmpty()) {
             connectionManager.deregisterFeed(connectionId);
@@ -74,7 +75,7 @@ public class FeedRuntimeManager {
         return executorService;
     }
 
-    public Set<FeedRuntimeId> getFeedRuntimes() {
+    public Set<ActiveRuntimeId> getFeedRuntimes() {
         return feedRuntimes.keySet();
     }
 

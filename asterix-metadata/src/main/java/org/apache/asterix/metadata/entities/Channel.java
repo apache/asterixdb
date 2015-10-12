@@ -15,6 +15,8 @@
 
 package org.apache.asterix.metadata.entities;
 
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -26,8 +28,8 @@ public class Channel implements IMetadataEntity {
 
     private static final long serialVersionUID = 1L;
 
-    private final String dataverseName;
-    private final String channelName;
+    /** A unique identifier for the channel */
+    protected final ActiveId channelId;
     private final String subscriptionsDatasetName;
     private final String resultsDatasetName;
     private final String duration;
@@ -35,20 +37,15 @@ public class Channel implements IMetadataEntity {
 
     public Channel(String dataverseName, String channelName, String subscriptionsDataset, String resultsDataset,
             FunctionSignature function, String duration) {
-        this.dataverseName = dataverseName;
-        this.channelName = channelName;
+        this.channelId = new ActiveId(dataverseName, channelName, ActiveObjectType.CHANNEL);
         this.function = function;
         this.duration = duration;
         this.resultsDatasetName = resultsDataset;
         this.subscriptionsDatasetName = subscriptionsDataset;
     }
 
-    public String getDataverseName() {
-        return dataverseName;
-    }
-
-    public String getChannelName() {
-        return channelName;
+    public ActiveId getChannelId() {
+        return channelId;
     }
 
     public String getSubscriptionsDataset() {
@@ -86,10 +83,7 @@ public class Channel implements IMetadataEntity {
             return false;
         }
         Channel otherDataset = (Channel) other;
-        if (!otherDataset.dataverseName.equals(dataverseName)) {
-            return false;
-        }
-        if (!otherDataset.channelName.equals(channelName)) {
+        if (!otherDataset.channelId.equals(channelId)) {
             return false;
         }
         return true;

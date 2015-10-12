@@ -21,30 +21,29 @@ package org.apache.asterix.feeds;
 import java.util.logging.Level;
 
 import org.json.JSONObject;
-
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.FeedTupleCommitAckMessage;
 import org.apache.asterix.common.feeds.MessageReceiver;
 import org.apache.asterix.common.feeds.NodeLoadReport;
-import org.apache.asterix.common.feeds.api.IFeedLoadManager;
+import org.apache.asterix.common.feeds.api.IActiveLoadManager;
 import org.apache.asterix.common.feeds.api.IFeedMessage.MessageType;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
 import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
 import org.apache.asterix.common.feeds.message.FeedReportMessage;
+import org.apache.asterix.common.feeds.message.FeedTupleCommitAckMessage;
 import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
-import org.apache.asterix.feeds.CentralFeedManager.AQLExecutor;
+import org.apache.asterix.feeds.CentralActiveManager.AQLExecutor;
 import org.apache.asterix.hyracks.bootstrap.FeedBootstrap;
 
 public class FeedMessageReceiver extends MessageReceiver<String> {
 
     private static boolean initialized;
 
-    private final IFeedLoadManager feedLoadManager;
+    private final IActiveLoadManager feedLoadManager;
     private final IFeedTrackingManager feedTrackingManager;
 
-    public FeedMessageReceiver(CentralFeedManager centralFeedManager) {
+    public FeedMessageReceiver(CentralActiveManager centralFeedManager) {
         this.feedLoadManager = centralFeedManager.getFeedLoadManager();
         this.feedTrackingManager = centralFeedManager.getFeedTrackingManager();
     }

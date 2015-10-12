@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.common.feeds.message;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
-import org.apache.asterix.common.feeds.ActiveId;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A feed control message sent from a storage runtime of a feed pipeline to report the intake timestamp corresponding
@@ -108,7 +109,7 @@ public class StorageReportFeedMessage extends FeedMessage {
 
     public static StorageReportFeedMessage read(JSONObject obj) throws JSONException {
         ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
-                obj.getString(FeedConstants.MessageConstants.FEED));
+                obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));
         int partition = obj.getInt(FeedConstants.MessageConstants.PARTITION);

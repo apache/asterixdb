@@ -34,9 +34,9 @@ import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
+import org.apache.asterix.common.feeds.api.ICentralActiveManager;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
-import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.feeds.CentralActiveManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
@@ -60,7 +60,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private Server webServer;
     private Server jsonAPIServer;
     private Server feedServer;
-    private ICentralFeedManager centralFeedManager;
+    private ICentralActiveManager centralFeedManager;
 
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
@@ -100,7 +100,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         waitUntilServerStart(feedServer);
 
         ExternalLibraryBootstrap.setUpExternaLibraries(false);
-        centralFeedManager = CentralFeedManager.getInstance();
+        centralFeedManager = CentralActiveManager.getInstance();
         centralFeedManager.start();
 
         AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager(

@@ -20,10 +20,10 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
-import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 
@@ -46,9 +46,9 @@ public interface IFeedLifecycleListener extends IJobLifecycleListener, IClusterE
 
     public List<String> getStoreLocations(ActiveJobId feedId);
 
-    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber);
+    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IActiveLifecycleEventSubscriber subscriber);
 
-    public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IFeedLifecycleEventSubscriber subscriber);
+    public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IActiveLifecycleEventSubscriber subscriber);
 
     public List<String> getCollectLocations(ActiveJobId feedConnectionId);
 

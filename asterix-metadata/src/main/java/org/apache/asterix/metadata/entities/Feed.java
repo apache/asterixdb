@@ -19,7 +19,8 @@
 
 package org.apache.asterix.metadata.entities;
 
-import org.apache.asterix.common.feeds.ActiveId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -56,7 +57,7 @@ public class Feed implements IMetadataEntity {
     }
 
     public Feed(String dataverseName, String datasetName, FunctionSignature appliedFunction, FeedType feedType) {
-        this.feedId = new ActiveId(dataverseName, datasetName);
+        this.feedId = new ActiveId(dataverseName, datasetName, ActiveObjectType.FEED);
         this.appliedFunction = appliedFunction;
         this.feedType = feedType;
         this.displayName = feedType + "(" + feedId + ")";

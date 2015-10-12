@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedService;
 import org.apache.asterix.common.feeds.message.NodeReportMessage;
@@ -40,7 +40,7 @@ public class NodeLoadReportService implements IFeedService {
     private final NodeLoadReportTask task;
     private final Timer timer;
 
-    public NodeLoadReportService(String nodeId, IFeedManager feedManager) {
+    public NodeLoadReportService(String nodeId, IActiveManager feedManager) {
         this.nodeId = nodeId;
         this.task = new NodeLoadReportTask(nodeId, feedManager);
         this.timer = new Timer();
@@ -59,14 +59,14 @@ public class NodeLoadReportService implements IFeedService {
     private static class NodeLoadReportTask extends TimerTask {
 
         private final String nodeId;
-        private final IFeedManager feedManager;
+        private final IActiveManager feedManager;
         private final NodeReportMessage message;
         private final IFeedMessageService messageService;
 
         private static OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
         private static MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
 
-        public NodeLoadReportTask(String nodeId, IFeedManager feedManager) {
+        public NodeLoadReportTask(String nodeId, IActiveManager feedManager) {
             this.nodeId = nodeId;
             this.feedManager = feedManager;
             this.message = new NodeReportMessage(0.0f, 0L, 0);
@@ -75,7 +75,7 @@ public class NodeLoadReportService implements IFeedService {
 
         @Override
         public void run() {
-            List<FeedRuntimeId> runtimeIds = feedManager.getFeedConnectionManager().getRegisteredRuntimes();
+            List<ActiveRuntimeId> runtimeIds = feedManager.getFeedConnectionManager().getRegisteredRuntimes();
             int nRuntimes = runtimeIds.size();
             double cpuLoad = getCpuLoad();
             double usedHeap = getUsedHeap();

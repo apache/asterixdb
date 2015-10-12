@@ -36,7 +36,7 @@ import org.apache.hyracks.api.job.JobId;
 
 public class FeedsActivator implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedJobNotificationHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveJobNotificationHandler.class.getName());
 
     private List<FeedCollectInfo> feedsToRevive;
     private Mode mode;
@@ -74,12 +74,12 @@ public class FeedsActivator implements Runnable {
                     try {
                         JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.getSpec());
                         if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("Resumed feed :" + finfo.feedConnectionId + " job id " + jobId);
+                            LOGGER.info("Resumed job :" + finfo.getActiveJobId() + " job id " + jobId);
                             LOGGER.info("Job:" + finfo.getSpec());
                         }
                     } catch (Exception e) {
                         if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.warning("Unable to resume feed " + finfo.feedConnectionId + " " + e.getMessage());
+                            LOGGER.warning("Unable to resume job " + finfo.getActiveJobId() + " " + e.getMessage());
                         }
                     }
                 }

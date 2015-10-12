@@ -19,21 +19,21 @@
 package org.apache.asterix.common.feeds;
 
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
-import org.apache.asterix.common.feeds.api.IFeedRuntime;
+import org.apache.asterix.common.feeds.api.IActiveRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 
-public class FeedRuntime implements IFeedRuntime {
+public class ActiveRuntime implements IActiveRuntime {
 
     /** A unique identifier for the runtime **/
-    protected final FeedRuntimeId runtimeId;
+    protected final ActiveRuntimeId runtimeId;
 
     /** The output frame writer associated with the runtime **/
     protected IFrameWriter frameWriter;
 
     /** The pre-processor associated with the runtime **/
-    protected FeedRuntimeInputHandler inputHandler;
+    protected ActiveRuntimeInputHandler inputHandler;
 
-    public FeedRuntime(FeedRuntimeId runtimeId, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter) {
+    public ActiveRuntime(ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter) {
         this.runtimeId = runtimeId;
         this.frameWriter = frameWriter;
         this.inputHandler = inputHandler;
@@ -44,12 +44,12 @@ public class FeedRuntime implements IFeedRuntime {
     }
 
     @Override
-    public FeedRuntimeId getRuntimeId() {
+    public ActiveRuntimeId getRuntimeId() {
         return runtimeId;
     }
 
     @Override
-    public IFrameWriter getFeedFrameWriter() {
+    public IFrameWriter getActiveFrameWriter() {
         return frameWriter;
     }
 
@@ -59,7 +59,7 @@ public class FeedRuntime implements IFeedRuntime {
     }
 
     @Override
-    public FeedRuntimeInputHandler getInputHandler() {
+    public ActiveRuntimeInputHandler getInputHandler() {
         return inputHandler;
     }
 

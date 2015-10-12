@@ -21,8 +21,8 @@ package org.apache.asterix.common.feeds.api;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
 
-public interface IFeedLifecycleIntakeEventSubscriber extends IFeedLifecycleEventSubscriber {
+public interface IFeedLifecycleIntakeEventSubscriber extends IActiveLifecycleEventSubscriber {
 
-    public void handleFeedEvent(FeedIntakeInfo iInfo, FeedLifecycleEvent event) throws AsterixException;
+    public void handleFeedEvent(FeedIntakeInfo iInfo, ActiveLifecycleEvent event) throws AsterixException;
 
 }

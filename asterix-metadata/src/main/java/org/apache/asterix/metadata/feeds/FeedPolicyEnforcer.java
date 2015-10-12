@@ -21,8 +21,8 @@ package org.apache.asterix.metadata.feeds;
 import java.rmi.RemoteException;
 import java.util.Map;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 
 public class FeedPolicyEnforcer {

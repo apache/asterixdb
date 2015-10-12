@@ -31,8 +31,9 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.feeds.api.IFeedFrameHandler;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
@@ -47,7 +48,7 @@ public class FeedFrameHandlers {
     }
 
     public static IFeedFrameHandler getFeedFrameHandler(FrameDistributor distributor, ActiveId feedId,
-            RoutingMode routingMode, FeedRuntimeType runtimeType, int partition, int frameSize) throws IOException {
+            RoutingMode routingMode, ActiveRuntimeType runtimeType, int partition, int frameSize) throws IOException {
         IFeedFrameHandler handler = null;
         switch (routingMode) {
             case IN_MEMORY_ROUTE:
@@ -69,11 +70,11 @@ public class FeedFrameHandlers {
 
         private final ActiveId feedId;
         private int nDiscarded;
-        private final FeedRuntimeType runtimeType;
+        private final ActiveRuntimeType runtimeType;
         private final int partition;
         private final FrameDistributor distributor;
 
-        public DiscardRouter(FrameDistributor distributor, ActiveId feedId, FeedRuntimeType runtimeType, int partition)
+        public DiscardRouter(FrameDistributor distributor, ActiveId feedId, ActiveRuntimeType runtimeType, int partition)
                 throws HyracksDataException {
             this.distributor = distributor;
             this.feedId = feedId;
@@ -128,7 +129,7 @@ public class FeedFrameHandlers {
 
         private final Collection<FeedFrameCollector> frameCollectors;
 
-        public InMemoryRouter(Collection<FeedFrameCollector> frameCollectors, FeedRuntimeType runtimeType, int partition) {
+        public InMemoryRouter(Collection<FeedFrameCollector> frameCollectors, ActiveRuntimeType runtimeType, int partition) {
             this.frameCollectors = frameCollectors;
         }
 
@@ -166,7 +167,7 @@ public class FeedFrameHandlers {
         private FrameSpiller<ByteBuffer> receiver;
         private Iterator<ByteBuffer> iterator;
 
-        public DiskSpiller(FrameDistributor distributor, ActiveId feedId, FeedRuntimeType runtimeType, int partition,
+        public DiskSpiller(FrameDistributor distributor, ActiveId feedId, ActiveRuntimeType runtimeType, int partition,
                 int frameSize) throws IOException {
             this.feedId = feedId;
             receiver = new FrameSpiller<ByteBuffer>(distributor, feedId, frameSize);

@@ -28,11 +28,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedTupleCommitAckMessage;
-import org.apache.asterix.common.feeds.FeedTupleCommitResponseMessage;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
+import org.apache.asterix.common.feeds.message.FeedTupleCommitAckMessage;
+import org.apache.asterix.common.feeds.message.FeedTupleCommitResponseMessage;
 import org.apache.asterix.file.FeedOperations;
 import org.apache.hyracks.api.job.JobSpecification;
 
@@ -116,7 +116,7 @@ public class FeedTrackingManager implements IFeedTrackingManager {
         messageDestinations.addAll(storageLocations);
         try {
             JobSpecification spec = FeedOperations.buildCommitAckResponseJob(response, messageDestinations);
-            CentralFeedManager.runJob(spec, false);
+            CentralActiveManager.runJob(spec, false);
         } catch (Exception e) {
             e.printStackTrace();
             if (LOGGER.isLoggable(Level.WARNING)) {

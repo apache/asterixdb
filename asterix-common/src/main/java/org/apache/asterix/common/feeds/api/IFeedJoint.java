@@ -20,10 +20,10 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 

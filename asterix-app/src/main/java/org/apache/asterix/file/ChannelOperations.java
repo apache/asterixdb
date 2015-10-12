@@ -14,11 +14,11 @@
  */
 package org.apache.asterix.file;
 
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.channels.ChannelId;
 import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;

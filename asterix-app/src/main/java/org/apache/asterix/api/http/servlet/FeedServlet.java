@@ -32,14 +32,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.api.IFeedLoadManager;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveLoadManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.feeds.CentralActiveManager;
 
 public class FeedServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -90,7 +91,7 @@ public class FeedServlet extends HttpServlet {
         if (requestURI.startsWith("/webui/static")) {
             outStr = sb.toString();
         } else {
-            Collection<FeedActivity> lfa = CentralFeedManager.getInstance().getFeedLoadManager().getFeedActivities();
+            Collection<FeedActivity> lfa = CentralActiveManager.getInstance().getFeedLoadManager().getActivities();
             StringBuilder ldStr = new StringBuilder();
             ldStr.append("<br />");
             ldStr.append("<br />");
@@ -128,11 +129,11 @@ public class FeedServlet extends HttpServlet {
         String compute = activity.getFeedActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
         String store = activity.getFeedActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
-        IFeedLoadManager loadManager = CentralFeedManager.getInstance().getFeedLoadManager();
+        IActiveLoadManager loadManager = CentralActiveManager.getInstance().getFeedLoadManager();
         ActiveJobId connectionId = new FeedConnectionId(new ActiveId(activity.getDataverseName(),
-                activity.getFeedName()), activity.getDatasetName());
-        int intakeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.COLLECT) * intake.split(",").length;
-        int storeRate = loadManager.getOutflowRate(connectionId, FeedRuntimeType.STORE) * store.split(",").length;
+                activity.getFeedName(), ActiveObjectType.FEED), activity.getDatasetName());
+        int intakeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.COLLECT) * intake.split(",").length;
+        int storeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.STORE) * store.split(",").length;
 
         html.append("<tr>");
         html.append("<td>" + activity.getFeedName() + "</td>");
@@ -167,5 +168,3 @@ public class FeedServlet extends HttpServlet {
         return "<font color=\"" + color + "\">" + s + "</font>";
     }
 }
-
-

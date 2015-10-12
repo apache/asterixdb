@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.FrameDataException;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -40,11 +40,11 @@ public class FeedExceptionHandler implements IExceptionHandler {
     private final IHyracksTaskContext ctx;
     private final FrameTupleAccessor fta;
     private final RecordDescriptor recordDesc;
-    private final IFeedManager feedManager;
+    private final IActiveManager feedManager;
     private final FeedConnectionId connectionId;
 
     public FeedExceptionHandler(IHyracksTaskContext ctx, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedManager feedManager, FeedConnectionId connectionId) {
+            IActiveManager feedManager, FeedConnectionId connectionId) {
         this.ctx = ctx;
         this.fta = fta;
         this.recordDesc = recordDesc;

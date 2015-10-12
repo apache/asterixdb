@@ -22,26 +22,26 @@ import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber;
 
-public class FeedLifecycleEventSubscriber implements IFeedLifecycleEventSubscriber {
+public class ActiveLifecycleEventSubscriber implements IActiveLifecycleEventSubscriber {
 
-    private LinkedBlockingQueue<FeedLifecycleEvent> inbox;
+    private LinkedBlockingQueue<ActiveLifecycleEvent> inbox;
 
-    public FeedLifecycleEventSubscriber() {
-        this.inbox = new LinkedBlockingQueue<FeedLifecycleEvent>();
+    public ActiveLifecycleEventSubscriber() {
+        this.inbox = new LinkedBlockingQueue<ActiveLifecycleEvent>();
     }
 
     @Override
-    public void handleFeedEvent(FeedLifecycleEvent event) {
+    public void handleEvent(ActiveLifecycleEvent event) {
         inbox.add(event);
     }
 
     @Override
-    public void assertEvent(FeedLifecycleEvent event) throws AsterixException, InterruptedException {
+    public void assertEvent(ActiveLifecycleEvent event) throws AsterixException, InterruptedException {
         boolean eventOccurred = false;
-        FeedLifecycleEvent e = null;
-        Iterator<FeedLifecycleEvent> eventsSoFar = inbox.iterator();
+        ActiveLifecycleEvent e = null;
+        Iterator<ActiveLifecycleEvent> eventsSoFar = inbox.iterator();
         while (eventsSoFar.hasNext()) {
             e = eventsSoFar.next();
             assertNoFailure(e);
@@ -57,8 +57,9 @@ public class FeedLifecycleEventSubscriber implements IFeedLifecycleEventSubscrib
         }
     }
 
-    private void assertNoFailure(FeedLifecycleEvent e) throws AsterixException {
-        if (e.equals(FeedLifecycleEvent.FEED_INTAKE_FAILURE) || e.equals(FeedLifecycleEvent.FEED_COLLECT_FAILURE)) {
+    private void assertNoFailure(ActiveLifecycleEvent e) throws AsterixException {
+        if (e.equals(ActiveLifecycleEvent.FEED_INTAKE_FAILURE) || e.equals(ActiveLifecycleEvent.FEED_COLLECT_FAILURE)) {
+            //TODO: Handle failures for other types of jobs
             throw new AsterixException("Failure in feed");
         }
     }

@@ -26,10 +26,10 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedRuntime;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.ActiveRuntime;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedRuntimeManager;
 import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
 
@@ -70,7 +70,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public synchronized void registerFeedRuntime(FeedConnectionId connectionId, FeedRuntime feedRuntime)
+    public synchronized void registerFeedRuntime(FeedConnectionId connectionId, ActiveRuntime feedRuntime)
             throws Exception {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(connectionId);
         if (runtimeMgr == null) {
@@ -81,7 +81,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public void deRegisterFeedRuntime(ActiveJobId connectionId, FeedRuntimeId feedRuntimeId) {
+    public void deRegisterFeedRuntime(ActiveJobId connectionId, ActiveRuntimeId feedRuntimeId) {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(connectionId);
         if (runtimeMgr != null) {
             runtimeMgr.deregisterFeedRuntime(feedRuntimeId);
@@ -89,7 +89,7 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public FeedRuntime getFeedRuntime(ActiveJobId connectionId, FeedRuntimeId feedRuntimeId) {
+    public ActiveRuntime getFeedRuntime(ActiveJobId connectionId, ActiveRuntimeId feedRuntimeId) {
         FeedRuntimeManager runtimeMgr = feedRuntimeManagers.get(connectionId);
         return runtimeMgr != null ? runtimeMgr.getFeedRuntime(feedRuntimeId) : null;
     }
@@ -100,8 +100,8 @@ public class FeedConnectionManager implements IFeedConnectionManager {
     }
 
     @Override
-    public List<FeedRuntimeId> getRegisteredRuntimes() {
-        List<FeedRuntimeId> runtimes = new ArrayList<FeedRuntimeId>();
+    public List<ActiveRuntimeId> getRegisteredRuntimes() {
+        List<ActiveRuntimeId> runtimes = new ArrayList<ActiveRuntimeId>();
         for (Entry<FeedConnectionId, FeedRuntimeManager> entry : feedRuntimeManagers.entrySet()) {
             runtimes.addAll(entry.getValue().getFeedRuntimes());
         }

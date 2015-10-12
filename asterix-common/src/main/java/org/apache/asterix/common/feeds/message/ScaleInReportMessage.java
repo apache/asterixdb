@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.common.feeds.message;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A feed control message indicating the need to scale in a stage of the feed ingestion pipeline.
@@ -36,13 +36,13 @@ public class ScaleInReportMessage extends FeedMessage {
 
     private final FeedConnectionId connectionId;
 
-    private final FeedRuntimeType runtimeType;
+    private final ActiveRuntimeType runtimeType;
 
     private int currentCardinality;
 
     private int reducedCardinaliy;
 
-    public ScaleInReportMessage(FeedConnectionId connectionId, FeedRuntimeType runtimeType, int currentCardinality,
+    public ScaleInReportMessage(FeedConnectionId connectionId, ActiveRuntimeType runtimeType, int currentCardinality,
             int reducedCardinaliy) {
         super(MessageType.SCALE_IN_REQUEST);
         this.connectionId = connectionId;
@@ -57,7 +57,7 @@ public class ScaleInReportMessage extends FeedMessage {
                 + " currentCardinality " + currentCardinality + " reducedCardinality " + reducedCardinaliy;
     }
 
-    public FeedRuntimeType getRuntimeType() {
+    public ActiveRuntimeType getRuntimeType() {
         return runtimeType;
     }
 
@@ -80,10 +80,10 @@ public class ScaleInReportMessage extends FeedMessage {
 
     public static ScaleInReportMessage read(JSONObject obj) throws JSONException {
         ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
-                obj.getString(FeedConstants.MessageConstants.FEED));
+                obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));
-        FeedRuntimeType runtimeType = FeedRuntimeType.valueOf(obj
+        ActiveRuntimeType runtimeType = ActiveRuntimeType.valueOf(obj
                 .getString(FeedConstants.MessageConstants.RUNTIME_TYPE));
         return new ScaleInReportMessage(connectionId, runtimeType,
                 obj.getInt(FeedConstants.MessageConstants.CURRENT_CARDINALITY),

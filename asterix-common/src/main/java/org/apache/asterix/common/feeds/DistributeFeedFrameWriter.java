@@ -24,10 +24,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler.Type;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -53,13 +55,13 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private IFrameWriter writer;
 
     /** The feed operation whose output is being distributed by the DistributeFeedFrameWriter **/
-    private final FeedRuntimeType feedRuntimeType;
+    private final ActiveRuntimeType feedRuntimeType;
 
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveId feedId, IFrameWriter writer, FeedRuntimeType feedRuntimeType,
-            int partition, FrameTupleAccessor fta, IFeedManager feedManager) throws IOException {
+    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveId feedId, IFrameWriter writer, ActiveRuntimeType feedRuntimeType,
+            int partition, FrameTupleAccessor fta, IActiveManager feedManager) throws IOException {
         this.feedId = feedId;
         this.frameDistributor = new FrameDistributor(ctx, feedId, feedRuntimeType, partition, true,
                 feedManager.getFeedMemoryManager(), fta);

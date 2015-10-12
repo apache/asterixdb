@@ -21,6 +21,7 @@ package org.apache.asterix.common.feeds;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.IMessageReceiver;
 import org.apache.hyracks.api.comm.IFrameWriter;

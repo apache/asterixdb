@@ -29,7 +29,7 @@ import org.apache.asterix.common.api.IClusterManagementWorkResponse;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
-import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.feeds.CentralActiveManager;
 import org.apache.asterix.file.ExternalIndexingOperations;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -84,7 +84,7 @@ public class AsterixGlobalRecoveryManager implements IClusterEventsSubscriber {
                         List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
                         for (Dataverse dataverse : dataverses) {
                             if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
-                                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse, CentralFeedManager.getInstance());
+                                AqlMetadataProvider metadataProvider = new AqlMetadataProvider(dataverse, CentralActiveManager.getInstance());
                                 List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
                                         dataverse.getDataverseName());
                                 for (Dataset dataset : datasets) {

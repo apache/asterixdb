@@ -24,13 +24,14 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.DataBucket.ContentType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMemoryComponent;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
 import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -42,19 +43,19 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 /**
  * Provides for error-handling and input-side buffering for a feed runtime.
  */
-public class FeedRuntimeInputHandler implements IFrameWriter {
+public class ActiveRuntimeInputHandler implements IFrameWriter {
 
-    private static Logger LOGGER = Logger.getLogger(FeedRuntimeInputHandler.class.getName());
+    private static Logger LOGGER = Logger.getLogger(ActiveRuntimeInputHandler.class.getName());
 
-    private final FeedConnectionId connectionId;
-    private final FeedRuntimeId runtimeId;
+    private final ActiveJobId activeJobId;
+    private final ActiveRuntimeId runtimeId;
     private final FeedPolicyAccessor feedPolicyAccessor;
     private final boolean bufferingEnabled;
     private final IExceptionHandler exceptionHandler;
     private final FeedFrameDiscarder discarder;
     private final FeedFrameSpiller spiller;
     private final FeedPolicyAccessor fpa;
-    private final IFeedManager feedManager;
+    private final IActiveManager feedManager;
 
     private IFrameWriter coreOperator;
     private MonitoredBuffer mBuffer;
@@ -68,10 +69,10 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
 
     private FrameEventCallback frameEventCallback;
 
-    public FeedRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId, IFrameWriter coreOperator,
-            FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
-            RecordDescriptor recordDesc, IFeedManager feedManager, int nPartitions) throws IOException {
-        this.connectionId = connectionId;
+    public ActiveRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
+            IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
+            RecordDescriptor recordDesc, IActiveManager feedManager, int nPartitions) throws IOException {
+        this.activeJobId = connectionId;
         this.runtimeId = runtimeId;
         this.coreOperator = coreOperator;
         this.bufferingEnabled = bufferingEnabled;
@@ -127,7 +128,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
                     discard(frame);
                     break;
                 case STALL:
-                    switch (runtimeId.getFeedRuntimeType()) {
+                    switch (runtimeId.getRuntimeType()) {
                         case COLLECT:
                         case COMPUTE_COLLECT:
                         case COMPUTE:
@@ -182,16 +183,16 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     }
 
     public void reportUnresolvableCongestion() throws HyracksDataException {
-        if (this.runtimeId.getFeedRuntimeType().equals(FeedRuntimeType.COMPUTE)) {
-            FeedCongestionMessage congestionReport = new FeedCongestionMessage(connectionId, runtimeId,
-                    mBuffer.getInflowRate(), mBuffer.getOutflowRate(), mode);
+        if (this.runtimeId.getRuntimeType().equals(ActiveRuntimeType.COMPUTE)) {
+            FeedCongestionMessage congestionReport = new FeedCongestionMessage((FeedConnectionId) activeJobId,
+                    runtimeId, mBuffer.getInflowRate(), mBuffer.getOutflowRate(), mode);
             feedManager.getFeedMessageService().sendMessage(congestionReport);
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Congestion reported " + this.connectionId + " " + this.runtimeId);
+                LOGGER.warning("Congestion reported " + this.activeJobId + " " + this.runtimeId);
             }
         } else {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unresolvable congestion at " + this.connectionId + " " + this.runtimeId);
+                LOGGER.warning("Unresolvable congestion at " + this.activeJobId + " " + this.runtimeId);
             }
         }
     }
@@ -377,7 +378,7 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         return nProcessed;
     }
 
-    public FeedRuntimeId getRuntimeId() {
+    public ActiveRuntimeId getRuntimeId() {
         return runtimeId;
     }
 
@@ -401,11 +402,11 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
         }
     }
 
-    public FeedConnectionId getConnectionId() {
-        return connectionId;
+    public ActiveJobId getActiveJobId() {
+        return activeJobId;
     }
 
-    public IFeedManager getFeedManager() {
+    public IActiveManager getFeedManager() {
         return feedManager;
     }
 
@@ -420,10 +421,11 @@ public class FeedRuntimeInputHandler implements IFrameWriter {
     public void setThrottlingEnabled(boolean throttlingEnabled) {
         if (this.throttlingEnabled != throttlingEnabled) {
             this.throttlingEnabled = throttlingEnabled;
-            IFeedMessage throttlingEnabledMesg = new ThrottlingEnabledFeedMessage(connectionId, runtimeId);
+            IFeedMessage throttlingEnabledMesg = new ThrottlingEnabledFeedMessage((FeedConnectionId) activeJobId,
+                    runtimeId);
             feedManager.getFeedMessageService().sendMessage(throttlingEnabledMesg);
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Throttling " + throttlingEnabled + " for " + this.connectionId + "[" + runtimeId + "]");
+                LOGGER.warning("Throttling " + throttlingEnabled + " for " + this.activeJobId + "[" + runtimeId + "]");
             }
         }
     }

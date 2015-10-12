@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.feeds;
+package org.apache.asterix.common.active;
 
 import java.io.Serializable;
 

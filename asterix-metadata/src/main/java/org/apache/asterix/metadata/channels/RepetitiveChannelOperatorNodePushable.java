@@ -25,7 +25,7 @@ import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.channels.ChannelId;
 import org.apache.asterix.common.channels.ChannelRuntimeId;
 import org.apache.asterix.common.channels.api.IChannelRuntime;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorNodePushable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -42,7 +42,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
 
     private final ChannelId channelId;
     private final ChannelRuntimeId channelRuntimeId;
-    private final IFeedManager feedManager;
+    private final IActiveManager feedManager;
     private final IHyracksTaskContext ctx;
     private final long duration;
     private final String query;

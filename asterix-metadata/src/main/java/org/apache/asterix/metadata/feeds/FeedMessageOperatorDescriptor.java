@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.feeds;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.ActiveId;
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.hyracks.api.comm.IFrameWriter;
 
 public interface IFeedOperatorOutputSideHandler extends IFrameWriter {

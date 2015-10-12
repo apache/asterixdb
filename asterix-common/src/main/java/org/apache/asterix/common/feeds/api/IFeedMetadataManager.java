@@ -33,7 +33,7 @@ public interface IFeedMetadataManager {
      * @param feedManager
      * @throws AsterixException
      */
-    public void logTuple(FeedConnectionId feedConnectionId, String tuple, String message, IFeedManager feedManager)
+    public void logTuple(FeedConnectionId feedConnectionId, String tuple, String message, IActiveManager feedManager)
             throws AsterixException;
 
 }

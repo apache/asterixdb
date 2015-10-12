@@ -20,11 +20,11 @@ package org.apache.asterix.common.feeds.message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 
 /**
  * A feed control message indicating the need to end the feed. This message is dispatched
@@ -38,7 +38,7 @@ public class EndFeedMessage extends FeedMessage {
 
     private final FeedConnectionId connectionId;
 
-    private final FeedRuntimeType sourceRuntimeType;
+    private final ActiveRuntimeType sourceRuntimeType;
 
     private final boolean completeDisconnection;
 
@@ -49,7 +49,7 @@ public class EndFeedMessage extends FeedMessage {
         DISCONTINUE_SOURCE
     }
 
-    public EndFeedMessage(FeedConnectionId connectionId, FeedRuntimeType sourceRuntimeType, ActiveId sourceFeedId,
+    public EndFeedMessage(FeedConnectionId connectionId, ActiveRuntimeType sourceRuntimeType, ActiveId sourceFeedId,
             boolean completeDisconnection, EndMessageType endMessageType) {
         super(MessageType.END);
         this.connectionId = connectionId;
@@ -64,7 +64,7 @@ public class EndFeedMessage extends FeedMessage {
         return MessageType.END.name() + "  " + connectionId + " [" + sourceRuntimeType + "] ";
     }
 
-    public FeedRuntimeType getSourceRuntimeType() {
+    public ActiveRuntimeType getSourceRuntimeType() {
         return sourceRuntimeType;
     }
 

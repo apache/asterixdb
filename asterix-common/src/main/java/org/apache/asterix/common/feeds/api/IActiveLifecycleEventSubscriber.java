@@ -16,33 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.feeds;
+package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.active.ActiveJobInfo;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.asterix.common.exceptions.AsterixException;
 
-public class FeedJobInfo extends ActiveJobInfo {
+public interface IActiveLifecycleEventSubscriber {
 
-    public enum JobType {
-        INTAKE,
-        COLLECT,
-        FEED_CONNECT
+    public enum ActiveLifecycleEvent {
+        ACTIVE_JOB_STARTED,
+        FEED_INTAKE_STARTED,
+        FEED_COLLECT_STARTED,
+        FEED_INTAKE_FAILURE,
+        FEED_COLLECT_FAILURE,
+        ACTIVE_JOB_FAILURE,
+        ACTIVE_JOB_ENDED,
+        FEED_ENDED
     }
 
-    private final JobType jobType;
+    public void assertEvent(ActiveLifecycleEvent event) throws AsterixException, InterruptedException;
 
-    public FeedJobInfo(JobId jobId, JobState state, JobType jobType, JobSpecification spec) {
-        super(jobId, state, spec);
-        this.jobType = jobType;
-    }
-
-    public JobType getJobType() {
-        return jobType;
-    }
-
-    public String toString() {
-        return jobId + " [" + jobType + "]";
-    }
-
+    public void handleEvent(ActiveLifecycleEvent event);
 }

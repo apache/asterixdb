@@ -22,20 +22,20 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.FeedCollectRuntimeInputHandler;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedFrameCollector.State;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
-import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -55,13 +55,13 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private final FeedConnectionId connectionId;
     private final Map<String, String> feedPolicy;
     private final FeedPolicyAccessor policyAccessor;
-    private final IFeedManager feedManager;
+    private final IActiveManager feedManager;
     private final ISubscribableRuntime sourceRuntime;
     private final IHyracksTaskContext ctx;
     private final int nPartitions;
 
     private RecordDescriptor outputRecordDescriptor;
-    private FeedRuntimeInputHandler inputSideHandler;
+    private ActiveRuntimeInputHandler inputSideHandler;
     private CollectionRuntime collectRuntime;
 
     public FeedCollectOperatorNodePushable(IHyracksTaskContext ctx, ActiveId sourceFeedId,
@@ -83,8 +83,8 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     public void initialize() throws HyracksDataException {
         try {
             outputRecordDescriptor = recordDesc;
-            FeedRuntimeType sourceRuntimeType = ((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId())
-                    .getFeedRuntimeType();
+            ActiveRuntimeType sourceRuntimeType = ((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId())
+                    .getRuntimeType();
             switch (sourceRuntimeType) {
                 case INTAKE:
                     handleCompleteConnection();
@@ -119,8 +119,8 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleCompleteConnection() throws Exception {
-        FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.COLLECT, partition,
-                FeedRuntimeId.DEFAULT_OPERAND_ID);
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(ActiveRuntimeType.COLLECT, partition,
+                ActiveRuntimeId.DEFAULT_OPERAND_ID);
         collectRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager().getFeedRuntime(connectionId,
                 runtimeId);
         if (collectRuntime == null) {
@@ -130,20 +130,19 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
         }
     }
 
-    private void beginNewFeed(FeedRuntimeId runtimeId) throws Exception {
+    private void beginNewFeed(ActiveRuntimeId runtimeId) throws Exception {
         writer.open();
         IFrameWriter outputSideWriter = writer;
-        if (((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId()).getFeedRuntimeType().equals(
-                FeedRuntimeType.COMPUTE)) {
+        if (((SubscribableFeedRuntimeId) sourceRuntime.getRuntimeId()).getRuntimeType().equals(
+                ActiveRuntimeType.COMPUTE)) {
             outputSideWriter = new CollectTransformFeedFrameWriter(ctx, writer, sourceRuntime, outputRecordDescriptor,
                     connectionId);
             this.recordDesc = sourceRuntime.getRecordDescriptor();
         }
 
         FrameTupleAccessor tupleAccessor = new FrameTupleAccessor(recordDesc);
-        inputSideHandler = new FeedCollectRuntimeInputHandler(ctx, connectionId, runtimeId, outputSideWriter, policyAccessor,
-                false,  tupleAccessor, recordDesc,
-                feedManager, nPartitions);
+        inputSideHandler = new FeedCollectRuntimeInputHandler(ctx, connectionId, runtimeId, outputSideWriter,
+                policyAccessor, false, tupleAccessor, recordDesc, feedManager, nPartitions);
 
         collectRuntime = new CollectionRuntime(connectionId, runtimeId, inputSideHandler, outputSideWriter,
                 sourceRuntime, feedPolicy);
@@ -167,8 +166,8 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handlePartialConnection() throws Exception {
-        FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.COMPUTE_COLLECT, partition,
-                FeedRuntimeId.DEFAULT_OPERAND_ID);
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(ActiveRuntimeType.COMPUTE_COLLECT, partition,
+                ActiveRuntimeId.DEFAULT_OPERAND_ID);
         writer.open();
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Beginning new feed (from existing partial connection):" + connectionId);
@@ -176,9 +175,8 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
         IFeedOperatorOutputSideHandler wrapper = new CollectTransformFeedFrameWriter(ctx, writer, sourceRuntime,
                 outputRecordDescriptor, connectionId);
 
-        inputSideHandler = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, wrapper, policyAccessor, false,
-                 new FrameTupleAccessor(recordDesc), recordDesc, feedManager,
-                nPartitions);
+        inputSideHandler = new ActiveRuntimeInputHandler(ctx, connectionId, runtimeId, wrapper, policyAccessor, false,
+                new FrameTupleAccessor(recordDesc), recordDesc, feedManager, nPartitions);
 
         collectRuntime = new CollectionRuntime(connectionId, runtimeId, inputSideHandler, wrapper, sourceRuntime,
                 feedPolicy);

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.declared;
 
-import org.apache.asterix.common.feeds.ActiveId;
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;

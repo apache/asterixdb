@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class FeedFrameDiscarder {
@@ -30,15 +31,15 @@ public class FeedFrameDiscarder {
     private static final Logger LOGGER = Logger.getLogger(FeedFrameSpiller.class.getName());
 
     private final IHyracksTaskContext ctx;
-    private final FeedRuntimeInputHandler inputHandler;
+    private final ActiveRuntimeInputHandler inputHandler;
     private final ActiveJobId connectionId;
-    private final FeedRuntimeId runtimeId;
+    private final ActiveRuntimeId runtimeId;
     private final FeedPolicyAccessor policyAccessor;
     private final float maxFractionDiscard;
     private int nDiscarded;
 
-    public FeedFrameDiscarder(IHyracksTaskContext ctx, ActiveJobId connectionId, FeedRuntimeId runtimeId, 
-            FeedPolicyAccessor policyAccessor, FeedRuntimeInputHandler inputHandler) throws IOException {
+    public FeedFrameDiscarder(IHyracksTaskContext ctx, ActiveJobId connectionId, ActiveRuntimeId runtimeId, 
+            FeedPolicyAccessor policyAccessor, ActiveRuntimeInputHandler inputHandler) throws IOException {
         this.ctx = ctx;
         this.connectionId = connectionId;
         this.runtimeId = runtimeId;

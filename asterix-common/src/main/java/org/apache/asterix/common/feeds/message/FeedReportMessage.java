@@ -19,29 +19,30 @@
 
 package org.apache.asterix.common.feeds.message;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class FeedReportMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedConnectionId connectionId;
-    private final FeedRuntimeId runtimeId;
+    private final ActiveJobId activeJobId;
+    private final ActiveRuntimeId runtimeId;
     private final ValueType valueType;
     private int value;
 
-    public FeedReportMessage(FeedConnectionId connectionId, FeedRuntimeId runtimeId, ValueType valueType, int value) {
+    public FeedReportMessage(ActiveJobId connectionId, ActiveRuntimeId runtimeId, ValueType valueType, int value) {
         super(MessageType.FEED_REPORT);
-        this.connectionId = connectionId;
+        this.activeJobId = connectionId;
         this.runtimeId = runtimeId;
         this.valueType = valueType;
         this.value = value;
@@ -55,10 +56,12 @@ public class FeedReportMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
-        obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
-        obj.put(FeedConstants.MessageConstants.RUNTIME_TYPE, runtimeId.getFeedRuntimeType());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, activeJobId.getActiveId().getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, activeJobId.getActiveId().getName());
+        if (activeJobId instanceof FeedConnectionId) {
+            obj.put(FeedConstants.MessageConstants.DATASET, ((FeedConnectionId) activeJobId).getDatasetName());
+        }
+        obj.put(FeedConstants.MessageConstants.RUNTIME_TYPE, runtimeId.getRuntimeType());
         obj.put(FeedConstants.MessageConstants.PARTITION, runtimeId.getPartition());
         obj.put(FeedConstants.MessageConstants.VALUE_TYPE, valueType);
         obj.put(FeedConstants.MessageConstants.VALUE, value);
@@ -67,10 +70,10 @@ public class FeedReportMessage extends FeedMessage {
 
     public static FeedReportMessage read(JSONObject obj) throws JSONException {
         ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
-                obj.getString(FeedConstants.MessageConstants.FEED));
+                obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));
-        FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.valueOf(obj
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(ActiveRuntimeType.valueOf(obj
                 .getString(FeedConstants.MessageConstants.RUNTIME_TYPE)),
                 obj.getInt(FeedConstants.MessageConstants.PARTITION), FeedConstants.MessageConstants.NOT_APPLICABLE);
         ValueType type = ValueType.valueOf(obj.getString(MessageConstants.VALUE_TYPE));
@@ -87,10 +90,10 @@ public class FeedReportMessage extends FeedMessage {
     }
 
     public ActiveJobId getConnectionId() {
-        return connectionId;
+        return activeJobId;
     }
 
-    public FeedRuntimeId getRuntimeId() {
+    public ActiveRuntimeId getRuntimeId() {
         return runtimeId;
     }
 

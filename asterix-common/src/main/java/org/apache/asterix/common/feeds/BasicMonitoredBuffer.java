@@ -28,9 +28,9 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class BasicMonitoredBuffer extends MonitoredBuffer {
 
-    public BasicMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter, FrameTupleAccessor fta,
+    public BasicMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter, FrameTupleAccessor fta,
             RecordDescriptor recordDesc, IFeedMetricCollector metricCollector,
-            FeedConnectionId connectionId, FeedRuntimeId runtimeId, IExceptionHandler exceptionHandler,
+            FeedConnectionId connectionId, ActiveRuntimeId runtimeId, IExceptionHandler exceptionHandler,
             IFrameEventCallback callback, int nPartitions, FeedPolicyAccessor policyAccessor) {
         super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, connectionId, runtimeId,
                 exceptionHandler, callback, nPartitions, policyAccessor);

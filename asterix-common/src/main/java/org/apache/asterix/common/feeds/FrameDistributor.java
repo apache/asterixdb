@@ -25,9 +25,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.feeds.api.IFeedMemoryComponent.Type;
 import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,7 +42,7 @@ public class FrameDistributor {
 
     private final IHyracksTaskContext ctx;
     private final ActiveId feedId;
-    private final FeedRuntimeType feedRuntimeType;
+    private final ActiveRuntimeType feedRuntimeType;
     private final int partition;
     private final IFeedMemoryManager memoryManager;
     private final boolean enableSynchronousTransfer;
@@ -73,7 +74,7 @@ public class FrameDistributor {
         INACTIVE
     }
 
-    public FrameDistributor(IHyracksTaskContext ctx, ActiveId feedId, FeedRuntimeType feedRuntimeType, int partition,
+    public FrameDistributor(IHyracksTaskContext ctx, ActiveId feedId, ActiveRuntimeType feedRuntimeType, int partition,
             boolean enableSynchronousTransfer, IFeedMemoryManager memoryManager, FrameTupleAccessor fta)
             throws HyracksDataException {
         this.ctx = ctx;
@@ -348,7 +349,7 @@ public class FrameDistributor {
         return distributionMode;
     }
 
-    public FeedRuntimeType getFeedRuntimeType() {
+    public ActiveRuntimeType getFeedRuntimeType() {
         return feedRuntimeType;
     }
 

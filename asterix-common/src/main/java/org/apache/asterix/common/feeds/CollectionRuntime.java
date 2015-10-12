@@ -20,6 +20,7 @@ package org.apache.asterix.common.feeds;
 
 import java.util.Map;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedFrameCollector.State;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
@@ -32,15 +33,15 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
  * intake job. For a secondary feed, tuples are collected from the intake/compute
  * runtime associated with the source feed.
  */
-public class CollectionRuntime extends FeedRuntime implements ISubscriberRuntime {
+public class CollectionRuntime extends ActiveRuntime implements ISubscriberRuntime {
 
     private final ActiveJobId connectionId;
     private final ISubscribableRuntime sourceRuntime;
     private final Map<String, String> feedPolicy;
     private FeedFrameCollector frameCollector;
 
-    public CollectionRuntime(ActiveJobId connectionId, FeedRuntimeId runtimeId,
-            FeedRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter,
+    public CollectionRuntime(ActiveJobId connectionId, ActiveRuntimeId runtimeId,
+            ActiveRuntimeInputHandler inputSideHandler, IFrameWriter outputSideWriter,
             ISubscribableRuntime sourceRuntime, Map<String, String> feedPolicy) {
         super(runtimeId, inputSideHandler, outputSideWriter);
         this.connectionId = connectionId;

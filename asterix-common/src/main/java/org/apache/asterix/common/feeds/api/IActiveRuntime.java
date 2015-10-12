@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.feeds.FeedRuntimeId;
-import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.hyracks.api.comm.IFrameWriter;
 
-public interface IFeedRuntime {
+public interface IActiveRuntime {
 
-    public enum FeedRuntimeType {
+    public enum ActiveRuntimeType {
         INTAKE,
         COLLECT,
         COMPUTE_COLLECT,
@@ -32,6 +32,8 @@ public interface IFeedRuntime {
         STORE,
         OTHER,
         ETS,
+        REPETITIVE,
+        CONTINUOUS,
         JOIN
     }
 
@@ -48,15 +50,15 @@ public interface IFeedRuntime {
     }
 
     /**
-     * @return the unique runtime id associated with the feedRuntime
+     * @return the unique runtime id associated with the activeRuntime
      */
-    public FeedRuntimeId getRuntimeId();
+    public ActiveRuntimeId getRuntimeId();
 
     /**
-     * @return the frame writer associated with the feed runtime.
+     * @return the frame writer associated with the activeRuntime.
      */
-    public IFrameWriter getFeedFrameWriter();
+    public IFrameWriter getActiveFrameWriter();
 
-    public FeedRuntimeInputHandler getInputHandler();
+    public ActiveRuntimeInputHandler getInputHandler();
 
 }

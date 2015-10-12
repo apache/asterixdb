@@ -20,7 +20,9 @@ package org.apache.asterix.common.feeds;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.feeds.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
 
 /**
  * A unique identifier for a feed connection. A feed connection is an instance of a data feed that is flowing into a dataset.

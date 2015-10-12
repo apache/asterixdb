@@ -44,7 +44,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.Test;
 
-import org.apache.asterix.feeds.CentralFeedManager;
+import org.apache.asterix.feeds.CentralActiveManager;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -169,7 +169,7 @@ public class ConnectorAPIServletTest {
     private ARecordType getMetadataRecordType(String dataverseName, String datasetName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
-        AqlMetadataProvider metadataProvider = new AqlMetadataProvider(null, CentralFeedManager.getInstance());
+        AqlMetadataProvider metadataProvider = new AqlMetadataProvider(null, CentralActiveManager.getInstance());
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         ARecordType recordType = (ARecordType) metadataProvider.findType(dataverseName, dataset.getItemTypeName());

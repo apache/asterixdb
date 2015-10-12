@@ -18,6 +18,44 @@
  */
 package org.apache.asterix.feeds;
 
+import java.io.PrintWriter;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.apache.asterix.api.common.SessionConfig;
+import org.apache.asterix.aql.expression.DataverseDecl;
+import org.apache.asterix.aql.expression.DisconnectFeedStatement;
+import org.apache.asterix.aql.expression.Identifier;
+import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobInfo;
+import org.apache.asterix.common.api.IClusterManagementWork;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.api.IClusterManagementWorkResponse;
+import org.apache.asterix.common.feeds.FeedConnectJobInfo;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConnectionRequest;
+import org.apache.asterix.common.feeds.FeedIntakeInfo;
+import org.apache.asterix.common.feeds.FeedJointKey;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber;
+import org.apache.asterix.common.feeds.api.IFeedJoint;
+import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
+import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.channels.ChannelMetaOperatorDescriptor;
+import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
+import org.apache.asterix.metadata.cluster.AddNodeWork;
+import org.apache.asterix.metadata.cluster.ClusterManager;
+import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import org.apache.asterix.om.util.AsterixAppContextInfo;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
+import org.apache.hyracks.api.job.JobSpecification;
 
 /**
  * A listener that subscribes to events associated with cluster membership
@@ -26,7 +64,7 @@ package org.apache.asterix.feeds;
  * take any corrective action that may be required when a node involved in a
  * feed leaves the cluster.
  */
-/*
+
 public class ActiveJobLifecycleOldListener implements IActiveJobLifeCycleListener {
 
     private static final Logger LOGGER = Logger.getLogger(ActiveJobLifecycleListener.class.getName());
@@ -93,7 +131,7 @@ public class ActiveJobLifecycleOldListener implements IActiveJobLifeCycleListene
 
     /*
      * Traverse job specification to categorize job as a feed intake job or a feed collection job 
-     
+     */
     @Override
     public void notifyJobCreation(JobId jobId, IActivityClusterGraphGeneratorFactory acggf) throws HyracksException {
         JobSpecification spec = acggf.getJobSpecification();
@@ -453,4 +491,4 @@ public class ActiveJobLifecycleOldListener implements IActiveJobLifeCycleListene
         return jobNotificationHandler.getJobLocations(activeId);
     }
 
-}*/
+}

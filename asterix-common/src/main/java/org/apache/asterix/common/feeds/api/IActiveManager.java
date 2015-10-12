@@ -30,7 +30,7 @@ import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 /**
  * Provides access to services related to feed management within a node controller
  */
-public interface IFeedManager {
+public interface IActiveManager {
 
     /**
      * gets the nodeId associated with the host node controller

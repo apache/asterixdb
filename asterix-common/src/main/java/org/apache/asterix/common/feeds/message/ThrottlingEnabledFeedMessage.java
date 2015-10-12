@@ -18,17 +18,18 @@
  */
 package org.apache.asterix.common.feeds.message;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
- * A feed control message indicating the need to end the feed. This message is dispatched
+ * This message is dispatched
  * to all locations that host an operator involved in the feed pipeline.
  */
 public class ThrottlingEnabledFeedMessage extends FeedMessage {
@@ -37,9 +38,9 @@ public class ThrottlingEnabledFeedMessage extends FeedMessage {
 
     private final FeedConnectionId connectionId;
 
-    private final FeedRuntimeId runtimeId;
+    private final ActiveRuntimeId runtimeId;
 
-    public ThrottlingEnabledFeedMessage(FeedConnectionId connectionId, FeedRuntimeId runtimeId) {
+    public ThrottlingEnabledFeedMessage(FeedConnectionId connectionId, ActiveRuntimeId runtimeId) {
         super(MessageType.THROTTLING_ENABLED);
         this.connectionId = connectionId;
         this.runtimeId = runtimeId;
@@ -57,7 +58,7 @@ public class ThrottlingEnabledFeedMessage extends FeedMessage {
         obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
         obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
-        obj.put(FeedConstants.MessageConstants.RUNTIME_TYPE, runtimeId.getFeedRuntimeType());
+        obj.put(FeedConstants.MessageConstants.RUNTIME_TYPE, runtimeId.getRuntimeType());
         obj.put(FeedConstants.MessageConstants.OPERAND_ID, runtimeId.getOperandId());
         obj.put(FeedConstants.MessageConstants.PARTITION, runtimeId.getPartition());
         return obj;
@@ -67,16 +68,16 @@ public class ThrottlingEnabledFeedMessage extends FeedMessage {
         return connectionId;
     }
 
-    public FeedRuntimeId getFeedRuntimeId() {
+    public ActiveRuntimeId getFeedRuntimeId() {
         return runtimeId;
     }
 
     public static ThrottlingEnabledFeedMessage read(JSONObject obj) throws JSONException {
         ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
-                obj.getString(FeedConstants.MessageConstants.FEED));
+                obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));
-        FeedRuntimeId runtimeId = new FeedRuntimeId(FeedRuntimeType.valueOf(obj
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(ActiveRuntimeType.valueOf(obj
                 .getString(FeedConstants.MessageConstants.RUNTIME_TYPE)),
                 obj.getInt(FeedConstants.MessageConstants.PARTITION),
                 obj.getString(FeedConstants.MessageConstants.OPERAND_ID));

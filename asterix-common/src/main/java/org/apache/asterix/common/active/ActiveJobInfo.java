@@ -32,22 +32,43 @@ public class ActiveJobInfo {
         ENDED
     }
 
-    protected final JobId jobId;
+    public enum ActiveJopType {
+        FEED_INTAKE,
+        FEED_COLLECT,
+        FEED_CONNECT,
+        CHANNEL_REPETITIVE,
+        CHANNEL_CONTINUOUS
+    }
+
+    protected JobId jobId;
     protected JobState state;
     protected JobSpecification spec;
+    protected ActiveJopType jobType;
+    protected ActiveJobId activeJobId;
 
-    public ActiveJobInfo(JobId jobId, JobState state, JobSpecification spec) {
+    public ActiveJobInfo(JobId jobId, JobState state, ActiveJopType jobType, JobSpecification spec,
+            ActiveJobId activeJobId) {
         this.jobId = jobId;
         this.state = state;
         this.spec = spec;
+        this.jobType = jobType;
+        this.activeJobId = activeJobId;
     }
 
     public JobId getJobId() {
         return jobId;
     }
 
+    public ActiveJopType getJobType() {
+        return jobType;
+    }
+
     public JobState getState() {
         return state;
+    }
+
+    public ActiveJobId getActiveJobId() {
+        return activeJobId;
     }
 
     public void setState(JobState state) {

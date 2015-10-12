@@ -28,7 +28,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 /**
  * Represent a feed runtime whose output can be routed along other parallel path(s).
  */
-public interface ISubscribableRuntime extends IFeedRuntime {
+public interface ISubscribableRuntime extends IActiveRuntime {
 
     /**
      * @param collectionRuntime
@@ -51,7 +51,7 @@ public interface ISubscribableRuntime extends IFeedRuntime {
     /**
      * @return
      */
-    public DistributeFeedFrameWriter getFeedFrameWriter();
+    public DistributeFeedFrameWriter getActiveFrameWriter();
 
     /**
      * @return

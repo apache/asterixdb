@@ -105,11 +105,11 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
         // write the key in the first fields of the tuple
 
         tupleBuilder.reset();
-        aString.setValue(channel.getDataverseName());
+        aString.setValue(channel.getChannelId().getDataverse());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
-        aString.setValue(channel.getChannelName());
+        aString.setValue(channel.getChannelId().getName());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -117,13 +117,13 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(channel.getDataverseName());
+        aString.setValue(channel.getChannelId().getDataverse());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.CHANNEL_ARECORD_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
 
         // write field 1
         fieldValue.reset();
-        aString.setValue(channel.getChannelName());
+        aString.setValue(channel.getChannelId().getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.CHANNEL_ARECORD_CHANNEL_NAME_FIELD_INDEX, fieldValue);
 

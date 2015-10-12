@@ -14,12 +14,11 @@
  */
 package org.apache.asterix.common.feeds.message;
 
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.FeedConstants;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import org.apache.asterix.common.channels.ChannelId;
-import org.apache.asterix.common.channels.ChannelRuntimeId;
-import org.apache.asterix.common.feeds.FeedConstants;
 
 /**
  * A feed control message indicating the need to end the feed. This message is dispatched
@@ -29,11 +28,11 @@ public class DropChannelMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final ChannelId channelId;
+    private final ActiveId channelId;
 
-    private final ChannelRuntimeId channelRuntimeId;
+    private final ActiveRuntimeId channelRuntimeId;
 
-    public DropChannelMessage(ChannelId channelId, ChannelRuntimeId channelRuntimeId) {
+    public DropChannelMessage(ActiveId channelId, ActiveRuntimeId channelRuntimeId) {
         super(MessageType.DROP_CHANNEL);
         this.channelId = channelId;
         this.channelRuntimeId = channelRuntimeId;
@@ -49,22 +48,22 @@ public class DropChannelMessage extends FeedMessage {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
         obj.put(FeedConstants.MessageConstants.DATAVERSE, channelId.getDataverse());
-        obj.put(FeedConstants.MessageConstants.CHANNEL, channelId.getChannelName());
+        obj.put(FeedConstants.MessageConstants.CHANNEL, channelId.getName());
         return obj;
     }
 
-    public ChannelId getChannelId() {
+    public ActiveId getChannelId() {
         return channelId;
     }
 
-    public ChannelRuntimeId getChannelRuntimeId() {
+    public ActiveRuntimeId getChannelRuntimeId() {
         return channelRuntimeId;
     }
 
-    public static DropChannelMessage read(JSONObject obj) throws JSONException {
-        ChannelId channelId = new ChannelId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
-                obj.getString(FeedConstants.MessageConstants.CHANNEL));
-        return new DropChannelMessage(channelId, (ChannelRuntimeId) channelId);
-    }
+    /*   public static DropChannelMessage read(JSONObject obj) throws JSONException {
+           ActiveId channelId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
+                   obj.getString(FeedConstants.MessageConstants.CHANNEL), ActiveObjectType.CHANNEL);
+           return new DropChannelMessage(channelId, (ChannelRuntimeId) channelId);
+       }*/
 
 }

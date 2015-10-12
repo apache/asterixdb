@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.feeds;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.message.FeedMessage;

@@ -42,7 +42,7 @@ public class FeedFrameSpiller {
 
     private final IHyracksTaskContext ctx;
     private final FeedConnectionId connectionId;
-    private final FeedRuntimeId runtimeId;
+    private final ActiveRuntimeId runtimeId;
     private final FeedPolicyAccessor policyAccessor;
     private BufferedOutputStream bos;
     private File file;
@@ -50,7 +50,7 @@ public class FeedFrameSpiller {
     private long bytesWritten = 0;
     private int spilledFrameCount = 0;
 
-    public FeedFrameSpiller(IHyracksTaskContext ctx, FeedConnectionId connectionId, FeedRuntimeId runtimeId,
+    public FeedFrameSpiller(IHyracksTaskContext ctx, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
             FeedPolicyAccessor policyAccessor) throws IOException {
         this.ctx = ctx;
         this.connectionId = connectionId;
@@ -81,7 +81,7 @@ public class FeedFrameSpiller {
         Date date = new Date();
         String dateSuffix = date.toString().replace(' ', '_');
         String fileName = connectionId.getActiveId() + "_" + connectionId.getDatasetName() + "_"
-                + runtimeId.getFeedRuntimeType() + "_" + runtimeId.getPartition() + "_" + dateSuffix;
+                + runtimeId.getRuntimeType() + "_" + runtimeId.getPartition() + "_" + dateSuffix;
 
         file = new File(fileName);
         if (!file.exists()) {
@@ -131,9 +131,9 @@ public class FeedFrameSpiller {
 
         @Override
         public ByteBuffer next() {
-            IFrame frame  = null;
+            IFrame frame = null;
             try {
-                frame  = new VSizeFrame(ctx);
+                frame = new VSizeFrame(ctx);
                 Arrays.fill(frame.getBuffer().array(), (byte) 0);
                 bis.read(frame.getBuffer().array(), 0, frame.getFrameSize());
                 readFrameCount++;

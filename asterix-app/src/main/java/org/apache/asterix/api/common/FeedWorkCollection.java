@@ -183,12 +183,12 @@ public class FeedWorkCollection {
                             try {
                                 JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.getSpec());
                                 if (LOGGER.isLoggable(Level.INFO)) {
-                                    LOGGER.info("Resumed feed :" + finfo.feedConnectionId + " job id " + jobId);
+                                    LOGGER.info("Resumed feed :" + finfo.getActiveJobId() + " job id " + jobId);
                                     LOGGER.info("Job:" + finfo.getSpec());
                                 }
                             } catch (Exception e) {
                                 if (LOGGER.isLoggable(Level.WARNING)) {
-                                    LOGGER.warning("Unable to resume feed " + finfo.feedConnectionId + " "
+                                    LOGGER.warning("Unable to resume feed " + finfo.getActiveJobId() + " "
                                             + e.getMessage());
                                 }
                             }

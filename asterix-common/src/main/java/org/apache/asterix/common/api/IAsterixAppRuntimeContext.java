@@ -24,7 +24,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
@@ -76,5 +76,5 @@ public interface IAsterixAppRuntimeContext {
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
-    public IFeedManager getFeedManager();
+    public IActiveManager getFeedManager();
 }

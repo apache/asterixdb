@@ -17,13 +17,9 @@ package org.apache.asterix.common.channels;
 
 import java.util.Map;
 
-public class ChannelActivity implements Comparable<ChannelActivity> {
+import org.apache.asterix.common.feeds.ActiveActivity;
 
-    private int activityId;
-
-    private final String dataverseName;
-    private final String channelName;
-    private final Map<String, String> channelActivityDetails;
+public class ChannelActivity extends ActiveActivity {
 
     public static class ChannelActivityDetails {
         public static final String CHANNEL_LOCATIONS = "locations";
@@ -32,70 +28,7 @@ public class ChannelActivity implements Comparable<ChannelActivity> {
     }
 
     public ChannelActivity(String dataverseName, String channelName, Map<String, String> channelActivityDetails) {
-        this.dataverseName = dataverseName;
-        this.channelName = channelName;
-        this.channelActivityDetails = channelActivityDetails;
-    }
-
-    public String getDataverseName() {
-        return dataverseName;
-    }
-
-    public String getChannelName() {
-        return channelName;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof ChannelActivity)) {
-            return false;
-        }
-
-        if (!((ChannelActivity) other).dataverseName.equals(dataverseName)) {
-            return false;
-        }
-        if (!((ChannelActivity) other).getChannelName().equals(channelName)) {
-            return false;
-        }
-        if (((ChannelActivity) other).getActivityId() != (activityId)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return dataverseName + "." + channelName + " " + activityId;
-    }
-
-    public String getTimestamp() {
-        return channelActivityDetails.get(ChannelActivityDetails.CHANNEL_TIMESTAMP);
-    }
-
-    public int getActivityId() {
-        return activityId;
-    }
-
-    public void setActivityId(int activityId) {
-        this.activityId = activityId;
-    }
-
-    public Map<String, String> getChannelActivityDetails() {
-        return channelActivityDetails;
-    }
-
-    @Override
-    public int compareTo(ChannelActivity o) {
-        return o.getActivityId() - this.activityId;
+        super(dataverseName, channelName, channelActivityDetails);
     }
 
 }

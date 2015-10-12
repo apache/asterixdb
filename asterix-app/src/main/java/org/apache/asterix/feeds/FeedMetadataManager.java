@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
 import org.apache.asterix.hyracks.bootstrap.FeedBootstrap;
 import org.apache.asterix.metadata.feeds.XAQLFeedMessage;
@@ -54,7 +54,7 @@ public class FeedMetadataManager implements IFeedMetadataManager {
     }
 
     @Override
-    public void logTuple(FeedConnectionId connectionId, String tuple, String message, IFeedManager feedManager)
+    public void logTuple(FeedConnectionId connectionId, String tuple, String message, IActiveManager feedManager)
             throws AsterixException {
         try {
             AString id = new AString("1");

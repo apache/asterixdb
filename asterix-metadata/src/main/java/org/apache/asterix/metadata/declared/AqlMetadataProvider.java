@@ -47,7 +47,7 @@ import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
+import org.apache.asterix.common.feeds.api.ICentralActiveManager;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
@@ -195,7 +195,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
-    private final ICentralFeedManager centralFeedManager;
+    private final ICentralActiveManager centralFeedManager;
 
     private final Dataverse defaultDataverse;
     private JobId jobId;
@@ -222,7 +222,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         return config;
     }
 
-    public AqlMetadataProvider(Dataverse defaultDataverse, ICentralFeedManager centralFeedManager) {
+    public AqlMetadataProvider(Dataverse defaultDataverse, ICentralActiveManager centralFeedManager) {
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         this.storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
@@ -429,7 +429,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                             locationArray = feedDataSource.getLocations();
                         } else {
                             Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager()
-                                    .getFeedActivities();
+                                    .getActivities();
                             Iterator<FeedActivity> it = activities.iterator();
                             FeedActivity activity = null;
                             while (it.hasNext()) {
@@ -451,7 +451,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
                 break;
             case SECONDARY:
-                Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager().getFeedActivities();
+                Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager().getActivities();
                 Iterator<FeedActivity> it = activities.iterator();
                 FeedActivity activity = null;
                 while (it.hasNext()) {

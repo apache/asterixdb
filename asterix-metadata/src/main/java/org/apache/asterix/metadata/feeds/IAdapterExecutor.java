@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.feeds;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.active.ActiveJobId;
 
 public interface IAdapterExecutor {
 

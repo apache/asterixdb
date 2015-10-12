@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 
-public interface ICentralFeedManager {
+public interface ICentralActiveManager {
 
     public void start() throws AsterixException;
 
@@ -30,5 +30,5 @@ public interface ICentralFeedManager {
 
     public IFeedTrackingManager getFeedTrackingManager();
 
-    public IFeedLoadManager getFeedLoadManager();
+    public IActiveLoadManager getFeedLoadManager();
 }

@@ -29,7 +29,7 @@ import org.apache.asterix.common.feeds.FeedMessageService;
 import org.apache.asterix.common.feeds.FeedMetricCollector;
 import org.apache.asterix.common.feeds.NodeLoadReportService;
 import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
 import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
@@ -46,9 +46,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * Provider necessary central repository for registering/retrieving
  * artifacts/services associated with a feed.
  */
-public class FeedManager implements IFeedManager {
+public class ActiveManager implements IActiveManager {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveManager.class.getName());
 
     private final IFeedSubscriptionManager feedSubscriptionManager;
 
@@ -72,7 +72,7 @@ public class FeedManager implements IFeedManager {
 
     private final int frameSize;
 
-    public FeedManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize) throws AsterixException, HyracksDataException {
+    public ActiveManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize) throws AsterixException, HyracksDataException {
         this.nodeId = nodeId;
         this.feedSubscriptionManager = new FeedSubscriptionManager(nodeId);
         this.feedConnectionManager = new FeedConnectionManager(nodeId);

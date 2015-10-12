@@ -22,18 +22,17 @@ import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.ActiveJobId;
-import org.apache.asterix.common.feeds.FeedActivity;
-import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.ActiveActivity;
 import org.apache.asterix.common.feeds.NodeLoadReport;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
 import org.apache.asterix.common.feeds.message.FeedReportMessage;
 import org.apache.asterix.common.feeds.message.ScaleInReportMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 
-public interface IFeedLoadManager {
+public interface IActiveLoadManager {
 
     public void submitNodeLoadReport(NodeLoadReport report);
 
@@ -47,14 +46,14 @@ public interface IFeedLoadManager {
 
     public void reportThrottlingEnabled(ThrottlingEnabledFeedMessage mesg) throws AsterixException, Exception;
 
-    int getOutflowRate(ActiveJobId connectionId, FeedRuntimeType runtimeType);
+    int getOutflowRate(ActiveJobId connectionId, ActiveRuntimeType runtimeType);
 
-    void reportFeedActivity(FeedConnectionId connectionId, FeedActivity activity);
+    void reportActivity(ActiveJobId activeJobId, ActiveActivity activity);
 
-    void removeFeedActivity(ActiveJobId connectionId);
+    void removeActivity(ActiveJobId activeJobId);
 
-    public FeedActivity getFeedActivity(ActiveJobId connectionId);
+    public ActiveActivity getActivity(ActiveJobId connectionId);
 
-    public Collection<FeedActivity> getFeedActivities();
+    public Collection<ActiveActivity> getActivities();
 
 }

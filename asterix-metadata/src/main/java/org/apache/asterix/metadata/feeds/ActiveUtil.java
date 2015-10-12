@@ -29,19 +29,16 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.asterix.common.channels.ChannelId;
-import org.apache.asterix.common.channels.ChannelRuntimeId;
-import org.apache.asterix.common.channels.api.IChannelRuntime.ChannelRuntimeType;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.ActiveJobId;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -64,6 +61,7 @@ import org.apache.asterix.metadata.functions.ExternalLibraryManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -165,7 +163,7 @@ public class ActiveUtil {
         Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
         FeedMetaOperatorDescriptor metaOp = null;
         for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
-            operandId = FeedRuntimeId.DEFAULT_OPERAND_ID;
+            operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof FeedCollectOperatorDescriptor) {
                 FeedCollectOperatorDescriptor orig = (FeedCollectOperatorDescriptor) opDesc;
@@ -176,16 +174,16 @@ public class ActiveUtil {
             } else if (opDesc instanceof AsterixLSMTreeInsertDeleteOperatorDescriptor) {
                 operandId = ((AsterixLSMTreeInsertDeleteOperatorDescriptor) opDesc).getIndexName();
                 metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc, feedPolicyProperties,
-                        FeedRuntimeType.STORE, false, operandId);
+                        ActiveRuntimeType.STORE, false, operandId);
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
             } else if (opDesc instanceof AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor) {
                 operandId = ((AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor) opDesc).getIndexName();
                 metaOp = new FeedMetaOperatorDescriptor(altered, feedConnectionId, opDesc, feedPolicyProperties,
-                        FeedRuntimeType.STORE, false, operandId);
+                        ActiveRuntimeType.STORE, false, operandId);
                 oldNewOID.put(opDesc.getOperatorId(), metaOp.getOperatorId());
 
             } else {
-                FeedRuntimeType runtimeType = null;
+                ActiveRuntimeType runtimeType = null;
                 boolean enableSubscriptionMode = false;
                 boolean createMetaOp = true;
                 OperatorDescriptorId opId = null;
@@ -197,19 +195,19 @@ public class ActiveUtil {
                                 .get(0);
                         IOperatorDescriptor sourceOp = spec.getProducer(connectorDesc);
                         if (sourceOp instanceof FeedCollectOperatorDescriptor) {
-                            runtimeType = preProcessingRequired ? FeedRuntimeType.COMPUTE : FeedRuntimeType.OTHER;
+                            runtimeType = preProcessingRequired ? ActiveRuntimeType.COMPUTE : ActiveRuntimeType.OTHER;
                             enableSubscriptionMode = preProcessingRequired;
                         } else {
-                            runtimeType = FeedRuntimeType.OTHER;
+                            runtimeType = ActiveRuntimeType.OTHER;
                         }
                     } else if (runtimeFactory instanceof EmptyTupleSourceRuntimeFactory) {
-                        runtimeType = FeedRuntimeType.ETS;
+                        runtimeType = ActiveRuntimeType.ETS;
                     } else {
-                        runtimeType = FeedRuntimeType.OTHER;
+                        runtimeType = ActiveRuntimeType.OTHER;
                     }
                 } else {
                     if (opDesc instanceof AbstractSingleActivityOperatorDescriptor) {
-                        runtimeType = FeedRuntimeType.OTHER;
+                        runtimeType = ActiveRuntimeType.OTHER;
                     } else {
                         opId = altered.createOperatorDescriptorId(opDesc);
                         createMetaOp = false;
@@ -325,7 +323,7 @@ public class ActiveUtil {
 
     }
 
-    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ChannelId channelId) {
+    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ActiveId channelId) {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Original Job Spec:" + spec);
@@ -338,10 +336,10 @@ public class ActiveUtil {
         Map<OperatorDescriptorId, OperatorDescriptorId> oldNewOID = new HashMap<OperatorDescriptorId, OperatorDescriptorId>();
         ChannelMetaOperatorDescriptor metaOp = null;
         for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorMap.entrySet()) {
-            operandId = ChannelRuntimeId.DEFAULT_OPERAND_ID;
+            operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof RepetitiveChannelOperatorDescriptor) {
-                metaOp = new ChannelMetaOperatorDescriptor(altered, channelId, opDesc, ChannelRuntimeType.REPETITIVE,
+                metaOp = new ChannelMetaOperatorDescriptor(altered, channelId, opDesc, ActiveRuntimeType.REPETITIVE,
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getFunction(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getDuration(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getSubscriptionsName(),
@@ -457,7 +455,7 @@ public class ActiveUtil {
         return altered;
     }
 
-    public static void increaseCardinality(JobSpecification spec, FeedRuntimeType compute, int requiredCardinality,
+    public static void increaseCardinality(JobSpecification spec, ActiveRuntimeType compute, int requiredCardinality,
             List<String> newLocations) throws AsterixException {
         IOperatorDescriptor changingOpDesc = alterJobSpecForComputeCardinality(spec, requiredCardinality);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, changingOpDesc,
@@ -465,7 +463,7 @@ public class ActiveUtil {
 
     }
 
-    public static void decreaseComputeCardinality(JobSpecification spec, FeedRuntimeType compute,
+    public static void decreaseComputeCardinality(JobSpecification spec, ActiveRuntimeType compute,
             int requiredCardinality, List<String> currentLocations) throws AsterixException {
         IOperatorDescriptor changingOpDesc = alterJobSpecForComputeCardinality(spec, requiredCardinality);
         String[] chosenLocations = nChooseK(requiredCardinality, currentLocations);
@@ -488,7 +486,7 @@ public class ActiveUtil {
             if (sourceOp instanceof FeedCollectOperatorDescriptor) {
                 targetOp = entry.getValue().getValue().getKey();
                 if (targetOp instanceof FeedMetaOperatorDescriptor
-                        && (((FeedMetaOperatorDescriptor) targetOp).getRuntimeType().equals(FeedRuntimeType.COMPUTE))) {
+                        && (((FeedMetaOperatorDescriptor) targetOp).getRuntimeType().equals(ActiveRuntimeType.COMPUTE))) {
                     connDesc = connectors.get(cid);
                     break;
                 } else {
@@ -531,8 +529,8 @@ public class ActiveUtil {
                     opId = ((PartitionCountExpression) lexpr).getOperatorDescriptorId();
                     IOperatorDescriptor opDesc = spec.getOperatorMap().get(opId);
                     if (opDesc instanceof FeedMetaOperatorDescriptor) {
-                        FeedRuntimeType runtimeType = ((FeedMetaOperatorDescriptor) opDesc).getRuntimeType();
-                        if (runtimeType.equals(FeedRuntimeType.COMPUTE)) {
+                        ActiveRuntimeType runtimeType = ((FeedMetaOperatorDescriptor) opDesc).getRuntimeType();
+                        if (runtimeType.equals(ActiveRuntimeType.COMPUTE)) {
                             countConstraint = constraint;
                             changingOpDesc = opDesc;
                         }
@@ -543,8 +541,8 @@ public class ActiveUtil {
                     opId = ((PartitionLocationExpression) lexpr).getOperatorDescriptorId();
                     IOperatorDescriptor opDesc = spec.getOperatorMap().get(opId);
                     if (opDesc instanceof FeedMetaOperatorDescriptor) {
-                        FeedRuntimeType runtimeType = ((FeedMetaOperatorDescriptor) opDesc).getRuntimeType();
-                        if (runtimeType.equals(FeedRuntimeType.COMPUTE)) {
+                        ActiveRuntimeType runtimeType = ((FeedMetaOperatorDescriptor) opDesc).getRuntimeType();
+                        if (runtimeType.equals(ActiveRuntimeType.COMPUTE)) {
                             locationConstraint = constraint;
                             changingOpDesc = opDesc;
                             String location = (String) ((ConstantExpression) cexpr).getValue();

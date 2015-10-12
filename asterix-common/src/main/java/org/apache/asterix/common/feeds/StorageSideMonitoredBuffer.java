@@ -37,9 +37,9 @@ public class StorageSideMonitoredBuffer extends MonitoredBuffer {
     private boolean ackingEnabled;
     private final boolean timeTrackingEnabled;
 
-    public StorageSideMonitoredBuffer(IHyracksTaskContext ctx, FeedRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
+    public StorageSideMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
             FrameTupleAccessor fta,  RecordDescriptor recordDesc, IFeedMetricCollector metricCollector,
-            FeedConnectionId connectionId, FeedRuntimeId runtimeId, IExceptionHandler exceptionHandler,
+            FeedConnectionId connectionId, ActiveRuntimeId runtimeId, IExceptionHandler exceptionHandler,
             IFrameEventCallback callback, int nPartitions, FeedPolicyAccessor policyAccessor) {
         super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, connectionId, runtimeId,
                 exceptionHandler, callback, nPartitions, policyAccessor);

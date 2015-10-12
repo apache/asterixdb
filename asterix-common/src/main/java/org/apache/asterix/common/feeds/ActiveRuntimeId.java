@@ -20,19 +20,19 @@ package org.apache.asterix.common.feeds;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 
-public class FeedRuntimeId implements Serializable {
+public class ActiveRuntimeId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     public static final String DEFAULT_OPERAND_ID = "N/A";
 
-    private final FeedRuntimeType runtimeType;
+    private final ActiveRuntimeType runtimeType;
     private final int partition;
     private final String operandId;
 
-    public FeedRuntimeId(FeedRuntimeType runtimeType, int partition, String operandId) {
+    public ActiveRuntimeId(ActiveRuntimeType runtimeType, int partition, String operandId) {
         this.runtimeType = runtimeType;
         this.partition = partition;
         this.operandId = operandId;
@@ -48,11 +48,11 @@ public class FeedRuntimeId implements Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof FeedRuntimeId)) {
+        if (!(o instanceof ActiveRuntimeId)) {
             return false;
         }
-        FeedRuntimeId other = (FeedRuntimeId) o;
-        return (other.getFeedRuntimeType().equals(runtimeType) && other.getOperandId().equals(operandId) && other
+        ActiveRuntimeId other = (ActiveRuntimeId) o;
+        return (other.getRuntimeType().equals(runtimeType) && other.getOperandId().equals(operandId) && other
                 .getPartition() == partition);
     }
 
@@ -61,15 +61,11 @@ public class FeedRuntimeId implements Serializable {
         return toString().hashCode();
     }
 
-    public FeedRuntimeType getFeedRuntimeType() {
-        return runtimeType;
-    }
-
     public int getPartition() {
         return partition;
     }
 
-    public FeedRuntimeType getRuntimeType() {
+    public ActiveRuntimeType getRuntimeType() {
         return runtimeType;
     }
 

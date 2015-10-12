@@ -1,4 +1,4 @@
-package org.apache.asterix.common.feeds;
+package org.apache.asterix.common.active;
 
 /**
  * A unique identifier for a an active job. There

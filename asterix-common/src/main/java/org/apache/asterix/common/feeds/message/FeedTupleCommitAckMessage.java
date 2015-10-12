@@ -16,26 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.feeds;
+package org.apache.asterix.common.feeds.message;
 
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.feeds.FeedConnectionId;
+import org.apache.asterix.common.feeds.FeedConstants;
+import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.apache.asterix.common.feeds.message.FeedMessage;
-
-public class FeedTupleCommitResponseMessage extends FeedMessage {
+public class FeedTupleCommitAckMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
     private final FeedConnectionId connectionId;
-    private final int intakePartition;
-    private final int maxWindowAcked;
+    private int intakePartition;
+    private int base;
+    private byte[] commitAcks;
 
-    public FeedTupleCommitResponseMessage(FeedConnectionId connectionId, int intakePartition, int maxWindowAcked) {
-        super(MessageType.COMMIT_ACK_RESPONSE);
+    public FeedTupleCommitAckMessage(FeedConnectionId connectionId, int intakePartition, int base, byte[] commitAcks) {
+        super(MessageType.COMMIT_ACK);
         this.connectionId = connectionId;
         this.intakePartition = intakePartition;
-        this.maxWindowAcked = maxWindowAcked;
+        this.base = base;
+        this.commitAcks = commitAcks;
     }
 
     @Override
@@ -46,35 +53,48 @@ public class FeedTupleCommitResponseMessage extends FeedMessage {
         obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         obj.put(FeedConstants.MessageConstants.INTAKE_PARTITION, intakePartition);
-        obj.put(FeedConstants.MessageConstants.MAX_WINDOW_ACKED, maxWindowAcked);
+        obj.put(FeedConstants.MessageConstants.BASE, base);
+        String commitAcksString = DatatypeConverter.printBase64Binary(commitAcks);
+        obj.put(FeedConstants.MessageConstants.COMMIT_ACKS, commitAcksString);
         return obj;
     }
 
-    @Override
-    public String toString() {
-        return connectionId + "[" + intakePartition + "]" + "(" + maxWindowAcked + ")";
-    }
-
-    public static FeedTupleCommitResponseMessage read(JSONObject obj) throws JSONException {
+    public static FeedTupleCommitAckMessage read(JSONObject obj) throws JSONException {
         ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
-                obj.getString(FeedConstants.MessageConstants.FEED));
+                obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));
         int intakePartition = obj.getInt(FeedConstants.MessageConstants.INTAKE_PARTITION);
-        int maxWindowAcked = obj.getInt(FeedConstants.MessageConstants.MAX_WINDOW_ACKED);
-        return new FeedTupleCommitResponseMessage(connectionId, intakePartition, maxWindowAcked);
+        int base = obj.getInt(FeedConstants.MessageConstants.BASE);
+        String commitAcksString = obj.getString(FeedConstants.MessageConstants.COMMIT_ACKS);
+        byte[] commitAcks = DatatypeConverter.parseBase64Binary(commitAcksString);
+        return new FeedTupleCommitAckMessage(connectionId, intakePartition, base, commitAcks);
     }
 
-    public ActiveJobId getConnectionId() {
+    public FeedConnectionId getConnectionId() {
         return connectionId;
-    }
-
-    public int getMaxWindowAcked() {
-        return maxWindowAcked;
     }
 
     public int getIntakePartition() {
         return intakePartition;
+    }
+
+    public byte[] getCommitAcks() {
+        return commitAcks;
+    }
+
+    public void reset(int intakePartition, int base, byte[] commitAcks) {
+        this.intakePartition = intakePartition;
+        this.base = base;
+        this.commitAcks = commitAcks;
+    }
+
+    public int getBase() {
+        return base;
+    }
+
+    public void setBase(int base) {
+        this.base = base;
     }
 
 }

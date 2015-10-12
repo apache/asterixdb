@@ -16,35 +16,18 @@ package org.apache.asterix.common.channels;
 
 import java.util.List;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class ChannelJobInfo extends ActiveJobInfo {
 
-    public enum ChannelJobType {
-        REPETITIVE,
-        CONTINUOUS
-    }
-
-    protected final ChannelJobType jobType;
-
-    private final ChannelId channelId;
     private List<String> location;
 
-    public ChannelJobInfo(JobId jobId, JobState state, ChannelJobType jobType, JobSpecification spec,
-            ChannelId channelId) {
-        super(jobId, state, spec);
-        this.jobType = jobType;
-        this.channelId = channelId;
-    }
-
-    public ChannelId getChannelId() {
-        return channelId;
-    }
-
-    public ChannelJobType getJobType() {
-        return jobType;
+    public ChannelJobInfo(JobId jobId, JobState state, ActiveJopType jobType, JobSpecification spec,
+            ActiveJobId channelJobId) {
+        super(jobId, state, jobType, spec, channelJobId);
     }
 
     public String toString() {

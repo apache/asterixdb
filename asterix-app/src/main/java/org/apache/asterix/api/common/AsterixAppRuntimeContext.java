@@ -36,10 +36,10 @@ import org.apache.asterix.common.context.AsterixFileMapManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.feeds.FeedManager;
+import org.apache.asterix.feeds.ActiveManager;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
@@ -108,7 +108,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private IIOManager ioManager;
     private boolean isShuttingdown;
 
-    private IFeedManager feedManager;
+    private IActiveManager feedManager;
 
     public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) throws AsterixException {
         this.ncApplicationContext = ncApplicationContext;
@@ -154,7 +154,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         isShuttingdown = false;
 
-        feedManager = new FeedManager(ncApplicationContext.getNodeId(), feedProperties,
+        feedManager = new ActiveManager(ncApplicationContext.getNodeId(), feedProperties,
                 compilerProperties.getFrameSize());
 
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
@@ -268,7 +268,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
-    public IFeedManager getFeedManager() {
+    public IActiveManager getFeedManager() {
         return feedManager;
     }
 }

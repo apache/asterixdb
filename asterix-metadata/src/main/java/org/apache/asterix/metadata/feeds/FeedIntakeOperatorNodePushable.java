@@ -24,18 +24,18 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
-import org.apache.asterix.common.feeds.ActiveId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager.State;
 import org.apache.asterix.common.feeds.api.IFeedAdapter;
-import org.apache.asterix.common.feeds.api.IFeedManager;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
@@ -56,7 +56,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private final ActiveId feedId;
     private final int partition;
     private final IFeedSubscriptionManager feedSubscriptionManager;
-    private final IFeedManager feedManager;
+    private final IActiveManager feedManager;
     private final IHyracksTaskContext ctx;
     private final IFeedAdapterFactory adapterFactory;
     private final FeedPolicyAccessor policyAccessor;
@@ -96,10 +96,10 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                     throw new HyracksDataException(e);
                 }
                 FrameTupleAccessor fta = new FrameTupleAccessor(recordDesc);
-                feedFrameWriter = new DistributeFeedFrameWriter(ctx, feedId, writer, FeedRuntimeType.INTAKE, partition, fta,
+                feedFrameWriter = new DistributeFeedFrameWriter(ctx, feedId, writer, ActiveRuntimeType.INTAKE, partition, fta,
                         feedManager);
                 adapterRuntimeManager = new AdapterRuntimeManager(feedId, adapter, tracker, feedFrameWriter, partition);
-                SubscribableFeedRuntimeId runtimeId = new SubscribableFeedRuntimeId(feedId, FeedRuntimeType.INTAKE,
+                SubscribableFeedRuntimeId runtimeId = new SubscribableFeedRuntimeId(feedId, ActiveRuntimeType.INTAKE,
                         partition);
                 ingestionRuntime = new IngestionRuntime(feedId, runtimeId, feedFrameWriter, recordDesc,
                         adapterRuntimeManager);
@@ -115,7 +115,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
                         LOGGER.info(" Adaptor " + adapter.getClass().getName() + "[" + partition + "]"
                                 + " connected to backend for feed " + feedId);
                     }
-                    feedFrameWriter = (DistributeFeedFrameWriter) ingestionRuntime.getFeedFrameWriter();
+                    feedFrameWriter = (DistributeFeedFrameWriter) ingestionRuntime.getActiveFrameWriter();
                 } else {
                     String message = "Feed Ingestion Runtime for feed " + feedId
                             + " is already registered and is active!.";

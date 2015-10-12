@@ -21,18 +21,18 @@ package org.apache.asterix.file;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
-import org.apache.asterix.common.feeds.FeedTupleCommitResponseMessage;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.message.EndFeedMessage;
+import org.apache.asterix.common.feeds.message.FeedTupleCommitResponseMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -128,7 +128,7 @@ public class FeedOperations {
         IOperatorDescriptor feedMessenger;
         AlgebricksPartitionConstraint messengerPc;
         List<String> locations = null;
-        FeedRuntimeType sourceRuntimeType;
+        ActiveRuntimeType sourceRuntimeType;
         try {
             FeedConnectJobInfo cInfo = ActiveJobLifecycleListener.INSTANCE.getFeedConnectJobInfo(connectionId);
             IFeedJoint sourceFeedJoint = cInfo.getSourceFeedJoint();
@@ -137,12 +137,12 @@ public class FeedOperations {
             boolean terminateIntakeJob = false;
             boolean completeDisconnect = computeFeedJoint == null || computeFeedJoint.getReceivers().isEmpty();
             if (completeDisconnect) {
-                sourceRuntimeType = FeedRuntimeType.INTAKE;
+                sourceRuntimeType = ActiveRuntimeType.INTAKE;
                 locations = cInfo.getCollectLocations();
                 terminateIntakeJob = sourceFeedJoint.getReceivers().size() == 1;
             } else {
                 locations = cInfo.getComputeLocations();
-                sourceRuntimeType = FeedRuntimeType.COMPUTE;
+                sourceRuntimeType = ActiveRuntimeType.COMPUTE;
             }
 
             Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = buildDisconnectFeedMessengerRuntime(spec,
@@ -219,7 +219,7 @@ public class FeedOperations {
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDiscontinueFeedMessengerRuntime(
             JobSpecification jobSpec, ActiveId feedId, List<String> locations) throws AlgebricksException {
         FeedConnectionId feedConnectionId = new FeedConnectionId(feedId, null);
-        IFeedMessage feedMessage = new EndFeedMessage(feedConnectionId, FeedRuntimeType.INTAKE,
+        IFeedMessage feedMessage = new EndFeedMessage(feedConnectionId, ActiveRuntimeType.INTAKE,
                 feedConnectionId.getActiveId(), true, EndFeedMessage.EndMessageType.DISCONTINUE_SOURCE);
         return buildSendFeedMessageRuntime(jobSpec, feedConnectionId, feedMessage, locations);
     }
@@ -247,7 +247,7 @@ public class FeedOperations {
 
     private static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDisconnectFeedMessengerRuntime(
             JobSpecification jobSpec, FeedConnectionId feedConenctionId, List<String> locations,
-            FeedRuntimeType sourceFeedRuntimeType, boolean completeDisconnection, ActiveId sourceFeedId)
+            ActiveRuntimeType sourceFeedRuntimeType, boolean completeDisconnection, ActiveId sourceFeedId)
             throws AlgebricksException {
         IFeedMessage feedMessage = new EndFeedMessage(feedConenctionId, sourceFeedRuntimeType, sourceFeedId,
                 completeDisconnection, EndFeedMessage.EndMessageType.DISCONNECT_FEED);

@@ -33,27 +33,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.FeedWorkCollection.SubscribeFeedWork;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
+import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
+import org.apache.asterix.common.channels.ChannelActivity;
+import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
-import org.apache.asterix.common.feeds.FeedJobInfo;
-import org.apache.asterix.common.feeds.FeedJobInfo.JobType;
 import org.apache.asterix.common.feeds.FeedJointKey;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber;
+import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber.ActiveLifecycleEvent;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedJoint.State;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
-import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber.FeedLifecycleEvent;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener.Message;
+import org.apache.asterix.metadata.channels.ChannelMetaOperatorDescriptor;
+import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
@@ -76,26 +79,28 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 
-public class FeedJobNotificationHandler implements Runnable {
+public class ActiveJobNotificationHandler implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedJobNotificationHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveJobNotificationHandler.class.getName());
 
     private final LinkedBlockingQueue<Message> inbox;
-    private final Map<FeedConnectionId, List<IFeedLifecycleEventSubscriber>> eventSubscribers;
+    private final Map<ActiveJobId, List<IActiveLifecycleEventSubscriber>> eventSubscribers;
 
-    private final Map<JobId, FeedJobInfo> jobInfos;
+    private final Map<JobId, ActiveJobInfo> jobInfos;
     private final Map<ActiveId, FeedIntakeInfo> intakeJobInfos;
+    private final Map<ActiveJobId, ActiveJobInfo> activeJobInfos;
     private final Map<FeedConnectionId, FeedConnectJobInfo> connectJobInfos;
     private final Map<ActiveId, List<IFeedJoint>> feedPipeline;
     private final Map<FeedConnectionId, Pair<IIntakeProgressTracker, Long>> feedIntakeProgressTrackers;
 
-    public FeedJobNotificationHandler(LinkedBlockingQueue<Message> inbox) {
+    public ActiveJobNotificationHandler(LinkedBlockingQueue<Message> inbox) {
         this.inbox = inbox;
-        this.jobInfos = new HashMap<JobId, FeedJobInfo>();
+        this.jobInfos = new HashMap<JobId, ActiveJobInfo>();
         this.intakeJobInfos = new HashMap<ActiveId, FeedIntakeInfo>();
         this.connectJobInfos = new HashMap<FeedConnectionId, FeedConnectJobInfo>();
+        this.activeJobInfos = new HashMap<ActiveJobId, ActiveJobInfo>();
         this.feedPipeline = new HashMap<ActiveId, List<IFeedJoint>>();
-        this.eventSubscribers = new HashMap<FeedConnectionId, List<IFeedLifecycleEventSubscriber>>();
+        this.eventSubscribers = new HashMap<ActiveJobId, List<IActiveLifecycleEventSubscriber>>();
         this.feedIntakeProgressTrackers = new HashMap<FeedConnectionId, Pair<IIntakeProgressTracker, Long>>();
     }
 
@@ -166,6 +171,21 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
+    public void registerActiveJob(ActiveJobId activeJobId, JobId jobId, ActiveJopType jobType, JobSpecification jobSpec) {
+        if (jobInfos.get(jobId) != null) {
+            throw new IllegalStateException("Active job already registered");
+        }
+
+        ActiveJobInfo cInfo = new ActiveJobInfo(jobId, JobState.CREATED, jobType, jobSpec, activeJobId);
+        jobInfos.put(jobId, cInfo);
+        activeJobInfos.put(activeJobId, cInfo);
+
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Registered active job [" + jobId + "]" + " for activejob " + activeJobId);
+        }
+
+    }
+
     public void registerFeedIntakeJob(ActiveId feedId, JobId jobId, JobSpecification jobSpec)
             throws HyracksDataException {
         if (jobInfos.get(jobId) != null) {
@@ -182,8 +202,7 @@ public class FeedJobNotificationHandler implements Runnable {
         }
 
         if (intakeJoint != null) {
-            FeedIntakeInfo intakeJobInfo = new FeedIntakeInfo(jobId, JobState.CREATED, FeedJobInfo.JobType.INTAKE,
-                    feedId, intakeJoint, jobSpec);
+            FeedIntakeInfo intakeJobInfo = new FeedIntakeInfo(jobId, JobState.CREATED, feedId, intakeJoint, jobSpec);
             intakeJobInfos.put(feedId, intakeJobInfo);
             jobInfos.put(jobId, intakeJobInfo);
 
@@ -231,6 +250,27 @@ public class FeedJobNotificationHandler implements Runnable {
 
     }
 
+    public void deregisterActiveJob(JobId jobId) {
+        if (jobInfos.get(jobId) == null) {
+            throw new IllegalStateException(" Active job not registered ");
+        }
+
+        ActiveJobInfo info = jobInfos.get(jobId);
+        jobInfos.remove(jobId);
+        activeJobInfos.remove(info.getActiveJobId());
+
+        if (!info.getState().equals(JobState.UNDER_RECOVERY)) {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Deregistered active job [" + jobId + "]");
+            }
+        } else {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Not removing active as job is in " + JobState.UNDER_RECOVERY + " state.");
+            }
+        }
+
+    }
+
     public void deregisterFeedIntakeJob(JobId jobId) {
         if (jobInfos.get(jobId) == null) {
             throw new IllegalStateException(" Feed Intake job not registered ");
@@ -256,22 +296,26 @@ public class FeedJobNotificationHandler implements Runnable {
     }
 
     private void handleJobStartMessage(Message message) throws Exception {
-        FeedJobInfo jobInfo = jobInfos.get(message.jobId);
+        ActiveJobInfo jobInfo = jobInfos.get(message.jobId);
         switch (jobInfo.getJobType()) {
-            case INTAKE:
+            case FEED_INTAKE:
                 handleIntakeJobStartMessage((FeedIntakeInfo) jobInfo);
                 break;
             case FEED_CONNECT:
                 handleCollectJobStartMessage((FeedConnectJobInfo) jobInfo);
                 break;
+            case FEED_COLLECT:
+                break;
+            default:
+                handleActiveJobStartMessage(jobInfo);
+                break;
         }
-
     }
 
     private void handleJobFinishMessage(Message message) throws Exception {
-        FeedJobInfo jobInfo = jobInfos.get(message.jobId);
+        ActiveJobInfo jobInfo = jobInfos.get(message.jobId);
         switch (jobInfo.getJobType()) {
-            case INTAKE:
+            case FEED_INTAKE:
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Intake Job finished for feed intake " + jobInfo.getJobId());
                 }
@@ -283,8 +327,23 @@ public class FeedJobNotificationHandler implements Runnable {
                 }
                 handleFeedCollectJobFinishMessage((FeedConnectJobInfo) jobInfo);
                 break;
+            case FEED_COLLECT:
+                break;
+            default:
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info("Active Job finished for " + jobInfo.getJobId());
+                }
+                handleActiveJobFinishMessage(jobInfo, message);
+                break;
         }
 
+    }
+
+    private synchronized void handleActiveJobStartMessage(ActiveJobInfo jobInfo) throws Exception {
+        setLocations((ChannelJobInfo) jobInfo);
+        jobInfo.setState(JobState.ACTIVE);
+        // notify event listeners 
+        notifyActiveEventSubscribers(jobInfo, ActiveLifecycleEvent.ACTIVE_JOB_STARTED);
     }
 
     private synchronized void handleIntakeJobStartMessage(FeedIntakeInfo intakeJobInfo) throws Exception {
@@ -313,7 +372,7 @@ public class FeedJobNotificationHandler implements Runnable {
         intakeJobInfo.setState(JobState.ACTIVE);
 
         // notify event listeners 
-        notifyFeedEventSubscribers(intakeJobInfo, FeedLifecycleEvent.FEED_INTAKE_STARTED);
+        notifyFeedEventSubscribers(intakeJobInfo, ActiveLifecycleEvent.FEED_INTAKE_STARTED);
     }
 
     private void handleCollectJobStartMessage(FeedConnectJobInfo cInfo) throws RemoteException, ACIDException {
@@ -335,17 +394,27 @@ public class FeedJobNotificationHandler implements Runnable {
         // register activity in metadata
         registerFeedActivity(cInfo);
         // notify event listeners
-        notifyFeedEventSubscribers(cInfo, FeedLifecycleEvent.FEED_COLLECT_STARTED);
+        notifyFeedEventSubscribers(cInfo, ActiveLifecycleEvent.FEED_COLLECT_STARTED);
     }
 
-    private void notifyFeedEventSubscribers(FeedJobInfo jobInfo, FeedLifecycleEvent event) {
-        JobType jobType = jobInfo.getJobType();
+    private void notifyActiveEventSubscribers(ActiveJobInfo jobInfo, ActiveLifecycleEvent event) {
+        List<IActiveLifecycleEventSubscriber> subscribers = eventSubscribers.get(jobInfo.getActiveJobId());
+        if (subscribers != null && !subscribers.isEmpty()) {
+            for (IActiveLifecycleEventSubscriber subscriber : subscribers) {
+                subscriber.handleEvent(event);
+            }
+        }
+
+    }
+
+    private void notifyFeedEventSubscribers(ActiveJobInfo jobInfo, ActiveLifecycleEvent event) {
+        ActiveJopType jobType = jobInfo.getJobType();
         List<FeedConnectionId> impactedConnections = new ArrayList<FeedConnectionId>();
-        if (jobType.equals(JobType.INTAKE)) {
+        if (jobType.equals(ActiveJopType.FEED_INTAKE)) {
             ActiveId feedId = ((FeedIntakeInfo) jobInfo).getFeedId();
-            for (FeedConnectionId connId : eventSubscribers.keySet()) {
+            for (ActiveJobId connId : eventSubscribers.keySet()) {
                 if (connId.getActiveId().equals(feedId)) {
-                    impactedConnections.add(connId);
+                    impactedConnections.add((FeedConnectionId) connId);
                 }
             }
         } else {
@@ -353,10 +422,10 @@ public class FeedJobNotificationHandler implements Runnable {
         }
 
         for (ActiveJobId connId : impactedConnections) {
-            List<IFeedLifecycleEventSubscriber> subscribers = eventSubscribers.get(connId);
+            List<IActiveLifecycleEventSubscriber> subscribers = eventSubscribers.get(connId);
             if (subscribers != null && !subscribers.isEmpty()) {
-                for (IFeedLifecycleEventSubscriber subscriber : subscribers) {
-                    subscriber.handleFeedEvent(event);
+                for (IActiveLifecycleEventSubscriber subscriber : subscribers) {
+                    subscriber.handleEvent(event);
                 }
             }
         }
@@ -389,6 +458,16 @@ public class FeedJobNotificationHandler implements Runnable {
         return null;
     }
 
+    public Set<ActiveJobId> getActiveJobs() {
+        Set<ActiveJobId> activeJobs = new HashSet<ActiveJobId>();
+        for (ActiveJobInfo cInfo : jobInfos.values()) {
+            if (cInfo.getState().equals(JobState.ACTIVE)) {
+                activeJobs.add(cInfo.getActiveJobId());
+            }
+        }
+        return activeJobs;
+    }
+
     public Set<FeedConnectionId> getActiveFeedConnections() {
         Set<FeedConnectionId> activeConnections = new HashSet<FeedConnectionId>();
         for (FeedConnectJobInfo cInfo : connectJobInfos.values()) {
@@ -407,22 +486,45 @@ public class FeedJobNotificationHandler implements Runnable {
         return false;
     }
 
-    public void setJobState(ActiveJobId connectionId, JobState jobState) {
-        FeedConnectJobInfo connectJobInfo = connectJobInfos.get(connectionId);
-        connectJobInfo.setState(jobState);
+    public boolean isActive(ActiveJobId activeJobId) {
+        ActiveJobInfo cInfo = activeJobInfos.get(activeJobId);
+        if (cInfo != null) {
+            return cInfo.getState().equals(JobState.ACTIVE);
+        }
+        return false;
     }
 
-    public JobState getFeedJobState(ActiveJobId connectionId) {
-        return connectJobInfos.get(connectionId).getState();
+    public void setJobState(ActiveJobId activeJobId, JobState jobState) {
+        ActiveJobInfo jobInfo = activeJobInfos.get(activeJobId);
+        jobInfo.setState(jobState);
+    }
+
+    public JobState getJobState(ActiveJobId activeJobId) {
+        return activeJobInfos.get(activeJobId).getState();
+    }
+
+    private void handleActiveJobFinishMessage(ActiveJobInfo jobInfo, Message message) throws Exception {
+        IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
+        JobInfo info = hcc.getJobInfo(message.jobId);
+
+        deregisterActiveJob(message.jobId);
+
+        // notify event listeners 
+        JobStatus status = info.getStatus();
+        ActiveLifecycleEvent event;
+        event = status.equals(JobStatus.FAILURE) ? ActiveLifecycleEvent.ACTIVE_JOB_FAILURE
+                : ActiveLifecycleEvent.ACTIVE_JOB_ENDED;
+        notifyActiveEventSubscribers(jobInfo, event);
+
     }
 
     private void handleFeedIntakeJobFinishMessage(FeedIntakeInfo intakeInfo, Message message) throws Exception {
         IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
         JobInfo info = hcc.getJobInfo(message.jobId);
         JobStatus status = info.getStatus();
-        FeedLifecycleEvent event;
-        event = status.equals(JobStatus.FAILURE) ? FeedLifecycleEvent.FEED_INTAKE_FAILURE
-                : FeedLifecycleEvent.FEED_ENDED;
+        ActiveLifecycleEvent event;
+        event = status.equals(JobStatus.FAILURE) ? ActiveLifecycleEvent.FEED_INTAKE_FAILURE
+                : ActiveLifecycleEvent.FEED_ENDED;
 
         // remove feed joints
         deregisterFeedIntakeJob(message.jobId);
@@ -459,10 +561,11 @@ public class FeedJobNotificationHandler implements Runnable {
             jobInfos.remove(cInfo.getJobId());
             feedIntakeProgressTrackers.remove(cInfo.getConnectionId());
         }
-        deregisterFeedActivity(cInfo);
+        deregisterActivity(cInfo);
 
         // notify event listeners 
-        FeedLifecycleEvent event = failure ? FeedLifecycleEvent.FEED_COLLECT_FAILURE : FeedLifecycleEvent.FEED_ENDED;
+        ActiveLifecycleEvent event = failure ? ActiveLifecycleEvent.FEED_COLLECT_FAILURE
+                : ActiveLifecycleEvent.FEED_ENDED;
         notifyFeedEventSubscribers(cInfo, event);
     }
 
@@ -492,8 +595,8 @@ public class FeedJobNotificationHandler implements Runnable {
             FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getActiveId().getDataverse(), cInfo
                     .getConnectionId().getActiveId().getName(), cInfo.getConnectionId().getDatasetName(),
                     feedActivityDetails);
-            CentralFeedManager.getInstance().getFeedLoadManager()
-                    .reportFeedActivity(cInfo.getConnectionId(), feedActivity);
+            CentralActiveManager.getInstance().getFeedLoadManager()
+                    .reportActivity(cInfo.getConnectionId(), feedActivity);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -505,12 +608,38 @@ public class FeedJobNotificationHandler implements Runnable {
 
     }
 
-    public void deregisterFeedActivity(FeedConnectJobInfo cInfo) {
+    private void registerActivity(ChannelJobInfo cInfo) {
+        //TODO: REGISTER/DEREGISTER OTHER ACTIVE JOBS
+        Map<String, String> channelActivityDetails = new HashMap<String, String>();
+
+        if (cInfo.getLocation() != null) {
+            channelActivityDetails.put(ChannelActivity.ChannelActivityDetails.CHANNEL_LOCATIONS,
+                    StringUtils.join(cInfo.getLocation().iterator(), ','));
+        }
+
+        channelActivityDetails.put(ChannelActivity.ChannelActivityDetails.CHANNEL_TIMESTAMP, (new Date()).toString());
         try {
-            CentralFeedManager.getInstance().getFeedLoadManager().removeFeedActivity(cInfo.getConnectionId());
+            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getActiveId().getDataverse(),
+                    cInfo.getActiveJobId().getActiveId().getName(), channelActivityDetails);
+            CentralActiveManager.getInstance().getFeedLoadManager()
+                    .reportActivity(cInfo.getActiveJobId(), channelActivity);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Unable to register activity for " + cInfo + " " + e.getMessage());
+            }
+
+        }
+
+    }
+
+    public void deregisterActivity(ActiveJobInfo cInfo) {
+        try {
+            CentralActiveManager.getInstance().getFeedLoadManager().removeActivity(cInfo.getActiveJobId());
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to deregister feed activity for " + cInfo + " " + e.getMessage());
+                LOGGER.warning("Unable to deregister activity for " + cInfo + " " + e.getMessage());
             }
         }
     }
@@ -532,8 +661,13 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    public boolean isRegisteredFeedJob(JobId jobId) {
+    public boolean isRegisteredJob(JobId jobId) {
         return jobInfos.get(jobId) != null;
+    }
+
+    public List<String> getJobLocations(ActiveJobId activeJobId) {
+        //TODO: This will be changed when channels become procedures
+        return ((ChannelJobInfo) activeJobInfos.get(activeJobId)).getLocation();
     }
 
     public List<String> getFeedComputeLocations(ActiveId feedId) {
@@ -562,17 +696,17 @@ public class FeedJobNotificationHandler implements Runnable {
         return connectJobInfos.get(connectionId).getJobId();
     }
 
-    public void registerFeedEventSubscriber(FeedConnectionId connectionId, IFeedLifecycleEventSubscriber subscriber) {
-        List<IFeedLifecycleEventSubscriber> subscribers = eventSubscribers.get(connectionId);
+    public void registerEventSubscriber(ActiveJobId activeJobId, IActiveLifecycleEventSubscriber subscriber) {
+        List<IActiveLifecycleEventSubscriber> subscribers = eventSubscribers.get(activeJobId);
         if (subscribers == null) {
-            subscribers = new ArrayList<IFeedLifecycleEventSubscriber>();
-            eventSubscribers.put(connectionId, subscribers);
+            subscribers = new ArrayList<IActiveLifecycleEventSubscriber>();
+            eventSubscribers.put(activeJobId, subscribers);
         }
         subscribers.add(subscriber);
     }
 
-    public void deregisterFeedEventSubscriber(ActiveJobId connectionId, IFeedLifecycleEventSubscriber subscriber) {
-        List<IFeedLifecycleEventSubscriber> subscribers = eventSubscribers.get(connectionId);
+    public void deregisterFeedEventSubscriber(ActiveJobId activeJobId, IActiveLifecycleEventSubscriber subscriber) {
+        List<IActiveLifecycleEventSubscriber> subscribers = eventSubscribers.get(activeJobId);
         if (subscribers != null) {
             subscribers.remove(subscriber);
         }
@@ -636,12 +770,17 @@ public class FeedJobNotificationHandler implements Runnable {
         }
     }
 
-    public ActiveJobInfo getActiveJobInfo(ActiveId activeId) {
-        return connectJobInfos.get(activeId);
+    public ActiveJobInfo getActiveJobInfo(ActiveJobId activeJobId) {
+        return activeJobInfos.get(activeJobId);
     }
 
+    //Is this right???? called collect but gets from connect
     public JobSpecification getCollectJobSpecification(ActiveJobId connectionId) {
         return connectJobInfos.get(connectionId).getSpec();
+    }
+
+    public JobSpecification getActiveJobSpecification(ActiveId activeId) {
+        return jobInfos.get(activeId).getSpec();
     }
 
     public IFeedJoint getFeedPoint(ActiveId sourceFeedId, IFeedJoint.FeedJointType type) {
@@ -656,6 +795,47 @@ public class FeedJobNotificationHandler implements Runnable {
 
     public FeedConnectJobInfo getFeedConnectJobInfo(ActiveJobId connectionId) {
         return connectJobInfos.get(connectionId);
+    }
+
+    //TODO: Set locations for Procedures
+    private void setLocations(ChannelJobInfo cInfo) {
+        JobSpecification jobSpec = cInfo.getSpec();
+
+        List<OperatorDescriptorId> OperatorIds = new ArrayList<OperatorDescriptorId>();
+
+        Map<OperatorDescriptorId, IOperatorDescriptor> operators = jobSpec.getOperatorMap();
+        for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operators.entrySet()) {
+            IOperatorDescriptor opDesc = entry.getValue();
+            IOperatorDescriptor actualOp = null;
+            if (opDesc instanceof ChannelMetaOperatorDescriptor) {
+                actualOp = ((ChannelMetaOperatorDescriptor) opDesc).getCoreOperator();
+            } else {
+                actualOp = opDesc;
+            }
+
+            if (actualOp instanceof RepetitiveChannelOperatorDescriptor) {
+                OperatorIds.add(entry.getKey());
+            }
+        }
+
+        try {
+            IHyracksClientConnection hcc = AsterixAppContextInfo.getInstance().getHcc();
+            JobInfo info = hcc.getJobInfo(cInfo.getJobId());
+            List<String> locations = new ArrayList<String>();
+            for (OperatorDescriptorId opId : OperatorIds) {
+                Map<Integer, String> operatorLocations = info.getOperatorLocations().get(opId);
+                int nOperatorInstances = operatorLocations.size();
+                for (int i = 0; i < nOperatorInstances; i++) {
+                    locations.add(operatorLocations.get(i));
+                }
+            }
+
+            cInfo.setLocation(locations);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void setLocations(FeedConnectJobInfo cInfo) {

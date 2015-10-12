@@ -29,8 +29,8 @@ import org.apache.asterix.aql.base.Statement;
 import org.apache.asterix.aql.parser.AQLParser;
 import org.apache.asterix.aql.translator.AqlTranslator;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
-import org.apache.asterix.common.feeds.api.IFeedLoadManager;
+import org.apache.asterix.common.feeds.api.ICentralActiveManager;
+import org.apache.asterix.common.feeds.api.IActiveLoadManager;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
 import org.apache.asterix.metadata.feeds.SocketMessageListener;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
@@ -38,20 +38,20 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class CentralFeedManager implements ICentralFeedManager {
+public class CentralActiveManager implements ICentralActiveManager {
 
-    private static final ICentralFeedManager centralFeedManager = new CentralFeedManager();
+    private static final ICentralActiveManager centralFeedManager = new CentralActiveManager();
 
-    public static ICentralFeedManager getInstance() {
+    public static ICentralActiveManager getInstance() {
         return centralFeedManager;
     }
 
     private final int port;
-    private final IFeedLoadManager feedLoadManager;
+    private final IActiveLoadManager feedLoadManager;
     private final IFeedTrackingManager feedTrackingManager;
     private final SocketMessageListener messageListener;
 
-    private CentralFeedManager() {
+    private CentralActiveManager() {
         this.port = AsterixAppContextInfo.getInstance().getFeedProperties().getFeedCentralManagerPort();
         this.feedLoadManager = new FeedLoadManager();
         this.feedTrackingManager = new FeedTrackingManager();
@@ -78,7 +78,7 @@ public class CentralFeedManager implements ICentralFeedManager {
     }
 
     @Override
-    public IFeedLoadManager getFeedLoadManager() {
+    public IActiveLoadManager getFeedLoadManager() {
         return feedLoadManager;
     }
 

@@ -30,15 +30,15 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.ActiveJobId;
-import org.apache.asterix.common.feeds.FeedActivity;
+import org.apache.asterix.common.feeds.ActiveActivity;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
 import org.apache.asterix.common.feeds.NodeLoadReport;
-import org.apache.asterix.common.feeds.api.IFeedLoadManager;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveLoadManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
 import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
 import org.apache.asterix.common.feeds.message.FeedReportMessage;
@@ -54,13 +54,13 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedLoadManager implements IFeedLoadManager {
+public class FeedLoadManager implements IActiveLoadManager {
 
     private static final Logger LOGGER = Logger.getLogger(FeedLoadManager.class.getName());
 
     private static final long MIN_MODIFICATION_INTERVAL = 180000; // 10 seconds
     private final TreeSet<NodeLoadReport> nodeReports;
-    private final Map<FeedConnectionId, FeedActivity> feedActivities;
+    private final Map<ActiveJobId, ActiveActivity> activities;
     private final Map<String, Pair<Integer, Integer>> feedMetrics;
 
     private ActiveJobId lastModified;
@@ -70,7 +70,7 @@ public class FeedLoadManager implements IFeedLoadManager {
 
     public FeedLoadManager() {
         this.nodeReports = new TreeSet<NodeLoadReport>();
-        this.feedActivities = new HashMap<FeedConnectionId, FeedActivity>();
+        this.activities = new HashMap<ActiveJobId, ActiveActivity>();
         this.feedMetrics = new HashMap<String, Pair<Integer, Integer>>();
     }
 
@@ -82,7 +82,7 @@ public class FeedLoadManager implements IFeedLoadManager {
 
     @Override
     public void reportCongestion(FeedCongestionMessage message) throws AsterixException {
-        FeedRuntimeId runtimeId = message.getRuntimeId();
+        ActiveRuntimeId runtimeId = message.getRuntimeId();
         JobState jobState = ActiveJobLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
         if (jobState == null
                 || (jobState.equals(JobState.UNDER_RECOVERY))
@@ -118,7 +118,7 @@ public class FeedLoadManager implements IFeedLoadManager {
                 List<String> newLocations = new ArrayList<String>();
                 newLocations.addAll(currentComputeLocations);
                 newLocations.addAll(helperComputeNodes);
-                ActiveUtil.increaseCardinality(jobSpec, FeedRuntimeType.COMPUTE, requiredCardinality, newLocations);
+                ActiveUtil.increaseCardinality(jobSpec, ActiveRuntimeType.COMPUTE, requiredCardinality, newLocations);
 
                 // Step 2) send prepare to  stall message
                 gracefullyTerminateDataFlow(message.getConnectionId(), Integer.MAX_VALUE);
@@ -162,7 +162,7 @@ public class FeedLoadManager implements IFeedLoadManager {
             List<String> currentComputeLocations = new ArrayList<String>();
             currentComputeLocations.addAll(ActiveJobLifecycleListener.INSTANCE.getComputeLocations(message
                     .getConnectionId().getActiveId()));
-            ActiveUtil.decreaseComputeCardinality(jobSpec, FeedRuntimeType.COMPUTE, reducedCardinality,
+            ActiveUtil.decreaseComputeCardinality(jobSpec, ActiveRuntimeType.COMPUTE, reducedCardinality,
                     currentComputeLocations);
 
             gracefullyTerminateDataFlow(message.getConnectionId(), reducedCardinality - 1);
@@ -210,7 +210,7 @@ public class FeedLoadManager implements IFeedLoadManager {
 
     @Override
     public void submitFeedRuntimeReport(FeedReportMessage report) {
-        String key = "" + report.getConnectionId() + ":" + report.getRuntimeId().getFeedRuntimeType();
+        String key = "" + report.getConnectionId() + ":" + report.getRuntimeId().getRuntimeType();
         Pair<Integer, Integer> value = feedMetrics.get(key);
         if (value == null) {
             value = new Pair<Integer, Integer>(report.getValue(), 1);
@@ -222,7 +222,7 @@ public class FeedLoadManager implements IFeedLoadManager {
     }
 
     @Override
-    public int getOutflowRate(ActiveJobId connectionId, FeedRuntimeType runtimeType) {
+    public int getOutflowRate(ActiveJobId connectionId, ActiveRuntimeType runtimeType) {
         int rVal;
         String key = "" + connectionId + ":" + runtimeType;
         feedMetrics.get(key);
@@ -278,27 +278,27 @@ public class FeedLoadManager implements IFeedLoadManager {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.warning("Acking disabled for " + mesg.getConnectionId() + " in view of activated throttling");
         }
-        IFeedTrackingManager trackingManager = CentralFeedManager.getInstance().getFeedTrackingManager();
+        IFeedTrackingManager trackingManager = CentralActiveManager.getInstance().getFeedTrackingManager();
         trackingManager.disableAcking(connectionId);
     }
 
     @Override
-    public void reportFeedActivity(FeedConnectionId connectionId, FeedActivity activity) {
-        feedActivities.put(connectionId, activity);
+    public void reportActivity(ActiveJobId activeJobId, ActiveActivity activity) {
+        activities.put(activeJobId, activity);
     }
 
     @Override
-    public FeedActivity getFeedActivity(ActiveJobId connectionId) {
-        return feedActivities.get(connectionId);
+    public ActiveActivity getActivity(ActiveJobId activeJobId) {
+        return activities.get(activeJobId);
     }
 
     @Override
-    public Collection<FeedActivity> getFeedActivities() {
-        return feedActivities.values();
+    public Collection<ActiveActivity> getActivities() {
+        return activities.values();
     }
 
     @Override
-    public void removeFeedActivity(ActiveJobId connectionId) {
-        feedActivities.remove(connectionId);
+    public void removeActivity(ActiveJobId activeJobId) {
+        activities.remove(activeJobId);
     }
 }

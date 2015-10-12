@@ -21,7 +21,7 @@ package org.apache.asterix.metadata.feeds;
 import java.util.Map;
 
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -69,13 +69,13 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
      * type for the feed runtime associated with the operator.
      * Possible values: COMPUTE, STORE, OTHER
      **/
-    private final FeedRuntimeType runtimeType;
+    private final ActiveRuntimeType runtimeType;
 
     private final String operandId;
 
     public FeedMetaOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId,
             IOperatorDescriptor coreOperatorDescriptor, Map<String, String> feedPolicyProperties,
-            FeedRuntimeType runtimeType, boolean enableSubscriptionMode, String operandId) {
+            ActiveRuntimeType runtimeType, boolean enableSubscriptionMode, String operandId) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
         this.feedConnectionId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
@@ -125,7 +125,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         return coreOperator;
     }
 
-    public FeedRuntimeType getRuntimeType() {
+    public ActiveRuntimeType getRuntimeType() {
         return runtimeType;
     }
 

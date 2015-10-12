@@ -22,15 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.feeds.ActiveJobId;
-import org.apache.asterix.common.feeds.ActiveId;
-import org.apache.asterix.common.feeds.FeedJobInfo;
+import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedCollectInfo extends FeedJobInfo {
+public class FeedCollectInfo extends ActiveJobInfo {
     public ActiveId sourceFeedId;
-    public ActiveJobId feedConnectionId;
     public List<String> collectLocations = new ArrayList<String>();
     public List<String> computeLocations = new ArrayList<String>();
     public List<String> storageLocations = new ArrayList<String>();
@@ -39,17 +38,16 @@ public class FeedCollectInfo extends FeedJobInfo {
     public int superFeedManagerPort;
     public boolean fullyConnected;
 
-    public FeedCollectInfo(ActiveId sourceFeedId, ActiveJobId feedConnectionId, JobSpecification jobSpec,
-            JobId jobId, Map<String, String> feedPolicy) {
-        super(jobId, JobState.INACTIVE, JobType.COLLECT, jobSpec);
+    public FeedCollectInfo(ActiveId sourceFeedId, ActiveJobId feedConnectionId, JobSpecification jobSpec, JobId jobId,
+            Map<String, String> feedPolicy) {
+        super(jobId, JobState.INACTIVE, ActiveJopType.FEED_COLLECT, jobSpec, feedConnectionId);
         this.sourceFeedId = sourceFeedId;
-        this.feedConnectionId = feedConnectionId;
         this.feedPolicy = feedPolicy;
         this.fullyConnected = true;
     }
 
     @Override
     public String toString() {
-        return JobType.COLLECT + "[" + feedConnectionId + "]";
+        return ActiveJopType.FEED_COLLECT + "[" + activeJobId + "]";
     }
 }

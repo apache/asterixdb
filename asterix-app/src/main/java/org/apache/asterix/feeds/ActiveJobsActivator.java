@@ -5,7 +5,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobInfo;
-import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.hyracks.api.job.JobId;
 
@@ -63,26 +62,12 @@ public class ActiveJobsActivator implements Runnable {
                     try {
                         JobId jobId = AsterixAppContextInfo.getInstance().getHcc().startJob(finfo.getSpec());
                         if (LOGGER.isLoggable(Level.INFO)) {
-                            if (finfo instanceof FeedCollectInfo) {
-                                LOGGER.info("Resumed feed :" + ((FeedCollectInfo) finfo).feedConnectionId + " job id "
-                                        + jobId);
-                            } else {
-                                LOGGER.info("Resumed channel :" + ((ChannelJobInfo) finfo).getChannelId() + " job id "
-                                        + jobId);
-                            }
+                            LOGGER.info("Resumed :" + finfo.getActiveJobId() + " job id " + jobId);
                             LOGGER.info("Job:" + finfo.getSpec());
                         }
                     } catch (Exception e) {
                         if (LOGGER.isLoggable(Level.WARNING)) {
-                            if (finfo instanceof FeedCollectInfo) {
-                                LOGGER.warning("Unable to resume feed " + ((FeedCollectInfo) finfo).feedConnectionId
-                                        + " " + e.getMessage());
-                            } else {
-
-                                LOGGER.info("Unable to resume channel :" + ((ChannelJobInfo) finfo).getChannelId()
-                                        + e.getMessage());
-
-                            }
+                            LOGGER.warning("Unable to resume " + finfo.getActiveJobId() + " " + e.getMessage());
                         }
                     }
                 }

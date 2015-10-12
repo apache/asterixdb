@@ -25,12 +25,12 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.FeedConnectionId;
-import org.apache.asterix.common.feeds.FeedRuntime;
-import org.apache.asterix.common.feeds.FeedRuntimeId;
-import org.apache.asterix.common.feeds.FeedRuntimeInputHandler;
-import org.apache.asterix.common.feeds.api.IFeedManager;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.FeedRuntimeType;
-import org.apache.asterix.common.feeds.api.IFeedRuntime.Mode;
+import org.apache.asterix.common.feeds.ActiveRuntime;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
+import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -56,7 +56,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
      * The Feed Runtime instance associated with the operator. Feed Runtime
      * captures the state of the operator while the feed is active.
      */
-    private FeedRuntime feedRuntime;
+    private ActiveRuntime feedRuntime;
 
     /**
      * A unique identifier for the feed instance. A feed instance represents
@@ -73,10 +73,10 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     private int nPartitions;
 
     /** Type associated with the core feed operator **/
-    private final FeedRuntimeType runtimeType = FeedRuntimeType.STORE;
+    private final ActiveRuntimeType runtimeType = ActiveRuntimeType.STORE;
 
     /** The (singleton) instance of IFeedManager **/
-    private IFeedManager feedManager;
+    private IActiveManager feedManager;
 
     private FrameTupleAccessor fta;
 
@@ -84,7 +84,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private final String operandId;
 
-    private FeedRuntimeInputHandler inputSideHandler;
+    private ActiveRuntimeInputHandler inputSideHandler;
 
     public FeedMetaStoreNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
             int partition, int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
@@ -106,7 +106,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     @Override
     public void open() throws HyracksDataException {
-        FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, partition, operandId);
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         try {
             feedRuntime = feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
             if (feedRuntime == null) {
@@ -122,18 +122,18 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         }
     }
 
-    private void initializeNewFeedRuntime(FeedRuntimeId runtimeId) throws Exception {
+    private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         if (LOGGER.isLoggable(Level.WARNING)) {
             LOGGER.warning("Runtime not found for  " + runtimeId + " connection id " + connectionId);
         }
         this.fta = new FrameTupleAccessor(recordDesc);
-        this.inputSideHandler = new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
+        this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
                 policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, feedManager,
                 nPartitions);
         setupBasicRuntime(inputSideHandler);
     }
 
-    private void reviveOldFeedRuntime(FeedRuntimeId runtimeId) throws Exception {
+    private void reviveOldFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         this.inputSideHandler = feedRuntime.getInputHandler();
         this.fta = new FrameTupleAccessor(recordDesc);
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
@@ -146,11 +146,11 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         }
     }
 
-    private void setupBasicRuntime(FeedRuntimeInputHandler inputHandler) throws Exception {
+    private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
-        FeedRuntimeId runtimeId = new FeedRuntimeId(runtimeType, partition, operandId);
-        feedRuntime = new FeedRuntime(runtimeId, inputHandler, writer);
-        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, (FeedRuntime) feedRuntime);
+        ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
+        feedRuntime = new ActiveRuntime(runtimeId, inputHandler, writer);
+        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, (ActiveRuntime) feedRuntime);
     }
 
     @Override
@@ -209,7 +209,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     private void deregister() {
         if (feedRuntime != null) {
             feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId,
-                    ((FeedRuntime) feedRuntime).getRuntimeId());
+                    ((ActiveRuntime) feedRuntime).getRuntimeId());
         }
     }
 
