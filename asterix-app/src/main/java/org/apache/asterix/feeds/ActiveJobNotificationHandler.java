@@ -156,6 +156,10 @@ public class ActiveJobNotificationHandler implements Runnable {
         return connectJobInfos.values();
     }
 
+    public Collection<ActiveJobInfo> getActiveJobInfos() {
+        return activeJobInfos.values();
+    }
+
     public void registerFeedJoint(IFeedJoint feedJoint) {
         List<IFeedJoint> feedJointsOnPipeline = feedPipeline.get(feedJoint.getOwnerFeedId());
         if (feedJointsOnPipeline == null) {
@@ -705,7 +709,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         subscribers.add(subscriber);
     }
 
-    public void deregisterFeedEventSubscriber(ActiveJobId activeJobId, IActiveLifecycleEventSubscriber subscriber) {
+    public void deregisterEventSubscriber(ActiveJobId activeJobId, IActiveLifecycleEventSubscriber subscriber) {
         List<IActiveLifecycleEventSubscriber> subscribers = eventSubscribers.get(activeJobId);
         if (subscribers != null) {
             subscribers.remove(subscriber);

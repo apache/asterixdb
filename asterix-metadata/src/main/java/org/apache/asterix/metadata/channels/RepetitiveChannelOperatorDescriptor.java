@@ -16,7 +16,7 @@ package org.apache.asterix.metadata.channels;
 
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.channels.ChannelId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -35,7 +35,7 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
     private static final Logger LOGGER = Logger.getLogger(RepetitiveChannelOperatorDescriptor.class.getName());
 
     /** The unique identifier of the channel. **/
-    private final ChannelId channelId;
+    private final ActiveJobId channelJobId;
 
     private final FunctionSignature function;
 
@@ -62,8 +62,9 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
                 resultsName);
     }
 
-    public ChannelId getChannelId() {
-        return channelId;
+    @Override
+    public ActiveJobId getChannelJobId() {
+        return channelJobId;
     }
 
     public String getDuration() {

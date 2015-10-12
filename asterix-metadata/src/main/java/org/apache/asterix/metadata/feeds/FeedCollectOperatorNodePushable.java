@@ -98,7 +98,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
             State state = collectRuntime.waitTillCollectionOver();
             if (state.equals(State.FINISHED)) {
-                feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId,
+                feedManager.getConnectionManager().deRegisterActiveRuntime(connectionId,
                         collectRuntime.getRuntimeId());
                 writer.close();
                 inputSideHandler.close();
@@ -121,7 +121,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private void handleCompleteConnection() throws Exception {
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(ActiveRuntimeType.COLLECT, partition,
                 ActiveRuntimeId.DEFAULT_OPERAND_ID);
-        collectRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager().getFeedRuntime(connectionId,
+        collectRuntime = (CollectionRuntime) feedManager.getConnectionManager().getActiveRuntime(connectionId,
                 runtimeId);
         if (collectRuntime == null) {
             beginNewFeed(runtimeId);
@@ -146,7 +146,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
         collectRuntime = new CollectionRuntime(connectionId, runtimeId, inputSideHandler, outputSideWriter,
                 sourceRuntime, feedPolicy);
-        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, collectRuntime);
+        feedManager.getConnectionManager().registerActiveRuntime(connectionId, collectRuntime);
         sourceRuntime.subscribeFeed(policyAccessor, collectRuntime);
     }
 
@@ -180,7 +180,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
         collectRuntime = new CollectionRuntime(connectionId, runtimeId, inputSideHandler, wrapper, sourceRuntime,
                 feedPolicy);
-        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, collectRuntime);
+        feedManager.getConnectionManager().registerActiveRuntime(connectionId, collectRuntime);
         recordDesc = sourceRuntime.getRecordDescriptor();
         sourceRuntime.subscribeFeed(policyAccessor, collectRuntime);
     }
@@ -197,7 +197,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
                 LOGGER.info("Failure during feed ingestion. Deregistering feed runtime " + collectRuntime
                         + " as feed is not configured to handle failures");
             }
-            feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId, collectRuntime.getRuntimeId());
+            feedManager.getConnectionManager().deRegisterActiveRuntime(connectionId, collectRuntime.getRuntimeId());
             writer.close();
             throw new HyracksDataException(ie);
         }

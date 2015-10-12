@@ -110,7 +110,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
     public void open() throws HyracksDataException {
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         try {
-            feedRuntime = feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
+            feedRuntime = feedManager.getConnectionManager().getActiveRuntime(connectionId, runtimeId);
             if (feedRuntime == null) {
                 initializeNewFeedRuntime(runtimeId);
             } else {

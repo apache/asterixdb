@@ -35,7 +35,6 @@ import org.apache.asterix.common.api.IClusterManagementWorkResponse;
 import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
-import org.apache.asterix.common.feeds.FeedJobInfo;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.AddNodeWorkResponse;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
@@ -137,21 +136,26 @@ public class ActiveWorkRequestResponseHandler implements Runnable {
 
                     for (List<ActiveJobInfo> infos : failureAnalysis.values()) {
                         for (ActiveJobInfo info : infos) {
-                            if (info instanceof FeedJobInfo) {
-                                FeedJobInfo fInfo = (FeedJobInfo) info;
-                                switch (fInfo.getJobType()) {
-                                    case INTAKE:
-                                        revisedIntakeJobs.add((FeedIntakeInfo) info);
-                                        break;
-                                    case FEED_CONNECT:
-                                        revisedConnectJobInfos.add((FeedConnectJobInfo) info);
-                                        break;
-                                }
-                            } else {
-                                ChannelJobInfo cInfo = (ChannelJobInfo) info;
-                                revisedChannelJobInfos.add(cInfo);
-
+                            //TODO: ADD other active things
+                            switch (info.getJobType()) {
+                                case FEED_INTAKE:
+                                    revisedIntakeJobs.add((FeedIntakeInfo) info);
+                                    break;
+                                case FEED_CONNECT:
+                                    revisedConnectJobInfos.add((FeedConnectJobInfo) info);
+                                    break;
+                                case CHANNEL_CONTINUOUS:
+                                    revisedChannelJobInfos.add((ChannelJobInfo) info);
+                                    break;
+                                case CHANNEL_REPETITIVE:
+                                    revisedChannelJobInfos.add((ChannelJobInfo) info);
+                                    break;
+                                case FEED_COLLECT:
+                                    break;
+                                default:
+                                    break;
                             }
+
                         }
                     }
 

@@ -75,7 +75,7 @@ public class NodeLoadReportService implements IFeedService {
 
         @Override
         public void run() {
-            List<ActiveRuntimeId> runtimeIds = feedManager.getFeedConnectionManager().getRegisteredRuntimes();
+            List<ActiveRuntimeId> runtimeIds = feedManager.getConnectionManager().getRegisteredRuntimes();
             int nRuntimes = runtimeIds.size();
             double cpuLoad = getCpuLoad();
             double usedHeap = getUsedHeap();

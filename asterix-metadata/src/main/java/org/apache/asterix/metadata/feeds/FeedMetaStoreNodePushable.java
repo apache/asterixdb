@@ -108,7 +108,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
     public void open() throws HyracksDataException {
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         try {
-            feedRuntime = feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
+            feedRuntime = feedManager.getConnectionManager().getActiveRuntime(connectionId, runtimeId);
             if (feedRuntime == null) {
                 initializeNewFeedRuntime(runtimeId);
             } else {
@@ -150,7 +150,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         feedRuntime = new ActiveRuntime(runtimeId, inputHandler, writer);
-        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, (ActiveRuntime) feedRuntime);
+        feedManager.getConnectionManager().registerActiveRuntime(connectionId, (ActiveRuntime) feedRuntime);
     }
 
     @Override
@@ -208,7 +208,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     private void deregister() {
         if (feedRuntime != null) {
-            feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId,
+            feedManager.getConnectionManager().deRegisterActiveRuntime(connectionId,
                     ((ActiveRuntime) feedRuntime).getRuntimeId());
         }
     }

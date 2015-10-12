@@ -22,54 +22,55 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
 import org.apache.asterix.common.feeds.ActiveRuntimeId;
-import org.apache.asterix.common.feeds.FeedRuntimeManager;
+import org.apache.asterix.common.feeds.ActiveRuntimeManager;
 
 /**
  * Handle (de)registration of feeds for delivery of control messages.
  */
-public interface IFeedConnectionManager {
+public interface IActiveConnectionManager {
 
     /**
-     * Allows registration of a feedRuntime.
+     * Allows registration of an activeRuntime.
      * 
-     * @param feedRuntime
+     * @param activeRuntime
+     * @param activeId
      * @throws Exception
      */
-    public void registerFeedRuntime(FeedConnectionId connectionId, ActiveRuntime feedRuntime) throws Exception;
+    public void registerActiveRuntime(ActiveJobId activeJobId, ActiveRuntime activeRuntime) throws Exception;
 
     /**
-     * Obtain feed runtime corresponding to a feedRuntimeId
+     * Obtain active runtime corresponding to a activeRuntimeId
      * 
-     * @param feedRuntimeId
+     * @param activeRuntimeId
+     * @param activeId
      * @return
      */
-    public ActiveRuntime getFeedRuntime(ActiveJobId connectionId, ActiveRuntimeId feedRuntimeId);
+    public ActiveRuntime getActiveRuntime(ActiveJobId activeJobId, ActiveRuntimeId activeRuntimeId);
 
     /**
-     * De-register a feed
+     * De-register an active object
      * 
-     * @param feedConnection
+     * @param activeId
      * @throws IOException
      */
-    void deregisterFeed(ActiveJobId feedConnection);
+    public void deregister(ActiveJobId activeJobId);
 
     /**
-     * Obtain the feed runtime manager associated with a feed.
+     * Obtain the active runtime manager associated with an active object.
      * 
-     * @param feedConnection
+     * @param activeId
      * @return
      */
-    public FeedRuntimeManager getFeedRuntimeManager(ActiveJobId feedConnection);
+    public ActiveRuntimeManager getActiveRuntimeManager(ActiveJobId activeJobId);
 
     /**
-     * Allows de-registration of a feed runtime.
+     * Allows de-registration of an active runtime.
      * 
-     * @param feedRuntimeId
+     * @param activeRuntimeId
      */
-    void deRegisterFeedRuntime(ActiveJobId connectionId, ActiveRuntimeId feedRuntimeId);
+    void deRegisterActiveRuntime(ActiveJobId activeJobId, ActiveRuntimeId activeRuntimeId);
 
     public List<ActiveRuntimeId> getRegisteredRuntimes();
 

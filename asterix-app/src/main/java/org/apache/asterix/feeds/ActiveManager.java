@@ -21,22 +21,20 @@ package org.apache.asterix.feeds;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.channels.api.IChannelConnectionManager;
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedMemoryManager;
 import org.apache.asterix.common.feeds.FeedMessageService;
 import org.apache.asterix.common.feeds.FeedMetricCollector;
 import org.apache.asterix.common.feeds.NodeLoadReportService;
-import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
+import org.apache.asterix.common.feeds.api.IActiveConnectionManager;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
 import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
-import org.apache.asterix.metadata.channels.ChannelConnectionManager;
-import org.apache.asterix.metadata.feeds.FeedConnectionManager;
+import org.apache.asterix.metadata.feeds.ActiveConnectionManager;
 import org.apache.asterix.metadata.feeds.FeedSubscriptionManager;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -52,9 +50,7 @@ public class ActiveManager implements IActiveManager {
 
     private final IFeedSubscriptionManager feedSubscriptionManager;
 
-    private final IFeedConnectionManager feedConnectionManager;
-
-    private final IChannelConnectionManager channelConnectionManager;
+    private final IActiveConnectionManager connectionManager;
 
     private final IFeedMemoryManager feedMemoryManager;
 
@@ -72,16 +68,16 @@ public class ActiveManager implements IActiveManager {
 
     private final int frameSize;
 
-    public ActiveManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize) throws AsterixException, HyracksDataException {
+    public ActiveManager(String nodeId, AsterixFeedProperties feedProperties, int frameSize) throws AsterixException,
+            HyracksDataException {
         this.nodeId = nodeId;
         this.feedSubscriptionManager = new FeedSubscriptionManager(nodeId);
-        this.feedConnectionManager = new FeedConnectionManager(nodeId);
+        this.connectionManager = new ActiveConnectionManager(nodeId);
         this.feedMetadataManager = new FeedMetadataManager(nodeId);
         this.feedMemoryManager = new FeedMemoryManager(nodeId, feedProperties, frameSize);
         String ccClusterIp = AsterixClusterProperties.INSTANCE.getCluster() != null ? AsterixClusterProperties.INSTANCE
                 .getCluster().getMasterNode().getClusterIp() : "localhost";
         this.feedMessageService = new FeedMessageService(feedProperties, nodeId, ccClusterIp);
-        this.channelConnectionManager = new ChannelConnectionManager(nodeId);
         this.nodeLoadReportService = new NodeLoadReportService(nodeId, this);
         try {
             this.feedMessageService.start();
@@ -103,13 +99,8 @@ public class ActiveManager implements IActiveManager {
     }
 
     @Override
-    public IFeedConnectionManager getFeedConnectionManager() {
-        return feedConnectionManager;
-    }
-
-    @Override
-    public IChannelConnectionManager getChannelConnectionManager() {
-        return channelConnectionManager;
+    public IActiveConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     @Override

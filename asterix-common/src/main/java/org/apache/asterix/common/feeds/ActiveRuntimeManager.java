@@ -28,21 +28,26 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
+import org.apache.asterix.common.feeds.api.IActiveConnectionManager;
 
-public class FeedRuntimeManager {
+/**
+ * Provider necessary methods for retrieving
+ * runtimes for an active job
+ */
 
-    private static Logger LOGGER = Logger.getLogger(FeedRuntimeManager.class.getName());
+public class ActiveRuntimeManager {
 
-    private final ActiveJobId connectionId;
-    private final IFeedConnectionManager connectionManager;
-    private final Map<ActiveRuntimeId, ActiveRuntime> feedRuntimes;
+    private static Logger LOGGER = Logger.getLogger(ActiveRuntimeManager.class.getName());
+
+    private final ActiveJobId activeJobId;
+    private final IActiveConnectionManager connectionManager;
+    private final Map<ActiveRuntimeId, ActiveRuntime> runtimes;
 
     private final ExecutorService executorService;
 
-    public FeedRuntimeManager(ActiveJobId connectionId, IFeedConnectionManager feedConnectionManager) {
-        this.connectionId = connectionId;
-        this.feedRuntimes = new ConcurrentHashMap<ActiveRuntimeId, ActiveRuntime>();
+    public ActiveRuntimeManager(ActiveJobId activeJobId, IActiveConnectionManager feedConnectionManager) {
+        this.activeJobId = activeJobId;
+        this.runtimes = new ConcurrentHashMap<ActiveRuntimeId, ActiveRuntime>();
         this.executorService = Executors.newCachedThreadPool();
         this.connectionManager = feedConnectionManager;
     }
@@ -51,23 +56,23 @@ public class FeedRuntimeManager {
         if (executorService != null) {
             executorService.shutdownNow();
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Shut down executor service for :" + connectionId);
+                LOGGER.info("Shut down executor service for :" + activeJobId);
             }
         }
     }
 
-    public ActiveRuntime getFeedRuntime(ActiveRuntimeId runtimeId) {
-        return feedRuntimes.get(runtimeId);
+    public ActiveRuntime getActiveRuntime(ActiveRuntimeId runtimeId) {
+        return runtimes.get(runtimeId);
     }
 
-    public void registerFeedRuntime(ActiveRuntimeId runtimeId, ActiveRuntime feedRuntime) {
-        feedRuntimes.put(runtimeId, feedRuntime);
+    public void registerRuntime(ActiveRuntimeId runtimeId, ActiveRuntime runtime) {
+        runtimes.put(runtimeId, runtime);
     }
 
-    public synchronized void deregisterFeedRuntime(ActiveRuntimeId runtimeId) {
-        feedRuntimes.remove(runtimeId);
-        if (feedRuntimes.isEmpty()) {
-            connectionManager.deregisterFeed(connectionId);
+    public synchronized void deregisterRuntime(ActiveRuntimeId runtimeId) {
+        runtimes.remove(runtimeId);
+        if (runtimes.isEmpty()) {
+            connectionManager.deregister(activeJobId);
         }
     }
 
@@ -75,8 +80,8 @@ public class FeedRuntimeManager {
         return executorService;
     }
 
-    public Set<ActiveRuntimeId> getFeedRuntimes() {
-        return feedRuntimes.keySet();
+    public Set<ActiveRuntimeId> getRuntimes() {
+        return runtimes.keySet();
     }
 
 }

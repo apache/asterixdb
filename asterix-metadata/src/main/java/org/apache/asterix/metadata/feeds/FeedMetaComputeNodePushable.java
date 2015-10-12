@@ -108,7 +108,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
     public void open() throws HyracksDataException {
         ActiveRuntimeId runtimeId = new SubscribableFeedRuntimeId(connectionId.getActiveId(), runtimeType, partition);
         try {
-            feedRuntime = feedManager.getFeedConnectionManager().getFeedRuntime(connectionId, runtimeId);
+            feedRuntime = feedManager.getConnectionManager().getActiveRuntime(connectionId, runtimeId);
             if (feedRuntime == null) {
                 initializeNewFeedRuntime(runtimeId);
             } else {
@@ -135,7 +135,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         feedRuntime = new SubscribableRuntime(connectionId.getActiveId(), runtimeId, inputSideHandler, distributeWriter,
                 recordDesc);
         feedManager.getFeedSubscriptionManager().registerFeedSubscribableRuntime((ISubscribableRuntime) feedRuntime);
-        feedManager.getFeedConnectionManager().registerFeedRuntime(connectionId, feedRuntime);
+        feedManager.getConnectionManager().registerActiveRuntime(connectionId, feedRuntime);
 
         distributeWriter.subscribeFeed(policyEnforcer.getFeedPolicyAccessor(), writer, connectionId);
     }
@@ -217,7 +217,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             feedManager.getFeedSubscriptionManager().deregisterFeedSubscribableRuntime(runtimeId);
 
             // deregister from connection manager
-            feedManager.getFeedConnectionManager().deRegisterFeedRuntime(connectionId,
+            feedManager.getConnectionManager().deRegisterActiveRuntime(connectionId,
                     ((ActiveRuntime) feedRuntime).getRuntimeId());
         }
     }

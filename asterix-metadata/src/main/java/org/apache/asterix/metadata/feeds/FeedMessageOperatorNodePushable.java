@@ -36,7 +36,7 @@ import org.apache.asterix.common.feeds.FeedFrameCollector.State;
 import org.apache.asterix.common.feeds.ActiveRuntime;
 import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
-import org.apache.asterix.common.feeds.FeedRuntimeManager;
+import org.apache.asterix.common.feeds.ActiveRuntimeManager;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.IntakePartitionStatistics;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitoredBufferStorageTimerTask;
@@ -144,11 +144,11 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
     private void handleThrottlingEnabledMessage(ThrottlingEnabledFeedMessage throttlingMessage) {
         ActiveJobId connectionId = throttlingMessage.getConnectionId();
-        FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
-        Set<ActiveRuntimeId> runtimes = runtimeManager.getFeedRuntimes();
+        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        Set<ActiveRuntimeId> runtimes = runtimeManager.getRuntimes();
         for (ActiveRuntimeId runtimeId : runtimes) {
             if (runtimeId.getFeedRuntimeType().equals(ActiveRuntimeType.STORE)) {
-                ActiveRuntime storeRuntime = runtimeManager.getFeedRuntime(runtimeId);
+                ActiveRuntime storeRuntime = runtimeManager.getActiveRuntime(runtimeId);
                 ((StorageSideMonitoredBuffer) (storeRuntime.getInputHandler().getmBuffer())).setAcking(false);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Acking Disabled in view of throttling that has been activted upfron in the pipeline "
@@ -160,10 +160,10 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
 
     private void handleFeedTupleCommitResponseMessage(FeedTupleCommitResponseMessage commitResponseMessage) {
         ActiveJobId connectionId = commitResponseMessage.getConnectionId();
-        FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
-        Set<ActiveRuntimeId> runtimes = runtimeManager.getFeedRuntimes();
+        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        Set<ActiveRuntimeId> runtimes = runtimeManager.getRuntimes();
         for (ActiveRuntimeId runtimeId : runtimes) {
-            ActiveRuntime runtime = runtimeManager.getFeedRuntime(runtimeId);
+            ActiveRuntime runtime = runtimeManager.getActiveRuntime(runtimeId);
             switch (runtimeId.getFeedRuntimeType()) {
                 case COLLECT:
                     FeedCollectRuntimeInputHandler inputHandler = (FeedCollectRuntimeInputHandler) runtime
@@ -193,12 +193,12 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleTerminateFlowMessage(ActiveJobId connectionId) throws HyracksDataException {
-        FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
-        Set<ActiveRuntimeId> feedRuntimes = runtimeManager.getFeedRuntimes();
+        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        Set<ActiveRuntimeId> feedRuntimes = runtimeManager.getRuntimes();
 
         boolean found = false;
         for (ActiveRuntimeId runtimeId : feedRuntimes) {
-            ActiveRuntime runtime = runtimeManager.getFeedRuntime(runtimeId);
+            ActiveRuntime runtime = runtimeManager.getActiveRuntime(runtimeId);
             if (runtime.getRuntimeId().getRuntimeType().equals(ActiveRuntimeType.COLLECT)) {
                 ((CollectionRuntime) runtime).getFrameCollector().setState(State.HANDOVER);
                 found = true;
@@ -215,10 +215,10 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private void handlePrepareStallMessage(PrepareStallMessage prepareStallMessage) throws HyracksDataException {
         ActiveJobId connectionId = prepareStallMessage.getConnectionId();
         int computePartitionsRetainLimit = prepareStallMessage.getComputePartitionsRetainLimit();
-        FeedRuntimeManager runtimeManager = feedManager.getFeedConnectionManager().getFeedRuntimeManager(connectionId);
-        Set<ActiveRuntimeId> feedRuntimes = runtimeManager.getFeedRuntimes();
+        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        Set<ActiveRuntimeId> feedRuntimes = runtimeManager.getRuntimes();
         for (ActiveRuntimeId runtimeId : feedRuntimes) {
-            ActiveRuntime runtime = runtimeManager.getFeedRuntime(runtimeId);
+            ActiveRuntime runtime = runtimeManager.getActiveRuntime(runtimeId);
             switch (runtimeId.getFeedRuntimeType()) {
                 case COMPUTE:
                     Mode requiredMode = runtimeId.getPartition() <= computePartitionsRetainLimit ? Mode.STALL
@@ -266,7 +266,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
             }
 
             runtimeId = new ActiveRuntimeId(runtimeType, partition, ActiveRuntimeId.DEFAULT_OPERAND_ID);
-            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getFeedConnectionManager().getFeedRuntime(
+            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getConnectionManager().getActiveRuntime(
                     connectionId, runtimeId);
             feedRuntime.getSourceRuntime().unsubscribeFeed(feedRuntime);
             if (LOGGER.isLoggable(Level.INFO)) {

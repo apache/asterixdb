@@ -18,14 +18,7 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.channels.api.IChannelConnectionManager;
 import org.apache.asterix.common.config.AsterixFeedProperties;
-import org.apache.asterix.common.feeds.api.IFeedConnectionManager;
-import org.apache.asterix.common.feeds.api.IFeedMemoryManager;
-import org.apache.asterix.common.feeds.api.IFeedMessageService;
-import org.apache.asterix.common.feeds.api.IFeedMetadataManager;
-import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
-import org.apache.asterix.common.feeds.api.IFeedSubscriptionManager;
 
 /**
  * Provides access to services related to feed management within a node controller
@@ -51,17 +44,9 @@ public interface IActiveManager {
      * gets the handle to the singleton instance of connection manager
      * 
      * @return the singleton instance of connection manager
-     * @see IFeedConnectionManager
+     * @see IActiveConnectionManager
      */
-    public IFeedConnectionManager getFeedConnectionManager();
-
-    /**
-     * gets the handle to the singleton instance of connection manager
-     * 
-     * @return the singleton instance of connection manager
-     * @see IChannelConnectionManager
-     */
-    public IChannelConnectionManager getChannelConnectionManager();
+    public IActiveConnectionManager getConnectionManager();
 
     /**
      * gets the handle to the singleton instance of memory manager

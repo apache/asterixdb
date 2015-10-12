@@ -54,9 +54,9 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class FeedLoadManager implements IActiveLoadManager {
+public class ActiveLoadManager implements IActiveLoadManager {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedLoadManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveLoadManager.class.getName());
 
     private static final long MIN_MODIFICATION_INTERVAL = 180000; // 10 seconds
     private final TreeSet<NodeLoadReport> nodeReports;
@@ -68,7 +68,7 @@ public class FeedLoadManager implements IActiveLoadManager {
 
     private static final int UNKNOWN = -1;
 
-    public FeedLoadManager() {
+    public ActiveLoadManager() {
         this.nodeReports = new TreeSet<NodeLoadReport>();
         this.activities = new HashMap<ActiveJobId, ActiveActivity>();
         this.feedMetrics = new HashMap<String, Pair<Integer, Integer>>();
@@ -83,7 +83,7 @@ public class FeedLoadManager implements IActiveLoadManager {
     @Override
     public void reportCongestion(FeedCongestionMessage message) throws AsterixException {
         ActiveRuntimeId runtimeId = message.getRuntimeId();
-        JobState jobState = ActiveJobLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
+        JobState jobState = ActiveJobLifecycleListener.INSTANCE.getJobState(message.getConnectionId());
         if (jobState == null
                 || (jobState.equals(JobState.UNDER_RECOVERY))
                 || (message.getConnectionId().equals(lastModified) && System.currentTimeMillis()
@@ -145,7 +145,7 @@ public class FeedLoadManager implements IActiveLoadManager {
 
     @Override
     public void submitScaleInPossibleReport(ScaleInReportMessage message) throws Exception {
-        JobState jobState = ActiveJobLifecycleListener.INSTANCE.getFeedJobState(message.getConnectionId());
+        JobState jobState = ActiveJobLifecycleListener.INSTANCE.getJobState(message.getConnectionId());
         if (jobState == null || (jobState.equals(JobState.UNDER_RECOVERY))) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("JobState information for job " + "[" + message.getConnectionId() + "]" + " not found ");

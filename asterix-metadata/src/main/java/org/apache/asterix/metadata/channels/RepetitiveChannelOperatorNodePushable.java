@@ -19,18 +19,15 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.json.JSONException;
-
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.channels.ChannelId;
-import org.apache.asterix.common.channels.ChannelRuntimeId;
-import org.apache.asterix.common.channels.api.IChannelRuntime;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorNodePushable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.json.JSONException;
 
 /**
  * The runtime for @see{RepetitiveChannelOperationDescriptor}.
@@ -40,7 +37,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
-    private final ChannelId channelId;
+    private final ActiveJobId channelJobId;
     private final ChannelRuntimeId channelRuntimeId;
     private final IActiveManager feedManager;
     private final IHyracksTaskContext ctx;
@@ -163,8 +160,8 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
     }
 
     @Override
-    public ChannelId getChannelId() {
-        return channelId;
+    public ActiveJobId getChannelJobId() {
+        return channelJobId;
     }
 
     @Override

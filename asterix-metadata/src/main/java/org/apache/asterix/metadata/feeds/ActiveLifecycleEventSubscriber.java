@@ -60,7 +60,7 @@ public class ActiveLifecycleEventSubscriber implements IActiveLifecycleEventSubs
     private void assertNoFailure(ActiveLifecycleEvent e) throws AsterixException {
         if (e.equals(ActiveLifecycleEvent.FEED_INTAKE_FAILURE) || e.equals(ActiveLifecycleEvent.FEED_COLLECT_FAILURE)) {
             //TODO: Handle failures for other types of jobs
-            throw new AsterixException("Failure in feed");
+            throw new AsterixException("Failure in Active Job");
         }
     }
 

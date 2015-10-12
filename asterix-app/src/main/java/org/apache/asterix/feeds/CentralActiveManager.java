@@ -53,7 +53,7 @@ public class CentralActiveManager implements ICentralActiveManager {
 
     private CentralActiveManager() {
         this.port = AsterixAppContextInfo.getInstance().getFeedProperties().getFeedCentralManagerPort();
-        this.feedLoadManager = new FeedLoadManager();
+        this.feedLoadManager = new ActiveLoadManager();
         this.feedTrackingManager = new FeedTrackingManager();
         this.messageListener = new SocketMessageListener(port, new FeedMessageReceiver(this));
     }
