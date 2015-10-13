@@ -16,28 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
-import java.io.PrintStream;
-
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABinaryHexPrinter;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
-public class ADayTimeDurationPrinter implements IPrinter {
+public class ABinaryPrinterFactory implements IPrinterFactory {
 
-    public static final ADayTimeDurationPrinter INSTANCE = new ADayTimeDurationPrinter();
-
-    @Override
-    public void init() throws AlgebricksException {
-
+    private ABinaryPrinterFactory() {
     }
 
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("\"");
-        PrintTools.printDayTimeDurationString(b, s, l, ps);
-        ps.print("\")");
+    public static final ABinaryPrinterFactory INSTANCE = new ABinaryPrinterFactory();
+
+    @Override public IPrinter createPrinter() {
+        return ABinaryHexPrinter.INSTANCE;
     }
 }

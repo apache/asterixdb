@@ -21,6 +21,7 @@ package org.apache.asterix.om.pointables.printer.json.clean;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABinaryHexPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ABooleanPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ACirclePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ADatePrinter;
@@ -41,9 +42,8 @@ import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.APolygonPr
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ARectanglePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AStringPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.ATimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AUUIDPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.json.clean.AYearMonthDurationPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.ABinaryHexPrinter;
-import org.apache.asterix.dataflow.data.nontagged.printers.json.lossless.AUUIDPrinter;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;

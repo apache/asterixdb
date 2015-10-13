@@ -28,21 +28,18 @@ public class AYearMonthDurationPrinter implements IPrinter {
 
     public static final AYearMonthDurationPrinter INSTANCE = new AYearMonthDurationPrinter();
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.algebricks.data.IPrinter#init()
-     */
     @Override
     public void init() throws AlgebricksException {
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.hyracks.algebricks.data.IPrinter#print(byte[], int, int, java.io.PrintStream)
-     */
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+
         int months = AInt32SerializerDeserializer.getInt(b, s + 1);
-        // QQQ reasonable CSV representation?
+
+        ps.print("{ \"year-month-duration\": ");
         ps.print(months);
+        ps.print("}");
     }
 
 }

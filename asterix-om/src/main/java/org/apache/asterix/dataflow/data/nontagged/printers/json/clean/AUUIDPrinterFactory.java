@@ -33,5 +33,4 @@ public class AUUIDPrinterFactory implements IPrinterFactory {
     public IPrinter createPrinter() {
         return AUUIDPrinter.INSTANCE;
     }
-
 }

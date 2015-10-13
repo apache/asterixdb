@@ -16,28 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
+
+import org.apache.asterix.om.base.AMutableUUID;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.data.std.primitive.LongPointable;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.data.IPrinter;
+public class AUUIDPrinter implements IPrinter {
 
-public class ADayTimeDurationPrinter implements IPrinter {
-
-    public static final ADayTimeDurationPrinter INSTANCE = new ADayTimeDurationPrinter();
+    public static final AUUIDPrinter INSTANCE = new AUUIDPrinter();
+    // We use mutable UUID not to create a UUID object multiple times.
+    AMutableUUID uuid = new AMutableUUID(0, 0);
 
     @Override
     public void init() throws AlgebricksException {
-
     }
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("\"");
-        PrintTools.printDayTimeDurationString(b, s, l, ps);
-        ps.print("\")");
+        long msb = LongPointable.getLong(b, s + 1);
+        long lsb = LongPointable.getLong(b, s + 9);
+        uuid.setValue(msb, lsb);
+
+        ps.print("\"" + uuid.toStringLiteralOnly() + "\"");
     }
+
 }

@@ -16,28 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
-import java.io.PrintStream;
-
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 
-public class ADayTimeDurationPrinter implements IPrinter {
+import java.io.IOException;
+import java.io.PrintStream;
 
-    public static final ADayTimeDurationPrinter INSTANCE = new ADayTimeDurationPrinter();
+public class ABinaryHexPrinter implements IPrinter {
+    private ABinaryHexPrinter() {
+    }
 
-    @Override
-    public void init() throws AlgebricksException {
+    public static final ABinaryHexPrinter INSTANCE = new ABinaryHexPrinter();
+
+    @Override public void init() throws AlgebricksException {
 
     }
 
-    @Override
-    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        ps.print("\"");
-        PrintTools.printDayTimeDurationString(b, s, l, ps);
-        ps.print("\")");
+    @Override public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        int validLength = ABinarySerializerDeserializer.getLength(b, s + 1);
+        int start = s + 1 + ABinarySerializerDeserializer.SIZE_OF_LENGTH;
+        try {
+            PrintTools.printHexString(b, start, validLength, ps);
+        } catch (IOException e) {
+            throw new AlgebricksException(e);
+        }
     }
+
 }

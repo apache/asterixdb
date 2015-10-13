@@ -36,6 +36,24 @@ public class APolygonPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        throw new AlgebricksException("'Polygon' type unsupported for CSV output");
+        short numberOfPoints = AInt16SerializerDeserializer.getShort(b, s + 1);
+        s += 3;
+
+        ps.print("\"[ ");
+
+        for (int i = 0; i < numberOfPoints; i++) {
+            if (i > 0)
+                ps.print(", ");
+
+            ps.print("[");
+            ps.print(ADoubleSerializerDeserializer.getDouble(b, s));
+            ps.print(", ");
+            ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 8));
+            ps.print("]");
+
+            s += 16;
+        }
+
+        ps.print(" ]\"");
     }
 }

@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
@@ -35,8 +36,8 @@ public class ATimePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        // QQQ probably should be supported - issue 833
-        throw new AlgebricksException("'Time' type unsupported for CSV output");
+        ps.print("\"");
+        PrintTools.printTimeString(b, s, l, ps);
+        ps.print("\"");
     }
-
 }

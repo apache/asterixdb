@@ -55,6 +55,5 @@ public class APolygonPrinter implements IPrinter {
         }
 
         ps.print(" ]");
-
     }
 }

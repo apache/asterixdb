@@ -19,13 +19,9 @@
 
 package org.apache.asterix.om.pointables.printer.csv;
 
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.AUUIDPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ShortWithoutTypeInfoPrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABinaryHexPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ABooleanPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ACirclePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ADatePrinter;
@@ -46,6 +42,7 @@ import org.apache.asterix.dataflow.data.nontagged.printers.csv.APolygonPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ARectanglePrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AStringPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.ATimePrinter;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.AUUIDPrinter;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AYearMonthDurationPrinter;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
@@ -55,6 +52,10 @@ import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class is a IVisitablePointableVisitor implementation which recursively
@@ -176,6 +177,10 @@ public class APrintVisitor implements IVisitablePointableVisitor<Void, Pair<Prin
                 }
                 case STRING: {
                     AStringPrinter.INSTANCE.print(b, s, l, ps);
+                    break;
+                }
+                case BINARY: {
+                    ABinaryHexPrinter.INSTANCE.print(b, s, l, ps);
                     break;
                 }
                 case YEARMONTHDURATION: {

@@ -21,6 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 import java.io.PrintStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 
@@ -35,6 +36,14 @@ public class ARectanglePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        throw new AlgebricksException("'Rectangle' type unsupported for CSV output");
+        ps.print("\"[ [");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
+        ps.print(", ");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 9));
+        ps.print("], [");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 17));
+        ps.print(", ");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 25));
+        ps.print("] ]\"");
     }
 }

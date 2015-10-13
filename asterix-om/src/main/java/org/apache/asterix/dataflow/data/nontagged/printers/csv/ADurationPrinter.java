@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -36,7 +37,8 @@ public class ADurationPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        // QQQ Should possibly be supported? - issue 833
-        throw new AlgebricksException("'Duration' type unsupported for CSV output");
+        ps.print("\"");
+        PrintTools.printDurationString(b, s, l, ps);
+        ps.print("\"");
     }
 }
