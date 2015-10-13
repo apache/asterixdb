@@ -14,16 +14,16 @@
  */
 package org.apache.asterix.file;
 
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.channels.ChannelId;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.ActiveMessageOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
@@ -78,22 +78,22 @@ public class ChannelOperations {
             throws AsterixException {
         JobSpecification messageJobSpec = JobSpecificationUtils.createJobSpecification();
 
-        FeedMessageOperatorDescriptor feedMessenger = new FeedMessageOperatorDescriptor(messageJobSpec,
-                new FeedConnectionId(new ActiveId(terminateMessage.getChannelId().getDataverse(), terminateMessage
-                        .getChannelId().getChannelName()), terminateMessage.getChannelId().getChannelName()),
-                terminateMessage);
+        ActiveMessageOperatorDescriptor activeMessenger = new ActiveMessageOperatorDescriptor(messageJobSpec,
+                new ActiveJobId(new ActiveObjectId(terminateMessage.getChannelId().getDataverse(), terminateMessage
+                        .getChannelId().getName(), ActiveObjectType.CHANNEL)), terminateMessage);
 
-        ChannelJobInfo cInfo = (ChannelJobInfo) ActiveJobLifecycleListener.INSTANCE.getActiveJobInfo(new ChannelId(
-                terminateMessage.getChannelId().getDataverse(), terminateMessage.getChannelId().getChannelName()));
+        ChannelJobInfo cInfo = (ChannelJobInfo) ActiveJobLifecycleListener.INSTANCE.getActiveJobInfo(new ActiveJobId(
+                new ActiveObjectId(terminateMessage.getChannelId().getDataverse(), terminateMessage.getChannelId().getName(),
+                        ActiveObjectType.CHANNEL)));
 
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(cInfo
                 .getLocation().toArray(new String[] {}));
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, feedMessenger,
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, activeMessenger,
                 partitionConstraint);
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(messageJobSpec);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, nullSink,
                 partitionConstraint);
-        messageJobSpec.connect(new OneToOneConnectorDescriptor(messageJobSpec), feedMessenger, 0, nullSink, 0);
+        messageJobSpec.connect(new OneToOneConnectorDescriptor(messageJobSpec), activeMessenger, 0, nullSink, 0);
         messageJobSpec.addRoot(nullSink);
         return messageJobSpec;
     }

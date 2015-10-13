@@ -29,7 +29,7 @@ import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import org.apache.asterix.aql.parser.AQLParser;
 import org.apache.asterix.aql.parser.ParseException;
 import org.apache.asterix.aql.util.FunctionUtils;
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
@@ -71,7 +71,7 @@ public class SubscribeFeedStatement implements Statement {
 
     public void initialize(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         this.query = new Query();
-        ActiveId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
+        ActiveObjectId sourceFeedId = connectionRequest.getFeedJointKey().getFeedId();
         Feed subscriberFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, connectionRequest.getReceivingFeedId()
                 .getDataverse(), connectionRequest.getReceivingFeedId().getName());
         if (subscriberFeed == null) {
@@ -182,7 +182,7 @@ public class SubscribeFeedStatement implements Statement {
 
     private String getOutputType(MetadataTransactionContext mdTxnCtx) throws MetadataException {
         String outputType = null;
-        ActiveId feedId = connectionRequest.getReceivingFeedId();
+        ActiveObjectId feedId = connectionRequest.getReceivingFeedId();
         Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getName());
         FeedPolicyAccessor policyAccessor = new FeedPolicyAccessor(connectionRequest.getPolicyParameters());
         try {

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.DistributeFeedFrameWriter;
@@ -53,7 +53,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
-    private final ActiveId feedId;
+    private final ActiveObjectId feedId;
     private final int partition;
     private final IFeedSubscriptionManager feedSubscriptionManager;
     private final IActiveManager feedManager;
@@ -66,7 +66,7 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
     private IIntakeProgressTracker tracker;
     private DistributeFeedFrameWriter feedFrameWriter;
 
-    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, ActiveId feedId, IFeedAdapterFactory adapterFactory,
+    public FeedIntakeOperatorNodePushable(IHyracksTaskContext ctx, ActiveObjectId feedId, IFeedAdapterFactory adapterFactory,
             int partition, IngestionRuntime ingestionRuntime, FeedPolicyAccessor policyAccessor) {
         this.ctx = ctx;
         this.feedId = feedId;

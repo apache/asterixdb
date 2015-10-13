@@ -22,14 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedCollectInfo extends ActiveJobInfo {
-    public ActiveId sourceFeedId;
+    public ActiveObjectId sourceFeedId;
     public List<String> collectLocations = new ArrayList<String>();
     public List<String> computeLocations = new ArrayList<String>();
     public List<String> storageLocations = new ArrayList<String>();
@@ -38,7 +38,7 @@ public class FeedCollectInfo extends ActiveJobInfo {
     public int superFeedManagerPort;
     public boolean fullyConnected;
 
-    public FeedCollectInfo(ActiveId sourceFeedId, ActiveJobId feedConnectionId, JobSpecification jobSpec, JobId jobId,
+    public FeedCollectInfo(ActiveObjectId sourceFeedId, ActiveJobId feedConnectionId, JobSpecification jobSpec, JobId jobId,
             Map<String, String> feedPolicy) {
         super(jobId, JobState.INACTIVE, ActiveJopType.FEED_COLLECT, jobSpec, feedConnectionId);
         this.sourceFeedId = sourceFeedId;

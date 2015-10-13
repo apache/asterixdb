@@ -26,7 +26,7 @@ import java.io.Serializable;
  * objects and active jobs. In the case of feeds, one feed
  * can have many active jobs.
  */
-public class ActiveId implements Serializable {
+public class ActiveObjectId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,7 +41,7 @@ public class ActiveId implements Serializable {
 
     private final ActiveObjectType type;
 
-    public ActiveId(String dataverse, String name, ActiveObjectType type) {
+    public ActiveObjectId(String dataverse, String name, ActiveObjectType type) {
         this.dataverse = dataverse;
         this.name = name;
         this.type = type;
@@ -61,11 +61,11 @@ public class ActiveId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof ActiveId)) {
+        if (o == null || !(o instanceof ActiveObjectId)) {
             return false;
         }
-        if (this == o || ((ActiveId) o).getName().equals(name) && ((ActiveId) o).getDataverse().equals(dataverse)
-                && ((ActiveId) o).getType().equals(type)) {
+        if (this == o || ((ActiveObjectId) o).getName().equals(name) && ((ActiveObjectId) o).getDataverse().equals(dataverse)
+                && ((ActiveObjectId) o).getType().equals(type)) {
             return true;
         }
         return false;

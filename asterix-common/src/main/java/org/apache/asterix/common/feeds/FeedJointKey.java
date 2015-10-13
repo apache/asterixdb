@@ -20,7 +20,7 @@ package org.apache.asterix.common.feeds;
 
 import java.util.List;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -31,11 +31,11 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class FeedJointKey {
 
-    private final ActiveId primaryFeedId;
+    private final ActiveObjectId primaryFeedId;
     private final List<String> appliedFunctions;
     private final String stringRep;
 
-    public FeedJointKey(ActiveId feedId, List<String> appliedFunctions) {
+    public FeedJointKey(ActiveObjectId feedId, List<String> appliedFunctions) {
         this.primaryFeedId = feedId;
         this.appliedFunctions = appliedFunctions;
         StringBuilder builder = new StringBuilder();
@@ -45,7 +45,7 @@ public class FeedJointKey {
         stringRep = builder.toString();
     }
 
-    public ActiveId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return primaryFeedId;
     }
 

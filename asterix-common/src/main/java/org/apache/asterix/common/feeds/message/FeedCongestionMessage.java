@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.common.feeds.message;
 
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
@@ -78,7 +78,7 @@ public class FeedCongestionMessage extends FeedMessage {
     }
 
     public static FeedCongestionMessage read(JSONObject obj) throws JSONException {
-        ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
+        ActiveObjectId feedId = new ActiveObjectId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
                 obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));

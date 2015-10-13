@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
@@ -323,7 +323,7 @@ public class ActiveUtil {
 
     }
 
-    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ActiveId channelId) {
+    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ActiveObjectId channelId) {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Original Job Spec:" + spec);

@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.common.feeds.api;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 
 public interface ISubscriptionProvider {
 
-    public void subscribeFeed(ActiveId sourceFeedId, ActiveId recipientFeedId);
+    public void subscribeFeed(ActiveObjectId sourceFeedId, ActiveObjectId recipientFeedId);
 
-    public void unsubscribeFeed(ActiveId sourceFeedId, ActiveId recipientFeedId);
+    public void unsubscribeFeed(ActiveObjectId sourceFeedId, ActiveObjectId recipientFeedId);
 
 }

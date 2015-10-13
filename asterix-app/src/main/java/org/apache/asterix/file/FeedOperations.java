@@ -21,7 +21,7 @@ package org.apache.asterix.file;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
@@ -37,7 +37,7 @@ import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.PrimaryFeed;
-import org.apache.asterix.metadata.feeds.FeedMessageOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.ActiveMessageOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.IFeedAdapterFactory;
 import org.apache.asterix.metadata.feeds.PrepareStallMessage;
 import org.apache.asterix.metadata.feeds.TerminateDataFlowMessage;
@@ -94,7 +94,7 @@ public class FeedOperations {
         return new Pair<JobSpecification, IFeedAdapterFactory>(spec, adapterFactory);
     }
 
-    public static JobSpecification buildDiscontinueFeedSourceSpec(AqlMetadataProvider metadataProvider, ActiveId feedId)
+    public static JobSpecification buildDiscontinueFeedSourceSpec(AqlMetadataProvider metadataProvider, ActiveObjectId feedId)
             throws AsterixException, AlgebricksException {
 
         JobSpecification spec = JobSpecificationUtils.createJobSpecification();
@@ -217,7 +217,7 @@ public class FeedOperations {
     }
 
     public static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDiscontinueFeedMessengerRuntime(
-            JobSpecification jobSpec, ActiveId feedId, List<String> locations) throws AlgebricksException {
+            JobSpecification jobSpec, ActiveObjectId feedId, List<String> locations) throws AlgebricksException {
         FeedConnectionId feedConnectionId = new FeedConnectionId(feedId, null);
         IFeedMessage feedMessage = new EndFeedMessage(feedConnectionId, ActiveRuntimeType.INTAKE,
                 feedConnectionId.getActiveId(), true, EndFeedMessage.EndMessageType.DISCONTINUE_SOURCE);
@@ -229,7 +229,7 @@ public class FeedOperations {
             Collection<String> locations) throws AlgebricksException {
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(
                 locations.toArray(new String[] {}));
-        FeedMessageOperatorDescriptor feedMessenger = new FeedMessageOperatorDescriptor(jobSpec, feedConenctionId,
+        ActiveMessageOperatorDescriptor feedMessenger = new ActiveMessageOperatorDescriptor(jobSpec, feedConenctionId,
                 feedMessage);
         return new Pair<IOperatorDescriptor, AlgebricksPartitionConstraint>(feedMessenger, partitionConstraint);
     }
@@ -247,7 +247,7 @@ public class FeedOperations {
 
     private static Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildDisconnectFeedMessengerRuntime(
             JobSpecification jobSpec, FeedConnectionId feedConenctionId, List<String> locations,
-            ActiveRuntimeType sourceFeedRuntimeType, boolean completeDisconnection, ActiveId sourceFeedId)
+            ActiveRuntimeType sourceFeedRuntimeType, boolean completeDisconnection, ActiveObjectId sourceFeedId)
             throws AlgebricksException {
         IFeedMessage feedMessage = new EndFeedMessage(feedConenctionId, sourceFeedRuntimeType, sourceFeedId,
                 completeDisconnection, EndFeedMessage.EndMessageType.DISCONNECT_FEED);

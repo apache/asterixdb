@@ -20,7 +20,7 @@ package org.apache.asterix.common.feeds.message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
@@ -34,7 +34,7 @@ public class EndFeedMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final ActiveId sourceFeedId;
+    private final ActiveObjectId sourceFeedId;
 
     private final FeedConnectionId connectionId;
 
@@ -49,7 +49,7 @@ public class EndFeedMessage extends FeedMessage {
         DISCONTINUE_SOURCE
     }
 
-    public EndFeedMessage(FeedConnectionId connectionId, ActiveRuntimeType sourceRuntimeType, ActiveId sourceFeedId,
+    public EndFeedMessage(FeedConnectionId connectionId, ActiveRuntimeType sourceRuntimeType, ActiveObjectId sourceFeedId,
             boolean completeDisconnection, EndMessageType endMessageType) {
         super(MessageType.END);
         this.connectionId = connectionId;
@@ -68,7 +68,7 @@ public class EndFeedMessage extends FeedMessage {
         return sourceRuntimeType;
     }
 
-    public ActiveId getSourceFeedId() {
+    public ActiveObjectId getSourceFeedId() {
         return sourceFeedId;
     }
 

@@ -30,14 +30,14 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 /**
  * Sends a control message to the registered message queue for feed specified by its feedId.
  */
-public class FeedMessageOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public class ActiveMessageOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
     private final ActiveJobId connectionId;
     private final IFeedMessage feedMessage;
 
-    public FeedMessageOperatorDescriptor(JobSpecification spec, ActiveJobId connectionId, IFeedMessage feedMessage) {
+    public ActiveMessageOperatorDescriptor(JobSpecification spec, ActiveJobId connectionId, IFeedMessage feedMessage) {
         super(spec, 0, 1);
         this.connectionId = connectionId;
         this.feedMessage = feedMessage;

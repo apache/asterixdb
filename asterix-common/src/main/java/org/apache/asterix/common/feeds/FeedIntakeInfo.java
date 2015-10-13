@@ -20,7 +20,7 @@ package org.apache.asterix.common.feeds;
 
 import java.util.List;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.hyracks.api.job.JobId;
@@ -28,18 +28,18 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class FeedIntakeInfo extends ActiveJobInfo {
 
-    private final ActiveId feedId;
+    private final ActiveObjectId feedId;
     private final IFeedJoint intakeFeedJoint;
     private List<String> intakeLocation;
 
-    public FeedIntakeInfo(JobId jobId, JobState state, ActiveId feedId, IFeedJoint intakeFeedJoint,
+    public FeedIntakeInfo(JobId jobId, JobState state, ActiveObjectId feedId, IFeedJoint intakeFeedJoint,
             JobSpecification spec) {
         super(jobId, state, ActiveJopType.FEED_INTAKE, spec, null);
         this.feedId = feedId;
         this.intakeFeedJoint = intakeFeedJoint;
     }
 
-    public ActiveId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 

@@ -20,7 +20,7 @@ package org.apache.asterix.metadata.feeds;
 
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
@@ -96,7 +96,7 @@ public class CollectTransformFeedFrameWriter implements IFeedOperatorOutputSideH
     }
 
     @Override
-    public ActiveId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return connectionId.getActiveId();
     }
 

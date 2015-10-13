@@ -19,8 +19,8 @@
 
 package org.apache.asterix.metadata.entities;
 
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -33,7 +33,7 @@ public class Feed implements IMetadataEntity {
     private static final long serialVersionUID = 1L;
 
     /** A unique identifier for the feed */
-    protected final ActiveId feedId;
+    protected final ActiveObjectId feedId;
 
     /** The function that is to be applied on each incoming feed tuple **/
     protected final FunctionSignature appliedFunction;
@@ -57,13 +57,13 @@ public class Feed implements IMetadataEntity {
     }
 
     public Feed(String dataverseName, String datasetName, FunctionSignature appliedFunction, FeedType feedType) {
-        this.feedId = new ActiveId(dataverseName, datasetName, ActiveObjectType.FEED);
+        this.feedId = new ActiveObjectId(dataverseName, datasetName, ActiveObjectType.FEED);
         this.appliedFunction = appliedFunction;
         this.feedType = feedType;
         this.displayName = feedType + "(" + feedId + ")";
     }
 
-    public ActiveId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 

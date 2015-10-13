@@ -33,7 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.FeedWorkCollection.SubscribeFeedWork;
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
@@ -87,19 +87,19 @@ public class ActiveJobNotificationHandler implements Runnable {
     private final Map<ActiveJobId, List<IActiveLifecycleEventSubscriber>> eventSubscribers;
 
     private final Map<JobId, ActiveJobInfo> jobInfos;
-    private final Map<ActiveId, FeedIntakeInfo> intakeJobInfos;
+    private final Map<ActiveObjectId, FeedIntakeInfo> intakeJobInfos;
     private final Map<ActiveJobId, ActiveJobInfo> activeJobInfos;
     private final Map<FeedConnectionId, FeedConnectJobInfo> connectJobInfos;
-    private final Map<ActiveId, List<IFeedJoint>> feedPipeline;
+    private final Map<ActiveObjectId, List<IFeedJoint>> feedPipeline;
     private final Map<FeedConnectionId, Pair<IIntakeProgressTracker, Long>> feedIntakeProgressTrackers;
 
     public ActiveJobNotificationHandler(LinkedBlockingQueue<Message> inbox) {
         this.inbox = inbox;
         this.jobInfos = new HashMap<JobId, ActiveJobInfo>();
-        this.intakeJobInfos = new HashMap<ActiveId, FeedIntakeInfo>();
+        this.intakeJobInfos = new HashMap<ActiveObjectId, FeedIntakeInfo>();
         this.connectJobInfos = new HashMap<FeedConnectionId, FeedConnectJobInfo>();
         this.activeJobInfos = new HashMap<ActiveJobId, ActiveJobInfo>();
-        this.feedPipeline = new HashMap<ActiveId, List<IFeedJoint>>();
+        this.feedPipeline = new HashMap<ActiveObjectId, List<IFeedJoint>>();
         this.eventSubscribers = new HashMap<ActiveJobId, List<IActiveLifecycleEventSubscriber>>();
         this.feedIntakeProgressTrackers = new HashMap<FeedConnectionId, Pair<IIntakeProgressTracker, Long>>();
     }
@@ -190,7 +190,7 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     }
 
-    public void registerFeedIntakeJob(ActiveId feedId, JobId jobId, JobSpecification jobSpec)
+    public void registerFeedIntakeJob(ActiveObjectId feedId, JobId jobId, JobSpecification jobSpec)
             throws HyracksDataException {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Feed job already registered");
@@ -219,7 +219,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         }
     }
 
-    public void registerFeedCollectionJob(ActiveId sourceFeedId, FeedConnectionId connectionId, JobId jobId,
+    public void registerFeedCollectionJob(ActiveObjectId sourceFeedId, FeedConnectionId connectionId, JobId jobId,
             JobSpecification jobSpec, Map<String, String> feedPolicy) {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Feed job already registered");
@@ -415,7 +415,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         ActiveJopType jobType = jobInfo.getJobType();
         List<FeedConnectionId> impactedConnections = new ArrayList<FeedConnectionId>();
         if (jobType.equals(ActiveJopType.FEED_INTAKE)) {
-            ActiveId feedId = ((FeedIntakeInfo) jobInfo).getFeedId();
+            ActiveObjectId feedId = ((FeedIntakeInfo) jobInfo).getFeedId();
             for (ActiveJobId connId : eventSubscribers.keySet()) {
                 if (connId.getActiveId().equals(feedId)) {
                     impactedConnections.add((FeedConnectionId) connId);
@@ -599,7 +599,7 @@ public class ActiveJobNotificationHandler implements Runnable {
             FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getActiveId().getDataverse(), cInfo
                     .getConnectionId().getActiveId().getName(), cInfo.getConnectionId().getDatasetName(),
                     feedActivityDetails);
-            CentralActiveManager.getInstance().getFeedLoadManager()
+            CentralActiveManager.getInstance().getLoadManager()
                     .reportActivity(cInfo.getConnectionId(), feedActivity);
 
         } catch (Exception e) {
@@ -625,7 +625,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         try {
             ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getActiveId().getDataverse(),
                     cInfo.getActiveJobId().getActiveId().getName(), channelActivityDetails);
-            CentralActiveManager.getInstance().getFeedLoadManager()
+            CentralActiveManager.getInstance().getLoadManager()
                     .reportActivity(cInfo.getActiveJobId(), channelActivity);
 
         } catch (Exception e) {
@@ -640,7 +640,7 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     public void deregisterActivity(ActiveJobInfo cInfo) {
         try {
-            CentralActiveManager.getInstance().getFeedLoadManager().removeActivity(cInfo.getActiveJobId());
+            CentralActiveManager.getInstance().getLoadManager().removeActivity(cInfo.getActiveJobId());
         } catch (Exception e) {
             if (LOGGER.isLoggable(Level.WARNING)) {
                 LOGGER.warning("Unable to deregister activity for " + cInfo + " " + e.getMessage());
@@ -674,7 +674,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         return ((ChannelJobInfo) activeJobInfos.get(activeJobId)).getLocation();
     }
 
-    public List<String> getFeedComputeLocations(ActiveId feedId) {
+    public List<String> getFeedComputeLocations(ActiveObjectId feedId) {
         List<IFeedJoint> feedJoints = feedPipeline.get(feedId);
         for (IFeedJoint joint : feedJoints) {
             if (joint.getFeedJointKey().getFeedId().equals(feedId)) {
@@ -692,7 +692,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         return connectJobInfos.get(connectionId).getCollectLocations();
     }
 
-    public List<String> getFeedIntakeLocations(ActiveId feedId) {
+    public List<String> getFeedIntakeLocations(ActiveObjectId feedId) {
         return intakeJobInfos.get(feedId).getIntakeLocation();
     }
 
@@ -783,11 +783,11 @@ public class ActiveJobNotificationHandler implements Runnable {
         return connectJobInfos.get(connectionId).getSpec();
     }
 
-    public JobSpecification getActiveJobSpecification(ActiveId activeId) {
+    public JobSpecification getActiveJobSpecification(ActiveObjectId activeId) {
         return jobInfos.get(activeId).getSpec();
     }
 
-    public IFeedJoint getFeedPoint(ActiveId sourceFeedId, IFeedJoint.FeedJointType type) {
+    public IFeedJoint getFeedPoint(ActiveObjectId sourceFeedId, IFeedJoint.FeedJointType type) {
         List<IFeedJoint> joints = feedPipeline.get(sourceFeedId);
         for (IFeedJoint joint : joints) {
             if (joint.getType().equals(type)) {

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.declared;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.feeds.api.IActiveJobLifeCycleListener.ConnectionLocation;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -32,7 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 public class FeedDataSource extends AqlDataSource {
 
     private Feed feed;
-    private final ActiveId sourceFeedId;
+    private final ActiveObjectId sourceFeedId;
     private final FeedType sourceFeedType;
     private final ConnectionLocation location;
     private final String targetDataset;
@@ -40,7 +40,7 @@ public class FeedDataSource extends AqlDataSource {
     private final int computeCardinality;
 
     public FeedDataSource(AqlSourceId id, String targetDataset, IAType itemType, AqlDataSourceType dataSourceType,
-            ActiveId sourceFeedId, FeedType sourceFeedType, ConnectionLocation location, String[] locations)
+            ActiveObjectId sourceFeedId, FeedType sourceFeedType, ConnectionLocation location, String[] locations)
             throws AlgebricksException {
         super(id, id.getDataverseName(), id.getDatasourceName(), itemType, dataSourceType);
         this.targetDataset = targetDataset;
@@ -89,7 +89,7 @@ public class FeedDataSource extends AqlDataSource {
         return targetDataset;
     }
 
-    public ActiveId getSourceFeedId() {
+    public ActiveObjectId getSourceFeedId() {
         return sourceFeedId;
     }
 

@@ -557,13 +557,13 @@ public class MetadataCache {
 
     public Object addChannelIfNotExists(Channel channel) {
         synchronized (channels) {
-            Map<String, Channel> channelsInDataverse = channels.get(channel.getDataverseName());
+            Map<String, Channel> channelsInDataverse = channels.get(channel.getChannelId().getDataverse());
             if (channelsInDataverse == null) {
                 channelsInDataverse = new HashMap<String, Channel>();
-                channels.put(channel.getDataverseName(), channelsInDataverse);
+                channels.put(channel.getChannelId().getDataverse(), channelsInDataverse);
             }
-            if (!channelsInDataverse.containsKey(channel.getChannelName())) {
-                return channelsInDataverse.put(channel.getDataverseName(), channel);
+            if (!channelsInDataverse.containsKey(channel.getChannelId().getName())) {
+                return channelsInDataverse.put(channel.getChannelId().getDataverse(), channel);
             }
             return null;
         }
@@ -572,9 +572,9 @@ public class MetadataCache {
 
     public Object dropChannel(Channel channel) {
         synchronized (channels) {
-            Map<String, Channel> channelsInDataverse = channels.get(channel.getDataverseName());
+            Map<String, Channel> channelsInDataverse = channels.get(channel.getChannelId().getDataverse());
             if (channelsInDataverse != null) {
-                return channelsInDataverse.remove(channel.getChannelName());
+                return channelsInDataverse.remove(channel.getChannelId().getName());
             }
             return null;
         }

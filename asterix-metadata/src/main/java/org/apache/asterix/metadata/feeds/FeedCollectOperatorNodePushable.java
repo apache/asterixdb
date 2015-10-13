@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
@@ -64,7 +64,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryOutputSourceOp
     private ActiveRuntimeInputHandler inputSideHandler;
     private CollectionRuntime collectRuntime;
 
-    public FeedCollectOperatorNodePushable(IHyracksTaskContext ctx, ActiveId sourceFeedId,
+    public FeedCollectOperatorNodePushable(IHyracksTaskContext ctx, ActiveObjectId sourceFeedId,
             FeedConnectionId feedConnectionId, Map<String, String> feedPolicy, int partition, int nPartitions,
             ISubscribableRuntime sourceRuntime) {
         this.ctx = ctx;

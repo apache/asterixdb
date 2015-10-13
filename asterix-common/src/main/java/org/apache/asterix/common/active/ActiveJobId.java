@@ -1,5 +1,7 @@
 package org.apache.asterix.common.active;
 
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
+
 /**
  * A unique identifier for a an active job. There
  * is not always a one-to-one correspondence between active
@@ -8,13 +10,17 @@ package org.apache.asterix.common.active;
  */
 public class ActiveJobId {
 
-    protected final ActiveId activeId;
+    protected final ActiveObjectId activeId;
 
-    public ActiveJobId(ActiveId activeId) {
+    public ActiveJobId(ActiveObjectId activeId) {
         this.activeId = activeId;
     }
 
-    public ActiveId getActiveId() {
+    public ActiveJobId(String dataverse, String name, ActiveObjectType type) {
+        this.activeId = new ActiveObjectId(dataverse, name, type);
+    }
+
+    public ActiveObjectId getActiveId() {
         return activeId;
     }
 

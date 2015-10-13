@@ -14,7 +14,7 @@
  */
 package org.apache.asterix.common.feeds.message;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.json.JSONException;
@@ -28,11 +28,11 @@ public class DropChannelMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final ActiveId channelId;
+    private final ActiveObjectId channelId;
 
     private final ActiveRuntimeId channelRuntimeId;
 
-    public DropChannelMessage(ActiveId channelId, ActiveRuntimeId channelRuntimeId) {
+    public DropChannelMessage(ActiveObjectId channelId, ActiveRuntimeId channelRuntimeId) {
         super(MessageType.DROP_CHANNEL);
         this.channelId = channelId;
         this.channelRuntimeId = channelRuntimeId;
@@ -52,7 +52,7 @@ public class DropChannelMessage extends FeedMessage {
         return obj;
     }
 
-    public ActiveId getChannelId() {
+    public ActiveObjectId getChannelId() {
         return channelId;
     }
 

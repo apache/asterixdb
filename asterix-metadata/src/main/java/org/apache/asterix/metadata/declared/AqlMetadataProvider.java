@@ -42,6 +42,7 @@ import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOpe
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.IAsterixApplicationContextInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.feeds.ActiveActivity;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedActivity.FeedActivityDetails;
 import org.apache.asterix.common.feeds.FeedConnectionId;
@@ -195,7 +196,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
     private boolean asyncResults;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
-    private final ICentralActiveManager centralFeedManager;
+    private final ICentralActiveManager centralActiveManager;
 
     private final Dataverse defaultDataverse;
     private JobId jobId;
@@ -226,7 +227,7 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
         this.defaultDataverse = defaultDataverse;
         this.stores = AsterixAppContextInfo.getInstance().getMetadataProperties().getStores();
         this.storageProperties = AsterixAppContextInfo.getInstance().getStorageProperties();
-        this.centralFeedManager = centralFeedManager;
+        this.centralActiveManager = centralFeedManager;
     }
 
     public void setJobId(JobId jobId) {
@@ -428,17 +429,18 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                         if (feedDataSource.getFeed().getFeedId().equals(feedDataSource.getSourceFeedId())) {
                             locationArray = feedDataSource.getLocations();
                         } else {
-                            Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager()
+                            Collection<ActiveActivity> activities = centralActiveManager.getLoadManager()
                                     .getActivities();
-                            Iterator<FeedActivity> it = activities.iterator();
-                            FeedActivity activity = null;
+                            Iterator<ActiveActivity> it = activities.iterator();
+                            ActiveActivity activity = null;
                             while (it.hasNext()) {
                                 activity = it.next();
-                                if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
-                                        && activity.getFeedName()
-                                                .equals(feedDataSource.getSourceFeedId().getName())) {
-                                    locations = activity.getFeedActivityDetails().get(
-                                            FeedActivityDetails.COMPUTE_LOCATIONS);
+                                if (activity instanceof FeedActivity
+                                        && activity.getDataverseName().equals(
+                                                feedDataSource.getSourceFeedId().getDataverse())
+                                        && activity.getObjectName().equals(feedDataSource.getSourceFeedId().getName())) {
+                                    locations = activity.getActivityDetails()
+                                            .get(FeedActivityDetails.COMPUTE_LOCATIONS);
                                     locationArray = locations.split(",");
                                     break;
                                 }
@@ -451,21 +453,20 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                 }
                 break;
             case SECONDARY:
-                Collection<FeedActivity> activities = centralFeedManager.getFeedLoadManager().getActivities();
-                Iterator<FeedActivity> it = activities.iterator();
-                FeedActivity activity = null;
+                Collection<ActiveActivity> activities = centralActiveManager.getLoadManager().getActivities();
+                Iterator<ActiveActivity> it = activities.iterator();
+                ActiveActivity activity = null;
                 while (it.hasNext()) {
                     activity = it.next();
-                    if (activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
-                            && activity.getFeedName().equals(feedDataSource.getSourceFeedId().getName())) {
+                    if (activity instanceof FeedActivity
+                            && activity.getDataverseName().equals(feedDataSource.getSourceFeedId().getDataverse())
+                            && activity.getObjectName().equals(feedDataSource.getSourceFeedId().getName())) {
                         switch (feedDataSource.getLocation()) {
                             case SOURCE_FEED_INTAKE_STAGE:
-                                locations = activity.getFeedActivityDetails()
-                                        .get(FeedActivityDetails.COLLECT_LOCATIONS);
+                                locations = activity.getActivityDetails().get(FeedActivityDetails.COLLECT_LOCATIONS);
                                 break;
                             case SOURCE_FEED_COMPUTE_STAGE:
-                                locations = activity.getFeedActivityDetails()
-                                        .get(FeedActivityDetails.COMPUTE_LOCATIONS);
+                                locations = activity.getActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
                                 break;
                         }
                         break;

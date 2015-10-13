@@ -20,7 +20,7 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
@@ -101,7 +101,7 @@ public interface IFeedJoint {
      */
     public void removeReceiver(ActiveJobId connectionId);
 
-    public ActiveId getOwnerFeedId();
+    public ActiveObjectId getOwnerFeedId();
 
     /**
      * Add a feed connectionId to the set of registered subscribers

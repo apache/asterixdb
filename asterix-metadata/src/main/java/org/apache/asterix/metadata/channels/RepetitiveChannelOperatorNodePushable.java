@@ -21,7 +21,9 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.feeds.api.IActiveRuntime;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorNodePushable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -33,12 +35,12 @@ import org.json.JSONException;
  * The runtime for @see{RepetitiveChannelOperationDescriptor}.
  */
 public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable implements
-        IChannelRuntime {
+        IActiveRuntime {
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
     private final ActiveJobId channelJobId;
-    private final ChannelRuntimeId channelRuntimeId;
+    private final ActiveRuntimeId channelRuntimeId;
     private final IActiveManager feedManager;
     private final IHyracksTaskContext ctx;
     private final long duration;
@@ -46,11 +48,12 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
     private boolean complete = false;
     private Timer timer;
 
-    public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ChannelId channelId,
+    public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId,
             FunctionSignature function, String duration, String subscriptionsName, String resultsName) {
         this.ctx = ctx;
-        this.channelId = channelId;
-        this.channelRuntimeId = new ChannelRuntimeId(channelId.getDataverse(), channelId.getChannelName());
+        this.channelJobId = channelJobId;
+        this.channelRuntimeId = new ActiveRuntimeId(channelJobId.getActiveId().getDataverse(), channelJobId
+                .getActiveId().getName());
         this.duration = findPeriod(duration);
         this.query = produceQuery(function, subscriptionsName, resultsName);
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
@@ -101,7 +104,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
         //}
         //);
         StringBuilder builder = new StringBuilder();
-        builder.append("use dataverse " + channelId.getDataverse() + ";" + "\n");
+        builder.append("use dataverse " + channelJobId.getActiveId().getDataverse() + ";" + "\n");
         builder.append("insert into dataset " + resultsName + " ");
         builder.append(" (" + " for $sub in dataset " + subscriptionsName + "\n");
         builder.append(" for $result in " + function.getName() + "(");
@@ -125,7 +128,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
     @Override
     public void initialize() throws HyracksDataException {
         try {
-            feedManager.getChannelConnectionManager().registerChannelRuntime(channelRuntimeId, this);
+            feedManager.getConnectionManager().registerActiveRuntime(channelJobId, this);
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -145,8 +148,8 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
 
     private class AQLTask extends TimerTask {
         public void run() {
-            LOGGER.info("Executing Channel: " + channelId.toString());
-            RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(channelId, query);
+            LOGGER.info("Executing Channel: " + channelJobId.toString());
+            RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(channelJobId, query);
             feedManager.getFeedMessageService().sendMessage(xAqlMessage);
             if (LOGGER.isLoggable(Level.INFO)) {
                 try {
@@ -159,13 +162,12 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
         }
     }
 
-    @Override
     public ActiveJobId getChannelJobId() {
         return channelJobId;
     }
 
     @Override
-    public ChannelRuntimeId getRuntimeId() {
+    public ActiveRuntimeId getRuntimeId() {
         return channelRuntimeId;
     }
 

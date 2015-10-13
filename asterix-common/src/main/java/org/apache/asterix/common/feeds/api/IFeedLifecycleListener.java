@@ -20,7 +20,7 @@ package org.apache.asterix.common.feeds.api;
 
 import java.util.List;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IClusterEventsSubscriber;
 import org.apache.asterix.common.feeds.FeedConnectionId;
@@ -38,11 +38,11 @@ public interface IFeedLifecycleListener extends IJobLifecycleListener, IClusterE
 
     public boolean isFeedJointAvailable(FeedJointKey feedJoinKey);
 
-    public List<FeedConnectionId> getActiveFeedConnections(ActiveId feedId);
+    public List<FeedConnectionId> getActiveFeedConnections(ActiveObjectId feedId);
 
-    public List<String> getComputeLocations(ActiveId feedId);
+    public List<String> getComputeLocations(ActiveObjectId feedId);
 
-    public List<String> getIntakeLocations(ActiveId feedId);
+    public List<String> getIntakeLocations(ActiveObjectId feedId);
 
     public List<String> getStoreLocations(ActiveJobId feedId);
 

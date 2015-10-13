@@ -33,8 +33,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.ActiveActivity;
 import org.apache.asterix.common.feeds.FeedActivity;
@@ -94,7 +94,7 @@ public class FeedServlet extends HttpServlet {
             outStr = sb.toString();
         } else {
             Collection<FeedActivity> lfa = new HashSet<FeedActivity>();
-            for (ActiveActivity activity : CentralActiveManager.getInstance().getFeedLoadManager().getActivities()) {
+            for (ActiveActivity activity : CentralActiveManager.getInstance().getLoadManager().getActivities()) {
                 if (activity instanceof FeedActivity) {
                     lfa.add((FeedActivity) activity);
                 }
@@ -136,8 +136,8 @@ public class FeedServlet extends HttpServlet {
         String compute = activity.getActivityDetails().get(FeedActivityDetails.COMPUTE_LOCATIONS);
         String store = activity.getActivityDetails().get(FeedActivityDetails.STORAGE_LOCATIONS);
 
-        IActiveLoadManager loadManager = CentralActiveManager.getInstance().getFeedLoadManager();
-        ActiveJobId connectionId = new FeedConnectionId(new ActiveId(activity.getDataverseName(),
+        IActiveLoadManager loadManager = CentralActiveManager.getInstance().getLoadManager();
+        ActiveJobId connectionId = new FeedConnectionId(new ActiveObjectId(activity.getDataverseName(),
                 activity.getObjectName(), ActiveObjectType.FEED), activity.getDatasetName());
         int intakeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.COLLECT) * intake.split(",").length;
         int storeRate = loadManager.getOutflowRate(connectionId, ActiveRuntimeType.STORE) * store.split(",").length;

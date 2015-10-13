@@ -19,8 +19,8 @@
 
 package org.apache.asterix.common.feeds.message;
 
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
@@ -69,7 +69,7 @@ public class FeedReportMessage extends FeedMessage {
     }
 
     public static FeedReportMessage read(JSONObject obj) throws JSONException {
-        ActiveId feedId = new ActiveId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
+        ActiveObjectId feedId = new ActiveObjectId(obj.getString(FeedConstants.MessageConstants.DATAVERSE),
                 obj.getString(FeedConstants.MessageConstants.FEED), ActiveObjectType.FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId,
                 obj.getString(FeedConstants.MessageConstants.DATASET));

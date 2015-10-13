@@ -14,8 +14,8 @@
  */
 package org.apache.asterix.metadata.channels;
 
-import org.apache.asterix.common.channels.ChannelId;
-import org.apache.asterix.common.channels.api.IChannelRuntime.ChannelRuntimeType;
+import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -51,13 +51,13 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
     /**
      * A unique identifier for the channel instance.
      **/
-    private final ChannelId channelId;
+    private final ActiveJobId channelJobId;
 
     /**
      * type for the feed runtime associated with the operator.
      * Possible values: REPETITIVE, CONTINUOUS
      **/
-    private final ChannelRuntimeType runtimeType;
+    private final ActiveRuntimeType runtimeType;
 
     private final FunctionSignature function;
 
@@ -67,11 +67,11 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
 
     private final String resultsName;
 
-    public ChannelMetaOperatorDescriptor(JobSpecification spec, ChannelId channelId,
-            IOperatorDescriptor coreOperatorDescriptor, ChannelRuntimeType runtimeType, FunctionSignature function,
+    public ChannelMetaOperatorDescriptor(JobSpecification spec, ActiveJobId channelJobId,
+            IOperatorDescriptor coreOperatorDescriptor, ActiveRuntimeType runtimeType, FunctionSignature function,
             String duration, String subscriptionsName, String resultsName) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
-        this.channelId = channelId;
+        this.channelJobId = channelJobId;
         if (coreOperatorDescriptor.getOutputRecordDescriptors().length == 1) {
             recordDescriptors[0] = coreOperatorDescriptor.getOutputRecordDescriptors()[0];
         }
@@ -89,7 +89,7 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
         IOperatorNodePushable nodePushable = null;
         switch (runtimeType) {
             case REPETITIVE:
-                nodePushable = new RepetitiveChannelOperatorNodePushable(ctx, channelId, function, duration,
+                nodePushable = new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, function, duration,
                         subscriptionsName, resultsName);
                 break;
             default:
@@ -107,7 +107,7 @@ public class ChannelMetaOperatorDescriptor extends AbstractSingleActivityOperato
         return coreOperator;
     }
 
-    public ChannelRuntimeType getRuntimeType() {
+    public ActiveRuntimeType getRuntimeType() {
         return runtimeType;
     }
 

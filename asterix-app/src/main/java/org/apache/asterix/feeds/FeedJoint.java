@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
@@ -45,7 +45,7 @@ public class FeedJoint implements IFeedJoint {
     private final List<FeedConnectionId> receivers;
 
     /** The feedId on which the feedPoint resides **/
-    private final ActiveId ownerFeedId;
+    private final ActiveObjectId ownerFeedId;
 
     /** A list of feed subscription requests submitted for subscribing to the FeedPoint's data **/
     private final List<FeedConnectionRequest> connectionRequests;
@@ -56,7 +56,7 @@ public class FeedJoint implements IFeedJoint {
 
     private ActiveJobId provider;
 
-    public FeedJoint(FeedJointKey key, ActiveId ownerFeedId, ConnectionLocation subscriptionLocation, FeedJointType type,
+    public FeedJoint(FeedJointKey key, ActiveObjectId ownerFeedId, ConnectionLocation subscriptionLocation, FeedJointType type,
             ActiveJobId provider) {
         this.key = key;
         this.ownerFeedId = ownerFeedId;
@@ -150,7 +150,7 @@ public class FeedJoint implements IFeedJoint {
         return ((FeedJoint) o).getFeedJointKey().equals(this.key);
     }
 
-    public ActiveId getOwnerFeedId() {
+    public ActiveObjectId getOwnerFeedId() {
         return ownerFeedId;
     }
 

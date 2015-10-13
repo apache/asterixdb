@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
@@ -46,7 +46,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     private static final Logger LOGGER = Logger.getLogger(DistributeFeedFrameWriter.class.getName());
 
     /** A unique identifier for the feed to which the incoming tuples belong. **/
-    private final ActiveId feedId;
+    private final ActiveObjectId feedId;
 
     /** An instance of FrameDistributor that provides the mechanism for distributing a frame to multiple readers, each operating in isolation. **/
     private final FrameDistributor frameDistributor;
@@ -60,7 +60,7 @@ public class DistributeFeedFrameWriter implements IFrameWriter {
     /** The value of the partition 'i' if this is the i'th instance of the associated operator **/
     private final int partition;
 
-    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveId feedId, IFrameWriter writer, ActiveRuntimeType feedRuntimeType,
+    public DistributeFeedFrameWriter(IHyracksTaskContext ctx, ActiveObjectId feedId, IFrameWriter writer, ActiveRuntimeType feedRuntimeType,
             int partition, FrameTupleAccessor fta, IActiveManager feedManager) throws IOException {
         this.feedId = feedId;
         this.frameDistributor = new FrameDistributor(ctx, feedId, feedRuntimeType, partition, true,

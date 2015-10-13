@@ -78,7 +78,7 @@ public class CentralActiveManager implements ICentralActiveManager {
     }
 
     @Override
-    public IActiveLoadManager getFeedLoadManager() {
+    public IActiveLoadManager getLoadManager() {
         return feedLoadManager;
     }
 

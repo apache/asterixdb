@@ -20,9 +20,9 @@ package org.apache.asterix.common.feeds;
 
 import java.io.Serializable;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 
 /**
  * A unique identifier for a feed connection. A feed connection is an instance of a data feed that is flowing into a dataset.
@@ -34,13 +34,13 @@ public class FeedConnectionId extends ActiveJobId implements Serializable {
 
     final String datasetName;
 
-    public FeedConnectionId(ActiveId activeId, String datasetName) {
+    public FeedConnectionId(ActiveObjectId activeId, String datasetName) {
         super(activeId);
         this.datasetName = datasetName;
     }
 
     public FeedConnectionId(String dataverse, String feedName, String datasetName) {
-        super(new ActiveId(dataverse, feedName, ActiveObjectType.FEED));
+        super(new ActiveObjectId(dataverse, feedName, ActiveObjectType.FEED));
         this.datasetName = datasetName;
     }
 

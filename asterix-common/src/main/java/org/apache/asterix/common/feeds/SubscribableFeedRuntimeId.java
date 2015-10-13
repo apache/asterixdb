@@ -18,19 +18,19 @@
  */
 package org.apache.asterix.common.feeds;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 
 public class SubscribableFeedRuntimeId extends ActiveRuntimeId {
 
-    private final ActiveId feedId;
+    private final ActiveObjectId feedId;
 
-    public SubscribableFeedRuntimeId(ActiveId feedId, ActiveRuntimeType runtimeType, int partition) {
+    public SubscribableFeedRuntimeId(ActiveObjectId feedId, ActiveRuntimeType runtimeType, int partition) {
         super(runtimeType, partition, ActiveRuntimeId.DEFAULT_OPERAND_ID);
         this.feedId = feedId;
     }
 
-    public ActiveId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 

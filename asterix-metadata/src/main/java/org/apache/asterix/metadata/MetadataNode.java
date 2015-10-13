@@ -400,7 +400,7 @@ public class MetadataNode implements IMetadataNode {
                 // Drop all channels in this dataverse.
                 for (int i = 0; i < dataverseChannels.size(); i++) {
                     channel = dataverseChannels.get(i);
-                    dropChannel(jobId, dataverseName, channel.getChannelName());
+                    dropChannel(jobId, dataverseName, channel.getChannelId().getName());
                 }
             }
 
@@ -1495,8 +1495,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(jobId, MetadataPrimaryIndexes.CHANNEL_DATASET, channelTuple);
 
         } catch (TreeIndexException e) {
-            throw new MetadataException("A channel with this name " + channel.getChannelName()
-                    + " already exists in dataverse '" + channel.getDataverseName() + "'.", e);
+            throw new MetadataException("A channel with this name " + channel.getChannelId().getName()
+                    + " already exists in dataverse '" + channel.getChannelId().getDataverse() + "'.", e);
         } catch (Exception e) {
             throw new MetadataException(e);
         }

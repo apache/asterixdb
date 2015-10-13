@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -31,12 +31,12 @@ public class SubscribableRuntime extends ActiveRuntime implements ISubscribableR
 
     protected static final Logger LOGGER = Logger.getLogger(SubscribableRuntime.class.getName());
 
-    protected final ActiveId feedId;
+    protected final ActiveObjectId feedId;
     protected final List<ISubscriberRuntime> subscribers;
     protected final RecordDescriptor recordDescriptor;
     protected final DistributeFeedFrameWriter dWriter;
 
-    public SubscribableRuntime(ActiveId feedId, ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler,
+    public SubscribableRuntime(ActiveObjectId feedId, ActiveRuntimeId runtimeId, ActiveRuntimeInputHandler inputHandler,
             DistributeFeedFrameWriter dWriter, RecordDescriptor recordDescriptor) {
         super(runtimeId, inputHandler, dWriter);
         this.feedId = feedId;
@@ -45,7 +45,7 @@ public class SubscribableRuntime extends ActiveRuntime implements ISubscribableR
         this.subscribers = new ArrayList<ISubscriberRuntime>();
     }
 
-    public ActiveId getFeedId() {
+    public ActiveObjectId getFeedId() {
         return feedId;
     }
 

@@ -44,7 +44,7 @@ public class FeedMessageReceiver extends MessageReceiver<String> {
     private final IFeedTrackingManager feedTrackingManager;
 
     public FeedMessageReceiver(CentralActiveManager centralFeedManager) {
-        this.feedLoadManager = centralFeedManager.getFeedLoadManager();
+        this.feedLoadManager = centralFeedManager.getLoadManager();
         this.feedTrackingManager = centralFeedManager.getFeedTrackingManager();
     }
 

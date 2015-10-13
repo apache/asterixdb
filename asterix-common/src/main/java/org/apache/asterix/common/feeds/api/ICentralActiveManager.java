@@ -30,5 +30,5 @@ public interface ICentralActiveManager {
 
     public IFeedTrackingManager getFeedTrackingManager();
 
-    public IActiveLoadManager getFeedLoadManager();
+    public IActiveLoadManager getLoadManager();
 }

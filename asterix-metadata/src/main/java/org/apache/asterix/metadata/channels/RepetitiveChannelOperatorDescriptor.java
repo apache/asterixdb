@@ -17,6 +17,7 @@ package org.apache.asterix.metadata.channels;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -48,7 +49,7 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
     public RepetitiveChannelOperatorDescriptor(JobSpecification spec, String dataverseName, String channelName,
             String duration, FunctionSignature function, String subscriptionsName, String resultsName) {
         super(spec, 0, 1);
-        this.channelId = new ChannelId(dataverseName, channelName);
+        this.channelJobId = new ActiveJobId(dataverseName, channelName, ActiveObjectType.CHANNEL);
         this.duration = duration;
         this.function = function;
         this.subscriptionsName = subscriptionsName;
@@ -58,11 +59,10 @@ public class RepetitiveChannelOperatorDescriptor extends AbstractSingleActivityO
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new RepetitiveChannelOperatorNodePushable(ctx, channelId, function, duration, subscriptionsName,
+        return new RepetitiveChannelOperatorNodePushable(ctx, channelJobId, function, duration, subscriptionsName,
                 resultsName);
     }
 
-    @Override
     public ActiveJobId getChannelJobId() {
         return channelJobId;
     }

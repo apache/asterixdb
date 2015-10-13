@@ -40,7 +40,7 @@ import org.apache.asterix.aql.expression.DataverseDecl;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aql.translator.AqlTranslator;
-import org.apache.asterix.common.active.ActiveId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
@@ -399,7 +399,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
 
             try {
                 ctx = MetadataManager.INSTANCE.beginTransaction();
-                ActiveId feedId = cInfo.getConnectionId().getActiveId();
+                ActiveObjectId feedId = cInfo.getConnectionId().getActiveId();
                 DisconnectFeedStatement stmt = new DisconnectFeedStatement(new Identifier(feedId.getDataverse()),
                         new Identifier(feedId.getName()), new Identifier(cInfo.getConnectionId().getDatasetName()));
                 List<Statement> statements = new ArrayList<Statement>();
@@ -439,7 +439,7 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
     }
 
     @Override
-    public List<FeedConnectionId> getActiveFeedConnections(ActiveId feedId) {
+    public List<FeedConnectionId> getActiveFeedConnections(ActiveObjectId feedId) {
         List<FeedConnectionId> connections = new ArrayList<FeedConnectionId>();
         Collection<FeedConnectionId> activeConnections = jobNotificationHandler.getActiveFeedConnections();
         if (feedId != null) {
@@ -455,12 +455,12 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
     }
 
     @Override
-    public List<String> getComputeLocations(ActiveId feedId) {
+    public List<String> getComputeLocations(ActiveObjectId feedId) {
         return jobNotificationHandler.getFeedComputeLocations(feedId);
     }
 
     @Override
-    public List<String> getIntakeLocations(ActiveId feedId) {
+    public List<String> getIntakeLocations(ActiveObjectId feedId) {
         return jobNotificationHandler.getFeedIntakeLocations(feedId);
     }
 

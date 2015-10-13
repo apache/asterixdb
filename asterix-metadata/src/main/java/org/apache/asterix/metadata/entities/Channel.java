@@ -15,8 +15,8 @@
 
 package org.apache.asterix.metadata.entities;
 
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -29,7 +29,7 @@ public class Channel implements IMetadataEntity {
     private static final long serialVersionUID = 1L;
 
     /** A unique identifier for the channel */
-    protected final ActiveId channelId;
+    protected final ActiveObjectId channelId;
     private final String subscriptionsDatasetName;
     private final String resultsDatasetName;
     private final String duration;
@@ -37,14 +37,14 @@ public class Channel implements IMetadataEntity {
 
     public Channel(String dataverseName, String channelName, String subscriptionsDataset, String resultsDataset,
             FunctionSignature function, String duration) {
-        this.channelId = new ActiveId(dataverseName, channelName, ActiveObjectType.CHANNEL);
+        this.channelId = new ActiveObjectId(dataverseName, channelName, ActiveObjectType.CHANNEL);
         this.function = function;
         this.duration = duration;
         this.resultsDatasetName = resultsDataset;
         this.subscriptionsDatasetName = subscriptionsDataset;
     }
 
-    public ActiveId getChannelId() {
+    public ActiveObjectId getChannelId() {
         return channelId;
     }
 

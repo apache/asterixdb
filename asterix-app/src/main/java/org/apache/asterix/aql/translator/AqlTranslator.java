@@ -101,8 +101,8 @@ import org.apache.asterix.aql.expression.WriteStatement;
 import org.apache.asterix.aql.literal.StringLiteral;
 import org.apache.asterix.aql.parser.AQLParser;
 import org.apache.asterix.aql.util.FunctionUtils;
-import org.apache.asterix.common.active.ActiveId;
-import org.apache.asterix.common.active.ActiveId.ActiveObjectType;
+import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.channels.ChannelRuntimeId;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
@@ -1337,7 +1337,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             DisconnectFeedStatement disStmt = null;
             Identifier dvId = new Identifier(dataverseName);
             for (FeedConnectionId connection : activeFeedConnections) {
-                ActiveId feedId = connection.getActiveId();
+                ActiveObjectId feedId = connection.getActiveId();
                 if (feedId.getDataverse().equals(dataverseName)) {
                     disStmt = new DisconnectFeedStatement(dvId, new Identifier(feedId.getName()), new Identifier(
                             connection.getDatasetName()));
@@ -2231,7 +2231,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 }
             }
 
-            ActiveId feedId = new ActiveId(dataverseName, feedName, ActiveObjectType.FEED);
+            ActiveObjectId feedId = new ActiveObjectId(dataverseName, feedName, ActiveObjectType.FEED);
             List<FeedConnectionId> activeConnections = ActiveJobLifecycleListener.INSTANCE
                     .getActiveFeedConnections(feedId);
             if (activeConnections != null && !activeConnections.isEmpty()) {
@@ -2337,7 +2337,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             ActiveJobLifecycleListener.INSTANCE.registerFeedEventSubscriber(feedConnId, eventSubscriber);
             subscriberRegistered = true;
             if (createFeedIntakeJob) {
-                ActiveId feedId = connectionRequest.getFeedJointKey().getFeedId();
+                ActiveObjectId feedId = connectionRequest.getFeedJointKey().getFeedId();
                 PrimaryFeed primaryFeed = (PrimaryFeed) MetadataManager.INSTANCE.getFeed(mdTxnCtx,
                         feedId.getDataverse(), feedId.getName());
                 Pair<JobSpecification, IFeedAdapterFactory> pair = FeedOperations.buildFeedIntakeJobSpec(primaryFeed,
@@ -2419,7 +2419,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             sourceFeedJoint = ActiveJobLifecycleListener.INSTANCE.getAvailableFeedJoint(feedJointKey);
             if (sourceFeedJoint == null) { // the feed is currently not being ingested, i.e., it is unavailable.
                 connectionLocation = ConnectionLocation.SOURCE_FEED_INTAKE_STAGE;
-                ActiveId sourceFeedId = feedJointKey.getFeedId(); // the root/primary feedId 
+                ActiveObjectId sourceFeedId = feedJointKey.getFeedId(); // the root/primary feedId 
                 Feed primaryFeed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverse, sourceFeedId.getName());
                 FeedJointKey intakeFeedJointKey = new FeedJointKey(sourceFeedId, new ArrayList<String>());
                 sourceFeedJoint = new FeedJoint(intakeFeedJointKey, primaryFeed.getFeedId(), connectionLocation,
@@ -2521,7 +2521,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             runJob(hcc, jobSpec, true);
 
             if (!specDisconnectType.second) {
-                CentralActiveManager.getInstance().getFeedLoadManager().removeActivity(connectionId);
+                CentralActiveManager.getInstance().getLoadManager().removeActivity(connectionId);
                 ActiveJobLifecycleListener.INSTANCE.reportPartialDisconnection(connectionId);
             }
 
@@ -2762,7 +2762,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             throw e;
         } finally {
             MetadataLockManager.INSTANCE.dropChannelEnd(dataverseName, dataverseName + "." + channelName);
-            ActiveId channelId = new ActiveId(dataverseName, channelName, ActiveObjectType.CHANNEL);
+            ActiveObjectId channelId = new ActiveObjectId(dataverseName, channelName, ActiveObjectType.CHANNEL);
             ChannelRuntimeId channelRuntimeId = new ChannelRuntimeId(dataverseName, channelName);
             DropChannelMessage dropChannelMessage = new DropChannelMessage(channelId, channelRuntimeId);
             JobSpecification messageJobSpec = ChannelOperations.buildDropChannelMessageJob(dropChannelMessage);
