@@ -60,7 +60,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private Server webServer;
     private Server jsonAPIServer;
     private Server feedServer;
-    private ICentralActiveManager centralFeedManager;
+    private ICentralActiveManager centralActiveManager;
 
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
@@ -100,8 +100,8 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         waitUntilServerStart(feedServer);
 
         ExternalLibraryBootstrap.setUpExternaLibraries(false);
-        centralFeedManager = CentralActiveManager.getInstance();
-        centralFeedManager.start();
+        centralActiveManager = CentralActiveManager.getInstance();
+        centralActiveManager.start();
 
         AsterixGlobalRecoveryManager.INSTANCE = new AsterixGlobalRecoveryManager(
                 (HyracksConnection) getNewHyracksClientConnection());
