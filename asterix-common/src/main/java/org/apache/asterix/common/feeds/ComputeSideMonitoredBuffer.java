@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
@@ -29,11 +30,12 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class ComputeSideMonitoredBuffer extends MonitoredBuffer {
 
-    public ComputeSideMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler, IFrameWriter frameWriter,
-            FrameTupleAccessor fta, RecordDescriptor recordDesc, IFeedMetricCollector metricCollector,
-            FeedConnectionId connectionId, ActiveRuntimeId runtimeId, IExceptionHandler exceptionHandler,
-            IFrameEventCallback callback, int nPartitions, FeedPolicyAccessor policyAccessor) {
-        super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, connectionId, runtimeId,
+    public ComputeSideMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
+            IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
+            IFeedMetricCollector metricCollector, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
+            IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
+            FeedPolicyAccessor policyAccessor) {
+        super(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector, activeJobId, runtimeId,
                 exceptionHandler, callback, nPartitions, policyAccessor);
     }
 

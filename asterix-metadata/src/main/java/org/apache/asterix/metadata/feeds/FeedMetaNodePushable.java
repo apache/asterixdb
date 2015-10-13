@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
@@ -53,16 +53,17 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
     private FeedPolicyEnforcer policyEnforcer;
 
     /**
-     * The Feed Runtime instance associated with the operator. Feed Runtime
-     * captures the state of the operator while the feed is active.
+     * The Active Runtime instance associated with the operator. Active Runtime
+     * captures the state of the operator while the job is active.
      */
-    private ActiveRuntime feedRuntime;
+    private ActiveRuntime activeRuntime;
 
     /**
-     * A unique identifier for the feed instance. A feed instance represents
+     * A unique identifier for the active job. For instance,
+     * A feed connection instance represents
      * the flow of data from a feed to a dataset.
      **/
-    private FeedConnectionId connectionId;
+    protected ActiveJobId activeJobId;
 
     /**
      * Denotes the i'th operator instance in a setting where K operator
@@ -74,10 +75,10 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
     private int nPartitions;
 
     /** Type associated with the core feed operator **/
-    private final ActiveRuntimeType runtimeType = ActiveRuntimeType.OTHER;
+    protected ActiveRuntimeType runtimeType;
 
     /** The (singleton) instance of IFeedManager **/
-    private IActiveManager feedManager;
+    protected IActiveManager activeManager;
 
     private FrameTupleAccessor fta;
 
@@ -89,20 +90,19 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
     private ActiveRuntimeInputHandler inputSideHandler;
 
     public FeedMetaNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition,
-            int nPartitions, IOperatorDescriptor coreOperator, FeedConnectionId feedConnectionId,
+            int nPartitions, IOperatorDescriptor coreOperator, ActiveJobId activeJobId,
             Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
         this.ctx = ctx;
         this.coreOperator = (AbstractUnaryInputUnaryOutputOperatorNodePushable) ((IActivity) coreOperator)
                 .createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
-        this.policyEnforcer = new FeedPolicyEnforcer(feedConnectionId, feedPolicyProperties);
+        this.policyEnforcer = new FeedPolicyEnforcer(activeJobId, feedPolicyProperties);
         this.partition = partition;
         this.nPartitions = nPartitions;
-        this.connectionId = feedConnectionId;
-        this.feedManager = ((IAsterixAppRuntimeContext) (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject()).getFeedManager();
+        this.activeJobId = activeJobId;
+        this.runtimeType = ActiveRuntimeType.OTHER;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.feedManager = runtimeCtx.getFeedManager();
+        this.activeManager = runtimeCtx.getActiveManager();
         this.operandId = operationId;
     }
 
@@ -110,8 +110,8 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
     public void open() throws HyracksDataException {
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
         try {
-            feedRuntime = feedManager.getConnectionManager().getActiveRuntime(connectionId, runtimeId);
-            if (feedRuntime == null) {
+            activeRuntime = activeManager.getConnectionManager().getActiveRuntime(activeJobId, runtimeId);
+            if (activeRuntime == null) {
                 initializeNewFeedRuntime(runtimeId);
             } else {
                 reviveOldFeedRuntime(runtimeId);
@@ -125,19 +125,18 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
 
     private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         this.fta = new FrameTupleAccessor(recordDesc);
-        this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, connectionId, runtimeId,
+        this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, activeJobId, runtimeId,
                 (AbstractUnaryInputUnaryOutputOperatorNodePushable) coreOperator,
-                policyEnforcer.getFeedPolicyAccessor(), false, fta, recordDesc, feedManager,
-                nPartitions);
+                policyEnforcer.getFeedPolicyAccessor(), false, fta, recordDesc, activeManager, nPartitions);
 
         setupBasicRuntime(inputSideHandler);
     }
 
     private void reviveOldFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
-        this.inputSideHandler = feedRuntime.getInputHandler();
+        this.inputSideHandler = activeRuntime.getInputHandler();
         this.fta = new FrameTupleAccessor(recordDesc);
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
-        feedRuntime.setMode(Mode.PROCESS);
+        activeRuntime.setMode(Mode.PROCESS);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Retreived state from the zombie instance " + runtimeType + " node.");
         }
@@ -146,7 +145,11 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
     private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(runtimeType, partition, operandId);
-        feedRuntime = new ActiveRuntime(runtimeId, inputHandler, writer);
+        activeRuntime = new ActiveRuntime(runtimeId, inputHandler, writer);
+    }
+
+    public ActiveJobId getActiveJobId() {
+        return activeJobId;
     }
 
     @Override
@@ -164,7 +167,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
         if (LOGGER.isLoggable(Level.WARNING)) {
             LOGGER.info("Core Op:" + coreOperator.getDisplayName() + " fail ");
         }
-        feedRuntime.setMode(Mode.FAIL);
+        activeRuntime.setMode(Mode.FAIL);
         coreOperator.fail();
     }
 
@@ -180,7 +183,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
                 inputSideHandler.close();
             }
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Ending Operator  " + this.feedRuntime.getRuntimeId());
+                LOGGER.info("Ending Operator  " + this.activeRuntime.getRuntimeId());
             }
         }
     }

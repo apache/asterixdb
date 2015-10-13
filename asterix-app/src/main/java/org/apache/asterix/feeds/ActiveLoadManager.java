@@ -165,7 +165,7 @@ public class ActiveLoadManager implements IActiveLoadManager {
             ActiveUtil.decreaseComputeCardinality(jobSpec, ActiveRuntimeType.COMPUTE, reducedCardinality,
                     currentComputeLocations);
 
-            gracefullyTerminateDataFlow(message.getConnectionId(), reducedCardinality - 1);
+            gracefullyTerminateDataFlow((FeedConnectionId) message.getConnectionId(), reducedCardinality - 1);
             Thread.sleep(3000);
             JobId newJobId = runJob(jobSpec, false);
             if (LOGGER.isLoggable(Level.INFO)) {

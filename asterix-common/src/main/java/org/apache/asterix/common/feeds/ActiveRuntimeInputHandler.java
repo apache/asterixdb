@@ -26,11 +26,11 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.DataBucket.ContentType;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
-import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
-import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMemoryComponent;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
 import org.apache.asterix.common.feeds.message.FeedCongestionMessage;
@@ -70,17 +70,17 @@ public class ActiveRuntimeInputHandler implements IFrameWriter {
 
     private FrameEventCallback frameEventCallback;
 
-    public ActiveRuntimeInputHandler(IHyracksTaskContext ctx, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
+    public ActiveRuntimeInputHandler(IHyracksTaskContext ctx, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
             IFrameWriter coreOperator, FeedPolicyAccessor fpa, boolean bufferingEnabled, FrameTupleAccessor fta,
             RecordDescriptor recordDesc, IActiveManager feedManager, int nPartitions) throws IOException {
-        this.activeJobId = connectionId;
+        this.activeJobId = activeJobId;
         this.runtimeId = runtimeId;
         this.coreOperator = coreOperator;
         this.bufferingEnabled = bufferingEnabled;
         this.feedPolicyAccessor = fpa;
-        this.spiller = new FeedFrameSpiller(ctx, connectionId, runtimeId, fpa);
-        this.discarder = new FeedFrameDiscarder(ctx, connectionId, runtimeId, fpa, this);
-        this.exceptionHandler = new FeedExceptionHandler(ctx, fta, recordDesc, feedManager, connectionId);
+        this.spiller = new FeedFrameSpiller(ctx, activeJobId, runtimeId, fpa);
+        this.discarder = new FeedFrameDiscarder(ctx, activeJobId, runtimeId, fpa, this);
+        this.exceptionHandler = new FeedExceptionHandler(ctx, fta, recordDesc, feedManager, activeJobId);
         this.mode = Mode.PROCESS;
         this.lastMode = Mode.PROCESS;
         this.finished = false;
@@ -92,7 +92,7 @@ public class ActiveRuntimeInputHandler implements IFrameWriter {
                 IFeedMemoryComponent.Type.COLLECTION);
         this.frameEventCallback = new FrameEventCallback(fpa, this, coreOperator);
         this.mBuffer = MonitoredBuffer.getMonitoredBuffer(ctx, this, coreOperator, fta, recordDesc,
-                feedManager.getFeedMetricCollector(), connectionId, runtimeId, exceptionHandler, frameEventCallback,
+                feedManager.getFeedMetricCollector(), activeJobId, runtimeId, exceptionHandler, frameEventCallback,
                 nPartitions, fpa);
         this.mBuffer.start();
         this.throttlingEnabled = false;

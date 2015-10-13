@@ -86,7 +86,7 @@ public class FeedCollectOperatorDescriptor extends AbstractSingleActivityOperato
             throws HyracksDataException {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.subscriptionManager = runtimeCtx.getFeedManager().getFeedSubscriptionManager();
+        this.subscriptionManager = runtimeCtx.getActiveManager().getFeedSubscriptionManager();
         ISubscribableRuntime sourceRuntime = null;
         IOperatorNodePushable nodePushable = null;
         switch (subscriptionLocation) {

@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -42,7 +43,7 @@ public class FeedFrameSpiller {
     private static final Logger LOGGER = Logger.getLogger(FeedFrameSpiller.class.getName());
 
     private final IHyracksTaskContext ctx;
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId activeJobId;
     private final ActiveRuntimeId runtimeId;
     private final FeedPolicyAccessor policyAccessor;
     private BufferedOutputStream bos;
@@ -51,10 +52,10 @@ public class FeedFrameSpiller {
     private long bytesWritten = 0;
     private int spilledFrameCount = 0;
 
-    public FeedFrameSpiller(IHyracksTaskContext ctx, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
+    public FeedFrameSpiller(IHyracksTaskContext ctx, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
             FeedPolicyAccessor policyAccessor) throws IOException {
         this.ctx = ctx;
-        this.connectionId = connectionId;
+        this.activeJobId = activeJobId;
         this.runtimeId = runtimeId;
         this.policyAccessor = policyAccessor;
     }
@@ -81,7 +82,7 @@ public class FeedFrameSpiller {
     private void createFile() throws IOException {
         Date date = new Date();
         String dateSuffix = date.toString().replace(' ', '_');
-        String fileName = connectionId.getActiveId() + "_" + connectionId.getDatasetName() + "_"
+        String fileName = activeJobId.getActiveId() + "_" + ((FeedConnectionId) activeJobId).getDatasetName() + "_"
                 + runtimeId.getRuntimeType() + "_" + runtimeId.getPartition() + "_" + dateSuffix;
 
         file = new File(fileName);

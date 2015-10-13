@@ -268,7 +268,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     }
 
     @Override
-    public IActiveManager getFeedManager() {
+    public IActiveManager getActiveManager() {
         return feedManager;
     }
 }

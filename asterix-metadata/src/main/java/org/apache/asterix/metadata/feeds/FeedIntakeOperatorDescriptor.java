@@ -96,7 +96,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        IFeedSubscriptionManager feedSubscriptionManager = runtimeCtx.getFeedManager().getFeedSubscriptionManager();
+        IFeedSubscriptionManager feedSubscriptionManager = runtimeCtx.getActiveManager().getFeedSubscriptionManager();
         SubscribableFeedRuntimeId feedIngestionId = new SubscribableFeedRuntimeId(feedId, ActiveRuntimeType.INTAKE,
                 partition);
         IngestionRuntime ingestionRuntime = (IngestionRuntime) feedSubscriptionManager

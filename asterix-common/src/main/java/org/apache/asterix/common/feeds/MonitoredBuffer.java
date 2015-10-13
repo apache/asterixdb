@@ -24,12 +24,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.LogInputOutputRateTask;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitorInputQueueLengthTimerTask;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitoreProcessRateTimerTask;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitoredBufferStorageTimerTask;
-import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector.MetricType;
@@ -51,7 +52,7 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
     protected static final int PROCESS_RATE_REFRESH = 2; // refresh processing rate every 10th frame
 
     protected final IHyracksTaskContext ctx;
-    protected final FeedConnectionId connectionId;
+    protected final ActiveJobId connectionId;
     protected final ActiveRuntimeId runtimeId;
     protected final FrameTupleAccessor inflowFta;
     protected final FrameTupleAccessor outflowFta;
@@ -89,28 +90,28 @@ public abstract class MonitoredBuffer extends MessageReceiver<DataBucket> {
 
     public static MonitoredBuffer getMonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
             IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedMetricCollector metricCollector, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
+            IFeedMetricCollector metricCollector, ActiveJobId activeJobId, ActiveRuntimeId runtimeId,
             IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
             FeedPolicyAccessor policyAccessor) {
         switch (runtimeId.getRuntimeType()) {
             case COMPUTE:
                 return new ComputeSideMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
             case STORE:
                 return new StorageSideMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
             case COLLECT:
                 return new IntakeSideMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
             default:
                 return new BasicMonitoredBuffer(ctx, inputHandler, frameWriter, fta, recordDesc, metricCollector,
-                        connectionId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
+                        activeJobId, runtimeId, exceptionHandler, callback, nPartitions, policyAccessor);
         }
     }
 
     protected MonitoredBuffer(IHyracksTaskContext ctx, ActiveRuntimeInputHandler inputHandler,
             IFrameWriter frameWriter, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IFeedMetricCollector metricCollector, FeedConnectionId connectionId, ActiveRuntimeId runtimeId,
+            IFeedMetricCollector metricCollector, ActiveJobId connectionId, ActiveRuntimeId runtimeId,
             IExceptionHandler exceptionHandler, IFrameEventCallback callback, int nPartitions,
             FeedPolicyAccessor policyAccessor) {
         this.ctx = ctx;

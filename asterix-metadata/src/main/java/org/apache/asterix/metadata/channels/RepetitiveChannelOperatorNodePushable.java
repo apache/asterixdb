@@ -18,50 +18,44 @@
  */
 package org.apache.asterix.metadata.channels;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.channels.ChannelRuntimeId;
-import org.apache.asterix.common.feeds.api.IActiveManager;
-import org.apache.asterix.common.feeds.api.IActiveRuntime;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorNodePushable;
+import org.apache.asterix.metadata.feeds.FeedMetaNodePushable;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import org.json.JSONException;
 
 /**
  * The runtime for @see{RepetitiveChannelOperationDescriptor}.
  */
-public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable implements
-        IActiveRuntime {
+public class RepetitiveChannelOperatorNodePushable extends FeedMetaNodePushable {
 
     private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
 
-    private final ActiveJobId channelJobId;
     private final ChannelRuntimeId channelRuntimeId;
-    private final IActiveManager feedManager;
-    private final IHyracksTaskContext ctx;
     private final long duration;
     private final String query;
     private boolean complete = false;
     private Timer timer;
 
     public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId,
-            FunctionSignature function, String duration, String subscriptionsName, String resultsName) {
-        this.ctx = ctx;
-        this.channelJobId = channelJobId;
+            FunctionSignature function, String duration, String subscriptionsName, String resultsName)
+            throws HyracksDataException {
+        super(ctx, null, 0, 1, null, channelJobId, new HashMap<String, String>(), ActiveRuntimeId.DEFAULT_OPERAND_ID);
+        this.runtimeType = ActiveRuntimeType.REPETITIVE;
         this.channelRuntimeId = new ChannelRuntimeId(channelJobId.getActiveId());
         this.duration = findPeriod(duration);
         this.query = produceQuery(function, subscriptionsName, resultsName);
-        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject();
-        this.feedManager = runtimeCtx.getFeedManager();
         timer = new Timer();
 
     }
@@ -107,7 +101,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
         //}
         //);
         StringBuilder builder = new StringBuilder();
-        builder.append("use dataverse " + channelJobId.getDataverse() + ";" + "\n");
+        builder.append("use dataverse " + activeJobId.getDataverse() + ";" + "\n");
         builder.append("insert into dataset " + resultsName + " ");
         builder.append(" (" + " for $sub in dataset " + subscriptionsName + "\n");
         builder.append(" for $result in " + function.getName() + "(");
@@ -130,11 +124,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
 
     @Override
     public void initialize() throws HyracksDataException {
-        try {
-            feedManager.getConnectionManager().registerActiveRuntime(channelJobId, this);
-        } catch (Exception e) {
-            throw new HyracksDataException(e);
-        }
+        //activeManager.getConnectionManager().registerActiveRuntime(channelJobId, this);
         timer.schedule(new AQLTask(), 0, duration);
         writer.open();
         while (!complete) {
@@ -142,7 +132,6 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
         }
     }
 
-    @Override
     public void drop() throws HyracksDataException {
         timer.cancel();
         writer.close();
@@ -151,9 +140,9 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
 
     private class AQLTask extends TimerTask {
         public void run() {
-            LOGGER.info("Executing Channel: " + channelJobId.toString());
-            RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(channelJobId, query);
-            feedManager.getFeedMessageService().sendMessage(xAqlMessage);
+            LOGGER.info("Executing Channel: " + activeJobId.toString());
+            RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(activeJobId, query);
+            activeManager.getFeedMessageService().sendMessage(xAqlMessage);
             if (LOGGER.isLoggable(Level.INFO)) {
                 try {
                     LOGGER.info(" Sent " + xAqlMessage.toJSON());
@@ -163,15 +152,6 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryOutputSo
 
             }
         }
-    }
-
-    public ActiveJobId getChannelJobId() {
-        return channelJobId;
-    }
-
-    @Override
-    public ChannelRuntimeId getRuntimeId() {
-        return channelRuntimeId;
     }
 
 }

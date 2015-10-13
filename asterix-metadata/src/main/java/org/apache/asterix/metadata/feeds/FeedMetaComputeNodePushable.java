@@ -98,10 +98,10 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
         this.nPartitions = nPartitions;
         this.connectionId = feedConnectionId;
         this.feedManager = ((IAsterixAppRuntimeContext) (IAsterixAppRuntimeContext) ctx.getJobletContext()
-                .getApplicationContext().getApplicationObject()).getFeedManager();
+                .getApplicationContext().getApplicationObject()).getActiveManager();
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.feedManager = runtimeCtx.getFeedManager();
+        this.feedManager = runtimeCtx.getActiveManager();
     }
 
     @Override

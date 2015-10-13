@@ -23,10 +23,11 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.FrameDataException;
-import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IActiveManager;
+import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,15 +42,15 @@ public class FeedExceptionHandler implements IExceptionHandler {
     private final FrameTupleAccessor fta;
     private final RecordDescriptor recordDesc;
     private final IActiveManager feedManager;
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId activeJobId;
 
     public FeedExceptionHandler(IHyracksTaskContext ctx, FrameTupleAccessor fta, RecordDescriptor recordDesc,
-            IActiveManager feedManager, FeedConnectionId connectionId) {
+            IActiveManager feedManager, ActiveJobId activeJobId) {
         this.ctx = ctx;
         this.fta = fta;
         this.recordDesc = recordDesc;
         this.feedManager = feedManager;
-        this.connectionId = connectionId;
+        this.activeJobId = activeJobId;
     }
 
     public ByteBuffer handleException(Exception e, ByteBuffer frame) {
@@ -96,7 +97,8 @@ public class FeedExceptionHandler implements IExceptionHandler {
             Object instance = recordDesc.getFields()[i].deserialize(di);
             if (i == 0) {
                 String tuple = String.valueOf(instance);
-                feedManager.getFeedMetadataManager().logTuple(connectionId, tuple, e.getMessage(), feedManager);
+                feedManager.getFeedMetadataManager().logTuple((FeedConnectionId) activeJobId, tuple, e.getMessage(),
+                        feedManager);
             } else {
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.warning(", " + String.valueOf(instance));

@@ -54,7 +54,7 @@ public class FeedMetadataManager implements IFeedMetadataManager {
     }
 
     @Override
-    public void logTuple(FeedConnectionId connectionId, String tuple, String message, IActiveManager feedManager)
+    public void logTuple(FeedConnectionId connectionId, String tuple, String message, IActiveManager activeManager)
             throws AsterixException {
         try {
             AString id = new AString("1");
@@ -75,7 +75,7 @@ public class FeedMetadataManager implements IFeedMetadataManager {
             builder.append(";");
 
             XAQLFeedMessage xAqlMessage = new XAQLFeedMessage(connectionId, builder.toString());
-            feedManager.getFeedMessageService().sendMessage(xAqlMessage);
+            activeManager.getFeedMessageService().sendMessage(xAqlMessage);
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info(" Sent " + xAqlMessage.toJSON());
             }

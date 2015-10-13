@@ -83,7 +83,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
         this.partition = partition;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.feedManager = runtimeCtx.getFeedManager();
+        this.feedManager = runtimeCtx.getActiveManager();
     }
 
     @Override

@@ -76,5 +76,5 @@ public interface IAsterixAppRuntimeContext {
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
-    public IActiveManager getFeedManager();
+    public IActiveManager getActiveManager();
 }

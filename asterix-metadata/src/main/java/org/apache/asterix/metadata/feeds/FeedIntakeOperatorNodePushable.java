@@ -75,8 +75,8 @@ public class FeedIntakeOperatorNodePushable extends AbstractUnaryOutputSourceOpe
         this.adapterFactory = adapterFactory;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.feedSubscriptionManager = runtimeCtx.getFeedManager().getFeedSubscriptionManager();
-        this.feedManager = runtimeCtx.getFeedManager();
+        this.feedSubscriptionManager = runtimeCtx.getActiveManager().getFeedSubscriptionManager();
+        this.feedManager = runtimeCtx.getActiveManager();
         this.policyAccessor = policyAccessor;
     }
 

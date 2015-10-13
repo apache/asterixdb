@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds.message;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.feeds.FeedConnectionId;
@@ -34,7 +35,7 @@ public class ScaleInReportMessage extends FeedMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final FeedConnectionId connectionId;
+    private final ActiveJobId connectionId;
 
     private final ActiveRuntimeType runtimeType;
 
@@ -42,10 +43,10 @@ public class ScaleInReportMessage extends FeedMessage {
 
     private int reducedCardinaliy;
 
-    public ScaleInReportMessage(FeedConnectionId connectionId, ActiveRuntimeType runtimeType, int currentCardinality,
+    public ScaleInReportMessage(ActiveJobId activeJobId, ActiveRuntimeType runtimeType, int currentCardinality,
             int reducedCardinaliy) {
         super(MessageType.SCALE_IN_REQUEST);
-        this.connectionId = connectionId;
+        this.connectionId = activeJobId;
         this.runtimeType = runtimeType;
         this.currentCardinality = currentCardinality;
         this.reducedCardinaliy = reducedCardinaliy;
@@ -67,14 +68,16 @@ public class ScaleInReportMessage extends FeedMessage {
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
         obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getDataverse());
         obj.put(FeedConstants.MessageConstants.FEED, connectionId.getName());
-        obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
+        if (connectionId instanceof FeedConnectionId) {
+            obj.put(FeedConstants.MessageConstants.DATASET, ((FeedConnectionId) connectionId).getDatasetName());
+        }
         obj.put(FeedConstants.MessageConstants.RUNTIME_TYPE, runtimeType);
         obj.put(FeedConstants.MessageConstants.CURRENT_CARDINALITY, currentCardinality);
         obj.put(FeedConstants.MessageConstants.REDUCED_CARDINALITY, reducedCardinaliy);
         return obj;
     }
 
-    public FeedConnectionId getConnectionId() {
+    public ActiveJobId getConnectionId() {
         return connectionId;
     }
 

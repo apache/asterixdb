@@ -28,12 +28,13 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.feeds.api.IActiveManager;
-import org.apache.asterix.common.feeds.api.IFeedMessageService;
-import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.feeds.api.IFeedMessageService;
+import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback.FrameEvent;
 import org.apache.asterix.common.feeds.message.FeedReportMessage;
@@ -53,7 +54,7 @@ public class MonitoredBufferTimerTasks {
         private final StorageSideMonitoredBuffer mBuffer;
         private final IActiveManager feedManager;
         private final int partition;
-        private final FeedConnectionId connectionId;
+        private final ActiveJobId activeJobId;
         private final FeedPolicyAccessor policyAccessor;
         private final StorageFrameHandler storageFromeHandler;
         private final StorageReportFeedMessage storageReportMessage;
@@ -63,16 +64,17 @@ public class MonitoredBufferTimerTasks {
         private int countDelayExceeded = 0;
 
         public MonitoredBufferStorageTimerTask(StorageSideMonitoredBuffer mBuffer, IActiveManager feedManager,
-                FeedConnectionId connectionId, int partition, FeedPolicyAccessor policyAccessor,
+                ActiveJobId connectionId, int partition, FeedPolicyAccessor policyAccessor,
                 StorageFrameHandler storageFromeHandler) {
             this.mBuffer = mBuffer;
             this.feedManager = feedManager;
-            this.connectionId = connectionId;
+            this.activeJobId = connectionId;
             this.partition = partition;
             this.policyAccessor = policyAccessor;
             this.storageFromeHandler = storageFromeHandler;
-            this.storageReportMessage = new StorageReportFeedMessage(this.connectionId, this.partition, 0, false, 0, 0);
-            this.tupleCommitAckMessage = new FeedTupleCommitAckMessage(this.connectionId, 0, 0, null);
+            this.storageReportMessage = new StorageReportFeedMessage((FeedConnectionId) this.activeJobId,
+                    this.partition, 0, false, 0, 0);
+            this.tupleCommitAckMessage = new FeedTupleCommitAckMessage((FeedConnectionId) this.activeJobId, 0, 0, null);
             this.maxIntakeBaseCovered = new HashMap<Integer, Integer>();
         }
 
@@ -242,11 +244,11 @@ public class MonitoredBufferTimerTasks {
         private boolean proposedChange;
 
         public MonitoreProcessRateTimerTask(MonitoredBuffer mBuffer, IActiveManager feedManager,
-                FeedConnectionId connectionId, int nPartitions) {
+                ActiveJobId activeJobId, int nPartitions) {
             this.mBuffer = mBuffer;
             this.feedManager = feedManager;
             this.nPartitions = nPartitions;
-            this.sMessage = new ScaleInReportMessage(connectionId, ActiveRuntimeType.COMPUTE, 0, 0);
+            this.sMessage = new ScaleInReportMessage(activeJobId, ActiveRuntimeType.COMPUTE, 0, 0);
             this.proposedChange = false;
         }
 
