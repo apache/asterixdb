@@ -21,6 +21,7 @@ package org.apache.asterix.common.feeds;
 import java.util.logging.Level;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 

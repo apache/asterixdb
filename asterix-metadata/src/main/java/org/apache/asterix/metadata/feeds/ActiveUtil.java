@@ -29,15 +29,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.AsterixLSMInvertedIndexInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.dataflow.AsterixLSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataException;
@@ -323,7 +322,7 @@ public class ActiveUtil {
 
     }
 
-    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ActiveObjectId channelId) {
+    public static JobSpecification alterJobSpecificationForChannel(JobSpecification spec, ActiveJobId channelJobId) {
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Original Job Spec:" + spec);
@@ -339,7 +338,7 @@ public class ActiveUtil {
             operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
             IOperatorDescriptor opDesc = entry.getValue();
             if (opDesc instanceof RepetitiveChannelOperatorDescriptor) {
-                metaOp = new ChannelMetaOperatorDescriptor(altered, channelId, opDesc, ActiveRuntimeType.REPETITIVE,
+                metaOp = new ChannelMetaOperatorDescriptor(altered, channelJobId, opDesc, ActiveRuntimeType.REPETITIVE,
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getFunction(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getDuration(),
                         ((RepetitiveChannelOperatorDescriptor) opDesc).getSubscriptionsName(),
@@ -580,8 +579,7 @@ public class ActiveUtil {
         try {
             MetadataManager.INSTANCE.acquireReadLatch();
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getActiveId().getDataverse(), connectionId
-                    .getActiveId().getName());
+            feed = MetadataManager.INSTANCE.getFeed(ctx, connectionId.getDataverse(), connectionId.getName());
             preProcessingRequired = feed.getAppliedFunction() != null;
             MetadataManager.INSTANCE.commitTransaction(ctx);
         } catch (Exception e) {

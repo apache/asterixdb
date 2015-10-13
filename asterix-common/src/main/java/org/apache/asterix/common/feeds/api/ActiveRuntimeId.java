@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.feeds;
+package org.apache.asterix.common.feeds.api;
 
 import java.io.Serializable;
 
@@ -24,7 +24,7 @@ import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 
 public class ActiveRuntimeId implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    public static final long serialVersionUID = 1L;
 
     public static final String DEFAULT_OPERAND_ID = "N/A";
 

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds;
 
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector;
 import org.apache.asterix.common.feeds.api.IFrameEventCallback;

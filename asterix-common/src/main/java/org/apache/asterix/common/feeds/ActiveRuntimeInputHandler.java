@@ -28,6 +28,7 @@ import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.DataBucket.ContentType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IExceptionHandler;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMemoryComponent;

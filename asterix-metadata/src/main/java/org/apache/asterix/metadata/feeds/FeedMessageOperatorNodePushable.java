@@ -25,11 +25,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.channels.ChannelRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.ActiveRuntimeManager;
 import org.apache.asterix.common.feeds.CollectionRuntime;
@@ -45,6 +45,7 @@ import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IAdapterRuntimeManager;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
@@ -135,7 +136,7 @@ public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOp
     }
 
     private void handleDropChannelMessage(DropChannelMessage message) throws IOException {
-        ActiveRuntimeId channelRuntimeId = message.getChannelRuntimeId();
+        ChannelRuntimeId channelRuntimeId = message.getChannelRuntimeId();
         feedManager.getConnectionManager().deRegisterActiveRuntime(activeJobId, channelRuntimeId);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Dropped Channel " + message.getChannelId());

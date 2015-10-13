@@ -16,41 +16,52 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.feeds;
+package org.apache.asterix.common.channels;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 
-public class SubscribableFeedRuntimeId extends ActiveRuntimeId {
+/*
+ * Since there is a single runtime for the channel,
+ * All the runtimeid needs is name and dataverse
+ */
+
+public class ChannelRuntimeId extends ActiveRuntimeId {
 
     public static final long serialVersionUID = 1L;
+    protected final ActiveObjectId activeId;
 
-    private final ActiveObjectId feedId;
-
-    public SubscribableFeedRuntimeId(ActiveObjectId feedId, ActiveRuntimeType runtimeType, int partition) {
-        super(runtimeType, partition, ActiveRuntimeId.DEFAULT_OPERAND_ID);
-        this.feedId = feedId;
+    public ChannelRuntimeId(ActiveObjectId activeId) {
+        super(ActiveRuntimeType.REPETITIVE, 0, DEFAULT_OPERAND_ID);
+        this.activeId = activeId;
     }
 
-    public ActiveObjectId getFeedId() {
-        return feedId;
+    public ChannelRuntimeId(String dataverse, String name) {
+        super(ActiveRuntimeType.REPETITIVE, 0, DEFAULT_OPERAND_ID);
+        this.activeId = new ActiveObjectId(dataverse, name, ActiveObjectType.CHANNEL);
+    }
+
+    public ActiveObjectId getActiveId() {
+        return activeId;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof SubscribableFeedRuntimeId)) {
+        if (o == null || !(o instanceof ChannelRuntimeId)) {
             return false;
         }
 
-        return (super.equals(o) && this.feedId.equals(((SubscribableFeedRuntimeId) o).getFeedId()));
+        if (this == o || ((ChannelRuntimeId) o).getActiveId().equals(activeId)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public int hashCode() {
-        return super.hashCode() + feedId.hashCode();
+    public String toString() {
+        return "RuntimeId for :" + activeId.toString();
     }
+
 }

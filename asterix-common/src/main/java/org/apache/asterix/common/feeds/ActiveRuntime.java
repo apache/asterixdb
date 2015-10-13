@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.feeds;
 
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.IActiveRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;

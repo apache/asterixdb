@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedMessageService;
 import org.apache.asterix.common.feeds.api.IFeedService;

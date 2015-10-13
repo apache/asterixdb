@@ -28,8 +28,8 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeManager;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveConnectionManager;
 
 /**

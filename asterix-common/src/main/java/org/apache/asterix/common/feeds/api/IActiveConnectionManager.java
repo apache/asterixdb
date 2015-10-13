@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeManager;
 
 /**

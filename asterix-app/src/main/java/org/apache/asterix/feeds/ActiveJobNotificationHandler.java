@@ -596,8 +596,8 @@ public class ActiveJobNotificationHandler implements Runnable {
 
         feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_CONNECT_TIMESTAMP, (new Date()).toString());
         try {
-            FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getActiveId().getDataverse(), cInfo
-                    .getConnectionId().getActiveId().getName(), cInfo.getConnectionId().getDatasetName(),
+            FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getDataverse(), cInfo
+                    .getConnectionId().getName(), cInfo.getConnectionId().getDatasetName(),
                     feedActivityDetails);
             CentralActiveManager.getInstance().getLoadManager()
                     .reportActivity(cInfo.getConnectionId(), feedActivity);
@@ -623,8 +623,8 @@ public class ActiveJobNotificationHandler implements Runnable {
 
         channelActivityDetails.put(ChannelActivity.ChannelActivityDetails.CHANNEL_TIMESTAMP, (new Date()).toString());
         try {
-            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getActiveId().getDataverse(),
-                    cInfo.getActiveJobId().getActiveId().getName(), channelActivityDetails);
+            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getDataverse(),
+                    cInfo.getActiveJobId().getName(), channelActivityDetails);
             CentralActiveManager.getInstance().getLoadManager()
                     .reportActivity(cInfo.getActiveJobId(), channelActivity);
 

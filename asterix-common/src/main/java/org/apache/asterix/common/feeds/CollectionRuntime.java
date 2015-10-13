@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedFrameCollector.State;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;

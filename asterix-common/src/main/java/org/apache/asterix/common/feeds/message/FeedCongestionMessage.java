@@ -20,10 +20,10 @@ package org.apache.asterix.common.feeds.message;
 
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.json.JSONException;
@@ -53,8 +53,8 @@ public class FeedCongestionMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         obj.put(FeedConstants.MessageConstants.RUNTIME_TYPE, runtimeId.getRuntimeType());
         obj.put(FeedConstants.MessageConstants.OPERAND_ID, runtimeId.getOperandId());

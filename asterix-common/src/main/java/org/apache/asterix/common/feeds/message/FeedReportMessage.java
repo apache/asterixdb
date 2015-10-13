@@ -22,10 +22,10 @@ package org.apache.asterix.common.feeds.message;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
 import org.json.JSONException;
@@ -56,8 +56,8 @@ public class FeedReportMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, activeJobId.getActiveId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, activeJobId.getActiveId().getName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, activeJobId.getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, activeJobId.getName());
         if (activeJobId instanceof FeedConnectionId) {
             obj.put(FeedConstants.MessageConstants.DATASET, ((FeedConnectionId) activeJobId).getDatasetName());
         }

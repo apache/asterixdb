@@ -49,8 +49,8 @@ public class FeedTupleCommitAckMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getActiveId().getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getActiveId().getName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, connectionId.getDataverse());
+        obj.put(FeedConstants.MessageConstants.FEED, connectionId.getName());
         obj.put(FeedConstants.MessageConstants.DATASET, connectionId.getDatasetName());
         obj.put(FeedConstants.MessageConstants.INTAKE_PARTITION, intakePartition);
         obj.put(FeedConstants.MessageConstants.BASE, base);

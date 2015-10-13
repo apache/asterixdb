@@ -14,12 +14,11 @@
  */
 package org.apache.asterix.metadata.channels;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import org.apache.asterix.common.channels.ChannelId;
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.message.FeedMessage;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A feed control message indicating the need to execute a give AQL.
@@ -29,21 +28,21 @@ public class RepetitiveChannelXAQLMessage extends FeedMessage {
     private static final long serialVersionUID = 1L;
 
     private final String aql;
-    private final ChannelId channelId;
+    private final ActiveJobId channelJobId;
 
-    public RepetitiveChannelXAQLMessage(ChannelId channelId, String aql) {
+    public RepetitiveChannelXAQLMessage(ActiveJobId channelJobId, String aql) {
         super(MessageType.XAQL);
-        this.channelId = channelId;
+        this.channelJobId = channelJobId;
         this.aql = aql;
     }
 
     @Override
     public String toString() {
-        return messageType.name() + " " + channelId + " [" + aql + "] ";
+        return messageType.name() + " " + channelJobId + " [" + aql + "] ";
     }
 
-    public ChannelId getConnectionId() {
-        return channelId;
+    public ActiveJobId getJobId() {
+        return channelJobId;
     }
 
     public String getAql() {
@@ -54,8 +53,8 @@ public class RepetitiveChannelXAQLMessage extends FeedMessage {
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, channelId.getDataverse());
-        obj.put(FeedConstants.MessageConstants.FEED, channelId.getChannelName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, channelJobId.getDataverse());
+        obj.put(FeedConstants.MessageConstants.CHANNEL, channelJobId.getName());
         obj.put(FeedConstants.MessageConstants.AQL, aql);
         return obj;
     }

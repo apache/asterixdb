@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.CollectionRuntime;
 import org.apache.asterix.common.feeds.FeedCollectRuntimeInputHandler;
@@ -34,6 +33,7 @@ import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IFeedOperatorOutputSideHandler;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;

@@ -24,6 +24,14 @@ public class ActiveJobId {
         return activeId;
     }
 
+    public String getDataverse() {
+        return activeId.getDataverse();
+    }
+
+    public String getName() {
+        return activeId.getName();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof ActiveJobId)) {
@@ -43,7 +51,7 @@ public class ActiveJobId {
 
     @Override
     public String toString() {
-        return activeId.toString();
+        return "Job for :" + activeId.toString();
     }
 
 }

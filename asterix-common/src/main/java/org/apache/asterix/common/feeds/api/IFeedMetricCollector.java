@@ -19,7 +19,6 @@
 package org.apache.asterix.common.feeds.api;
 
 import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.feeds.ActiveRuntimeId;
 
 public interface IFeedMetricCollector {
 

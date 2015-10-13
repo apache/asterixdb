@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveObjectId;
+import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.api.ISubscriberRuntime;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
