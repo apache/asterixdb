@@ -38,16 +38,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-					<fork>true</fork>
-				</configuration>
-			</plugin>
-			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>
 				<version>0.9.0</version>
@@ -207,4 +197,4 @@
 			<version>2.3-20090302111651</version>
 		</dependency>
 	</dependencies>
-</project> 
+</project>

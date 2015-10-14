@@ -29,24 +29,8 @@
   <packaging>maven-plugin</packaging>
   <name>lexer-generator-maven-plugin</name>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-	  <fork>true</fork>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
     <dependency>
-      <!-- Dependency management inherited from top-level asterixdb -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>

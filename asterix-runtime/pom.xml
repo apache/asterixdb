@@ -38,16 +38,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-					<fork>true</fork>
-				</configuration>
-			</plugin>
-	      	<plugin>
 	        	<groupId>org.apache.asterix</groupId>
 	        	<artifactId>lexer-generator-maven-plugin</artifactId>
 	        	<version>0.8.7-SNAPSHOT</version>
@@ -184,4 +174,3 @@
 	</dependencies>
 
 </project>
-
