@@ -18,45 +18,96 @@
  */
 package org.apache.asterix.metadata.channels;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.active.ActiveJobId;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.channels.ChannelRuntime;
 import org.apache.asterix.common.channels.ChannelRuntimeId;
+import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
+import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
+import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.metadata.feeds.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.metadata.feeds.FeedMetaNodePushable;
+import org.apache.asterix.metadata.feeds.FeedPolicyEnforcer;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.json.JSONException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 /**
  * The runtime for @see{RepetitiveChannelOperationDescriptor}.
  */
-public class RepetitiveChannelOperatorNodePushable extends FeedMetaNodePushable {
+public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private static Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FeedMetaNodePushable.class.getName());
+
+    /**
+     * A policy enforcer that ensures dyanmic decisions for a feed are taken
+     * in accordance with the associated ingestion policy
+     **/
+    private FeedPolicyEnforcer policyEnforcer;
+
+    /**
+     * The Active Runtime instance associated with the operator. Active Runtime
+     * captures the state of the operator while the job is active.
+     */
+    private ChannelRuntime activeRuntime;
+
+    /**
+     * A unique identifier for the active job. For instance,
+     * A feed connection instance represents
+     * the flow of data from a feed to a dataset.
+     **/
+    protected ActiveJobId activeJobId;
+
+    /**
+     * Denotes the i'th operator instance in a setting where K operator
+     * instances are scheduled to run in parallel
+     **/
+    private int partition;
+
+    /** Total number of partitions available **/
+    private int nPartitions;
+
+    /** Type associated with the core feed operator **/
+    protected ActiveRuntimeType runtimeType;
+
+    /** The (singleton) instance of IFeedManager **/
+    protected IActiveManager activeManager;
+
+    private FrameTupleAccessor fta;
+
+    private final IHyracksTaskContext ctx;
+
+    private final String operandId;
+
+    /** The pre-processor associated with this runtime **/
+    private ActiveRuntimeInputHandler inputSideHandler;
 
     private final ChannelRuntimeId channelRuntimeId;
     private final long duration;
     private final String query;
-    private boolean complete = false;
-    private Timer timer;
 
     public RepetitiveChannelOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId channelJobId,
             FunctionSignature function, String duration, String subscriptionsName, String resultsName)
             throws HyracksDataException {
-        super(ctx, null, 0, 1, null, channelJobId, new HashMap<String, String>(), ActiveRuntimeId.DEFAULT_OPERAND_ID);
+        this.ctx = ctx;
+        this.activeJobId = channelJobId;
+        this.operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
         this.runtimeType = ActiveRuntimeType.REPETITIVE;
+        this.policyEnforcer = new FeedPolicyEnforcer(activeJobId, new HashMap<String, String>());
         this.channelRuntimeId = new ChannelRuntimeId(channelJobId.getActiveId());
         this.duration = findPeriod(duration);
         this.query = produceQuery(function, subscriptionsName, resultsName);
-        timer = new Timer();
+        IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
+                .getApplicationContext().getApplicationObject();
+        this.activeManager = runtimeCtx.getActiveManager();
 
     }
 
@@ -124,34 +175,85 @@ public class RepetitiveChannelOperatorNodePushable extends FeedMetaNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
-        //activeManager.getConnectionManager().registerActiveRuntime(channelJobId, this);
-        timer.schedule(new AQLTask(), 0, duration);
-        writer.open();
-        while (!complete) {
-
+        ChannelRuntimeId runtimeId = new ChannelRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
+        try {
+            activeRuntime = (ChannelRuntime) activeManager.getConnectionManager().getActiveRuntime(activeJobId,
+                    runtimeId);
+            if (activeRuntime == null) {
+                initializeNewFeedRuntime(runtimeId);
+            } else {
+                reviveOldFeedRuntime(runtimeId);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HyracksDataException(e);
         }
+        activeRuntime.initialize(duration);
+        writer.open();
     }
 
     public void drop() throws HyracksDataException {
-        timer.cancel();
+        activeRuntime.drop();
         writer.close();
-        complete = true;
     }
 
-    private class AQLTask extends TimerTask {
-        public void run() {
-            LOGGER.info("Executing Channel: " + activeJobId.toString());
-            RepetitiveChannelXAQLMessage xAqlMessage = new RepetitiveChannelXAQLMessage(activeJobId, query);
-            activeManager.getFeedMessageService().sendMessage(xAqlMessage);
-            if (LOGGER.isLoggable(Level.INFO)) {
-                try {
-                    LOGGER.info(" Sent " + xAqlMessage.toJSON());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+    @Override
+    public void open() throws HyracksDataException {
 
-            }
+    }
+
+    private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
+        this.fta = new FrameTupleAccessor(recordDesc);
+        this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, activeJobId, runtimeId, this,
+                policyEnforcer.getFeedPolicyAccessor(), false, fta, recordDesc, activeManager, nPartitions);
+
+        setupBasicRuntime(inputSideHandler);
+    }
+
+    private void reviveOldFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
+        this.inputSideHandler = activeRuntime.getInputHandler();
+        this.fta = new FrameTupleAccessor(recordDesc);
+        this.setOutputFrameWriter(0, writer, recordDesc);
+        activeRuntime.setMode(Mode.PROCESS);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Retreived state from the zombie instance " + runtimeType + " node.");
         }
+    }
+
+    private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
+        this.setOutputFrameWriter(0, writer, recordDesc);
+        ChannelRuntimeId runtimeId = new ChannelRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
+        activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query);
+        activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
+    }
+
+    public ActiveJobId getActiveJobId() {
+        return activeJobId;
+    }
+
+    @Override
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        try {
+            inputSideHandler.nextFrame(buffer);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new HyracksDataException(e);
+        }
+    }
+
+    @Override
+    public void fail() throws HyracksDataException {
+        if (LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.info("Core Op:" + this.getDisplayName() + " fail ");
+        }
+        activeRuntime.setMode(Mode.FAIL);
+        this.fail();
+    }
+
+    @Override
+    public void close() throws HyracksDataException {
+        // TODO Auto-generated method stub
+
     }
 
 }

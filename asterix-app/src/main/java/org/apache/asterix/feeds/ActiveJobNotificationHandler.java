@@ -33,11 +33,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.FeedWorkCollection.SubscribeFeedWork;
-import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.channels.ChannelActivity;
 import org.apache.asterix.common.channels.ChannelJobInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -179,8 +179,8 @@ public class ActiveJobNotificationHandler implements Runnable {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Active job already registered");
         }
-
-        ActiveJobInfo cInfo = new ActiveJobInfo(jobId, JobState.CREATED, jobType, jobSpec, activeJobId);
+        //TODO:Register other active jobs
+        ActiveJobInfo cInfo = new ChannelJobInfo(jobId, JobState.CREATED, jobType, jobSpec, activeJobId);
         jobInfos.put(jobId, cInfo);
         activeJobInfos.put(activeJobId, cInfo);
 
@@ -597,10 +597,8 @@ public class ActiveJobNotificationHandler implements Runnable {
         feedActivityDetails.put(FeedActivity.FeedActivityDetails.FEED_CONNECT_TIMESTAMP, (new Date()).toString());
         try {
             FeedActivity feedActivity = new FeedActivity(cInfo.getConnectionId().getDataverse(), cInfo
-                    .getConnectionId().getName(), cInfo.getConnectionId().getDatasetName(),
-                    feedActivityDetails);
-            CentralActiveManager.getInstance().getLoadManager()
-                    .reportActivity(cInfo.getConnectionId(), feedActivity);
+                    .getConnectionId().getName(), cInfo.getConnectionId().getDatasetName(), feedActivityDetails);
+            CentralActiveManager.getInstance().getLoadManager().reportActivity(cInfo.getConnectionId(), feedActivity);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -623,10 +621,9 @@ public class ActiveJobNotificationHandler implements Runnable {
 
         channelActivityDetails.put(ChannelActivity.ChannelActivityDetails.CHANNEL_TIMESTAMP, (new Date()).toString());
         try {
-            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getDataverse(),
-                    cInfo.getActiveJobId().getName(), channelActivityDetails);
-            CentralActiveManager.getInstance().getLoadManager()
-                    .reportActivity(cInfo.getActiveJobId(), channelActivity);
+            ChannelActivity channelActivity = new ChannelActivity(cInfo.getActiveJobId().getDataverse(), cInfo
+                    .getActiveJobId().getName(), channelActivityDetails);
+            CentralActiveManager.getInstance().getLoadManager().reportActivity(cInfo.getActiveJobId(), channelActivity);
 
         } catch (Exception e) {
             e.printStackTrace();

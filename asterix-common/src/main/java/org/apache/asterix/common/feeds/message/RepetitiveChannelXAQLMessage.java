@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.asterix.metadata.channels;
+package org.apache.asterix.common.feeds.message;
 
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.message.FeedMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
 

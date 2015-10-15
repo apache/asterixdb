@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.active;
 
+import java.io.Serializable;
+
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
 
 /**
@@ -26,7 +28,9 @@ import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
  * objects and active jobs. In the case of feeds, one feed
  * can have many active jobs, represented by feedconnectionid
  */
-public class ActiveJobId {
+public class ActiveJobId implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     protected final ActiveObjectId activeId;
 
