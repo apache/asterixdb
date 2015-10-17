@@ -16,15 +16,12 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<project
-    xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>asterix</artifactId>
         <groupId>org.apache.asterix</groupId>
-        <version>0.8.7-SNAPSHOT</version>
+        <version>0.8.8-SNAPSHOT</version>
     </parent>
     <artifactId>asterix-app</artifactId>
 
@@ -129,48 +126,48 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-algebra</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-aql</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-metadata</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-tools</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-common</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -180,7 +177,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-transactions</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -211,7 +208,7 @@
         <dependency>
             <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-test-framework</artifactId>
-            <version>0.8.7-SNAPSHOT</version>
+            <version>0.8.8-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

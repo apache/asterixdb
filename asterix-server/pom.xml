@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.asterix</groupId>
     <artifactId>asterix</artifactId>
-    <version>0.8.7-SNAPSHOT</version>
+    <version>0.8.8-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -140,7 +140,7 @@
   	<dependency>
   		<groupId>org.apache.asterix</groupId>
   		<artifactId>asterix-app</artifactId>
-  		<version>0.8.7-SNAPSHOT</version>
+  		<version>0.8.8-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>org.codehaus.mojo.appassembler</groupId>

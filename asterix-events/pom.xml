@@ -22,11 +22,11 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.7-SNAPSHOT</version>
+		<version>0.8.8-SNAPSHOT</version>
 	</parent>
 	<groupId>org.apache.asterix</groupId>
 	<artifactId>asterix-events</artifactId>
-	<version>0.8.7-SNAPSHOT</version>
+	<version>0.8.8-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -197,7 +197,7 @@
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
+			<version>0.8.8-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
