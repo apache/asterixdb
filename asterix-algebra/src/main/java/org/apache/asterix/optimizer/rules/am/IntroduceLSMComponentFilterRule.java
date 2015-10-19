@@ -22,9 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -39,6 +36,8 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -50,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
@@ -63,6 +63,8 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
+
+    protected IVariableTypeEnvironment typeEnvironment = null;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
@@ -78,8 +80,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         }
 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        typeEnvironment = context.getOutputTypeEnvironment(op);
         ILogicalExpression condExpr = ((SelectOperator) op).getCondition().getValue();
-        AccessMethodAnalysisContext analysisCtx = analyzeCondition(condExpr);
+        AccessMethodAnalysisContext analysisCtx = analyzeCondition(condExpr, context, typeEnvironment);
         if (analysisCtx.matchedFuncExprs.isEmpty()) {
             return false;
         }
@@ -128,7 +131,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         for (IOptimizableFuncExpr optFuncExpr : optFuncExprs) {
             ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(optFuncExpr.getFuncExpr()
                     .getFunctionIdentifier());
-            ILogicalExpression searchKeyExpr = new ConstantExpression(optFuncExpr.getConstantVal(0));
+            ILogicalExpression searchKeyExpr = optFuncExpr.getConstantAtRuntimeExpr(0);
             LogicalVariable var = context.newVar();
             assignKeyExprList.add(new MutableObject<ILogicalExpression>(searchKeyExpr));
             assignKeyVarList.add(var);
@@ -260,29 +263,31 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         return true;
     }
 
-    private AccessMethodAnalysisContext analyzeCondition(ILogicalExpression cond) {
+    private AccessMethodAnalysisContext analyzeCondition(ILogicalExpression cond, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         AccessMethodAnalysisContext analysisCtx = new AccessMethodAnalysisContext();
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) cond;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         if (funcIdent != AlgebricksBuiltinFunctions.OR) {
-            analyzeFunctionExpr(funcExpr, analysisCtx);
+            analyzeFunctionExpr(funcExpr, analysisCtx, context, typeEnvironment);
             for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
                 ILogicalExpression argExpr = arg.getValue();
                 if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                     continue;
                 }
-                analyzeFunctionExpr((AbstractFunctionCallExpression) argExpr, analysisCtx);
+                analyzeFunctionExpr((AbstractFunctionCallExpression) argExpr, analysisCtx, context, typeEnvironment);
             }
         }
         return analysisCtx;
     }
 
-    private void analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr, AccessMethodAnalysisContext analysisCtx) {
+    private void analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         if (funcIdent == AlgebricksBuiltinFunctions.LE || funcIdent == AlgebricksBuiltinFunctions.GE
                 || funcIdent == AlgebricksBuiltinFunctions.LT || funcIdent == AlgebricksBuiltinFunctions.GT
                 || funcIdent == AlgebricksBuiltinFunctions.EQ) {
-            AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
+            AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx, context, typeEnvironment);
         }
     }
 

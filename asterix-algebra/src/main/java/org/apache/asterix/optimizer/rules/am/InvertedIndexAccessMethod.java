@@ -24,14 +24,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.algebra.base.LogicalOperatorDeepCopyVisitor;
 import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.formats.nontagged.AqlBinaryTokenizerFactoryProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -47,6 +45,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
@@ -58,7 +58,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -125,10 +124,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     @Override
     public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
 
         if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
-            boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
+            boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx, context,
+                    typeEnvironment);
             if (!matches) {
                 matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVars(funcExpr, analysisCtx);
             }
@@ -138,7 +139,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     public boolean analyzeGetItemFuncExpr(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx)
+            throws AlgebricksException {
         if (funcExpr.getFunctionIdentifier() != AsterixBuiltinFunctions.GET_ITEM) {
             return false;
         }
@@ -222,15 +224,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private boolean analyzeJoinSimilarityCheckFuncExprArgs(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex,
-            AccessMethodAnalysisContext analysisCtx) {
+            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         // There should be exactly three arguments.
         // The last function argument is assumed to be the similarity threshold.
-        IAlgebricksConstantValue constThreshVal = null;
         ILogicalExpression arg3 = funcExpr.getArguments().get(2).getValue();
         if (arg3.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return false;
         }
-        constThreshVal = ((ConstantExpression) arg3).getValue();
         ILogicalExpression arg1 = funcExpr.getArguments().get(0).getValue();
         ILogicalExpression arg2 = funcExpr.getArguments().get(1).getValue();
         // We expect arg1 and arg2 to be non-constants for a join.
@@ -249,7 +249,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             return false;
         }
         OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVarExpr1,
-                fieldVarExpr2 }, new IAlgebricksConstantValue[] { constThreshVal });
+                fieldVarExpr2 }, new ILogicalExpression[] { arg3 },
+                new IAType[] { (IAType) AqlExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
@@ -262,15 +263,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private boolean analyzeSelectSimilarityCheckFuncExprArgs(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, int matchedAssignOrUnnestIndex,
-            AccessMethodAnalysisContext analysisCtx) {
+            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         // There should be exactly three arguments.
         // The last function argument is assumed to be the similarity threshold.
-        IAlgebricksConstantValue constThreshVal = null;
         ILogicalExpression arg3 = funcExpr.getArguments().get(2).getValue();
         if (arg3.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             return false;
         }
-        constThreshVal = ((ConstantExpression) arg3).getValue();
         ILogicalExpression arg1 = funcExpr.getArguments().get(0).getValue();
         ILogicalExpression arg2 = funcExpr.getArguments().get(1).getValue();
         // Determine whether one arg is constant, and the other is non-constant.
@@ -291,15 +290,16 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         } else {
             return false;
         }
-        ConstantExpression constExpr = (ConstantExpression) constArg;
-        IAlgebricksConstantValue constFilterVal = constExpr.getValue();
         LogicalVariable fieldVarExpr = getNonConstArgFieldExprPair(nonConstArg, funcExpr, assignsAndUnnests,
                 matchedAssignOrUnnestIndex);
         if (fieldVarExpr == null) {
             return false;
         }
+
         OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVarExpr },
-                new IAlgebricksConstantValue[] { constFilterVal, constThreshVal });
+                new ILogicalExpression[] { constArg, arg3 }, new IAType[] {
+                        (IAType) AqlExpressionTypeComputer.INSTANCE.getType(constArg, null, null),
+                        (IAType) AqlExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr))
@@ -731,8 +731,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                         inputSearchVar)));
                 // Since we are optimizing a join, the similarity threshold should be the only constant in the optimizable function expression.
-                isFilterableArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(optFuncExpr
-                        .getConstantVal(0))));
+                isFilterableArgs.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantAtRuntimeExpr(0)));
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils
                         .createInt32Constant(chosenIndex.getGramLength())));
                 boolean usePrePost = optFuncExpr.containsPartialField() ? false : true;
@@ -749,8 +748,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
                         inputSearchVar)));
                 // Since we are optimizing a join, the similarity threshold should be the only constant in the optimizable function expression.
-                isFilterableArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(optFuncExpr
-                        .getConstantVal(0))));
+                isFilterableArgs.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantAtRuntimeExpr(0)));
                 isFilterableExpr = new ScalarFunctionCallExpression(
                         FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE),
                         isFilterableArgs);
@@ -799,9 +797,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             typeTag = type.getTypeTag();
         } else {
             // We are optimizing a selection query. Add the type of the search key constant.
-            AsterixConstantValue constVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
-            IAObject obj = constVal.getObject();
-            type = obj.getType();
+            type = optFuncExpr.getConstantType(0);
             typeTag = type.getTypeTag();
             if (typeTag != ATypeTag.ORDEREDLIST && typeTag != ATypeTag.STRING && typeTag != ATypeTag.UNORDEREDLIST) {
                 throw new AlgebricksException("Only ordered lists, string, and unordered lists types supported.");
@@ -818,7 +814,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.SIMILARITY_JACCARD_CHECK) {
             jobGenParams.setSearchModifierType(SearchModifierType.JACCARD);
             // Add the similarity threshold which, by convention, is the last constant value.
-            jobGenParams.setSimilarityThreshold(optFuncExpr.getConstantVal(optFuncExpr.getNumConstantVals() - 1));
+            jobGenParams.setSimilarityThreshold(((ConstantExpression) optFuncExpr.getConstantAtRuntimeExpr(optFuncExpr
+                    .getNumConstantAtRuntimeExpr() - 1)).getValue());
         }
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CHECK
                 || optFuncExpr.getFuncExpr().getFunctionIdentifier() == AsterixBuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
@@ -828,7 +825,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 jobGenParams.setSearchModifierType(SearchModifierType.EDIT_DISTANCE);
             }
             // Add the similarity threshold which, by convention, is the last constant value.
-            jobGenParams.setSimilarityThreshold(optFuncExpr.getConstantVal(optFuncExpr.getNumConstantVals() - 1));
+            jobGenParams.setSimilarityThreshold(((ConstantExpression) optFuncExpr.getConstantAtRuntimeExpr(optFuncExpr
+                    .getNumConstantAtRuntimeExpr() - 1)).getValue());
         }
     }
 
@@ -839,7 +837,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Add a variable and its expr to the lists which will be passed into an assign op.
         LogicalVariable keyVar = context.newVar();
         keyVarList.add(keyVar);
-        keyExprList.add(new MutableObject<ILogicalExpression>(new ConstantExpression(optFuncExpr.getConstantVal(0))));
+        keyExprList.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantAtRuntimeExpr(0)));
         return;
     }
 
@@ -868,7 +866,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private boolean isEditDistanceFuncOptimizable(Index index, IOptimizableFuncExpr optFuncExpr)
             throws AlgebricksException {
-        if (optFuncExpr.getNumConstantVals() == 1) {
+        if (optFuncExpr.getNumConstantAtRuntimeExpr() == 1) {
             return isEditDistanceFuncJoinOptimizable(index, optFuncExpr);
         } else {
             return isEditDistanceFuncSelectOptimizable(index, optFuncExpr);
@@ -901,7 +899,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         // Check for panic in selection query.
         // TODO: Panic also depends on prePost which is currently hardcoded to be true.
-        AsterixConstantValue listOrStrConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
+        AsterixConstantValue listOrStrConstVal = (AsterixConstantValue) ((ConstantExpression) optFuncExpr
+                .getConstantAtRuntimeExpr(0)).getValue();
         IAObject listOrStrObj = listOrStrConstVal.getObject();
         ATypeTag typeTag = listOrStrObj.getType().getTypeTag();
 
@@ -909,7 +908,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             return false;
         }
 
-        AsterixConstantValue intConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(1);
+        AsterixConstantValue intConstVal = (AsterixConstantValue) ((ConstantExpression) optFuncExpr.getConstantAtRuntimeExpr(1))
+                .getValue();
         IAObject intObj = intConstVal.getObject();
 
         AInt32 edThresh = null;
@@ -1055,7 +1055,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private boolean isContainsFuncSelectOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
-        AsterixConstantValue strConstVal = (AsterixConstantValue) optFuncExpr.getConstantVal(0);
+        AsterixConstantValue strConstVal = (AsterixConstantValue) ((ConstantExpression) optFuncExpr.getConstantAtRuntimeExpr(0))
+                .getValue();
         IAObject strObj = strConstVal.getObject();
         ATypeTag typeTag = strObj.getType().getTypeTag();
 

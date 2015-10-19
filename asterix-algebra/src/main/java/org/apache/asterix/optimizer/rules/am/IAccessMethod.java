@@ -20,13 +20,13 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 
@@ -51,17 +51,19 @@ public interface IAccessMethod {
      * optimizable by this access method based on its function identifier. If
      * funcExpr has been found to be optimizable, this method adds an
      * OptimizableFunction to analysisCtx.matchedFuncExprs for further analysis.
-     *
+     * 
      * @return true if funcExpr is optimizable by this access method, false
      *         otherwise
+     * @throws AlgebricksException
      */
-    public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx);
+    boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException;
 
     /**
      * Indicates whether all index expressions must be matched in order for this
      * index to be applicable.
-     *
+     * 
      * @return boolean
      */
     public boolean matchAllIndexExprs();
@@ -69,7 +71,7 @@ public interface IAccessMethod {
     /**
      * Indicates whether this index is applicable if only a prefix of the index
      * expressions are matched.
-     *
+     * 
      * @return boolean
      */
     public boolean matchPrefixIndexExprs();
@@ -97,4 +99,5 @@ public interface IAccessMethod {
      * @throws AlgebricksException
      */
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException;
+
 }

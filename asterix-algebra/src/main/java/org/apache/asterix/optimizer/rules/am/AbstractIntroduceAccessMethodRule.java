@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -44,6 +42,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSourceType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -110,14 +109,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
     }
 
-    protected void pruneIndexCandidates(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
-            throws AlgebricksException {
+    protected void pruneIndexCandidates(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
             AccessMethodAnalysisContext amCtx = entry.getValue();
-            pruneIndexCandidates(entry.getKey(), amCtx);
+            pruneIndexCandidates(entry.getKey(), amCtx, context, typeEnvironment);
             // Remove access methods for which there are definitely no
             // applicable indexes.
             if (amCtx.indexExprsAndVars.isEmpty()) {
@@ -174,11 +173,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * only require a match on a prefix of fields to be applicable. This methods
      * removes all index candidates indexExprs that are definitely not
      * applicable according to the expressions involved.
-     *
+     * 
      * @throws AlgebricksException
      */
-    public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx)
-            throws AlgebricksException {
+    public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt = analysisCtx.indexExprsAndVars
                 .entrySet().iterator();
         // Used to keep track of matched expressions (added for prefix search)
@@ -222,11 +221,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     for (int j = 0; j < optFuncExpr.getNumLogicalVars(); j++)
                         if (j != exprAndVarIdx.second)
                             indexedTypes.add(optFuncExpr.getFieldType(j));
+
                     //add constants in case of select
-                    if (indexedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1) {
-                        indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(new ConstantExpression(
-                                optFuncExpr.getConstantVal(0)), null, null));
+                    if (indexedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1
+                            && optFuncExpr.getNumConstantAtRuntimeExpr() > 0) {
+                        indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(
+                                optFuncExpr.getConstantAtRuntimeExpr(0), context.getMetadataProvider(), typeEnvironment));
                     }
+
                     //infer type of logicalExpr based on index keyType
                     indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(
                             optFuncExpr.getLogicalExpr(exprAndVarIdx.second), null, new IVariableTypeEnvironment() {
@@ -329,9 +331,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Analyzes the given selection condition, filling analyzedAMs with
      * applicable access method types. At this point we are not yet consulting
      * the metadata whether an actual index exists or not.
+     * 
+     * @throws AlgebricksException
      */
     protected boolean analyzeCondition(ILogicalExpression cond, List<AbstractLogicalOperator> assignsAndUnnests,
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) cond;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         // Don't consider optimizing a disjunctive condition with an index (too
@@ -339,14 +344,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (funcIdent == AlgebricksBuiltinFunctions.OR) {
             return false;
         }
-        boolean found = analyzeFunctionExpr(funcExpr, assignsAndUnnests, analyzedAMs);
+        boolean found = analyzeFunctionExpr(funcExpr, assignsAndUnnests, analyzedAMs, context, typeEnvironment);
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
             ILogicalExpression argExpr = arg.getValue();
             if (argExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 continue;
             }
             AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
-            boolean matchFound = analyzeFunctionExpr(argFuncExpr, assignsAndUnnests, analyzedAMs);
+            boolean matchFound = analyzeFunctionExpr(argFuncExpr, assignsAndUnnests, analyzedAMs, context,
+                    typeEnvironment);
             found = found || matchFound;
         }
         return found;
@@ -356,9 +362,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Finds applicable access methods for the given function expression based
      * on the function identifier, and an analysis of the function's arguments.
      * Updates the analyzedAMs accordingly.
+     * 
+     * @throws AlgebricksException
      */
     protected boolean analyzeFunctionExpr(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+            List<AbstractLogicalOperator> assignsAndUnnests,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
         if (funcIdent == AlgebricksBuiltinFunctions.AND) {
             return false;
@@ -380,7 +390,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
             // Analyzes the funcExpr's arguments to see if the accessMethod is
             // truly applicable.
-            boolean matchFound = accessMethod.analyzeFuncExprArgs(funcExpr, assignsAndUnnests, analysisCtx);
+            boolean matchFound = accessMethod.analyzeFuncExprArgs(funcExpr, assignsAndUnnests, analysisCtx, context,
+                    typeEnvironment);
             if (matchFound) {
                 // If we've used the current new context placeholder, replace it
                 // with a new one.
@@ -398,7 +409,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Finds secondary indexes whose keys include fieldName, and adds a mapping
      * in analysisCtx.indexEsprs from that index to the a corresponding
      * optimizable function expression.
-     *
+     * 
      * @return true if a candidate index was added to foundIndexExprs, false
      *         otherwise
      * @throws AlgebricksException
