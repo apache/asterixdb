@@ -32,7 +32,7 @@ import org.json.JSONObject;
  * This message is dispatched
  * to all locations that host an operator involved in the feed pipeline.
  */
-public class ThrottlingEnabledFeedMessage extends FeedMessage {
+public class ThrottlingEnabledFeedMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

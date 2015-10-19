@@ -68,16 +68,16 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNod
  *      IFeedMessage
  *      IFeedManager
  */
-public class FeedMessageOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
+public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedMessageOperatorNodePushable.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveMessageOperatorNodePushable.class.getName());
 
     private final ActiveJobId activeJobId;
     private final IFeedMessage message;
     private final IActiveManager feedManager;
     private final int partition;
 
-    public FeedMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId activeJobId, IFeedMessage feedMessage,
+    public ActiveMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId activeJobId, IFeedMessage feedMessage,
             int partition) {
         this.activeJobId = activeJobId;
         this.message = feedMessage;

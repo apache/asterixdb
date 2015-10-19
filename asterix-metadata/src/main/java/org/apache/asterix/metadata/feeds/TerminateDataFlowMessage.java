@@ -24,9 +24,9 @@ import org.json.JSONObject;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.message.FeedMessage;
+import org.apache.asterix.common.feeds.message.ActiveMessage;
 
-public class TerminateDataFlowMessage extends FeedMessage {
+public class TerminateDataFlowMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

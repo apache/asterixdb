@@ -31,7 +31,7 @@ import org.json.JSONObject;
  * A feed control message sent from a storage runtime of a feed pipeline to report the intake timestamp corresponding
  * to the last persisted tuple.
  */
-public class StorageReportFeedMessage extends FeedMessage {
+public class StorageReportFeedMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

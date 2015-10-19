@@ -31,7 +31,7 @@ import org.json.JSONObject;
  * A feed control message indicating the need to scale in a stage of the feed ingestion pipeline.
  * Currently, scaling-in of the compute stage is supported.
  **/
-public class ScaleInReportMessage extends FeedMessage {
+public class ScaleInReportMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

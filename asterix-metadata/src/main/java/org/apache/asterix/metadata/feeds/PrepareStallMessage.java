@@ -23,13 +23,13 @@ import org.json.JSONObject;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConstants;
-import org.apache.asterix.common.feeds.message.FeedMessage;
+import org.apache.asterix.common.feeds.message.ActiveMessage;
 
 /**
  * A feed control message indicating the need to end the feed. This message is dispatched
  * to all locations that host an operator involved in the feed pipeline.
  */
-public class PrepareStallMessage extends FeedMessage {
+public class PrepareStallMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

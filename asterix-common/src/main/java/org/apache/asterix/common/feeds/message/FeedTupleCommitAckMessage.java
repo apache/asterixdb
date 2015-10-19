@@ -28,7 +28,7 @@ import org.apache.asterix.common.feeds.FeedConstants.MessageConstants;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FeedTupleCommitAckMessage extends FeedMessage {
+public class FeedTupleCommitAckMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

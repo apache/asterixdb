@@ -31,7 +31,7 @@ import org.apache.asterix.common.feeds.api.IFeedMetricCollector.ValueType;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FeedReportMessage extends FeedMessage {
+public class FeedReportMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

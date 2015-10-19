@@ -25,13 +25,13 @@ import org.apache.hyracks.api.dataflow.value.JSONSerializable;
  * A control message that can be sent to the runtime instance of a
  * feed's adapter.
  */
-public abstract class FeedMessage implements IFeedMessage, JSONSerializable {
+public abstract class ActiveMessage implements IFeedMessage, JSONSerializable {
 
     private static final long serialVersionUID = 1L;
 
     protected final MessageType messageType;
 
-    public FeedMessage(MessageType messageType) {
+    public ActiveMessage(MessageType messageType) {
         this.messageType = messageType;
     }
 

@@ -46,7 +46,7 @@ public class ActiveMessageOperatorDescriptor extends AbstractSingleActivityOpera
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new FeedMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition);
+        return new ActiveMessageOperatorNodePushable(ctx, connectionId, feedMessage, partition);
     }
 
 }

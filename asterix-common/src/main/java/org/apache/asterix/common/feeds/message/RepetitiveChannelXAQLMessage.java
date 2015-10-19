@@ -22,7 +22,7 @@ import org.json.JSONObject;
 /**
  * A feed control message indicating the need to execute a give AQL.
  */
-public class RepetitiveChannelXAQLMessage extends FeedMessage {
+public class RepetitiveChannelXAQLMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

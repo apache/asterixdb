@@ -24,7 +24,7 @@ import org.json.JSONObject;
 import org.apache.asterix.common.feeds.FeedConstants;
 import org.apache.asterix.common.feeds.api.IFeedMessage;
 
-public class NodeReportMessage extends FeedMessage {
+public class NodeReportMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

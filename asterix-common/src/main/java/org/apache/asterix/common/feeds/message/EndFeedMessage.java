@@ -30,7 +30,7 @@ import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
  * A feed control message indicating the need to end the feed. This message is dispatched
  * to all locations that host an operator involved in the feed pipeline.
  */
-public class EndFeedMessage extends FeedMessage {
+public class EndFeedMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 

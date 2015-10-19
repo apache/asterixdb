@@ -29,7 +29,7 @@ import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class FeedCongestionMessage extends FeedMessage {
+public class FeedCongestionMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 
