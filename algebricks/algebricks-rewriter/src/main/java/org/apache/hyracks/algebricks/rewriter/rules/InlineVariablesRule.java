@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -120,6 +119,21 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return false;
     }
 
+    /* An expression will be constant at runtime if it has:
+     * 1. A type
+     * 2. No free variables
+     */
+    public static boolean functionIsConstantAtRuntime(AbstractLogicalOperator op,
+            AbstractFunctionCallExpression funcExpr, IOptimizationContext context) throws AlgebricksException {
+        //make sure that there are no variables in the expression
+        Set<LogicalVariable> usedVariables = new HashSet<LogicalVariable>();
+        funcExpr.getUsedVariables(usedVariables);
+        if (usedVariables.size() > 0) {
+            return false;
+        }
+        return true;
+    }
+
     protected boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
@@ -134,7 +148,8 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
                 // Ignore functions that are either in the doNotInline set or are non-functional               
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier()) || !funcExpr.isFunctional()) {
+                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())
+                            || (!funcExpr.isFunctional() && !functionIsConstantAtRuntime(op, funcExpr, context))) {
                         continue;
                     }
                 }
