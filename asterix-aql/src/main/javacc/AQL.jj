@@ -1946,23 +1946,11 @@ Expression ListConstructor() throws ParseException:
 ListConstructor OrderedListConstructor() throws ParseException:
 {
       ListConstructor expr = new ListConstructor();
-      Expression tmp = null;
-      List<Expression> exprList = new ArrayList<Expression>();
+      List<Expression> exprList = null;
       expr.setType(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR);
 }
 {
-
-    <LEFTBRACKET>
-        ( tmp = Expression()
-            {
-              exprList.add(tmp);
-            }
-
-            (<COMMA> tmp = Expression() { exprList.add(tmp);  })*
-        )?
-
-    <RIGHTBRACKET>
-
+    <LEFTBRACKET> exprList = ExpressionList() <RIGHTBRACKET>
     {
       expr.setExprList(exprList);
       return expr;
@@ -1972,21 +1960,38 @@ ListConstructor OrderedListConstructor() throws ParseException:
 ListConstructor UnorderedListConstructor() throws ParseException:
 {
       ListConstructor expr = new ListConstructor();
-      Expression tmp = null;
-      List<Expression> exprList = new ArrayList<Expression>();
+      List<Expression> exprList = null;
       expr.setType(ListConstructor.Type.UNORDERED_LIST_CONSTRUCTOR);
 }
 {
-
-    <LEFTDBLBRACE> ( tmp = Expression()
-    {
-      exprList.add(tmp);
-    }
-    (<COMMA> tmp = Expression() { exprList.add(tmp);  })*)? <RIGHTDBLBRACE>
+    <LEFTDBLBRACE> exprList = ExpressionList() <RIGHTDBLBRACE>
     {
       expr.setExprList(exprList);
       return expr;
     }
+}
+
+List<Expression> ExpressionList() throws ParseException:
+{
+      Expression expr = null;
+      List<Expression> list = null;
+      List<Expression> exprList = new ArrayList<Expression>();
+}
+{
+    ( LOOKAHEAD(2)
+      expr = Expression() { exprList.add(expr); }
+      (<COMMA> list = ExpressionList() { exprList.addAll(list); })?
+    )?
+    (Comma())?
+    {
+        return exprList;
+    }
+}
+
+void Comma():
+{}
+{
+   <COMMA>
 }
 
 RecordConstructor RecordConstructor() throws ParseException:

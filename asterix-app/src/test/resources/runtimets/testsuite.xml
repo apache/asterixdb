@@ -2827,6 +2827,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="list">
+            <compilation-unit name="ordered-list-constructor_04">
+                <output-dir compare="Text">ordered-list-constructor_04</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="list">
             <compilation-unit name="scan-collection_01">
                 <output-dir compare="Text">scan-collection_01</output-dir>
             </compilation-unit>
@@ -2855,6 +2860,11 @@
         <test-case FilePath="list">
             <compilation-unit name="unordered-list-constructor_03">
                 <output-dir compare="Text">unordered-list-constructor_03</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="list">
+            <compilation-unit name="unordered-list-constructor_04">
+                <output-dir compare="Text">unordered-list-constructor_04</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="list">
