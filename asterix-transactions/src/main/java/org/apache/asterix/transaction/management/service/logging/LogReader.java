@@ -87,8 +87,8 @@ public class LogReader implements ILogReader {
             return null;
         }
         if (readBuffer.position() == readBuffer.limit()) {
-            boolean eof = refillLogReadBuffer();
-            if (eof && isRecoveryMode && readLSN < flushLSN.get()) {
+            boolean hasRemaining = refillLogReadBuffer();
+            if (!hasRemaining && isRecoveryMode && readLSN < flushLSN.get()) {
                 LOGGER.severe("Transaction log ends before expected. Log files may be missing.");
                 return null;
             }
