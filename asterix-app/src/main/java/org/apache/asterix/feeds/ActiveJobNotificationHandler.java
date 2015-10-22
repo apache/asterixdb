@@ -60,7 +60,7 @@ import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.FeedMetaOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.ActiveMetaOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedWorkManager;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -850,8 +850,8 @@ public class ActiveJobNotificationHandler implements Runnable {
         for (Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operators.entrySet()) {
             IOperatorDescriptor opDesc = entry.getValue();
             IOperatorDescriptor actualOp = null;
-            if (opDesc instanceof FeedMetaOperatorDescriptor) {
-                actualOp = ((FeedMetaOperatorDescriptor) opDesc).getCoreOperator();
+            if (opDesc instanceof ActiveMetaOperatorDescriptor) {
+                actualOp = ((ActiveMetaOperatorDescriptor) opDesc).getCoreOperator();
             } else {
                 actualOp = opDesc;
             }

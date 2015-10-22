@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.feeds;
 
 import java.util.Map;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -44,7 +45,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
  * contributes to providing fault- tolerance.
  */
 
-public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public class ActiveMetaOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
@@ -55,10 +56,10 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
     private IOperatorDescriptor coreOperator;
 
     /**
-     * A unique identifier for the feed instance. A feed instance represents the
+     * A unique identifier for the active job. e.g. A feed instance represents the
      * flow of data from a feed to a dataset.
      **/
-    private final FeedConnectionId feedConnectionId;
+    private final ActiveJobId activeJobId;
 
     /**
      * The policy associated with the feed instance.
@@ -73,11 +74,11 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     private final String operandId;
 
-    public FeedMetaOperatorDescriptor(JobSpecification spec, FeedConnectionId feedConnectionId,
+    public ActiveMetaOperatorDescriptor(JobSpecification spec, ActiveJobId feedConnectionId,
             IOperatorDescriptor coreOperatorDescriptor, Map<String, String> feedPolicyProperties,
-            ActiveRuntimeType runtimeType, boolean enableSubscriptionMode, String operandId) {
+            ActiveRuntimeType runtimeType, String operandId) {
         super(spec, coreOperatorDescriptor.getInputArity(), coreOperatorDescriptor.getOutputArity());
-        this.feedConnectionId = feedConnectionId;
+        this.activeJobId = feedConnectionId;
         this.feedPolicyProperties = feedPolicyProperties;
         if (coreOperatorDescriptor.getOutputRecordDescriptors().length == 1) {
             recordDescriptors[0] = coreOperatorDescriptor.getOutputRecordDescriptors()[0];
@@ -94,15 +95,15 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
         switch (runtimeType) {
             case COMPUTE:
                 nodePushable = new FeedMetaComputeNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, operandId);
+                        coreOperator, (FeedConnectionId) activeJobId, feedPolicyProperties, operandId);
                 break;
             case STORE:
                 nodePushable = new FeedMetaStoreNodePushable(ctx, recordDescProvider, partition, nPartitions,
-                        coreOperator, feedConnectionId, feedPolicyProperties, operandId);
+                        coreOperator, (FeedConnectionId) activeJobId, feedPolicyProperties, operandId);
                 break;
             case OTHER://nullsink
-                nodePushable = new FeedMetaNodePushable(ctx, recordDescProvider, partition, nPartitions, coreOperator,
-                        feedConnectionId, feedPolicyProperties, operandId);
+                nodePushable = new ActiveMetaNodePushable(ctx, recordDescProvider, partition, nPartitions,
+                        coreOperator, activeJobId, feedPolicyProperties, operandId);
                 break;
             case ETS:
                 nodePushable = ((AlgebricksMetaOperatorDescriptor) coreOperator).createPushRuntime(ctx,
@@ -118,7 +119,7 @@ public class FeedMetaOperatorDescriptor extends AbstractSingleActivityOperatorDe
 
     @Override
     public String toString() {
-        return "FeedMeta [" + coreOperator + " ]";
+        return "ActiveMeta [" + coreOperator + " ]";
     }
 
     public IOperatorDescriptor getCoreOperator() {

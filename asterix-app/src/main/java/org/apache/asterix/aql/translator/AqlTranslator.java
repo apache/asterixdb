@@ -437,7 +437,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                     metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                             || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
-                    handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery);
+                    handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, false);
                     break;
                 }
 
@@ -465,100 +465,6 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     break;
                 }
             }
-        }
-    }
-
-    /**
-     * Compiles an AQL statement and returns the relevant job
-     * 
-     * @param hcc
-     *            A Hyracks client connection that is used to submit a jobspec to Hyracks.
-     * @param hdc
-     *            A Hyracks dataset client object that is used to read the results.
-     * @param resultDelivery
-     *            True if the results should be read asynchronously or false if we should wait for results to be read.
-     * @return A List<QueryResult> containing a QueryResult instance corresponding to each submitted query.
-     * @throws Exception
-     */
-    public JobSpecification compileAndReturnJob(IHyracksClientConnection hcc, IHyracksDataset hdc,
-            ResultDelivery resultDelivery, Statement stmt) throws Exception {
-        JobSpecification spec = null;
-        int resultSetIdCounter = 0;
-        FileSplit outputFile = null;
-        IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
-        IResultSerializerFactoryProvider resultSerializerFactoryProvider = ResultSerializerFactoryProvider.INSTANCE;
-        Map<String, String> config = new HashMap<String, String>();
-
-        validateOperation(activeDefaultDataverse, stmt);
-        AqlMetadataProvider metadataProvider = new AqlMetadataProvider(activeDefaultDataverse,
-                CentralActiveManager.getInstance());
-        metadataProvider.setWriterFactory(writerFactory);
-        metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
-        metadataProvider.setOutputFile(outputFile);
-        metadataProvider.setConfig(config);
-        switch (stmt.getKind()) {
-            case INSERT: {
-                /*if (((InsertStatement) stmt).getReturnRecord() || ((InsertStatement) stmt).getReturnField() != null) {
-                    metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                    metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
-                            || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
-                }
-                spec = handleInsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery);
-                */
-                break;
-            }
-            case DELETE: {
-                spec = createDeleteJob(metadataProvider, stmt, hcc);
-                break;
-            }
-
-            case QUERY: {
-                /*
-                metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
-                metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
-                        || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
-                spec = handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery);
-                */
-                break;
-            }
-            default:
-                throw new AsterixException("Dissallowed statement!");
-
-        }
-
-        return spec;
-    }
-
-    private JobSpecification createDeleteJob(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
-
-        DeleteStatement stmtDelete = (DeleteStatement) stmt;
-        String dataverseName = getActiveDataverse(stmtDelete.getDataverseName());
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        boolean bActiveTxn = true;
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        //TODO:This needs to somehow be moved to the actual procedure invocation
-        /*MetadataLockManager.INSTANCE
-                .insertDeleteBegin(dataverseName, dataverseName + "." + stmtDelete.getDatasetName(),
-                        stmtDelete.getDataverses(), stmtDelete.getDatasets());
-        MetadataLockManager.INSTANCE.insertDeleteEnd(dataverseName, dataverseName + "." + stmtDelete.getDatasetName(),
-                stmtDelete.getDataverses(), stmtDelete.getDatasets());*/
-        try {
-            metadataProvider.setWriteTransaction(true);
-            CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
-                    stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
-                    metadataProvider);
-            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
-
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
-            return compiled;
-
-        } catch (Exception e) {
-            if (bActiveTxn) {
-                abort(e, e, mdTxnCtx);
-            }
-            throw e;
         }
     }
 
@@ -1920,13 +1826,13 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 List<Statement> statements = null;
                 statements = parser.parse();
                 if (!procedureContainsForbiddenStatements(statements)) {
-                    //instead of compile and execute, we need a compile and return job
-                    JobSpecification jobSpec = compileAndReturnJob(hcc, hdc, resultDelivery, statements.get(0));
-                    //TODO: Somehow we need to handle locks for the future
-                    //turn job into active version of job
-                    //JobSpecification alteredJobSpec = ActiveUtil.alterJobSpecificationForChannel());
-                    //runjob
-                    //runJob(hcc, alteredJobSpec, false);
+                    //TODO: for now we assume that a procedure is just a typical FLWR query
+                    JobSpecification jobSpec = handleQuery(metadataProvider, (Query) statements.get(0), hcc, hdc,
+                            resultDelivery, true);
+                    JobSpecification alteredJobSpec = ActiveUtil.alterJobSpecificationForProcedure(jobSpec,
+                            new ActiveJobId(dataverse, functionName, ActiveObjectType.PROCEDURE),
+                            new HashMap<String, String>());
+                    runJob(hcc, alteredJobSpec, false);
                 }
 
                 body = "";
@@ -2939,8 +2845,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleQuery(AqlMetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, ResultDelivery resultDelivery) throws Exception {
+    private JobSpecification handleQuery(AqlMetadataProvider metadataProvider, Query query,
+            IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, boolean isProcedure)
+            throws Exception {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -2953,7 +2860,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (sessionConfig.isExecuteQuery() && compiled != null) {
+            if (sessionConfig.isExecuteQuery() && compiled != null && !isProcedure) {
                 handleQueryResult(metadataProvider, hcc, hdc, compiled, resultDelivery);
             }
         } catch (Exception e) {
@@ -2967,6 +2874,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             // release external datasets' locks acquired during compilation of the query
             ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
+        return compiled;
     }
 
     private void handleQueryResult(AqlMetadataProvider metadataProvider, IHyracksClientConnection hcc,

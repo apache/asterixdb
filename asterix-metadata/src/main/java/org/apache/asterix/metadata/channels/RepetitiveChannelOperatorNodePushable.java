@@ -33,7 +33,7 @@ import org.apache.asterix.common.feeds.api.IActiveManager;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.Mode;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.metadata.feeds.FeedMetaNodePushable;
+import org.apache.asterix.metadata.feeds.ActiveMetaNodePushable;
 import org.apache.asterix.metadata.feeds.FeedPolicyEnforcer;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -45,7 +45,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperato
  */
 public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedMetaNodePushable.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveMetaNodePushable.class.getName());
 
     /**
      * A policy enforcer that ensures dyanmic decisions for a feed are taken

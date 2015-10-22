@@ -39,12 +39,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
-public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+public class ActiveMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedMetaNodePushable.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ActiveMetaNodePushable.class.getName());
 
     /** Runtime node pushable corresponding to the core feed operator **/
-    private AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
+    protected AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
 
     /**
      * A policy enforcer that ensures dyanmic decisions for a feed are taken
@@ -56,7 +56,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
      * The Active Runtime instance associated with the operator. Active Runtime
      * captures the state of the operator while the job is active.
      */
-    private ActiveRuntime activeRuntime;
+    protected ActiveRuntime activeRuntime;
 
     /**
      * A unique identifier for the active job. For instance,
@@ -69,7 +69,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
      * Denotes the i'th operator instance in a setting where K operator
      * instances are scheduled to run in parallel
      **/
-    private int partition;
+    protected int partition;
 
     /** Total number of partitions available **/
     private int nPartitions;
@@ -84,12 +84,12 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
 
     private final IHyracksTaskContext ctx;
 
-    private final String operandId;
+    protected final String operandId;
 
     /** The pre-processor associated with this runtime **/
-    private ActiveRuntimeInputHandler inputSideHandler;
+    protected ActiveRuntimeInputHandler inputSideHandler;
 
-    public FeedMetaNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition,
+    public ActiveMetaNodePushable(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider, int partition,
             int nPartitions, IOperatorDescriptor coreOperator, ActiveJobId activeJobId,
             Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
         this.ctx = ctx;
@@ -123,7 +123,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
         }
     }
 
-    private void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
+    protected void initializeNewFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         this.fta = new FrameTupleAccessor(recordDesc);
         this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, activeJobId, runtimeId,
                 (AbstractUnaryInputUnaryOutputOperatorNodePushable) coreOperator,
@@ -132,7 +132,7 @@ public class FeedMetaNodePushable extends AbstractUnaryInputUnaryOutputOperatorN
         setupBasicRuntime(inputSideHandler);
     }
 
-    private void reviveOldFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
+    protected void reviveOldFeedRuntime(ActiveRuntimeId runtimeId) throws Exception {
         this.inputSideHandler = activeRuntime.getInputHandler();
         this.fta = new FrameTupleAccessor(recordDesc);
         coreOperator.setOutputFrameWriter(0, writer, recordDesc);
