@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.7-SNAPSHOT</version>
+		<version>0.8.8-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-metadata</artifactId>
 
@@ -34,44 +34,29 @@
     </license>
   </licenses>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-					<fork>true</fork>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-common</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
+			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-om</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
+			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-runtime</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
+			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>
-			<version>0.8.7-SNAPSHOT</version>
+			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

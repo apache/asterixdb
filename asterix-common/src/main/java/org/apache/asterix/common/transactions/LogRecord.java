@@ -83,7 +83,6 @@ public class LogRecord implements ILogRecord {
     //------------- fields in a log record (end) --------------//
 
     private int PKFieldCnt;
-    private static final int CHECKSUM_SIZE = 8;
     private ITransactionContext txnCtx;
     private long LSN;
     private final AtomicBoolean isFlushed;
@@ -101,6 +100,24 @@ public class LogRecord implements ILogRecord {
         readNewValue = (SimpleTupleReference) tupleWriter.createTupleReference();
         checksumGen = new CRC32();
     }
+
+    private final static int TYPE_LEN = Byte.SIZE/Byte.SIZE;
+    private final static int JID_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int DSID_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int PKHASH_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int PKSZ_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int PRVLSN_LEN = Long.SIZE / Byte.SIZE;
+    private final static int RSID_LEN = Long.SIZE / Byte.SIZE;
+    private final static int LOGRCD_SZ_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int FLDCNT_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int NEWOP_LEN = Byte.SIZE/Byte.SIZE;
+    private final static int NEWVALSZ_LEN = Integer.SIZE / Byte.SIZE;
+    private final static int CHKSUM_LEN = Long.SIZE / Byte.SIZE;
+
+    private final static int ALL_RECORD_HEADER_LEN = TYPE_LEN + JID_LEN;
+    private final static int ENTITYCOMMIT_UPDATE_HEADER_LEN = DSID_LEN + PKHASH_LEN + PKSZ_LEN;
+    private final static int UPDATE_LSN_HEADER = PRVLSN_LEN + RSID_LEN + LOGRCD_SZ_LEN;
+    private final static int UPDATE_BODY_HEADER = FLDCNT_LEN + NEWOP_LEN + NEWVALSZ_LEN;
 
     @Override
     public void writeLogRecord(ByteBuffer buffer) {
@@ -130,7 +147,7 @@ public class LogRecord implements ILogRecord {
             buffer.putInt(datasetId);
         }
         
-        checksum = generateChecksum(buffer, beginOffset, logSize - CHECKSUM_SIZE);
+        checksum = generateChecksum(buffer, beginOffset, logSize - CHKSUM_LEN);
         buffer.putLong(checksum);
     }
 
@@ -154,52 +171,79 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public boolean readLogRecord(ByteBuffer buffer) {
+    public RECORD_STATUS readLogRecord(ByteBuffer buffer) {
         int beginOffset = buffer.position();
-        try {
-            logType = buffer.get();
-            jobId = buffer.getInt();
-            if(logType != LogType.FLUSH)
-            {
-                if (logType == LogType.JOB_COMMIT || logType == LogType.ABORT) {
-                    datasetId = -1;
-                    PKHashValue = -1;
-                } else {
-                    datasetId = buffer.getInt();
-                    PKHashValue = buffer.getInt();
-                    PKValueSize = buffer.getInt();
-                    if (PKValueSize <= 0) {
-                        throw new IllegalStateException("Primary Key Size is less than or equal to 0");
-                    }
-                    PKValue = readPKValue(buffer);
-                }
-                if (logType == LogType.UPDATE) {
-                    prevLSN = buffer.getLong();
-                    resourceId = buffer.getLong();
-                    logSize = buffer.getInt();
-                    fieldCnt = buffer.getInt();
-                    newOp = buffer.get();
-                    newValueSize = buffer.getInt();
-                    newValue = readTuple(buffer, readNewValue, fieldCnt, newValueSize);
-                } else {
-                    computeAndSetLogSize();
-                }
-            }
-            else{
-                computeAndSetLogSize();
-                datasetId = buffer.getInt();
-                resourceId = 0l;
-            }
-            
-            checksum = buffer.getLong();
-            if (checksum != generateChecksum(buffer, beginOffset, logSize - CHECKSUM_SIZE)) {
-                throw new IllegalStateException();
-            }
-        } catch (BufferUnderflowException e) {
+        //first we need the logtype and Job ID, if the buffer isn't that big, then no dice.
+        if(buffer.remaining() < ALL_RECORD_HEADER_LEN) {
             buffer.position(beginOffset);
-            return false;
+            return RECORD_STATUS.TRUNCATED;
         }
-        return true;
+        logType = buffer.get();
+        jobId = buffer.getInt();
+        if(logType != LogType.FLUSH)
+        {
+            if (logType == LogType.JOB_COMMIT || logType == LogType.ABORT) {
+                datasetId = -1;
+                PKHashValue = -1;
+            } else {
+                //attempt to read in the dsid, PK hash and PK length
+                if(buffer.remaining() < ENTITYCOMMIT_UPDATE_HEADER_LEN){
+                    buffer.position(beginOffset);
+                    return RECORD_STATUS.TRUNCATED;
+                }
+                datasetId = buffer.getInt();
+                PKHashValue = buffer.getInt();
+                PKValueSize = buffer.getInt();
+                //attempt to read in the PK
+                if(buffer.remaining() < PKValueSize){
+                    buffer.position(beginOffset);
+                    return RECORD_STATUS.TRUNCATED;
+                }
+                if (PKValueSize <= 0) {
+                    throw new IllegalStateException("Primary Key Size is less than or equal to 0");
+                }
+                PKValue = readPKValue(buffer);
+            }
+            if (logType == LogType.UPDATE) {
+                //attempt to read in the previous LSN, log size, new value size, and new record type
+                if(buffer.remaining() <UPDATE_LSN_HEADER + UPDATE_BODY_HEADER){
+                    buffer.position(beginOffset);
+                    return RECORD_STATUS.TRUNCATED;
+                }
+                prevLSN = buffer.getLong();
+                resourceId = buffer.getLong();
+                logSize = buffer.getInt();
+                fieldCnt = buffer.getInt();
+                newOp = buffer.get();
+                newValueSize = buffer.getInt();
+                if(buffer.remaining() < newValueSize){
+                    buffer.position(beginOffset);
+                    return RECORD_STATUS.TRUNCATED;
+                }
+                newValue = readTuple(buffer, readNewValue, fieldCnt, newValueSize);
+            } else {
+                computeAndSetLogSize();
+            }
+        }
+        else{
+            computeAndSetLogSize();
+            if(buffer.remaining() < DSID_LEN){
+                buffer.position(beginOffset);
+                return RECORD_STATUS.TRUNCATED;
+            }
+            datasetId = buffer.getInt();
+            resourceId = 0l;
+        }
+        //atempt to read checksum
+        if(buffer.remaining() < CHKSUM_LEN){
+            buffer.position(beginOffset);
+            return RECORD_STATUS.TRUNCATED;
+        }
+        checksum = buffer.getLong();
+        if (checksum != generateChecksum(buffer, beginOffset, logSize - CHKSUM_LEN)) {
+            return RECORD_STATUS.BAD_CHKSUM;
+        }
+        return RECORD_STATUS.OK;
     }
 
     private ITupleReference readPKValue(ByteBuffer buffer) {

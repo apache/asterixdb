@@ -37,8 +37,8 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.transaction.management.service.logging.LogPage;
-import org.apache.asterix.transaction.management.service.logging.LogPageReader;
+import org.apache.asterix.transaction.management.service.logging.LogBuffer;
+import org.apache.asterix.transaction.management.service.logging.LogBufferTailReader;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
@@ -2204,11 +2204,11 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
         }
     }
 
-    public void batchUnlock(LogPage logPage, LogPageReader logPageReader) throws ACIDException {
+    public void batchUnlock(LogBuffer logPage, LogBufferTailReader logBufferTailReader) throws ACIDException {
         latchLockTable();
         try {
             ITransactionContext txnCtx = null;
-            LogRecord logRecord = logPageReader.next();
+            LogRecord logRecord = logBufferTailReader.next();
             while (logRecord != null) {
                 if (logRecord.getLogType() == LogType.ENTITY_COMMIT) {
                     tempDatasetIdObj.setId(logRecord.getDatasetId());
@@ -2222,7 +2222,7 @@ public class LockManager implements ILockManager, ILifeCycleComponent {
                     txnCtx.notifyOptracker(true);
                     logPage.notifyJobTerminator();
                 }
-                logRecord = logPageReader.next();
+                logRecord = logBufferTailReader.next();
             }
         } finally {
             unlatchLockTable();

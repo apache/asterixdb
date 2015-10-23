@@ -28,8 +28,15 @@ public interface ILogRecord {
     public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 25;
     public static final int UPDATE_LOG_BASE_SIZE = 54;
     public static final int FLUSH_LOG_SIZE = 17;
-    
-    public boolean readLogRecord(ByteBuffer buffer);
+
+
+    public enum RECORD_STATUS{
+        TRUNCATED,
+        BAD_CHKSUM,
+        OK
+    }
+
+    public LogRecord.RECORD_STATUS readLogRecord(ByteBuffer buffer);
 
     public void writeLogRecord(ByteBuffer buffer);
 

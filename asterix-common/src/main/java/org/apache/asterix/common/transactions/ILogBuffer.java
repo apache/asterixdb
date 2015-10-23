@@ -16,35 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.service.logging;
+package org.apache.asterix.common.transactions;
 
-import java.nio.ByteBuffer;
+public interface ILogBuffer {
 
-import org.apache.asterix.common.transactions.LogRecord;
+    public void append(ILogRecord logRecord, long appendLsn);
 
-public class LogPageReader {
+    public void flush();
 
-    private final ByteBuffer buffer;
-    private final LogRecord logRecord;
-    private int endOffset;
-
-    public LogPageReader(ByteBuffer buffer) {
-        this.buffer = buffer;
-        logRecord = new LogRecord();
-    }
-
-    public void initializeScan(int beginOffset, int endOffset) {
-        this.endOffset = endOffset;
-        buffer.position(beginOffset);
-    }
-
-    public LogRecord next() {
-        if (buffer.position() == endOffset) {
-            return null;
-        }
-        if (!logRecord.readLogRecord(buffer)) {
-            throw new IllegalStateException();
-        }
-        return logRecord;
-    }
 }

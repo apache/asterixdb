@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.7-SNAPSHOT</version>
+		<version>0.8.8-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-test-framework</artifactId>
 
@@ -36,16 +36,6 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-					<fork>true</fork>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>

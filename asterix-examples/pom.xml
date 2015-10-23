@@ -21,7 +21,7 @@
 	<parent>
 		<artifactId>asterix</artifactId>
 		<groupId>org.apache.asterix</groupId>
-		<version>0.8.7-SNAPSHOT</version>
+		<version>0.8.8-SNAPSHOT</version>
 	</parent>
 	<artifactId>asterix-examples</artifactId>
 
@@ -70,4 +70,4 @@
 		</plugins>
 	</build>
 	<packaging>pom</packaging>
-</project> 
+</project>
