@@ -19,19 +19,16 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public abstract class AbstractUTF8StringBinaryTokenizer implements IBinaryTokenizer {
 
-    protected byte[] data;
-    protected int start;
-    protected int length;
-    protected int tokenLength;
-    protected int index;
-    protected int originalIndex;
-    protected int utf8Length;
-    protected boolean tokenCountCalculated = false;
-    protected short tokenCount;
+    protected byte[] sentenceBytes;
+    protected int sentenceStartOffset;
+    protected int sentenceEndOffset;
+    protected int sentenceUtf8Length;
+
+    protected int byteIndex;
 
     protected final IntArray tokensStart;
     protected final IntArray tokensLength;
@@ -59,27 +56,27 @@ public abstract class AbstractUTF8StringBinaryTokenizer implements IBinaryTokeni
         return token;
     }
 
+    //TODO: This UTF8Tokenizer strongly relies on the Asterix data format,
+    // i.e. the TypeTag and the byteIndex increasing both assume the given byte[] sentence
+    // is an AString object. A better way (if we want to keep the byte[] interface) would be
+    // giving this tokenizer the pure UTF8 character sequence whose {@code start} is the start
+    // of the first character, and move the shift offset to the caller.
     @Override
-    public void reset(byte[] data, int start, int length) {
-        this.start = start;
-        index = this.start;
-        if (sourceHasTypeTag) {
-            index++; // skip type tag
-        }
-        utf8Length = UTF8StringPointable.getUTFLength(data, index);
-        index += 2; // skip utf8 length indicator
-        this.data = data;
-        this.length = length + start;
+    public void reset(byte[] sentenceData, int start, int length) {
+        this.sentenceBytes = sentenceData;
+        this.sentenceStartOffset = start;
+        this.sentenceEndOffset = length + start;
 
-        tokenLength = 0;
+        byteIndex = this.sentenceStartOffset;
+        if (sourceHasTypeTag) {
+            byteIndex++; // skip type tag
+        }
+        sentenceUtf8Length = UTF8StringUtil.getUTFLength(sentenceData, byteIndex);
+        byteIndex += UTF8StringUtil.getNumBytesToStoreLength(sentenceUtf8Length); // skip utf8 length indicator
+
         if (!ignoreTokenCount) {
             tokensStart.reset();
             tokensLength.reset();
         }
-
-        // Needed for calculating the number of tokens
-        originalIndex = index;
-        tokenCountCalculated = false;
-        tokenCount = 0;
     }
 }

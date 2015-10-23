@@ -105,10 +105,10 @@ public class SecondaryIndexBulkLoadExample {
                 IntegerSerializerDeserializer.INSTANCE, // we will use this as
                                                         // payload in secondary
                                                         // index
-                UTF8StringSerializerDeserializer.INSTANCE, // we will use this
+                new UTF8StringSerializerDeserializer(), // we will use this
                                                            // ask key in
                                                            // secondary index
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
 
         int primaryFieldCount = 4;
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];

@@ -21,11 +21,14 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.IOException;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
-import org.apache.hyracks.dataflow.common.data.util.StringUtils;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 
 public class UTF8WordToken extends AbstractUTF8Token {
+
+    private static char NULL_PLACEHOLDER = 1; // can't be 0, cause utf8 modified char will use 2 bytes to write 0
+
+    private UTF8StringBuilder builder = new UTF8StringBuilder();
 
     public UTF8WordToken(byte tokenTypeTag, byte countTypeTag) {
         super(tokenTypeTag, countTypeTag);
@@ -33,19 +36,6 @@ public class UTF8WordToken extends AbstractUTF8Token {
 
     @Override
     public void serializeToken(GrowableArray out) throws IOException {
-        handleTokenTypeTag(out.getDataOutput());
-        int tokenUTF8LenOff = out.getLength();
-        int tokenUTF8Len = 0;
-        // Write dummy UTF length which will be correctly set later.
-        out.getDataOutput().writeShort(0);
-        int pos = start;
-        for (int i = 0; i < tokenLength; i++) {
-            char c = Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
-            tokenUTF8Len += StringUtils.writeCharAsModifiedUTF8(c, out.getDataOutput());
-            pos += UTF8StringPointable.charSize(data, pos);
-        }
-        // Set UTF length of token.
-        out.getByteArray()[tokenUTF8LenOff] = (byte) ((tokenUTF8Len >>> 8) & 0xFF);
-        out.getByteArray()[tokenUTF8LenOff + 1] = (byte) ((tokenUTF8Len >>> 0) & 0xFF);
+        super.serializeToken(builder, out, 0, 0, NULL_PLACEHOLDER, NULL_PLACEHOLDER);
     }
 }

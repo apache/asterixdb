@@ -21,17 +21,18 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public abstract class AbstractUTF8Token implements IToken {
     public static final int GOLDEN_RATIO_32 = 0x09e3779b9;
 
-    protected int length;
-    protected int tokenLength;
-    protected int start;
-    protected int tokenCount;
     protected byte[] data;
+    protected int startOffset;
+    protected int endOffset;
+    protected int tokenLength;
+    protected int tokenCount;
     protected final byte tokenTypeTag;
     protected final byte countTypeTag;
 
@@ -51,24 +52,24 @@ public abstract class AbstractUTF8Token implements IToken {
     }
 
     @Override
-    public int getLength() {
-        return length;
+    public int getEndOffset() {
+        return endOffset;
     }
 
-    public int getLowerCaseUTF8Len(int size) {
+    public int getLowerCaseUTF8Len(int limit) {
         int lowerCaseUTF8Len = 0;
-        int pos = start;
-        for (int i = 0; i < size; i++) {
-            char c = Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
-            lowerCaseUTF8Len += UTF8StringPointable.getModifiedUTF8Len(c);
-            pos += UTF8StringPointable.charSize(data, pos);
+        int pos = startOffset;
+        for (int i = 0; i < limit; i++) {
+            char c = Character.toLowerCase(UTF8StringUtil.charAt(data, pos));
+            lowerCaseUTF8Len += UTF8StringUtil.getModifiedUTF8Len(c);
+            pos += UTF8StringUtil.charSize(data, pos);
         }
         return lowerCaseUTF8Len;
     }
 
     @Override
-    public int getStart() {
-        return start;
+    public int getStartOffset() {
+        return startOffset;
     }
 
     @Override
@@ -88,11 +89,20 @@ public abstract class AbstractUTF8Token implements IToken {
         }
     }
 
+    /**
+     * Note: the {@code startOffset} is the offset of first character, not the string length offset
+     *
+     * @param data
+     * @param startOffset
+     * @param endOffset
+     * @param tokenLength
+     * @param tokenCount  the count of this token in a document , or a record, or something else.
+     */
     @Override
-    public void reset(byte[] data, int start, int length, int tokenLength, int tokenCount) {
+    public void reset(byte[] data, int startOffset, int endOffset, int tokenLength, int tokenCount) {
         this.data = data;
-        this.start = start;
-        this.length = length;
+        this.startOffset = startOffset;
+        this.endOffset = endOffset;
         this.tokenLength = tokenLength;
         this.tokenCount = tokenCount;
     }
@@ -102,4 +112,38 @@ public abstract class AbstractUTF8Token implements IToken {
         handleCountTypeTag(out.getDataOutput());
         out.getDataOutput().writeInt(tokenCount);
     }
+
+    // The preChar and postChar are required to be a single byte utf8 char, e.g. ASCII char.
+    protected void serializeToken(UTF8StringBuilder builder, GrowableArray out, int numPreChars, int numPostChars,
+            char preChar, char postChar)
+            throws IOException {
+
+        handleTokenTypeTag(out.getDataOutput());
+
+        assert UTF8StringUtil.getModifiedUTF8Len(preChar) == 1 && UTF8StringUtil.getModifiedUTF8Len(postChar) == 1;
+        int actualUtfLen = endOffset - startOffset;
+
+        builder.reset(out, actualUtfLen + numPreChars + numPostChars);
+        // pre chars
+        for (int i = 0; i < numPreChars; i++) {
+            builder.appendChar(preChar);
+        }
+
+        /// regular chars
+        int numRegChars = tokenLength - numPreChars - numPostChars;
+        int pos = startOffset;
+        for (int i = 0; i < numRegChars; i++) {
+            char c = Character.toLowerCase(UTF8StringUtil.charAt(data, pos));
+            builder.appendChar(c);
+            pos += UTF8StringUtil.charSize(data, pos);
+        }
+
+        // post chars
+        for (int i = 0; i < numPostChars; i++) {
+            builder.appendChar(postChar);
+        }
+
+        builder.finish();
+    }
+
 }

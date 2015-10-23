@@ -275,10 +275,10 @@ public class PushRuntimeTest {
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
 
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), FloatSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
         IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
@@ -355,10 +355,10 @@ public class PushRuntimeTest {
                 "data/tpch0.001/customer-part1.tbl")));
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), FloatSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
         IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
@@ -407,10 +407,10 @@ public class PushRuntimeTest {
                 "data/tpch0.001/customer.tbl")));
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), FloatSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
         IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
@@ -492,10 +492,10 @@ public class PushRuntimeTest {
                 "data/tpch0.001/customer.tbl")));
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), FloatSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
         IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
@@ -663,7 +663,7 @@ public class PushRuntimeTest {
         DelimitedDataTupleParserFactory stringParser = new DelimitedDataTupleParserFactory(
                 new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, '\u0000');
         RecordDescriptor stringRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(), });
 
         FileScanOperatorDescriptor scanOp = new FileScanOperatorDescriptor(spec, new ConstantFileSplitProvider(
                 inputSplits), stringParser, stringRec);
@@ -709,8 +709,8 @@ public class PushRuntimeTest {
                 "data/tpch0.001/nation.tbl")));
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
         IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE };
         FileScanOperatorDescriptor scanner = new FileScanOperatorDescriptor(spec, splitProvider,
@@ -817,10 +817,10 @@ public class PushRuntimeTest {
                 "data/tpch0.001/customer.tbl")));
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(fileSplits);
         RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), FloatSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
         IValueParserFactory[] valueParsers = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
                 UTF8StringParserFactory.INSTANCE, FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,

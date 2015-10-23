@@ -50,7 +50,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.util.ObjectCache;
 
 public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearcher {
     protected static final RecordDescriptor QUERY_TOKEN_REC_DESC = new RecordDescriptor(
-            new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
     protected final int OBJECT_CACHE_INIT_SIZE = 10;
     protected final int OBJECT_CACHE_EXPAND_SIZE = 10;

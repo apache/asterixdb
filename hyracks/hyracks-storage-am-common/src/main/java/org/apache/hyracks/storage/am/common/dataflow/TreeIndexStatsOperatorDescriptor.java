@@ -38,7 +38,7 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractTreeIndexOperatorD
 
     private static final long serialVersionUID = 1L;
     private static final RecordDescriptor recDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
     public TreeIndexStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,

@@ -19,50 +19,48 @@
 
 package org.apache.hyracks.dataflow.common.data.parsers;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.util.Arrays;
+
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
-import java.util.Arrays;
-
-import static org.junit.Assert.assertTrue;
-
 public class ByteArrayHexParserFactoryTest {
-
-    public static byte[] subArray(byte[] bytes, int start) {
-        return Arrays.copyOfRange(bytes, start, bytes.length);
-    }
 
     @Test
     public void testExtractPointableArrayFromHexString() throws Exception {
-        byte[] cache = new byte[] { };
+        testOneString("");
+        testOneString("ABCDEF0123456789");
 
-        String empty = "";
-        cache = ByteArrayHexParserFactory
-                .extractPointableArrayFromHexString(empty.toCharArray(), 0, empty.length(), cache);
+        testOneString("0123456789abcdef");
 
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == 0);
-        assertTrue(DatatypeConverter.printHexBinary(subArray(cache, 2)).equalsIgnoreCase(empty));
-
-        String everyChar = "ABCDEF0123456789";
-        cache = ByteArrayHexParserFactory
-                .extractPointableArrayFromHexString(everyChar.toCharArray(), 0, everyChar.length(), cache);
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == everyChar.length() / 2);
-        assertTrue(DatatypeConverter.printHexBinary(subArray(cache, 2)).equalsIgnoreCase(everyChar));
-
-        String lowercase = "0123456789abcdef";
-        cache = ByteArrayHexParserFactory
-                .extractPointableArrayFromHexString(lowercase.toCharArray(), 0, lowercase.length(), cache);
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == lowercase.length() / 2);
-        assertTrue(DatatypeConverter.printHexBinary(subArray(cache, 2)).equalsIgnoreCase(lowercase));
-
-        char[] maxChars = new char[ByteArrayPointable.MAX_LENGTH  * 2];
+        char[] maxChars = new char[65540 * 2];
         Arrays.fill(maxChars, 'f');
         String maxString = new String(maxChars);
-        cache = ByteArrayHexParserFactory
-                .extractPointableArrayFromHexString(maxString.toCharArray(), 0, maxString.length(), cache);
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == maxString.length() / 2);
-        assertTrue(DatatypeConverter.printHexBinary(subArray(cache, 2)).equalsIgnoreCase(maxString));
+
+        testOneString(maxString);
+    }
+
+    void testOneString(String test) throws HyracksDataException {
+        IValueParser parser = ByteArrayHexParserFactory.INSTANCE.createValueParser();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream outputStream = new DataOutputStream(bos);
+        ByteArrayPointable bytePtr = new ByteArrayPointable();
+
+        parser.parse(test.toCharArray(), 0, test.length(), outputStream);
+
+        bytePtr.set(bos.toByteArray(), 0, bos.size());
+
+        assertTrue(bytePtr.getContentLength() == test.length() / 2);
+        assertEquals(DatatypeConverter.printHexBinary(ByteArrayPointable.copyContent(bytePtr)).toLowerCase(),
+                test.toLowerCase());
     }
 
 }

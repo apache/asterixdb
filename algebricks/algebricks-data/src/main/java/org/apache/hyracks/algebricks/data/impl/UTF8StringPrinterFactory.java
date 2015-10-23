@@ -18,12 +18,13 @@
  */
 package org.apache.hyracks.algebricks.data.impl;
 
+import java.io.IOException;
 import java.io.PrintStream;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class UTF8StringPrinterFactory implements IPrinterFactory {
 
@@ -40,22 +41,11 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
 
             @Override
             public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-                int strlen = UTF8StringPointable.getUTFLength(b, s);
-                int pos = s + 2;
-                int maxPos = pos + strlen;
-                ps.print("\"");
-                while (pos < maxPos) {
-                    char c = UTF8StringPointable.charAt(b, pos);
-                    switch (c) {
-                        case '\\':
-                        case '"':
-                            ps.print('\\');
-                            break;
-                    }
-                    ps.print(c);
-                    pos += UTF8StringPointable.charSize(b, pos);
+                try {
+                    UTF8StringUtil.printUTF8StringWithQuotes(b, s, l, ps);
+                } catch (IOException e) {
+                    throw new AlgebricksException(e);
                 }
-                ps.print("\"");
             }
 
             @Override

@@ -20,7 +20,7 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class UTF8StringNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
     private static final long serialVersionUID = 1L;
@@ -30,17 +30,7 @@ public class UTF8StringNormalizedKeyComputerFactory implements INormalizedKeyCom
         return new INormalizedKeyComputer() {
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                int len = UTF8StringPointable.getUTFLength(bytes, start);
-                int nk = 0;
-                int offset = start + 2;
-                for (int i = 0; i < 2; ++i) {
-                    nk <<= 16;
-                    if (i < len) {
-                        nk += ((int) UTF8StringPointable.charAt(bytes, offset)) & 0xffff;
-                        offset += UTF8StringPointable.charSize(bytes, offset);
-                    }
-                }
-                return nk;
+                return UTF8StringUtil.normalize(bytes, start);
             }
         };
     }

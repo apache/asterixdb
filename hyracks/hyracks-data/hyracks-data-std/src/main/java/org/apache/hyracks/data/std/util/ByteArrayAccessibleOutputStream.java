@@ -41,6 +41,26 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
         count += 1;
     }
 
+    /**
+     * Rewind the current position by {@code delta} to a previous position.
+     * This function is used to drop the already written delta bytes.
+     * In some cases, we write some bytes, and afterward we found we've written more than expected.
+     * Then we need to fix the position by rewind the current position to the expected one.
+     *
+     * Currently, it is used by the {@link AbstractVarLenObjectBuilder} which may take more space than required
+     * at beginning, and it will shift the data and fix the position whenever required.
+     *
+     * It will throw {@link IndexOutOfBoundsException} if the {@code delta} is negative.
+     * Evil function, use with caution.
+     * @param delta
+     */
+    public void rewindPositionBy(int delta) {
+        if (delta < 0 || count < delta) {
+            throw new IndexOutOfBoundsException();
+        }
+        count -= delta;
+    }
+
     @Override
     public void write(byte[] b, int off, int len) {
         if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) - b.length > 0)) {
@@ -60,9 +80,8 @@ public class ByteArrayAccessibleOutputStream extends ByteArrayOutputStream {
     /**
      * Increases the capacity to ensure that it can hold at least the
      * number of elements specified by the minimum capacity argument.
-     * 
-     * @param minCapacity
-     *            the desired minimum capacity
+     *
+     * @param minCapacity the desired minimum capacity
      */
     private void grow(int minCapacity) {
         // overflow-conscious code

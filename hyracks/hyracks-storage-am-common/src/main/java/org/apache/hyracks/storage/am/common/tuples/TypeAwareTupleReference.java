@@ -19,11 +19,14 @@
 
 package org.apache.hyracks.storage.am.common.tuples;
 
+import static org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder.VarLenIntDecoder;
+
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     protected ByteBuffer buf;
@@ -34,7 +37,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     protected int dataStartOff;
 
     protected ITypeTraits[] typeTraits;
-    protected VarLenIntEncoderDecoder encDec = new VarLenIntEncoderDecoder();
+    protected VarLenIntDecoder encDec = VarLenIntEncoderDecoder.createDecoder();
     protected int[] decodedFieldSlots;
 
     public TypeAwareTupleReference(ITypeTraits[] typeTraits) {

@@ -53,6 +53,8 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
 public class PigletExpressionJobGen implements ILogicalExpressionJobGen {
+    private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
+
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(ILogicalExpression expr, IVariableTypeEnvironment env,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
@@ -74,7 +76,7 @@ public class PigletExpressionJobGen implements ILogicalExpressionJobGen {
 
                     case CHAR_ARRAY:
                         try {
-                            UTF8StringSerializerDeserializer.INSTANCE.serialize(image, dos);
+                            utf8SerDer.serialize(image, dos);
                         } catch (Exception e) {
                             throw new AlgebricksException(e);
                         }

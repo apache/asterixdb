@@ -66,7 +66,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(
                 spec,
@@ -81,7 +81,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         RecordDescriptor desc2 = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
         PreclusteredGroupOperatorDescriptor group = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
@@ -138,7 +138,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(
                 spec,
@@ -153,7 +153,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID, NC1_ID, NC2_ID);
 
         RecordDescriptor desc2 = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
         PreclusteredGroupOperatorDescriptor group = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
@@ -211,7 +211,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         FileSplit[] splits = new FileSplit[] { new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(
                 spec,
@@ -226,7 +226,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID, NC1_ID, NC2_ID);
 
         RecordDescriptor desc2 = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
         PreclusteredGroupOperatorDescriptor group = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(

@@ -82,9 +82,9 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     protected final int[] primaryBloomFilterKeyFields = new int[primaryKeyFieldCount];
 
     protected final RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     // to be set by subclasses
     protected String primaryFileName;
@@ -98,7 +98,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     protected final int[] secondaryBloomFilterKeyFields = new int[secondaryKeyFieldCount];
 
     protected final RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     protected String secondaryFileName;
     protected IFileSplitProvider secondarySplitProvider;
@@ -160,11 +160,11 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
                 "data/tpch0.001/orders-part1.tbl"))) };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -217,11 +217,11 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("0", dos);
+        new UTF8StringSerializerDeserializer().serialize("0", dos);
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
@@ -272,11 +272,11 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
                 "data/tpch0.001/orders-part2.tbl"))) };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,

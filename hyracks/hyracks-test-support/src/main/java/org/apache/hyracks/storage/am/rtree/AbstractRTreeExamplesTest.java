@@ -210,7 +210,7 @@ public abstract class AbstractRTreeExamplesTest {
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
 
         // Declare RTree keys.
         int rtreeKeyFieldCount = 4;
@@ -350,7 +350,7 @@ public abstract class AbstractRTreeExamplesTest {
         // Declare field serdes.
         ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
 
         // Declare RTree keys.
         int rtreeKeyFieldCount = 4;

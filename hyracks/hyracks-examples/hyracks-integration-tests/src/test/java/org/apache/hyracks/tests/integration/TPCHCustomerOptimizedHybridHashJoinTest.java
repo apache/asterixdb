@@ -59,32 +59,32 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 "data/tpch0.001/customer4.tbl"))) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
                 "data/tpch0.001/orders4.tbl"))) };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -137,32 +137,32 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 "data/tpch0.001/customer3.tbl"))) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
                 "data/tpch0.001/orders4.tbl"))) };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
@@ -216,32 +216,32 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 "data/tpch0.001/customer3.tbl"))) };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
         RecordDescriptor custDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
         FileSplit[] ordersSplits = new FileSplit[] { new FileSplit(NC2_ID, new FileReference(new File(
                 "data/tpch0.001/orders1.tbl"))) };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
                 new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,

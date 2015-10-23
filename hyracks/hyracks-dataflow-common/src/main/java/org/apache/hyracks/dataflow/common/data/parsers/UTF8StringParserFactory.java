@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class UTF8StringParserFactory implements IValueParserFactory {
     public static final IValueParserFactory INSTANCE = new UTF8StringParserFactory();
@@ -34,53 +35,12 @@ public class UTF8StringParserFactory implements IValueParserFactory {
     @Override
     public IValueParser createValueParser() {
         return new IValueParser() {
-            private byte[] utf8;
+            private UTF8StringWriter writer = new UTF8StringWriter();
 
             @Override
             public void parse(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
-                int utflen = 0;
-                for (int i = 0; i < length; i++) {
-                    char ch = buffer[i + start];
-                    if ((ch >= 0x0001) && (ch <= 0x007F)) {
-                        utflen++;
-                    } else if (ch > 0x07ff) {
-                        utflen += 3;
-                    } else {
-                        utflen += 2;
-                    }
-                }
-
-                if (utf8 == null || utf8.length < utflen + 2) {
-                    utf8 = new byte[utflen + 2];
-                }
-
-                int count = 0;
-                utf8[count++] = (byte) ((utflen >>> 8) & 0xff);
-                utf8[count++] = (byte) ((utflen >>> 0) & 0xff);
-
-                int i = 0;
-                for (i = 0; i < length; i++) {
-                    char ch = buffer[i + start];
-                    if (!((ch >= 0x0001) && (ch <= 0x007F)))
-                        break;
-                    utf8[count++] = (byte) ch;
-                }
-
-                for (; i < length; i++) {
-                    char ch = buffer[i + start];
-                    if ((ch >= 0x0001) && (ch <= 0x007F)) {
-                        utf8[count++] = (byte) ch;
-                    } else if (ch > 0x07FF) {
-                        utf8[count++] = (byte) (0xE0 | ((ch >> 12) & 0x0F));
-                        utf8[count++] = (byte) (0x80 | ((ch >> 6) & 0x3F));
-                        utf8[count++] = (byte) (0x80 | ((ch >> 0) & 0x3F));
-                    } else {
-                        utf8[count++] = (byte) (0xC0 | ((ch >> 6) & 0x1F));
-                        utf8[count++] = (byte) (0x80 | ((ch >> 0) & 0x3F));
-                    }
-                }
                 try {
-                    out.write(utf8, 0, utflen + 2);
+                    writer.writeUTF8(buffer, start, length, out);
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

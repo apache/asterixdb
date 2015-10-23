@@ -80,7 +80,7 @@ public class SplitOperatorTest extends AbstractIntegrationTest {
         DelimitedDataTupleParserFactory stringParser = new DelimitedDataTupleParserFactory(
                 new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, '\u0000');
         RecordDescriptor stringRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE, });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(), });
 
         FileScanOperatorDescriptor scanOp = new FileScanOperatorDescriptor(spec, new ConstantFileSplitProvider(
                 inputSplits), stringParser, stringRec);

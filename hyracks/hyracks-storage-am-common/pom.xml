@@ -68,5 +68,10 @@
   		<type>jar</type>
   		<scope>compile</scope>
   	</dependency>
+    <dependency>
+         <groupId>org.apache.hyracks</groupId>
+         <artifactId>hyracks-util</artifactId>
+         <version>0.2.17-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

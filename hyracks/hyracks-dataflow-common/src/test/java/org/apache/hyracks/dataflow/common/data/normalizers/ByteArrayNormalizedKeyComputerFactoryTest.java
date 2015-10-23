@@ -19,14 +19,13 @@
 
 package org.apache.hyracks.dataflow.common.data.normalizers;
 
-import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializerTest;
-import org.junit.Test;
+import static junit.framework.Assert.assertTrue;
 
 import java.util.Random;
 
-import static junit.framework.Assert.assertTrue;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.junit.Test;
 
 public class ByteArrayNormalizedKeyComputerFactoryTest {
 
@@ -34,33 +33,21 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
 
     INormalizedKeyComputer computer = ByteArrayNormalizedKeyComputerFactory.INSTANCE.createNormalizedKeyComputer();
 
-    public static ByteArrayPointable generateRandomByteArrayPointable(int maxSize, Random random) {
-        byte[] bytes = ByteArraySerializerDeserializerTest
-                .generateRandomBytes(maxSize, random);
-        ByteArrayPointable pointable = new ByteArrayPointable();
-        pointable.set(bytes, 0, bytes.length);
-        return pointable;
-    }
-
     @Test
     public void testRandomNormalizedKey() {
         for (int i = 0; i < 10; ++i) {
-            ByteArrayPointable pointable1 = generateRandomByteArrayPointable(ByteArrayPointable.MAX_LENGTH + 1,
-                    random);
-
-            ByteArrayPointable pointable2 = generateRandomByteArrayPointable(ByteArrayPointable.MAX_LENGTH + 1,
-                    random);
+            ByteArrayPointable pointable1 = generateRandomByteArrayPointableWithFixLength(
+                    Math.abs(random.nextInt((i + 1) * 10)), random);
+            ByteArrayPointable pointable2 = generateRandomByteArrayPointableWithFixLength(
+                    Math.abs(random.nextInt((i + 1) * 10)), random);
             assertNormalizeValue(pointable1, pointable2, computer);
         }
     }
 
     public static ByteArrayPointable generateRandomByteArrayPointableWithFixLength(int length, Random random) {
-        byte[] bytes = new byte[length + ByteArrayPointable.SIZE_OF_LENGTH];
+        byte[] bytes = new byte[length];
         random.nextBytes(bytes);
-        ByteArrayPointable pointable = new ByteArrayPointable();
-        ByteArrayPointable.putLength(length, bytes, 0);
-        pointable.set(bytes, 0, bytes.length);
-        return pointable;
+        return ByteArrayPointable.generatePointableFromPureBytes(bytes);
     }
 
     public static void assertNormalizeValue(ByteArrayPointable pointable1, ByteArrayPointable pointable2,
@@ -82,11 +69,12 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
             assertNormalizeValue(pointable1, pointable2, computer);
         }
 
-        byte[] bytes1 = new byte[] { 0, 4, 0, 25, 34, 42 };
-        byte[] bytes2 = new byte[] { 0, 4, (byte) 130, 25, 34, 42 };
+        ByteArrayPointable ptr1 = ByteArrayPointable.generatePointableFromPureBytes(new byte[] { 0, 25, 34, 42 });
+        ByteArrayPointable ptr2 = ByteArrayPointable.generatePointableFromPureBytes(
+                new byte[] { (byte) 130, 25, 34, 42 });
 
-        int n1 = computer.normalize(bytes1, 0, bytes1.length);
-        int n2 = computer.normalize(bytes2, 0, bytes2.length);
+        int n1 = computer.normalize(ptr1.getByteArray(), ptr1.getStartOffset(), ptr1.getLength());
+        int n2 = computer.normalize(ptr2.getByteArray(), ptr2.getStartOffset(), ptr2.getLength());
         assertTrue(n1 < n2);
 
     }

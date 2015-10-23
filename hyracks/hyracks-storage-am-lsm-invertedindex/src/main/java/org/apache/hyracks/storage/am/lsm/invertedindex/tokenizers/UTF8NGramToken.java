@@ -21,9 +21,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.IOException;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
-import org.apache.hyracks.dataflow.common.data.util.StringUtils;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 
 public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
 
@@ -33,6 +32,8 @@ public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
 
     protected int numPreChars;
     protected int numPostChars;
+
+    private UTF8StringBuilder builder = new UTF8StringBuilder();
 
     public UTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
         super(tokenTypeTag, countTypeTag);
@@ -50,38 +51,7 @@ public class UTF8NGramToken extends AbstractUTF8Token implements INGramToken {
 
     @Override
     public void serializeToken(GrowableArray out) throws IOException {
-        handleTokenTypeTag(out.getDataOutput());
-        int tokenUTF8LenOff = out.getLength();
-
-        // regular chars
-        int numRegChars = tokenLength - numPreChars - numPostChars;
-
-        // assuming pre and post char need 1-byte each in utf8
-        int tokenUTF8Len = numPreChars + numPostChars;
-
-        // Write dummy UTF length which will be correctly set later.
-        out.getDataOutput().writeShort(0);
-
-        // pre chars
-        for (int i = 0; i < numPreChars; i++) {
-            StringUtils.writeCharAsModifiedUTF8(PRECHAR, out.getDataOutput());
-        }
-
-        int pos = start;
-        for (int i = 0; i < numRegChars; i++) {
-            char c = Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
-            tokenUTF8Len += StringUtils.writeCharAsModifiedUTF8(c, out.getDataOutput());
-            pos += UTF8StringPointable.charSize(data, pos);
-        }
-
-        // post chars
-        for (int i = 0; i < numPostChars; i++) {
-            StringUtils.writeCharAsModifiedUTF8(POSTCHAR, out.getDataOutput());
-        }
-
-        // Set UTF length of token.
-        out.getByteArray()[tokenUTF8LenOff] = (byte) ((tokenUTF8Len >>> 8) & 0xFF);
-        out.getByteArray()[tokenUTF8LenOff + 1] = (byte) ((tokenUTF8Len >>> 0) & 0xFF);
+        super.serializeToken(builder, out, numPreChars, numPostChars, PRECHAR, POSTCHAR);
     }
 
     public void setNumPrePostChars(int numPreChars, int numPostChars) {

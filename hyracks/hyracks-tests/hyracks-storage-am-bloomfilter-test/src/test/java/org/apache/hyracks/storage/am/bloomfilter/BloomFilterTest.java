@@ -135,9 +135,9 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
                 bloomFilterSpec.getNumBucketsPerElements());
 
         int fieldCount = 5;
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 

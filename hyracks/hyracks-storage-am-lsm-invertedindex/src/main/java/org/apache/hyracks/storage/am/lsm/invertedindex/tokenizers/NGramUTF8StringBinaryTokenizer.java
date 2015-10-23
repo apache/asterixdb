@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
 
@@ -50,7 +50,7 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
 
     @Override
     public void next() {
-        int currentTokenStart = index;
+        int currentTokenStart = byteIndex;
         int tokenCount = 1;
         int numPreChars = 0;
         int numPostChars = 0;
@@ -62,46 +62,48 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
 
         concreteToken.setNumPrePostChars(numPreChars, numPostChars);
         if (numPreChars == 0) {
-            index += UTF8StringPointable.charSize(data, index);
+            byteIndex += UTF8StringUtil.charSize(sentenceBytes, byteIndex);
         }
 
         // compute token count
         // ignore pre and post grams for duplicate detection
         if (!ignoreTokenCount && numPreChars == 0 && numPostChars == 0) {
-            int tmpIndex = start + 2; // skip utf8 length indicator
+            int tmpIndex = sentenceStartOffset;
             if (sourceHasTypeTag) {
                 tmpIndex++; // skip type tag
             }
+            int utfLength = UTF8StringUtil.getUTFLength(sentenceBytes, tmpIndex);
+            tmpIndex += UTF8StringUtil.getNumBytesToStoreLength(utfLength); // skip utf8 length indicator
             while (tmpIndex < currentTokenStart) {
                 tokenCount++; // assume found
                 int offset = 0;
                 for (int j = 0; j < gramLength; j++) {
-                    if (Character.toLowerCase(UTF8StringPointable.charAt(data, currentTokenStart + offset)) != Character
-                            .toLowerCase(UTF8StringPointable.charAt(data, tmpIndex + offset))) {
+                    if (Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset))
+                            != Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tmpIndex + offset))) {
                         tokenCount--;
                         break;
                     }
-                    offset += UTF8StringPointable.charSize(data, tmpIndex + offset);
+                    offset += UTF8StringUtil.charSize(sentenceBytes, tmpIndex + offset);
                 }
-                tmpIndex += UTF8StringPointable.charSize(data, tmpIndex);
+                tmpIndex += UTF8StringUtil.charSize(sentenceBytes, tmpIndex);
             }
         }
 
         // set token
-        token.reset(data, currentTokenStart, length, gramLength, tokenCount);
+        token.reset(sentenceBytes, currentTokenStart, sentenceEndOffset, gramLength, tokenCount);
     }
 
     @Override
-    public void reset(byte[] data, int start, int length) {
-        super.reset(data, start, length);
+    public void reset(byte[] sentenceData, int start, int length) {
+        super.reset(sentenceData, start, length);
         gramNum = 0;
 
         int numChars = 0;
-        int pos = index;
-        int end = pos + utf8Length;
+        int pos = byteIndex;
+        int end = pos + sentenceUtf8Length;
         while (pos < end) {
             numChars++;
-            pos += UTF8StringPointable.charSize(data, pos);
+            pos += UTF8StringUtil.charSize(sentenceData, pos);
         }
 
         if (usePrePost) {

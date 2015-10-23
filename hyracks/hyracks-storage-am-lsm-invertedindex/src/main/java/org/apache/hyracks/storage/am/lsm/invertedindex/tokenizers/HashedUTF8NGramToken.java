@@ -21,8 +21,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.IOException;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class HashedUTF8NGramToken extends UTF8NGramToken {
     public HashedUTF8NGramToken(byte tokenTypeTag, byte countTypeTag) {
@@ -43,11 +43,11 @@ public class HashedUTF8NGramToken extends UTF8NGramToken {
 
         // regular chars
         int numRegGrams = tokenLength - numPreChars - numPostChars;
-        int pos = start;
+        int pos = startOffset;
         for (int i = 0; i < numRegGrams; i++) {
-            hash ^= Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
+            hash ^= Character.toLowerCase(UTF8StringUtil.charAt(data, pos));
             hash *= GOLDEN_RATIO_32;
-            pos += UTF8StringPointable.charSize(data, pos);
+            pos += UTF8StringUtil.charSize(data, pos);
         }
 
         // post chars

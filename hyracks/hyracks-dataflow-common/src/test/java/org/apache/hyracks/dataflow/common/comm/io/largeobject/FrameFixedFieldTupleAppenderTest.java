@@ -53,9 +53,9 @@ public class FrameFixedFieldTupleAppenderTest {
     FrameFixedFieldAppender appender;
     static ISerializerDeserializer[] fields = new ISerializerDeserializer[] {
             IntegerSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(),
             IntegerSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(),
     };
     static RecordDescriptor recordDescriptor = new RecordDescriptor(fields);
     static ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(recordDescriptor.getFieldCount());

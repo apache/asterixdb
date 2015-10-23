@@ -100,9 +100,9 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected final IBinaryComparatorFactory[] primaryComparatorFactories = new IBinaryComparatorFactory[primaryKeyFieldCount];
 
     protected final RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
             DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
             DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE });
 
@@ -119,7 +119,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected final RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
             DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE });
+            new UTF8StringSerializerDeserializer() });
 
     // This is only used for the LSMRTree. We need a comparator Factories for
     // the BTree component of the LSMRTree.
@@ -220,11 +220,11 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
                 "data/orders-with-locations-part1.txt"))) };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE });
 
@@ -283,11 +283,11 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("0", dos);
+        new UTF8StringSerializerDeserializer().serialize("0", dos);
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
@@ -331,11 +331,11 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
                 "data/orders-with-locations-part2.txt"))) };
         IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
         RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE, DoubleSerializerDeserializer.INSTANCE,
                 DoubleSerializerDeserializer.INSTANCE });
 

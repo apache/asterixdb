@@ -30,11 +30,19 @@ public abstract class AbstractPointable implements IPointable {
         this.bytes = bytes;
         this.start = start;
         this.length = length;
+        afterReset();
     }
 
     @Override
     public void set(IValueReference pointer) {
         set(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
+    }
+
+    /**
+     * This method will be called after set the new bytes values.
+     * It could be used to reset the state of the inherited Pointable object.
+     */
+    protected void afterReset() {
     }
 
     @Override

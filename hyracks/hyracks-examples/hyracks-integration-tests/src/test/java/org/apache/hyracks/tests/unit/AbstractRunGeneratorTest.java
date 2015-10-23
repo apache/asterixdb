@@ -54,8 +54,8 @@ import org.junit.Test;
 
 public abstract class AbstractRunGeneratorTest {
     static TestUtils testUtils = new TestUtils();
-    static ISerializerDeserializer[] SerDers = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE };
+    static ISerializerDeserializer[] SerDers = new ISerializerDeserializer[] {
+            IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
     static RecordDescriptor RecordDesc = new RecordDescriptor(SerDers);
     static Random GRandom = new Random(System.currentTimeMillis());
     static int[] SortFields = new int[] { 0, 1 };
@@ -153,7 +153,7 @@ public abstract class AbstractRunGeneratorTest {
             for (Map.Entry<Integer, String> entry : specialData.entrySet()) {
                 tb.reset();
                 tb.addField(IntegerSerializerDeserializer.INSTANCE, entry.getKey());
-                tb.addField(UTF8StringSerializerDeserializer.INSTANCE, entry.getValue());
+                tb.addField(new UTF8StringSerializerDeserializer(), entry.getValue());
 
                 VSizeFrame frame = new VSizeFrame(ctx, FrameHelper.calcAlignedFrameSizeToStore(
                         tb.getFieldEndOffsets().length, tb.getSize(), ctx.getInitialFrameSize()));
@@ -173,7 +173,7 @@ public abstract class AbstractRunGeneratorTest {
             if (!keyValuePair.containsKey(key)) {
                 String value = generateRandomRecord(minRecordSize, maxRecordSize);
                 tb.addField(IntegerSerializerDeserializer.INSTANCE, key);
-                tb.addField(UTF8StringSerializerDeserializer.INSTANCE, value);
+                tb.addField(new UTF8StringSerializerDeserializer(), value);
 
                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                     frameList.add(frame);

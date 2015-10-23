@@ -229,7 +229,7 @@ public class Join {
         if (hasGroupBy) {
 
             RecordDescriptor groupResultDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                    UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                    new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
 
             HashGroupOperatorDescriptor gby = new HashGroupOperatorDescriptor(
                     spec,

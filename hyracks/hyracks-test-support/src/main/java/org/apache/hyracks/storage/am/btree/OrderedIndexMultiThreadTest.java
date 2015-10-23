@@ -120,7 +120,7 @@ public abstract class OrderedIndexMultiThreadTest {
     @Test
     public void oneStringKeyAndValue() throws InterruptedException, TreeIndexException, HyracksException {
         ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         int numKeys = 1;
         String dataMsg = "One String Key And Value";
 

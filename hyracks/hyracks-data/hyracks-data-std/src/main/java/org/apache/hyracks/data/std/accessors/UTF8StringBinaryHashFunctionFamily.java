@@ -20,7 +20,7 @@ package org.apache.hyracks.data.std.accessors;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class UTF8StringBinaryHashFunctionFamily implements IBinaryHashFunctionFamily {
     public static final IBinaryHashFunctionFamily INSTANCE = new UTF8StringBinaryHashFunctionFamily();
@@ -40,17 +40,7 @@ public class UTF8StringBinaryHashFunctionFamily implements IBinaryHashFunctionFa
         return new IBinaryHashFunction() {
             @Override
             public int hash(byte[] bytes, int offset, int length) {
-                int h = 0;
-                int utflen = UTF8StringPointable.getUTFLength(bytes, offset);
-                int sStart = offset + 2;
-                int c = 0;
-
-                while (c < utflen) {
-                    char ch = UTF8StringPointable.charAt(bytes, sStart + c);
-                    h = (coefficient * h + ch) % r;
-                    c += UTF8StringPointable.charSize(bytes, sStart + c);
-                }
-                return h;
+                return UTF8StringUtil.hash(bytes, offset, coefficient, r);
             }
         };
     }

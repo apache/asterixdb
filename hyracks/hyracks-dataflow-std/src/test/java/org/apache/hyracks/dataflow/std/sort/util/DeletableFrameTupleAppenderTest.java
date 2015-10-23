@@ -25,9 +25,6 @@ import static org.junit.Assert.assertTrue;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,12 +33,15 @@ import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDese
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.util.IntSerDeUtils;
 import org.apache.hyracks.dataflow.std.sort.Utility;
+import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.junit.Before;
+import org.junit.Test;
 
 public class DeletableFrameTupleAppenderTest {
     DeletableFrameTupleAppender appender;
     ISerializerDeserializer[] fields = new ISerializerDeserializer[] {
             IntegerSerializerDeserializer.INSTANCE,
-            UTF8StringSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(),
     };
     RecordDescriptor recordDescriptor = new RecordDescriptor(fields);
     ArrayTupleBuilder builder = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
@@ -90,7 +90,8 @@ public class DeletableFrameTupleAppenderTest {
     }
 
     int assertTupleIsExpected(int i, int dataOffset) {
-        int tupleLength = 2 * 4 + 4 + 2 + i + 1;
+        int lenStrMeta = UTF8StringUtil.getNumBytesToStoreLength(i);
+        int tupleLength = 2 * 4 + 4 + lenStrMeta + i + 1;
         assertEquals(dataOffset, appender.getTupleStartOffset(i));
         assertEquals(tupleLength, appender.getTupleLength(i));
 
@@ -99,7 +100,7 @@ public class DeletableFrameTupleAppenderTest {
         assertEquals(i + 1,
                 IntSerDeUtils.getInt(appender.getBuffer().array(), appender.getAbsoluteFieldStartOffset(i, 0)));
         assertEquals(dataOffset + 2 * 4 + 4, appender.getAbsoluteFieldStartOffset(i, 1));
-        assertEquals(2 + i + 1, appender.getFieldLength(i, 1));
+        assertEquals(lenStrMeta + i + 1, appender.getFieldLength(i, 1));
         return tupleLength;
     }
 

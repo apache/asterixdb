@@ -19,57 +19,71 @@
 
 package org.apache.hyracks.dataflow.common.data.marshalling;
 
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class ByteArraySerializerDeserializer implements ISerializerDeserializer<byte[]> {
 
     private static final long serialVersionUID = 1L;
 
-    public final static ByteArraySerializerDeserializer INSTANCE = new ByteArraySerializerDeserializer();
-
-    private ByteArraySerializerDeserializer() {
+    public ByteArraySerializerDeserializer() {
     }
 
+    private byte[] metaBuffer = new byte[5];
+
+    /**
+     * Return a pure byte array which doesn't have the length encoding prefix
+     *
+     * @param in - Stream to read instance from.
+     * @return
+     * @throws HyracksDataException
+     */
     @Override
     public byte[] deserialize(DataInput in) throws HyracksDataException {
         try {
-            int length = in.readUnsignedShort();
-            byte[] bytes = new byte[length + ByteArrayPointable.SIZE_OF_LENGTH];
-            in.readFully(bytes, ByteArrayPointable.SIZE_OF_LENGTH, length);
-            ByteArrayPointable.putLength(length, bytes, 0);
+            int contentLength = VarLenIntEncoderDecoder.decode(in);
+            byte[] bytes = new byte[contentLength];
+            in.readFully(bytes, 0, contentLength);
             return bytes;
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
     }
 
+    /**
+     * a pure content only byte array which doesn't have the encoded length at the beginning.
+     * will write the entire array into the out
+     */
     @Override
     public void serialize(byte[] instance, DataOutput out) throws HyracksDataException {
-
-        if (instance.length > ByteArrayPointable.MAX_LENGTH) {
-            throw new HyracksDataException(
-                    "encoded byte array too long: " + instance.length + " bytes");
-        }
         try {
-            int realLength = ByteArrayPointable.getFullLength(instance, 0);
-            out.write(instance, 0, realLength);
+            int metaLength = VarLenIntEncoderDecoder.encode(instance.length, metaBuffer, 0);
+            out.write(metaBuffer, 0, metaLength);
+            out.write(instance);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
     }
 
-    public void serialize(byte[] instance, int start, int length, DataOutput out) throws HyracksDataException {
-        if (length > ByteArrayPointable.MAX_LENGTH) {
-            throw new HyracksDataException(
-                    "encoded byte array too long: " + instance.length + " bytes");
-        }
+    public void serialize(ByteArrayPointable byteArrayPtr, DataOutput out) throws HyracksDataException {
         try {
+            out.write(byteArrayPtr.getByteArray(), byteArrayPtr.getStartOffset(), byteArrayPtr.getLength());
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    // A pure byte array, which doesn't have the length information encoded at the beginning
+    public void serialize(byte[] instance, int start, int length, DataOutput out) throws HyracksDataException {
+        int metaLength = VarLenIntEncoderDecoder.encode(length, metaBuffer, 0);
+        try {
+            out.write(metaBuffer, 0, metaLength);
             out.write(instance, start, length);
         } catch (IOException e) {
             throw new HyracksDataException(e);

@@ -19,58 +19,44 @@
 
 package org.apache.hyracks.dataflow.common.data.marshalling;
 
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.Arrays;
-import java.util.Random;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.util.string.UTF8StringSample;
+import org.junit.Test;
 
 public class ByteArraySerializerDeserializerTest {
-    Random random = new Random();
 
-    public static byte[] generateRandomBytes(int maxSize, Random random) {
-        int size = random.nextInt(maxSize);
-        byte[] bytes = new byte[size + ByteArrayPointable.SIZE_OF_LENGTH];
-        random.nextBytes(bytes);
-        ByteArrayPointable.putLength(size, bytes, 0);
-        return bytes;
-    }
+    ByteArrayPointable bytePtr = new ByteArrayPointable();
+    ByteArraySerializerDeserializer serder = new ByteArraySerializerDeserializer();
 
     @Test
     public void testSerializeDeserializeRandomBytes() throws Exception {
-        for (int i = 0; i < 10; ++i) {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            byte[] randomBytes = generateRandomBytes(ByteArrayPointable.MAX_LENGTH + 1, random);
-
-            ByteArraySerializerDeserializer.INSTANCE.serialize(randomBytes, new DataOutputStream(outputStream));
-            byte[] result = outputStream.toByteArray();
-            assertTrue(Arrays.equals(randomBytes, result));
-
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(result);
-            assertTrue(Arrays.equals(randomBytes,
-                    ByteArraySerializerDeserializer.INSTANCE.deserialize(new DataInputStream(inputStream))));
-        }
-
+        testOneByteArray(UTF8StringSample.EMPTY_STRING.getBytes());
+        testOneByteArray(UTF8StringSample.STRING_UTF8_MIX.getBytes());
+        testOneByteArray(UTF8StringSample.STRING_LEN_128.getBytes());
+        testOneByteArray(UTF8StringSample.STRING_LEN_MEDIUM.getBytes());
+        testOneByteArray(UTF8StringSample.STRING_LEN_LARGE.getBytes());
     }
 
-    @Test
-    public void testPutGetLength() throws Exception {
-        final int size = 5;
-        byte[] newBytes = new byte[size];
-        for (int i = 0; i < 10; ++i) {
-            int length = random.nextInt(ByteArrayPointable.MAX_LENGTH +1);
-            for (int j = 0; j < size - 1; ++j) {
-                ByteArrayPointable.putLength(length, newBytes, j);
-                int result = ByteArrayPointable.getLength(newBytes, j);
-                assertTrue(result == length);
-            }
-        }
+    void testOneByteArray(byte[] testBytes) throws HyracksDataException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        serder.serialize(testBytes, new DataOutputStream(outputStream));
+
+        bytePtr.set(outputStream.toByteArray(), 0, outputStream.size());
+        assertTrue(Arrays.equals(testBytes, ByteArrayPointable.copyContent(bytePtr)));
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        assertTrue(Arrays.equals(testBytes, serder.deserialize(new DataInputStream(inputStream))));
+
     }
 
 }

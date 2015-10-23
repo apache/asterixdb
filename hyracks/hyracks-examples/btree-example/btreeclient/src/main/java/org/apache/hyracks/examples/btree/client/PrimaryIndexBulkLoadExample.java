@@ -105,15 +105,15 @@ public class PrimaryIndexBulkLoadExample {
         // int, string
         // we will use field-index 2 as primary key to fill a clustered index
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, // this field will
+                new UTF8StringSerializerDeserializer(), // this field will
                                                            // not go into B-Tree
-                UTF8StringSerializerDeserializer.INSTANCE, // we will use this
+                new UTF8StringSerializerDeserializer(), // we will use this
                                                            // as payload
                 IntegerSerializerDeserializer.INSTANCE, // we will use this
                                                         // field as key
                 IntegerSerializerDeserializer.INSTANCE, // we will use this as
                                                         // payload
-                UTF8StringSerializerDeserializer.INSTANCE // we will use this as
+                new UTF8StringSerializerDeserializer() // we will use this as
                                                           // payload
                 });
 

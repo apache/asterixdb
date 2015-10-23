@@ -29,7 +29,9 @@ import org.apache.hyracks.algebricks.data.impl.IntegerPrinterFactory;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
 import org.apache.hyracks.algebricks.examples.piglet.types.Type;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
 
@@ -73,7 +75,7 @@ public class PigletPrinterFactoryProvider implements IPrinterFactoryProvider {
                 @Override
                 public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
                     try {
-                        WriteValueTools.writeUTF8String(b, s, l, ps);
+                        UTF8StringUtil.printUTF8StringWithQuotes(b, s, l, ps);
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     }

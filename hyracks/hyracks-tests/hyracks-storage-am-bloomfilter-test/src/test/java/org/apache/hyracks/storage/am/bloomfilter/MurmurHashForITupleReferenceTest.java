@@ -109,7 +109,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
         }
 
         int fieldCount = 2;
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer() };
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         String s = randomString(100, rnd);
@@ -137,8 +137,8 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
         }
 
         int fieldCount = 3;
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         String s1 = randomString(40, rnd);

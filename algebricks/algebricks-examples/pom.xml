@@ -22,8 +22,15 @@
   <artifactId>algebricks-examples</artifactId>
   <packaging>pom</packaging>
   <name>algebricks-examples</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.hyracks</groupId>
+            <artifactId>algebricks-core</artifactId>
+            <version>0.2.17-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
-  <parent>
+    <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>algebricks</artifactId>
     <version>0.2.17-SNAPSHOT</version>

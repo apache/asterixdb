@@ -20,20 +20,18 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.apache.hyracks.data.std.util.GrowableArray;
 
 public class NGramTokenizerTest {
 
@@ -72,11 +70,7 @@ public class NGramTokenizerTest {
 
     @Before
     public void init() throws Exception {
-        // serialize string into bytes
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutput dos = new DataOutputStream(baos);
-        dos.writeUTF(str);
-        inputBuffer = baos.toByteArray();
+        inputBuffer = UTF8StringUtil.writeStringToBytes(str);
     }
 
     void runTestNGramTokenizerWithCountedHashedUTF8Tokens(boolean prePost) throws IOException {
@@ -192,7 +186,8 @@ public class NGramTokenizerTest {
             ByteArrayInputStream bais = new ByteArrayInputStream(tokenData.getByteArray());
             DataInput in = new DataInputStream(bais);
 
-            String strGram = in.readUTF();
+            UTF8StringReader reader = new UTF8StringReader();
+            String strGram = reader.readUTF(in);
 
             // System.out.println("\"" + strGram + "\"");
 

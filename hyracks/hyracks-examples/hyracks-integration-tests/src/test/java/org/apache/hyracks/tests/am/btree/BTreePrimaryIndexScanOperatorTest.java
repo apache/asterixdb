@@ -59,11 +59,11 @@ public class BTreePrimaryIndexScanOperatorTest extends AbstractBTreeOperatorTest
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("0", dos);
+        new UTF8StringSerializerDeserializer().serialize("0", dos);
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,

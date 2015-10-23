@@ -124,8 +124,8 @@ public abstract class OrderedIndexTestDriver {
             LOGGER.info("BTree " + getTestOpName() + " Test With One String Key And Value.");
         }
 
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Range search in ["cbf", cc7"]
         ITupleReference lowKey = TupleUtils.createTuple(fieldSerdes, "cbf");
@@ -142,8 +142,8 @@ public abstract class OrderedIndexTestDriver {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys.");
         }
 
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Range search in ["cbf", "ddd", cc7", "eee"]
         ITupleReference lowKey = TupleUtils.createTuple(fieldSerdes, "cbf", "ddd");
@@ -164,9 +164,9 @@ public abstract class OrderedIndexTestDriver {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys And Values.");
         }
 
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Range search in ["cbf", "ddd", cc7", "eee"]
         ITupleReference lowKey = TupleUtils.createTuple(fieldSerdes, "cbf", "ddd");

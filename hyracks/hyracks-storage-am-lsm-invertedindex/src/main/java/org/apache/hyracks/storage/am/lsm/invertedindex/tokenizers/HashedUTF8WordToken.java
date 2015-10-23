@@ -21,8 +21,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.IOException;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class HashedUTF8WordToken extends UTF8WordToken {
 
@@ -46,11 +46,11 @@ public class HashedUTF8WordToken extends UTF8WordToken {
         }
         int offset = 0;
         for (int i = 0; i < tokenLength; i++) {
-            if (UTF8StringPointable.charAt(t.getData(), t.getStart() + offset) != UTF8StringPointable.charAt(data,
-                    start + offset)) {
+            if (UTF8StringUtil.charAt(t.getData(), t.getStartOffset() + offset) != UTF8StringUtil.charAt(data,
+                    startOffset + offset)) {
                 return false;
             }
-            offset += UTF8StringPointable.charSize(data, start + offset);
+            offset += UTF8StringUtil.charSize(data, startOffset + offset);
         }
         return true;
     }
@@ -61,16 +61,16 @@ public class HashedUTF8WordToken extends UTF8WordToken {
     }
 
     @Override
-    public void reset(byte[] data, int start, int length, int tokenLength, int tokenCount) {
-        super.reset(data, start, length, tokenLength, tokenCount);
+    public void reset(byte[] data, int startOffset, int endOffset, int tokenLength, int tokenCount) {
+        super.reset(data, startOffset, endOffset, tokenLength, tokenCount);
 
         // pre-compute hash value using JAQL-like string hashing
-        int pos = start;
+        int pos = startOffset;
         hash = GOLDEN_RATIO_32;
         for (int i = 0; i < tokenLength; i++) {
-            hash ^= Character.toLowerCase(UTF8StringPointable.charAt(data, pos));
+            hash ^= Character.toLowerCase(UTF8StringUtil.charAt(data, pos));
             hash *= GOLDEN_RATIO_32;
-            pos += UTF8StringPointable.charSize(data, pos);
+            pos += UTF8StringUtil.charSize(data, pos);
         }
         hash += tokenCount;
     }

@@ -20,14 +20,16 @@ package org.apache.hyracks.algebricks.data.utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public final class WriteValueTools {
 
     private final static int[] INT_INTERVALS = { 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999,
             Integer.MAX_VALUE };
-    private final static int[] INT_DIVIDERS = { 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
+    private final static int[] INT_DIVIDERS = { 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+            1000000000 };
     private final static int[] DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
     public static void writeInt(int i, OutputStream os) throws IOException {
@@ -75,50 +77,11 @@ public final class WriteValueTools {
         os.write(DIGITS[(int) (d % 10)]);
     }
 
-    public static void writeUTF8String(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = UTF8StringPointable.getUTFLength(b, s);
-        int position = s + 2;
-        int maxPosition = position + stringLength;
-        os.write('\"');
-        while (position < maxPosition) {
-            char c = UTF8StringPointable.charAt(b, position);
-            switch (c) {
-            // escape
-                case '\\':
-                case '"':
-                    os.write('\\');
-                    break;
-            }
-            int sz = UTF8StringPointable.charSize(b, position);
-            while (sz > 0) {
-                os.write(b[position]);
-                position++;
-                sz--;
-            }
-        }
-        os.write('\"');
+    public static void writeUTF8StringWithQuotes(String string, OutputStream ps) throws IOException {
+        UTF8StringUtil.printUTF8StringWithQuotes(string, ps);
     }
 
-    public static void writeUTF8StringNoQuotes(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = UTF8StringPointable.getUTFLength(b, s);
-        int position = s + 2;
-        int maxPosition = position + stringLength;
-        while (position < maxPosition) {
-            char c = UTF8StringPointable.charAt(b, position);
-            switch (c) {
-            // escape
-                case '\\':
-                case '"':
-                    os.write('\\');
-                    break;
-            }
-            int sz = UTF8StringPointable.charSize(b, position);
-            while (sz > 0) {
-                os.write(b[position]);
-                position++;
-                sz--;
-            }
-        }
+    public static void writeUTF8StringNoQuotes(String string, OutputStream ps) throws IOException {
+        UTF8StringUtil.printUTF8StringNoQuotes(string, ps);
     }
-
 }

@@ -161,14 +161,14 @@ public class LSMBTreeTuplesTest {
         testLSMBTreeTuple(intFields);
         
         ISerializerDeserializer[] stringFields = new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         testLSMBTreeTuple(stringFields);
         
         ISerializerDeserializer[] mixedFields = new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                 IntegerSerializerDeserializer.INSTANCE };
         testLSMBTreeTuple(mixedFields);
     }

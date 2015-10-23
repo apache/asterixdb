@@ -52,7 +52,7 @@ public class UnionTest extends AbstractIntegrationTest {
                 new FileSplit(NC1_ID, new FileReference(new File("data/words.txt"))) });
 
         RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor csvScanner01 = new FileScanOperatorDescriptor(
                 spec,

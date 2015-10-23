@@ -109,7 +109,7 @@ public class RunMergingFrameReaderTest {
             while (true) {
                 tb.reset();
                 tb.addField(IntegerSerializerDeserializer.INSTANCE, lastEntry.getKey());
-                tb.addField(UTF8StringSerializerDeserializer.INSTANCE, lastEntry.getValue());
+                tb.addField(new UTF8StringSerializerDeserializer(), lastEntry.getValue());
                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                     break;
                 } else {
@@ -148,7 +148,7 @@ public class RunMergingFrameReaderTest {
             for (Map.Entry<Integer, String> entry : specialData.entrySet()) {
                 tb.reset();
                 tb.addField(IntegerSerializerDeserializer.INSTANCE, entry.getKey());
-                tb.addField(UTF8StringSerializerDeserializer.INSTANCE, entry.getValue());
+                tb.addField(new UTF8StringSerializerDeserializer(), entry.getValue());
                 int size = tb.getSize() + tb.getFieldEndOffsets().length * 4;
                 datasize += size;
                 if (size > maxtuple) {
@@ -164,7 +164,7 @@ public class RunMergingFrameReaderTest {
             int key = GRandom.nextInt(datasize + 1);
             if (!result.containsKey(key)) {
                 tb.addField(IntegerSerializerDeserializer.INSTANCE, key);
-                tb.addField(UTF8StringSerializerDeserializer.INSTANCE, value);
+                tb.addField(new UTF8StringSerializerDeserializer(), value);
                 int size = tb.getSize() + tb.getFieldEndOffsets().length * 4;
                 datasize += size;
                 if (size > maxtuple) {

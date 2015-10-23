@@ -18,14 +18,42 @@
  */
 package org.apache.hyracks.data.std.primitive;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public final class UTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
+
+    // These values are cached to speed up the length data access.
+    // Since we are using the variable-length encoding, we can save the repeated decoding efforts.
+    // WARNING: must call the resetConstants() method after each reset().
+    private int utf8Length;
+    private int metaLength;
+    private int hashValue;
+    private int stringLength;
+
+    /**
+     * reset those meta length.
+     * Since the {@code utf8Length} and the {@code metaLength} are often used, we compute those two values in advance.
+     * As for the {@code stringLength} and the {@code hashValue}, they will be lazily initialized after the first call.
+     */
+    @Override
+    protected void afterReset() {
+        utf8Length = UTF8StringUtil.getUTFLength(bytes, start);
+        metaLength = UTF8StringUtil.getNumBytesToStoreLength(getUTF8Length());
+        hashValue = 0;
+        stringLength = -1;
+    }
+
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 
@@ -54,111 +82,57 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
     };
 
+    public static UTF8StringPointable generateUTF8Pointable(String string) {
+        byte[] bytes;
+        bytes = UTF8StringUtil.writeStringToBytes(string);
+        UTF8StringPointable ptr = new UTF8StringPointable();
+        ptr.set(bytes, 0, bytes.length);
+        return ptr;
+    }
+
     /**
      * Returns the character at the given byte offset. The caller is responsible for making sure that
      * the provided offset is within bounds and points to the beginning of a valid UTF8 character.
-     * 
-     * @param offset
-     *            - Byte offset
+     *
+     * @param offset - Byte offset
      * @return Character at the given offset.
      */
     public char charAt(int offset) {
-        return charAt(bytes, start + offset);
-    }
-
-    public static char charAt(byte[] b, int s) {
-        int c = b[s] & 0xff;
-        switch (c >> 4) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-                return (char) c;
-
-            case 12:
-            case 13:
-                return (char) (((c & 0x1F) << 6) | ((b[s + 1]) & 0x3F));
-
-            case 14:
-                return (char) (((c & 0x0F) << 12) | (((b[s + 1]) & 0x3F) << 6) | (((b[s + 2]) & 0x3F) << 0));
-
-            default:
-                throw new IllegalArgumentException();
-        }
+        return UTF8StringUtil.charAt(bytes, start + offset);
     }
 
     public int charSize(int offset) {
-        return charSize(bytes, start + offset);
-    }
-
-    public static int charSize(byte[] b, int s) {
-        int c = b[s] & 0xff;
-        switch (c >> 4) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-                return 1;
-
-            case 12:
-            case 13:
-                return 2;
-
-            case 14:
-                return 3;
-        }
-        throw new IllegalStateException();
-    }
-
-    public static int getModifiedUTF8Len(char c) {
-        if (c >= 0x0000 && c <= 0x007F) {
-            return 1;
-        } else if (c <= 0x07FF) {
-            return 2;
-        } else {
-            return 3;
-        }
+        return UTF8StringUtil.charSize(bytes, start + offset);
     }
 
     /**
      * Gets the length of the string in characters.
-     * 
+     * The first time call will need to go through the entire string, the following call will just return the pre-caculated result
+     *
      * @return length of string in characters
      */
     public int getStringLength() {
-        return getStringLength(bytes, start);
-    }
-
-    public static int getStringLength(byte[] b, int s) {
-        int pos = s + 2;
-        int end = pos + getUTFLength(b, s);
-        int charCount = 0;
-        while (pos < end) {
-            charCount++;
-            pos += charSize(b, pos);
+        if (stringLength < 0) {
+            stringLength = UTF8StringUtil.getStringLength(bytes, start);
         }
-        return charCount;
+        return stringLength;
     }
 
     /**
      * Gets the length of the UTF-8 encoded string in bytes.
-     * 
+     *
      * @return length of UTF-8 encoded string in bytes
      */
-    public int getUTFLength() {
-        return getUTFLength(bytes, start);
+    public int getUTF8Length() {
+        return utf8Length;
     }
 
-    public static int getUTFLength(byte[] b, int s) {
-        return ((b[s] & 0xff) << 8) + ((b[s + 1] & 0xff) << 0);
+    public int getMetaDataLength() {
+        return metaLength;
+    }
+
+    public int getCharStartOffset() {
+        return getStartOffset() + getMetaDataLength();
     }
 
     @Override
@@ -168,56 +142,307 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        int utflen1 = getUTFLength(this.bytes, this.start);
-        int utflen2 = getUTFLength(bytes, start);
-
-        int c1 = 0;
-        int c2 = 0;
-
-        int s1Start = this.start + 2;
-        int s2Start = start + 2;
-
-        while (c1 < utflen1 && c2 < utflen2) {
-            char ch1 = charAt(this.bytes, s1Start + c1);
-            char ch2 = charAt(bytes, s2Start + c2);
-
-            if (ch1 != ch2) {
-                return ch1 - ch2;
-            }
-            c1 += charSize(this.bytes, s1Start + c1);
-            c2 += charSize(bytes, s2Start + c2);
-        }
-        return utflen1 - utflen2;
+        return UTF8StringUtil.compareTo(this.bytes, this.start, bytes, start);
     }
 
     @Override
     public int hash() {
-        int h = 0;
-        int utflen = getUTFLength(bytes, start);
-        int sStart = start + 2;
-        int c = 0;
-
-        while (c < utflen) {
-            char ch = charAt(bytes, sStart + c);
-            h = 31 * h + ch;
-            c += charSize(bytes, sStart + c);
+        if (hashValue == 0) {
+            hashValue = UTF8StringUtil.hash(this.bytes, this.start);
         }
-        return h;
-    }
-
-    public static void toString(StringBuilder buffer, byte[] bytes, int start) {
-        int utfLen = getUTFLength(bytes, start);
-        int offset = 2;
-        while (utfLen > 0) {
-            char c = charAt(bytes, start + offset);
-            buffer.append(c);
-            int cLen = UTF8StringPointable.getModifiedUTF8Len(c);
-            offset += cLen;
-            utfLen -= cLen;
-        }
+        return hashValue;
     }
 
     public void toString(StringBuilder buffer) {
-        toString(buffer, bytes, start);
+        UTF8StringUtil.toString(buffer, bytes, start);
     }
+
+    public String toString() {
+        return new String(this.bytes, this.getCharStartOffset(), this.getUTF8Length(), Charset.forName("UTF-8"));
+    }
+
+    /****
+     * String functions
+     */
+
+    public int ignoreCaseCompareTo(UTF8StringPointable other) {
+        return UTF8StringUtil.lowerCaseCompareTo(this.getByteArray(), this.getStartOffset(),
+                other.getByteArray(), other.getStartOffset());
+    }
+
+    public int find(UTF8StringPointable pattern, boolean ignoreCase) {
+        return find(this, pattern, ignoreCase);
+    }
+
+    /**
+     * return the byte offset of the first character of the matching string. Not including the MetaLength
+     *
+     * @param src
+     * @param pattern
+     * @param ignoreCase
+     * @return
+     */
+    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        final int srcUtfLen = src.getUTF8Length();
+        final int pttnUtfLen = pattern.getUTF8Length();
+        final int srcStart = src.getMetaDataLength();
+        final int pttnStart = pattern.getMetaDataLength();
+
+        int startMatch = 0;
+        int maxStart = srcUtfLen - pttnUtfLen;
+        while (startMatch <= maxStart) {
+            int c1 = startMatch;
+            int c2 = 0;
+            while (c1 < srcUtfLen && c2 < pttnUtfLen) {
+                char ch1 = src.charAt(srcStart + c1);
+                char ch2 = pattern.charAt(pttnStart + c2);
+
+                if (ch1 != ch2) {
+                    if (!ignoreCase || ignoreCase && Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
+                        break;
+                    }
+                }
+                c1 += src.charSize(srcStart + c1);
+                c2 += pattern.charSize(pttnStart + c2);
+            }
+            if (c2 == pttnUtfLen) {
+                return startMatch;
+            }
+            startMatch += src.charSize(srcStart + startMatch);
+        }
+        return -1;
+    }
+
+    public boolean contains(UTF8StringPointable pattern, boolean ignoreCase) {
+        return contains(this, pattern, ignoreCase);
+    }
+
+    public static boolean contains(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        return find(src, pattern, ignoreCase) >= 0;
+    }
+
+    public boolean startsWith(UTF8StringPointable pattern, boolean ignoreCase) {
+        return startsWith(this, pattern, ignoreCase);
+    }
+
+    public static boolean startsWith(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        int utflen1 = src.getUTF8Length();
+        int utflen2 = pattern.getUTF8Length();
+        if (utflen2 > utflen1)
+            return false;
+
+        int s1Start = src.getMetaDataLength();
+        int s2Start = pattern.getMetaDataLength();
+
+        int c1 = 0;
+        int c2 = 0;
+        while (c1 < utflen1 && c2 < utflen2) {
+            char ch1 = src.charAt(s1Start + c1);
+            char ch2 = pattern.charAt(s2Start + c2);
+            if (ch1 != ch2) {
+                if (!ignoreCase || ignoreCase && Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
+                    break;
+                }
+            }
+            c1 += src.charSize(s1Start + c1);
+            c2 += pattern.charSize(s2Start + c2);
+        }
+        return (c2 == utflen2);
+    }
+
+    public boolean endsWith(UTF8StringPointable pattern, boolean ignoreCase) {
+        return endsWith(this, pattern, ignoreCase);
+    }
+
+    public static boolean endsWith(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+        int len1 = src.getUTF8Length();
+        int len2 = pattern.getUTF8Length();
+        if (len2 > len1)
+            return false;
+
+        int s1Start = src.getMetaDataLength();
+        int s2Start = pattern.getMetaDataLength();
+
+        int c1 = len1 - len2;
+        int c2 = 0;
+        while (c1 < len1 && c2 < len2) {
+            char ch1 = src.charAt(s1Start + c1);
+            char ch2 = pattern.charAt(s2Start + c2);
+
+            if (ch1 != ch2) {
+                if (!ignoreCase || ignoreCase && Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
+                    break;
+                }
+            }
+            c1 += src.charSize(s1Start + c1);
+            c2 += pattern.charSize(s2Start + c2);
+        }
+        return (c2 == len2);
+    }
+
+    public void concat(UTF8StringPointable next, UTF8StringBuilder builder, GrowableArray out) throws IOException {
+        concat(this, next, builder, out);
+    }
+
+    public static void concat(UTF8StringPointable first, UTF8StringPointable next, UTF8StringBuilder builder,
+            GrowableArray out) throws IOException {
+        int firstUtfLen = first.getUTF8Length();
+        int nextUtfLen = next.getUTF8Length();
+
+        builder.reset(out, firstUtfLen + nextUtfLen);
+        builder.appendUtf8StringPointable(first);
+        builder.appendUtf8StringPointable(next);
+        builder.finish();
+    }
+
+    public void substr(int charOffset, int charLength, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        substr(this, charOffset, charLength, builder, out);
+    }
+
+    public static void substr(UTF8StringPointable src, int charOffset, int charLength, UTF8StringBuilder builder,
+            GrowableArray out) throws IOException {
+        // Really don't understand why we need to support the charOffset < 0 case.
+        // At this time, usually there is mistake on user side, we'd better give him a warning.
+        // assert charOffset >= 0;
+        if (charOffset < 0) {
+            charOffset = 0;
+        }
+        if (charLength < 0) {
+            charLength = 0;
+        }
+
+        int utfLen = src.getUTF8Length();
+        int chIdx = 0;
+        int byteIdx = 0;
+        while (byteIdx < utfLen && chIdx < charOffset) {
+            byteIdx += src.charSize(src.getMetaDataLength() + byteIdx);
+            chIdx++;
+        }
+        if (byteIdx >= utfLen) {
+            // Again, why do we tolerant this kind of mistakes?
+            // throw new StringIndexOutOfBoundsException(charOffset);
+            builder.reset(out, 0);
+            builder.finish();
+            return;
+        }
+
+        builder.reset(out, Math.min(utfLen - byteIdx, (int) (charLength * 1.0 * byteIdx / chIdx)));
+        chIdx = 0;
+        while (byteIdx < utfLen && chIdx < charLength) {
+            builder.appendChar(src.charAt(src.getMetaDataLength() + byteIdx));
+            chIdx++;
+            byteIdx += src.charSize(src.getMetaDataLength() + byteIdx);
+        }
+        builder.finish();
+    }
+
+    public void substrBefore(UTF8StringPointable match, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        substrBefore(this, match, builder, out);
+    }
+
+    /**
+     * Write the substring before the given pattern. It will write a empty string if the matching fails.
+     *
+     * @param src
+     * @param match
+     * @param builder
+     * @param out
+     * @throws IOException
+     */
+    public static void substrBefore(
+            UTF8StringPointable src,
+            UTF8StringPointable match,
+            UTF8StringBuilder builder,
+            GrowableArray out) throws IOException {
+
+        int byteOffset = find(src, match, false);
+        if (byteOffset < 0) {
+            builder.reset(out, 0);
+            builder.finish();
+            return;
+        }
+
+        final int srcMetaLen = src.getMetaDataLength();
+
+        builder.reset(out, byteOffset);
+        for (int idx = 0; idx < byteOffset; ) {
+            builder.appendChar(src.charAt(srcMetaLen + idx));
+            idx += src.charSize(srcMetaLen + idx);
+        }
+        builder.finish();
+    }
+
+    public void substrAfter(UTF8StringPointable match, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        substrAfter(this, match, builder, out);
+    }
+
+    /**
+     * Write the substring after the given pattern. It will write a empty string if the matching fails.
+     *
+     * @param src
+     * @param match
+     * @param builder
+     * @param out
+     */
+    public static void substrAfter(
+            UTF8StringPointable src,
+            UTF8StringPointable match,
+            UTF8StringBuilder builder,
+            GrowableArray out) throws IOException {
+
+        int byteOffset = find(src, match, false);
+        if (byteOffset < 0) {
+            builder.reset(out, 0);
+            builder.finish();
+            return;
+        }
+
+        final int srcUtfLen = src.getUTF8Length();
+        final int matchUtfLen = match.getUTF8Length();
+
+        final int resultLen = srcUtfLen - byteOffset - matchUtfLen;
+        builder.reset(out, resultLen);
+        builder.appendUtf8StringPointable(src, src.getCharStartOffset() + byteOffset + matchUtfLen, resultLen);
+        builder.finish();
+    }
+
+    public void lowercase(UTF8StringBuilder builder, GrowableArray out) throws IOException {
+        lowercase(this, builder, out);
+    }
+
+    public static void lowercase(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        final int srcUtfLen = src.getUTF8Length();
+        final int srcStart = src.getMetaDataLength();
+
+        builder.reset(out, srcUtfLen);
+        int byteIndex = 0;
+        while (byteIndex < srcUtfLen) {
+            builder.appendChar(Character.toLowerCase(src.charAt(srcStart + byteIndex)));
+            byteIndex += src.charSize(srcStart + byteIndex);
+        }
+        builder.finish();
+    }
+
+    public void uppercase(UTF8StringBuilder builder, GrowableArray out) throws IOException {
+        uppercase(this, builder, out);
+    }
+
+    public static void uppercase(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        final int srcUtfLen = src.getUTF8Length();
+        final int srcStart = src.getMetaDataLength();
+
+        builder.reset(out, srcUtfLen);
+        int byteIndex = 0;
+        while (byteIndex < srcUtfLen) {
+            builder.appendChar(Character.toUpperCase(src.charAt(srcStart + byteIndex)));
+            byteIndex += src.charSize(srcStart + byteIndex);
+        }
+        builder.finish();
+    }
+
 }

@@ -29,7 +29,6 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
@@ -67,6 +66,8 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
     public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor) throws HyracksDataException {
         return new IFieldAggregateDescriptor() {
+
+            UTF8StringSerializerDeserializer utf8SerializerDeserializer = new UTF8StringSerializerDeserializer();
 
             @Override
             public void reset() {
@@ -112,7 +113,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 int fieldLength = accessor.getFieldLength(tIndex, aggField);
-                String strField = UTF8StringSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
+                String strField = utf8SerializerDeserializer.deserialize(new DataInputStream(
                         new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
                                 + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {
@@ -157,7 +158,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 int fieldLength = accessor.getFieldLength(tIndex, aggField);
-                String strField = UTF8StringSerializerDeserializer.INSTANCE.deserialize(new DataInputStream(
+                String strField = utf8SerializerDeserializer.deserialize(new DataInputStream(
                         new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
                                 + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {

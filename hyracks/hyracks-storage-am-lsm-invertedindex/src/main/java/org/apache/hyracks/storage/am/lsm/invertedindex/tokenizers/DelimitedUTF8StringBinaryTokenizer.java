@@ -19,9 +19,13 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryTokenizer {
+
+    protected short tokenCount;
+    private boolean tokenCountCalculated;
+    private int originalIndex;
 
     public DelimitedUTF8StringBinaryTokenizer(boolean ignoreTokenCount, boolean sourceHasTypeTag,
             ITokenFactory tokenFactory) {
@@ -29,44 +33,52 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
     }
 
     @Override
-    public boolean hasNext() {
-        // skip delimiters
-        while (index < length && isSeparator(UTF8StringPointable.charAt(data, index))) {
-            index += UTF8StringPointable.charSize(data, index);
-        }
-        return index < length;
+    public void reset(byte[] sentenceData, int start, int length) {
+        super.reset(sentenceData, start, length);
+        // Needed for calculating the number of tokens
+        tokenCount = 0;
+        tokenCountCalculated = false;
+        originalIndex = byteIndex;
     }
 
-    private boolean isSeparator(char c) {
-        return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER || Character.getType(c) == Character.OTHER_NUMBER);
+    @Override
+    public boolean hasNext() {
+        // skip delimiters
+        while (byteIndex < sentenceEndOffset && isSeparator(UTF8StringUtil.charAt(sentenceBytes, byteIndex))) {
+            byteIndex += UTF8StringUtil.charSize(sentenceBytes, byteIndex);
+        }
+        return byteIndex < sentenceEndOffset;
+    }
+
+    private static boolean isSeparator(char c) {
+        return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER
+                || Character.getType(c) == Character.OTHER_NUMBER);
     }
 
     @Override
     public void next() {
-        tokenLength = 0;
-        int currentTokenStart = index;
-        while (index < length && !isSeparator(UTF8StringPointable.charAt(data, index))) {
-            index += UTF8StringPointable.charSize(data, index);
+        int tokenLength = 0;
+        int currentTokenStart = byteIndex;
+        while (byteIndex < sentenceEndOffset && !isSeparator(UTF8StringUtil.charAt(sentenceBytes, byteIndex))) {
+            byteIndex += UTF8StringUtil.charSize(sentenceBytes, byteIndex);
             tokenLength++;
         }
-        int tokenCount = 1;
+        int curTokenCount = 1;
         if (tokenLength > 0 && !ignoreTokenCount) {
             // search if we got the same token before
             for (int i = 0; i < tokensStart.length(); ++i) {
                 if (tokenLength == tokensLength.get(i)) {
                     int tokenStart = tokensStart.get(i);
-                    tokenCount++; // assume we found it
+                    curTokenCount++; // assume we found it
                     int offset = 0;
-                    int currLength = 0;
-                    while (currLength < tokenLength) {
+                    for (int charPos= 0; charPos < tokenLength; charPos++) {
                         // case insensitive comparison
-                        if (Character.toLowerCase(UTF8StringPointable.charAt(data, currentTokenStart + offset)) != Character
-                                .toLowerCase(UTF8StringPointable.charAt(data, tokenStart + offset))) {
-                            tokenCount--;
+                        if (Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset))
+                                != Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tokenStart + offset))) {
+                            curTokenCount--;
                             break;
                         }
-                        offset += UTF8StringPointable.charSize(data, currentTokenStart + offset);
-                        currLength++;
+                        offset += UTF8StringUtil.charSize(sentenceBytes, currentTokenStart + offset);
                     }
                 }
             }
@@ -76,16 +88,19 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
         }
 
         // set token
-        token.reset(data, currentTokenStart, index, tokenLength, tokenCount);
+        token.reset(sentenceBytes, currentTokenStart, byteIndex, tokenLength, curTokenCount);
+        tokenCount++;
     }
 
+
+    // TODO Why we bother to get the tokenCount in advance? It seems a caller's problem.
     @Override
     public short getTokensCount() {
         if (!tokenCountCalculated) {
             tokenCount = 0;
             boolean previousCharIsSeparator = true;
-            while (originalIndex < length) {
-                if (isSeparator(UTF8StringPointable.charAt(data, originalIndex))) {
+            while (originalIndex < sentenceEndOffset) {
+                if (isSeparator(UTF8StringUtil.charAt(sentenceBytes, originalIndex))) {
                     previousCharIsSeparator = true;
                 } else {
                     if (previousCharIsSeparator) {
@@ -93,7 +108,7 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
                         previousCharIsSeparator = false;
                     }
                 }
-                originalIndex += UTF8StringPointable.charSize(data, originalIndex);
+                originalIndex += UTF8StringUtil.charSize(sentenceBytes, originalIndex);
             }
         }
         return tokenCount;

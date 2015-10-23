@@ -102,7 +102,7 @@ public class SecondaryIndexSearchExample {
 
         // schema of tuples coming out of secondary index
         RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
 
         int secondaryFieldCount = 2;
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[secondaryFieldCount];
@@ -120,8 +120,8 @@ public class SecondaryIndexSearchExample {
 
         // schema of tuples coming out of primary index
         RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(), });
 
         int primaryFieldCount = 4;
         ITypeTraits[] primaryTypeTraits = new ITypeTraits[primaryFieldCount];
@@ -145,15 +145,15 @@ public class SecondaryIndexSearchExample {
         DataOutput dos = tb.getDataOutput();
 
         tb.reset();
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("0", dos); // low
+        new UTF8StringSerializerDeserializer().serialize("0", dos); // low
                                                                        // key
         tb.addFieldEndOffset();
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("f", dos); // high
+        new UTF8StringSerializerDeserializer().serialize("f", dos); // high
                                                                        // key
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,

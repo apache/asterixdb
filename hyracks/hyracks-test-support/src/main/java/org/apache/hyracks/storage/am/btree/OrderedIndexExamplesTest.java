@@ -164,8 +164,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -324,8 +324,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -408,8 +408,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;
@@ -514,8 +514,8 @@ public abstract class OrderedIndexExamplesTest {
         typeTraits[0] = UTF8StringPointable.TYPE_TRAITS;
         typeTraits[1] = UTF8StringPointable.TYPE_TRAITS;
         // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
 
         // Declare keys.
         int keyFieldCount = 1;

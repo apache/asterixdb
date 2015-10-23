@@ -24,18 +24,26 @@ import java.io.IOException;
 import org.apache.hyracks.data.std.util.GrowableArray;
 
 public interface IToken {
-	public byte[] getData();
+    public byte[] getData();
 
-	public int getLength();
+    public int getEndOffset();
 
-	public int getStart();
+    public int getStartOffset();
 
-	public int getTokenLength();
+    public int getTokenLength();
 
-	public void reset(byte[] data, int start, int length, int tokenLength,
-			int tokenCount);
+    /**
+     * reset the storage byte array.
+     *
+     * @param data
+     * @param startOffset
+     * @param endOffset
+     * @param tokenLength
+     * @param tokenCount  the count of this token in a document , or a record, or something else.
+     */
+    public void reset(byte[] data, int startOffset, int endOffset, int tokenLength, int tokenCount);
 
-	public void serializeToken(GrowableArray out) throws IOException;
+    public void serializeToken(GrowableArray out) throws IOException;
 
-	public void serializeTokenCount(GrowableArray out) throws IOException;
+    public void serializeTokenCount(GrowableArray out) throws IOException;
 }

@@ -19,32 +19,25 @@
 
 package org.apache.hyracks.dataflow.common.data.parsers;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import junit.framework.TestCase;
-import org.junit.Test;
+import static org.apache.hyracks.data.std.primitive.ByteArrayPointable.copyContent;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.Arrays;
 
-import static org.apache.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactoryTest.subArray;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class ByteArrayBase64ParserFactoryTest extends TestCase {
 
     @Test
     public void testParseBase64String() throws HyracksDataException {
-        IValueParser parser = ByteArrayBase64ParserFactory.INSTANCE.createValueParser();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream outputStream = new DataOutputStream(bos);
-        String empty = "";
-
-        parser.parse(empty.toCharArray(), 0, empty.length(), outputStream);
-
-        byte[] cache = bos.toByteArray();
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == 0);
-        assertTrue(DatatypeConverter.printBase64Binary(subArray(cache, 2)).equalsIgnoreCase(empty));
+        testOneString("");
 
         StringBuilder everyChar = new StringBuilder();
         for (char c = 'a'; c <= 'z'; c++) {
@@ -58,21 +51,26 @@ public class ByteArrayBase64ParserFactoryTest extends TestCase {
         }
         everyChar.append("+/");
 
-        bos.reset();
-        parser.parse(everyChar.toString().toCharArray(), 0, everyChar.length(), outputStream);
-        cache = bos.toByteArray();
-        byte[] answer = DatatypeConverter.parseBase64Binary(everyChar.toString());
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == answer.length);
-        assertTrue(Arrays.equals(answer, subArray(cache, 2)));
+        testOneString(everyChar.toString());
 
-        byte[] maxBytes = new byte[ByteArrayPointable.MAX_LENGTH];
-        Arrays.fill(maxBytes, (byte) 0xff);
-        String maxString = DatatypeConverter.printBase64Binary(maxBytes);
-        bos.reset();
-        parser.parse(maxString.toCharArray(), 0, maxString.length(), outputStream);
-        cache = bos.toByteArray();
-        assertTrue(ByteArrayPointable.getLength(cache, 0) == maxBytes.length);
-        assertTrue(Arrays.equals(maxBytes, subArray(cache, 2)));
+        byte[] longBytes = new byte[65536];
+        Arrays.fill(longBytes, (byte) 0xff);
+        String maxString = DatatypeConverter.printBase64Binary(longBytes);
+
+        testOneString(maxString);
     }
 
+    void testOneString(String test) throws HyracksDataException {
+        IValueParser parser = ByteArrayBase64ParserFactory.INSTANCE.createValueParser();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream outputStream = new DataOutputStream(bos);
+        ByteArrayPointable bytePtr = new ByteArrayPointable();
+
+        parser.parse(test.toCharArray(), 0, test.length(), outputStream);
+        bytePtr.set(bos.toByteArray(), 0, bos.size());
+
+        byte[] answer = DatatypeConverter.parseBase64Binary(test);
+        assertTrue(bytePtr.getContentLength() == answer.length);
+        assertTrue(Arrays.equals(answer, copyContent(bytePtr)));
+    }
 }

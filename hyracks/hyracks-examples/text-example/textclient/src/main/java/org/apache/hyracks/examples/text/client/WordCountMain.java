@@ -132,14 +132,14 @@ public class WordCountMain {
 
         IFileSplitProvider splitsProvider = new ConstantFileSplitProvider(inSplits);
         RecordDescriptor wordDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
         FileScanOperatorDescriptor wordScanner = new FileScanOperatorDescriptor(spec, splitsProvider,
                 new WordTupleParserFactory(), wordDesc);
         createPartitionConstraint(spec, wordScanner, inSplits);
 
         RecordDescriptor groupResultDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
 
         IOperatorDescriptor gBy;
         int[] keys = new int[] { 0 };

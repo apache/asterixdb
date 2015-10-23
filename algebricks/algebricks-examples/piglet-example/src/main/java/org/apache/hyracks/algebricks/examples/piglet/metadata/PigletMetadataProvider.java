@@ -110,7 +110,7 @@ public class PigletMetadataProvider implements IMetadataProvider<String, String>
 
                 case CHAR_ARRAY:
                     vpf = UTF8StringParserFactory.INSTANCE;
-                    serDeser = UTF8StringSerializerDeserializer.INSTANCE;
+                    serDeser = new UTF8StringSerializerDeserializer();
                     break;
 
                 case FLOAT:

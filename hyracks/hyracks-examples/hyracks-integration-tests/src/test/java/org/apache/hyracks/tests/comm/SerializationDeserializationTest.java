@@ -144,7 +144,7 @@ public class SerializationDeserializationTest {
     @Test
     public void serdeser01() throws Exception {
         RecordDescriptor rDes = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE });
         LineProcessor processor = new LineProcessor() {
             @Override
             public void process(String line, IDataWriter<Object[]> writer) throws Exception {

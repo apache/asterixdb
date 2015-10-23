@@ -20,7 +20,6 @@
 package org.apache.hyracks.data.std.util;
 
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
@@ -28,7 +27,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 
 public class GrowableArray implements IDataOutputProvider {
     private final ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-    private final DataOutputStream dos = new DataOutputStream(baaos);
+    private final RewindableDataOutputStream dos = new RewindableDataOutputStream(baaos);
 
     @Override
     public DataOutput getDataOutput() {
@@ -37,6 +36,24 @@ public class GrowableArray implements IDataOutputProvider {
 
     public void reset() {
         baaos.reset();
+    }
+
+    /**
+     * Rewind the current position by {@code delta} to a previous position.
+     * This function is used to drop the already written delta bytes.
+     * In some cases, we write some bytes, and afterward we found we've written more than expected.
+     * Then we need to fix the position by rewind the current position to the expected one.
+     *
+     * Currently, it is used by the {@link AbstractVarLenObjectBuilder} which may take more space than required
+     * at beginning, and it will shift the data and fix the position whenever required.
+     * It will throw {@link IndexOutOfBoundsException} if the {@code delta} is negative.
+     * Evil function, use with caution.
+     *
+     * @param delta
+     */
+    public void rewindPositionBy(int delta) {
+        baaos.rewindPositionBy(delta);
+        dos.rewindWrittenBy(delta);
     }
 
     public byte[] getByteArray() {

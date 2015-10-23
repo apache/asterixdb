@@ -96,6 +96,7 @@
   </pluginRepositories>
 
   <modules>
+    <module>hyracks-util</module>
     <module>hyracks-ipc</module>
     <module>hyracks-api</module>
     <module>hyracks-comm</module>

@@ -24,19 +24,21 @@ import java.io.IOException;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class UTF8StringSerializerDeserializer implements ISerializerDeserializer<String> {
-    public static final UTF8StringSerializerDeserializer INSTANCE = new UTF8StringSerializerDeserializer();
 
     private static final long serialVersionUID = 1L;
+    private UTF8StringReader reader = new UTF8StringReader();
+    private UTF8StringWriter writer = new UTF8StringWriter();
 
-    private UTF8StringSerializerDeserializer() {
-    }
+    public UTF8StringSerializerDeserializer() {}
 
     @Override
     public String deserialize(DataInput in) throws HyracksDataException {
         try {
-            return in.readUTF();
+            return reader.readUTF(in);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -45,7 +47,7 @@ public class UTF8StringSerializerDeserializer implements ISerializerDeserializer
     @Override
     public void serialize(String instance, DataOutput out) throws HyracksDataException {
         try {
-            out.writeUTF(instance);
+            writer.writeUTF8(instance, out);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

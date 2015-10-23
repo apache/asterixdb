@@ -63,14 +63,14 @@ public class BTreeSecondaryIndexSearchOperatorTest extends AbstractBTreeOperator
 
         tb.reset();
         // low key
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("1998-07-21", dos);
+        new UTF8StringSerializerDeserializer().serialize("1998-07-21", dos);
         tb.addFieldEndOffset();
         // high key
-        UTF8StringSerializerDeserializer.INSTANCE.serialize("2000-10-18", dos);
+        new UTF8StringSerializerDeserializer().serialize("2000-10-18", dos);
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,

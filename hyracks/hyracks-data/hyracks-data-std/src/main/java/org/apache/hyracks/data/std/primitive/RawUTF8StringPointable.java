@@ -24,6 +24,7 @@ import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 /**
  * This class provides the raw bytes-based comparison and hash function for UTF8 strings.
@@ -66,44 +67,16 @@ public final class RawUTF8StringPointable extends AbstractPointable implements I
 
     @Override
     public int compareTo(byte[] bytes, int start, int length) {
-        int utflen1 = UTF8StringPointable.getUTFLength(this.bytes, this.start);
-        int utflen2 = UTF8StringPointable.getUTFLength(bytes, start);
-
-        int c1 = 0;
-        int c2 = 0;
-
-        int s1Start = this.start + 2;
-        int s2Start = start + 2;
-
-        while (c1 < utflen1 && c2 < utflen2) {
-            char ch1 = (char) this.bytes[s1Start + c1];
-            char ch2 = (char) bytes[s2Start + c2];
-
-            if (ch1 != ch2) {
-                return ch1 - ch2;
-            }
-            c1++;
-            c2++;
-        }
-        return utflen1 - utflen2;
+        return UTF8StringUtil.rawByteCompareTo(this.bytes, this.start, bytes, start);
     }
 
     @Override
     public int hash() {
-        int h = 0;
-        int utflen = UTF8StringPointable.getUTFLength(bytes, start);
-        int sStart = start + 2;
-        int c = 0;
-
-        while (c < utflen) {
-            char ch = (char) bytes[sStart + c];
-            h = 31 * h + ch;
-            c++;
-        }
-        return h;
+        return UTF8StringUtil.rawBytehash(this.bytes, this.start);
     }
 
     public void toString(StringBuilder buffer) {
-        UTF8StringPointable.toString(buffer, bytes, start);
+        UTF8StringUtil.toString(buffer, bytes, start);
     }
+
 }

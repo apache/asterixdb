@@ -148,7 +148,7 @@ public class DataflowTest extends TestCase {
         String[] readSchedule = scheduler.getLocationConstraints(splits);
         JobSpecification jobSpec = new JobSpecification();
         RecordDescriptor recordDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
         String[] locations = new String[] { HyracksUtils.NC1_ID, HyracksUtils.NC1_ID, HyracksUtils.NC2_ID,
                 HyracksUtils.NC2_ID };
