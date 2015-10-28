@@ -87,8 +87,8 @@ import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class CloneAndSubstituteVariablesVisitor implements
-        IAqlExpressionVisitor<Pair<IAqlExpression, List<VariableSubstitution>>, List<VariableSubstitution>> {
+public class CloneAndSubstituteVariablesVisitor
+        implements IAqlExpressionVisitor<Pair<IAqlExpression, List<VariableSubstitution>>, List<VariableSubstitution>> {
 
     private AqlRewritingContext context;
 
@@ -278,7 +278,14 @@ public class CloneAndSubstituteVariablesVisitor implements
     public Pair<IAqlExpression, List<VariableSubstitution>> visitLimitClause(LimitClause lc,
             List<VariableSubstitution> arg) throws AsterixException {
         Pair<IAqlExpression, List<VariableSubstitution>> p1 = lc.getLimitExpr().accept(this, arg);
-        Pair<IAqlExpression, List<VariableSubstitution>> p2 = lc.getOffset().accept(this, arg);
+        Pair<IAqlExpression, List<VariableSubstitution>> p2 = null;
+        // The offset expression can be null.
+        Expression lcOffsetExpr = lc.getOffset();
+        if (lcOffsetExpr != null) {
+            p2 = lcOffsetExpr.accept(this, arg);
+        } else {
+            p2 = new Pair<IAqlExpression, List<VariableSubstitution>>(null, null);
+        }
         LimitClause c = new LimitClause((Expression) p1.first, (Expression) p2.first);
         return new Pair<IAqlExpression, List<VariableSubstitution>>(c, arg);
     }
@@ -628,7 +635,6 @@ public class CloneAndSubstituteVariablesVisitor implements
         // TODO Auto-generated method stub
         return null;
     }
-    
 
     @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitCreateFeedPolicyStatement(

@@ -5932,6 +5932,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="user-defined-functions">
+            <compilation-unit name="udf31">
+                <output-dir compare="Text">udf31</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="user-defined-functions">
             <compilation-unit name="f01">
                 <output-dir compare="Text">f01</output-dir>
                 <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
@@ -6159,7 +6164,7 @@
 
     </test-group>
     <test-group name="hdfs">
-    	<test-case FilePath="hdfs">
+      <test-case FilePath="hdfs">
             <compilation-unit name="hdfs_shortcircuit">
                 <output-dir compare="Text">hdfs_shortcircuit</output-dir>
             </compilation-unit>
