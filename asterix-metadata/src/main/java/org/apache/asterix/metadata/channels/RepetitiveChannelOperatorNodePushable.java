@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.channels.ChannelRuntime;
-import org.apache.asterix.common.channels.ChannelRuntimeId;
+import org.apache.asterix.common.channels.ProcedureRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveManager;
@@ -90,7 +90,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
     /** The pre-processor associated with this runtime **/
     private ActiveRuntimeInputHandler inputSideHandler;
 
-    private final ChannelRuntimeId channelRuntimeId;
+    private final ProcedureRuntimeId channelRuntimeId;
     private final long duration;
     private final String query;
 
@@ -102,7 +102,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
         this.operandId = ActiveRuntimeId.DEFAULT_OPERAND_ID;
         this.runtimeType = ActiveRuntimeType.REPETITIVE;
         this.policyEnforcer = new FeedPolicyEnforcer(activeJobId, new HashMap<String, String>());
-        this.channelRuntimeId = new ChannelRuntimeId(channelJobId.getActiveId());
+        this.channelRuntimeId = new ProcedureRuntimeId(channelJobId.getActiveId());
         this.duration = findPeriod(duration);
         this.query = produceQuery(function, subscriptionsName, resultsName);
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
@@ -175,7 +175,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
     @Override
     public void initialize() throws HyracksDataException {
-        ChannelRuntimeId runtimeId = new ChannelRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
+        ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
         try {
             activeRuntime = (ChannelRuntime) activeManager.getConnectionManager().getActiveRuntime(activeJobId,
                     runtimeId);
@@ -222,7 +222,7 @@ public class RepetitiveChannelOperatorNodePushable extends AbstractUnaryInputUna
 
     private void setupBasicRuntime(ActiveRuntimeInputHandler inputHandler) throws Exception {
         this.setOutputFrameWriter(0, writer, recordDesc);
-        ChannelRuntimeId runtimeId = new ChannelRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
+        ProcedureRuntimeId runtimeId = new ProcedureRuntimeId(activeJobId.getDataverse(), activeJobId.getName());
         activeRuntime = new ChannelRuntime(runtimeId, inputHandler, writer, activeManager, activeJobId, query);
         activeManager.getConnectionManager().registerActiveRuntime(activeJobId, activeRuntime);
     }

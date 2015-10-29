@@ -40,7 +40,8 @@ public interface IFeedMessage extends Serializable, JSONSerializable {
         COMMIT_ACK,
         COMMIT_ACK_RESPONSE,
         THROTTLING_ENABLED,
-        DROP_CHANNEL
+        DROP_CHANNEL,
+        EXECUTE_PROCEDURE
     }
 
     /**

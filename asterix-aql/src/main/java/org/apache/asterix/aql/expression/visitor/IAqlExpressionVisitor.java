@@ -38,6 +38,7 @@ import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -195,5 +196,7 @@ public interface IAqlExpressionVisitor<R, T> {
     R visitFunctionDropStatement(FunctionDropStatement del, T arg) throws AsterixException;
 
     R visitCompactStatement(CompactStatement del, T arg) throws AsterixException;
+
+    R visitExecuteProcedureStatement(ExecuteProcedureStatement ep, T arg) throws AsterixException;
 
 }

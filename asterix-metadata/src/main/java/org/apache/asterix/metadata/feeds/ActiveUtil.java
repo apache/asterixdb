@@ -83,6 +83,7 @@ import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.RandomPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 
@@ -486,7 +487,7 @@ public class ActiveUtil {
                     runtimeType = ActiveRuntimeType.OTHER;
                 }
             } else {
-                if (opDesc instanceof AbstractSingleActivityOperatorDescriptor) {
+                if (opDesc instanceof AbstractUnaryInputUnaryOutputOperatorNodePushable) {
                     runtimeType = ActiveRuntimeType.OTHER;
                 } else {
                     opId = altered.createOperatorDescriptorId(opDesc);
@@ -494,7 +495,7 @@ public class ActiveUtil {
                 }
             }
             if (createMetaOp) {
-                metaOp = new ActiveMetaOperatorDescriptor(altered, activeJobId, opDesc, feedPolicyProperties,
+                metaOp = new ProcedureMetaOperatorDescriptor(altered, activeJobId, opDesc, feedPolicyProperties,
                         runtimeType, operandId);
                 opId = metaOp.getOperatorId();
             }

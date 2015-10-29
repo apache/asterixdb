@@ -39,7 +39,7 @@ import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.channels.ChannelActivity;
-import org.apache.asterix.common.channels.ChannelJobInfo;
+import org.apache.asterix.common.channels.ProcedureJobInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.feeds.FeedActivity;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
@@ -57,10 +57,10 @@ import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener.Message;
 import org.apache.asterix.metadata.channels.ChannelMetaOperatorDescriptor;
 import org.apache.asterix.metadata.channels.RepetitiveChannelOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.ActiveMetaOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
-import org.apache.asterix.metadata.feeds.ActiveMetaOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedWorkManager;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -179,8 +179,7 @@ public class ActiveJobNotificationHandler implements Runnable {
         if (jobInfos.get(jobId) != null) {
             throw new IllegalStateException("Active job already registered");
         }
-        //TODO:Register other active jobs
-        ActiveJobInfo cInfo = new ChannelJobInfo(jobId, JobState.CREATED, jobType, jobSpec, activeJobId);
+        ActiveJobInfo cInfo = new ProcedureJobInfo(jobId, JobState.CREATED, jobType, jobSpec, activeJobId);
         jobInfos.put(jobId, cInfo);
         activeJobInfos.put(activeJobId, cInfo);
 
@@ -344,7 +343,7 @@ public class ActiveJobNotificationHandler implements Runnable {
     }
 
     private synchronized void handleActiveJobStartMessage(ActiveJobInfo jobInfo) throws Exception {
-        setLocations((ChannelJobInfo) jobInfo);
+        setLocations((ProcedureJobInfo) jobInfo);
         jobInfo.setState(JobState.ACTIVE);
         // notify event listeners 
         notifyActiveEventSubscribers(jobInfo, ActiveLifecycleEvent.ACTIVE_JOB_STARTED);
@@ -610,7 +609,7 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     }
 
-    private void registerActivity(ChannelJobInfo cInfo) {
+    private void registerActivity(ProcedureJobInfo cInfo) {
         //TODO: REGISTER/DEREGISTER OTHER ACTIVE JOBS
         Map<String, String> channelActivityDetails = new HashMap<String, String>();
 
@@ -668,7 +667,7 @@ public class ActiveJobNotificationHandler implements Runnable {
 
     public List<String> getJobLocations(ActiveJobId activeJobId) {
         //TODO: This will be changed when channels become procedures
-        return ((ChannelJobInfo) activeJobInfos.get(activeJobId)).getLocation();
+        return ((ProcedureJobInfo) activeJobInfos.get(activeJobId)).getLocation();
     }
 
     public List<String> getFeedComputeLocations(ActiveObjectId feedId) {
@@ -799,7 +798,7 @@ public class ActiveJobNotificationHandler implements Runnable {
     }
 
     //TODO: Set locations for Procedures
-    private void setLocations(ChannelJobInfo cInfo) {
+    private void setLocations(ProcedureJobInfo cInfo) {
         JobSpecification jobSpec = cInfo.getSpec();
 
         List<OperatorDescriptorId> OperatorIds = new ArrayList<OperatorDescriptorId>();

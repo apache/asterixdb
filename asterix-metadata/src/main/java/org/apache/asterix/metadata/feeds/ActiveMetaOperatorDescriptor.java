@@ -53,26 +53,26 @@ public class ActiveMetaOperatorDescriptor extends AbstractSingleActivityOperator
      * The actual (Hyracks) operator that is wrapped around by the MetaFeed
      * operator.
      **/
-    private IOperatorDescriptor coreOperator;
+    protected IOperatorDescriptor coreOperator;
 
     /**
      * A unique identifier for the active job. e.g. A feed instance represents the
      * flow of data from a feed to a dataset.
      **/
-    private final ActiveJobId activeJobId;
+    protected final ActiveJobId activeJobId;
 
     /**
      * The policy associated with the feed instance.
      **/
-    private final Map<String, String> feedPolicyProperties;
+    protected final Map<String, String> feedPolicyProperties;
 
     /**
      * type for the feed runtime associated with the operator.
      * Possible values: COMPUTE, STORE, OTHER
      **/
-    private final ActiveRuntimeType runtimeType;
+    protected final ActiveRuntimeType runtimeType;
 
-    private final String operandId;
+    protected final String operandId;
 
     public ActiveMetaOperatorDescriptor(JobSpecification spec, ActiveJobId feedConnectionId,
             IOperatorDescriptor coreOperatorDescriptor, Map<String, String> feedPolicyProperties,
@@ -128,6 +128,10 @@ public class ActiveMetaOperatorDescriptor extends AbstractSingleActivityOperator
 
     public ActiveRuntimeType getRuntimeType() {
         return runtimeType;
+    }
+
+    public ActiveJobId getActiveJobId() {
+        return activeJobId;
     }
 
 }

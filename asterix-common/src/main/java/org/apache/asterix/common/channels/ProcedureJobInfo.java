@@ -21,11 +21,12 @@ import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
-public class ChannelJobInfo extends ActiveJobInfo {
+public class ProcedureJobInfo extends ActiveJobInfo {
 
+    //The locations of operators for the job
     private List<String> location;
 
-    public ChannelJobInfo(JobId jobId, JobState state, ActiveJopType jobType, JobSpecification spec,
+    public ProcedureJobInfo(JobId jobId, JobState state, ActiveJopType jobType, JobSpecification spec,
             ActiveJobId channelJobId) {
         super(jobId, state, jobType, spec, channelJobId);
     }

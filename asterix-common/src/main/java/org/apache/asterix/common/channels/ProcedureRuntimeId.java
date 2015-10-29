@@ -24,21 +24,21 @@ import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
 import org.apache.asterix.common.feeds.api.IActiveRuntime.ActiveRuntimeType;
 
 /*
- * Since there is a single runtime for the channel,
+ * Since there is a single runtime for the procedure/channel,
  * All the runtimeid needs is name and dataverse
  */
 
-public class ChannelRuntimeId extends ActiveRuntimeId {
+public class ProcedureRuntimeId extends ActiveRuntimeId {
 
     public static final long serialVersionUID = 1L;
     protected final ActiveObjectId activeId;
 
-    public ChannelRuntimeId(ActiveObjectId activeId) {
+    public ProcedureRuntimeId(ActiveObjectId activeId) {
         super(ActiveRuntimeType.REPETITIVE, 0, DEFAULT_OPERAND_ID);
         this.activeId = activeId;
     }
 
-    public ChannelRuntimeId(String dataverse, String name) {
+    public ProcedureRuntimeId(String dataverse, String name) {
         super(ActiveRuntimeType.REPETITIVE, 0, DEFAULT_OPERAND_ID);
         this.activeId = new ActiveObjectId(dataverse, name, ActiveObjectType.CHANNEL);
     }
@@ -49,11 +49,11 @@ public class ChannelRuntimeId extends ActiveRuntimeId {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof ChannelRuntimeId)) {
+        if (o == null || !(o instanceof ProcedureRuntimeId)) {
             return false;
         }
 
-        if (this == o || ((ChannelRuntimeId) o).getActiveId().equals(activeId)) {
+        if (this == o || ((ProcedureRuntimeId) o).getActiveId().equals(activeId)) {
             return true;
         }
         return false;

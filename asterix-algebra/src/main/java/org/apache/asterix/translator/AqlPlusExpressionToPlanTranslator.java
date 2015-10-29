@@ -24,9 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.aql.base.Clause;
 import org.apache.asterix.aql.base.Expression;
 import org.apache.asterix.aql.base.Expression.Kind;
@@ -50,6 +47,7 @@ import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -121,6 +119,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -1526,6 +1526,13 @@ public class AqlPlusExpressionToPlanTranslator extends AbstractAqlTranslator imp
 
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del,
+            Mutable<ILogicalOperator> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visitExecuteProcedureStatement(ExecuteProcedureStatement ep,
             Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;

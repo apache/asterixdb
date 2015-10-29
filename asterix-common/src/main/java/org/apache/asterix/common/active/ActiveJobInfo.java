@@ -37,7 +37,8 @@ public class ActiveJobInfo {
         FEED_COLLECT,
         FEED_CONNECT,
         CHANNEL_REPETITIVE,
-        CHANNEL_CONTINUOUS
+        CHANNEL_CONTINUOUS,
+        PROCEDURE
     }
 
     protected JobId jobId;

@@ -44,6 +44,7 @@ import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -603,6 +604,12 @@ public class AQLPrintVisitor implements IAqlVisitorWithVoidReturn<Integer> {
 
     @Override
     public void visit(RunStatement stmt, Integer arg) throws AsterixException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void visit(ExecuteProcedureStatement stmt, Integer arg) throws AsterixException {
         // TODO Auto-generated method stub
 
     }

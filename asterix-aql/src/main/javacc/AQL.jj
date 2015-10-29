@@ -75,6 +75,7 @@ import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
 import org.apache.asterix.aql.expression.ExternalDetailsDecl;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FieldAccessor;
@@ -323,6 +324,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
     | stmt = RunStatement()
+    | stmt = ExecuteProcedureStatement()
   )
   {
     return stmt;
@@ -688,6 +690,22 @@ CreateFunctionStatement FunctionSpecification(boolean isProcedure) throws ParseE
       removeCurrentScope();
       return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists, isProcedure);
     }
+}
+
+ExecuteProcedureStatement ExecuteProcedureStatement() throws ParseException:
+{
+	ExecuteProcedureStatement st;
+	Expression callExpr;
+}
+{
+  "execute" 
+  {
+  	callExpr = FunctionCallExpr();
+  	st = new ExecuteProcedureStatement(callExpr);
+  }
+  {
+  	return st;
+  }
 }
 
 CreateFeedStatement FeedSpecification() throws ParseException:
@@ -1581,6 +1599,8 @@ FunctionDecl FunctionDeclaration() throws ParseException:
       return funcDecl;
     }
 }
+
+
 
 
 Query Query() throws ParseException:

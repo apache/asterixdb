@@ -14,12 +14,13 @@
  */
 package org.apache.asterix.file;
 
+import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.active.ActiveJobId;
-import org.apache.asterix.common.channels.ChannelJobInfo;
+import org.apache.asterix.common.channels.ProcedureJobInfo;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
+import org.apache.asterix.common.feeds.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
@@ -37,7 +38,7 @@ import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
 /**
  * Provides helper method(s) for creating JobSpec for operations on a channel.
  */
-public class ChannelOperations {
+public class ProcedureOperations {
 
     /**
      * Builds the job spec for repetitive channel
@@ -82,11 +83,37 @@ public class ChannelOperations {
                 new ActiveJobId(new ActiveObjectId(terminateMessage.getChannelId().getDataverse(), terminateMessage
                         .getChannelId().getName(), ActiveObjectType.CHANNEL)), terminateMessage);
 
-        ChannelJobInfo cInfo = (ChannelJobInfo) ActiveJobLifecycleListener.INSTANCE.getActiveJobInfo(new ActiveJobId(
-                new ActiveObjectId(terminateMessage.getChannelId().getDataverse(), terminateMessage.getChannelId().getName(),
-                        ActiveObjectType.CHANNEL)));
+        ProcedureJobInfo cInfo = (ProcedureJobInfo) ActiveJobLifecycleListener.INSTANCE
+                .getActiveJobInfo(new ActiveJobId(new ActiveObjectId(terminateMessage.getChannelId().getDataverse(),
+                        terminateMessage.getChannelId().getName(), ActiveObjectType.CHANNEL)));
 
         AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(cInfo
+                .getLocation().toArray(new String[] {}));
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, activeMessenger,
+                partitionConstraint);
+        NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(messageJobSpec);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, nullSink,
+                partitionConstraint);
+        messageJobSpec.connect(new OneToOneConnectorDescriptor(messageJobSpec), activeMessenger, 0, nullSink, 0);
+        messageJobSpec.addRoot(nullSink);
+        return messageJobSpec;
+    }
+
+    //TODO: most of the work is the same for this and drop channel. Need to combine work
+    public static JobSpecification buildExecuteProcedureMessageJob(ExecuteProcedureMessage executeMessage)
+            throws AsterixException {
+        JobSpecification messageJobSpec = JobSpecificationUtils.createJobSpecification();
+
+        ActiveMessageOperatorDescriptor activeMessenger = new ActiveMessageOperatorDescriptor(messageJobSpec,
+                new ActiveJobId(new ActiveObjectId(executeMessage.getProcedureId().getDataverse(), executeMessage
+                        .getProcedureId().getName(), ActiveObjectType.PROCEDURE)), executeMessage);
+
+        ProcedureJobInfo jInfo = (ProcedureJobInfo) ActiveJobLifecycleListener.INSTANCE
+                .getActiveJobInfo(new ActiveJobId(new ActiveObjectId(executeMessage.getProcedureId().getDataverse(),
+                        executeMessage.getProcedureId().getName(), ActiveObjectType.PROCEDURE)));
+
+        //TODO: THis message currently goes to every operator involved in the job. It should only go to the head
+        AlgebricksPartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(jInfo
                 .getLocation().toArray(new String[] {}));
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(messageJobSpec, activeMessenger,
                 partitionConstraint);

@@ -40,15 +40,15 @@ import org.apache.asterix.aql.expression.DataverseDecl;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aql.translator.AqlTranslator;
-import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.active.ActiveJobInfo.ActiveJopType;
 import org.apache.asterix.common.active.ActiveJobInfo.JobState;
+import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
-import org.apache.asterix.common.channels.ChannelJobInfo;
+import org.apache.asterix.common.channels.ProcedureJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
@@ -67,6 +67,7 @@ import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.ClusterManager;
 import org.apache.asterix.metadata.feeds.FeedCollectOperatorDescriptor;
 import org.apache.asterix.metadata.feeds.FeedIntakeOperatorDescriptor;
+import org.apache.asterix.metadata.feeds.ProcedureMetaOperatorDescriptor;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.om.util.AsterixClusterProperties;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -178,6 +179,10 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
                 channelJobId = (channelOp).getChannelJobId();
                 jobNotificationHandler.registerActiveJob(channelJobId, jobId, ActiveJopType.CHANNEL_REPETITIVE, spec);
                 break;
+            } else if (opDesc instanceof ProcedureMetaOperatorDescriptor) {
+                ActiveJobId activeJobId = ((ProcedureMetaOperatorDescriptor) opDesc).getActiveJobId();
+                jobNotificationHandler.registerActiveJob(activeJobId, jobId, ActiveJopType.PROCEDURE, spec);
+                break;
             }
         }
     }
@@ -250,8 +255,8 @@ public class ActiveJobLifecycleListener implements IFeedLifecycleListener {
             }
             for (ActiveJobInfo jInfo : activeJobInfos) {
                 //TODO:Handle other active jobs
-                if (jInfo instanceof ChannelJobInfo) {
-                    ChannelJobInfo cInfo = (ChannelJobInfo) jInfo;
+                if (jInfo instanceof ProcedureJobInfo) {
+                    ProcedureJobInfo cInfo = (ProcedureJobInfo) jInfo;
                     if (cInfo.getLocation().contains(deadNode)) {
                         continue;
                     }

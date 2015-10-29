@@ -24,40 +24,40 @@ import org.json.JSONObject;
  * A feed control message indicating the need to end the feed. This message is dispatched
  * to all locations that host an operator involved in the feed pipeline.
  */
-public class DropChannelMessage extends ActiveMessage {
+public class ExecuteProcedureMessage extends ActiveMessage {
 
     private static final long serialVersionUID = 1L;
 
-    private final ActiveObjectId channelId;
+    private final ActiveObjectId procedureId;
 
-    private final ProcedureRuntimeId channelRuntimeId;
+    private final ProcedureRuntimeId procedureRuntimeId;
 
-    public DropChannelMessage(ActiveObjectId channelId, ProcedureRuntimeId channelRuntimeId) {
+    public ExecuteProcedureMessage(ActiveObjectId channelId, ProcedureRuntimeId channelRuntimeId) {
         super(MessageType.DROP_CHANNEL);
-        this.channelId = channelId;
-        this.channelRuntimeId = channelRuntimeId;
+        this.procedureId = channelId;
+        this.procedureRuntimeId = channelRuntimeId;
     }
 
     @Override
     public String toString() {
-        return MessageType.DROP_CHANNEL.name() + "  " + channelId;
+        return MessageType.EXECUTE_PROCEDURE.name() + "  " + procedureId;
     }
 
     @Override
     public JSONObject toJSON() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(FeedConstants.MessageConstants.MESSAGE_TYPE, messageType.name());
-        obj.put(FeedConstants.MessageConstants.DATAVERSE, channelId.getDataverse());
-        obj.put(FeedConstants.MessageConstants.CHANNEL, channelId.getName());
+        obj.put(FeedConstants.MessageConstants.DATAVERSE, procedureId.getDataverse());
+        obj.put(FeedConstants.MessageConstants.PROCEDURE, procedureId.getName());
         return obj;
     }
 
-    public ActiveObjectId getChannelId() {
-        return channelId;
+    public ActiveObjectId getProcedureId() {
+        return procedureId;
     }
 
-    public ProcedureRuntimeId getChannelRuntimeId() {
-        return channelRuntimeId;
+    public ProcedureRuntimeId getProcedureRuntimeId() {
+        return procedureRuntimeId;
     }
 
     /*   public static DropChannelMessage read(JSONObject obj) throws JSONException {

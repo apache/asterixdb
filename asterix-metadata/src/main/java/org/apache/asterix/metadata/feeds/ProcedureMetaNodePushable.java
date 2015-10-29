@@ -38,6 +38,7 @@ public class ProcedureMetaNodePushable extends ActiveMetaNodePushable {
             Map<String, String> feedPolicyProperties, String operationId) throws HyracksDataException {
         super(ctx, recordDescProvider, partition, nPartitions, coreOperator, activeJobId, feedPolicyProperties,
                 operationId);
+        //TODO: should runtimetype be set to procedure???
     }
 
     public void runProcedure() throws HyracksDataException {

@@ -45,6 +45,7 @@ import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -282,7 +283,14 @@ public class CloneAndSubstituteVariablesVisitor implements
     public Pair<IAqlExpression, List<VariableSubstitution>> visitLimitClause(LimitClause lc,
             List<VariableSubstitution> arg) throws AsterixException {
         Pair<IAqlExpression, List<VariableSubstitution>> p1 = lc.getLimitExpr().accept(this, arg);
-        Pair<IAqlExpression, List<VariableSubstitution>> p2 = lc.getOffset().accept(this, arg);
+        Pair<IAqlExpression, List<VariableSubstitution>> p2 = null;
+        // The offset expression can be null.
+        Expression lcOffsetExpr = lc.getOffset();
+        if (lcOffsetExpr != null) {
+            p2 = lcOffsetExpr.accept(this, arg);
+        } else {
+            p2 = new Pair<IAqlExpression, List<VariableSubstitution>>(null, null);
+        }
         LimitClause c = new LimitClause((Expression) p1.first, (Expression) p2.first);
         return new Pair<IAqlExpression, List<VariableSubstitution>>(c, arg);
     }
@@ -669,6 +677,13 @@ public class CloneAndSubstituteVariablesVisitor implements
     @Override
     public Pair<IAqlExpression, List<VariableSubstitution>> visitChannelUnsubscribeStatement(
             ChannelUnsubscribeStatement del, List<VariableSubstitution> arg) throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<IAqlExpression, List<VariableSubstitution>> visitExecuteProcedureStatement(
+            ExecuteProcedureStatement ep, List<VariableSubstitution> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }

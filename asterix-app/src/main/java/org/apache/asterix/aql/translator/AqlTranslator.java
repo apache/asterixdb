@@ -68,6 +68,7 @@ import org.apache.asterix.aql.expression.DataverseDropStatement;
 import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.ExternalDetailsDecl;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -104,7 +105,7 @@ import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.active.ActiveObjectId.ActiveObjectType;
-import org.apache.asterix.common.channels.ChannelRuntimeId;
+import org.apache.asterix.common.channels.ProcedureRuntimeId;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalDatasetTransactionState;
@@ -124,16 +125,17 @@ import org.apache.asterix.common.feeds.api.IActiveLifecycleEventSubscriber.Activ
 import org.apache.asterix.common.feeds.api.IFeedJoint;
 import org.apache.asterix.common.feeds.api.IFeedJoint.FeedJointType;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
+import org.apache.asterix.common.feeds.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.feeds.ActiveJobLifecycleListener;
 import org.apache.asterix.feeds.CentralActiveManager;
 import org.apache.asterix.feeds.FeedJoint;
-import org.apache.asterix.file.ChannelOperations;
 import org.apache.asterix.file.DatasetOperations;
 import org.apache.asterix.file.DataverseOperations;
 import org.apache.asterix.file.ExternalIndexingOperations;
 import org.apache.asterix.file.FeedOperations;
 import org.apache.asterix.file.IndexOperations;
+import org.apache.asterix.file.ProcedureOperations;
 import org.apache.asterix.formats.nontagged.AqlTypeTraitProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataException;
@@ -365,12 +367,12 @@ public class AqlTranslator extends AbstractAqlTranslator {
                         metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                 || resultDelivery == ResultDelivery.ASYNC_DEFERRED);
                     }
-                    handleInsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery);
+                    handleInsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, false);
 
                     break;
                 }
                 case DELETE: {
-                    handleDeleteStatement(metadataProvider, stmt, hcc);
+                    handleDeleteStatement(metadataProvider, stmt, hcc, false);
                     break;
                 }
 
@@ -463,6 +465,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 case RUN: {
                     handleRunStatement(metadataProvider, stmt, hcc);
                     break;
+                }
+                case EXECUTE_PROCEDURE: {
+                    handleExecuteProcedureStatement(metadataProvider, stmt, hcc);
                 }
             }
         }
@@ -1820,15 +1825,25 @@ public class AqlTranslator extends AbstractAqlTranslator {
             String kind = FunctionKind.SCALAR.toString();
             String body = cfs.getFunctionBody();
             if (cfs.getIsProcedure()) {
-                kind = "PROCEDURE";
+                kind = FunctionKind.PROCEDURE.toString();
 
                 AQLParser parser = new AQLParser(new StringReader(body));
                 List<Statement> statements = null;
                 statements = parser.parse();
                 if (!procedureContainsForbiddenStatements(statements)) {
-                    //TODO: for now we assume that a procedure is just a typical FLWR query
-                    JobSpecification jobSpec = handleQuery(metadataProvider, (Query) statements.get(0), hcc, hdc,
-                            resultDelivery, true);
+                    JobSpecification jobSpec = null;
+                    //Currently only allow query,insert,and delete
+                    if (statements.get(0).getKind() == Kind.QUERY) {
+                        jobSpec = handleQuery(metadataProvider, (Query) statements.get(0), hcc, hdc, resultDelivery,
+                                true);
+                    } else if (statements.get(0).getKind() == Kind.INSERT) {
+                        jobSpec = handleInsertStatement(metadataProvider, (InsertStatement) statements.get(0), hcc,
+                                hdc, resultDelivery, true);
+                    } else if (statements.get(0).getKind() == Kind.DELETE) {
+                        jobSpec = handleDeleteStatement(metadataProvider, (DeleteStatement) statements.get(0), hcc,
+                                true);
+                    }
+
                     JobSpecification alteredJobSpec = ActiveUtil.alterJobSpecificationForProcedure(jobSpec,
                             new ActiveJobId(dataverse, functionName, ActiveObjectType.PROCEDURE),
                             new HashMap<String, String>());
@@ -1848,6 +1863,43 @@ public class AqlTranslator extends AbstractAqlTranslator {
             throw e;
         } finally {
             MetadataLockManager.INSTANCE.functionStatementEnd(dataverse, dataverse + "." + functionName);
+        }
+    }
+
+    private void handleExecuteProcedureStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+        ExecuteProcedureStatement eps = (ExecuteProcedureStatement) stmt;
+        FunctionSignature sig = eps.getFunctionSignature();
+        String dataverse = getActiveDataverseName(sig.getNamespace());
+        String functionName = sig.getName();
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
+            if (dv == null) {
+                throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
+            }
+            Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, sig);
+            if (function == null || function.getKind() != FunctionKind.PROCEDURE.toString()) {
+                throw new AlgebricksException("Unknown function " + sig);
+            }
+
+            ActiveObjectId procedureId = new ActiveObjectId(dataverse, functionName, ActiveObjectType.PROCEDURE);
+            ProcedureRuntimeId procedureRuntimeId = new ProcedureRuntimeId(procedureId);
+            ExecuteProcedureMessage executeProcedureMessage = new ExecuteProcedureMessage(procedureId,
+                    procedureRuntimeId);
+            JobSpecification messageJobSpec = ProcedureOperations
+                    .buildExecuteProcedureMessageJob(executeProcedureMessage);
+            runJob(hcc, messageJobSpec, true);
+
+        } catch (Exception e) {
+            abort(e, e, mdTxnCtx);
+            throw e;
+        } finally {
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+
         }
     }
 
@@ -1915,8 +1967,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         }
     }
 
-    private void handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery) throws Exception {
+    private JobSpecification handleInsertStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery, boolean isProcedure)
+            throws Exception {
 
         InsertStatement stmtInsert = (InsertStatement) stmt;
         String dataverseName = getActiveDataverse(stmtInsert.getDataverseName());
@@ -1927,17 +1980,18 @@ public class AqlTranslator extends AbstractAqlTranslator {
         MetadataLockManager.INSTANCE.insertDeleteBegin(dataverseName,
                 dataverseName + "." + stmtInsert.getDatasetName(), query.getDataverses(), query.getDatasets());
 
+        JobSpecification compiled = null;
         try {
             metadataProvider.setWriteTransaction(true);
             CompiledInsertStatement clfrqs = new CompiledInsertStatement(dataverseName, stmtInsert.getDatasetName()
                     .getValue(), query, stmtInsert.getVarCounter(), stmtInsert.getReturnRecord(),
                     stmtInsert.getReturnField());
-            JobSpecification compiled = rewriteCompileQuery(metadataProvider, query, clfrqs);
+            compiled = rewriteCompileQuery(metadataProvider, query, clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled != null) {
+            if (compiled != null && !isProcedure) {
                 if (stmtInsert.getReturnRecord() || stmtInsert.getReturnField() != null) {
                     handleQueryResult(metadataProvider, hcc, hdc, compiled, resultDelivery);
                 } else {
@@ -1955,10 +2009,11 @@ public class AqlTranslator extends AbstractAqlTranslator {
             MetadataLockManager.INSTANCE.insertDeleteEnd(dataverseName,
                     dataverseName + "." + stmtInsert.getDatasetName(), query.getDataverses(), query.getDatasets());
         }
+        return compiled;
     }
 
-    private void handleDeleteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+    private JobSpecification handleDeleteStatement(AqlMetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, boolean isProcedure) throws Exception {
 
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
         String dataverseName = getActiveDataverse(stmtDelete.getDataverseName());
@@ -1969,17 +2024,19 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 .insertDeleteBegin(dataverseName, dataverseName + "." + stmtDelete.getDatasetName(),
                         stmtDelete.getDataverses(), stmtDelete.getDatasets());
 
+        JobSpecification compiled = null;
+
         try {
             metadataProvider.setWriteTransaction(true);
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
                     metadataProvider);
-            JobSpecification compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
+            compiled = rewriteCompileQuery(metadataProvider, clfrqs.getQuery(), clfrqs);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (compiled != null) {
+            if (compiled != null && !isProcedure) {
                 runJob(hcc, compiled, true);
             }
 
@@ -1993,6 +2050,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                     dataverseName + "." + stmtDelete.getDatasetName(), stmtDelete.getDataverses(),
                     stmtDelete.getDatasets());
         }
+        return compiled;
     }
 
     private JobSpecification rewriteCompileQuery(AqlMetadataProvider metadataProvider, Query query,
@@ -2608,7 +2666,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             ccs.initialize(mdTxnCtx, subscriptionsName.getValue(), resultsName.getValue());
             channel = new Channel(dataverseName, channelName, subscriptionsName.getValue(), resultsName.getValue(),
                     ccs.getFunction(), ccs.getDuration());
-            JobSpecification jobSpec = ChannelOperations.buildChannelJobSpec(dataverseName, channelName,
+            JobSpecification jobSpec = ProcedureOperations.buildChannelJobSpec(dataverseName, channelName,
                     ccs.getDuration(), ccs.getFunction(), ccs.getSubscriptionsName(), ccs.getResultsName(),
                     metadataProvider);
 
@@ -2669,9 +2727,9 @@ public class AqlTranslator extends AbstractAqlTranslator {
         } finally {
             MetadataLockManager.INSTANCE.dropChannelEnd(dataverseName, dataverseName + "." + channelName);
             ActiveObjectId channelId = new ActiveObjectId(dataverseName, channelName, ActiveObjectType.CHANNEL);
-            ChannelRuntimeId channelRuntimeId = new ChannelRuntimeId(channelId);
+            ProcedureRuntimeId channelRuntimeId = new ProcedureRuntimeId(channelId);
             DropChannelMessage dropChannelMessage = new DropChannelMessage(channelId, channelRuntimeId);
-            JobSpecification messageJobSpec = ChannelOperations.buildDropChannelMessageJob(dropChannelMessage);
+            JobSpecification messageJobSpec = ProcedureOperations.buildDropChannelMessageJob(dropChannelMessage);
             runJob(hcc, messageJobSpec, true);
         }
     }
@@ -2714,7 +2772,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
 
         InsertStatement insert = new InsertStatement(new Identifier(dataverseName), new Identifier(
                 subscriptionsDatasetName), subscriptionTuple, stmtChannelSub.getVarCounter(), false, returnField);
-        handleInsertStatement(metadataProvider, insert, hcc, hdc, resultDelivery);
+        handleInsertStatement(metadataProvider, insert, hcc, hdc, resultDelivery, false);
 
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
 
@@ -2757,7 +2815,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
         DeleteStatement delete = new DeleteStatement(vars, new Identifier(dataverseName), subscriptionsDatasetName,
                 condition, stmtChannelSub.getVarCounter(), stmtChannelSub.getDataverses(), stmtChannelSub.getDatasets());
 
-        handleDeleteStatement(metadataProvider, delete, hcc);
+        handleDeleteStatement(metadataProvider, delete, hcc, false);
 
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
 

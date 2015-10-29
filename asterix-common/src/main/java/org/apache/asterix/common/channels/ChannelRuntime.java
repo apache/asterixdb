@@ -76,6 +76,7 @@ public class ChannelRuntime extends ActiveRuntime {
 
     }
 
+    //TODO: I don't think that this actually gets rid of the operator. Not sure
     public void drop() throws HyracksDataException {
         timer.cancel();
         complete = true;

@@ -48,6 +48,7 @@ import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -622,6 +623,12 @@ public final class AqlRewriter {
 
         @Override
         public Void visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del, Void arg) throws AsterixException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Void visitExecuteProcedureStatement(ExecuteProcedureStatement ep, Void arg) throws AsterixException {
             // TODO Auto-generated method stub
             return null;
         }

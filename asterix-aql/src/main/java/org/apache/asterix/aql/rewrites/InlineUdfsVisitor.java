@@ -46,6 +46,7 @@ import org.apache.asterix.aql.expression.DeleteStatement;
 import org.apache.asterix.aql.expression.DisconnectFeedStatement;
 import org.apache.asterix.aql.expression.DistinctClause;
 import org.apache.asterix.aql.expression.DropStatement;
+import org.apache.asterix.aql.expression.ExecuteProcedureStatement;
 import org.apache.asterix.aql.expression.FLWOGRExpression;
 import org.apache.asterix.aql.expression.FeedDropStatement;
 import org.apache.asterix.aql.expression.FeedPolicyDropStatement;
@@ -599,6 +600,13 @@ public class InlineUdfsVisitor implements IAqlExpressionVisitor<Boolean, List<Fu
 
     @Override
     public Boolean visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del, List<FunctionDecl> arg)
+            throws AsterixException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Boolean visitExecuteProcedureStatement(ExecuteProcedureStatement ep, List<FunctionDecl> arg)
             throws AsterixException {
         // TODO Auto-generated method stub
         return null;

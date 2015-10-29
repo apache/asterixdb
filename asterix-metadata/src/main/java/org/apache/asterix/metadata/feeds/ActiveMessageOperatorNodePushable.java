@@ -29,7 +29,7 @@ import org.apache.asterix.common.active.ActiveJobId;
 import org.apache.asterix.common.active.ActiveObjectId;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.channels.ChannelRuntime;
-import org.apache.asterix.common.channels.ChannelRuntimeId;
+import org.apache.asterix.common.channels.ProcedureRuntimeId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
 import org.apache.asterix.common.feeds.ActiveRuntimeManager;
@@ -41,6 +41,7 @@ import org.apache.asterix.common.feeds.FeedFrameCollector.State;
 import org.apache.asterix.common.feeds.IngestionRuntime;
 import org.apache.asterix.common.feeds.IntakePartitionStatistics;
 import org.apache.asterix.common.feeds.MonitoredBufferTimerTasks.MonitoredBufferStorageTimerTask;
+import org.apache.asterix.common.feeds.ProcedureRuntime;
 import org.apache.asterix.common.feeds.StorageSideMonitoredBuffer;
 import org.apache.asterix.common.feeds.SubscribableFeedRuntimeId;
 import org.apache.asterix.common.feeds.api.ActiveRuntimeId;
@@ -53,6 +54,7 @@ import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.api.ISubscribableRuntime;
 import org.apache.asterix.common.feeds.message.DropChannelMessage;
 import org.apache.asterix.common.feeds.message.EndFeedMessage;
+import org.apache.asterix.common.feeds.message.ExecuteProcedureMessage;
 import org.apache.asterix.common.feeds.message.FeedTupleCommitResponseMessage;
 import org.apache.asterix.common.feeds.message.ThrottlingEnabledFeedMessage;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -74,17 +76,17 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
 
     private final ActiveJobId activeJobId;
     private final IFeedMessage message;
-    private final IActiveManager feedManager;
+    private final IActiveManager activeManager;
     private final int partition;
 
-    public ActiveMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId activeJobId, IFeedMessage feedMessage,
-            int partition) {
+    public ActiveMessageOperatorNodePushable(IHyracksTaskContext ctx, ActiveJobId activeJobId,
+            IFeedMessage feedMessage, int partition) {
         this.activeJobId = activeJobId;
         this.message = feedMessage;
         this.partition = partition;
         IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                 .getApplicationContext().getApplicationObject();
-        this.feedManager = runtimeCtx.getActiveManager();
+        this.activeManager = runtimeCtx.getActiveManager();
     }
 
     @Override
@@ -124,6 +126,10 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
                     handleDropChannelMessage((DropChannelMessage) message);
                     break;
                 }
+                case EXECUTE_PROCEDURE: {
+                    handleExecuteProcedureMessage((ExecuteProcedureMessage) message);
+                    break;
+                }
                 default:
                     break;
 
@@ -136,12 +142,23 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
         }
     }
 
+    private void handleExecuteProcedureMessage(ExecuteProcedureMessage message) throws IOException {
+        ProcedureRuntimeId procedureRuntimeId = message.getProcedureRuntimeId();
+        ProcedureRuntime runtime = (ProcedureRuntime) activeManager.getConnectionManager().getActiveRuntime(
+                activeJobId, procedureRuntimeId);
+        runtime.execute();
+        activeManager.getConnectionManager().deRegisterActiveRuntime(activeJobId, procedureRuntimeId);
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.info("Executed Procedure " + message.getProcedureId());
+        }
+    }
+
     private void handleDropChannelMessage(DropChannelMessage message) throws IOException {
-        ChannelRuntimeId channelRuntimeId = message.getChannelRuntimeId();
-        ChannelRuntime cRuntime = (ChannelRuntime) feedManager.getConnectionManager().getActiveRuntime(activeJobId,
+        ProcedureRuntimeId channelRuntimeId = message.getChannelRuntimeId();
+        ChannelRuntime cRuntime = (ChannelRuntime) activeManager.getConnectionManager().getActiveRuntime(activeJobId,
                 channelRuntimeId);
         cRuntime.drop();
-        feedManager.getConnectionManager().deRegisterActiveRuntime(activeJobId, channelRuntimeId);
+        activeManager.getConnectionManager().deRegisterActiveRuntime(activeJobId, channelRuntimeId);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Dropped Channel " + message.getChannelId());
         }
@@ -149,7 +166,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
 
     private void handleThrottlingEnabledMessage(ThrottlingEnabledFeedMessage throttlingMessage) {
         ActiveJobId connectionId = throttlingMessage.getConnectionId();
-        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        ActiveRuntimeManager runtimeManager = activeManager.getConnectionManager()
+                .getActiveRuntimeManager(connectionId);
         Set<ActiveRuntimeId> runtimes = runtimeManager.getRuntimes();
         for (ActiveRuntimeId runtimeId : runtimes) {
             if (runtimeId.getRuntimeType().equals(ActiveRuntimeType.STORE)) {
@@ -165,7 +183,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
 
     private void handleFeedTupleCommitResponseMessage(FeedTupleCommitResponseMessage commitResponseMessage) {
         ActiveJobId connectionId = commitResponseMessage.getConnectionId();
-        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        ActiveRuntimeManager runtimeManager = activeManager.getConnectionManager()
+                .getActiveRuntimeManager(connectionId);
         Set<ActiveRuntimeId> runtimes = runtimeManager.getRuntimes();
         for (ActiveRuntimeId runtimeId : runtimes) {
             ActiveRuntime runtime = runtimeManager.getActiveRuntime(runtimeId);
@@ -187,7 +206,7 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
         commitResponseMessage.getIntakePartition();
         SubscribableFeedRuntimeId sid = new SubscribableFeedRuntimeId(connectionId.getActiveId(),
                 ActiveRuntimeType.INTAKE, partition);
-        IngestionRuntime ingestionRuntime = (IngestionRuntime) feedManager.getFeedSubscriptionManager()
+        IngestionRuntime ingestionRuntime = (IngestionRuntime) activeManager.getFeedSubscriptionManager()
                 .getSubscribableRuntime(sid);
         if (ingestionRuntime != null) {
             IIntakeProgressTracker tracker = ingestionRuntime.getAdapterRuntimeManager().getProgressTracker();
@@ -198,7 +217,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
     }
 
     private void handleTerminateFlowMessage(ActiveJobId connectionId) throws HyracksDataException {
-        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        ActiveRuntimeManager runtimeManager = activeManager.getConnectionManager()
+                .getActiveRuntimeManager(connectionId);
         Set<ActiveRuntimeId> feedRuntimes = runtimeManager.getRuntimes();
 
         boolean found = false;
@@ -220,7 +240,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
     private void handlePrepareStallMessage(PrepareStallMessage prepareStallMessage) throws HyracksDataException {
         ActiveJobId connectionId = prepareStallMessage.getConnectionId();
         int computePartitionsRetainLimit = prepareStallMessage.getComputePartitionsRetainLimit();
-        ActiveRuntimeManager runtimeManager = feedManager.getConnectionManager().getActiveRuntimeManager(connectionId);
+        ActiveRuntimeManager runtimeManager = activeManager.getConnectionManager()
+                .getActiveRuntimeManager(connectionId);
         Set<ActiveRuntimeId> feedRuntimes = runtimeManager.getRuntimes();
         for (ActiveRuntimeId runtimeId : feedRuntimes) {
             ActiveRuntime runtime = runtimeManager.getActiveRuntime(runtimeId);
@@ -241,7 +262,7 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
         ActiveObjectId sourceFeedId = endFeedMessage.getSourceFeedId();
         SubscribableFeedRuntimeId subscribableRuntimeId = new SubscribableFeedRuntimeId(sourceFeedId,
                 ActiveRuntimeType.INTAKE, partition);
-        ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager().getSubscribableRuntime(
+        ISubscribableRuntime feedRuntime = activeManager.getFeedSubscriptionManager().getSubscribableRuntime(
                 subscribableRuntimeId);
         IAdapterRuntimeManager adapterRuntimeManager = ((IngestionRuntime) feedRuntime).getAdapterRuntimeManager();
         adapterRuntimeManager.stop();
@@ -271,7 +292,7 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
             }
 
             runtimeId = new ActiveRuntimeId(runtimeType, partition, ActiveRuntimeId.DEFAULT_OPERAND_ID);
-            CollectionRuntime feedRuntime = (CollectionRuntime) feedManager.getConnectionManager().getActiveRuntime(
+            CollectionRuntime feedRuntime = (CollectionRuntime) activeManager.getConnectionManager().getActiveRuntime(
                     activeJobId, runtimeId);
             feedRuntime.getSourceRuntime().unsubscribeFeed(feedRuntime);
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -287,8 +308,8 @@ public class ActiveMessageOperatorNodePushable extends AbstractUnaryOutputSource
                     // feed could be primary or secondary, doesn't matter
                     SubscribableFeedRuntimeId feedSubscribableRuntimeId = new SubscribableFeedRuntimeId(
                             activeJobId.getActiveId(), ActiveRuntimeType.COMPUTE, partition);
-                    ISubscribableRuntime feedRuntime = feedManager.getFeedSubscriptionManager().getSubscribableRuntime(
-                            feedSubscribableRuntimeId);
+                    ISubscribableRuntime feedRuntime = activeManager.getFeedSubscriptionManager()
+                            .getSubscribableRuntime(feedSubscribableRuntimeId);
                     DistributeFeedFrameWriter dWriter = (DistributeFeedFrameWriter) feedRuntime.getActiveFrameWriter();
                     Map<IFrameWriter, FeedFrameCollector> registeredCollectors = dWriter.getRegisteredReaders();
 

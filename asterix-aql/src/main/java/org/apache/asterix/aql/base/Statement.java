@@ -57,6 +57,7 @@ public interface Statement extends IAqlExpression {
         FUNCTION_DROP,
         COMPACT,
         EXTERNAL_DATASET_REFRESH,
+        EXECUTE_PROCEDURE,
         RUN
     }
 

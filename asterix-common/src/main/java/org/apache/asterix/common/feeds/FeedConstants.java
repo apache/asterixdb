@@ -36,6 +36,7 @@ public class FeedConstants {
         public static final String FEED = "feed";
         public static final String CHANNEL = "channel";
         public static final String DATASET = "dataset";
+        public static final String PROCEDURE = "procedure";
         public static final String AQL = "aql";
         public static final String RUNTIME_TYPE = "runtime-type";
         public static final String PARTITION = "partition";

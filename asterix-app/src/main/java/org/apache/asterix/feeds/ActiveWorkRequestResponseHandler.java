@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.active.ActiveJobInfo;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
-import org.apache.asterix.common.channels.ChannelJobInfo;
+import org.apache.asterix.common.channels.ProcedureJobInfo;
 import org.apache.asterix.common.feeds.FeedConnectJobInfo;
 import org.apache.asterix.common.feeds.FeedIntakeInfo;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
@@ -132,7 +132,7 @@ public class ActiveWorkRequestResponseHandler implements Runnable {
 
                     Set<FeedIntakeInfo> revisedIntakeJobs = new HashSet<FeedIntakeInfo>();
                     Set<FeedConnectJobInfo> revisedConnectJobInfos = new HashSet<FeedConnectJobInfo>();
-                    Set<ChannelJobInfo> revisedChannelJobInfos = new HashSet<ChannelJobInfo>();
+                    Set<ProcedureJobInfo> revisedChannelJobInfos = new HashSet<ProcedureJobInfo>();
 
                     for (List<ActiveJobInfo> infos : failureAnalysis.values()) {
                         for (ActiveJobInfo info : infos) {
@@ -145,10 +145,10 @@ public class ActiveWorkRequestResponseHandler implements Runnable {
                                     revisedConnectJobInfos.add((FeedConnectJobInfo) info);
                                     break;
                                 case CHANNEL_CONTINUOUS:
-                                    revisedChannelJobInfos.add((ChannelJobInfo) info);
+                                    revisedChannelJobInfos.add((ProcedureJobInfo) info);
                                     break;
                                 case CHANNEL_REPETITIVE:
-                                    revisedChannelJobInfos.add((ChannelJobInfo) info);
+                                    revisedChannelJobInfos.add((ProcedureJobInfo) info);
                                     break;
                                 case FEED_COLLECT:
                                     break;
@@ -169,7 +169,7 @@ public class ActiveWorkRequestResponseHandler implements Runnable {
                             hcc.startJob(info.getSpec());
                             Thread.sleep(2000);
                         }
-                        for (ChannelJobInfo info : revisedChannelJobInfos) {
+                        for (ProcedureJobInfo info : revisedChannelJobInfos) {
                             hcc.startJob(info.getSpec());
                             Thread.sleep(2000);
                         }
