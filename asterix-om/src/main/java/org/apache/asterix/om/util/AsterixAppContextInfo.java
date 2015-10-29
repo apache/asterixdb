@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixStorageProperties;
@@ -52,6 +53,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
     private AsterixFeedProperties feedProperties;
+    private AsterixBuildProperties buildProperties;
 
     private IHyracksClientConnection hcc;
 
@@ -67,6 +69,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         INSTANCE.feedProperties = new AsterixFeedProperties(propertiesAccessor);
         INSTANCE.hcc = hcc;
+        INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
         Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
     }
 
@@ -113,7 +116,12 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     public AsterixFeedProperties getFeedProperties() {
         return feedProperties;
     }
-    
+
+    @Override
+    public AsterixBuildProperties getBuildProperties() {
+        return buildProperties;
+    }
+
     public IHyracksClientConnection getHcc() {
         return hcc;
     }

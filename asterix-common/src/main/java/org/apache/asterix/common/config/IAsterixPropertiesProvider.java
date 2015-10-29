@@ -30,4 +30,6 @@ public interface IAsterixPropertiesProvider {
     public AsterixExternalProperties getExternalProperties();
     
     public AsterixFeedProperties getFeedProperties();
+
+    AsterixBuildProperties getBuildProperties();
 }

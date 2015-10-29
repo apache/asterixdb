@@ -36,6 +36,8 @@ import org.apache.asterix.api.http.servlet.QueryResultAPIServlet;
 import org.apache.asterix.api.http.servlet.QueryStatusAPIServlet;
 import org.apache.asterix.api.http.servlet.ShutdownAPIServlet;
 import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
+import org.apache.asterix.api.http.servlet.VersionAPIServlet;
+import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
@@ -57,6 +59,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(CCApplicationEntryPoint.class.getName());
 
     private static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
+    private static final String ASTERIX_BUILD_PROP_ATTR = "org.apache.asterix.PROPS";
 
     private Server webServer;
     private Server jsonAPIServer;
@@ -89,7 +92,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);
         webServer.start();
-
+        AsterixBuildProperties buildProperties = AsterixAppContextInfo.getInstance().getBuildProperties();
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
 
@@ -160,6 +163,9 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
 
         IHyracksClientConnection hcc = getNewHyracksClientConnection();
         context.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
+        context.setAttribute(ASTERIX_BUILD_PROP_ATTR, AsterixAppContextInfo.getInstance());
+
+
 
         jsonAPIServer.setHandler(context);
         context.addServlet(new ServletHolder(new QueryAPIServlet()), "/query");
@@ -170,6 +176,7 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.addServlet(new ServletHolder(new AQLAPIServlet()), "/aql");
         context.addServlet(new ServletHolder(new ConnectorAPIServlet()), "/connector");
         context.addServlet(new ServletHolder(new ShutdownAPIServlet()), "/admin/shutdown");
+        context.addServlet(new ServletHolder(new VersionAPIServlet()), "/admin/version");
     }
 
     private void setupFeedServer(AsterixExternalProperties externalProperties) throws Exception {

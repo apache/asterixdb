@@ -27,6 +27,7 @@ import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
+import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixStorageProperties;
@@ -95,6 +96,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixStorageProperties storageProperties;
     private AsterixTransactionProperties txnProperties;
     private AsterixFeedProperties feedProperties;
+    private AsterixBuildProperties buildProperties;
 
     private AsterixThreadExecutor threadExecutor;
     private DatasetLifecycleManager indexLifecycleManager;
@@ -118,6 +120,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         storageProperties = new AsterixStorageProperties(ASTERIX_PROPERTIES_ACCESSOR);
         txnProperties = new AsterixTransactionProperties(ASTERIX_PROPERTIES_ACCESSOR);
         feedProperties = new AsterixFeedProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        buildProperties = new AsterixBuildProperties(ASTERIX_PROPERTIES_ACCESSOR);
     }
 
     public void initialize() throws IOException, ACIDException, AsterixException {
@@ -246,6 +249,11 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public AsterixFeedProperties getFeedProperties() {
         return feedProperties;
+    }
+
+    @Override
+    public AsterixBuildProperties getBuildProperties() {
+        return buildProperties;
     }
 
     @Override

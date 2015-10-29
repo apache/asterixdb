@@ -22,3 +22,4 @@ bin/
 .idea/
 asterix.ipr
 asterix.iws
+git.properties
