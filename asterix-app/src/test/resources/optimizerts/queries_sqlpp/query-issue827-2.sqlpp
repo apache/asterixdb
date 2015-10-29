@@ -1,0 +1,80 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue827
+ * https://code.google.com/p/asterixdb/issues/detail?id=827
+ * Expected Res : SUCCESS
+ * Date         : 3rd Dec. 2014
+ */
+
+drop  database tpch if exists;
+create  database tpch;
+
+use tpch;
+
+
+create type tpch.LineItemType as
+ closed {
+  l_orderkey : int32,
+  l_partkey : int32,
+  l_suppkey : int32,
+  l_linenumber : int32,
+  l_quantity : double,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+}
+
+create  table LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+
+{'sum_qty_partial':tpch.sum((
+    select element i.l_quantity
+    from  LineItem as i
+    where (i.l_shipdate <= '1998-09-02')
+)),'sum_base_price':tpch.sum((
+    select element i.l_extendedprice
+    from  LineItem as i
+)),'sum_disc_price':tpch.sum((
+    select element (i.l_extendedprice * (1 - i.l_discount))
+    from  LineItem as i
+)),'sum_charge':tpch.sum((
+    select element (i.l_extendedprice * (1 - i.l_discount) * (1 + i.l_tax))
+    from  LineItem as i
+)),'ave_qty':tpch.avg((
+    select element i.l_quantity
+    from  LineItem as i
+    where (i.l_shipdate <= '1998-09-02')
+)),'ave_price':tpch.avg((
+    select element i.l_extendedprice
+    from  LineItem as i
+)),'ave_disc':tpch.avg((
+    select element i.l_discount
+    from  LineItem as i
+)),'count_order':tpch.count((
+    select element l
+    from  LineItem as l
+))};

@@ -1,0 +1,52 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    interests : OrderedList [string]
+,
+    children : OrderedList [          open RecordType {
+            name : string,
+            age : int32?
+          }
+]
+
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+WriteOutputTo nc1:rttest/inverted-index-basic_olist-jaccard.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=c ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.similarity-jaccard@2[
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=interests
+      ]
+      OrderedListConstructor [
+        LiteralExpr [STRING] [databases]
+        LiteralExpr [STRING] [computers]
+        LiteralExpr [STRING] [wine]
+      ]
+    ]
+    >=
+    LiteralExpr [FLOAT] [0.7]
+  ]

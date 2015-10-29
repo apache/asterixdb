@@ -1,0 +1,17 @@
+DataverseUse TinySocial
+Query:
+  SELECT ELEMENT [
+  Variable [ Name=user Id=0 ]
+  ]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TwitterUsers] 
+  ]
+  Variable [ Name=user Id=0 ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=user Id=0 ]
+    Field=screen_name
+  ]
+  ASC
+

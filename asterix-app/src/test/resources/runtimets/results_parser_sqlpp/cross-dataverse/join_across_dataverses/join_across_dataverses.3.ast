@@ -1,0 +1,81 @@
+DataverseUse test1
+DataverseUse test2
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cust_name]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [cust_age]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=age
+    ]
+  )
+  (
+    LiteralExpr [STRING] [order_total]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=total
+    ]
+  )
+  (
+    LiteralExpr [STRING] [orderList]
+    :
+    OrderedListConstructor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=oid
+      ]
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=cid
+      ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [test1.Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [test2.Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=cid
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=name
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=total
+  ]
+  ASC
+

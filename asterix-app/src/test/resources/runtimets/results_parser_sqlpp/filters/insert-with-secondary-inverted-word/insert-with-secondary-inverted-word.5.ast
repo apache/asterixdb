@@ -1,0 +1,47 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=m ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookMessages]
+  ]
+  AS
+  Variable [ Name=m ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.similarity-jaccard@2[
+        FunctionCall test.word-tokens@1[
+          FieldAccessor [
+            Variable [ Name=m ]
+            Field=message
+          ]
+        ]
+        FunctionCall test.word-tokens@1[
+          LiteralExpr [STRING] [love sprint at&t verizon]
+        ]
+      ]
+      >=
+      LiteralExpr [FLOAT] [0.2]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=m ]
+        Field=send-time
+      ]
+      <
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2012-12-20T10:10:00]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=m ]
+    Field=send-time
+  ]
+  ASC
+

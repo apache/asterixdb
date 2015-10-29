@@ -1,0 +1,64 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Self-equi joins a dataset, Customers, based on the customer id.
+ *                  Given the 'indexnl' hint we expect the join to be transformed
+ *                  into an indexed nested-loop join using Customers' primary index.
+ * Success        : Yes
+ */
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.AddressType as
+ closed {
+  number : int32,
+  street : string,
+  city : string
+}
+
+create type test.CustomerTypetmp as
+ closed {
+  cid : int32,
+  name : string,
+  age : int32?,
+  address : AddressType?,
+  lastorder : {
+      oid : int32,
+      total : float
+  }
+
+}
+
+create type test.CustomerType as
+ closed {
+  nested : CustomerTypetmp
+}
+
+create  table Customers(CustomerType) primary key nested.cid;
+
+write output to nc1:"rttest/btree-index-join_primary-equi-join_06.adm"
+select element {'customer1':c1.nested,'customer2':c2.nested}
+from  Customers as c1,
+      Customers as c2
+where (c1.nested.cid /*+ indexnl */  = c2.nested.cid)
+;

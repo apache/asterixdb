@@ -41,6 +41,6 @@ create index ngram_index on DBLP(title) type ngram(3);
 write output to nc1:"rttest/inverted-index-basic_ngram-contains.adm";
 
 for $o in dataset('DBLP')
-where /*+ skip-index */ contains($o.title, "Multimedia")
+where /*+ skip-index */ test.contains($o.title, "Multimedia")
 order by $o.id
 return $o

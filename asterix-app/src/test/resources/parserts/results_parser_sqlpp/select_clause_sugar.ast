@@ -1,0 +1,21 @@
+Query:
+SELECT [
+Variable [ Name=x ]
+value
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [20]
+    LiteralExpr [LONG] [30]
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [10]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+Where
+  OperatorExpr [
+    Variable [ Name=x ]
+    =
+    LiteralExpr [LONG] [10]
+  ]

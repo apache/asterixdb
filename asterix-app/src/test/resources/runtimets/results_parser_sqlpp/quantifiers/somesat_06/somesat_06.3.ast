@@ -1,0 +1,118 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=x ]
+  :=
+  OrderedListConstructor [
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [FALSE]
+          LiteralExpr [FALSE]
+        ]
+      ]
+      Satifies [
+        Variable [ Name=x ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [TRUE]
+          LiteralExpr [FALSE]
+        ]
+      ]
+      Satifies [
+        Variable [ Name=x ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [FALSE]
+          LiteralExpr [TRUE]
+        ]
+      ]
+      Satifies [
+        Variable [ Name=x ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [TRUE]
+          LiteralExpr [TRUE]
+        ]
+      ]
+      Satifies [
+        Variable [ Name=x ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [FALSE]
+          LiteralExpr [FALSE]
+        ]
+      ]
+      Satifies [
+        FunctionCall test.not@1[
+          Variable [ Name=x ]
+        ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [TRUE]
+          LiteralExpr [FALSE]
+        ]
+      ]
+      Satifies [
+        FunctionCall test.not@1[
+          Variable [ Name=x ]
+        ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [FALSE]
+          LiteralExpr [TRUE]
+        ]
+      ]
+      Satifies [
+        FunctionCall test.not@1[
+          Variable [ Name=x ]
+        ]
+      ]
+    ]
+    QuantifiedExpression SOME [
+      [Variable [ Name=x ]
+      In
+        OrderedListConstructor [
+          LiteralExpr [TRUE]
+          LiteralExpr [TRUE]
+        ]
+      ]
+      Satifies [
+        FunctionCall test.not@1[
+          Variable [ Name=x ]
+        ]
+      ]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=x ]
+  AS
+  Variable [ Name=i ]
+]

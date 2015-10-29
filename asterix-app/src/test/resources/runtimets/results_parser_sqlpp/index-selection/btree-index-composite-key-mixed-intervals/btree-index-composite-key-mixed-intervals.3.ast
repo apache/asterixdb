@@ -1,0 +1,56 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=l ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [employee]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=fname
+      ]
+      >
+      LiteralExpr [STRING] [Julio]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=lname
+      ]
+      >
+      LiteralExpr [STRING] [Mattocks]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=fname
+      ]
+      <=
+      LiteralExpr [STRING] [Micco]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=lname
+      ]
+      <
+      LiteralExpr [STRING] [Vangieson]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=id
+  ]
+  ASC
+

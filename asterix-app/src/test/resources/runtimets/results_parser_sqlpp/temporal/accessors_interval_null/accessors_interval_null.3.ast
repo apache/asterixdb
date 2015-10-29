@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [start-null-interval]
+    :
+    FunctionCall test.get-interval-start@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [end-null-interval]
+    :
+    FunctionCall test.get-interval-end@1[
+      LiteralExpr [NULL]
+    ]
+  )
+]
+]

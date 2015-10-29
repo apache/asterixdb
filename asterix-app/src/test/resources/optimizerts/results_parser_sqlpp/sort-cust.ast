@@ -1,0 +1,59 @@
+DataverseUse custlimit
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int32,
+        total : float
+      }
+
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+WriteOutputTo nc1:/tmp/custlimit.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [custname]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [custage]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=age
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=age
+  ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [10]

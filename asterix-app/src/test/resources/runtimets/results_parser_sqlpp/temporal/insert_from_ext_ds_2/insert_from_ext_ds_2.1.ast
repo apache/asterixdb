@@ -1,0 +1,15 @@
+DataverseUse timeTest
+TypeDecl timesType [
+  open RecordType {
+    date : date,
+    time : time,
+    datetime : datetime,
+    duration : duration,
+    year-month-duration : year-month-duration,
+    day-time-duration : day-time-duration,
+    date-interval : interval,
+    time-interval : interval,
+    datetime-interval : interval
+  }
+]
+DatasetDecl timeData(timesType) partitioned by [[date]]

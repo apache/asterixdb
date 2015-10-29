@@ -1,0 +1,46 @@
+DataverseUse test
+WriteOutputTo nc1:/tmp/inline_funs.adm
+FunctionDecl f1([]) {
+  OperatorExpr [
+    LiteralExpr [LONG] [1]
+    +
+    FunctionCall test.f2@0[
+    ]
+  ]
+}
+
+FunctionDecl f2([]) {
+  OperatorExpr [
+    LiteralExpr [LONG] [2]
+    +
+    FunctionCall test.f3@0[
+    ]
+    +
+    FunctionCall test.f3@0[
+    ]
+    +
+    FunctionCall test.f3@0[
+    ]
+    +
+    FunctionCall test.f4@0[
+    ]
+  ]
+}
+
+FunctionDecl f3([]) {
+  OperatorExpr [
+    LiteralExpr [LONG] [0]
+    -
+    LiteralExpr [LONG] [1]
+  ]
+}
+
+FunctionDecl f4([]) {
+  LiteralExpr [LONG] [1001]
+}
+
+Query:
+SELECT ELEMENT [
+FunctionCall test.f1@0[
+]
+]

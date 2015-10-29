@@ -26,11 +26,11 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.expression.ConnectFeedStatement;
-import org.apache.asterix.aql.expression.DataverseDecl;
-import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.DataverseDecl;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.hyracks.api.job.JobId;
 

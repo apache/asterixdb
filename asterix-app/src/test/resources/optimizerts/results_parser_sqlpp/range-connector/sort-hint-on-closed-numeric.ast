@@ -1,0 +1,29 @@
+DataverseUse TinySocial
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string,
+    lang : string,
+    friends_count : int64,
+    statuses_count : int64,
+    name : string,
+    followers_count : int64
+  }
+]
+DatasetDecl TwitterUsers(TwitterUserType) partitioned by [[screen-name]]
+Query:
+SELECT ELEMENT [
+Variable [ Name=user ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TwitterUsers]
+  ]
+  AS
+  Variable [ Name=user ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=user ]
+    Field=friends_count
+  ]
+  ASC
+

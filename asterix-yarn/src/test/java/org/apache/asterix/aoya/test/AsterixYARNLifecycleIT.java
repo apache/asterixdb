@@ -54,7 +54,7 @@ import org.apache.asterix.event.model.AsterixRuntimeState;
 import org.apache.asterix.event.schema.yarnCluster.Cluster;
 import org.apache.asterix.event.schema.yarnCluster.Node;
 import org.apache.asterix.event.service.ServiceProvider;
-import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.aoya.test.YARNCluster;
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.testframework.context.TestCaseContext;

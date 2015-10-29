@@ -1,0 +1,20 @@
+Query:
+SELECT ELEMENT [
+FunctionCall null.sql-avg@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=x ]
+    ]
+    FROM [      OrderedListConstructor [
+        LiteralExpr [DOUBLE] [1.0]
+        LiteralExpr [DOUBLE] [2.0]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+  )
+]
+]

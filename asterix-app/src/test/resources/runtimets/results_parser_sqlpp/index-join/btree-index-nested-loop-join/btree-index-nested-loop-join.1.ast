@@ -1,0 +1,33 @@
+DataverseUse test
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string,
+    lang : string,
+    friends_count : int32,
+    statuses_count : int32,
+    name : string,
+    followers_count : int32
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : int64,
+    user : string,
+    sender-location : point,
+    send-time : datetime,
+    forward-from : int64,
+    retweet-from : int64,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string
+  }
+]
+TypeDecl ResultType [
+  open RecordType {
+    vertexid : int64,
+    rank : double
+  }
+]
+DatasetDecl TwitterUsers(TwitterUserType) partitioned by [[screen-name]]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
+DatasetDecl results(ResultType) partitioned by [[vertexid]]

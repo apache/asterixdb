@@ -1,0 +1,10 @@
+Query:
+OperatorExpr [
+  LiteralExpr [LONG] [1]
+  +
+  LiteralExpr [LONG] [10]
+  +
+  LiteralExpr [LONG] [20]
+  +
+  LiteralExpr [NULL]
+]

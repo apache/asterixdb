@@ -1,0 +1,150 @@
+DataverseUse test
+TypeDecl EmploymentType [
+  closed RecordType {
+    organization-name : string,
+    start-date : date,
+    end-date : date?
+  }
+]
+TypeDecl FacebookUserTypetmp [
+  closed RecordType {
+    id : int32,
+    id-copy : int32,
+    alias : string,
+    name : string,
+    user-since : datetime,
+    user-since-copy : datetime,
+    friend-ids : UnorderedList <int32>
+,
+    employment : OrderedList [EmploymentType]
+
+  }
+]
+TypeDecl FacebookMessageTypetmp [
+  open RecordType {
+    message-id : int32,
+    message-id-copy : int32,
+    author-id : int32,
+    in-response-to : int32?,
+    sender-location : point?,
+    message : string
+  }
+]
+TypeDecl FacebookUserType [
+  closed RecordType {
+    nested : FacebookUserTypetmp
+  }
+]
+TypeDecl FacebookMessageType [
+  closed RecordType {
+    nested : FacebookMessageTypetmp
+  }
+]
+DatasetDecl FacebookUsers(FacebookUserType) partitioned by [[nested, id]]
+DatasetDecl FacebookMessages(FacebookMessageType) partitioned by [[nested, message-id]]
+WriteOutputTo nc1:rttest/btree-index-join_title-secondary-equi-join-multiindex.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [fbu-ID]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [fbm-auth-ID]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=message ]
+        Field=nested
+      ]
+      Field=author-id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [uname]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=nested
+      ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [message]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=message ]
+        Field=nested
+      ]
+      Field=message
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS
+  Variable [ Name=user ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookMessages]
+  ]
+  AS
+  Variable [ Name=message ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=user ]
+          Field=nested
+        ]
+        Field=id
+      ]
+      =
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=message ]
+          Field=nested
+        ]
+        Field=author-id-copy
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=user ]
+          Field=nested
+        ]
+        Field=id
+      ]
+      >=
+      LiteralExpr [LONG] [11000]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=user ]
+          Field=nested
+        ]
+        Field=id
+      ]
+      <=
+      LiteralExpr [LONG] [12000]
+    ]
+  ]

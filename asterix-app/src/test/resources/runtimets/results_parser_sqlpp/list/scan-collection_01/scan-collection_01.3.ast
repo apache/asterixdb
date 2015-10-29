@@ -1,0 +1,13 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=u ]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+  ]
+  AS
+  Variable [ Name=u ]
+]

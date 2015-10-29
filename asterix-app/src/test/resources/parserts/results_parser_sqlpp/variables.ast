@@ -1,0 +1,14 @@
+Query:
+LetVariable [ Name=a ]
+  :=
+  LiteralExpr [LONG] [1]
+LetVariable [ Name=b ]
+  :=
+  LiteralExpr [LONG] [1]
+SELECT ELEMENT [
+OperatorExpr [
+  Variable [ Name=b ]
+  -
+  Variable [ Name=a ]
+]
+]

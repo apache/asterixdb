@@ -1,0 +1,56 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Joins two datasets on the intersection of their point attributes.
+ *                  Both datasets 'MyData' and 'MyData2' have an enforced open RTree index, and we expect the
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.MyRecord as
+{
+  id : int32,
+  kwds : string,
+  line1 : line,
+  line2 : line,
+  poly1 : polygon,
+  poly2 : polygon,
+  rec : rectangle
+}
+
+create  table MyData1(MyRecord) primary key id;
+
+create  table MyData2(MyRecord) primary key id;
+
+create  index rtree_index  on MyData1 (point:point) type rtree enforced;
+
+create  index rtree_index2  on MyData2 (point:point) type rtree enforced;
+
+write output to nc1:"rttest/rtree-index-join_spatial-intersect-point_02.adm"
+select element {'a':a,'b':b}
+from  MyData1 as a,
+      MyData2 as b
+where test."spatial-intersect"(a.point,b.point)
+;

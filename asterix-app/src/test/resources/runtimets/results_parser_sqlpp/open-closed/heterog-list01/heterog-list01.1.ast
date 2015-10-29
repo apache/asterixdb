@@ -1,0 +1,17 @@
+DataverseUse test
+TypeDecl BatterType [
+  open RecordType {
+    id : int64,
+    descrpt : string
+  }
+]
+TypeDecl TestType [
+  closed RecordType {
+    id : int64,
+    description : string,
+    name : string,
+    batters : UnorderedList <BatterType>
+
+  }
+]
+DatasetDecl T1(TestType) partitioned by [[id]]

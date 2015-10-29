@@ -1,0 +1,6 @@
+DataverseUse test
+Query:
+FunctionCall test.string-length@1[
+  FunctionCall test.fn02@0[
+  ]
+]

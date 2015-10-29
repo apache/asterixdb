@@ -1,0 +1,26 @@
+DataverseUse test
+Query:
+LetVariable [ Name=rectangle ]
+  :=
+  FunctionCall test.create-rectangle@2[
+    FunctionCall test.create-point@2[
+      LiteralExpr [DOUBLE] [9.2]
+      LiteralExpr [DOUBLE] [49.0]
+    ]
+    FunctionCall test.create-point@2[
+      LiteralExpr [DOUBLE] [77.8]
+      LiteralExpr [DOUBLE] [111.1]
+    ]
+  ]
+LetVariable [ Name=rectangle_list ]
+  :=
+  FunctionCall test.get-points@1[
+    Variable [ Name=rectangle ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=p ]
+]
+FROM [  Variable [ Name=rectangle_list ]
+  AS
+  Variable [ Name=p ]
+]

@@ -1,0 +1,20 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=txt ]
+  :=
+  LiteralExpr [STRING] [Jürgen S. Generic's Car]
+LetVariable [ Name=tokens ]
+  :=
+  FunctionCall test.gram-tokens@3[
+    Variable [ Name=txt ]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [TRUE]
+  ]
+SELECT ELEMENT [
+Variable [ Name=token ]
+]
+FROM [  Variable [ Name=tokens ]
+  AS
+  Variable [ Name=token ]
+]

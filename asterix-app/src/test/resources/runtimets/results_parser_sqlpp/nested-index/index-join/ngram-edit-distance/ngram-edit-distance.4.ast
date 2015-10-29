@@ -1,0 +1,93 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=nested
+    ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=nested
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.edit-distance@2[
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=a ]
+            Field=nested
+          ]
+          Field=name
+        ]
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=b ]
+            Field=nested
+          ]
+          Field=name
+        ]
+      ]
+      <=
+      LiteralExpr [LONG] [4]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=cid
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=cid
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=nested
+    ]
+    Field=cid
+  ]
+  ASC
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=nested
+    ]
+    Field=cid
+  ]
+  ASC
+

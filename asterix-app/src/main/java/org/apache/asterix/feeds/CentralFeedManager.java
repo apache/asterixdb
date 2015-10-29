@@ -25,13 +25,13 @@ import java.util.List;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.parser.AQLParser;
 import org.apache.asterix.aql.translator.AqlTranslator;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.ICentralFeedManager;
 import org.apache.asterix.common.feeds.api.IFeedLoadManager;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
+import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.feeds.SocketMessageListener;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -97,7 +97,8 @@ public class CentralFeedManager implements ICentralFeedManager {
             statements = parser.Statement();
             SessionConfig pc = new SessionConfig(out, OutputFormat.ADM);
             AqlTranslator translator = new AqlTranslator(statements, pc);
-            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, AqlTranslator.ResultDelivery.SYNC);
+            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                    AqlTranslator.ResultDelivery.SYNC);
         }
     }
 

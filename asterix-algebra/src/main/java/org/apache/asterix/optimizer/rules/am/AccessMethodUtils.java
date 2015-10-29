@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
-import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -186,8 +186,8 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVar1,
-                fieldVar2 }, new ILogicalExpression[0], new IAType[0]);
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr,
+                new LogicalVariable[] { fieldVar1, fieldVar2 }, new ILogicalExpression[0], new IAType[0]);
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr))
@@ -230,8 +230,8 @@ public class AccessMethodUtils {
                 case SINGLE_PARTITION_WORD_INVIX:
                 case SINGLE_PARTITION_NGRAM_INVIX: {
                     for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes()
-                                .get(i), index.getKeyFieldNames().get(i), recordType);
+                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(
+                                index.getKeyFieldTypes().get(i), index.getKeyFieldNames().get(i), recordType);
                         dest.add(keyPairType.first);
                     }
                     break;
@@ -275,7 +275,7 @@ public class AccessMethodUtils {
 
     public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType, Index index,
             boolean primaryKeysOnly, IOptimizationContext context, List<LogicalVariable> dest)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         int numPrimaryKeys = 0;
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
@@ -329,7 +329,7 @@ public class AccessMethodUtils {
      */
     public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
             // Type Checking and type promotion is done here
@@ -390,11 +390,11 @@ public class AccessMethodUtils {
         } else {
             // We are optimizing a join query. Determine which variable feeds the secondary index.
             if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
-                return new Pair<ILogicalExpression, Boolean>(new VariableReferenceExpression(
-                        optFuncExpr.getLogicalVar(0)), false);
+                return new Pair<ILogicalExpression, Boolean>(
+                        new VariableReferenceExpression(optFuncExpr.getLogicalVar(0)), false);
             } else {
-                return new Pair<ILogicalExpression, Boolean>(new VariableReferenceExpression(
-                        optFuncExpr.getLogicalVar(1)), false);
+                return new Pair<ILogicalExpression, Boolean>(
+                        new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
             }
         }
     }
@@ -402,7 +402,8 @@ public class AccessMethodUtils {
     /**
      * Returns the first expr optimizable by this index.
      */
-    public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
+    public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx) {
         List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
         int firstExprIndex = indexExprs.get(0).first;
         return analysisCtx.matchedFuncExprs.get(firstExprIndex);
@@ -434,7 +435,8 @@ public class AccessMethodUtils {
         // This is the operator that jobgen will be looking for. It contains an unnest function that has all necessary arguments to determine
         // which index to use, which variables contain the index-search keys, what is the original dataset, etc.
         UnnestMapOperator secondaryIndexUnnestOp = new UnnestMapOperator(secondaryIndexUnnestVars,
-                new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes, retainInput);
+                new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes,
+                retainInput);
         secondaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
         secondaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
@@ -444,7 +446,7 @@ public class AccessMethodUtils {
     public static UnnestMapOperator createPrimaryIndexUnnestMap(AbstractDataSourceOperator dataSourceOp,
             Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
             boolean sortPrimaryKeys, boolean retainInput, boolean retainNull, boolean requiresBroadcast)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
                 inputOp);
         // Optionally add a sort on the primary-index keys before searching the primary index.
@@ -454,8 +456,8 @@ public class AccessMethodUtils {
             for (LogicalVariable pkVar : primaryKeyVars) {
                 Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
                         new VariableReferenceExpression(pkVar));
-                order.getOrderExpressions().add(
-                        new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+                order.getOrderExpressions()
+                        .add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
             }
             // The secondary-index search feeds into the sort.
             order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
@@ -519,12 +521,14 @@ public class AccessMethodUtils {
                             .equals(AlgebricksBuiltinFunctions.NOT)) {
                         ScalarFunctionCallExpression notFuncExpr = (ScalarFunctionCallExpression) selectOp
                                 .getCondition().getValue();
-                        if (notFuncExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        if (notFuncExpr.getArguments().get(0).getValue()
+                                .getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                             if (((AbstractFunctionCallExpression) notFuncExpr.getArguments().get(0).getValue())
                                     .getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
                                 isNullFuncExpr = (ScalarFunctionCallExpression) notFuncExpr.getArguments().get(0)
                                         .getValue();
-                                if (isNullFuncExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                if (isNullFuncExpr.getArguments().get(0).getValue()
+                                        .getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                                     foundSelectNonNull = true;
                                     break;
                                 }
@@ -570,8 +574,8 @@ public class AccessMethodUtils {
     }
 
     private static void writeVarList(List<LogicalVariable> varList, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
-                new AsterixConstantValue(new AInt32(varList.size()))));
+        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(
+                new ConstantExpression(new AsterixConstantValue(new AInt32(varList.size()))));
         funcArgs.add(numKeysRef);
         for (LogicalVariable keyVar : varList) {
             Mutable<ILogicalExpression> keyVarRef = new MutableObject<ILogicalExpression>(
@@ -581,8 +585,8 @@ public class AccessMethodUtils {
     }
 
     private static void addStringArg(String argument, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> stringRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
-                new AsterixConstantValue(new AString(argument))));
+        Mutable<ILogicalExpression> stringRef = new MutableObject<ILogicalExpression>(
+                new ConstantExpression(new AsterixConstantValue(new AString(argument))));
         funcArgs.add(stringRef);
     }
 
@@ -595,10 +599,10 @@ public class AccessMethodUtils {
         // add a sort on the RID fields before fetching external data.
         OrderOperator order = new OrderOperator();
         for (LogicalVariable pkVar : primaryKeyVars) {
-            Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                    pkVar));
-            order.getOrderExpressions().add(
-                    new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+            Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
+                    new VariableReferenceExpression(pkVar));
+            order.getOrderExpressions()
+                    .add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
         }
         // The secondary-index search feeds into the sort.
         order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));

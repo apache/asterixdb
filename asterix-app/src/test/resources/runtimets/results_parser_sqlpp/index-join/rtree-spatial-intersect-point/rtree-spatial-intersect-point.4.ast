@@ -1,0 +1,87 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [aid]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [bid]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [apt]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=point
+    ]
+  )
+  (
+    LiteralExpr [STRING] [bp]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=point
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData1]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.spatial-intersect@2[
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=point
+      ]
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=point
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=id
+      ]
+      !=
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=b ]
+    Field=id
+  ]
+  ASC
+

@@ -1,0 +1,31 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [t1]
+  ]
+  AS
+  Variable [ Name=a ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=unique1
+      ]
+      >
+      LiteralExpr [LONG] [10]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=stringu1
+      ]
+      =
+      LiteralExpr [STRING] [DGAAAAXXXXXXXXXXXXXXXXXXX]
+    ]
+  ]

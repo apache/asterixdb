@@ -1,0 +1,431 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [year1]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year2]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year3]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [-1987-11-19]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year4]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [09280329]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year5]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year6]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.string@1[
+        LiteralExpr [STRING] [-0003-01-09T23:12:12.39-07:00]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year7]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year8]
+    :
+    FunctionCall test.get-year@1[
+      FunctionCall test.year-month-duration@1[
+        LiteralExpr [STRING] [P8Y12M]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year-null]
+    :
+    FunctionCall test.get-year@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month1]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month2]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month3]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [-1987-11-19]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month4]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [09280329]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month5]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month6]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month7]
+    :
+    FunctionCall test.get-month@1[
+      FunctionCall test.year-month-duration@1[
+        LiteralExpr [STRING] [P8Y12M]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [month-null]
+    :
+    FunctionCall test.get-month@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day1]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day2]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day3]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [-1987-11-19]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day4]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [09280329]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day5]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day6]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day7]
+    :
+    FunctionCall test.get-day@1[
+      FunctionCall test.day-time-duration@1[
+        LiteralExpr [STRING] [P32DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day-null]
+    :
+    FunctionCall test.get-day@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [hour1]
+    :
+    FunctionCall test.get-hour@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [hour2]
+    :
+    FunctionCall test.get-hour@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [hour3]
+    :
+    FunctionCall test.get-hour@1[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [12:23:34.930+07:00]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [hour4]
+    :
+    FunctionCall test.get-hour@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [hour5]
+    :
+    FunctionCall test.get-hour@1[
+      FunctionCall test.day-time-duration@1[
+        LiteralExpr [STRING] [P32DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [hour-null]
+    :
+    FunctionCall test.get-hour@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min1]
+    :
+    FunctionCall test.get-minute@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min2]
+    :
+    FunctionCall test.get-minute@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min3]
+    :
+    FunctionCall test.get-minute@1[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [12:23:34.930+07:00]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min4]
+    :
+    FunctionCall test.get-minute@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min5]
+    :
+    FunctionCall test.get-minute@1[
+      FunctionCall test.day-time-duration@1[
+        LiteralExpr [STRING] [P32DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min-null]
+    :
+    FunctionCall test.get-minute@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [second1]
+    :
+    FunctionCall test.get-second@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [second2]
+    :
+    FunctionCall test.get-second@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [second3]
+    :
+    FunctionCall test.get-second@1[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [12:23:34.930+07:00]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [second4]
+    :
+    FunctionCall test.get-second@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [second5]
+    :
+    FunctionCall test.get-second@1[
+      FunctionCall test.day-time-duration@1[
+        LiteralExpr [STRING] [P32DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [second-null]
+    :
+    FunctionCall test.get-second@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ms1]
+    :
+    FunctionCall test.get-millisecond@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1987-11-19T23:49:23.938]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ms2]
+    :
+    FunctionCall test.get-millisecond@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19371229T20030628]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ms3]
+    :
+    FunctionCall test.get-millisecond@1[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [12:23:34.930+07:00]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ms4]
+    :
+    FunctionCall test.get-millisecond@1[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y73M632DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ms5]
+    :
+    FunctionCall test.get-millisecond@1[
+      FunctionCall test.day-time-duration@1[
+        LiteralExpr [STRING] [P32DT49H743M3948.94S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ms-null]
+    :
+    FunctionCall test.get-millisecond@1[
+      LiteralExpr [NULL]
+    ]
+  )
+]

@@ -1,0 +1,121 @@
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [collocated_evnets]
+    :
+    Variable [ Name=collocated_events ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Event]
+  ]
+  AS
+  Variable [ Name=event ]
+]
+LetVariable [ Name=collocated_events ]
+  :=
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [event_name]
+        :
+        FieldAccessor [
+          Variable [ Name=collocated_event ]
+          Field=name
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Events]
+      ]
+      AS
+      Variable [ Name=collocated_event ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=collocated_event ]
+              Field=location
+            ]
+            Field=street
+          ]
+          ~=
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=event ]
+              Field=location
+            ]
+            Field=street
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=collocated_event ]
+              Field=location
+            ]
+            Field=city
+          ]
+          =
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=event ]
+              Field=location
+            ]
+            Field=city
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=collocated_event ]
+              Field=location
+            ]
+            Field=state
+          ]
+          =
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=event ]
+              Field=location
+            ]
+            Field=state
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=collocated_event ]
+              Field=location
+            ]
+            Field=zip
+          ]
+          =
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=event ]
+              Field=location
+            ]
+            Field=zip
+          ]
+        ]
+      ]
+  )
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=event ]
+      Field=name
+    ]
+    =
+    LiteralExpr [STRING] [The Night of the Ad Eaters, 29th edition]
+  ]

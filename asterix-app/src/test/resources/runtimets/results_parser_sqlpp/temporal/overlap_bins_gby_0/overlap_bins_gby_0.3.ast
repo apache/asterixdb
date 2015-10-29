@@ -1,0 +1,109 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [tbin]
+    :
+    FieldAccessor [
+      Variable [ Name=gen0 ]
+      Field=bin
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval]
+    :
+    Variable [ Name=itv ]
+  )
+  (
+    LiteralExpr [STRING] [overlap]
+    :
+    FunctionCall test.get-overlapping-interval@2[
+      FieldAccessor [
+        Variable [ Name=gen0 ]
+        Field=bin
+      ]
+      Variable [ Name=itv ]
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [i]
+        :
+        Variable [ Name=i ]
+      )
+      (
+        LiteralExpr [STRING] [bin]
+        :
+        Variable [ Name=bin ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [tsdata]
+      ]
+      AS
+      Variable [ Name=i ]
+,
+      FunctionCall test.overlap-bins@3[
+        FunctionCall test.interval-start-from-time@2[
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=time
+          ]
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=duration
+          ]
+        ]
+        FunctionCall test.time@1[
+          LiteralExpr [STRING] [00:00:00]
+        ]
+        FunctionCall test.day-time-duration@1[
+          LiteralExpr [STRING] [PT1H30M]
+        ]
+      ]
+      AS
+      Variable [ Name=j ]
+    ]
+    Groupby
+      Variable [ Name=bin ]
+      :=
+      Variable [ Name=j ]
+      With
+      Variable [ Name=i ]
+      Variable [ Name=j ]
+
+    Orderby
+      FunctionCall test.get-interval-start@1[
+        Variable [ Name=bin ]
+      ]
+      ASC
+
+  )
+  AS
+  Variable [ Name=gen0 ]
+,
+  FieldAccessor [
+    Variable [ Name=gen0 ]
+    Field=i
+  ]
+  AS
+  Variable [ Name=x ]
+]
+LetVariable [ Name=itv ]
+  :=
+  FunctionCall test.interval-start-from-time@2[
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=time
+    ]
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=duration
+    ]
+  ]

@@ -1,0 +1,82 @@
+DataverseUse orders-aggreg
+TypeDecl OrderType [
+  closed RecordType {
+    oid : int32,
+    cid : int32,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[oid]]
+WriteOutputTo nc1:/tmp/orders-aggreg.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cid]
+    :
+    Variable [ Name=cid ]
+  )
+  (
+    LiteralExpr [STRING] [ordpercust]
+    :
+    FunctionCall orders-aggreg.count@1[
+      Variable [ Name=o ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [totalcust]
+    :
+    FunctionCall orders-aggreg.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=total
+        ]
+        ]
+        FROM [          Variable [ Name=o ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [avgcust]
+    :
+    FunctionCall orders-aggreg.avg@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=total
+        ]
+        ]
+        FROM [          Variable [ Name=o ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Groupby
+  Variable [ Name=cid ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=cid
+  ]
+  With
+  Variable [ Name=o ]
+

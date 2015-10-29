@@ -1,0 +1,112 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=si ]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [xx]
+        :
+        Variable [ Name=xx ]
+      )
+      (
+        LiteralExpr [STRING] [x]
+        :
+        Variable [ Name=x ]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        Variable [ Name=uid ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Orders]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=x ]
+          Field=o_custkey
+        ]
+        <
+        LiteralExpr [LONG] [4]
+      ]
+    Groupby
+      Variable [ Name=uid ]
+      :=
+      FieldAccessor [
+        Variable [ Name=x ]
+        Field=o_custkey
+      ]
+      With
+      Variable [ Name=x ]
+
+    LetVariable [ Name=xx ]
+      :=
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [uid]
+            :
+            Variable [ Name=uid ]
+          )
+          (
+            LiteralExpr [STRING] [seq]
+            :
+            Variable [ Name=i ]
+          )
+          (
+            LiteralExpr [STRING] [item]
+            :
+            FieldAccessor [
+              Variable [ Name=y ]
+              Field=o_orderkey
+            ]
+          )
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=xxx ]
+            ]
+            FROM [              Variable [ Name=x ]
+              AS
+              Variable [ Name=xxx ]
+            ]
+            Orderby
+              FieldAccessor [
+                Variable [ Name=xxx ]
+                Field=o_orderkey
+              ]
+              ASC
+
+          )
+          AS
+          Variable [ Name=y ]
+          AT
+          Variable [ Name=i ]
+        ]
+      )
+    Orderby
+      Variable [ Name=uid ]
+      ASC
+
+  )
+  AS
+  Variable [ Name=gen0 ]
+,
+  FieldAccessor [
+    Variable [ Name=gen0 ]
+    Field=xx
+  ]
+  AS
+  Variable [ Name=si ]
+]

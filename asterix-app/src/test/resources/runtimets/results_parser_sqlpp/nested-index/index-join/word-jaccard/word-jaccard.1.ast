@@ -1,0 +1,33 @@
+DataverseUse test
+TypeDecl DBLPNestedType [
+  closed RecordType {
+    id : int64,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl DBLPType [
+  closed RecordType {
+    nested : DBLPNestedType
+  }
+]
+TypeDecl CSXNestedType [
+  closed RecordType {
+    id : int64,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  closed RecordType {
+    nested : CSXNestedType
+  }
+]
+DatasetDecl DBLPtmp(DBLPNestedType) partitioned by [[id]]
+DatasetDecl CSXtmp(CSXNestedType) partitioned by [[id]]
+DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
+DatasetDecl CSX(CSXType) partitioned by [[nested, id]]

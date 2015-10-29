@@ -1,0 +1,73 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int32,
+        total : float
+      }
+
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    oid : int32,
+    cid : int32,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+DatasetDecl Orders(OrderType) partitioned by [[oid]]
+WriteOutputTo nc1:rttest/btree-index-join_primary-equi-join_05.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [customer]
+    :
+    Variable [ Name=c ]
+  )
+  (
+    LiteralExpr [STRING] [order]
+    :
+    Variable [ Name=o ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=cid
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+  ]

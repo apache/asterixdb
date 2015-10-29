@@ -1,0 +1,24 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [sql-count]
+    :
+    FunctionCall test.sql-count@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=x ]
+          Field=doubleField
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Numeric]
+          ]
+          AS
+          Variable [ Name=x ]
+        ]
+      )
+    ]
+  )
+]

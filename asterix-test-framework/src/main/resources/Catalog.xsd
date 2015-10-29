@@ -209,6 +209,8 @@
          <xs:enumeration value="Lossless-JSON"/>
          <xs:enumeration value="CSV"/>
          <xs:enumeration value="CSV_Header"/>
+         <xs:enumeration value="AST"/>
+         <xs:enumeration value="PLAN"/>
       </xs:restriction>
    </xs:simpleType>
 

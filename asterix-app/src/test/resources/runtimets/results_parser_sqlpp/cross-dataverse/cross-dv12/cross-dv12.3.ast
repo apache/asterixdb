@@ -1,0 +1,17 @@
+DataverseUse testdv1
+DataverseUse testdv2
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [fun-01]
+    :
+    FunctionCall testdv1.fun01@0[
+    ]
+  )
+  (
+    LiteralExpr [STRING] [fun-02]
+    :
+    FunctionCall testdv2.fun02@0[
+    ]
+  )
+]

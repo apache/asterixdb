@@ -1,0 +1,19 @@
+DataverseUse test
+Query:
+QuantifiedExpression SOME [
+  [Variable [ Name=i ]
+  In
+    OrderedListConstructor [
+      LiteralExpr [LONG] [100]
+      LiteralExpr [LONG] [200]
+    ]
+  ]
+  Satifies [
+    OperatorExpr [
+      Variable [ Name=i ]
+      <
+      FunctionCall test.f1@0[
+      ]
+    ]
+  ]
+]

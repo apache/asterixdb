@@ -1,0 +1,58 @@
+DataverseUse tpch
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int64,
+    o_custkey : int64,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int64,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int64,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int64,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+TypeDecl SupplierType [
+  closed RecordType {
+    s_suppkey : int64,
+    s_name : string,
+    s_address : string,
+    s_nationkey : int64,
+    s_phone : string,
+    s_acctbal : double,
+    s_comment : string
+  }
+]
+TypeDecl NationType [
+  closed RecordType {
+    n_nationkey : int64,
+    n_name : string,
+    n_regionkey : int64,
+    n_comment : string
+  }
+]
+TypeDecl RegionType [
+  closed RecordType {
+    r_regionkey : int64,
+    r_name : string,
+    r_comment : string
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+DatasetDecl Supplier(SupplierType) partitioned by [[s_suppkey]]
+DatasetDecl Region(RegionType) partitioned by [[r_regionkey]]
+DatasetDecl Nation(NationType) partitioned by [[n_nationkey]]
+DatasetDecl Customer(CustomerType) partitioned by [[c_custkey]]
+DatasetDecl SelectedNation(NationType) partitioned by [[n_nationkey]]

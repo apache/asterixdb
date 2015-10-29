@@ -1,0 +1,102 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [datetime1]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2010-10-30T10:50:56.999+05:45]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime2]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2010-10-30T10:30:56.250-10:00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime3]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [1987-11-19T09:20:00.200Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime4]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [1987-11-19T10:50:56Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime5]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-1987-11-19T10:50:56.099-05:30]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime6]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-0001-11-19T10:50:56.719Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime7]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [1951-12-27T12:20:15Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime8]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [2043-11-19T10:50:56.719Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime9]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19280329T174937374-0630]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime10]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19280329T174937374+0630]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime11]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19280329T174937374]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime12]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19280329T174937374+0630]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime13]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19280329T17493737+0630]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime14]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-19280301T05493737+0630]
+    ]
+  )
+]

@@ -1,0 +1,83 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  closed RecordType {
+    id : int32,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl CSX(CSXType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/inverted-index-join-noeqjoin_ngram-fuzzyeq-edit-distance.adm
+Set simfunction=edit-distance
+Set simthreshold=3
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [aauthors]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=authors
+    ]
+  )
+  (
+    LiteralExpr [STRING] [bauthors]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=authors
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=authors
+      ]
+      ~=
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=authors
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=id
+      ]
+    ]
+  ]

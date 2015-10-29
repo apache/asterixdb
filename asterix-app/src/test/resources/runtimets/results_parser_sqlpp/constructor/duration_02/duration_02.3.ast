@@ -1,0 +1,88 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [duration1]
+    :
+    FunctionCall test.year-month-duration@1[
+      LiteralExpr [STRING] [P30Y10M]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration2]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [P25DT13H12M50S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration3]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [PT13H12M50S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration4]
+    :
+    FunctionCall test.year-month-duration@1[
+      LiteralExpr [STRING] [P30Y]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration5]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [PT13H]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration6]
+    :
+    FunctionCall test.year-month-duration@1[
+      LiteralExpr [STRING] [-P30Y10M]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration7]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [-P25DT13H12M50S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration8]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [-PT13H50S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration9]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [P120D]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration10]
+    :
+    FunctionCall test.year-month-duration@1[
+      LiteralExpr [STRING] [-P28M]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration11]
+    :
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [PT29M90.937S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration12]
+    :
+    FunctionCall test.year-month-duration@1[
+      LiteralExpr [STRING] [P300Y15M]
+    ]
+  )
+]

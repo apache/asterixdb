@@ -1,0 +1,25 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.sql-avg@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=x ]
+    ]
+    FROM [      OrderedListConstructor [
+        FunctionCall test.float@1[
+          LiteralExpr [STRING] [1]
+        ]
+        FunctionCall test.float@1[
+          LiteralExpr [STRING] [2]
+        ]
+        FunctionCall test.float@1[
+          LiteralExpr [STRING] [3]
+        ]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+  )
+]
+]

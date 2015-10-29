@@ -1,0 +1,8 @@
+Query:
+FunctionCall null.sum@1[
+  OrderedListConstructor [
+    LiteralExpr [LONG] [748374857483]
+    LiteralExpr [LONG] [23]
+    LiteralExpr [DOUBLE] [0.5]
+  ]
+]

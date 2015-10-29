@@ -1,0 +1,26 @@
+DataverseUse test
+TypeDecl EmpTmp [
+  closed RecordType {
+    id : int64,
+    fname : string,
+    lname : string,
+    age : int64,
+    dept : string
+  }
+]
+TypeDecl Nested [
+  closed RecordType {
+    id : int64,
+    fname : string,
+    lname : string,
+    age : int64,
+    dept : string
+  }
+]
+TypeDecl Emp [
+  closed RecordType {
+    nested : Nested
+  }
+]
+DatasetDecl employeeTmp(EmpTmp) partitioned by [[id]]
+DatasetDecl employee(Emp) partitioned by [[nested, id]]

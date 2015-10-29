@@ -1,0 +1,42 @@
+DataverseUse test
+Query:
+LetVariable [ Name=a ]
+  :=
+  LiteralExpr [STRING] [사랑]
+LetVariable [ Name=b ]
+  :=
+  LiteralExpr [STRING] [사랑해]
+LetVariable [ Name=c ]
+  :=
+  LiteralExpr [STRING] [사과]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.edit-distance-check@3[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [1]
+    ]
+    FunctionCall test.edit-distance-check@3[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [1]
+    ]
+    FunctionCall test.edit-distance-check@3[
+      Variable [ Name=b ]
+      Variable [ Name=c ]
+      LiteralExpr [LONG] [1]
+    ]
+    FunctionCall test.edit-distance-check@3[
+      Variable [ Name=c ]
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [2]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

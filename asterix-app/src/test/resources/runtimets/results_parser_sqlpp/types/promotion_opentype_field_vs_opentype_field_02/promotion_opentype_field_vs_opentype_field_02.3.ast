@@ -1,0 +1,61 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [emp.id]
+    :
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [emp.suprvrid]
+    :
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=supvrid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dept.dmgrid2]
+    :
+    FieldAccessor [
+      Variable [ Name=dept ]
+      Field=dmgrid2
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [empDataset]
+  ]
+  AS
+  Variable [ Name=emp ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [deptDataset]
+  ]
+  AS
+  Variable [ Name=dept ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=dept ]
+      Field=dmgrid2
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=supvrid
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=emp ]
+    Field=id
+  ]
+  ASC
+

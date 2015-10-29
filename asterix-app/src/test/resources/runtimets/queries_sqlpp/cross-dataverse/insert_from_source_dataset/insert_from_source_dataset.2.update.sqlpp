@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Use fully qualified dataset names to insert into target dataset by doing a select on source dataset.
+ * Expected Res : Success
+ * Date         : Sep 19 2012
+ */
+
+insert into test.t1
+select element {'id':456,'name':'Roger'};
+insert into test.t1
+select element {'id':351,'name':'Bob'};
+insert into test.t1
+select element {'id':257,'name':'Sammy'};
+insert into test.t1
+select element {'id':926,'name':'Richard'};
+insert into test.t1
+select element {'id':482,'name':'Kevin'};
+insert into test.t2
+select element {'id':438,'name':'Ravi'};
+insert into test.t2
+select element {'id':321,'name':'Bobby'};
+insert into test.t2
+select element {'id':219,'name':'Sam'};
+insert into test.t2
+select element {'id':851,'name':'Ricardo'};
+insert into test.t2
+select element {'id':201,'name':'Kelvin'};
+insert into test.t1
+select element l
+from  "test.t2" as l
+;

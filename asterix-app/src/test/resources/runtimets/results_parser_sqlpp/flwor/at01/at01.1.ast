@@ -1,0 +1,21 @@
+DataverseUse test
+TypeDecl EmploymentType [
+  open RecordType {
+    organization-name : string,
+    start-date : date,
+    end-date : date?
+  }
+]
+TypeDecl FacebookUserType [
+  closed RecordType {
+    id : int64,
+    alias : string,
+    name : string,
+    user-since : datetime,
+    friend-ids : UnorderedList <int64>
+,
+    employment : OrderedList [EmploymentType]
+
+  }
+]
+DatasetDecl FacebookUsers(FacebookUserType) partitioned by [[id]]

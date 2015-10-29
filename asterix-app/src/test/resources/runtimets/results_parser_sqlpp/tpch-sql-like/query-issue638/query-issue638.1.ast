@@ -1,0 +1,102 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int64,
+    l_partkey : int64,
+    l_suppkey : int64,
+    l_linenumber : int64,
+    l_quantity : int64,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_selectflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int64,
+    o_custkey : int64,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int64,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int64,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int64,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+TypeDecl SupplierType [
+  closed RecordType {
+    s_suppkey : int64,
+    s_name : string,
+    s_address : string,
+    s_nationkey : int64,
+    s_phone : string,
+    s_acctbal : double,
+    s_comment : string
+  }
+]
+TypeDecl NationType [
+  closed RecordType {
+    n_nationkey : int64,
+    n_name : string,
+    n_regionkey : int64,
+    n_comment : string
+  }
+]
+TypeDecl RegionType [
+  closed RecordType {
+    r_regionkey : int64,
+    r_name : string,
+    r_comment : string
+  }
+]
+TypeDecl PartType [
+  closed RecordType {
+    p_partkey : int64,
+    p_name : string,
+    p_mfgr : string,
+    p_brand : string,
+    p_type : string,
+    p_size : int64,
+    p_container : string,
+    p_retailprice : double,
+    p_comment : string
+  }
+]
+TypeDecl PartSuppType [
+  closed RecordType {
+    ps_partkey : int64,
+    ps_suppkey : int64,
+    ps_availqty : int64,
+    ps_supplycost : double,
+    ps_comment : string
+  }
+]
+DatasetDecl LineItem(LineItemType)is an external dataset
+DatasetDecl Orders(OrderType)is an external dataset
+DatasetDecl Supplier(SupplierType)is an external dataset
+DatasetDecl Region(RegionType)is an external dataset
+DatasetDecl Nation(NationType)is an external dataset
+DatasetDecl Part(PartType)is an external dataset
+DatasetDecl Partsupp(PartSuppType)is an external dataset
+DatasetDecl Customer(CustomerType)is an external dataset

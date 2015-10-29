@@ -1,0 +1,21 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  closed RecordType {
+    id : int32,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl CSX(CSXType) partitioned by [[id]]

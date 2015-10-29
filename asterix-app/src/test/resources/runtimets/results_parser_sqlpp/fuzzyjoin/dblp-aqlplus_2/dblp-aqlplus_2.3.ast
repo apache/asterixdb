@@ -1,0 +1,67 @@
+DataverseUse fuzzyjoin
+Set simthreshold=.5f
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [dblp]
+    :
+    Variable [ Name=dblp ]
+  )
+  (
+    LiteralExpr [STRING] [dblp2]
+    :
+    Variable [ Name=dblp2 ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=dblp ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=dblp2 ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=dblp ]
+        Field=title
+      ]
+      ~=
+      FieldAccessor [
+        Variable [ Name=dblp2 ]
+        Field=title
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=dblp ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=dblp2 ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=dblp ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=dblp2 ]
+    Field=id
+  ]
+  ASC
+

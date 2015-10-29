@@ -1,0 +1,27 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.string-length@1[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstu]
+    ]
+    FunctionCall null.string-length@1[
+      LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTU]
+    ]
+    FunctionCall null.string-length@1[
+      LiteralExpr [STRING] [abcdEFGHijklMNOPqrstu]
+    ]
+    FunctionCall null.string-length@1[
+      LiteralExpr [STRING] [abcd EFGH ijkl MNOP qrstu]
+    ]
+    FunctionCall null.string-length@1[
+      LiteralExpr [STRING] [   Hello World    !!!!....:-)]
+    ]
+    FunctionCall null.string-length@1[
+      LiteralExpr [STRING] [~!@#$%^&*()_+{}:?<>/.,';`][\]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

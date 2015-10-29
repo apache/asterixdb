@@ -1,0 +1,33 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  Variable [ Name=m ]
+  FunctionCall test.count@1[
+    Variable [ Name=id ]
+  ]
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DataOpen]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+LetVariable [ Name=id ]
+  :=
+  FieldAccessor [
+    Variable [ Name=x ]
+    Field=id
+  ]
+Groupby
+  Variable [ Name=m ]
+  :=
+  FieldAccessor [
+    Variable [ Name=x ]
+    Field=int_m
+  ]
+  With
+  Variable [ Name=id ]
+  Variable [ Name=x ]
+

@@ -1,0 +1,30 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2011-12-31T14:00:00-10:00]
+      ]
+      =
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2012-01-01T00:00:00Z]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2000-03-01T02:00:00+04:00]
+      ]
+      =
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2000-02-29T22:00:00Z]
+      ]
+    ]
+  )
+]

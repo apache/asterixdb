@@ -1,0 +1,19 @@
+DataverseUse test
+TypeDecl EmpType [
+  open RecordType {
+    id : int64,
+    name : string,
+    address :       open RecordType {
+        number : int64,
+        street : string,
+        city : string
+      }
+,
+    age : int64?,
+    interests : UnorderedList <string>
+?,
+    children : OrderedList [string]
+?
+  }
+]
+DatasetDecl Emp(EmpType)is an external dataset

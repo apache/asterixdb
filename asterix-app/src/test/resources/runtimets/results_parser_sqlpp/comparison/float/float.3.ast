@@ -1,0 +1,82 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+      >
+      FunctionCall test.int8@1[
+        LiteralExpr [STRING] [+1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+      >=
+      FunctionCall test.int16@1[
+        LiteralExpr [STRING] [2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+      <
+      FunctionCall test.int32@1[
+        LiteralExpr [STRING] [+3]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+      <=
+      FunctionCall test.int64@1[
+        LiteralExpr [STRING] [-4]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+      =
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result6]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-5.5f]
+      ]
+      !=
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+    ]
+  )
+]

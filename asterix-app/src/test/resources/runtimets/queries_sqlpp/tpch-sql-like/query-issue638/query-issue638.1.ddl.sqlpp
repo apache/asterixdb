@@ -1,0 +1,140 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix from issue638
+ * https://code.google.com/p/asterixdb/issues/detail?id=638
+ * Expected Res : SUCCESS
+ * Date         : 24th Oct. 2014
+ */
+
+drop  database tpch if exists;
+create  database tpch;
+
+use tpch;
+
+
+create type tpch.LineItemType as
+ closed {
+  l_orderkey : int64,
+  l_partkey : int64,
+  l_suppkey : int64,
+  l_linenumber : int64,
+  l_quantity : int64,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_selectflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+}
+
+create type tpch.OrderType as
+ closed {
+  o_orderkey : int64,
+  o_custkey : int64,
+  o_orderstatus : string,
+  o_totalprice : double,
+  o_orderdate : string,
+  o_orderpriority : string,
+  o_clerk : string,
+  o_shippriority : int64,
+  o_comment : string
+}
+
+create type tpch.CustomerType as
+ closed {
+  c_custkey : int64,
+  c_name : string,
+  c_address : string,
+  c_nationkey : int64,
+  c_phone : string,
+  c_acctbal : double,
+  c_mktsegment : string,
+  c_comment : string
+}
+
+create type tpch.SupplierType as
+ closed {
+  s_suppkey : int64,
+  s_name : string,
+  s_address : string,
+  s_nationkey : int64,
+  s_phone : string,
+  s_acctbal : double,
+  s_comment : string
+}
+
+create type tpch.NationType as
+ closed {
+  n_nationkey : int64,
+  n_name : string,
+  n_regionkey : int64,
+  n_comment : string
+}
+
+create type tpch.RegionType as
+ closed {
+  r_regionkey : int64,
+  r_name : string,
+  r_comment : string
+}
+
+create type tpch.PartType as
+ closed {
+  p_partkey : int64,
+  p_name : string,
+  p_mfgr : string,
+  p_brand : string,
+  p_type : string,
+  p_size : int64,
+  p_container : string,
+  p_retailprice : double,
+  p_comment : string
+}
+
+create type tpch.PartSuppType as
+ closed {
+  ps_partkey : int64,
+  ps_suppkey : int64,
+  ps_availqty : int64,
+  ps_supplycost : double,
+  ps_comment : string
+}
+
+create external  table LineItem(LineItemType) using "localfs"(("path"="nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Orders(OrderType) using "localfs"(("path"="nc1://data/tpch0.001/orders.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Supplier(SupplierType) using "localfs"(("path"="nc1://data/tpch0.001/supplier.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Region(RegionType) using "localfs"(("path"="nc1://data/tpch0.001/region.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Nation(NationType) using "localfs"(("path"="nc1://data/tpch0.001/nation.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Part(PartType) using "localfs"(("path"="nc1://data/tpch0.001/part.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Partsupp(PartSuppType) using "localfs"(("path"="nc1://data/tpch0.001/partsupp.tbl"),("format"="delimited-text"),("delimiter"="|"));
+
+create external  table Customer(CustomerType) using "localfs"(("path"="nc1://data/tpch0.001/customer.tbl"),("format"="delimited-text"),("delimiter"="|"));
+

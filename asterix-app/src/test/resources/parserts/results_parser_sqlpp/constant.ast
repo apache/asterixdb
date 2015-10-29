@@ -1,0 +1,6 @@
+Query:
+OperatorExpr [
+  NEGATIVE LiteralExpr [LONG] [1]
+  +
+  LiteralExpr [LONG] [1]
+]

@@ -1,0 +1,93 @@
+Query:
+SELECT ELEMENT [
+FunctionCall null.count@1[
+  Variable [ Name=r ]
+]
+]
+FROM [  UnorderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [gas]
+        :
+        LiteralExpr [STRING] [co]
+      )
+      (
+        LiteralExpr [STRING] [num]
+        :
+        LiteralExpr [DOUBLE] [0.1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [gas]
+        :
+        LiteralExpr [STRING] [co]
+      )
+      (
+        LiteralExpr [STRING] [num]
+        :
+        LiteralExpr [DOUBLE] [0.2]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [gas]
+        :
+        LiteralExpr [STRING] [co]
+      )
+      (
+        LiteralExpr [STRING] [num]
+        :
+        LiteralExpr [DOUBLE] [0.3]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [gas]
+        :
+        LiteralExpr [STRING] [co2]
+      )
+      (
+        LiteralExpr [STRING] [num]
+        :
+        LiteralExpr [DOUBLE] [0.4]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [gas]
+        :
+        LiteralExpr [STRING] [no2]
+      )
+      (
+        LiteralExpr [STRING] [num]
+        :
+        LiteralExpr [DOUBLE] [0.5]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [gas]
+        :
+        LiteralExpr [STRING] [no2]
+      )
+      (
+        LiteralExpr [STRING] [num]
+        :
+        LiteralExpr [DOUBLE] [0.6]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=r ]
+]
+Groupby
+  Variable [ Name=g ]
+  :=
+  FieldAccessor [
+    Variable [ Name=r ]
+    Field=gas
+  ]
+  With
+  Variable [ Name=r ]
+

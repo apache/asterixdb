@@ -25,13 +25,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 
-import org.junit.Test;
-
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.base.AsterixTestHelper;
+import org.junit.Test;
 
 public class DmlTest {
 
@@ -40,12 +39,11 @@ public class DmlTest {
     private static final String SEPARATOR = File.separator;
     private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "dmlts"
             + SEPARATOR;
-    private static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     private static final String PATH_SCRIPTS = PATH_BASE + "scripts" + SEPARATOR;
     private static final String LOAD_FOR_ENLIST_FILE = PATH_SCRIPTS + "load-cust.aql";
-    private static final String ENLIST_FILE = PATH_SCRIPTS + "enlist-scan-cust.aql";
 
     private static final PrintWriter ERR = new PrintWriter(System.err);
+    private final TestExecutor testExecutor = new TestExecutor();
 
     @Test
     public void enlistTest() throws Exception {
@@ -68,18 +66,10 @@ public class DmlTest {
             loadReader.close();
         }
         asterixLoad.execute();
-        File enlistFile = new File(ENLIST_FILE);
-        int dot = enlistFile.getName().lastIndexOf('.');
-        String resultFileName = enlistFile.getName().substring(0, dot + 1) + ".adm";
-        File expectedFile = new File(PATH_EXPECTED + SEPARATOR + resultFileName);
-        File actualFile = new File(PATH_ACTUAL + SEPARATOR + resultFileName);
-        // Khurram
-        //TestsUtils.runScriptAndCompareWithResult(AsterixHyracksIntegrationUtil.getHyracksClientConnection(),
-                //enlistFile, ERR, expectedFile, actualFile);
 
         AsterixHyracksIntegrationUtil.deinit();
         for (String d : ASTERIX_DATA_DIRS) {
-            TestsUtils.deleteRec(new File(d));
+            testExecutor.deleteRec(new File(d));
         }
         outdir.delete();
     }

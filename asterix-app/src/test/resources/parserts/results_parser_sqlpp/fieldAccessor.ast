@@ -1,0 +1,23 @@
+Query:
+LetVariable [ Name=bla ]
+  :=
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [name]
+      :
+      LiteralExpr [STRING] [value]
+    )
+  ]
+SELECT ELEMENT [
+OperatorExpr [
+  FieldAccessor [
+    Variable [ Name=bla ]
+    Field=name
+  ]
+  =
+  FieldAccessor [
+    Variable [ Name=bla ]
+    Field=name
+  ]
+]
+]

@@ -1,0 +1,48 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [a   b  c  d  e  f  g]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [abcdefghij KLMNOP qrstu VWXYZ]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyz]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [this is a test string]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [smaller string]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [ABCD]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [AbCdEfGhIjKlMnOpQrStUvWxYz]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [abcdefghijkABCDEFGHIJK]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [HIJKLMNOPQRhijklmnopqr]
+    ]
+    FunctionCall null.lowercase@1[
+      FunctionCall null.substring@2[
+        LiteralExpr [STRING] [ABCDEFghIJKLMnopQRSTuvwxYZ01234]
+        LiteralExpr [LONG] [0]
+      ]
+    ]
+    FunctionCall null.lowercase@1[
+      LiteralExpr [STRING] [A33B2CD1EF78GHijk123LMNopqrstUVW3x2y01035Z]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

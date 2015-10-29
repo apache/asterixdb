@@ -1,0 +1,64 @@
+DataverseUse test
+TypeDecl MyRecordNestedOpen [
+  open RecordType {
+    id : int32,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle
+  }
+]
+TypeDecl MyRecordOpen [
+  closed RecordType {
+    nested : MyRecordNestedOpen
+  }
+]
+DatasetDecl MyData1(MyRecordOpen) partitioned by [[nested, id]]
+DatasetDecl MyData2(MyRecordOpen) partitioned by [[nested, id]]
+WriteOutputTo nc1:rttest/rtree-index-join_spatial-intersect-point_02.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [a]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [b]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData1]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  FunctionCall test.spatial-intersect@2[
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=nested
+      ]
+      Field=point
+    ]
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=nested
+      ]
+      Field=point
+    ]
+  ]

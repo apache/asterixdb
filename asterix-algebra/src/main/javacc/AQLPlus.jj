@@ -29,40 +29,79 @@ PARSER_BEGIN(AQLPlusParser)
 
 package org.apache.asterix.aqlplus.parser;
 
-import java.io.*;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Stack;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.asterix.aql.literal.FloatLiteral;
-import org.apache.asterix.aql.literal.DoubleLiteral;
-import org.apache.asterix.aql.literal.FalseLiteral;
-import org.apache.asterix.aql.base.Literal;
-import org.apache.asterix.aql.literal.IntegerLiteral;
-import org.apache.asterix.aql.literal.LongIntegerLiteral;
-import org.apache.asterix.aql.literal.NullLiteral;
-import org.apache.asterix.aql.literal.StringLiteral;
-import org.apache.asterix.aql.literal.TrueLiteral;
-import org.apache.asterix.aql.parser.ScopeChecker;
-import org.apache.asterix.aql.base.*;
-import org.apache.asterix.aql.expression.*;
-import org.apache.asterix.aql.expression.visitor.AQLPrintVisitor;
-import org.apache.asterix.aql.expression.UnaryExpr.Sign;
-import org.apache.asterix.aql.expression.TypeExpression.TypeExprKind;
-import org.apache.asterix.aql.base.Statement.Kind;
-import org.apache.asterix.aql.context.Scope;
-import org.apache.asterix.aql.context.RootScopeFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.om.functions.AsterixFunction;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.aql.clause.DistinctClause;
+import org.apache.asterix.lang.aql.clause.ForClause;
+import org.apache.asterix.lang.aql.clause.JoinClause;
+import org.apache.asterix.lang.aql.clause.MetaVariableClause;
+import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
+import org.apache.asterix.lang.aql.expression.MetaVariableExpr;
+import org.apache.asterix.lang.aql.expression.UnionExpr;
+import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Literal;
+import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
+import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.clause.LimitClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.context.RootScopeFactory;
+import org.apache.asterix.lang.common.context.Scope;
+import org.apache.asterix.lang.common.expression.AbstractAccessor;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.FieldBinding;
+import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.IfExpr;
+import org.apache.asterix.lang.common.expression.IndexAccessor;
+import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.OperatorExpr;
+import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
+import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
+import org.apache.asterix.lang.common.expression.TypeExpression;
+import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
+import org.apache.asterix.lang.common.expression.UnaryExpr;
+import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
+import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.DoubleLiteral;
+import org.apache.asterix.lang.common.literal.FalseLiteral;
+import org.apache.asterix.lang.common.literal.FloatLiteral;
+import org.apache.asterix.lang.common.literal.IntegerLiteral;
+import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
+import org.apache.asterix.lang.common.literal.NullLiteral;
+import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
+import org.apache.asterix.lang.common.parser.ScopeChecker;
+import org.apache.asterix.lang.common.statement.DataverseDecl;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.SetStatement;
+import org.apache.asterix.lang.common.statement.TypeDecl;
+import org.apache.asterix.lang.common.statement.WriteStatement;
+import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
-
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
-import org.apache.hyracks.algebricks.common.utils.Pair;
-
 
 
 public class AQLPlusParser extends ScopeChecker {
@@ -1251,7 +1290,7 @@ Clause LetClause() throws ParseException:
     {
       getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       lc.setVarExpr(varExp);
-      lc.setBeExpr(beExp);
+      lc.setBindingExpr(beExp);
       return lc;
     }
 }

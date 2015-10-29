@@ -1,0 +1,24 @@
+Query:
+SELECT ELEMENT [
+OperatorExpr [
+  Variable [ Name=i ]
+  +
+  Variable [ Name=j ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+  ]
+  AS
+  Variable [ Name=i ]
+,
+  UnorderedListConstructor [
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [6]
+  ]
+  AS
+  Variable [ Name=j ]
+]

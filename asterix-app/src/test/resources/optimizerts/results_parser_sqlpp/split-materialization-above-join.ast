@@ -1,0 +1,392 @@
+DataverseUse fuzzyjoin
+TypeDecl DBLPType [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [left]
+    :
+    Variable [ Name=paperLeft ]
+  )
+  (
+    LiteralExpr [STRING] [right]
+    :
+    Variable [ Name=paperRight ]
+  )
+  (
+    LiteralExpr [STRING] [sim]
+    :
+    FieldAccessor [
+      Variable [ Name=ridpair ]
+      Field=sim
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paperLeft ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paperRight ]
+,
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [idLeft]
+        :
+        Variable [ Name=idLeft ]
+      )
+      (
+        LiteralExpr [STRING] [idRight]
+        :
+        Variable [ Name=idRight ]
+      )
+      (
+        LiteralExpr [STRING] [sim]
+        :
+        IndexAccessor [
+          Variable [ Name=sim ]
+          Index:           Variable [ Name=sim ]
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [DBLP]
+      ]
+      AS
+      Variable [ Name=paperLeft ]
+,
+      FunctionCall fuzzyjoin.subset-collection@3[
+        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [tokensLeft]
+        ]
+        LiteralExpr [LONG] [0]
+        FunctionCall fuzzyjoin.prefix-len-jaccard@2[
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [lenLeft]
+          ]
+          LiteralExpr [FLOAT] [0.5]
+        ]
+      ]
+      AS
+      Variable [ Name=prefixTokenLeft ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [DBLP]
+      ]
+      AS
+      Variable [ Name=paperRight ]
+,
+      FunctionCall fuzzyjoin.subset-collection@3[
+        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [tokensRight]
+        ]
+        LiteralExpr [LONG] [0]
+        FunctionCall fuzzyjoin.prefix-len-jaccard@2[
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [lenRight]
+          ]
+          LiteralExpr [FLOAT] [0.5]
+        ]
+      ]
+      AS
+      Variable [ Name=prefixTokenRight ]
+    ]
+    LetVariable [ Name=lenLeft ]
+      :=
+      FunctionCall fuzzyjoin.len@1[
+        FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+          FieldAccessor [
+            Variable [ Name=paperLeft ]
+            Field=title
+          ]
+        ]
+      ]
+    LetVariable [ Name=tokensLeft ]
+      :=
+      (
+        SELECT ELEMENT [
+        Variable [ Name=i ]
+        ]
+        FROM [          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+            FieldAccessor [
+              Variable [ Name=paperLeft ]
+              Field=title
+            ]
+          ]
+          AS
+          Variable [ Name=tokenUnranked ]
+,
+          (
+            SELECT ELEMENT [
+            Variable [ Name=tokenGroupped ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [DBLP]
+              ]
+              AS
+              Variable [ Name=paper ]
+,
+              FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+                FieldAccessor [
+                  Variable [ Name=paper ]
+                  Field=title
+                ]
+              ]
+              AS
+              Variable [ Name=token ]
+            ]
+            Groupby
+              Variable [ Name=tokenGroupped ]
+              :=
+              Variable [ Name=token ]
+              With
+              Variable [ Name=paper ]
+              Variable [ Name=token ]
+              Variable [ Name=tokenUnranked ]
+              Variable [ Name=tokensLeft ]
+              Variable [ Name=lenLeft ]
+              Variable [ Name=paperLeft ]
+              Variable [ Name=paperRight ]
+              Variable [ Name=prefixTokenRight ]
+              Variable [ Name=prefixTokenLeft ]
+              Variable [ Name=paperLeft ]
+              Variable [ Name=paperRight ]
+
+            Orderby
+              FunctionCall fuzzyjoin.count@1[
+                Variable [ Name=paper ]
+              ]
+              ASC
+              Variable [ Name=tokenGroupped ]
+              ASC
+
+          )
+          AS
+          Variable [ Name=tokenRanked ]
+          AT
+          Variable [ Name=i ]
+        ]
+        Where
+          OperatorExpr [
+            Variable [ Name=tokenUnranked ]
+            =
+            Variable [ Name=tokenRanked ]
+          ]
+        Orderby
+          Variable [ Name=i ]
+          ASC
+
+      )
+    LetVariable [ Name=lenRight ]
+      :=
+      FunctionCall fuzzyjoin.len@1[
+        FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+          FieldAccessor [
+            Variable [ Name=paperRight ]
+            Field=title
+          ]
+        ]
+      ]
+    LetVariable [ Name=tokensRight ]
+      :=
+      (
+        SELECT ELEMENT [
+        Variable [ Name=i ]
+        ]
+        FROM [          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+            FieldAccessor [
+              Variable [ Name=paperRight ]
+              Field=title
+            ]
+          ]
+          AS
+          Variable [ Name=tokenUnranked ]
+,
+          (
+            SELECT ELEMENT [
+            Variable [ Name=tokenGroupped ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [DBLP]
+              ]
+              AS
+              Variable [ Name=paper ]
+,
+              FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+                FieldAccessor [
+                  Variable [ Name=paper ]
+                  Field=title
+                ]
+              ]
+              AS
+              Variable [ Name=token ]
+            ]
+            Groupby
+              Variable [ Name=tokenGroupped ]
+              :=
+              Variable [ Name=token ]
+              With
+              Variable [ Name=paper ]
+              Variable [ Name=token ]
+              Variable [ Name=tokenUnranked ]
+              Variable [ Name=tokensRight ]
+              Variable [ Name=lenRight ]
+              Variable [ Name=tokensLeft ]
+              Variable [ Name=lenLeft ]
+              Variable [ Name=paperLeft ]
+              Variable [ Name=paperRight ]
+              Variable [ Name=prefixTokenRight ]
+              Variable [ Name=prefixTokenLeft ]
+              Variable [ Name=paperLeft ]
+              Variable [ Name=paperRight ]
+
+            Orderby
+              FunctionCall fuzzyjoin.count@1[
+                Variable [ Name=paper ]
+              ]
+              ASC
+              Variable [ Name=tokenGroupped ]
+              ASC
+
+          )
+          AS
+          Variable [ Name=tokenRanked ]
+          AT
+          Variable [ Name=i ]
+        ]
+        Where
+          OperatorExpr [
+            Variable [ Name=tokenUnranked ]
+            =
+            Variable [ Name=tokenRanked ]
+          ]
+        Orderby
+          Variable [ Name=i ]
+          ASC
+
+      )
+    LetVariable [ Name=sim ]
+      :=
+      FunctionCall fuzzyjoin.similarity-jaccard-prefix@6[
+        Variable [ Name=lenLeft ]
+        Variable [ Name=tokensLeft ]
+        Variable [ Name=lenRight ]
+        Variable [ Name=tokensRight ]
+        Variable [ Name=prefixTokenLeft ]
+        LiteralExpr [FLOAT] [0.5]
+      ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          Variable [ Name=prefixTokenLeft ]
+          =
+          Variable [ Name=prefixTokenRight ]
+        ]
+        and
+        OperatorExpr [
+          OperatorExpr [
+            Variable [ Name=sim ]
+            >=
+            LiteralExpr [FLOAT] [0.5]
+          ]
+          and
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=paperLeft ]
+              Field=id
+            ]
+            <
+            FieldAccessor [
+              Variable [ Name=paperRight ]
+              Field=id
+            ]
+          ]
+        ]
+      ]
+    Groupby
+      Variable [ Name=idLeft ]
+      :=
+      FieldAccessor [
+        Variable [ Name=paperLeft ]
+        Field=id
+      ]
+      Variable [ Name=idRight ]
+      :=
+      FieldAccessor [
+        Variable [ Name=paperRight ]
+        Field=id
+      ]
+      With
+      Variable [ Name=sim ]
+      Variable [ Name=tokensRight ]
+      Variable [ Name=lenRight ]
+      Variable [ Name=tokensLeft ]
+      Variable [ Name=lenLeft ]
+      Variable [ Name=paperLeft ]
+      Variable [ Name=paperRight ]
+      Variable [ Name=prefixTokenRight ]
+      Variable [ Name=prefixTokenLeft ]
+      Variable [ Name=paperLeft ]
+      Variable [ Name=paperRight ]
+
+  )
+  AS
+  Variable [ Name=ridpair ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=ridpair ]
+        Field=idLeft
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=paperLeft ]
+        Field=id
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=ridpair ]
+        Field=idRight
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=paperRight ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=paperLeft ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=paperRight ]
+    Field=id
+  ]
+  ASC
+

@@ -1,0 +1,163 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [sql-count1]
+    :
+    FunctionCall null.sql-count@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [average1]
+    :
+    FunctionCall null.sql-avg@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-sum1]
+    :
+    FunctionCall null.sql-sum@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-min1]
+    :
+    FunctionCall null.sql-min@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-max1]
+    :
+    FunctionCall null.sql-max@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-count2]
+    :
+    FunctionCall null.sql-count@1[
+      UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [average2]
+    :
+    FunctionCall null.sql-avg@1[
+      UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-sum2]
+    :
+    FunctionCall null.sql-sum@1[
+      UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-min2]
+    :
+    FunctionCall null.sql-min@1[
+      UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-max2]
+    :
+    FunctionCall null.sql-max@1[
+      UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+]

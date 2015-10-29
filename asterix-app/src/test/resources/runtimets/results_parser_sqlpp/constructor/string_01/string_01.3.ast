@@ -1,0 +1,18 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [string1]
+    :
+    FunctionCall test.string@1[
+      LiteralExpr [STRING] [true]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [string2]
+    :
+    FunctionCall test.string@1[
+      LiteralExpr [STRING] [false"]
+    ]
+  )
+]

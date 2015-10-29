@@ -1,0 +1,26 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [not_x]
+    :
+    FunctionCall test.not@1[
+      LiteralExpr [TRUE]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [not_y]
+    :
+    FunctionCall test.not@1[
+      LiteralExpr [FALSE]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [not_z]
+    :
+    FunctionCall test.not@1[
+      LiteralExpr [NULL]
+    ]
+  )
+]

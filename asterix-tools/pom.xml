@@ -139,7 +139,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
-			<artifactId>asterix-aql</artifactId>
+			<artifactId>asterix-lang-aql</artifactId>
 			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
@@ -161,12 +161,12 @@
 			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-metadata</artifactId>
 			<version>0.8.8-SNAPSHOT</version>
 			<scope>compile</scope>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>org.apache.asterix</groupId>
 			<artifactId>asterix-events</artifactId>

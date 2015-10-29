@@ -1,0 +1,160 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_orderkey]
+    :
+    Variable [ Name=l_orderkey ]
+  )
+  (
+    LiteralExpr [STRING] [revenue]
+    :
+    Variable [ Name=revenue ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderdate]
+    :
+    Variable [ Name=o_orderdate ]
+  )
+  (
+    LiteralExpr [STRING] [o_shippriority]
+    :
+    Variable [ Name=o_shippriority ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customer]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_mktsegment
+        ]
+        =
+        LiteralExpr [STRING] [BUILDING]
+      ]
+      and
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_custkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=o_custkey
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_orderkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=o_orderkey
+        ]
+      ]
+      and
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=o_orderdate
+        ]
+        <
+        LiteralExpr [STRING] [1995-03-15]
+      ]
+      and
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_shipdate
+        ]
+        >
+        LiteralExpr [STRING] [1995-03-15]
+      ]
+    ]
+  ]
+Groupby
+  Variable [ Name=l_orderkey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_orderkey
+  ]
+  Variable [ Name=o_orderdate ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderdate
+  ]
+  Variable [ Name=o_shippriority ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_shippriority
+  ]
+  With
+  Variable [ Name=c ]
+  Variable [ Name=l ]
+  Variable [ Name=o ]
+
+LetVariable [ Name=revenue ]
+  :=
+  FunctionCall tpch.sum@1[
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_extendedprice
+        ]
+        *
+        OperatorExpr [
+          LiteralExpr [LONG] [1]
+          -
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=l_discount
+          ]
+        ]
+      ]
+      ]
+      FROM [        Variable [ Name=l ]
+        AS
+        Variable [ Name=i ]
+      ]
+    )
+  ]
+Orderby
+  Variable [ Name=revenue ]
+  DESC
+  Variable [ Name=o_orderdate ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [10]

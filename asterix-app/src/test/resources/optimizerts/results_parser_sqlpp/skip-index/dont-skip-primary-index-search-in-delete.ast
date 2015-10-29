@@ -1,0 +1,25 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    interests : UnorderedList <string>
+,
+    children : OrderedList [          open RecordType {
+            name : string,
+            age : int32?
+          }
+]
+
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]

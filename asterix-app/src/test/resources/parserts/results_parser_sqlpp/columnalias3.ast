@@ -1,0 +1,82 @@
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [root]
+    :
+    FunctionCall null.SQRT@1[
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=a
+        ]
+        *
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=b
+        ]
+      ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tbl_name]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Groupby
+  FunctionCall null.SQRT@1[
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=a
+      ]
+      *
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=b
+      ]
+    ]
+  ]
+  With
+  Variable [ Name=t ]
+
+LetVariable [ Name=u ]
+  :=
+  FunctionCall null.SQRT@1[
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=a
+      ]
+      *
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=b
+      ]
+    ]
+  ]
+ HAVING
+  OperatorExpr [
+    FunctionCall null.SQRT@1[
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=a
+        ]
+        *
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=b
+        ]
+      ]
+    ]
+    >
+    LiteralExpr [LONG] [0]
+  ]
+Orderby
+  Variable [ Name=u ]
+  ASC
+

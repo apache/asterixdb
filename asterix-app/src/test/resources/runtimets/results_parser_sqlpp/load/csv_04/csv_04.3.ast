@@ -1,0 +1,51 @@
+DataverseUse temp
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [float]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=float
+    ]
+  )
+  (
+    LiteralExpr [STRING] [stringa]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=stringa
+    ]
+  )
+  (
+    LiteralExpr [STRING] [stringb]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=stringb
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds]
+  ]
+  AS
+  Variable [ Name=i ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=i ]
+    Field=id
+  ]
+  ASC
+

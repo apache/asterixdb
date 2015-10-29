@@ -1,0 +1,13 @@
+DataverseUse test
+TypeDecl FacebookMessageType [
+  closed RecordType {
+    message-id : int64,
+    author-id : int64,
+    in-response-to : int64?,
+    sender-location : point?,
+    message : string,
+    send-time : datetime
+  }
+]
+DatasetDecl FacebookMessages(FacebookMessageType) partitioned by [[message-id]]
+DatasetDecl FacebookMessages2(FacebookMessageType) partitioned by [[message-id]]

@@ -1,0 +1,39 @@
+TypeDecl TestType [
+  open RecordType {
+    key1 : int32,
+    key2 : int32,
+    fname : string,
+    lname : string
+  }
+]
+DatasetDecl DsOne(TestType) partitioned by [[key1]]
+DatasetDecl DsTwo(TestType) partitioned by [[key1]]
+WriteOutputTo nc1:rttest/btree-index-join_primary-equi-join_02.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [test1.DsOne]
+  ]
+  AS
+  Variable [ Name=x ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [test1.DsTwo]
+  ]
+  AS
+  Variable [ Name=y ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=key2
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=y ]
+      Field=key1
+    ]
+  ]

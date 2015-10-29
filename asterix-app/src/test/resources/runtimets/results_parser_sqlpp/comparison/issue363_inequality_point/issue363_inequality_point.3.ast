@@ -1,0 +1,55 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [point0]
+    :
+    OperatorExpr [
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+      >
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.4444,80.65]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point1]
+    :
+    OperatorExpr [
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.4444,80.65]
+      ]
+      <
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point2]
+    :
+    OperatorExpr [
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+      >=
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.4444,80.65]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point3]
+    :
+    OperatorExpr [
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.4444,80.65]
+      ]
+      <=
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+    ]
+  )
+]

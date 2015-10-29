@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -32,9 +34,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.apache.asterix.test.aql.TestsUtils;
-import org.apache.asterix.testframework.context.TestCaseContext;
 
 @RunWith(Parameterized.class)
 public class RecoveryIT {
@@ -50,6 +49,7 @@ public class RecoveryIT {
     private static String scriptHomePath;
     private static ProcessBuilder pb;
     private static Map<String, String> env;
+    private final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -75,23 +75,23 @@ public class RecoveryIT {
                 + "resources" + File.separator + "transactionts" + File.separator + "scripts";
         env.put("SCRIPT_HOME", scriptHomePath);
 
-        TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
-                + "configure_and_validate.sh");
-        TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
-                + "stop_and_delete.sh");
+        TestExecutor.executeScript(pb,
+                scriptHomePath + File.separator + "setup_teardown" + File.separator + "configure_and_validate.sh");
+        TestExecutor.executeScript(pb,
+                scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
-        File dataCopyDir = new File(managixHomePath + File.separator + ".." + File.separator + ".." + File.separator
-                + "data");
+        File dataCopyDir = new File(
+                managixHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
         FileUtils.deleteDirectory(dataCopyDir);
-        TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
-                + "stop_and_delete.sh");
-        TestsUtils.executeScript(pb, scriptHomePath + File.separator + "setup_teardown" + File.separator
-                + "shutdown.sh");
+        TestExecutor.executeScript(pb,
+                scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");
+        TestExecutor.executeScript(pb,
+                scriptHomePath + File.separator + "setup_teardown" + File.separator + "shutdown.sh");
     }
 
     @Parameters
@@ -110,7 +110,7 @@ public class RecoveryIT {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, pb, false);
+        testExecutor.executeTest(PATH_ACTUAL, tcCtx, pb, false);
     }
 
 }

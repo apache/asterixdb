@@ -1,0 +1,32 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+with  a as [],
+      b as [1,2,3,4,5],
+      c as [4,3,5,8,9,2,1],
+      d as [7,5,8,9,3,10,1,2,11,4],
+      e as [11,12,13,14,15,16,17,18,19,20,21],
+      f as [1,2,3,4,5,7,8,9,10,11],
+      results as [test."similarity-jaccard-check"(a,b,0.000000f),test."similarity-jaccard-check"(b,a,0.000000f),test."similarity-jaccard-check"(a,b,0.100000f),test."similarity-jaccard-check"(b,a,0.100000f),test."similarity-jaccard-check"(c,d,0.600000f),test."similarity-jaccard-check"(d,c,0.600000f),test."similarity-jaccard-check"(c,d,0.800000f),test."similarity-jaccard-check"(d,c,0.800000f),test."similarity-jaccard-check"(e,f,0.050000f),test."similarity-jaccard-check"(f,e,0.050000f),test."similarity-jaccard-check"(e,f,0.800000f),test."similarity-jaccard-check"(f,e,0.800000f)]
+select element i
+from  results as i
+;

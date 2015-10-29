@@ -1,0 +1,24 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.substring@2[
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=name
+  ]
+  LiteralExpr [LONG] [4]
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testdst]
+  ]
+  AS
+  Variable [ Name=a ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=name
+  ]
+  ASC
+

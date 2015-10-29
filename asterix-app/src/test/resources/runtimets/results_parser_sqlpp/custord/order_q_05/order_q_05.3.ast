@@ -1,0 +1,70 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [orderid]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=oid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ordertot]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=total
+    ]
+  )
+  (
+    LiteralExpr [STRING] [emptyorderedlist]
+    :
+    Variable [ Name=c1 ]
+  )
+  (
+    LiteralExpr [STRING] [emptyunorderedlist]
+    :
+    Variable [ Name=c2 ]
+  )
+  (
+    LiteralExpr [STRING] [olist_item1]
+    :
+    IndexAccessor [
+      Variable [ Name=c1 ]
+      Index:       Variable [ Name=c1 ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [olist_item5]
+    :
+    IndexAccessor [
+      Variable [ Name=c1 ]
+      Index:       Variable [ Name=c1 ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ulist_item1]
+    :
+    IndexAccessor [
+      Variable [ Name=c2 ]
+      Index: ANY
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+LetVariable [ Name=c1 ]
+  :=
+  OrderedListConstructor [
+  ]
+LetVariable [ Name=c2 ]
+  :=
+  UnorderedListConstructor [
+  ]

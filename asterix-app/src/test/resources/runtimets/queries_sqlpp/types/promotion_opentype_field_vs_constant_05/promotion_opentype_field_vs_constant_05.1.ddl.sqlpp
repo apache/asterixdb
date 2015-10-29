@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Type Promotion Test
+* - Comparison between an open-type field and a FLOAT constant
+* - Expected Result: Success
+*/
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.empInfoType as
+{
+  id : int64,
+  empno : int64,
+  name : string,
+  height : float,
+  age : int64,
+  worksince : int64
+}
+
+create type test.deptInfoType as
+{
+  did : int64,
+  dname : string,
+  floor : int64,
+  dsince : int64,
+  bossid : int64,
+  bossidint32 : int32
+}
+
+create  table empDataset(empInfoType) primary key id;
+
+create  table deptDataset(deptInfoType) primary key did;
+
+create  index empAgeIdx  on empDataset (age) type btree;
+
+create  index deptFloorIdx  on deptDataset (floor) type btree;
+

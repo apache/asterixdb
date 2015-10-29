@@ -1,0 +1,71 @@
+DataverseUse index_search
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+WriteOutputTo nc1:/tmp/index_search.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [o_orderkey]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_orderkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_custkey]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_custkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderstatus]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_orderstatus
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_custkey
+      ]
+      =
+      LiteralExpr [LONG] [40]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderstatus
+      ]
+      =
+      LiteralExpr [STRING] [P]
+    ]
+  ]

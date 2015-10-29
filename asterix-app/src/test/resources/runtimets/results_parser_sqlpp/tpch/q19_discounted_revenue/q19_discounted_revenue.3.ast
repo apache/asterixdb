@@ -1,0 +1,270 @@
+DataverseUse tpch
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+FunctionCall tpch.sum@1[
+  (
+    SELECT ELEMENT [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_extendedprice
+      ]
+      *
+      OperatorExpr [
+        LiteralExpr [LONG] [1]
+        -
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_discount
+        ]
+      ]
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItem]
+      ]
+      AS
+      Variable [ Name=l ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Part]
+      ]
+      AS
+      Variable [ Name=p ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_partkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_partkey
+          ]
+        ]
+        and
+        OperatorExpr [
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_brand
+              ]
+              =
+              LiteralExpr [STRING] [Brand#12]
+            ]
+            and
+            FunctionCall tpch.reg-exp@2[
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_container
+              ]
+              LiteralExpr [STRING] [SM CASE||SM BOX||SM PACK||SM PKG]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              >=
+              LiteralExpr [LONG] [1]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              <=
+              LiteralExpr [LONG] [11]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_size
+              ]
+              >=
+              LiteralExpr [LONG] [1]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_size
+              ]
+              <=
+              LiteralExpr [LONG] [5]
+            ]
+            and
+            FunctionCall tpch.reg-exp@2[
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipmode
+              ]
+              LiteralExpr [STRING] [AIR||AIR REG]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipinstruct
+              ]
+              =
+              LiteralExpr [STRING] [DELIVER IN PERSON]
+            ]
+          ]
+          or
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_brand
+              ]
+              =
+              LiteralExpr [STRING] [Brand#23]
+            ]
+            and
+            FunctionCall tpch.reg-exp@2[
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_container
+              ]
+              LiteralExpr [STRING] [MED BAG||MED BOX||MED PKG||MED PACK]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              >=
+              LiteralExpr [LONG] [10]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              <=
+              LiteralExpr [LONG] [20]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_size
+              ]
+              >=
+              LiteralExpr [LONG] [1]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_size
+              ]
+              <=
+              LiteralExpr [LONG] [10]
+            ]
+            and
+            FunctionCall tpch.reg-exp@2[
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipmode
+              ]
+              LiteralExpr [STRING] [AIR||AIR REG]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipinstruct
+              ]
+              =
+              LiteralExpr [STRING] [DELIVER IN PERSON]
+            ]
+          ]
+          or
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_brand
+              ]
+              =
+              LiteralExpr [STRING] [Brand#34]
+            ]
+            and
+            FunctionCall tpch.reg-exp@2[
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_container
+              ]
+              LiteralExpr [STRING] [LG CASE||LG BOX||LG PACK||LG PKG]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              >=
+              LiteralExpr [LONG] [20]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              <=
+              LiteralExpr [LONG] [30]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_size
+              ]
+              >=
+              LiteralExpr [LONG] [1]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_size
+              ]
+              <=
+              LiteralExpr [LONG] [15]
+            ]
+            and
+            FunctionCall tpch.reg-exp@2[
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipmode
+              ]
+              LiteralExpr [STRING] [AIR||AIR REG]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipinstruct
+              ]
+              =
+              LiteralExpr [STRING] [DELIVER IN PERSON]
+            ]
+          ]
+        ]
+      ]
+  )
+]
+]

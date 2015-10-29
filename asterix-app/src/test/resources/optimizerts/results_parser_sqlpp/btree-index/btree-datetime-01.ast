@@ -1,0 +1,50 @@
+DataverseUse emergencyTest
+TypeDecl CHPReport [
+  open RecordType {
+    id : int64,
+    timestamp : datetime,
+    title : string,
+    message : string
+  }
+]
+DatasetDecl CHPReports(CHPReport) partitioned by [[timestamp]]
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=emergency ]
+  Field=message
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CHPReports]
+  ]
+  AS
+  Variable [ Name=emergency ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emergency ]
+        Field=timestamp
+      ]
+      >=
+      OperatorExpr [
+        FunctionCall emergencyTest.current-datetime@0[
+        ]
+        -
+        FunctionCall emergencyTest.day-time-duration@1[
+          LiteralExpr [STRING] [PT10H]
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emergency ]
+        Field=title
+      ]
+      =
+      LiteralExpr [STRING] [ghost]
+    ]
+  ]

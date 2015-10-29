@@ -1,0 +1,41 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [dr1]
+    :
+    FunctionCall test.duration-from-interval@1[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dr2]
+    :
+    FunctionCall test.duration-from-interval@1[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dr3]
+    :
+    FunctionCall test.duration-from-interval@1[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [12:32:38]
+        LiteralExpr [STRING] [20:29:20]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dr4]
+    :
+    FunctionCall test.duration-from-interval@1[
+      LiteralExpr [NULL]
+    ]
+  )
+]

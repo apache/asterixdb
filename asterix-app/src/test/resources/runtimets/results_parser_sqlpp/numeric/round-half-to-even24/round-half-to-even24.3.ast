@@ -1,0 +1,54 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [d0]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [0.015]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d1]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [0.025]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d2]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [3.567812E+3]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d3]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [4.7564E-3]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d4]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [35612.25]
+      ]
+      NEGATIVE LiteralExpr [LONG] [2]
+    ]
+  )
+]

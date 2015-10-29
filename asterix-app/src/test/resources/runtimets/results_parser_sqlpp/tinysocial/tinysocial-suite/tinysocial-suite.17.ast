@@ -1,0 +1,48 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [user]
+    :
+    Variable [ Name=uid ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    Variable [ Name=c ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Groupby
+  Variable [ Name=uid ]
+  :=
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=t ]
+      Field=user
+    ]
+    Field=screen-name
+  ]
+  With
+  Variable [ Name=t ]
+
+LetVariable [ Name=c ]
+  :=
+  FunctionCall TinySocial.count@1[
+    Variable [ Name=t ]
+  ]
+Orderby
+  Variable [ Name=c ]
+  ASC
+  Variable [ Name=uid ]
+  DESC
+
+Limit
+  LiteralExpr [LONG] [3]

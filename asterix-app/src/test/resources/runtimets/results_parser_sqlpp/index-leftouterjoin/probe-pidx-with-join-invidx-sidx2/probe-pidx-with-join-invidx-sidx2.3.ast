@@ -1,0 +1,123 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [tweet]
+    :
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [id]
+        :
+        FieldAccessor [
+          Variable [ Name=t1 ]
+          Field=tweetid
+        ]
+      )
+      (
+        LiteralExpr [STRING] [topics]
+        :
+        FieldAccessor [
+          Variable [ Name=t1 ]
+          Field=message-text
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [similar-tweets]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [id]
+          :
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=tweetid
+          ]
+        )
+        (
+          LiteralExpr [STRING] [topics]
+          :
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=message-text
+          ]
+        )
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [TweetMessages]
+        ]
+        AS
+        Variable [ Name=t2 ]
+      ]
+      LetVariable [ Name=sim ]
+        :=
+        FunctionCall test.edit-distance-check@3[
+          FieldAccessor [
+            Variable [ Name=t1 ]
+            Field=message-text
+          ]
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=message-text
+          ]
+          LiteralExpr [LONG] [7]
+        ]
+      Where
+        OperatorExpr [
+          IndexAccessor [
+            Variable [ Name=sim ]
+            Index:             Variable [ Name=sim ]
+          ]
+          and
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=t2 ]
+              Field=tweetid
+            ]
+            !=
+            FieldAccessor [
+              Variable [ Name=t1 ]
+              Field=tweetid
+            ]
+          ]
+        ]
+      Orderby
+        FieldAccessor [
+          Variable [ Name=t2 ]
+          Field=tweetid
+        ]
+        ASC
+
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t1 ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=tweetid
+    ]
+    >
+    FunctionCall test.int64@1[
+      LiteralExpr [STRING] [240]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=tweetid
+  ]
+  ASC
+

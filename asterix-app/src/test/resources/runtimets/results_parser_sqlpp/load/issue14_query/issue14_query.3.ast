@@ -1,0 +1,10 @@
+DataverseUse test
+Query:
+  SELECT ELEMENT [
+  Variable [ Name=l Id=0 ]
+  ]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [onektup] 
+  ]
+  Variable [ Name=l Id=0 ]
+]

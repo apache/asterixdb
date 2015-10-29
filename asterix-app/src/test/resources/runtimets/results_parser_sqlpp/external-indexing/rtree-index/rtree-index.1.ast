@@ -1,0 +1,15 @@
+DataverseUse test
+TypeDecl MyRecord [
+  closed RecordType {
+    id : int64,
+    point : point,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle,
+    circle : circle
+  }
+]
+DatasetDecl MyData(MyRecord)is an external dataset

@@ -1,0 +1,37 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+with  dt1 as test.datetime('2011-12-31T14:00:00-10:00'),
+      dt2 as test.datetime('2012-01-01T00:00:00Z'),
+      dt3 as test.datetime('2005-01-01T00:00:00+04:00'),
+      dt4 as test.datetime('2011-12-31T13:00:00-11:00'),
+      dt5 as test.datetime('2012-04-06T00:00:00Z'),
+      dt6 as test.datetime('-1937-07-07T23:00:00+08:00'),
+      dt7 as test.datetime('-1600-03-01T00:00:00.384+06:00'),
+      dt8 as test.datetime('-1600-02-29T23:59:59.999Z'),
+      dt9 as test.datetime('2000-02-29T23:59:59.999Z'),
+      dt10 as test.datetime('2000-03-01T01:59:59.999+07:00'),
+      dt11 as test.datetime('-1600-03-01T00:00:00.384-06:00')
+select element dt
+from  [dt1,dt2,dt3,dt4,dt5,dt6,dt7,dt8,dt9,dt10,dt11] as dt
+order by dt
+;

@@ -1,0 +1,63 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue838
+ * https://code.google.com/p/asterixdb/issues/detail?id=838
+ * Expected Res : SUCCESS
+ * Date         : 18 Dec. 2014
+ */
+
+drop  database twitter if exists;
+create  database twitter;
+
+use twitter;
+
+
+create type twitter.TweetMessageType as
+ closed {
+  tweetid : int64,
+  "sender-location" : point,
+  text : string
+}
+
+create type twitter.TweetHistorySubscription as
+{
+  "subscription-id" : int32,
+  location : point
+}
+
+create  table TweetHistorySubscriptions(TweetHistorySubscription) primary key "subscription-id";
+
+create  index testa  on TweetHistorySubscriptions (location) type rtree;
+
+create  table TweetMessages(TweetMessageType) primary key tweetid;
+
+create  index locationIdx  on TweetMessages ("sender-location") type rtree;
+
+write output to nc1:"rttest/query-issue838.adm"
+select element {'subscription-id':sub."subscription-id",'changeSet':1,'execution-time':twitter."current-datetime"(),'message-text':text}
+from  TweetHistorySubscriptions as sub,
+      (
+    select element tweet
+    from  TweetMessages as tweet
+    with  circle as twitter."create-circle"(location,30.0)
+    where twitter."spatial-intersect"(tweet."sender-location",circle)
+) as text
+with  location as sub.location
+;

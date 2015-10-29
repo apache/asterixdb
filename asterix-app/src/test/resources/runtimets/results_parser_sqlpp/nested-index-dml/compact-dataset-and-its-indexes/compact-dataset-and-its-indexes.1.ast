@@ -1,0 +1,28 @@
+DataverseUse test
+TypeDecl LineItemTypetmp [
+  closed RecordType {
+    l_orderkey : int64,
+    l_partkey : int64,
+    l_suppkey : int64,
+    l_linenumber : int64,
+    l_quantity : int64,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl LineItemType [
+  closed RecordType {
+    nested : LineItemTypetmp
+  }
+]
+DatasetDecl LineItemtmp(LineItemTypetmp) partitioned by [[l_orderkey], [l_linenumber]]
+DatasetDecl LineItem(LineItemType) partitioned by [[nested, l_orderkey], [nested, l_linenumber]]

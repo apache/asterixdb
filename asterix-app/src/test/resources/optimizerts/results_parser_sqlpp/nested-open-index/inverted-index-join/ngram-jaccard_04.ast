@@ -1,0 +1,107 @@
+DataverseUse test
+Set import-private-functions=true
+TypeDecl DBLPTypetmp [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXTypetmp [
+  open RecordType {
+    id : int32,
+    csxid : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl DBLPType [
+  closed RecordType {
+    nested : DBLPTypetmp
+  }
+]
+TypeDecl CSXType [
+  closed RecordType {
+    nested : CSXTypetmp
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
+DatasetDecl CSX(CSXType) partitioned by [[nested, id]]
+WriteOutputTo nc1:rttest/inverted-index-join_ngram-jaccard_01.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.similarity-jaccard@2[
+        FunctionCall test.gram-tokens@3[
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=a ]
+              Field=nested
+            ]
+            Field=title
+          ]
+          LiteralExpr [LONG] [3]
+          LiteralExpr [FALSE]
+        ]
+        FunctionCall test.gram-tokens@3[
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=b ]
+              Field=nested
+            ]
+            Field=title
+          ]
+          LiteralExpr [LONG] [3]
+          LiteralExpr [FALSE]
+        ]
+      ]
+      >=
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=id
+      ]
+    ]
+  ]

@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [field1]
+    :
+    FunctionCall test.like@2[
+      LiteralExpr [STRING] [A8BBB]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [field2]
+    :
+    FunctionCall test.like@2[
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [_6%]
+    ]
+  )
+]

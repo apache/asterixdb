@@ -1,0 +1,19 @@
+DataverseUse test
+TypeDecl Emp [
+  closed RecordType {
+    id : int64,
+    fname : string,
+    lname : string,
+    age : int64,
+    dept : string
+  }
+]
+TypeDecl EmpOpen [
+  open RecordType {
+    id : int64,
+    age : int64,
+    dept : string
+  }
+]
+DatasetDecl employee(Emp) partitioned by [[id]]
+DatasetDecl employeeOpen(EmpOpen) partitioned by [[id]]

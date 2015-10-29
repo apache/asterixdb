@@ -1,0 +1,9 @@
+DataverseUse TinySocial
+DatasetDecl FacebookUsers(FacebookUserType) partitioned by [[id]]
+DatasetDecl FacebookMessages(FacebookMessageType) partitioned by [[message-id]]
+DatasetDecl TwitterUsers(TwitterUserType) partitioned by [[screen-name]]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
+DatasetDecl FacebookUsersAlternate(FacebookUserAlternateType) partitioned by [[id]]
+DatasetDecl FacebookMessagesAlternate(FacebookMessageAlternateType) partitioned by [[message-id]]
+DatasetDecl TwitterUsersAlternate(TwitterUserAlternateType) partitioned by [[screen-name]]
+DatasetDecl TweetMessagesAlternate(TweetMessageAlternateType) partitioned by [[tweetid]]

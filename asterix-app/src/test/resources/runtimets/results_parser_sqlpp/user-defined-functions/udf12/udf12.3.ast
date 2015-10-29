@@ -1,0 +1,8 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.foo@2[
+  LiteralExpr [LONG] [100]
+  LiteralExpr [LONG] [200]
+]
+]

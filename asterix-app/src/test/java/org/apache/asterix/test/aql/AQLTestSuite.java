@@ -25,14 +25,13 @@ import java.io.UnsupportedEncodingException;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.apache.asterix.lang.aql.parser.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
-import org.apache.asterix.aql.parser.ParseException;
-
 public class AQLTestSuite extends TestSuite {
-    private static String AQLTS_PATH = StringUtils.join(new String[] { "src", "test", "resources", "AQLTS",
+    private static String AQLTS_PATH = StringUtils.join(new String[] { "src", "test", "resources", "parserts",
             "queries" + File.separator }, File.separator);
-    private static String AQLTS_SQL_LIKE_PATH = StringUtils.join(new String[] { "src", "test", "resources", "AQLTS",
+    private static String AQLTS_SQL_LIKE_PATH = StringUtils.join(new String[] { "src", "test", "resources", "parserts",
             "queries-sql-like" + File.separator }, File.separator);
 
     public static Test suite() throws ParseException, UnsupportedEncodingException, FileNotFoundException {
@@ -51,9 +50,7 @@ public class AQLTestSuite extends TestSuite {
                 testSuite.addTest(new AQLTestCase(file));
             }
         }
-
         return testSuite;
-
     }
 
     public static void main(String args[]) throws Throwable {

@@ -1,0 +1,12 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  UnorderedListConstructor [
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [20]
+    LiteralExpr [LONG] [30]
+  ]
+  AS
+  Variable [ Name=x ]
+]

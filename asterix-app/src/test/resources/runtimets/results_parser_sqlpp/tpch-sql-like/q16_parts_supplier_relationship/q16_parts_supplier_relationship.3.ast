@@ -1,0 +1,361 @@
+DataverseUse tpch
+FunctionDecl tmp([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [p_brand]
+        :
+        FieldAccessor [
+          Variable [ Name=psp ]
+          Field=p_brand
+        ]
+      )
+      (
+        LiteralExpr [STRING] [p_type]
+        :
+        FieldAccessor [
+          Variable [ Name=psp ]
+          Field=p_type
+        ]
+      )
+      (
+        LiteralExpr [STRING] [p_size]
+        :
+        FieldAccessor [
+          Variable [ Name=psp ]
+          Field=p_size
+        ]
+      )
+      (
+        LiteralExpr [STRING] [ps_suppkey]
+        :
+        FieldAccessor [
+          Variable [ Name=psp ]
+          Field=ps_suppkey
+        ]
+      )
+    ]
+    ]
+    FROM [      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [p_brand]
+            :
+            FieldAccessor [
+              Variable [ Name=p ]
+              Field=p_brand
+            ]
+          )
+          (
+            LiteralExpr [STRING] [p_type]
+            :
+            FieldAccessor [
+              Variable [ Name=p ]
+              Field=p_type
+            ]
+          )
+          (
+            LiteralExpr [STRING] [p_size]
+            :
+            FieldAccessor [
+              Variable [ Name=p ]
+              Field=p_size
+            ]
+          )
+          (
+            LiteralExpr [STRING] [ps_suppkey]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_suppkey
+            ]
+          )
+        ]
+        ]
+        FROM [          Variable [ Name=Partsupp ]
+          AS
+          Variable [ Name=ps ]
+,
+          Variable [ Name=Part ]
+          AS
+          Variable [ Name=p ]
+        ]
+        Where
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_partkey
+              ]
+              =
+              FieldAccessor [
+                Variable [ Name=ps ]
+                Field=ps_partkey
+              ]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_brand
+              ]
+              !=
+              LiteralExpr [STRING] [Brand#45]
+            ]
+            and
+            FunctionCall tpch.not@1[
+              FunctionCall tpch.like@2[
+                FieldAccessor [
+                  Variable [ Name=p ]
+                  Field=p_type
+                ]
+                LiteralExpr [STRING] [MEDIUM POLISHED%]
+              ]
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=psp ]
+,
+      Variable [ Name=Supplier ]
+      AS
+      Variable [ Name=s ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=psp ]
+            Field=ps_suppkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=s ]
+            Field=s_suppkey
+          ]
+        ]
+        and
+        FunctionCall tpch.not@1[
+          FunctionCall tpch.like@2[
+            FieldAccessor [
+              Variable [ Name=s ]
+              Field=s_comment
+            ]
+            LiteralExpr [STRING] [%Customer%Complaints%]
+          ]
+        ]
+      ]
+  )
+}
+
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [p_brand]
+    :
+    Variable [ Name=p_brand ]
+  )
+  (
+    LiteralExpr [STRING] [p_type]
+    :
+    Variable [ Name=p_type ]
+  )
+  (
+    LiteralExpr [STRING] [p_size]
+    :
+    Variable [ Name=p_size ]
+  )
+  (
+    LiteralExpr [STRING] [supplier_cnt]
+    :
+    Variable [ Name=supplier_cnt ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [p_brand]
+        :
+        Variable [ Name=p_brand1 ]
+      )
+      (
+        LiteralExpr [STRING] [p_type]
+        :
+        Variable [ Name=p_type1 ]
+      )
+      (
+        LiteralExpr [STRING] [p_size]
+        :
+        Variable [ Name=p_size1 ]
+      )
+      (
+        LiteralExpr [STRING] [ps_suppkey]
+        :
+        Variable [ Name=ps_suppkey1 ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall tpch.tmp@0[
+      ]
+      AS
+      Variable [ Name=t ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [49]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [14]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [23]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [45]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [19]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [3]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [36]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t ]
+            Field=p_size
+          ]
+          =
+          LiteralExpr [LONG] [9]
+        ]
+      ]
+    Groupby
+      Variable [ Name=p_brand1 ]
+      :=
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=p_brand
+      ]
+      Variable [ Name=p_type1 ]
+      :=
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=p_type
+      ]
+      Variable [ Name=p_size1 ]
+      :=
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=p_size
+      ]
+      Variable [ Name=ps_suppkey1 ]
+      :=
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=ps_suppkey
+      ]
+      With
+      Variable [ Name=t ]
+
+  )
+  AS
+  Variable [ Name=t2 ]
+]
+Groupby
+  Variable [ Name=p_brand ]
+  :=
+  FieldAccessor [
+    Variable [ Name=t2 ]
+    Field=p_brand
+  ]
+  Variable [ Name=p_type ]
+  :=
+  FieldAccessor [
+    Variable [ Name=t2 ]
+    Field=p_type
+  ]
+  Variable [ Name=p_size ]
+  :=
+  FieldAccessor [
+    Variable [ Name=t2 ]
+    Field=p_size
+  ]
+  With
+  Variable [ Name=t2 ]
+
+LetVariable [ Name=supplier_cnt ]
+  :=
+  FunctionCall tpch.count@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=ps_suppkey
+      ]
+      ]
+      FROM [        Variable [ Name=t2 ]
+        AS
+        Variable [ Name=i ]
+      ]
+    )
+  ]
+Orderby
+  Variable [ Name=supplier_cnt ]
+  DESC
+  Variable [ Name=p_brand ]
+  ASC
+  Variable [ Name=p_type ]
+  ASC
+  Variable [ Name=p_size ]
+  ASC
+

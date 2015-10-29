@@ -1,0 +1,9 @@
+DataverseUse test
+Query:
+FunctionCall test.echo@1[
+  UnorderedListConstructor [
+    LiteralExpr [STRING] [this is optional data]
+    LiteralExpr [STRING] [this is extra data]
+    LiteralExpr [STRING] [open types are good]
+  ]
+]

@@ -1,0 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+{'start1':test."get-interval-start"(test."interval-from-date"(test.date('2010-10-30'),'2013-04-01')),'end1':test."get-interval-end"(test."interval-from-date"(test.date('2010-10-30'),'2013-04-01')),'start2':test."get-interval-start"(test."interval-from-time"('08:09:10.234Z',test.time('203040567+0800'))),'end2':test."get-interval-end"(test."interval-from-time"('08:09:10.234Z',test.time('203040567+0800'))),'start3':test."get-interval-start"(test."interval-from-datetime"('2009-09-01T00:00:00.000+08:00',test."datetime-from-date-time"(test.date('2013-04-04'),test.time('00:00:00.000+08:00')))),'end3':test."get-interval-end"(test."interval-from-datetime"('2009-09-01T00:00:00.000+08:00',test."datetime-from-date-time"(test.date('2013-04-04'),test.time('00:00:00.000+08:00'))))};

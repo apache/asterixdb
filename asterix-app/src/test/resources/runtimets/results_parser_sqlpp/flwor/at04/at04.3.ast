@@ -1,0 +1,85 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [o_custkey]
+    :
+    Variable [ Name=ckey ]
+  )
+  (
+    LiteralExpr [STRING] [users]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [num]
+          :
+          Variable [ Name=ip ]
+        )
+        (
+          LiteralExpr [STRING] [orderkey]
+          :
+          FieldAccessor [
+            Variable [ Name=f ]
+            Field=o_orderkey
+          ]
+        )
+      ]
+      ]
+      FROM [        (
+          SELECT ELEMENT [
+          Variable [ Name=i1 ]
+          ]
+          FROM [            Variable [ Name=i ]
+            AS
+            Variable [ Name=i1 ]
+          ]
+          Orderby
+            FieldAccessor [
+              Variable [ Name=i1 ]
+              Field=o_orderkey
+            ]
+            ASC
+
+        )
+        AS
+        Variable [ Name=f ]
+        AT
+        Variable [ Name=ip ]
+      ]
+    )
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    Variable [ Name=o ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Orders]
+      ]
+      AS
+      Variable [ Name=o ]
+    ]
+  )
+  AS
+  Variable [ Name=i ]
+]
+Groupby
+  Variable [ Name=ckey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=i ]
+    Field=o_custkey
+  ]
+  With
+  Variable [ Name=i ]
+
+Orderby
+  Variable [ Name=ckey ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [3]

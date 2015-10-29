@@ -1,0 +1,82 @@
+DataverseUse test
+TypeDecl DBLPNestedType [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl DBLPType [
+  closed RecordType {
+    nested : DBLPNestedType
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
+WriteOutputTo nc1:rttest/inverted-index-complex_ngram-edit-distance-check-substring.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=paper ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [title]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=paper ]
+        Field=nested
+      ]
+      Field=title
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+]
+Where
+  IndexAccessor [
+    FunctionCall test.edit-distance-check@3[
+      FunctionCall test.substring@3[
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=paper ]
+            Field=nested
+          ]
+          Field=title
+        ]
+        LiteralExpr [LONG] [0]
+        LiteralExpr [LONG] [8]
+      ]
+      LiteralExpr [STRING] [datbase]
+      LiteralExpr [LONG] [1]
+    ]
+    Index:     FunctionCall test.edit-distance-check@3[
+      FunctionCall test.substring@3[
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=paper ]
+            Field=nested
+          ]
+          Field=title
+        ]
+        LiteralExpr [LONG] [0]
+        LiteralExpr [LONG] [8]
+      ]
+      LiteralExpr [STRING] [datbase]
+      LiteralExpr [LONG] [1]
+    ]
+  ]

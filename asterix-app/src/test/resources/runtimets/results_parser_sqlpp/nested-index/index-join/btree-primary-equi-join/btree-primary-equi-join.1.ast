@@ -1,0 +1,48 @@
+DataverseUse test
+TypeDecl AddressType [
+  open RecordType {
+    number : int64,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerTypetmp [
+  closed RecordType {
+    cid : int64,
+    name : string,
+    cashBack : int64,
+    age : int64?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int64,
+        total : float
+      }
+
+  }
+]
+TypeDecl OrderTypetmp [
+  open RecordType {
+    oid : int64,
+    cid : int64,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float,
+    items : OrderedList [int64]
+
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    nested : CustomerTypetmp
+  }
+]
+TypeDecl OrderType [
+  open RecordType {
+    nested : OrderTypetmp
+  }
+]
+DatasetDecl Customerstmp(CustomerTypetmp) partitioned by [[cid]]
+DatasetDecl Orderstmp(OrderTypetmp) partitioned by [[oid]]
+DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
+DatasetDecl Orders(OrderType) partitioned by [[nested, oid]]

@@ -1,0 +1,146 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [o_orderkey]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=o_orderkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_custkey]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=o_custkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderstatus]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=o_orderstatus
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderkey2]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o2 ]
+        Field=nested
+      ]
+      Field=o_orderkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_custkey2]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o2 ]
+        Field=nested
+      ]
+      Field=o_custkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderstatus2]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o2 ]
+        Field=nested
+      ]
+      Field=o_orderstatus
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o2 ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=nested
+        ]
+        Field=o_custkey
+      ]
+      =
+      LiteralExpr [LONG] [20]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=o2 ]
+          Field=nested
+        ]
+        Field=o_custkey
+      ]
+      =
+      LiteralExpr [LONG] [10]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=nested
+        ]
+        Field=o_orderstatus
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=o2 ]
+          Field=nested
+        ]
+        Field=o_orderstatus
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=nested
+    ]
+    Field=o_orderkey
+  ]
+  ASC
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=o2 ]
+      Field=nested
+    ]
+    Field=o_orderkey
+  ]
+  ASC
+

@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
@@ -76,10 +75,12 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     private final Counter counter;
     private final LogicalExpressionDeepCopyVisitor exprDeepCopyVisitor;
 
-    // Key: Variable in the original plan. Value: New variable replacing the original one in the copied plan.
+    // Key: Variable in the original plan. Value: New variable replacing the
+    // original one in the copied plan.
     private final Map<LogicalVariable, LogicalVariable> outVarMapping = new HashMap<LogicalVariable, LogicalVariable>();
 
-    // Key: Variable in the original plan. Value: Variable with which to replace original variable in the plan copy.
+    // Key: Variable in the original plan. Value: Variable with which to replace
+    // original variable in the plan copy.
     private final Map<LogicalVariable, LogicalVariable> inVarMapping;
 
     public LogicalOperatorDeepCopyVisitor(Counter counter) {
@@ -93,7 +94,8 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
      *            Starting variable counter.
      * @param inVarMapping
      *            Variable mapping keyed by variables in the original plan.
-     *            Those variables are replaced by their corresponding value in the map in the copied plan.
+     *            Those variables are replaced by their corresponding value in
+     *            the map in the copied plan.
      */
     public LogicalOperatorDeepCopyVisitor(Counter counter, Map<LogicalVariable, LogicalVariable> inVarMapping) {
         this.counter = counter;
@@ -280,10 +282,10 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
 
     @Override
     public ILogicalOperator visitGroupByOperator(GroupByOperator op, ILogicalOperator arg) throws AlgebricksException {
-        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByListCopy = deepCopyVariableExpressionReferencePairList(op
-                .getGroupByList());
-        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorListCopy = deepCopyVariableExpressionReferencePairList(op
-                .getDecorList());
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByListCopy = deepCopyVariableExpressionReferencePairList(
+                op.getGroupByList());
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorListCopy = deepCopyVariableExpressionReferencePairList(
+                op.getDecorList());
         List<ILogicalPlan> nestedPlansCopy = new ArrayList<ILogicalPlan>();
 
         GroupByOperator opCopy = new GroupByOperator(groupByListCopy, decorListCopy, nestedPlansCopy);
@@ -297,9 +299,10 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
     @Override
     public ILogicalOperator visitInnerJoinOperator(InnerJoinOperator op, ILogicalOperator arg)
             throws AlgebricksException {
-        InnerJoinOperator opCopy = new InnerJoinOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op
-                .getCondition()), deepCopyOperatorReference(op.getInputs().get(0), null), deepCopyOperatorReference(op
-                .getInputs().get(1), null));
+        InnerJoinOperator opCopy = new InnerJoinOperator(
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
+                deepCopyOperatorReference(op.getInputs().get(0), null),
+                deepCopyOperatorReference(op.getInputs().get(1), null));
         copyAnnotations(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
@@ -470,4 +473,5 @@ public class LogicalOperatorDeepCopyVisitor implements ILogicalOperatorVisitor<I
             throws AlgebricksException {
         throw new UnsupportedOperationException();
     }
+
 }

@@ -1,0 +1,108 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [a]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=interests
+    ]
+  )
+  (
+    LiteralExpr [STRING] [b]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=interests
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ed]
+    :
+    Variable [ Name=ed ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+LetVariable [ Name=ed ]
+  :=
+  FunctionCall test.edit-distance@2[
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=interests
+    ]
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=interests
+    ]
+  ]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.len@1[
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=interests
+        ]
+      ]
+      >
+      LiteralExpr [LONG] [2]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.len@1[
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=interests
+        ]
+      ]
+      >
+      LiteralExpr [LONG] [2]
+    ]
+    and
+    OperatorExpr [
+      Variable [ Name=ed ]
+      <=
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=cid
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=cid
+      ]
+    ]
+  ]
+Orderby
+  Variable [ Name=ed ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=cid
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=b ]
+    Field=cid
+  ]
+  ASC
+

@@ -1,0 +1,8 @@
+Query:
+FunctionCall null.string_to_codepoint@1[
+  LiteralExpr [STRING] [äöß]
+]
+Query:
+FunctionCall null.string_to_codepoint@1[
+  LiteralExpr [STRING] [迎]
+]

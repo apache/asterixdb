@@ -1,0 +1,9 @@
+DataverseUse fooverse
+TypeDecl FooType [
+  open RecordType {
+    id : int64,
+    numbers : OrderedList [int64]
+
+  }
+]
+DatasetDecl Foo(FooType) partitioned by [[id]]

@@ -1,0 +1,30 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=o ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP1]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+LetVariable [ Name=jacc ]
+  :=
+  FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall test.word-tokens@1[
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=title
+      ]
+    ]
+    FunctionCall test.word-tokens@1[
+      LiteralExpr [STRING] [Transactions for Cooperative Environments]
+    ]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+Where
+  IndexAccessor [
+    Variable [ Name=jacc ]
+    Index:     Variable [ Name=jacc ]
+  ]

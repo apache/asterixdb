@@ -1,0 +1,53 @@
+DataverseUse test
+WriteOutputTo nc1:rttest/btree-index_btree-primary-17.adm
+TypeDecl TestTypetmp [
+  open RecordType {
+    fname : string,
+    lname : string
+  }
+]
+TypeDecl TestType [
+  open RecordType {
+    nested : TestTypetmp
+  }
+]
+DatasetDecl testdst(TestType) partitioned by [[nested, fname], [nested, lname]]
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=emp ]
+  Field=nested
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testdst]
+  ]
+  AS
+  Variable [ Name=emp ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=emp ]
+          Field=nested
+        ]
+        Field=fname
+      ]
+      <=
+      LiteralExpr [STRING] [Craig]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=emp ]
+          Field=nested
+        ]
+        Field=lname
+      ]
+      >
+      LiteralExpr [STRING] [Kevin]
+    ]
+  ]

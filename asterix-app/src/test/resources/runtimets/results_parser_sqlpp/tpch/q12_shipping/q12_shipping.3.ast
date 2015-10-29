@@ -1,0 +1,192 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_shipmode]
+    :
+    Variable [ Name=l_shipmode ]
+  )
+  (
+    LiteralExpr [STRING] [high_line_count]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FunctionCall tpch.switch-case@5[
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=o_orderpriority
+              ]
+              =
+              LiteralExpr [STRING] [1-URGENT]
+            ]
+            or
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=o_orderpriority
+              ]
+              =
+              LiteralExpr [STRING] [2-HIGH]
+            ]
+          ]
+          LiteralExpr [TRUE]
+          LiteralExpr [LONG] [1]
+          LiteralExpr [FALSE]
+          LiteralExpr [LONG] [0]
+        ]
+        ]
+        FROM [          Variable [ Name=o ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [low_line_count]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FunctionCall tpch.switch-case@5[
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=o_orderpriority
+              ]
+              =
+              LiteralExpr [STRING] [1-URGENT]
+            ]
+            or
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=o_orderpriority
+              ]
+              =
+              LiteralExpr [STRING] [2-HIGH]
+            ]
+          ]
+          LiteralExpr [TRUE]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [FALSE]
+          LiteralExpr [LONG] [1]
+        ]
+        ]
+        FROM [          Variable [ Name=o ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_commitdate
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_receiptdate
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_shipdate
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_commitdate
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_receiptdate
+      ]
+      >=
+      LiteralExpr [STRING] [1994-01-01]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_receiptdate
+      ]
+      <
+      LiteralExpr [STRING] [1995-01-01]
+    ]
+    and
+    OperatorExpr [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_shipmode
+        ]
+        =
+        LiteralExpr [STRING] [MAIL]
+      ]
+      or
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_shipmode
+        ]
+        =
+        LiteralExpr [STRING] [SHIP]
+      ]
+    ]
+  ]
+Groupby
+  Variable [ Name=l_shipmode ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_shipmode
+  ]
+  With
+  Variable [ Name=l ]
+  Variable [ Name=o ]
+
+Orderby
+  Variable [ Name=l_shipmode ]
+  ASC
+

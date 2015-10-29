@@ -1,0 +1,133 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall test.count@1[
+      (
+        SELECT ELEMENT [
+        Variable [ Name=t ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Test]
+          ]
+          AS
+          Variable [ Name=t ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [average]
+    :
+    FunctionCall test.avg@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=val
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=t ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [Test]
+              ]
+              AS
+              Variable [ Name=t ]
+            ]
+          )
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sum]
+    :
+    FunctionCall test.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=val
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=t ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [Test]
+              ]
+              AS
+              Variable [ Name=t ]
+            ]
+          )
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min]
+    :
+    FunctionCall test.min@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=valplus
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=t ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [Test]
+              ]
+              AS
+              Variable [ Name=t ]
+            ]
+          )
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [max]
+    :
+    FunctionCall test.max@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=valplus
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=t ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [Test]
+              ]
+              AS
+              Variable [ Name=t ]
+            ]
+          )
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+]

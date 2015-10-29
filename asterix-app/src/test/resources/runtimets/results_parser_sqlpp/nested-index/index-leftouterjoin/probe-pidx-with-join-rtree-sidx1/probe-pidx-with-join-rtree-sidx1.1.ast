@@ -1,0 +1,31 @@
+DataverseUse test
+TypeDecl TwitterUserType [
+  closed RecordType {
+    screen-name : string,
+    lang : string,
+    friends-count : int64,
+    statuses-count : int64,
+    name : string,
+    followers-count : int64
+  }
+]
+TypeDecl TweetMessageNestedType [
+  closed RecordType {
+    tweetid : int64,
+    user : TwitterUserType,
+    sender-location : point,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string,
+    countA : int64,
+    countB : int64
+  }
+]
+TypeDecl TweetMessageType [
+  closed RecordType {
+    nested : TweetMessageNestedType
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[nested, tweetid]]
+DatasetDecl TweetMessagesTmp(TweetMessageNestedType) partitioned by [[tweetid]]

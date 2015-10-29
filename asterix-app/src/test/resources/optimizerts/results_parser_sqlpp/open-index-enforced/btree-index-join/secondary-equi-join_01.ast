@@ -1,0 +1,60 @@
+DataverseUse test
+TypeDecl DBLPType [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  closed RecordType {
+    id : int32,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl CSX(CSXType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/btree-index-join_title-secondary-equi-join_01.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=title
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=title
+    ]
+  ]

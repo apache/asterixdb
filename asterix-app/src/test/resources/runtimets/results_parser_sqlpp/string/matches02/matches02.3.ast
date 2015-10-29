@@ -1,0 +1,85 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c3]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Hello World]
+      LiteralExpr [STRING] [Hello World]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c4]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Asterix for Dummies]
+      LiteralExpr [STRING] [Asterix for Dummies]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c5]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [semistructured data]
+      FunctionCall null.lowercase@1[
+        LiteralExpr [STRING] [SEMISTRUCTURED DATA]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c6]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Mega Living!]
+      LiteralExpr [STRING] [Mega]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c7]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Mega Living!]
+      LiteralExpr [STRING] [ving!]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c8]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Mega Living!]
+      LiteralExpr [STRING] [ ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c9]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Mega Living!]
+      LiteralExpr [STRING] [a l]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c10]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Mega Living!]
+      LiteralExpr [STRING] []
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c11]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [ ]
+      LiteralExpr [STRING] [ ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c12]
+    :
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [aaaa]
+      LiteralExpr [STRING] [aaaaa]
+    ]
+  )
+]

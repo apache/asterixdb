@@ -1,0 +1,24 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use Pregelix;
+
+
+insert into InputGraph
+select element {{{'id':0,'value':0,'edges':{{{'destVertexId':1}}}},{'id':1,'value':1,'edges':{{{'destVertexId':1},{'destVertexId':2}}}},{'id':2,'value':2,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3}}}},{'id':3,'value':3,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4}}}},{'id':4,'value':4,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4},{'destVertexId':5}}}},{'id':5,'value':5,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4},{'destVertexId':5},{'destVertexId':6}}}},{'id':6,'value':6,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4},{'destVertexId':5},{'destVertexId':6},{'destVertexId':7}}}},{'id':7,'value':7,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4},{'destVertexId':5},{'destVertexId':6},{'destVertexId':7},{'destVertexId':8}}}},{'id':8,'value':8,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4},{'destVertexId':5},{'destVertexId':6},{'destVertexId':7},{'destVertexId':8},{'destVertexId':9}}}},{'id':9,'value':9,'edges':{{{'destVertexId':1},{'destVertexId':2},{'destVertexId':3},{'destVertexId':4},{'destVertexId':5},{'destVertexId':6},{'destVertexId':7},{'destVertexId':8},{'destVertexId':9},{'destVertexId':0}}}},{'id':10,'value':10,'edges':{{{'destVertexId':11}}}},{'id':11,'value':11,'edges':{{{'destVertexId':11},{'destVertexId':12}}}},{'id':12,'value':12,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13}}}},{'id':13,'value':13,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14}}}},{'id':14,'value':14,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14},{'destVertexId':15}}}},{'id':15,'value':15,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14},{'destVertexId':15},{'destVertexId':16}}}},{'id':16,'value':16,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14},{'destVertexId':15},{'destVertexId':16},{'destVertexId':17}}}},{'id':17,'value':17,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14},{'destVertexId':15},{'destVertexId':16},{'destVertexId':17},{'destVertexId':18}}}},{'id':18,'value':18,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14},{'destVertexId':15},{'destVertexId':16},{'destVertexId':17},{'destVertexId':18},{'destVertexId':19}}}},{'id':19,'value':19,'edges':{{{'destVertexId':11},{'destVertexId':12},{'destVertexId':13},{'destVertexId':14},{'destVertexId':15},{'destVertexId':16},{'destVertexId':17},{'destVertexId':18},{'destVertexId':19},{'destVertexId':10}}}}}};

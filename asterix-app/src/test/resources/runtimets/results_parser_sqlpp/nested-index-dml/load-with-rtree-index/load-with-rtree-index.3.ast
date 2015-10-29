@@ -1,0 +1,38 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+Variable [ Name=c ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Where
+  FunctionCall TinySocial.spatial-intersect@2[
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=user
+      ]
+      Field=sender-location
+    ]
+    FunctionCall TinySocial.create-rectangle@2[
+      FunctionCall TinySocial.create-point@2[
+        LiteralExpr [DOUBLE] [0.0]
+        LiteralExpr [DOUBLE] [0.0]
+      ]
+      FunctionCall TinySocial.create-point@2[
+        LiteralExpr [DOUBLE] [50.0]
+        LiteralExpr [DOUBLE] [80.0]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=tweetid
+  ]
+  ASC
+

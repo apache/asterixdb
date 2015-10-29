@@ -1,0 +1,21 @@
+DataverseUse fuzzyjoin
+TypeDecl DBLPType [
+  open RecordType {
+    id : int64,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  open RecordType {
+    id : int64,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl CSX(CSXType) partitioned by [[id]]

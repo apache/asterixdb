@@ -1,0 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description      : Test Quantified Expressions 
+ *                  : every <variable-name> in [ordered-list], <variable-name> in [ordered-list] satisfies expression
+ * Expected Result  : Success
+ * Date             : 5th July 2012
+ */
+
+with  a as [every x in [1,2] satisfies (avg([x,1]) = 1),every x in ['1','2'] satisfies (string(x) = '1'),every x in ['1','2'] satisfies ("string-length"(x) = 1),every x in [[1,2],[10],[1,5,7,8]] satisfies (count(x) = 1),every x in [[2],[10],[8]] satisfies (count(x) = 1),every x in [true,false] satisfies boolean('true'),every x in [true,true] satisfies not(x),every x in [1,2,3],
+y in [4,5,6] satisfies ((x + y) = 5),every x in [1,2,3],
+y in [4,5,6] satisfies ((x - y) = 5),every x in [1,2,3],
+y in [4,5,6] satisfies ((x * y) = 10),every x in ['ab','cd'],
+y in ['ab','de'] satisfies (string(x) = string(y)),every x in [1,2,3],
+y in [4,5,6] satisfies (int32(x) = int32(y)),every x in [1,2,3],
+y in [4,5,6] satisfies (float(x) = float(y)),every x in [1,2,3],
+y in [4,5,6] satisfies (double(x) = double(y)),every x in ['true','false'],
+y in ['false','true'] satisfies (boolean(x) = boolean(y)),every x in ['1980-05-05T13:13:13Z','1980-05-05T13:13:13Z'],
+y in ['1980-05-05T13:13:13Z','1980-05-05T13:13:13Z'] satisfies (datetime(x) = datetime(y))]
+select element i
+from  a as i
+;

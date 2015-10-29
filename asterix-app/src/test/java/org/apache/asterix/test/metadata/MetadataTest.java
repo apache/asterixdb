@@ -22,6 +22,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
@@ -30,13 +36,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
-import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.test.aql.TestsUtils;
-import org.apache.asterix.testframework.context.TestCaseContext;
 
 /**
  * Executes the Metadata tests.
@@ -47,11 +46,12 @@ public class MetadataTest {
     private TestCaseContext tcCtx;
 
     private static final String PATH_ACTUAL = "mdtest" + File.separator;
-    private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources",
-            "metadata" + File.separator }, File.separator);
+    private static final String PATH_BASE = StringUtils
+            .join(new String[] { "src", "test", "resources", "metadata" + File.separator }, File.separator);
     private static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     private static AsterixTransactionProperties txnProperties;
+    private static final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -78,7 +78,7 @@ public class MetadataTest {
 
         // clean up the files written by the ASTERIX storage manager
         for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
-            TestsUtils.deleteRec(new File(d));
+            testExecutor.deleteRec(new File(d));
         }
     }
 
@@ -107,7 +107,7 @@ public class MetadataTest {
 
     @Test
     public void test() throws Exception {
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
+        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 
 }

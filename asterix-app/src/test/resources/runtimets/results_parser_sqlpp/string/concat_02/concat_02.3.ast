@@ -1,0 +1,33 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [a]
+    :
+    FunctionCall test.string-concat@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [b]
+    :
+    FunctionCall test.string-concat@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [STRING] [foo]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c]
+    :
+    FunctionCall test.string-concat@1[
+      OrderedListConstructor [
+        LiteralExpr [STRING] [foo]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+]

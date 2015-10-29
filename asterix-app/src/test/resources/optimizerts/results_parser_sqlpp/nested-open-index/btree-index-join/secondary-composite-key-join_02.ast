@@ -1,0 +1,78 @@
+DataverseUse test
+TypeDecl Nametmp [
+  open RecordType {
+    id : int32
+  }
+]
+TypeDecl NameType [
+  open RecordType {
+    nested : Nametmp
+  }
+]
+DatasetDecl Names(NameType) partitioned by [[nested, id]]
+WriteOutputTo nc1:rttest/btree-index-join_secondary-composite-key-prefix-join_02.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [emp1]
+    :
+    Variable [ Name=emp1 ]
+  )
+  (
+    LiteralExpr [STRING] [emp2]
+    :
+    Variable [ Name=emp2 ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Names]
+  ]
+  AS
+  Variable [ Name=emp1 ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Names]
+  ]
+  AS
+  Variable [ Name=emp2 ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=emp1 ]
+          Field=nested
+        ]
+        Field=fname
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=emp2 ]
+          Field=nested
+        ]
+        Field=fname
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=emp1 ]
+          Field=nested
+        ]
+        Field=lname
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=emp2 ]
+          Field=nested
+        ]
+        Field=lname
+      ]
+    ]
+  ]

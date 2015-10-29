@@ -1,0 +1,86 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [x]
+    :
+    Variable [ Name=x ]
+  )
+  (
+    LiteralExpr [STRING] [y]
+    :
+    Variable [ Name=y ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [s]
+  ]
+  AS
+  Variable [ Name=x ]
+,
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=z ]
+      Field=c
+    ]
+    ]
+    FROM [      UnorderedListConstructor [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [LONG] [1]
+          )
+          (
+            LiteralExpr [STRING] [c]
+            :
+            LiteralExpr [LONG] [1]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [LONG] [2]
+          )
+          (
+            LiteralExpr [STRING] [c]
+            :
+            LiteralExpr [LONG] [2]
+          )
+        ]
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [a]
+            :
+            LiteralExpr [LONG] [1]
+          )
+          (
+            LiteralExpr [STRING] [c]
+            :
+            LiteralExpr [NULL]
+          )
+        ]
+      ]
+      AS
+      Variable [ Name=z ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=x ]
+          Field=b
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=z ]
+          Field=a
+        ]
+      ]
+  )
+  AS
+  Variable [ Name=y ]
+]

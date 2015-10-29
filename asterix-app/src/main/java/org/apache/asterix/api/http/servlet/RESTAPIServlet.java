@@ -30,25 +30,24 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-import org.json.JSONObject;
-
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.base.Statement.Kind;
-import org.apache.asterix.aql.parser.AQLParser;
-import org.apache.asterix.aql.parser.ParseException;
-import org.apache.asterix.aql.parser.TokenMgrError;
 import org.apache.asterix.aql.translator.AqlTranslator;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.aql.parser.TokenMgrError;
+import org.apache.asterix.lang.aql.util.AQLFormatPrintUtil;
+import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.Statement.Kind;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.result.ResultReader;
 import org.apache.asterix.result.ResultUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.json.JSONObject;
 
 abstract class RESTAPIServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -62,8 +61,7 @@ abstract class RESTAPIServlet extends HttpServlet {
      * SessionConfig with the appropriate output writer and output-format
      * based on the Accept: header and other servlet parameters.
      */
-    static SessionConfig initResponse(HttpServletRequest request, HttpServletResponse response)
-        throws IOException {
+    static SessionConfig initResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setCharacterEncoding("utf-8");
 
         // CLEAN_JSON output is the default; most generally useful for a
@@ -76,12 +74,10 @@ abstract class RESTAPIServlet extends HttpServlet {
         if (output != null) {
             if (output.equals("CSV")) {
                 format = OutputFormat.CSV;
-            }
-            else if (output.equals("ADM")) {
+            } else if (output.equals("ADM")) {
                 format = OutputFormat.ADM;
             }
-        }
-        else {
+        } else {
             // Second check the Accept: HTTP header.
             if (accept != null) {
                 if (accept.contains("application/x-adm")) {
@@ -93,9 +89,9 @@ abstract class RESTAPIServlet extends HttpServlet {
         }
 
         // If it's JSON, check for the "lossless" flag
-        if (format == OutputFormat.CLEAN_JSON &&
-                ("true".equals(request.getParameter("lossless")) ||
-                (accept != null && accept.contains("lossless=true")))) {
+        if (format == OutputFormat.CLEAN_JSON
+                && ("true".equals(request.getParameter("lossless")) || (accept != null && accept
+                        .contains("lossless=true")))) {
             format = OutputFormat.LOSSLESS_JSON;
         }
 
@@ -113,12 +109,11 @@ abstract class RESTAPIServlet extends HttpServlet {
                 break;
             case CSV: {
                 // Check for header parameter or in Accept:.
-                if ("present".equals(request.getParameter("header")) ||
-                    (accept != null && accept.contains("header=present"))) {
+                if ("present".equals(request.getParameter("header"))
+                        || (accept != null && accept.contains("header=present"))) {
                     response.setContentType("text/csv; header=present");
                     sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, true);
-                }
-                else {
+                } else {
                     response.setContentType("text/csv; header=absent");
                 }
             }
@@ -168,7 +163,7 @@ abstract class RESTAPIServlet extends HttpServlet {
                 AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, sessionConfig);
                 aqlTranslator.compileAndExecute(hcc, hds, resultDelivery);
             }
-        } catch (ParseException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
+        } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
             String errorMessage = ResultUtils.buildParseExceptionMessage(pe, query);
             JSONObject errorResp = ResultUtils.getErrorResponse(2, errorMessage, "", "");

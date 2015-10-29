@@ -1,0 +1,218 @@
+DataverseUse tpch
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_returnflag]
+    :
+    Variable [ Name=l_returnflag ]
+  )
+  (
+    LiteralExpr [STRING] [l_linestatus]
+    :
+    Variable [ Name=l_linestatus ]
+  )
+  (
+    LiteralExpr [STRING] [sum_qty]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_quantity
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sum_base_price]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_extendedprice
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sum_disc_price]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=l_extendedprice
+          ]
+          *
+          OperatorExpr [
+            LiteralExpr [LONG] [1]
+            -
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=l_discount
+            ]
+          ]
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sum_charge]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=l_extendedprice
+          ]
+          *
+          OperatorExpr [
+            LiteralExpr [LONG] [1]
+            -
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=l_discount
+            ]
+          ]
+          *
+          OperatorExpr [
+            LiteralExpr [LONG] [1]
+            +
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=l_tax
+            ]
+          ]
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ave_qty]
+    :
+    FunctionCall tpch.avg@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_quantity
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ave_price]
+    :
+    FunctionCall tpch.avg@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_extendedprice
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ave_disc]
+    :
+    FunctionCall tpch.avg@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_discount
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [count_order]
+    :
+    FunctionCall tpch.count@1[
+      Variable [ Name=l ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_shipdate
+    ]
+    <=
+    LiteralExpr [STRING] [1998-09-02]
+  ]
+Groupby
+  Variable [ Name=l_returnflag ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_returnflag
+  ]
+  Variable [ Name=l_linestatus ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_linestatus
+  ]
+  With
+  Variable [ Name=l ]
+
+Orderby
+  Variable [ Name=l_returnflag ]
+  ASC
+  Variable [ Name=l_linestatus ]
+  ASC
+

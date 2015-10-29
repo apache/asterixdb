@@ -1,0 +1,21 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+OperatorExpr [
+  Variable [ Name=x ]
+  and
+  Variable [ Name=y ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [STRING] [true]
+  ]
+  AS
+  Variable [ Name=x ]
+,
+  OrderedListConstructor [
+    LiteralExpr [STRING] [false]
+  ]
+  AS
+  Variable [ Name=y ]
+]

@@ -90,7 +90,12 @@
       <item name="Filter-Based LSM Index Acceleration" href="aql/filters.html"/>
       <item name="HTTP API to AsterixDB" href="api.html"/>
     </menu>
-
+    
+    <menu name="SQL++">
+      <item name="SQL++ integration into AsterixDB" href="sqlpp/sqlpp-internals.html"/>
+      <item name="The SQL++ query language in AsterixDB" href="sqlpp/sqlpp-in-asterixdb.html"/>
+    </menu>
+    
     <menu ref="reports"/>
 
     <footer>

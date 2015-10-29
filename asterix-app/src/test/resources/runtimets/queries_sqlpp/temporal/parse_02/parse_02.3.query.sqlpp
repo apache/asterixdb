@@ -1,0 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * Test case for parsing temporal strings with format strings
+ * Expected Result: Success
+ **/
+
+use test;
+
+
+{'date-string-1':test."print-date"(test.date('-0123-01-30'),'YY/M/D'),'date-string-2':test."print-date"(test.date('-0123-01-30'),'MMM DD, YYYY'),'date-string-3':test."print-date"(test.date('-0123-01-30'),'YYYY/MM/DD'),'time-string-1':test."print-time"(test.time('08:07:29.030Z'),'h.m.s.nn a z'),'time-string-2':test."print-time"(test.time('08:07:29.030Z'),'hh.mm.ss.nnn a z'),'datetime-string-1':test."print-datetime"(test.datetime('0137-12-31T23:59:59.999+08:00'),'MMM DD h:m:s.nnn a YY z'),'datetime-string-2':test."print-datetime"(test.datetime('0137-12-31T23:59:59.999+08:00'),'YYYY/MMM/DD h:m:s.nnnz a'),'datetime-string-3':test."print-datetime"(test.datetime('0137-12-31T23:59:59.999+08:00'),'YYYY-MM-DDThh:mm:ss.nnnz')};

@@ -1,0 +1,11 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=paper ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLPsplits]
+  ]
+  AS
+  Variable [ Name=paper ]
+]

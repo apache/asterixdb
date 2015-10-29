@@ -1,0 +1,12 @@
+DataverseUse test
+TypeDecl SpatialType [
+  open RecordType {
+    id : int64,
+    point : point,
+    line1 : line,
+    poly1 : polygon,
+    rec : rectangle,
+    circle : circle
+  }
+]
+DatasetDecl MyData(SpatialType) partitioned by [[id]]

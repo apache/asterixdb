@@ -1,0 +1,15 @@
+DataverseUse tpch
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int64,
+    o_custkey : int64,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int64,
+    o_comment : string
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]

@@ -97,7 +97,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
@@ -156,7 +156,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         || chosenIndex.getIndexType() == IndexType.SINGLE_PARTITION_NGRAM_INVIX)
                     isKeywordOrNgramIndexChosen = true;
                 if ((chosenAccessMethod == BTreeAccessMethod.INSTANCE && chosenIndex.getIndexType() != IndexType.BTREE)
-                        || (chosenAccessMethod == RTreeAccessMethod.INSTANCE && chosenIndex.getIndexType() != IndexType.RTREE)
+                        || (chosenAccessMethod == RTreeAccessMethod.INSTANCE
+                                && chosenIndex.getIndexType() != IndexType.RTREE)
                         || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && !isKeywordOrNgramIndexChosen)) {
                     continue;
                 }
@@ -226,7 +227,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     if (indexedTypes.size() < 2 && optFuncExpr.getNumLogicalVars() == 1
                             && optFuncExpr.getNumConstantAtRuntimeExpr() > 0) {
                         indexedTypes.add((IAType) AqlExpressionTypeComputer.INSTANCE.getType(
-                                optFuncExpr.getConstantAtRuntimeExpr(0), context.getMetadataProvider(), typeEnvironment));
+                                optFuncExpr.getConstantAtRuntimeExpr(0), context.getMetadataProvider(),
+                                typeEnvironment));
                     }
 
                     //infer type of logicalExpr based on index keyType
@@ -243,7 +245,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                                 @Override
                                 public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
                                         List<List<LogicalVariable>> correlatedNullableVariableLists)
-                                        throws AlgebricksException {
+                                                throws AlgebricksException {
                                     if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second)))
                                         return keyType;
                                     throw new IllegalArgumentException();
@@ -417,7 +419,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     protected boolean fillIndexExprs(List<Index> datasetIndexes, List<String> fieldName, IAType fieldType,
             IOptimizableFuncExpr optFuncExpr, int matchedFuncExprIndex, int varIdx,
             OptimizableOperatorSubTree matchedSubTree, AccessMethodAnalysisContext analysisCtx)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         List<Index> indexCandidates = new ArrayList<Index>();
         // Add an index to the candidates if one of the indexed fields is
         // fieldName
@@ -448,7 +450,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     subTree.dataset.getDatasetName());
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             // Try to match variables from optFuncExpr to assigns or unnests.
-            for (int assignOrUnnestIndex = 0; assignOrUnnestIndex < subTree.assignsAndUnnests.size(); assignOrUnnestIndex++) {
+            for (int assignOrUnnestIndex = 0; assignOrUnnestIndex < subTree.assignsAndUnnests
+                    .size(); assignOrUnnestIndex++) {
                 AbstractLogicalOperator op = subTree.assignsAndUnnests.get(assignOrUnnestIndex);
                 if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                     AssignOperator assignOp = (AssignOperator) op;
@@ -465,13 +468,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         // Remember matching subtree.
                         optFuncExpr.setOptimizableSubTree(optVarIndex, subTree);
                         List<String> fieldName = getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex,
-                                varIndex, subTree.recordType, optVarIndex, optFuncExpr.getFuncExpr().getArguments()
-                                        .get(optVarIndex).getValue());
+                                varIndex, subTree.recordType, optVarIndex,
+                                optFuncExpr.getFuncExpr().getArguments().get(optVarIndex).getValue());
                         if (fieldName == null) {
                             continue;
                         }
-                        IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp).getType(
-                                optFuncExpr.getLogicalExpr(optVarIndex));
+                        IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp)
+                                .getType(optFuncExpr.getLogicalExpr(optVarIndex));
                         // Set the fieldName in the corresponding matched
                         // function expression.
                         optFuncExpr.setFieldName(optVarIndex, fieldName);
@@ -506,8 +509,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                             continue;
                         }
                     }
-                    IAType fieldType = (IAType) context.getOutputTypeEnvironment(unnestOp).getType(
-                            optFuncExpr.getLogicalExpr(funcVarIndex));
+                    IAType fieldType = (IAType) context.getOutputTypeEnvironment(unnestOp)
+                            .getType(optFuncExpr.getLogicalExpr(funcVarIndex));
                     // Set the fieldName in the corresponding matched function
                     // expression.
                     optFuncExpr.setFieldName(funcVarIndex, fieldName);
@@ -549,7 +552,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     private void matchVarsFromOptFuncExprToDataSourceScan(IOptimizableFuncExpr optFuncExpr, int optFuncExprIndex,
             List<Index> datasetIndexes, List<LogicalVariable> dsVarList, OptimizableOperatorSubTree subTree,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean fromAdditionalDataSource)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         for (int varIndex = 0; varIndex < dsVarList.size(); varIndex++) {
             LogicalVariable var = dsVarList.get(varIndex);
             int funcVarIndex = optFuncExpr.findLogicalVar(var);
@@ -565,10 +568,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 fieldName = DatasetUtils.getPartitioningKeys(subTree.dataset).get(varIndex);
                 fieldType = (IAType) context.getOutputTypeEnvironment(subTree.dataSourceRef.getValue()).getVarType(var);
             } else {
-                fieldName = DatasetUtils.getPartitioningKeys(subTree.ixJoinOuterAdditionalDatasets.get(varIndex)).get(
-                        varIndex);
-                fieldType = (IAType) context.getOutputTypeEnvironment(
-                        subTree.ixJoinOuterAdditionalDataSourceRefs.get(varIndex).getValue()).getVarType(var);
+                fieldName = DatasetUtils.getPartitioningKeys(subTree.ixJoinOuterAdditionalDatasets.get(varIndex))
+                        .get(varIndex);
+                fieldType = (IAType) context
+                        .getOutputTypeEnvironment(subTree.ixJoinOuterAdditionalDataSourceRefs.get(varIndex).getValue())
+                        .getVarType(var);
             }
             // Set the fieldName in the corresponding matched function
             // expression, and remember matching subtree.
@@ -587,8 +591,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     private void setTypeTag(IOptimizationContext context, OptimizableOperatorSubTree subTree,
             IOptimizableFuncExpr optFuncExpr, int funcVarIndex) throws AlgebricksException {
         // Set the typeTag if the type is not null
-        IAType type = (IAType) context.getOutputTypeEnvironment(subTree.root).getVarType(
-                optFuncExpr.getLogicalVar(funcVarIndex));
+        IAType type = (IAType) context.getOutputTypeEnvironment(subTree.root)
+                .getVarType(optFuncExpr.getLogicalVar(funcVarIndex));
         optFuncExpr.setFieldType(funcVarIndex, type);
     }
 
@@ -599,9 +603,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      *
      * @throws AlgebricksException
      */
-    protected List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
-            int funcVarIndex, ILogicalExpression parentFuncExpr) throws AlgebricksException {
+    protected List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree,
+            int opIndex, int assignVarIndex, ARecordType recordType, int funcVarIndex,
+            ILogicalExpression parentFuncExpr) throws AlgebricksException {
         // Get expression corresponding to opVar at varIndex.
         AbstractLogicalExpression expr = null;
         AbstractFunctionCallExpression childFuncExpr = null;
@@ -714,7 +718,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
                 if (!isByName) {
                     try {
-                        fieldName = ((ARecordType) recordType.getSubFieldType(parentFieldNames)).getFieldNames()[fieldIndex];
+                        fieldName = ((ARecordType) recordType.getSubFieldType(parentFieldNames))
+                                .getFieldNames()[fieldIndex];
                     } catch (IOException e) {
                         throw new AlgebricksException(e);
                     }
@@ -768,7 +773,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         LogicalVariable curVar = ((VariableReferenceExpression) argExpr).getVariableReference();
         // We look for the assign or unnest operator that produces curVar below
         // the current operator
-        for (int assignOrUnnestIndex = opIndex + 1; assignOrUnnestIndex < subTree.assignsAndUnnests.size(); assignOrUnnestIndex++) {
+        for (int assignOrUnnestIndex = opIndex + 1; assignOrUnnestIndex < subTree.assignsAndUnnests
+                .size(); assignOrUnnestIndex++) {
             AbstractLogicalOperator curOp = subTree.assignsAndUnnests.get(assignOrUnnestIndex);
             if (curOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                 AssignOperator assignOp = (AssignOperator) curOp;

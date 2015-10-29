@@ -28,10 +28,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.ARecordType;
@@ -79,6 +79,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     // TODO: There is some redundancy here, since these are listed in AlgebricksBuiltinFunctions as well.
     private static List<FunctionIdentifier> funcIdents = new ArrayList<FunctionIdentifier>();
+
     static {
         funcIdents.add(AlgebricksBuiltinFunctions.EQ);
         funcIdents.add(AlgebricksBuiltinFunctions.LE);
@@ -217,7 +218,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             Mutable<ILogicalExpression> conditionRef, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
         // we made sure indexSubTree has datasource scan
@@ -268,8 +269,8 @@ public class BTreeAccessMethod implements IAccessMethod {
                 throw new AlgebricksException(
                         "Could not match optimizable function expression to any index field name.");
             }
-            Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(
-                    optFuncExpr, indexSubTree, probeSubTree);
+            Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(optFuncExpr,
+                    indexSubTree, probeSubTree);
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
             if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 constantAtRuntimeExpressions[keyPos] = searchKeyExpr;
@@ -435,8 +436,8 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         // determine cases when prefix search could be applied
         for (int i = 1; i < lowKeyExprs.length; i++) {
-            if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null
-                    && lowKeyLimits[i] == null || highKeyLimits[0] == null && highKeyLimits[i] != null
+            if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null && lowKeyLimits[i] == null
+                    || highKeyLimits[0] == null && highKeyLimits[i] != null
                     || highKeyLimits[0] != null && highKeyLimits[i] == null) {
                 numSecondaryKeys--;
                 primaryIndexPostProccessingIsNeeded = true;
@@ -608,8 +609,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     private LimitType getLimitType(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree probeSubTree) {
-        ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(optFuncExpr.getFuncExpr()
-                .getFunctionIdentifier());
+        ComparisonKind ck = AlgebricksBuiltinFunctions
+                .getComparisonType(optFuncExpr.getFuncExpr().getFunctionIdentifier());
         LimitType limit = null;
         switch (ck) {
             case EQ: {
@@ -669,9 +670,8 @@ public class BTreeAccessMethod implements IAccessMethod {
                 return false;
             }
         }
-        if (!index.isPrimaryIndex()
-                && optFuncExpr.getFuncExpr().getAnnotations()
-                        .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
+        if (!index.isPrimaryIndex() && optFuncExpr.getFuncExpr().getAnnotations()
+                .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
             return false;
         }
         // No additional analysis required for BTrees.

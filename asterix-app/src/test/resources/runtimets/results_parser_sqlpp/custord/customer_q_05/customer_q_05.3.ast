@@ -1,0 +1,112 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [custname]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [age]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=age
+    ]
+  )
+  (
+    LiteralExpr [STRING] [MathAge]
+    :
+    Variable [ Name=rec ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=rec ]
+  :=
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [age]
+      :
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=age
+      ]
+    )
+    (
+      LiteralExpr [STRING] [age+5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=age
+        ]
+        +
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [age-5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=age
+        ]
+        -
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [age*5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=age
+        ]
+        *
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [age/5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=age
+        ]
+        /
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [-age]
+      :
+      NEGATIVE FieldAccessor [
+  Variable [ Name=c ]
+  Field=age
+]
+    )
+  ]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    >=
+    FunctionCall test.int32@1[
+      LiteralExpr [STRING] [3]
+    ]
+  ]

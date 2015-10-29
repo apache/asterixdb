@@ -22,25 +22,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.aql.base.Clause;
-import org.apache.asterix.aql.base.Expression;
-import org.apache.asterix.aql.base.Statement.Kind;
-import org.apache.asterix.aql.expression.CallExpr;
-import org.apache.asterix.aql.expression.FLWOGRExpression;
-import org.apache.asterix.aql.expression.FieldAccessor;
-import org.apache.asterix.aql.expression.FieldBinding;
-import org.apache.asterix.aql.expression.ForClause;
-import org.apache.asterix.aql.expression.Identifier;
-import org.apache.asterix.aql.expression.LiteralExpr;
-import org.apache.asterix.aql.expression.Query;
-import org.apache.asterix.aql.expression.RecordConstructor;
-import org.apache.asterix.aql.expression.VariableExpr;
-import org.apache.asterix.aql.expression.WhereClause;
-import org.apache.asterix.aql.literal.StringLiteral;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.aql.clause.ForClause;
+import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
+import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.FieldBinding;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.types.ARecordType;
@@ -211,7 +211,8 @@ public class CompiledStatements {
         private final int gramLength;
 
         public CompiledCreateIndexStatement(String indexName, String dataverseName, String datasetName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
+                IndexType indexType) {
             this.indexName = indexName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -390,7 +391,7 @@ public class CompiledStatements {
             return policyName;
         }
     }
-    
+
     public static class CompiledSubscribeFeedStatement implements ICompiledDmlStatement {
 
         private final FeedConnectionRequest request;
@@ -431,7 +432,6 @@ public class CompiledStatements {
         }
 
     }
-
 
     public static class CompiledDisconnectFeedStatement implements ICompiledDmlStatement {
         private String dataverseName;
@@ -483,8 +483,8 @@ public class CompiledStatements {
         private int varCounter;
         private AqlMetadataProvider metadataProvider;
 
-        public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName,
-                Expression condition, int varCounter, AqlMetadataProvider metadataProvider) {
+        public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName, Expression condition,
+                int varCounter, AqlMetadataProvider metadataProvider) {
             this.var = var;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
@@ -592,7 +592,8 @@ public class CompiledStatements {
         private final int gramLength;
 
         public CompiledIndexCompactStatement(String dataverseName, String datasetName, String indexName,
-                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength, IndexType indexType) {
+                List<List<String>> keyFields, List<IAType> keyTypes, boolean isEnforced, int gramLength,
+                IndexType indexType) {
             super(dataverseName, datasetName);
             this.indexName = indexName;
             this.keyFields = keyFields;

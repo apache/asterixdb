@@ -1,0 +1,24 @@
+DataverseUse student
+DataverseUse teacher
+TypeDecl stdType [
+  open RecordType {
+    id : int64,
+    name : string,
+    age : int64,
+    sex : string,
+    dept : string
+  }
+]
+TypeDecl tchrType [
+  open RecordType {
+    id : int64,
+    name : string,
+    age : int64,
+    sex : string,
+    dept : string
+  }
+]
+DatasetDecl ugdstd(stdType) partitioned by [[id]]
+DatasetDecl gdstd(stdType) partitioned by [[id]]
+DatasetDecl prof(tchrType) partitioned by [[id]]
+DatasetDecl pstdoc(tchrType) partitioned by [[id]]

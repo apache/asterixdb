@@ -1,0 +1,19 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.avg@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=x ]
+    ]
+    FROM [      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [2]
+        LiteralExpr [LONG] [3]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+  )
+]
+]

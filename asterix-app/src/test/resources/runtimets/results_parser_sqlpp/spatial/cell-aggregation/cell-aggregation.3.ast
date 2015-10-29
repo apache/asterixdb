@@ -1,0 +1,61 @@
+DataverseUse test
+Query:
+LetVariable [ Name=grid ]
+  :=
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [cell]
+        :
+        Variable [ Name=c ]
+      )
+      (
+        LiteralExpr [STRING] [count]
+        :
+        Variable [ Name=num ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [MyData]
+      ]
+      AS
+      Variable [ Name=o ]
+    ]
+    Groupby
+      Variable [ Name=c ]
+      :=
+      FunctionCall test.spatial-cell@4[
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=loc
+        ]
+        FunctionCall test.create-point@2[
+          LiteralExpr [DOUBLE] [0.0]
+          LiteralExpr [DOUBLE] [0.0]
+        ]
+        LiteralExpr [DOUBLE] [5.0]
+        LiteralExpr [DOUBLE] [5.0]
+      ]
+      With
+      Variable [ Name=o ]
+      Variable [ Name=grid ]
+
+    LetVariable [ Name=num ]
+      :=
+      FunctionCall test.count@1[
+        Variable [ Name=o ]
+      ]
+    Orderby
+      Variable [ Name=num ]
+      ASC
+
+  )
+SELECT ELEMENT [
+Variable [ Name=g ]
+]
+FROM [  Variable [ Name=grid ]
+  AS
+  Variable [ Name=g ]
+]

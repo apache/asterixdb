@@ -45,7 +45,7 @@ public class AccessMethodAnalysisContext {
 
     // Maps from index to the dataset it is indexing.
     public Map<Index, Dataset> indexDatasetMap = new TreeMap<Index, Dataset>();
-    
+
     // Maps from an index to the number of matched fields in the query plan (for performing prefix search)
     public Map<Index, Integer> indexNumMatchedKeys = new TreeMap<Index, Integer>();
 

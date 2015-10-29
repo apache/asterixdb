@@ -1,0 +1,42 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+Variable [ Name=user ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS
+  Variable [ Name=user ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=user-since
+      ]
+      >=
+      FunctionCall TinySocial.datetime@1[
+        LiteralExpr [STRING] [2010-07-22T00:00:00]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=user-since
+      ]
+      <=
+      FunctionCall TinySocial.datetime@1[
+        LiteralExpr [STRING] [2012-07-29T23:59:59]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=user ]
+    Field=id
+  ]
+  ASC
+

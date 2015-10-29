@@ -1,0 +1,44 @@
+DataverseUse test
+Query:
+OrderedListConstructor [
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [ABCDEF0123456789]
+    LiteralExpr [STRING] [hex]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [abcdef0123456789]
+    LiteralExpr [STRING] [HEX]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [0A0B0C0D0E0F]
+    LiteralExpr [STRING] [hEx]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [01020304050607080900]
+    LiteralExpr [STRING] [hex]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] []
+    LiteralExpr [STRING] [hex]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/]
+    LiteralExpr [STRING] [base64]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] []
+    LiteralExpr [STRING] [base64]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [QXN0ZXJpeA==]
+    LiteralExpr [STRING] [BASE64]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [QXN0ZXJpeAE=]
+    LiteralExpr [STRING] [baSE64]
+  ]
+  FunctionCall test.parse-binary@2[
+    LiteralExpr [STRING] [QXN0ZXJpeAE8]
+    LiteralExpr [STRING] [base64]
+  ]
+]

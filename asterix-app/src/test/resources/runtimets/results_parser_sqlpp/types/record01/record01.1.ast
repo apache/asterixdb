@@ -1,0 +1,7 @@
+DataverseUse local
+TypeDecl ttype [
+  open RecordType {
+    id : int32
+  }
+]
+DatasetDecl dset(ttype) partitioned by [[id]]

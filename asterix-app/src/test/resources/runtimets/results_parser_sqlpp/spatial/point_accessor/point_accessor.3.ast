@@ -1,0 +1,24 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [x-coordinate]
+    :
+    FunctionCall test.get-x@1[
+      FunctionCall test.create-point@2[
+        LiteralExpr [DOUBLE] [2.3]
+        LiteralExpr [DOUBLE] [5.0]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [y-coordinate]
+    :
+    FunctionCall test.get-y@1[
+      FunctionCall test.create-point@2[
+        LiteralExpr [DOUBLE] [2.3]
+        LiteralExpr [DOUBLE] [5.0]
+      ]
+    ]
+  )
+]

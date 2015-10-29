@@ -1,0 +1,84 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [f0]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int8@1[
+        LiteralExpr [STRING] [-20]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f1]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int16@1[
+        LiteralExpr [STRING] [-23]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f2]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int32@1[
+        LiteralExpr [STRING] [-29]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f3]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int64@1[
+        LiteralExpr [STRING] [-21]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f4]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int8@1[
+        LiteralExpr [STRING] [20]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f5]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int16@1[
+        LiteralExpr [STRING] [22]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f6]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int32@1[
+        LiteralExpr [STRING] [23]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f7]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.int64@1[
+        LiteralExpr [STRING] [27]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+]

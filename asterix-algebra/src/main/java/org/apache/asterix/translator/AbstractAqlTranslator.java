@@ -23,15 +23,15 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.expression.DatasetDecl;
-import org.apache.asterix.aql.expression.DataverseDropStatement;
-import org.apache.asterix.aql.expression.DeleteStatement;
-import org.apache.asterix.aql.expression.DropStatement;
-import org.apache.asterix.aql.expression.InsertStatement;
-import org.apache.asterix.aql.expression.NodeGroupDropStatement;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.statement.DatasetDecl;
+import org.apache.asterix.lang.common.statement.DataverseDropStatement;
+import org.apache.asterix.lang.common.statement.DeleteStatement;
+import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.InsertStatement;
+import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.metadata.bootstrap.MetadataConstants;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.AsterixBuiltinTypeMap;
@@ -53,8 +53,8 @@ public abstract class AbstractAqlTranslator {
 
     public void validateOperation(Dataverse defaultDataverse, Statement stmt) throws AsterixException {
 
-        if (!(AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE) && AsterixClusterProperties.INSTANCE
-                .isGlobalRecoveryCompleted())) {
+        if (!(AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)
+                && AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted())) {
             int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
@@ -65,13 +65,12 @@ public abstract class AbstractAqlTranslator {
                 }
             } catch (InterruptedException e) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Thread interrupted while waiting for cluster to be "
-                            + ClusterState.ACTIVE);
+                    LOGGER.warning("Thread interrupted while waiting for cluster to be " + ClusterState.ACTIVE);
                 }
             }
             if (!AsterixClusterProperties.INSTANCE.getState().equals(ClusterState.ACTIVE)) {
-                throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE
-                        + " state." + "\n One or more Node Controllers have left or haven't joined yet.\n");
+                throw new AsterixException(" Asterix Cluster is in " + ClusterState.UNUSABLE + " state."
+                        + "\n One or more Node Controllers have left or haven't joined yet.\n");
             } else {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Cluster is now " + ClusterState.ACTIVE);
@@ -88,7 +87,8 @@ public abstract class AbstractAqlTranslator {
             int maxWaitCycles = AsterixAppContextInfo.getInstance().getExternalProperties().getMaxWaitClusterActive();
             int waitCycleCount = 0;
             try {
-                while (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted() && waitCycleCount < maxWaitCycles) {
+                while (!AsterixClusterProperties.INSTANCE.isGlobalRecoveryCompleted()
+                        && waitCycleCount < maxWaitCycles) {
                     Thread.sleep(1000);
                     waitCycleCount++;
                 }
@@ -141,8 +141,8 @@ public abstract class AbstractAqlTranslator {
 
             case DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvDropStmt.getDataverseName()
-                        .getValue());
+                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME
+                        .equals(dvDropStmt.getDataverseName().getValue());
                 if (invalidOperation) {
                     message = "Cannot drop dataverse:" + dvDropStmt.getDataverseName().getValue();
                 }

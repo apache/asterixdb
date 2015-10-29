@@ -1,0 +1,128 @@
+DataverseUse join-super-key_1
+TypeDecl SupplierType [
+  closed RecordType {
+    s_suppkey : int32,
+    s_name : string,
+    s_address : string,
+    s_nationkey : int32,
+    s_phone : string,
+    s_acctbal : double,
+    s_comment : string
+  }
+]
+TypeDecl NationType [
+  closed RecordType {
+    n_nationkey : int32,
+    n_name : string,
+    n_regionkey : int32,
+    n_comment : string
+  }
+]
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl PartType [
+  closed RecordType {
+    p_partkey : int32,
+    p_name : string,
+    p_mfgr : string,
+    p_brand : string,
+    p_type : string,
+    p_size : int32,
+    p_container : string,
+    p_retailprice : double,
+    p_comment : string
+  }
+]
+TypeDecl PartSuppType [
+  closed RecordType {
+    ps_partkey : int32,
+    ps_suppkey : int32,
+    ps_availqty : int32,
+    ps_supplycost : double,
+    ps_comment : string
+  }
+]
+WriteOutputTo nc1:/tmp/join-super-key_01.adm
+DatasetDecl LineItems(LineItemType) partitioned by [[l_partkey], [l_linenumber]]
+DatasetDecl PartSupp(PartSuppType) partitioned by [[ps_partkey], [ps_suppkey]]
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_partkey]
+    :
+    FieldAccessor [
+      Variable [ Name=li ]
+      Field=l_partkey
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItems]
+  ]
+  AS
+  Variable [ Name=li ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [PartSupp]
+  ]
+  AS
+  Variable [ Name=ps ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=li ]
+        Field=l_partkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=ps ]
+        Field=ps_partkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=li ]
+        Field=l_suppkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=ps ]
+        Field=ps_suppkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=li ]
+        Field=l_extendedprice
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=ps ]
+        Field=ps_supplycost
+      ]
+    ]
+  ]

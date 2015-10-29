@@ -1,0 +1,55 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [circle0]
+    :
+    OperatorExpr [
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+      >
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.5678,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle1]
+    :
+    OperatorExpr [
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.5678,-1.00e-10 +10.5E-2]
+      ]
+      <
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle2]
+    :
+    OperatorExpr [
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+      >=
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.5678,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle3]
+    :
+    OperatorExpr [
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.5678,-1.00e-10 +10.5E-2]
+      ]
+      <=
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
+]

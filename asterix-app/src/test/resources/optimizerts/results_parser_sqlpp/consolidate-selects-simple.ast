@@ -1,0 +1,63 @@
+DataverseUse test
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
+WriteOutputTo nc1:rttest/consolidate-selects-simple.aql
+Query:
+SELECT ELEMENT [
+Variable [ Name=c ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_name
+      ]
+      =
+      LiteralExpr [STRING] [testname]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_address
+      ]
+      =
+      LiteralExpr [STRING] [testaddr]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_nationkey
+      ]
+      =
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_phone
+      ]
+      =
+      LiteralExpr [STRING] [123456789]
+    ]
+  ]

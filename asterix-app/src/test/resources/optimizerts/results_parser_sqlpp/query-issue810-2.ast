@@ -1,0 +1,204 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+DatasetDecl LineItem(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_returnflag]
+    :
+    Variable [ Name=l_returnflag ]
+  )
+  (
+    LiteralExpr [STRING] [l_linestatus]
+    :
+    Variable [ Name=l_linestatus ]
+  )
+  (
+    LiteralExpr [STRING] [count_cheaps]
+    :
+    FunctionCall tpch.count@1[
+      Variable [ Name=cheaps ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [avg_expensive_discounts]
+    :
+    FunctionCall tpch.avg@1[
+      Variable [ Name=expensives ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sum_disc_prices]
+    :
+    FunctionCall tpch.sum@1[
+      Variable [ Name=disc_prices ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [total_charges]
+    :
+    FunctionCall tpch.sum@1[
+      Variable [ Name=charges ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_shipdate
+    ]
+    <=
+    LiteralExpr [STRING] [1998-09-02]
+  ]
+Groupby
+  Variable [ Name=l_returnflag ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_returnflag
+  ]
+  Variable [ Name=l_linestatus ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_linestatus
+  ]
+  With
+  Variable [ Name=l ]
+
+LetVariable [ Name=expensives ]
+  :=
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=l_discount
+    ]
+    ]
+    FROM [      Variable [ Name=l ]
+      AS
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_discount
+        ]
+        <=
+        LiteralExpr [DOUBLE] [0.05]
+      ]
+  )
+LetVariable [ Name=cheaps ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      Variable [ Name=l ]
+      AS
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_discount
+        ]
+        >
+        LiteralExpr [DOUBLE] [0.05]
+      ]
+  )
+LetVariable [ Name=charges ]
+  :=
+  (
+    SELECT ELEMENT [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=l_extendedprice
+      ]
+      *
+      OperatorExpr [
+        LiteralExpr [LONG] [1]
+        -
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_discount
+        ]
+      ]
+      *
+      OperatorExpr [
+        LiteralExpr [LONG] [1]
+        +
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_tax
+        ]
+      ]
+    ]
+    ]
+    FROM [      Variable [ Name=l ]
+      AS
+      Variable [ Name=i ]
+    ]
+  )
+LetVariable [ Name=disc_prices ]
+  :=
+  (
+    SELECT ELEMENT [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=l_extendedprice
+      ]
+      *
+      OperatorExpr [
+        LiteralExpr [LONG] [1]
+        -
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_discount
+        ]
+      ]
+    ]
+    ]
+    FROM [      Variable [ Name=l ]
+      AS
+      Variable [ Name=i ]
+    ]
+  )
+Orderby
+  Variable [ Name=l_returnflag ]
+  ASC
+  Variable [ Name=l_linestatus ]
+  ASC
+

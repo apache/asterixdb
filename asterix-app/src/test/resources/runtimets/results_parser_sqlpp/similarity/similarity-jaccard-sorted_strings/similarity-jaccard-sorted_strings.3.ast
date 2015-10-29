@@ -1,0 +1,101 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=a ]
+  :=
+  OrderedListConstructor [
+  ]
+LetVariable [ Name=b ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [efg]
+  ]
+LetVariable [ Name=c ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [ijk]
+  ]
+LetVariable [ Name=d ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [fgh]
+    LiteralExpr [STRING] [ghi]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [ijk]
+    LiteralExpr [STRING] [jkl]
+  ]
+LetVariable [ Name=e ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [Abc]
+    LiteralExpr [STRING] [bCd]
+    LiteralExpr [STRING] [cdE]
+    LiteralExpr [STRING] [DEf]
+    LiteralExpr [STRING] [eFG]
+    LiteralExpr [STRING] [HiJ]
+    LiteralExpr [STRING] [IJK]
+  ]
+LetVariable [ Name=f ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [fgh]
+    LiteralExpr [STRING] [ghi]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [ijk]
+    LiteralExpr [STRING] [jkl]
+  ]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.similarity-jaccard-sorted@2[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+    ]
+    FunctionCall test.similarity-jaccard-sorted@2[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+    ]
+    FunctionCall test.similarity-jaccard-sorted@2[
+      Variable [ Name=c ]
+      Variable [ Name=d ]
+    ]
+    FunctionCall test.similarity-jaccard-sorted@2[
+      Variable [ Name=d ]
+      Variable [ Name=c ]
+    ]
+    FunctionCall test.similarity-jaccard-sorted@2[
+      Variable [ Name=e ]
+      Variable [ Name=f ]
+    ]
+    FunctionCall test.similarity-jaccard-sorted@2[
+      Variable [ Name=f ]
+      Variable [ Name=e ]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

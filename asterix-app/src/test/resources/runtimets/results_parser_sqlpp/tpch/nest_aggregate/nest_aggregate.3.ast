@@ -1,0 +1,139 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [nation_key]
+    :
+    FieldAccessor [
+      Variable [ Name=nation ]
+      Field=n_nationkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [name]
+    :
+    FieldAccessor [
+      Variable [ Name=nation ]
+      Field=n_name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [aggregates]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [order_date]
+          :
+          Variable [ Name=orderdate ]
+        )
+        (
+          LiteralExpr [STRING] [sum_price]
+          :
+          Variable [ Name=sum ]
+        )
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Orders]
+        ]
+        AS
+        Variable [ Name=orders ]
+,
+        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Customer]
+        ]
+        AS
+        Variable [ Name=customer ]
+      ]
+      Where
+        OperatorExpr [
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=orders ]
+              Field=o_custkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=customer ]
+              Field=c_custkey
+            ]
+          ]
+          and
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=customer ]
+              Field=c_nationkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=nation ]
+              Field=n_nationkey
+            ]
+          ]
+        ]
+      Groupby
+        Variable [ Name=orderdate ]
+        :=
+        FieldAccessor [
+          Variable [ Name=orders ]
+          Field=o_orderdate
+        ]
+        With
+        Variable [ Name=orders ]
+        Variable [ Name=customer ]
+        Variable [ Name=nation ]
+        Variable [ Name=sn ]
+
+      LetVariable [ Name=sum ]
+        :=
+        FunctionCall tpch.sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              Variable [ Name=o ]
+              Field=o_totalprice
+            ]
+            ]
+            FROM [              Variable [ Name=orders ]
+              AS
+              Variable [ Name=o ]
+            ]
+          )
+        ]
+      Orderby
+        Variable [ Name=sum ]
+        ASC
+
+      Limit
+        LiteralExpr [LONG] [3]
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Nation]
+  ]
+  AS
+  Variable [ Name=nation ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [SelectedNation]
+  ]
+  AS
+  Variable [ Name=sn ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=nation ]
+      Field=n_nationkey
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=sn ]
+      Field=n_nationkey
+    ]
+  ]

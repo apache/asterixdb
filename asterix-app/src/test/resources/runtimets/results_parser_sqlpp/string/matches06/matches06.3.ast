@@ -1,0 +1,73 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [mnop]
+      LiteralExpr [STRING] [.]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefABCDEF]
+      LiteralExpr [STRING] [/d]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [12345]
+      LiteralExpr [STRING] [\d]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefGHIJK]
+      LiteralExpr [STRING] [\D]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [       ]
+      LiteralExpr [STRING] [\s]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [       ]
+      LiteralExpr [STRING] [\S]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [Welcome to pattern matching!]
+      LiteralExpr [STRING] [[a-zA-Z_0-9]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [!@#$%^&*()]
+      LiteralExpr [STRING] [[a-zA-Z_0-9]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [!@#$%^&*()]
+      LiteralExpr [STRING] [[^\W]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [!@#$%^&*]
+      LiteralExpr [STRING] [[^\w]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [0xffff]
+      LiteralExpr [STRING] [[\p{XDigit}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [FFFFFFFF]
+      LiteralExpr [STRING] [[\p{XDigit}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefgh]
+      LiteralExpr [STRING] [[\p{javaLowerCase}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [ABCDEF]
+      LiteralExpr [STRING] [[\p{javaLowerCase}]]
+    ]
+    FunctionCall null.matches@2[
+      FunctionCall null.codepoint-to-string@1[
+        OrderedListConstructor [
+          LiteralExpr [LONG] [163]
+        ]
+      ]
+      LiteralExpr [STRING] [[\p{Sc}]]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

@@ -1,0 +1,9 @@
+DataverseUse test
+TypeDecl TestType1 [
+  open RecordType {
+    fname : string,
+    lname : string,
+    id : int64
+  }
+]
+DatasetDecl testds1(TestType1) partitioned by [[id]]

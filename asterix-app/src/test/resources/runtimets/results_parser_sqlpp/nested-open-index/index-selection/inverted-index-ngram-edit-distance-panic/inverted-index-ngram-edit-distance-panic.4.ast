@@ -1,0 +1,32 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=o ]
+  Field=nested
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+LetVariable [ Name=ed ]
+  :=
+  FunctionCall test.edit-distance-check@3[
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=authors
+    ]
+    LiteralExpr [STRING] [Amihay Motro]
+    LiteralExpr [LONG] [5]
+  ]
+Where
+  IndexAccessor [
+    Variable [ Name=ed ]
+    Index:     Variable [ Name=ed ]
+  ]

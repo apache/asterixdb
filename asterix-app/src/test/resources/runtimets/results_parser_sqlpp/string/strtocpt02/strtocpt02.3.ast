@@ -1,0 +1,4 @@
+Query:
+FunctionCall null.string-to-codepoint@1[
+  LiteralExpr [STRING] ["'-=_+|\,./<>?:;~`]
+]

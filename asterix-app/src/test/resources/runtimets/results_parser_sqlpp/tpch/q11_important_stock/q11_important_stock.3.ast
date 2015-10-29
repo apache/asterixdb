@@ -1,0 +1,230 @@
+DataverseUse tpch
+Query:
+LetVariable [ Name=sum ]
+  :=
+  FunctionCall tpch.sum@1[
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=ps ]
+          Field=ps_supplycost
+        ]
+        *
+        FieldAccessor [
+          Variable [ Name=ps ]
+          Field=ps_availqty
+        ]
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Partsupp]
+        ]
+        AS
+        Variable [ Name=ps ]
+,
+        (
+          SELECT ELEMENT [
+          RecordConstructor [
+            (
+              LiteralExpr [STRING] [s_suppkey]
+              :
+              FieldAccessor [
+                Variable [ Name=s ]
+                Field=s_suppkey
+              ]
+            )
+          ]
+          ]
+          FROM [            FunctionCall Metadata.dataset@1[
+              LiteralExpr [STRING] [Supplier]
+            ]
+            AS
+            Variable [ Name=s ]
+,
+            FunctionCall Metadata.dataset@1[
+              LiteralExpr [STRING] [Nation]
+            ]
+            AS
+            Variable [ Name=n ]
+          ]
+          Where
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=s ]
+                Field=s_nationkey
+              ]
+              =
+              FieldAccessor [
+                Variable [ Name=n ]
+                Field=n_nationkey
+              ]
+            ]
+        )
+        AS
+        Variable [ Name=sn ]
+      ]
+      Where
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=ps ]
+            Field=ps_suppkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=sn ]
+            Field=s_suppkey
+          ]
+        ]
+    )
+  ]
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [partkey]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=ps_partkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [part_value]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=part_value
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [ps_partkey]
+        :
+        Variable [ Name=ps_partkey ]
+      )
+      (
+        LiteralExpr [STRING] [part_value]
+        :
+        FunctionCall tpch.sum@1[
+          (
+            SELECT ELEMENT [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=ps_supplycost
+              ]
+              *
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=ps_availqty
+              ]
+            ]
+            ]
+            FROM [              Variable [ Name=ps ]
+              AS
+              Variable [ Name=i ]
+            ]
+          )
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Partsupp]
+      ]
+      AS
+      Variable [ Name=ps ]
+,
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [s_suppkey]
+            :
+            FieldAccessor [
+              Variable [ Name=s ]
+              Field=s_suppkey
+            ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Supplier]
+          ]
+          AS
+          Variable [ Name=s ]
+,
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Nation]
+          ]
+          AS
+          Variable [ Name=n ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=s ]
+              Field=s_nationkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=n ]
+              Field=n_nationkey
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=sn ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=ps ]
+          Field=ps_suppkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=sn ]
+          Field=s_suppkey
+        ]
+      ]
+    Groupby
+      Variable [ Name=ps_partkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=ps ]
+        Field=ps_partkey
+      ]
+      With
+      Variable [ Name=ps ]
+      Variable [ Name=sn ]
+      Variable [ Name=sum ]
+
+  )
+  AS
+  Variable [ Name=t1 ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=part_value
+    ]
+    >
+    OperatorExpr [
+      Variable [ Name=sum ]
+      *
+      LiteralExpr [DOUBLE] [1.0E-5]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=part_value
+  ]
+  DESC
+

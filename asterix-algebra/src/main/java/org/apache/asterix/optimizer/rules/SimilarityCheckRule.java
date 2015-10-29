@@ -23,9 +23,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
-import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;

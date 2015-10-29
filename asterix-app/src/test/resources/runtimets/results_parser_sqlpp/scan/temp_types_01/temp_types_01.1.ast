@@ -1,0 +1,11 @@
+DataverseUse test
+TypeDecl TempType [
+  open RecordType {
+    id : int64,
+    date : date,
+    time : time,
+    datetime : datetime,
+    duration : duration
+  }
+]
+DatasetDecl Temp(TempType)is an external dataset

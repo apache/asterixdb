@@ -1,0 +1,61 @@
+DataverseUse test
+TypeDecl Name [
+  open RecordType {
+    id : int32
+  }
+]
+DatasetDecl Names(Name) partitioned by [[id]]
+WriteOutputTo nc1:rttest/btree-index-join_secondary-composite-key-prefix-join_02.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [emp1]
+    :
+    Variable [ Name=emp1 ]
+  )
+  (
+    LiteralExpr [STRING] [emp2]
+    :
+    Variable [ Name=emp2 ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Names]
+  ]
+  AS
+  Variable [ Name=emp1 ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Names]
+  ]
+  AS
+  Variable [ Name=emp2 ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emp1 ]
+        Field=fname
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=emp2 ]
+        Field=fname
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emp1 ]
+        Field=lname
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=emp2 ]
+        Field=lname
+      ]
+    ]
+  ]

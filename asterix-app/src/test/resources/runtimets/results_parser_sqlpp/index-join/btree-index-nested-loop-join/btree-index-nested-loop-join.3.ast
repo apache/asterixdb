@@ -1,0 +1,59 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=tm ]
+  Field=tweetid
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TwitterUsers]
+  ]
+  AS
+  Variable [ Name=tu ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=tm ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [results]
+  ]
+  AS
+  Variable [ Name=r ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=r ]
+        Field=vertexid
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=tm ]
+        Field=tweetid
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=tm ]
+        Field=user
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=tu ]
+        Field=screen-name
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=tm ]
+    Field=tweetid
+  ]
+  ASC
+

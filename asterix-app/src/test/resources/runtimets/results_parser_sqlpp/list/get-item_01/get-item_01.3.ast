@@ -1,0 +1,16 @@
+DataverseUse test
+Query:
+IndexAccessor [
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+  ]
+  Index:   OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+  ]
+]

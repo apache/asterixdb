@@ -1,0 +1,70 @@
+DataverseUse test
+TypeDecl sType [
+  closed RecordType {
+    b : int32
+  }
+]
+DatasetDecl s(sType) partitioned by [[b]]
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [x]
+    :
+    Variable [ Name=x ]
+  )
+  (
+    LiteralExpr [STRING] [y]
+    :
+    Variable [ Name=y ]
+  )
+]
+]
+FROM [  UnorderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [a]
+        :
+        LiteralExpr [LONG] [1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [a]
+        :
+        LiteralExpr [LONG] [2]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=x ]
+,
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=z ]
+      Field=b
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [s]
+      ]
+      AS
+      Variable [ Name=z ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=x ]
+          Field=a
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=z ]
+          Field=b
+        ]
+      ]
+  )
+  AS
+  Variable [ Name=y ]
+]

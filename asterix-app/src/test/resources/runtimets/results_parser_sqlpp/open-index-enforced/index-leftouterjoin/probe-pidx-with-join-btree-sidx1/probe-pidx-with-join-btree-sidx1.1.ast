@@ -1,0 +1,25 @@
+DataverseUse test
+TypeDecl TwitterUserType [
+  closed RecordType {
+    screen-name : string,
+    lang : string,
+    friends-count : int64,
+    statuses-count : int64,
+    name : string,
+    followers-count : int64
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : int64,
+    user : TwitterUserType,
+    sender-location : point,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string,
+    countA : int64
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
+DatasetDecl TweetMessagesTmp(TweetMessageType) partitioned by [[tweetid]]

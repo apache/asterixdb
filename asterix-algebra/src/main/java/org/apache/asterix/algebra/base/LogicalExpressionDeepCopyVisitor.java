@@ -82,8 +82,8 @@ public class LogicalExpressionDeepCopyVisitor implements ILogicalExpressionVisit
     }
 
     // TODO return List<...>
-    public ArrayList<Mutable<ILogicalExpression>> deepCopyExpressionReferenceList(List<Mutable<ILogicalExpression>> list)
-            throws AlgebricksException {
+    public ArrayList<Mutable<ILogicalExpression>> deepCopyExpressionReferenceList(
+            List<Mutable<ILogicalExpression>> list) throws AlgebricksException {
         ArrayList<Mutable<ILogicalExpression>> listCopy = new ArrayList<Mutable<ILogicalExpression>>(list.size());
         for (Mutable<ILogicalExpression> exprRef : list) {
             listCopy.add(deepCopyExpressionReference(exprRef));

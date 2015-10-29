@@ -1,0 +1,17 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [len1]
+    :
+    FunctionCall test.len@1[
+      OrderedListConstructor [
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [len2]
+    :
+    LiteralExpr [NULL]
+  )
+]

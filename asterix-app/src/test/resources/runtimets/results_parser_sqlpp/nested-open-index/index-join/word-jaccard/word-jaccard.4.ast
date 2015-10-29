@@ -1,0 +1,97 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=nested
+    ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=nested
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.similarity-jaccard@2[
+        FunctionCall test.word-tokens@1[
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=a ]
+              Field=nested
+            ]
+            Field=title
+          ]
+        ]
+        FunctionCall test.word-tokens@1[
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=b ]
+              Field=nested
+            ]
+            Field=title
+          ]
+        ]
+      ]
+      >=
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=nested
+    ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=nested
+    ]
+    Field=id
+  ]
+  ASC
+

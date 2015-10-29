@@ -22,13 +22,12 @@ import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.asterix.event.model.AsterixInstance.State;
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import org.apache.asterix.event.model.AsterixInstance.State;
-import org.apache.asterix.test.aql.TestsUtils;
-import org.apache.asterix.testframework.context.TestCaseContext;
 
 public class AsterixExternalLibraryIT {
 
@@ -40,6 +39,7 @@ public class AsterixExternalLibraryIT {
             + "testlib-zip-binary-assembly.zip";
     private static final Logger LOGGER = Logger.getLogger(AsterixExternalLibraryIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
+    private final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -63,7 +63,7 @@ public class AsterixExternalLibraryIT {
     @Test
     public void test() throws Exception {
         for (TestCaseContext testCaseCtx : testCaseCollection) {
-            TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx, null, false);
+            testExecutor.executeTest(PATH_ACTUAL, testCaseCtx, null, false);
         }
     }
 

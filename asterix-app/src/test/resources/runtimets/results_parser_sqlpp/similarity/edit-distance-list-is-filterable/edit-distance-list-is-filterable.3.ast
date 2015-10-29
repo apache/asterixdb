@@ -1,0 +1,56 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=a ]
+  :=
+  OrderedListConstructor [
+  ]
+LetVariable [ Name=b ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [6]
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [10]
+  ]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.edit-distance-list-is-filterable@2[
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall test.edit-distance-list-is-filterable@2[
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [3]
+    ]
+    FunctionCall test.edit-distance-list-is-filterable@2[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall test.edit-distance-list-is-filterable@2[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [3]
+    ]
+    FunctionCall test.edit-distance-list-is-filterable@2[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [8]
+    ]
+    FunctionCall test.edit-distance-list-is-filterable@2[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [11]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

@@ -1,0 +1,7 @@
+DataverseUse test
+Query:
+OperatorExpr [
+  LiteralExpr [FALSE]
+  and
+  LiteralExpr [NULL]
+]

@@ -1,0 +1,22 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int64,
+    l_partkey : int64,
+    l_suppkey : int64,
+    l_linenumber : int64,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_selectflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+DatasetDecl LineItem(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]

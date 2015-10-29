@@ -1,0 +1,16 @@
+DataverseUse testdv2
+TypeDecl testtype [
+  closed RecordType {
+    id : string,
+    name : string,
+    hobby : UnorderedList <string>
+?
+  }
+]
+TypeDecl testtype2 [
+  open RecordType {
+    id : string
+  }
+]
+DatasetDecl testds(testtype) partitioned by [[id]]
+DatasetDecl testds2(testtype2) partitioned by [[id]]

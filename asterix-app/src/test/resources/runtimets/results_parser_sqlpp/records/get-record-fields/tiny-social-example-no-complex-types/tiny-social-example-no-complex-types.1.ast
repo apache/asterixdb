@@ -1,0 +1,88 @@
+DataverseUse TinySocial
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string,
+    lang : string,
+    friends_count : int64,
+    statuses_count : int64
+  }
+]
+TypeDecl TweetMessageType [
+  closed RecordType {
+    tweetid : string,
+    user : TwitterUserType,
+    sender-location : point?,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string
+  }
+]
+TypeDecl EmploymentType [
+  open RecordType {
+    organization-name : string,
+    start-date : date,
+    end-date : date?
+  }
+]
+TypeDecl FacebookUserType [
+  closed RecordType {
+    id : int64,
+    alias : string,
+    name : string,
+    user-since : datetime,
+    friend-ids : UnorderedList <int64>
+,
+    employment : OrderedList [EmploymentType]
+
+  }
+]
+TypeDecl FacebookMessageType [
+  closed RecordType {
+    message-id : int64,
+    author-id : int64,
+    in-response-to : int64?,
+    sender-location : point?,
+    message : string
+  }
+]
+TypeDecl TwitterUserAlternateType [
+  open RecordType {
+    screen-name : string,
+    lang : string,
+    friends_count : int64,
+    statuses_count : int64
+  }
+]
+TypeDecl TweetMessageAlternateType [
+  closed RecordType {
+    tweetid : string,
+    sender-location : point?,
+    send-time : datetime,
+    message-text : string
+  }
+]
+TypeDecl EmploymentAlternateType [
+  open RecordType {
+    organization-name : string,
+    start-date : date,
+    end-date : date?
+  }
+]
+TypeDecl FacebookUserAlternateType [
+  closed RecordType {
+    id : int64,
+    alias : string,
+    name : string,
+    user-since : datetime
+  }
+]
+TypeDecl FacebookMessageAlternateType [
+  closed RecordType {
+    message-id : int64,
+    author-id : int64,
+    in-response-to : int64?,
+    sender-location : point?,
+    message : string
+  }
+]

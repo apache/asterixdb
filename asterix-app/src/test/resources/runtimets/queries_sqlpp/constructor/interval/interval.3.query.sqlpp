@@ -1,0 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+{'interval11':test."interval-from-date"(test.date('2010-10-30'),test.date('2012-10-21')),'interval12':test."interval-from-date"('2010-10-30',test.date('2012-10-21')),'interval13':test."interval-from-date"(test.date('2010-10-30'),'2012-10-21'),'interval14':test."interval-from-date"('2010-10-30','2012-10-21'),'interval15':test."interval-from-date"(null,'2012-10-21'),'interval16':test."interval-from-date"('2010-10-30',null),'interval21':test."interval-from-time"(test.time('03:04:05.678-11:00'),test.time('232425267+0200')),'interval22':test."interval-from-time"('03:04:05.678-11:00',test.time('232425267+0200')),'interval23':test."interval-from-time"(test.time('03:04:05.678-11:00'),'232425267+0200'),'interval24':test."interval-from-time"('03:04:05.678-11:00','232425267+0200'),'interval25':test."interval-from-time"(null,test.time('232425267+0200')),'interval26':test."interval-from-time"(test.time('03:04:05.678-11:00'),null),'interval31':test."interval-from-datetime"(test.datetime('-1987-11-19T02:43:57.938+08:00'),test.datetime('19991112T124935948-0700')),'interval32':test."interval-from-datetime"('-1987-11-19T02:43:57.938+08:00',test.datetime('19991112T124935948-0700')),'interval33':test."interval-from-datetime"(test.datetime('-1987-11-19T02:43:57.938+08:00'),'19991112T124935948-0700'),'interval34':test."interval-from-datetime"('-1987-11-19T02:43:57.938+08:00','19991112T124935948-0700'),'interval35':test."interval-from-datetime"(null,test.datetime('19991112T124935948-0700')),'interval36':test."interval-from-datetime"(test.datetime('-1987-11-19T02:43:57.938+08:00'),null),'interval41':test."interval-start-from-date"(test.date('0001-12-27'),test.duration('P3Y394DT48H398.483S')),'interval42':test."interval-start-from-date"('0001-12-27',test.duration('P3Y394DT48H398.483S')),'interval43':test."interval-start-from-date"(test.date('0001-12-27'),'P3Y394DT48H398.483S'),'interval44':test."interval-start-from-date"('0001-12-27','P3Y394DT48H398.483S'),'interval45':test."interval-start-from-date"(null,test.duration('P3Y394DT48H398.483S')),'interval46':test."interval-start-from-date"(test.date('0001-12-27'),null),'interval51':test."interval-start-from-time"(test.time('20:03:20.948'),test.duration('P60DT48M389.938S')),'interval52':test."interval-start-from-time"('20:03:20.948',test.duration('P60DT48M389.938S')),'interval53':test."interval-start-from-time"(test.time('20:03:20.948'),'P60DT48M389.938S'),'interval54':test."interval-start-from-time"('20:03:20.948','P60DT48M389.938S'),'interval55':test."interval-start-from-time"(null,test.duration('P60DT48M389.938S')),'interval56':test."interval-start-from-time"(test.time('20:03:20.948'),null),'interval61':test."interval-start-from-datetime"(test.datetime('-2043-11-19T15:32:39.293'),test.duration('P439Y3M20DT20H39M58.949S')),'interval62':test."interval-start-from-datetime"('-2043-11-19T15:32:39.293',test.duration('P439Y3M20DT20H39M58.949S')),'interval63':test."interval-start-from-datetime"(test.datetime('-2043-11-19T15:32:39.293'),'P439Y3M20DT20H39M58.949S'),'interval64':test."interval-start-from-datetime"('-2043-11-19T15:32:39.293','P439Y3M20DT20H39M58.949S'),'interval65':test."interval-start-from-datetime"(null,test.duration('P439Y3M20DT20H39M58.949S')),'interval66':test."interval-start-from-datetime"(test.datetime('-2043-11-19T15:32:39.293'),null)};

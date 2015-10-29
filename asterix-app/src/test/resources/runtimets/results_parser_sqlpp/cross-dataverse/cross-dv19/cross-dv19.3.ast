@@ -1,0 +1,39 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=l ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Metadata.Dataset]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=DataverseName
+      ]
+      =
+      LiteralExpr [STRING] [test1]
+    ]
+    or
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=DataverseName
+      ]
+      =
+      LiteralExpr [STRING] [test2]
+    ]
+    or
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=DataverseName
+      ]
+      =
+      LiteralExpr [STRING] [TwitterData]
+    ]
+  ]

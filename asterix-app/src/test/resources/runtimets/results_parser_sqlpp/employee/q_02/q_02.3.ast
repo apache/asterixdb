@@ -1,0 +1,61 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=m ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Emp]
+  ]
+  AS
+  Variable [ Name=e ]
+]
+LetVariable [ Name=m ]
+  :=
+  OrderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [EmpName]
+        :
+        FieldAccessor [
+          Variable [ Name=e ]
+          Field=name
+        ]
+      )
+      (
+        LiteralExpr [STRING] [parent_interest_1]
+        :
+        IndexAccessor [
+          FieldAccessor [
+            Variable [ Name=e ]
+            Field=interests
+          ]
+          Index: ANY
+        ]
+      )
+      (
+        LiteralExpr [STRING] [child1Name]
+        :
+        IndexAccessor [
+          FieldAccessor [
+            Variable [ Name=e ]
+            Field=children
+          ]
+          Index: ANY
+        ]
+      )
+      (
+        LiteralExpr [STRING] [child2Name]
+        :
+        IndexAccessor [
+          FieldAccessor [
+            Variable [ Name=e ]
+            Field=children
+          ]
+          Index:           FieldAccessor [
+            Variable [ Name=e ]
+            Field=children
+          ]
+        ]
+      )
+    ]
+  ]

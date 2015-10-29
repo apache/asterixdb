@@ -1,0 +1,10 @@
+DataverseUse temp
+TypeDecl test [
+  closed RecordType {
+    id : int32,
+    float : float,
+    stringa : string,
+    stringb : string?
+  }
+]
+DatasetDecl testds(test) partitioned by [[id]]

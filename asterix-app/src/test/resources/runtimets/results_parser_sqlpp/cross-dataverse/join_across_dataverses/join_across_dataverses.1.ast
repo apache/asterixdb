@@ -1,0 +1,35 @@
+TypeDecl AddressType [
+  open RecordType {
+    number : int64,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int64,
+    name : string,
+    cashBack : int64,
+    age : int64?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int64,
+        total : float
+      }
+
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+TypeDecl OrderType [
+  open RecordType {
+    oid : int64,
+    cid : int64,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float,
+    items : OrderedList [int64]
+
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[oid]]

@@ -1,0 +1,86 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [start1]
+    :
+    FunctionCall test.get-interval-start@1[
+      FunctionCall test.interval-from-date@2[
+        FunctionCall test.date@1[
+          LiteralExpr [STRING] [2010-10-30]
+        ]
+        LiteralExpr [STRING] [2013-04-01]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [end1]
+    :
+    FunctionCall test.get-interval-end@1[
+      FunctionCall test.interval-from-date@2[
+        FunctionCall test.date@1[
+          LiteralExpr [STRING] [2010-10-30]
+        ]
+        LiteralExpr [STRING] [2013-04-01]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [start2]
+    :
+    FunctionCall test.get-interval-start@1[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [08:09:10.234Z]
+        FunctionCall test.time@1[
+          LiteralExpr [STRING] [203040567+0800]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [end2]
+    :
+    FunctionCall test.get-interval-end@1[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [08:09:10.234Z]
+        FunctionCall test.time@1[
+          LiteralExpr [STRING] [203040567+0800]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [start3]
+    :
+    FunctionCall test.get-interval-start@1[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2009-09-01T00:00:00.000+08:00]
+        FunctionCall test.datetime-from-date-time@2[
+          FunctionCall test.date@1[
+            LiteralExpr [STRING] [2013-04-04]
+          ]
+          FunctionCall test.time@1[
+            LiteralExpr [STRING] [00:00:00.000+08:00]
+          ]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [end3]
+    :
+    FunctionCall test.get-interval-end@1[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2009-09-01T00:00:00.000+08:00]
+        FunctionCall test.datetime-from-date-time@2[
+          FunctionCall test.date@1[
+            LiteralExpr [STRING] [2013-04-04]
+          ]
+          FunctionCall test.time@1[
+            LiteralExpr [STRING] [00:00:00.000+08:00]
+          ]
+        ]
+      ]
+    ]
+  )
+]

@@ -1,0 +1,18 @@
+DataverseUse fuzzyjoin
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int64,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl TOKENSRANKEDADMType [
+  closed RecordType {
+    token : int64,
+    rank : int64
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by [[rank]]

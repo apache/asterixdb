@@ -1,0 +1,11 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.string-to-codepoint@1[
+      LiteralExpr [STRING] []
+    ]
+  )
+]

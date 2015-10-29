@@ -1,0 +1,755 @@
+DataverseUse tpch
+FunctionDecl tmp1([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [s_acctbal]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=s_acctbal
+        ]
+      )
+      (
+        LiteralExpr [STRING] [s_name]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=s_name
+        ]
+      )
+      (
+        LiteralExpr [STRING] [n_name]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=n_name
+        ]
+      )
+      (
+        LiteralExpr [STRING] [p_partkey]
+        :
+        FieldAccessor [
+          Variable [ Name=p ]
+          Field=p_partkey
+        ]
+      )
+      (
+        LiteralExpr [STRING] [ps_supplycost]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=ps_supplycost
+        ]
+      )
+      (
+        LiteralExpr [STRING] [p_mfgr]
+        :
+        FieldAccessor [
+          Variable [ Name=p ]
+          Field=p_mfgr
+        ]
+      )
+      (
+        LiteralExpr [STRING] [s_address]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=s_address
+        ]
+      )
+      (
+        LiteralExpr [STRING] [s_phone]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=s_phone
+        ]
+      )
+      (
+        LiteralExpr [STRING] [s_comment]
+        :
+        FieldAccessor [
+          Variable [ Name=pssrn ]
+          Field=s_comment
+        ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=Part ]
+      AS
+      Variable [ Name=p ]
+,
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [n_name]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=n_name
+            ]
+          )
+          (
+            LiteralExpr [STRING] [p_partkey]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_partkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [ps_supplycost]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_supplycost
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_name]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_name
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_acctbal]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_acctbal
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_address]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_address
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_phone]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_phone
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_comment]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_comment
+            ]
+          )
+        ]
+        ]
+        FROM [          Variable [ Name=Partsupp ]
+          AS
+          Variable [ Name=ps ]
+,
+          (
+            SELECT ELEMENT [
+            RecordConstructor [
+              (
+                LiteralExpr [STRING] [s_suppkey]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_suppkey
+                ]
+              )
+              (
+                LiteralExpr [STRING] [n_name]
+                :
+                FieldAccessor [
+                  Variable [ Name=rn ]
+                  Field=n_name
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_name]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_name
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_acctbal]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_acctbal
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_address]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_address
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_phone]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_phone
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_comment]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_comment
+                ]
+              )
+            ]
+            ]
+            FROM [              Variable [ Name=Supplier ]
+              AS
+              Variable [ Name=s ]
+,
+              (
+                SELECT ELEMENT [
+                RecordConstructor [
+                  (
+                    LiteralExpr [STRING] [n_nationkey]
+                    :
+                    FieldAccessor [
+                      Variable [ Name=n ]
+                      Field=n_nationkey
+                    ]
+                  )
+                  (
+                    LiteralExpr [STRING] [n_name]
+                    :
+                    FieldAccessor [
+                      Variable [ Name=n ]
+                      Field=n_name
+                    ]
+                  )
+                ]
+                ]
+                FROM [                  Variable [ Name=Region ]
+                  AS
+                  Variable [ Name=r ]
+,
+                  Variable [ Name=Nation ]
+                  AS
+                  Variable [ Name=n ]
+                ]
+                Where
+                  OperatorExpr [
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=n ]
+                        Field=n_regionkey
+                      ]
+                      =
+                      FieldAccessor [
+                        Variable [ Name=r ]
+                        Field=r_regionkey
+                      ]
+                    ]
+                    and
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=r ]
+                        Field=r_name
+                      ]
+                      =
+                      LiteralExpr [STRING] [EUROPE]
+                    ]
+                  ]
+              )
+              AS
+              Variable [ Name=rn ]
+            ]
+            Where
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_nationkey
+                ]
+                =
+                FieldAccessor [
+                  Variable [ Name=rn ]
+                  Field=n_nationkey
+                ]
+              ]
+          )
+          AS
+          Variable [ Name=srn ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_suppkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_suppkey
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=pssrn ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_partkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=pssrn ]
+            Field=p_partkey
+          ]
+        ]
+        and
+        FunctionCall tpch.like@2[
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_type
+          ]
+          LiteralExpr [STRING] [%BRASS]
+        ]
+      ]
+  )
+}
+
+FunctionDecl tmp2([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [p_partkey]
+        :
+        Variable [ Name=p_partkey ]
+      )
+      (
+        LiteralExpr [STRING] [ps_min_supplycost]
+        :
+        FunctionCall tpch.min@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=ps_supplycost
+            ]
+            ]
+            FROM [              Variable [ Name=pssrn ]
+              AS
+              Variable [ Name=i ]
+            ]
+          )
+        ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=Part ]
+      AS
+      Variable [ Name=p ]
+,
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [n_name]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=n_name
+            ]
+          )
+          (
+            LiteralExpr [STRING] [p_partkey]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_partkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [ps_supplycost]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_supplycost
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_name]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_name
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_acctbal]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_acctbal
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_address]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_address
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_phone]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_phone
+            ]
+          )
+          (
+            LiteralExpr [STRING] [s_comment]
+            :
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_comment
+            ]
+          )
+        ]
+        ]
+        FROM [          Variable [ Name=Partsupp ]
+          AS
+          Variable [ Name=ps ]
+,
+          (
+            SELECT ELEMENT [
+            RecordConstructor [
+              (
+                LiteralExpr [STRING] [s_suppkey]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_suppkey
+                ]
+              )
+              (
+                LiteralExpr [STRING] [n_name]
+                :
+                FieldAccessor [
+                  Variable [ Name=rn ]
+                  Field=n_name
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_name]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_name
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_acctbal]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_acctbal
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_address]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_address
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_phone]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_phone
+                ]
+              )
+              (
+                LiteralExpr [STRING] [s_comment]
+                :
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_comment
+                ]
+              )
+            ]
+            ]
+            FROM [              Variable [ Name=Supplier ]
+              AS
+              Variable [ Name=s ]
+,
+              (
+                SELECT ELEMENT [
+                RecordConstructor [
+                  (
+                    LiteralExpr [STRING] [n_nationkey]
+                    :
+                    FieldAccessor [
+                      Variable [ Name=n ]
+                      Field=n_nationkey
+                    ]
+                  )
+                  (
+                    LiteralExpr [STRING] [n_name]
+                    :
+                    FieldAccessor [
+                      Variable [ Name=n ]
+                      Field=n_name
+                    ]
+                  )
+                ]
+                ]
+                FROM [                  Variable [ Name=Region ]
+                  AS
+                  Variable [ Name=r ]
+,
+                  Variable [ Name=Nation ]
+                  AS
+                  Variable [ Name=n ]
+                ]
+                Where
+                  OperatorExpr [
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=n ]
+                        Field=n_regionkey
+                      ]
+                      =
+                      FieldAccessor [
+                        Variable [ Name=r ]
+                        Field=r_regionkey
+                      ]
+                    ]
+                    and
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=r ]
+                        Field=r_name
+                      ]
+                      =
+                      LiteralExpr [STRING] [EUROPE]
+                    ]
+                  ]
+              )
+              AS
+              Variable [ Name=rn ]
+            ]
+            Where
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=s ]
+                  Field=s_nationkey
+                ]
+                =
+                FieldAccessor [
+                  Variable [ Name=rn ]
+                  Field=n_nationkey
+                ]
+              ]
+          )
+          AS
+          Variable [ Name=srn ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=srn ]
+              Field=s_suppkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_suppkey
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=pssrn ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_partkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=pssrn ]
+            Field=p_partkey
+          ]
+        ]
+        and
+        FunctionCall tpch.like@2[
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_type
+          ]
+          LiteralExpr [STRING] [%BRASS]
+        ]
+      ]
+    Groupby
+      Variable [ Name=p_partkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=pssrn ]
+        Field=p_partkey
+      ]
+
+  )
+}
+
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [s_acctbal]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=s_acctbal
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_name]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=s_name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [n_name]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=n_name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [p_partkey]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=p_partkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [p_mfgr]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=p_mfgr
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_address]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=s_address
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_phone]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=s_phone
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_comment]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=s_comment
+    ]
+  )
+]
+]
+FROM [  FunctionCall tpch.tmp2@0[
+  ]
+  AS
+  Variable [ Name=t2 ]
+,
+  FunctionCall tpch.tmp1@0[
+  ]
+  AS
+  Variable [ Name=t1 ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t1 ]
+        Field=p_partkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=t2 ]
+        Field=p_partkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t1 ]
+        Field=ps_supplycost
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=t2 ]
+        Field=ps_min_supplycost
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=s_acctbal
+  ]
+  DESC
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=n_name
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=s_name
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=p_partkey
+  ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [100]

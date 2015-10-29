@@ -1,0 +1,65 @@
+DataverseUse test
+TypeDecl MyRecord [
+  closed RecordType {
+    id : int32,
+    point : point,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle
+  }
+]
+TypeDecl MyRecordOpen [
+  open RecordType {
+    id : int32,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle
+  }
+]
+DatasetDecl MyData1(MyRecordOpen) partitioned by [[id]]
+DatasetDecl MyData2(MyRecord) partitioned by [[id]]
+WriteOutputTo nc1:rttest/index-join_rtree-spatial-intersect-point.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [a]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [b]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData1]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  FunctionCall test.spatial-intersect@2[
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=point
+    ]
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=point
+    ]
+  ]

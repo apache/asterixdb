@@ -1,0 +1,12 @@
+DataverseUse STBench
+TypeDecl SimpleGeoPlaceType [
+  closed RecordType {
+    coordinates : point,
+    id : int64,
+    name : string,
+    tags : string,
+    categories : string,
+    phone : string
+  }
+]
+DatasetDecl SimpleGeoPlace(SimpleGeoPlaceType) partitioned by [[id]]

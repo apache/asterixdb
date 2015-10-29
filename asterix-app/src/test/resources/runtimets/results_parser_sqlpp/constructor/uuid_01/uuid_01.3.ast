@@ -1,0 +1,18 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [uuid1]
+    :
+    FunctionCall test.uuid@1[
+      LiteralExpr [STRING] [02a199ca-bf58-412e-bd9f-60a0c975a8ac]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [uuid2]
+    :
+    FunctionCall test.uuid@1[
+      LiteralExpr [STRING] [8cea25ab-55f8-467e-929d-94888f754832]
+    ]
+  )
+]

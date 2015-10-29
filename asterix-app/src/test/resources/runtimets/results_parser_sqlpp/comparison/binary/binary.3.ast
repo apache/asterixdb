@@ -1,0 +1,148 @@
+DataverseUse test
+Query:
+OrderedListConstructor [
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    >
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    >=
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    <
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    <=
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    !=
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+    >
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+    >=
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+    <
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+    <=
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+    =
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+    !=
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    =
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+    =
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0A0A]
+    ]
+    =
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cw==]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [0B]
+    ]
+    =
+    FunctionCall test.base64@1[
+      LiteralExpr [STRING] [Cgo=]
+    ]
+  ]
+]

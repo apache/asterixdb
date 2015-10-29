@@ -1,0 +1,61 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [field-name]
+    :
+    Variable [ Name=n ]
+  )
+  (
+    LiteralExpr [STRING] [field-type]
+    :
+    Variable [ Name=t ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    Variable [ Name=count ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessagesAlternate]
+  ]
+  AS
+  Variable [ Name=r ]
+,
+  FunctionCall TinySocial.get-record-fields@1[
+    Variable [ Name=r ]
+  ]
+  AS
+  Variable [ Name=f ]
+]
+Groupby
+  Variable [ Name=n ]
+  :=
+  FieldAccessor [
+    Variable [ Name=f ]
+    Field=field-name
+  ]
+  Variable [ Name=t ]
+  :=
+  FieldAccessor [
+    Variable [ Name=f ]
+    Field=field-type
+  ]
+  With
+  Variable [ Name=r ]
+  Variable [ Name=f ]
+
+LetVariable [ Name=count ]
+  :=
+  FunctionCall TinySocial.count@1[
+    Variable [ Name=r ]
+  ]
+Orderby
+  Variable [ Name=n ]
+  ASC
+  Variable [ Name=t ]
+  ASC
+

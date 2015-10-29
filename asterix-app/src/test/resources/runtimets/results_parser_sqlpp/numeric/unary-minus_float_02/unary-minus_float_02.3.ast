@@ -1,0 +1,32 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [float1]
+    :
+    NEGATIVE FunctionCall test.float@1[
+  LiteralExpr [STRING] [-80.20f]
+]
+  )
+  (
+    LiteralExpr [STRING] [float2]
+    :
+    NEGATIVE FunctionCall test.float@1[
+  LiteralExpr [STRING] [NaN]
+]
+  )
+  (
+    LiteralExpr [STRING] [float3]
+    :
+    NEGATIVE FunctionCall test.float@1[
+  LiteralExpr [STRING] [INF]
+]
+  )
+  (
+    LiteralExpr [STRING] [float4]
+    :
+    NEGATIVE FunctionCall test.float@1[
+  LiteralExpr [STRING] [-INF]
+]
+  )
+]

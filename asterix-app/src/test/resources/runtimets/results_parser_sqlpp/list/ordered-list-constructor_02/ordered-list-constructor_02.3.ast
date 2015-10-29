@@ -1,0 +1,13 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  OrderedListConstructor [
+    LiteralExpr [STRING] [foo]
+    LiteralExpr [STRING] [bar]
+  ]
+  OrderedListConstructor [
+    LiteralExpr [STRING] [foobar]
+  ]
+]
+]

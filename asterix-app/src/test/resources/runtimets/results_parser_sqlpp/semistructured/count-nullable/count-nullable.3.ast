@@ -1,0 +1,38 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [custage]
+    :
+    Variable [ Name=age ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall test.count@1[
+      Variable [ Name=c ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Groupby
+  Variable [ Name=age ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=age
+  ]
+  With
+  Variable [ Name=c ]
+
+Orderby
+  Variable [ Name=age ]
+  ASC
+

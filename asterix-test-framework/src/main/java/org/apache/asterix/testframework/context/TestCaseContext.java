@@ -37,15 +37,18 @@ public class TestCaseContext {
      * For specifying the desired output formatting of results.
      */
     public enum OutputFormat {
-        NONE  ("", ""),
-        ADM   ("adm", "application/x-adm"),
+        NONE("", ""),
+        ADM("adm", "application/x-adm"),
         LOSSLESS_JSON("json", "application/json; lossless=true"),
-        CLEAN_JSON ("json", "application/json"),
-        CSV   ("csv", "text/csv"),
-        CSV_HEADER ("csv-header", "text/csv; header=present");
+        CLEAN_JSON("json", "application/json"),
+        CSV("csv", "text/csv"),
+        CSV_HEADER("csv-header", "text/csv; header=present"),
+        AST("ast", "application/x-ast"),
+        PLAN("plan", "application/x-plan");
 
         private final String extension;
         private final String mimetype;
+
         OutputFormat(String ext, String mime) {
             this.extension = ext;
             this.mimetype = mime;
@@ -62,22 +65,26 @@ public class TestCaseContext {
         //
         public static OutputFormat forCompilationUnit(CompilationUnit cUnit) {
             switch (cUnit.getOutputDir().getCompare()) {
-            case TEXT:
-                return OutputFormat.ADM;
-            case LOSSLESS_JSON:
-                return OutputFormat.LOSSLESS_JSON;
-            case CLEAN_JSON:
-                return OutputFormat.CLEAN_JSON;
-            case CSV:
-                return OutputFormat.CSV;
-            case CSV_HEADER:
-                return OutputFormat.CSV_HEADER;
-            case INSPECT:
-            case IGNORE:
-                return OutputFormat.NONE;
-            default:
-                assert false: "Unknown ComparisonEnum!";
-                return OutputFormat.NONE;
+                case TEXT:
+                    return OutputFormat.ADM;
+                case LOSSLESS_JSON:
+                    return OutputFormat.LOSSLESS_JSON;
+                case CLEAN_JSON:
+                    return OutputFormat.CLEAN_JSON;
+                case CSV:
+                    return OutputFormat.CSV;
+                case CSV_HEADER:
+                    return OutputFormat.CSV_HEADER;
+                case INSPECT:
+                case IGNORE:
+                    return OutputFormat.NONE;
+                case AST:
+                    return OutputFormat.AST;
+                case PLAN:
+                    return OutputFormat.PLAN;
+                default:
+                    assert false : "Unknown ComparisonEnum!";
+                    return OutputFormat.NONE;
             }
         }
     };
@@ -164,20 +171,20 @@ public class TestCaseContext {
         File path = actualResultsBase;
         path = new File(path, testSuite.getResultOffsetPath());
         path = new File(path, testCase.getFilePath());
-        return new File(path, cUnit.getOutputDir().getValue() + "." +
-                        OutputFormat.forCompilationUnit(cUnit).extension());
+        return new File(path,
+                cUnit.getOutputDir().getValue() + "." + OutputFormat.forCompilationUnit(cUnit).extension());
     }
 
     public static class Builder {
         private final boolean m_doSlow;
         private final Pattern m_re;
+
         public Builder() {
             m_doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
             String re = System.getProperty("testre");
             if (re == null) {
                 m_re = null;
-            }
-            else {
+            } else {
                 m_re = Pattern.compile(re);
             }
         }
@@ -219,8 +226,7 @@ public class TestCaseContext {
                                 break;
                             }
                         }
-                    }
-                    else {
+                    } else {
                         // No regex == everything matches
                         matches = true;
                     }

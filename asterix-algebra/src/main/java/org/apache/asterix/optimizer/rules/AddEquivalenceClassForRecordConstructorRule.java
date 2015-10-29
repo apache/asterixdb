@@ -26,8 +26,7 @@ import java.util.Map;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.mortbay.util.SingletonList;
-
-import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -60,7 +59,8 @@ import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -117,8 +117,8 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
                 ILogicalExpression expr = new ScalarFunctionCallExpression(
                         FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                         new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)),
-                        new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                                new AInt32(parameterIndex / 2))))); // Every two parameters corresponds to a field.
+                        new MutableObject<ILogicalExpression>(
+                                new ConstantExpression(new AsterixConstantValue(new AInt32(parameterIndex / 2))))); // Every two parameters corresponds to a field.
                 EquivalenceClass equivClass = new EquivalenceClass(SingletonList.newSingletonList(fieldVar), fieldVar,
                         SingletonList.newSingletonList(expr));
                 ecs.put(fieldVar, equivClass);

@@ -1,0 +1,101 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=a ]
+  :=
+  OrderedListConstructor [
+  ]
+LetVariable [ Name=b ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+  ]
+LetVariable [ Name=c ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+  ]
+LetVariable [ Name=d ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [11]
+  ]
+LetVariable [ Name=e ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [1]
+  ]
+LetVariable [ Name=f ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [11]
+    LiteralExpr [LONG] [4]
+  ]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.similarity-jaccard@2[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+    ]
+    FunctionCall test.similarity-jaccard@2[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+    ]
+    FunctionCall test.similarity-jaccard@2[
+      Variable [ Name=c ]
+      Variable [ Name=d ]
+    ]
+    FunctionCall test.similarity-jaccard@2[
+      Variable [ Name=d ]
+      Variable [ Name=c ]
+    ]
+    FunctionCall test.similarity-jaccard@2[
+      Variable [ Name=e ]
+      Variable [ Name=f ]
+    ]
+    FunctionCall test.similarity-jaccard@2[
+      Variable [ Name=f ]
+      Variable [ Name=e ]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

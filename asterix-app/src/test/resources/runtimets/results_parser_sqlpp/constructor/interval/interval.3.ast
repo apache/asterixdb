@@ -1,0 +1,360 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [interval11]
+    :
+    FunctionCall test.interval-from-date@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval12]
+    :
+    FunctionCall test.interval-from-date@2[
+      LiteralExpr [STRING] [2010-10-30]
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval13]
+    :
+    FunctionCall test.interval-from-date@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2010-10-30]
+      ]
+      LiteralExpr [STRING] [2012-10-21]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval14]
+    :
+    FunctionCall test.interval-from-date@2[
+      LiteralExpr [STRING] [2010-10-30]
+      LiteralExpr [STRING] [2012-10-21]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval15]
+    :
+    FunctionCall test.interval-from-date@2[
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [2012-10-21]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval16]
+    :
+    FunctionCall test.interval-from-date@2[
+      LiteralExpr [STRING] [2010-10-30]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval21]
+    :
+    FunctionCall test.interval-from-time@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [03:04:05.678-11:00]
+      ]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [232425267+0200]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval22]
+    :
+    FunctionCall test.interval-from-time@2[
+      LiteralExpr [STRING] [03:04:05.678-11:00]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [232425267+0200]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval23]
+    :
+    FunctionCall test.interval-from-time@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [03:04:05.678-11:00]
+      ]
+      LiteralExpr [STRING] [232425267+0200]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval24]
+    :
+    FunctionCall test.interval-from-time@2[
+      LiteralExpr [STRING] [03:04:05.678-11:00]
+      LiteralExpr [STRING] [232425267+0200]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval25]
+    :
+    FunctionCall test.interval-from-time@2[
+      LiteralExpr [NULL]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [232425267+0200]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval26]
+    :
+    FunctionCall test.interval-from-time@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [03:04:05.678-11:00]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval31]
+    :
+    FunctionCall test.interval-from-datetime@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+      ]
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19991112T124935948-0700]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval32]
+    :
+    FunctionCall test.interval-from-datetime@2[
+      LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19991112T124935948-0700]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval33]
+    :
+    FunctionCall test.interval-from-datetime@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+      ]
+      LiteralExpr [STRING] [19991112T124935948-0700]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval34]
+    :
+    FunctionCall test.interval-from-datetime@2[
+      LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+      LiteralExpr [STRING] [19991112T124935948-0700]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval35]
+    :
+    FunctionCall test.interval-from-datetime@2[
+      LiteralExpr [NULL]
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [19991112T124935948-0700]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval36]
+    :
+    FunctionCall test.interval-from-datetime@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval41]
+    :
+    FunctionCall test.interval-start-from-date@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [0001-12-27]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y394DT48H398.483S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval42]
+    :
+    FunctionCall test.interval-start-from-date@2[
+      LiteralExpr [STRING] [0001-12-27]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y394DT48H398.483S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval43]
+    :
+    FunctionCall test.interval-start-from-date@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [0001-12-27]
+      ]
+      LiteralExpr [STRING] [P3Y394DT48H398.483S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval44]
+    :
+    FunctionCall test.interval-start-from-date@2[
+      LiteralExpr [STRING] [0001-12-27]
+      LiteralExpr [STRING] [P3Y394DT48H398.483S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval45]
+    :
+    FunctionCall test.interval-start-from-date@2[
+      LiteralExpr [NULL]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P3Y394DT48H398.483S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval46]
+    :
+    FunctionCall test.interval-start-from-date@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [0001-12-27]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval51]
+    :
+    FunctionCall test.interval-start-from-time@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [20:03:20.948]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P60DT48M389.938S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval52]
+    :
+    FunctionCall test.interval-start-from-time@2[
+      LiteralExpr [STRING] [20:03:20.948]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P60DT48M389.938S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval53]
+    :
+    FunctionCall test.interval-start-from-time@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [20:03:20.948]
+      ]
+      LiteralExpr [STRING] [P60DT48M389.938S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval54]
+    :
+    FunctionCall test.interval-start-from-time@2[
+      LiteralExpr [STRING] [20:03:20.948]
+      LiteralExpr [STRING] [P60DT48M389.938S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval55]
+    :
+    FunctionCall test.interval-start-from-time@2[
+      LiteralExpr [NULL]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P60DT48M389.938S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval56]
+    :
+    FunctionCall test.interval-start-from-time@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [20:03:20.948]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval61]
+    :
+    FunctionCall test.interval-start-from-datetime@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval62]
+    :
+    FunctionCall test.interval-start-from-datetime@2[
+      LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval63]
+    :
+    FunctionCall test.interval-start-from-datetime@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
+      ]
+      LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval64]
+    :
+    FunctionCall test.interval-start-from-datetime@2[
+      LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
+      LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval65]
+    :
+    FunctionCall test.interval-start-from-datetime@2[
+      LiteralExpr [NULL]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P439Y3M20DT20H39M58.949S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval66]
+    :
+    FunctionCall test.interval-start-from-datetime@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-2043-11-19T15:32:39.293]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+]

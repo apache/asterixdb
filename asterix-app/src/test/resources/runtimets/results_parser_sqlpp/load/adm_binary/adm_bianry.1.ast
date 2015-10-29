@@ -1,0 +1,7 @@
+DataverseUse temp
+TypeDecl test [
+  open RecordType {
+    ba : binary
+  }
+]
+DatasetDecl testds(test) partitioned by [[ba]]

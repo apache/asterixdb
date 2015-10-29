@@ -1,0 +1,50 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [tbin]
+    :
+    Variable [ Name=d ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall test.count@1[
+      Variable [ Name=i ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tsdata]
+  ]
+  AS
+  Variable [ Name=i ]
+]
+Groupby
+  Variable [ Name=d ]
+  :=
+  FunctionCall test.interval-bin@3[
+    FunctionCall test.get-time-from-datetime@1[
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=timestamp
+      ]
+    ]
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [00:00:00.000Z]
+    ]
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [PT10M]
+    ]
+  ]
+  With
+  Variable [ Name=i ]
+
+Orderby
+  FunctionCall test.get-interval-start@1[
+    Variable [ Name=d ]
+  ]
+  ASC
+

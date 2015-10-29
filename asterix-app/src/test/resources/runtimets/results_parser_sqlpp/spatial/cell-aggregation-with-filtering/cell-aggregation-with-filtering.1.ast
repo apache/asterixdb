@@ -1,0 +1,11 @@
+DataverseUse test
+TypeDecl Tweet [
+  closed RecordType {
+    id : int64,
+    tweetid : int64,
+    loc : point,
+    time : datetime,
+    text : string
+  }
+]
+DatasetDecl TwitterData(Tweet) partitioned by [[id]]

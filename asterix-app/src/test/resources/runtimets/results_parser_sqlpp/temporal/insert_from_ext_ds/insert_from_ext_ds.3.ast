@@ -1,0 +1,68 @@
+DataverseUse testdvt
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [date]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=dateField
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=timeField
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=datetimeField
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=durationField
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=intervalField
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ymduration]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=yearMonthDurationField
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dtduration]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=dayTimeDurationField
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds]
+  ]
+  AS
+  Variable [ Name=r ]
+]

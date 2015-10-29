@@ -1,0 +1,304 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : int32,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+DatasetDecl Customer(CustomerType) partitioned by [[c_custkey]]
+FunctionDecl q22_customer_tmp([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [c_acctbal]
+        :
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_acctbal
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_custkey]
+        :
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_custkey
+        ]
+      )
+      (
+        LiteralExpr [STRING] [cntrycode]
+        :
+        Variable [ Name=phone_substr ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=Customer ]
+      AS
+      Variable [ Name=c ]
+    ]
+    LetVariable [ Name=phone_substr ]
+      :=
+      FunctionCall tpch.substring@3[
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_phone
+        ]
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [2]
+      ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [13]
+        ]
+        or
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [31]
+        ]
+        or
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [23]
+        ]
+        or
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [29]
+        ]
+        or
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [30]
+        ]
+        or
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [18]
+        ]
+        or
+        OperatorExpr [
+          Variable [ Name=phone_substr ]
+          =
+          LiteralExpr [STRING] [17]
+        ]
+      ]
+  )
+}
+
+Query:
+LetVariable [ Name=avg ]
+  :=
+  FunctionCall tpch.avg@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_acctbal
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Customer]
+        ]
+        AS
+        Variable [ Name=c ]
+      ]
+      LetVariable [ Name=phone_substr ]
+        :=
+        FunctionCall tpch.substring@3[
+          FieldAccessor [
+            Variable [ Name=c ]
+            Field=c_phone
+          ]
+          LiteralExpr [LONG] [1]
+          LiteralExpr [LONG] [2]
+        ]
+      Where
+        OperatorExpr [
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_acctbal
+            ]
+            >
+            LiteralExpr [DOUBLE] [0.0]
+          ]
+          and
+          OperatorExpr [
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [13]
+            ]
+            or
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [31]
+            ]
+            or
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [23]
+            ]
+            or
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [29]
+            ]
+            or
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [30]
+            ]
+            or
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [18]
+            ]
+            or
+            OperatorExpr [
+              Variable [ Name=phone_substr ]
+              =
+              LiteralExpr [STRING] [17]
+            ]
+          ]
+        ]
+    )
+  ]
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cntrycode]
+    :
+    Variable [ Name=cntrycode ]
+  )
+  (
+    LiteralExpr [STRING] [numcust]
+    :
+    FunctionCall tpch.count@1[
+      Variable [ Name=ct ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [totacctbal]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=c_acctbal
+        ]
+        ]
+        FROM [          Variable [ Name=ct ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  FunctionCall tpch.q22_customer_tmp@0[
+  ]
+  AS
+  Variable [ Name=ct ]
+]
+Where
+  OperatorExpr [
+    FunctionCall tpch.count@1[
+      (
+        SELECT ELEMENT [
+        Variable [ Name=o ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Orders]
+          ]
+          AS
+          Variable [ Name=o ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=ct ]
+              Field=c_custkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=o ]
+              Field=o_custkey
+            ]
+          ]
+      )
+    ]
+    =
+    LiteralExpr [LONG] [0]
+  ]
+Groupby
+  Variable [ Name=cntrycode ]
+  :=
+  FieldAccessor [
+    Variable [ Name=ct ]
+    Field=cntrycode
+  ]
+  With
+  Variable [ Name=ct ]
+  Variable [ Name=avg ]
+
+Orderby
+  Variable [ Name=cntrycode ]
+  ASC
+

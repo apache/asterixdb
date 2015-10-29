@@ -43,4 +43,9 @@ public class SkipSecondaryIndexSearchExpressionAnnotation implements IExpression
         clone.setObject(object);
         return clone;
     }
+
+    @Override
+    public String toString() {
+        return SKIP_SECONDARY_INDEX_SEARCH_ANNOTATION_KEY;
+    }
 }

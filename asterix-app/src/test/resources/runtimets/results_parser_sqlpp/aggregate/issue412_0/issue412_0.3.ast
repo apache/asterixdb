@@ -1,0 +1,8 @@
+Query:
+FunctionCall null.count@1[
+  OrderedListConstructor [
+    LiteralExpr [STRING] [ASTERIX]
+    LiteralExpr [STRING] [Hyracks]
+    LiteralExpr [NULL]
+  ]
+]

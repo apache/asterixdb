@@ -31,6 +31,7 @@ import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.aql.TestsUtils;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestGroup;
@@ -53,12 +54,13 @@ public class ExecutionTest {
     protected static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
 
     protected static final String PATH_ACTUAL = "rttest" + File.separator;
-    protected static final String PATH_BASE = StringUtils.join(
-            new String[] { "src", "test", "resources", "runtimets" }, File.separator);
+    protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
+            File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     protected static AsterixTransactionProperties txnProperties;
+    private final static TestExecutor testExecutor = new TestExecutor();
 
     protected static TestGroup FailedGroup;
 
@@ -88,7 +90,8 @@ public class ExecutionTest {
 
         HDFSCluster.getInstance().setup();
 
-        // Set the node resolver to be the identity resolver that expects node names
+        // Set the node resolver to be the identity resolver that expects node
+        // names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
@@ -107,7 +110,7 @@ public class ExecutionTest {
         }
         // clean up the files written by the ASTERIX storage manager
         for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
-            TestsUtils.deleteRec(new File(d));
+            testExecutor.deleteRec(new File(d));
         }
         HDFSCluster.getInstance().cleanup();
 
@@ -123,10 +126,9 @@ public class ExecutionTest {
             failedSuite.setQueryOffsetPath("queries");
             failedSuite.getTestGroup().add(FailedGroup);
             marshaller.marshal(failedSuite, temp);
-            System.err.println("The failed.xml is written to :" + temp.getAbsolutePath() +
-                    ". You can copy it to only.xml by the following cmd:" +
-                    "\rcp " + temp.getAbsolutePath() + " " +
-                    Paths.get("./src/test/resources/runtimets/only.xml").toAbsolutePath());
+            System.err.println("The failed.xml is written to :" + temp.getAbsolutePath()
+                    + ". You can copy it to only.xml by the following cmd:" + "\rcp " + temp.getAbsolutePath() + " "
+                    + Paths.get("./src/test/resources/runtimets/only.xml").toAbsolutePath());
         }
     }
 

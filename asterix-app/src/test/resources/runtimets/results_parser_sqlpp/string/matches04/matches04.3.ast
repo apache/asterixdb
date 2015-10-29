@@ -1,0 +1,37 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [UCI UCI UCI UCI UCI UCI]
+      LiteralExpr [STRING] [[UCI{6}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [UCI UCI UCI UCI UCI UCI]
+      LiteralExpr [STRING] [[UCI{3,6}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [UCI UCI UCI UCI UCI UCI]
+      LiteralExpr [STRING] [[UCI{7}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [UCI UCI UCI UCI UCI UCI]
+      LiteralExpr [STRING] [[UCI{1}]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [UCI UCI UCI]
+      LiteralExpr [STRING] [[UCI+]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [false]
+      LiteralExpr [STRING] [[true|false]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [YX]
+      LiteralExpr [STRING] [[XY]]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

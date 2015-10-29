@@ -1,0 +1,44 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=id
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  FunctionCall test.spatial-intersect@2[
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=rec
+    ]
+    FunctionCall test.create-rectangle@2[
+      FunctionCall test.create-point@2[
+        LiteralExpr [DOUBLE] [4.5]
+        LiteralExpr [DOUBLE] [9.0]
+      ]
+      FunctionCall test.create-point@2[
+        NEGATIVE LiteralExpr [DOUBLE] [1.0]
+        LiteralExpr [DOUBLE] [5.0]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=id
+  ]
+  ASC
+

@@ -1,0 +1,21 @@
+DataverseUse test
+TypeDecl MyRecordtmp [
+  closed RecordType {
+    id : int64,
+    point : point,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle,
+    circle : circle
+  }
+]
+TypeDecl MyRecord [
+  closed RecordType {
+    nested : MyRecordtmp
+  }
+]
+DatasetDecl MyDatatmp(MyRecordtmp) partitioned by [[id]]
+DatasetDecl MyData(MyRecord) partitioned by [[nested, id]]

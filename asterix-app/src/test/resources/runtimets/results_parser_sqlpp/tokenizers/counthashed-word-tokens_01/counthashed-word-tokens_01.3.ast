@@ -1,0 +1,18 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=txt ]
+  :=
+  LiteralExpr [STRING] [Hello World, I would like to inform you of the importance of Foo Bar. Yes, Foo Bar. Jürgen.]
+LetVariable [ Name=tokens ]
+  :=
+  FunctionCall test.counthashed-word-tokens@1[
+    Variable [ Name=txt ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=token ]
+]
+FROM [  Variable [ Name=tokens ]
+  AS
+  Variable [ Name=token ]
+]

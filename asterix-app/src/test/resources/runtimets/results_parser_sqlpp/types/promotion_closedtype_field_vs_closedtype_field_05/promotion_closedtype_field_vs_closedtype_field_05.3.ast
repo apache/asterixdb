@@ -1,0 +1,84 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [emp.id]
+    :
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dept.did]
+    :
+    FieldAccessor [
+      Variable [ Name=dept ]
+      Field=did
+    ]
+  )
+  (
+    LiteralExpr [STRING] [emp.empno]
+    :
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=empno
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dept.dno]
+    :
+    FieldAccessor [
+      Variable [ Name=dept ]
+      Field=dno
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [empDataset]
+  ]
+  AS
+  Variable [ Name=emp ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [deptDataset]
+  ]
+  AS
+  Variable [ Name=dept ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=empno
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=dept ]
+      Field=dno
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=emp ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=dept ]
+    Field=did
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=emp ]
+    Field=empno
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=dept ]
+    Field=dno
+  ]
+  ASC
+

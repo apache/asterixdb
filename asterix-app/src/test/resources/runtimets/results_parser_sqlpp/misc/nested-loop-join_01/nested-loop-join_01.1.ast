@@ -1,0 +1,23 @@
+DataverseUse test
+TypeDecl UserType [
+  open RecordType {
+    uid : int64,
+    name : string,
+    lottery_numbers : OrderedList [int64]
+,
+    interests : UnorderedList <string>
+
+  }
+]
+TypeDecl VisitorType [
+  open RecordType {
+    vid : int64,
+    name : string,
+    lottery_numbers : OrderedList [int64]
+,
+    interests : UnorderedList <string>
+
+  }
+]
+DatasetDecl Users(UserType) partitioned by [[uid]]
+DatasetDecl Visitors(VisitorType) partitioned by [[vid]]

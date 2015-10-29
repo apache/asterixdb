@@ -1,0 +1,55 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.string-concat@1[
+      OrderedListConstructor [
+        FunctionCall null.codepoint-to-string@1[
+          FunctionCall null.string-to-codepoint@1[
+            LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]
+          ]
+        ]
+        FunctionCall null.codepoint-to-string@1[
+          FunctionCall null.string-to-codepoint@1[
+            LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]
+          ]
+        ]
+        FunctionCall null.codepoint-to-string@1[
+          FunctionCall null.string-to-codepoint@1[
+            LiteralExpr [STRING] [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]
+          ]
+        ]
+      ]
+    ]
+    FunctionCall null.string-concat@1[
+      OrderedListConstructor [
+        LiteralExpr [STRING] [ ]
+        LiteralExpr [STRING] [a]
+        LiteralExpr [STRING] [b]
+        LiteralExpr [STRING] [  ]
+        LiteralExpr [STRING] [c]
+        LiteralExpr [STRING] [d]
+        LiteralExpr [STRING] [e]
+        LiteralExpr [STRING] [f]
+        LiteralExpr [STRING] [g]
+        LiteralExpr [STRING] [p]
+        LiteralExpr [STRING] [o]
+        LiteralExpr [STRING] [q]
+        LiteralExpr [STRING] [r]
+        LiteralExpr [STRING] [s]
+        LiteralExpr [STRING] [t]
+        LiteralExpr [STRING] [ ]
+      ]
+    ]
+    FunctionCall null.string-concat@1[
+      OrderedListConstructor [
+        LiteralExpr [STRING] [This is a test]
+        LiteralExpr [STRING] [and all tests must pass]
+        LiteralExpr [STRING] [and life is good...]
+      ]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

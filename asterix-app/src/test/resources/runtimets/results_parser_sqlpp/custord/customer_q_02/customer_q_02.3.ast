@@ -1,0 +1,39 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [nestedRecord]
+    :
+    Variable [ Name=nestedRec ]
+  )
+  (
+    LiteralExpr [STRING] [order_id]
+    :
+    FieldAccessor [
+      Variable [ Name=nestedRec ]
+      Field=oid
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=nestedRec ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=lastorder
+  ]

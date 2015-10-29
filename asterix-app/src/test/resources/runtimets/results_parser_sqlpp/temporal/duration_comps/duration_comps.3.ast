@@ -1,0 +1,113 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [yearMonthGreaterComp]
+    :
+    FunctionCall test.year-month-duration-greater-than@2[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P13M]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1Y]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dayTimeGreaterComp]
+    :
+    FunctionCall test.day-time-duration-greater-than@2[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1D]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [-P3D]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [yearMonthLessComp]
+    :
+    FunctionCall test.year-month-duration-less-than@2[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P13M]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1Y]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dayTimeLessComp]
+    :
+    FunctionCall test.day-time-duration-less-than@2[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1D]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [-P3D]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [equal1]
+    :
+    FunctionCall test.duration-equal@2[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1D]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [PT24H]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [equal2]
+    :
+    FunctionCall test.duration-equal@2[
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [-P3D]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [PT24H]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [equal3]
+    :
+    FunctionCall test.duration-equal@2[
+      FunctionCall test.duration-from-months@1[
+        FunctionCall test.months-from-year-month-duration@1[
+          FunctionCall test.get-year-month-duration@1[
+            FunctionCall test.duration@1[
+              LiteralExpr [STRING] [P1Y]
+            ]
+          ]
+        ]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P1Y]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [equal4]
+    :
+    FunctionCall test.duration-equal@2[
+      FunctionCall test.duration-from-ms@1[
+        FunctionCall test.ms-from-day-time-duration@1[
+          FunctionCall test.get-day-time-duration@1[
+            FunctionCall test.duration@1[
+              LiteralExpr [STRING] [-P3D]
+            ]
+          ]
+        ]
+      ]
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [-P3D]
+      ]
+    ]
+  )
+]

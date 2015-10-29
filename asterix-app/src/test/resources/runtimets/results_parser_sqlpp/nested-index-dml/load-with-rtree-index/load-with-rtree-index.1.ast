@@ -1,0 +1,23 @@
+DataverseUse TinySocial
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string,
+    lang : string,
+    friends_count : int64,
+    statuses_count : int64,
+    name : string,
+    followers_count : int64,
+    sender-location : point?
+  }
+]
+TypeDecl TweetMessageType [
+  closed RecordType {
+    user : TwitterUserType,
+    tweetid : int64,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]

@@ -1,0 +1,25 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.min@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=x ]
+    ]
+    FROM [      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [2]
+        LiteralExpr [LONG] [3]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=x ]
+        >
+        LiteralExpr [LONG] [10]
+      ]
+  )
+]
+]

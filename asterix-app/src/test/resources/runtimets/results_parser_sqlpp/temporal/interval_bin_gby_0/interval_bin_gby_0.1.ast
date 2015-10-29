@@ -1,0 +1,8 @@
+DataverseUse test
+TypeDecl Schema [
+  closed RecordType {
+    id : int64,
+    timestamp : datetime
+  }
+]
+DatasetDecl tsdata(Schema) partitioned by [[id]]

@@ -1,0 +1,59 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [topic]
+    :
+    Variable [ Name=topic ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall test.count@1[
+      Variable [ Name=tweet ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=tweet ]
+,
+  FieldAccessor [
+    Variable [ Name=tweet ]
+    Field=referred-topics
+  ]
+  AS
+  Variable [ Name=reftopic ]
+]
+Where
+  QuantifiedExpression SOME [
+    [Variable [ Name=reftopic ]
+    In
+      FieldAccessor [
+        Variable [ Name=tweet ]
+        Field=referred-topics
+      ]
+    ]
+    Satifies [
+      FunctionCall test.contains@2[
+        Variable [ Name=reftopic ]
+        LiteralExpr [STRING] [verizon]
+      ]
+    ]
+  ]
+Groupby
+  Variable [ Name=topic ]
+  :=
+  Variable [ Name=reftopic ]
+  With
+  Variable [ Name=tweet ]
+  Variable [ Name=reftopic ]
+
+Orderby
+  Variable [ Name=topic ]
+  ASC
+

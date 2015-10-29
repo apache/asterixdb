@@ -1,0 +1,99 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [list1]
+    :
+    Variable [ Name=c1 ]
+  )
+  (
+    LiteralExpr [STRING] [list2]
+    :
+    Variable [ Name=c2 ]
+  )
+  (
+    LiteralExpr [STRING] [list3]
+    :
+    Variable [ Name=c3 ]
+  )
+  (
+    LiteralExpr [STRING] [list4]
+    :
+    Variable [ Name=c4 ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=nestedRec ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=lastorder
+  ]
+LetVariable [ Name=c1 ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    FieldAccessor [
+      Variable [ Name=nestedRec ]
+      Field=oid
+    ]
+  ]
+LetVariable [ Name=c2 ]
+  :=
+  UnorderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    FieldAccessor [
+      Variable [ Name=nestedRec ]
+      Field=oid
+    ]
+  ]
+LetVariable [ Name=c3 ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=lastorder
+    ]
+    Variable [ Name=nestedRec ]
+  ]
+LetVariable [ Name=c4 ]
+  :=
+  UnorderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=lastorder
+    ]
+    Variable [ Name=nestedRec ]
+  ]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    >=
+    FunctionCall test.int32@1[
+      LiteralExpr [STRING] [3]
+    ]
+  ]

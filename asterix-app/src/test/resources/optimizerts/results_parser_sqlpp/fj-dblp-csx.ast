@@ -1,0 +1,200 @@
+DataverseUse fj-dblp-csx
+TypeDecl DBLPType [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  open RecordType {
+    id : int32,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl CSX(CSXType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/fj-dblp-csx.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [idDBLP]
+    :
+    Variable [ Name=idDBLP ]
+  )
+  (
+    LiteralExpr [STRING] [idCSX]
+    :
+    Variable [ Name=idCSX ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paperDBLP ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tokensDBLP]
+  ]
+  AS
+  Variable [ Name=prefixTokenDBLP ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=paperCSX ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tokensCSX]
+  ]
+  AS
+  Variable [ Name=prefixTokenCSX ]
+]
+LetVariable [ Name=idDBLP ]
+  :=
+  FieldAccessor [
+    Variable [ Name=paperDBLP ]
+    Field=id
+  ]
+LetVariable [ Name=unrankedTokensDBLP ]
+  :=
+  FunctionCall fj-dblp-csx.counthashed-word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paperDBLP ]
+      Field=title
+    ]
+  ]
+LetVariable [ Name=tokensDBLP ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      Variable [ Name=unrankedTokensDBLP ]
+      AS
+      Variable [ Name=token ]
+,
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=paper ]
+          Field=title
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [DBLP]
+          ]
+          AS
+          Variable [ Name=paper ]
+        ]
+      )
+      AS
+      Variable [ Name=tokenRanked ]
+      AT
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=token ]
+        =
+        Variable [ Name=tokenRanked ]
+      ]
+    Orderby
+      Variable [ Name=i ]
+      ASC
+
+  )
+LetVariable [ Name=idCSX ]
+  :=
+  FieldAccessor [
+    Variable [ Name=paperCSX ]
+    Field=id
+  ]
+LetVariable [ Name=unrankedTokensCSX ]
+  :=
+  FunctionCall fj-dblp-csx.counthashed-word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paperCSX ]
+      Field=title
+    ]
+  ]
+LetVariable [ Name=tokensCSX ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      Variable [ Name=unrankedTokensCSX ]
+      AS
+      Variable [ Name=token ]
+,
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=paper ]
+          Field=title
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [DBLP]
+          ]
+          AS
+          Variable [ Name=paper ]
+        ]
+      )
+      AS
+      Variable [ Name=tokenRanked ]
+      AT
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=token ]
+        =
+        Variable [ Name=tokenRanked ]
+      ]
+    Orderby
+      Variable [ Name=i ]
+      ASC
+
+  )
+Where
+  OperatorExpr [
+    Variable [ Name=prefixTokenDBLP ]
+    =
+    Variable [ Name=prefixTokenCSX ]
+  ]
+Groupby
+  Variable [ Name=idDBLP ]
+  :=
+  Variable [ Name=idDBLP ]
+  Variable [ Name=idCSX ]
+  :=
+  Variable [ Name=idCSX ]
+  With
+  Variable [ Name=tokensCSX ]
+  Variable [ Name=unrankedTokensCSX ]
+  Variable [ Name=idCSX ]
+  Variable [ Name=tokensDBLP ]
+  Variable [ Name=unrankedTokensDBLP ]
+  Variable [ Name=idDBLP ]
+  Variable [ Name=paperDBLP ]
+  Variable [ Name=prefixTokenDBLP ]
+  Variable [ Name=prefixTokenCSX ]
+  Variable [ Name=paperCSX ]
+
+Orderby
+  Variable [ Name=idDBLP ]
+  ASC
+  Variable [ Name=idCSX ]
+  ASC
+

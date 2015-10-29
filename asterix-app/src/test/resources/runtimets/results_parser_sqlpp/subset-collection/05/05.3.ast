@@ -1,0 +1,19 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+Variable [ Name=l ]
+]
+FROM [  FunctionCall test.subset-collection@3[
+    OrderedListConstructor [
+      LiteralExpr [STRING] [a]
+      LiteralExpr [STRING] [b]
+      LiteralExpr [STRING] [c]
+      LiteralExpr [STRING] [d]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+  ]
+  AS
+  Variable [ Name=l ]
+]

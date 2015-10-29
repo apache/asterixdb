@@ -1,0 +1,37 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+Variable [ Name=paper ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+]
+LetVariable [ Name=paper_tokens ]
+  :=
+  FunctionCall test.word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paper ]
+      Field=title
+    ]
+  ]
+LetVariable [ Name=query_tokens ]
+  :=
+  FunctionCall test.word-tokens@1[
+    LiteralExpr [STRING] [Cooperative Transactions for Environments]
+  ]
+LetVariable [ Name=jacc ]
+  :=
+  FunctionCall test.similarity-jaccard-sorted-check@3[
+    Variable [ Name=paper_tokens ]
+    Variable [ Name=query_tokens ]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+Where
+  IndexAccessor [
+    Variable [ Name=jacc ]
+    Index:     Variable [ Name=jacc ]
+  ]

@@ -1,0 +1,7 @@
+DataverseUse TinySocial
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : string
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]

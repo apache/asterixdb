@@ -1,0 +1,7 @@
+DataverseUse fuzzyjoin
+TypeDecl DBLPType [
+  open RecordType {
+    id : int64
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]

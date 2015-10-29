@@ -1,0 +1,11 @@
+Query:
+FieldAccessor [
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [author-id]
+      :
+      LiteralExpr [LONG] [2]
+    )
+  ]
+  Field=author-id
+]

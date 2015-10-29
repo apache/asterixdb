@@ -1,0 +1,17 @@
+DataverseUse SocialNetworkData
+Query:
+SELECT ELEMENT [
+FunctionCall SocialNetworkData.count@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=h ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [HandbookUsers]
+      ]
+      AS
+      Variable [ Name=h ]
+    ]
+  )
+]
+]

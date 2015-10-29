@@ -1,0 +1,64 @@
+DataverseUse test
+Query:
+LetVariable [ Name=k ]
+  :=
+  OrderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [a]
+        :
+        LiteralExpr [LONG] [1]
+      )
+      (
+        LiteralExpr [STRING] [b]
+        :
+        LiteralExpr [STRING] [hello]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [a]
+        :
+        LiteralExpr [LONG] [2]
+      )
+      (
+        LiteralExpr [STRING] [b]
+        :
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [k]
+            :
+            OrderedListConstructor [
+              LiteralExpr [LONG] [1]
+              LiteralExpr [LONG] [2]
+              LiteralExpr [LONG] [2]
+            ]
+          )
+        ]
+      )
+    ]
+  ]
+SELECT ELEMENT [
+FunctionCall test.string-concat@1[
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=b
+    ]
+    LiteralExpr [STRING] [ world]
+  ]
+]
+]
+FROM [  Variable [ Name=k ]
+  AS
+  Variable [ Name=x ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=a
+    ]
+    =
+    LiteralExpr [LONG] [1]
+  ]

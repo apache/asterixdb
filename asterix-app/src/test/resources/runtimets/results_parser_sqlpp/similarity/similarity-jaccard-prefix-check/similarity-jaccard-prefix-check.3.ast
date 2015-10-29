@@ -1,0 +1,109 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  FunctionCall test.similarity-jaccard-prefix-check@6[
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [FLOAT] [1.0]
+  ]
+  FunctionCall test.similarity-jaccard-prefix-check@6[
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [4]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+  FunctionCall test.similarity-jaccard-prefix-check@6[
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [4]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [FLOAT] [0.6]
+  ]
+  FunctionCall test.similarity-jaccard-prefix-check@6[
+    LiteralExpr [LONG] [3]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    LiteralExpr [LONG] [9]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+  FunctionCall test.similarity-jaccard-prefix-check@6[
+    LiteralExpr [LONG] [4]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [4]
+    ]
+    LiteralExpr [LONG] [2]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+  FunctionCall test.similarity-jaccard-prefix-check@6[
+    LiteralExpr [LONG] [4]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [4]
+    ]
+    LiteralExpr [LONG] [4]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+    ]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [FLOAT] [0.33]
+  ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+  ]
+  AS
+  Variable [ Name=l ]
+]

@@ -1,0 +1,30 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [circle-radius]
+    :
+    FunctionCall test.get-radius@1[
+      FunctionCall test.create-circle@2[
+        FunctionCall test.create-point@2[
+          LiteralExpr [DOUBLE] [6.0]
+          LiteralExpr [DOUBLE] [3.0]
+        ]
+        LiteralExpr [DOUBLE] [1.0]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle-center]
+    :
+    FunctionCall test.get-center@1[
+      FunctionCall test.create-circle@2[
+        FunctionCall test.create-point@2[
+          LiteralExpr [DOUBLE] [6.0]
+          LiteralExpr [DOUBLE] [3.0]
+        ]
+        LiteralExpr [DOUBLE] [1.0]
+      ]
+    ]
+  )
+]

@@ -1,0 +1,290 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [s_name]
+    :
+    FieldAccessor [
+      Variable [ Name=t4 ]
+      Field=s_name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_address]
+    :
+    FieldAccessor [
+      Variable [ Name=t4 ]
+      Field=s_address
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [ps_suppkey]
+        :
+        FieldAccessor [
+          Variable [ Name=pst1 ]
+          Field=ps_suppkey
+        ]
+      )
+    ]
+    ]
+    FROM [      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [l_partkey]
+            :
+            Variable [ Name=l_partkey ]
+          )
+          (
+            LiteralExpr [STRING] [l_suppkey]
+            :
+            Variable [ Name=l_suppkey ]
+          )
+          (
+            LiteralExpr [STRING] [sum_quantity]
+            :
+            OperatorExpr [
+              LiteralExpr [DOUBLE] [0.5]
+              *
+              FunctionCall tpch.sum@1[
+                (
+                  SELECT ELEMENT [
+                  FieldAccessor [
+                    Variable [ Name=i ]
+                    Field=l_quantity
+                  ]
+                  ]
+                  FROM [                    Variable [ Name=l ]
+                    AS
+                    Variable [ Name=i ]
+                  ]
+                )
+              ]
+            ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [LineItem]
+          ]
+          AS
+          Variable [ Name=l ]
+        ]
+        Groupby
+          Variable [ Name=l_partkey ]
+          :=
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_partkey
+          ]
+          Variable [ Name=l_suppkey ]
+          :=
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_suppkey
+          ]
+          With
+          Variable [ Name=l ]
+
+      )
+      AS
+      Variable [ Name=t2 ]
+,
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [ps_suppkey]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_suppkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [ps_partkey]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_partkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [ps_availqty]
+            :
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_availqty
+            ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Partsupp]
+          ]
+          AS
+          Variable [ Name=ps ]
+,
+          (
+            SELECT ELEMENT [
+            RecordConstructor [
+              (
+                LiteralExpr [STRING] [p_partkey]
+                :
+                FieldAccessor [
+                  Variable [ Name=p ]
+                  Field=p_partkey
+                ]
+              )
+            ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [Part]
+              ]
+              AS
+              Variable [ Name=p ]
+            ]
+          )
+          AS
+          Variable [ Name=t1 ]
+        ]
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=ps ]
+              Field=ps_partkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=t1 ]
+              Field=p_partkey
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=pst1 ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=pst1 ]
+            Field=ps_partkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=l_partkey
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=pst1 ]
+            Field=ps_suppkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=l_suppkey
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=pst1 ]
+            Field=ps_availqty
+          ]
+          >
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=sum_quantity
+          ]
+        ]
+      ]
+  )
+  AS
+  Variable [ Name=t3 ]
+,
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [s_name]
+        :
+        FieldAccessor [
+          Variable [ Name=s ]
+          Field=s_name
+        ]
+      )
+      (
+        LiteralExpr [STRING] [s_address]
+        :
+        FieldAccessor [
+          Variable [ Name=s ]
+          Field=s_address
+        ]
+      )
+      (
+        LiteralExpr [STRING] [s_suppkey]
+        :
+        FieldAccessor [
+          Variable [ Name=s ]
+          Field=s_suppkey
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Nation]
+      ]
+      AS
+      Variable [ Name=n ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Supplier]
+      ]
+      AS
+      Variable [ Name=s ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=s ]
+          Field=s_nationkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=n ]
+          Field=n_nationkey
+        ]
+      ]
+  )
+  AS
+  Variable [ Name=t4 ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=t3 ]
+      Field=ps_suppkey
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=t4 ]
+      Field=s_suppkey
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t4 ]
+    Field=s_name
+  ]
+  ASC
+

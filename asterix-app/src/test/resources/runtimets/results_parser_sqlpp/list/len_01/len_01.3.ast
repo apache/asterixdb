@@ -1,0 +1,56 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  FunctionCall test.len@1[
+    OrderedListConstructor [
+    ]
+  ]
+  FunctionCall test.len@1[
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+    ]
+  ]
+  FunctionCall test.len@1[
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+    ]
+  ]
+  FunctionCall test.len@1[
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+  ]
+  FunctionCall test.len@1[
+    UnorderedListConstructor [
+    ]
+  ]
+  FunctionCall test.len@1[
+    UnorderedListConstructor [
+      LiteralExpr [LONG] [1]
+    ]
+  ]
+  FunctionCall test.len@1[
+    UnorderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+    ]
+  ]
+  FunctionCall test.len@1[
+    UnorderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+    ]
+  ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+  ]
+  AS
+  Variable [ Name=l ]
+]

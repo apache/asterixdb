@@ -1,0 +1,49 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Test case name :  open-closed-21.aql
+ * Description    :  Insert into open type internal dataset by querying another open type internal dataset
+ *                :  In this case source dataset has (n+n) fields and the target dataset has only 1 field, but has no intial records in it.
+ * Success        :  Yes
+ * Date           :  29 April 2012
+ */
+
+use test;
+
+
+insert into employee
+select element {'id':201,'name':'John Doe','age':32,'sex':'M','dob':test.date('1975-01-11')};
+insert into employee
+select element {'id':202,'name':'John Smith','age':30,'sex':'M','dob':test.date('1982-07-12')};
+insert into employee
+select element {'id':203,'name':'John Wayne','age':62,'sex':'M','dob':test.date('1950-01-08')};
+insert into employee
+select element {'id':204,'name':'Roger Sanders','age':48,'sex':'M','dob':test.date('1972-11-12')};
+insert into employee
+select element {'id':205,'name':'Raj Singh','age':37,'sex':'M','dob':test.date('1978-05-06')};
+insert into employee
+select element {'id':206,'name':'Mike Tyson','age':44,'sex':'M','dob':test.date('1965-09-03')};
+insert into employee
+select element {'id':227,'name':'Mariam','age':30,'sex':'F','dob':test.date('1982-11-01')};
+insert into employee
+select element {'id':228,'name':'Cathy','age':35,'sex':'F','dob':test.date('1976-06-11'),'desgination':{{'Department Manager'}}};
+insert into dtst01
+select element l
+from  employee as l
+;

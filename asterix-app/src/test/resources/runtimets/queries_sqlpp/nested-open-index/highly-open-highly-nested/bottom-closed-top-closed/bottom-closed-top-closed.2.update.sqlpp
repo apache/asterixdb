@@ -1,0 +1,108 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Description  : Create a highly nested datastructure that uses opened and closed datasets
+
+use test;
+
+
+insert into Ss
+select element {'id':1,'Species':'Gulo'};
+insert into Ss
+select element {'id':2,'Species':'Johnstoni'};
+insert into GSs
+select element {'id':1,'Genus':'Gulo','lower':S}
+from  Ss as S
+where (S.Species = 'Gulo')
+;
+insert into GSs
+select element {'id':2,'Genus':'Okapia','lower':S}
+from  Ss as S
+where (S.Species = 'Johnstoni')
+;
+insert into FGSs
+select element {'id':1,'Family':'Mustelinae','lower':S}
+from  GSs as S
+where (S.lower.Species = 'Gulo')
+;
+insert into FGSs
+select element {'id':2,'Family':'Giraffidae','lower':S}
+from  GSs as S
+where (S.lower.Species = 'Johnstoni')
+;
+insert into OFGSs
+select element {'id':1,'Order':'Carnivora','lower':S}
+from  FGSs as S
+where (S.lower.lower.Species = 'Gulo')
+;
+insert into OFGSs
+select element {'id':2,'Order':'Artiodactyla','lower':S}
+from  FGSs as S
+where (S.lower.lower.Species = 'Johnstoni')
+;
+insert into COFGSs
+select element {'id':1,'Class':'Mammalia','lower':S}
+from  OFGSs as S
+where (S.lower.lower.lower.Species = 'Gulo')
+;
+insert into COFGSs
+select element {'id':2,'Class':'Mammalia','lower':S}
+from  OFGSs as S
+where (S.lower.lower.lower.Species = 'Johnstoni')
+;
+insert into PCOFGSs
+select element {'id':1,'Phylum':'Chordata','lower':S}
+from  COFGSs as S
+where (S.lower.lower.lower.lower.Species = 'Gulo')
+;
+insert into PCOFGSs
+select element {'id':2,'Phylum':'Chordata','lower':S}
+from  COFGSs as S
+where (S.lower.lower.lower.lower.Species = 'Johnstoni')
+;
+insert into KPCOFGSs
+select element {'id':1,'Kingdom':'Animalia','lower':S}
+from  PCOFGSs as S
+where (S.lower.lower.lower.lower.lower.Species = 'Gulo')
+;
+insert into KPCOFGSs
+select element {'id':2,'Kingdom':'Animalia','lower':S}
+from  PCOFGSs as S
+where (S.lower.lower.lower.lower.lower.Species = 'Johnstoni')
+;
+insert into Classifications
+select element {'id':1,'fullClassification':S}
+from  KPCOFGSs as S
+where (S.lower.lower.lower.lower.lower.lower.Species = 'Gulo')
+;
+insert into Classifications
+select element {'id':2,'fullClassification':S}
+from  KPCOFGSs as S
+where (S.lower.lower.lower.lower.lower.lower.Species = 'Johnstoni')
+;
+insert into Animals
+select element {'id':1,'class':S}
+from  Classifications as S
+where (S.fullClassification.lower.lower.lower.lower.lower.lower.Species = 'Gulo')
+;
+insert into Animals
+select element {'id':2,'class':S}
+from  Classifications as S
+where (S.fullClassification.lower.lower.lower.lower.lower.lower.Species = 'Johnstoni')
+;

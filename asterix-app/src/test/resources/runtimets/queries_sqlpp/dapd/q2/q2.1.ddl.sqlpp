@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.AddressType as
+ closed {
+  street : string,
+  city : string,
+  zip : string,
+  latlong : point
+}
+
+create type test.EventType as
+ closed {
+  event_id : int64,
+  name : string,
+  location : AddressType?,
+  organizers : {{{
+          name : string
+      }
+}},
+  sponsoring_sigs : [{
+          sig_id : int64,
+          chapter_name : string
+      }
+],
+  interest_keywords : {{string}},
+  price : double?,
+  start_time : datetime,
+  end_time : datetime
+}
+
+create external  table Event(EventType) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/events/tiny/event.adm"),("format"="adm"));
+

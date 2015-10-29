@@ -1,0 +1,272 @@
+DataverseUse tpch
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+TypeDecl SupplierType [
+  closed RecordType {
+    s_suppkey : int32,
+    s_name : string,
+    s_address : string,
+    s_nationkey : int32,
+    s_phone : string,
+    s_acctbal : double,
+    s_comment : string
+  }
+]
+TypeDecl NationType [
+  closed RecordType {
+    n_nationkey : int32,
+    n_name : string,
+    n_regionkey : int32,
+    n_comment : string
+  }
+]
+TypeDecl RegionType [
+  closed RecordType {
+    r_regionkey : int32,
+    r_name : string,
+    r_comment : string
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+DatasetDecl Supplier(SupplierType) partitioned by [[s_suppkey]]
+DatasetDecl Region(RegionType) partitioned by [[r_regionkey]]
+DatasetDecl Nation(NationType) partitioned by [[n_nationkey]]
+DatasetDecl Customer(CustomerType) partitioned by [[c_custkey]]
+DatasetDecl SelectedNation(NationType) partitioned by [[n_nationkey]]
+Query:
+LetVariable [ Name=t ]
+  :=
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [n_nationkey]
+        :
+        FieldAccessor [
+          Variable [ Name=nation ]
+          Field=n_nationkey
+        ]
+      )
+      (
+        LiteralExpr [STRING] [n_name]
+        :
+        FieldAccessor [
+          Variable [ Name=nation ]
+          Field=n_name
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Nation]
+      ]
+      AS
+      Variable [ Name=nation ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [SelectedNation]
+      ]
+      AS
+      Variable [ Name=sn ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=nation ]
+          Field=n_nationkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=sn ]
+          Field=n_nationkey
+        ]
+      ]
+  )
+LetVariable [ Name=X ]
+  :=
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [nation_key]
+        :
+        Variable [ Name=nation_key ]
+      )
+      (
+        LiteralExpr [STRING] [order_date]
+        :
+        Variable [ Name=orderdate ]
+      )
+      (
+        LiteralExpr [STRING] [sum_price]
+        :
+        Variable [ Name=sum ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=t ]
+      AS
+      Variable [ Name=n ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Customer]
+      ]
+      AS
+      Variable [ Name=customer ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Orders]
+      ]
+      AS
+      Variable [ Name=orders ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=orders ]
+            Field=o_custkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=customer ]
+            Field=c_custkey
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=customer ]
+            Field=c_nationkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=n ]
+            Field=n_nationkey
+          ]
+        ]
+      ]
+    Groupby
+      Variable [ Name=orderdate ]
+      :=
+      FieldAccessor [
+        Variable [ Name=orders ]
+        Field=o_orderdate
+      ]
+      Variable [ Name=nation_key ]
+      :=
+      FieldAccessor [
+        Variable [ Name=n ]
+        Field=n_nationkey
+      ]
+      With
+      Variable [ Name=orders ]
+      Variable [ Name=n ]
+      Variable [ Name=customer ]
+      Variable [ Name=X ]
+      Variable [ Name=t ]
+
+    LetVariable [ Name=sum ]
+      :=
+      FunctionCall tpch.sum@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            Variable [ Name=o ]
+            Field=o_totalprice
+          ]
+          ]
+          FROM [            Variable [ Name=orders ]
+            AS
+            Variable [ Name=o ]
+          ]
+        )
+      ]
+  )
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [nation_key]
+    :
+    Variable [ Name=nation_key ]
+  )
+  (
+    LiteralExpr [STRING] [sum_price]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [orderdate]
+          :
+          FieldAccessor [
+            Variable [ Name=y ]
+            Field=order_date
+          ]
+        )
+        (
+          LiteralExpr [STRING] [sum_price]
+          :
+          FieldAccessor [
+            Variable [ Name=y ]
+            Field=sum_price
+          ]
+        )
+      ]
+      ]
+      FROM [        Variable [ Name=x ]
+        AS
+        Variable [ Name=y ]
+      ]
+      Orderby
+        FieldAccessor [
+          Variable [ Name=y ]
+          Field=sum_price
+        ]
+        DESC
+
+      Limit
+        LiteralExpr [LONG] [3]
+    )
+  )
+]
+]
+FROM [  Variable [ Name=X ]
+  AS
+  Variable [ Name=x ]
+]
+Groupby
+  Variable [ Name=nation_key ]
+  :=
+  FieldAccessor [
+    Variable [ Name=x ]
+    Field=nation_key
+  ]
+  With
+  Variable [ Name=x ]
+  Variable [ Name=X ]
+  Variable [ Name=t ]
+

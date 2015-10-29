@@ -1,0 +1,9 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+UnorderedListConstructor [
+  LiteralExpr [NULL]
+  LiteralExpr [NULL]
+  LiteralExpr [NULL]
+]
+]

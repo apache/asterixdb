@@ -1,0 +1,44 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [distance]
+    :
+    Variable [ Name=distance ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+LetVariable [ Name=distance ]
+  :=
+  FunctionCall test.spatial-distance@2[
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=point
+    ]
+    FunctionCall test.create-point@2[
+      LiteralExpr [DOUBLE] [0.0]
+      LiteralExpr [DOUBLE] [0.0]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=id
+  ]
+  ASC
+

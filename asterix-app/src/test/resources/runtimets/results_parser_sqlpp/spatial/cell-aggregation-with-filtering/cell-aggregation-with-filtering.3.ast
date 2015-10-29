@@ -1,0 +1,103 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cell]
+    :
+    Variable [ Name=c ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    Variable [ Name=num ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TwitterData]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+LetVariable [ Name=keywords ]
+  :=
+  LiteralExpr [STRING] [Allergies]
+LetVariable [ Name=region ]
+  :=
+  FunctionCall test.polygon@1[
+    LiteralExpr [STRING] [
+	33.80503407287759,-126.41235263538363 
+	44.9090773200516,-126.41235263538363 
+	44.9090773200516,-87.65258701038363 
+	33.80503407287759,-87.65258701038363]
+  ]
+Where
+  OperatorExpr [
+    FunctionCall test.spatial-intersect@2[
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=loc
+      ]
+      Variable [ Name=region ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=time
+      ]
+      >
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2011-05-15T00:00:00Z]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=time
+      ]
+      <
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2011-05-16T23:59:59Z]
+      ]
+    ]
+    and
+    FunctionCall test.contains@2[
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=text
+      ]
+      Variable [ Name=keywords ]
+    ]
+  ]
+Groupby
+  Variable [ Name=c ]
+  :=
+  FunctionCall test.spatial-cell@4[
+    FieldAccessor [
+      Variable [ Name=t ]
+      Field=loc
+    ]
+    FunctionCall test.create-point@2[
+      LiteralExpr [DOUBLE] [24.5]
+      NEGATIVE LiteralExpr [DOUBLE] [125.5]
+    ]
+    LiteralExpr [DOUBLE] [3.0]
+    LiteralExpr [DOUBLE] [3.0]
+  ]
+  With
+  Variable [ Name=region ]
+  Variable [ Name=keywords ]
+  Variable [ Name=t ]
+
+LetVariable [ Name=num ]
+  :=
+  FunctionCall test.count@1[
+    Variable [ Name=t ]
+  ]
+Orderby
+  Variable [ Name=num ]
+  ASC
+

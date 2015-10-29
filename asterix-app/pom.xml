@@ -131,13 +131,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.asterix</groupId>
-            <artifactId>asterix-aql</artifactId>
-            <version>0.8.8-SNAPSHOT</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.asterix</groupId>
             <artifactId>asterix-om</artifactId>
             <version>0.8.8-SNAPSHOT</version>
             <type>jar</type>
@@ -224,5 +217,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 </project>

@@ -1,0 +1,88 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    interests : OrderedList [string]
+,
+    children : OrderedList [          open RecordType {
+            name : string,
+            age : int32?
+          }
+]
+
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+DatasetDecl Customers2(CustomerType) partitioned by [[cid]]
+WriteOutputTo nc1:rttest/inverted-index-join-noeqjoin_olist-fuzzyeq-edit-distance.adm
+Set simfunction=edit-distance
+Set simthreshold=3
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [ainterests]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=interests
+    ]
+  )
+  (
+    LiteralExpr [STRING] [binterests]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=interests
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=interests
+      ]
+      ~=
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=interests
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=cid
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=cid
+      ]
+    ]
+  ]

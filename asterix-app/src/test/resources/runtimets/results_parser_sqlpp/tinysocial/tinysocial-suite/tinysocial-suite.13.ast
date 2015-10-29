@@ -1,0 +1,38 @@
+DataverseUse TinySocial
+Query:
+SELECT ELEMENT [
+Variable [ Name=fbu ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS
+  Variable [ Name=fbu ]
+]
+Where
+  QuantifiedExpression EVERY [
+    [Variable [ Name=e ]
+    In
+      FieldAccessor [
+        Variable [ Name=fbu ]
+        Field=employment
+      ]
+    ]
+    Satifies [
+      FunctionCall TinySocial.not@1[
+        FunctionCall TinySocial.is-null@1[
+          FieldAccessor [
+            Variable [ Name=e ]
+            Field=end-date
+          ]
+        ]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=fbu ]
+    Field=id
+  ]
+  ASC
+

@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.sql-max@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=val
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Test]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+  )
+]
+]

@@ -1,0 +1,84 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] []
+      LiteralExpr [NULL]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [bra]
+      LiteralExpr [STRING] [XXX]
+      LiteralExpr [STRING] []
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [hello world]
+      LiteralExpr [STRING] [XxXx]
+      LiteralExpr [STRING] [x]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [bra]
+      LiteralExpr [STRING] [XXX]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [XXX]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result6]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [Bra]
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [i]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result7]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [Bra]
+      LiteralExpr [STRING] []
+      LiteralExpr [STRING] [i]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result8]
+    :
+    FunctionCall test.replace@4[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] []
+      LiteralExpr [STRING] [XXX]
+      LiteralExpr [STRING] []
+    ]
+  )
+]

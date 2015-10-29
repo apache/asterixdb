@@ -1,0 +1,398 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [before1]
+    :
+    FunctionCall test.interval-before@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2011-10-30]
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [before2]
+    :
+    FunctionCall test.interval-before@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-12-21]
+        LiteralExpr [STRING] [2013-01-01]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [after1]
+    :
+    FunctionCall test.interval-after@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2011-10-30]
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [after2]
+    :
+    FunctionCall test.interval-after@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-12-21]
+        LiteralExpr [STRING] [2013-01-01]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [meet1]
+    :
+    FunctionCall test.interval-meets@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [20120727T020202222]
+        LiteralExpr [STRING] [2013-08-08T03:03:03.333]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [meet2]
+    :
+    FunctionCall test.interval-meets@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19000707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [metby1]
+    :
+    FunctionCall test.interval-met-by@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [20120727T020202222]
+        LiteralExpr [STRING] [2013-08-08T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [metby2]
+    :
+    FunctionCall test.interval-met-by@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19000707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [2012-06-26T01:01:01.111]
+        LiteralExpr [STRING] [2012-07-27T02:02:02.222]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlaps1]
+    :
+    FunctionCall test.interval-overlaps@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [12:32:38]
+        LiteralExpr [STRING] [20:29:20]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlaps2]
+    :
+    FunctionCall test.interval-overlaps@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [01:32:49]
+        LiteralExpr [STRING] [17:48:19]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlapped1]
+    :
+    FunctionCall test.interval-overlapped-by@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [12:32:38]
+        LiteralExpr [STRING] [20:29:20]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlapped2]
+    :
+    FunctionCall test.interval-overlapped-by@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [01:32:49]
+        LiteralExpr [STRING] [17:48:19]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap1]
+    :
+    FunctionCall test.interval-overlapping@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [01:32:49]
+        LiteralExpr [STRING] [17:48:19]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [12:32:38]
+        LiteralExpr [STRING] [20:29:20]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap2]
+    :
+    FunctionCall test.interval-overlapping@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [01:32:49]
+        LiteralExpr [STRING] [17:48:19]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [starts1]
+    :
+    FunctionCall test.interval-starts@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [starts2]
+    :
+    FunctionCall test.interval-starts@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2011-10-30]
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [startedby1]
+    :
+    FunctionCall test.interval-started-by@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-12-21]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [startedby2]
+    :
+    FunctionCall test.interval-started-by@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2011-10-30]
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [covers1]
+    :
+    FunctionCall test.interval-covers@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [covers2]
+    :
+    FunctionCall test.interval-covers@2[
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [-19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [coveredby1]
+    :
+    FunctionCall test.interval-covered-by@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [coveredby2]
+    :
+    FunctionCall test.interval-covered-by@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [-19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2010-10-30]
+        LiteralExpr [STRING] [2010-11-30]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ends1]
+    :
+    FunctionCall test.interval-ends@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [12:32:38]
+        LiteralExpr [STRING] [20:29:20]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ends2]
+    :
+    FunctionCall test.interval-ends@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [endedby1]
+    :
+    FunctionCall test.interval-ended-by@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [12:32:38]
+        LiteralExpr [STRING] [20:29:20]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [endedby2]
+    :
+    FunctionCall test.interval-ended-by@2[
+      FunctionCall test.interval-from-time@2[
+        LiteralExpr [STRING] [17:48:19]
+        LiteralExpr [STRING] [22:19:49]
+      ]
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null1]
+    :
+    FunctionCall test.interval-before@2[
+      LiteralExpr [NULL]
+      FunctionCall test.interval-from-date@2[
+        LiteralExpr [STRING] [2011-10-30]
+        LiteralExpr [STRING] [2012-10-21]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null2]
+    :
+    FunctionCall test.interval-covered-by@2[
+      FunctionCall test.interval-from-datetime@2[
+        LiteralExpr [STRING] [19990707T020202222]
+        LiteralExpr [STRING] [2013-08-07T03:03:03.333]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null3]
+    :
+    FunctionCall test.interval-overlapping@2[
+      LiteralExpr [NULL]
+      LiteralExpr [NULL]
+    ]
+  )
+]

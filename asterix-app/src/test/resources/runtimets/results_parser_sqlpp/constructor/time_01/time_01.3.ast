@@ -1,0 +1,81 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [time1]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [10:50:56.200+05:00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time2]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [10:50:56.200-10:15]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time3]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [10:50:56]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time4]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [10:50:56.200Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time5]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [23:59:59.999-13:30]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time6]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [00:00:00.000+14:45]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time7]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [12:59:00.019-01:00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time8]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [12:59:00.01-01:00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time9]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [12:59:00.019-01:00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time10]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [12590001-0100]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time11]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [125900019+0100]
+    ]
+  )
+]

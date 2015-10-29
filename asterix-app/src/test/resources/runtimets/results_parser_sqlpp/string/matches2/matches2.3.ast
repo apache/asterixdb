@@ -1,0 +1,12 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.matches@2[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [^a.*a$]
+    ]
+  )
+]

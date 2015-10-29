@@ -1,0 +1,19 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=l ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Metadata.Function]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=DataverseName
+    ]
+    =
+    LiteralExpr [STRING] [testdv1]
+  ]

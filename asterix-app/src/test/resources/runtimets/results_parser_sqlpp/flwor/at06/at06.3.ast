@@ -1,0 +1,100 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [partkey]
+    :
+    FieldAccessor [
+      Variable [ Name=gen0 ]
+      Field=partkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [pid]
+    :
+    Variable [ Name=p ]
+  )
+  (
+    LiteralExpr [STRING] [shipdate]
+    :
+    FieldAccessor [
+      Variable [ Name=j ]
+      Field=l_shipdate
+    ]
+  )
+  (
+    LiteralExpr [STRING] [orderkey]
+    :
+    FieldAccessor [
+      Variable [ Name=j ]
+      Field=l_orderkey
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [partkey]
+        :
+        Variable [ Name=partkey ]
+      )
+      (
+        LiteralExpr [STRING] [i]
+        :
+        Variable [ Name=i ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItem]
+      ]
+      AS
+      Variable [ Name=i ]
+    ]
+    Groupby
+      Variable [ Name=partkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=l_partkey
+      ]
+      With
+      Variable [ Name=i ]
+
+  )
+  AS
+  Variable [ Name=gen0 ]
+,
+  (
+    SELECT ELEMENT [
+    Variable [ Name=ii ]
+    ]
+    FROM [      FieldAccessor [
+        Variable [ Name=gen0 ]
+        Field=i
+      ]
+      AS
+      Variable [ Name=ii ]
+    ]
+    Orderby
+      FieldAccessor [
+        Variable [ Name=ii ]
+        Field=l_shipdate
+      ]
+      ASC
+
+  )
+  AS
+  Variable [ Name=j ]
+  AT
+  Variable [ Name=p ]
+]
+Where
+  OperatorExpr [
+    Variable [ Name=p ]
+    <
+    LiteralExpr [LONG] [4]
+  ]

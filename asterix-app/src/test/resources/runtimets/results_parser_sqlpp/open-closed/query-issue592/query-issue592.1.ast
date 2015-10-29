@@ -1,0 +1,14 @@
+DataverseUse fooverse
+TypeDecl bartype [
+  open RecordType {
+    baz : int64
+  }
+]
+TypeDecl footype [
+  open RecordType {
+    id : int64,
+    bars : OrderedList [bartype]
+?
+  }
+]
+DatasetDecl fooset(footype) partitioned by [[id]]

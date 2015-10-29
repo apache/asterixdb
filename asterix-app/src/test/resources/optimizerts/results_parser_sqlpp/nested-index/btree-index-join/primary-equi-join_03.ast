@@ -1,0 +1,95 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerTypetmp [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int32,
+        total : float
+      }
+
+  }
+]
+TypeDecl OrderTypetmp [
+  closed RecordType {
+    oid : int32,
+    cid : int32,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    nested : CustomerTypetmp
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    nested : OrderTypetmp
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
+DatasetDecl Orders(OrderType) partitioned by [[nested, oid]]
+WriteOutputTo nc1:rttest/btree-index-join_primary-equi-join_04.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [customer]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=nested
+    ]
+  )
+  (
+    LiteralExpr [STRING] [order]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=nested
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=nested
+      ]
+      Field=cid
+    ]
+    =
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=cid
+    ]
+  ]

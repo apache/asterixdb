@@ -1,0 +1,13 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  FunctionCall test.is-null@1[
+    LiteralExpr [NULL]
+  ]
+  FunctionCall test.is-null@1[
+    LiteralExpr [LONG] [10]
+  ]
+]
+]
