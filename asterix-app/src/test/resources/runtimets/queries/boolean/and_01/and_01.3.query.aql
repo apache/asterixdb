@@ -18,6 +18,6 @@
  */
 use dataverse test;
 
-for $x in ["true"]
-for $y in ["false"]
+let $x := boolean("true")
+let $y := boolean("false")
 return $x and $y

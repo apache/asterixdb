@@ -35,19 +35,24 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.httpclient.*;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
+import org.apache.asterix.testframework.context.TestFileContext;
+import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
-
-import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
-import org.apache.asterix.testframework.context.TestFileContext;
-import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 
 public class TestsUtils {
 
@@ -383,6 +388,11 @@ public class TestsUtils {
 
     public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
             boolean isDmlRecoveryTest) throws Exception {
+        executeTest(actualPath, testCaseCtx, pb, isDmlRecoveryTest, null);
+    }
+
+    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
+            boolean isDmlRecoveryTest, TestGroup failedGroup) throws Exception {
 
         File testFile;
         File expectedResultFile;
@@ -395,7 +405,8 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
+            LOGGER.info(
+                    "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
             for (TestFileContext ctx : testFileCtxs) {
@@ -524,16 +535,22 @@ public class TestsUtils {
                     }
 
                 } catch (Exception e) {
+
                     System.err.println("testFile " + testFile.toString() + " raised an exception:");
+
                     e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         System.err.println("...Unexpected!");
+                        if (failedGroup != null) {
+                            failedGroup.getTestCase().add(testCaseCtx.getTestCase());
+                        }
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     } else {
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                 + " failed as expected: " + e.getMessage());
                         System.err.println("...but that was expected.");
                     }
+
                 }
             }
         }

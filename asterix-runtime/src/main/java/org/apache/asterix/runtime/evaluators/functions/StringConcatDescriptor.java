@@ -38,10 +38,9 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.util.StringUtils;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -74,6 +73,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final byte[] tempLengthArray = new byte[5];
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -81,7 +81,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                             outInputList.reset();
                             evalList.evaluate(tuple);
                             byte[] listBytes = outInputList.getByteArray();
-                            if (listBytes[0] != SER_ORDEREDLIST_TYPE_TAG && listBytes[0] != SER_UNORDEREDLIST_TYPE_TAG) {
+                            if (listBytes[0] != SER_ORDEREDLIST_TYPE_TAG
+                                    && listBytes[0] != SER_UNORDEREDLIST_TYPE_TAG) {
                                 throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
                                         + ": expects input type ORDEREDLIST/UNORDEREDLIST, but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(listBytes[0]));
@@ -110,19 +111,20 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                         throw new AlgebricksException(AsterixBuiltinFunctions.STRING_CONCAT.getName()
                                                 + ": expects type STRING/NULL for the list item but got " + itemType);
                                     }
-                                    utf8Len += UTF8StringPointable.getUTFLength(listBytes, itemOffset);
+                                    utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                                 }
                                 out.writeByte(ATypeTag.STRING.serialize());
-                                StringUtils.writeUTF8Len(utf8Len, out);
+                                int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);
+                                out.write(tempLengthArray, 0, cbytes);
+
                                 for (int i = 0; i < listAccessor.size(); i++) {
                                     int itemOffset = listAccessor.getItemOffset(i);
                                     if (listAccessor.itemsAreSelfDescribing()) {
                                         itemOffset += 1;
                                     }
-                                    utf8Len = UTF8StringPointable.getUTFLength(listBytes, itemOffset);
-                                    for (int j = 0; j < utf8Len; j++) {
-                                        out.writeByte(listBytes[2 + itemOffset + j]);
-                                    }
+                                    utf8Len = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
+                                    out.write(listBytes, UTF8StringUtil.getNumBytesToStoreLength(utf8Len) + itemOffset,
+                                            utf8Len);
                                 }
                             } catch (AsterixException ex) {
                                 throw new AlgebricksException(ex);

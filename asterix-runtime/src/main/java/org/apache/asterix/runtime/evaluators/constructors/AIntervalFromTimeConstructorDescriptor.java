@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInterval;
@@ -42,6 +41,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -83,6 +83,7 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -105,12 +106,13 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                             if (argOut0.getByteArray()[0] == SER_TIME_TYPE_TAG) {
                                 intervalStart = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                                utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
                                 // start date
-                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
-                                        + (argOut0.getByteArray()[2] & 0xff << 0);
+                                int stringLength = utf8Ptr.getUTF8Length();
 
-                                intervalStart = ATimeParserFactory.parseTimePart(argOut0.getByteArray(), 3,
-                                        stringLength);
+                                intervalStart = ATimeParserFactory
+                                        .parseTimePart(utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/TIME for the first argument, but got "
@@ -124,11 +126,13 @@ public class AIntervalFromTimeConstructorDescriptor extends AbstractScalarFuncti
                             if (argOut1.getByteArray()[0] == SER_TIME_TYPE_TAG) {
                                 intervalEnd = ATimeSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
+                                utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
                                 // start date
-                                int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                        + (argOut1.getByteArray()[2] & 0xff << 0);
+                                int stringLength = utf8Ptr.getUTF8Length();
 
-                                intervalEnd = ATimeParserFactory.parseTimePart(argOut1.getByteArray(), 3, stringLength);
+                                intervalEnd = ATimeParserFactory
+                                        .parseTimePart(argOut1.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength);
 
                             } else {
                                 throw new AlgebricksException(FID.getName()

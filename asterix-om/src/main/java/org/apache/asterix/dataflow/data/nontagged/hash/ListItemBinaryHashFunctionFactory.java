@@ -21,7 +21,6 @@ package org.apache.asterix.dataflow.data.nontagged.hash;
 
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.UTF8StringLowercasePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
@@ -29,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
 
 /**

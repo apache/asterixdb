@@ -59,9 +59,10 @@ public class AOrderedListBinaryTokenizer implements IBinaryTokenizer {
             itemOffset = getItemOffset(data, start, itemIndex);
             // Assuming homogeneous list.
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[start + 1]);
+            // ? Can we handle the non-string type ?
             length = NonTaggedFormatUtil.getFieldValueLength(data, itemOffset, typeTag, false);
             // Last param is a hack to pass the type tag.
-            token.reset(data, itemOffset, length, length, data[start + 1]);
+            token.reset(data, itemOffset, itemOffset + length, length, data[start + 1]);
         } catch (AsterixException e) {
             throw new IllegalStateException(e);
         }

@@ -32,20 +32,6 @@ import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 public class AInt32Printer implements IPrinter {
 
     private static final String SUFFIX_STRING = "i32";
-    private static byte[] _suffix;
-    private static int _suffix_count;
-    static {
-        ByteArrayAccessibleOutputStream interm = new ByteArrayAccessibleOutputStream();
-        DataOutput dout = new DataOutputStream(interm);
-        try {
-            dout.writeUTF(SUFFIX_STRING);
-            interm.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        _suffix = interm.getByteArray();
-        _suffix_count = interm.size();
-    }
 
     public static final AInt32Printer INSTANCE = new AInt32Printer();
 
@@ -58,7 +44,7 @@ public class AInt32Printer implements IPrinter {
         int d = AInt32SerializerDeserializer.getInt(b, s + 1);
         try {
             WriteValueTools.writeInt(d, ps);
-            WriteValueTools.writeUTF8StringNoQuotes(_suffix, 0, _suffix_count, ps);
+            WriteValueTools.writeUTF8StringNoQuotes(SUFFIX_STRING, ps);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -112,6 +110,7 @@ import org.apache.asterix.om.typecomputer.impl.UnaryStringInt64OrNullTypeCompute
 import org.apache.asterix.om.typecomputer.impl.UnaryStringOrNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorResultType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -238,10 +237,6 @@ public class AsterixBuiltinFunctions {
     // String funcitons
     public final static FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string-equal", 2);
-    public final static FunctionIdentifier STRING_START_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "start-with", 2);
-    public final static FunctionIdentifier STRING_END_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "end-with", 2);
     public final static FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "matches", 2);
     public final static FunctionIdentifier STRING_MATCHES_WITH_FLAG = new FunctionIdentifier(
@@ -256,6 +251,17 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "replace", 4);
     public final static FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "string-length", 1);
+    public final static FunctionIdentifier STRING_LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like",
+            2);
+    public final static FunctionIdentifier STRING_CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "contains",
+            2);
+    public final static FunctionIdentifier STRING_STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "starts-with", 2);
+    public final static FunctionIdentifier STRING_ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "ends-with", 2);
+    public final static FunctionIdentifier SUBSTRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
+            "substring", 3);
     public final static FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
             "substring", 2);
     public final static FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
@@ -286,16 +292,6 @@ public class AsterixBuiltinFunctions {
             FunctionConstants.ASTERIX_NS, "make-field-nested-handle", 3);
     public final static FunctionIdentifier MAKE_FIELD_NAME_HANDLE = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "make-field-name-handle", 1);
-
-    public final static FunctionIdentifier SUBSTRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "substring", 3);
-    public final static FunctionIdentifier LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2);
-    public final static FunctionIdentifier CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "contains",
-            2);
-    public final static FunctionIdentifier STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "starts-with", 2);
-    public final static FunctionIdentifier ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ends-with", 2);
 
     public final static FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public final static FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
@@ -755,7 +751,6 @@ public class AsterixBuiltinFunctions {
         addFunction(CIRCLE_CONSTRUCTOR, OptionalACircleTypeComputer.INSTANCE, true);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
 
-        addFunction(CONTAINS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(COUNT, AInt64TypeComputer.INSTANCE, true);
         addPrivateFunction(COUNTHASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(COUNTHASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
@@ -780,7 +775,6 @@ public class AsterixBuiltinFunctions {
         addPrivateFunction(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(EMBED_TYPE, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
-        addFunction(ENDS_WITH, ABooleanTypeComputer.INSTANCE, true);
         // add(FIELD_ACCESS, NonTaggedFieldAccessByNameResultType.INSTANCE);
 
         addFunction(FLOAT_CONSTRUCTOR, OptionalAFloatTypeComputer.INSTANCE, true);
@@ -798,7 +792,6 @@ public class AsterixBuiltinFunctions {
         addFunction(INT32_CONSTRUCTOR, OptionalAInt32TypeComputer.INSTANCE, true);
         addFunction(INT64_CONSTRUCTOR, OptionalAInt64TypeComputer.INSTANCE, true);
         addFunction(LEN, OptionalAInt64TypeComputer.INSTANCE, true);
-        addFunction(LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
         addFunction(LINE_CONSTRUCTOR, OptionalALineTypeComputer.INSTANCE, true);
         addPrivateFunction(LISTIFY, OrderedListConstructorResultType.INSTANCE, true);
         addPrivateFunction(LOCAL_AVG, NonTaggedLocalAvgTypeComputer.INSTANCE, true);
@@ -833,6 +826,8 @@ public class AsterixBuiltinFunctions {
         addFunction(FIND_BINARY, OptionalAInt64TypeComputer.INSTANCE, true);
         addFunction(FIND_BINARY_FROM, OptionalAInt64TypeComputer.INSTANCE, true);
 
+        addFunction(STRING_LIKE, BinaryBooleanOrNullFunctionTypeComputer.INSTANCE, true);
+        addFunction(STRING_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_TO_CODEPOINT, OrderedListOfAInt64TypeComputer.INSTANCE, true);
         addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true);
         addFunction(STRING_CONCAT, OptionalAStringTypeComputer.INSTANCE, true);
@@ -840,8 +835,8 @@ public class AsterixBuiltinFunctions {
         addFunction(STRING_LENGTH, UnaryStringInt64OrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_LOWERCASE, UnaryStringOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_UPPERCASE, UnaryStringOrNullTypeComputer.INSTANCE, true);
-        addFunction(STRING_START_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
-        addFunction(STRING_END_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_STARTS_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
+        addFunction(STRING_ENDS_WITH, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_MATCHES, BinaryStringBoolOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_MATCHES_WITH_FLAG, TripleStringBoolOrNullTypeComputer.INSTANCE, true);
         addFunction(STRING_REPLACE, TripleStringStringOrNullTypeComputer.INSTANCE, true);
@@ -917,7 +912,6 @@ public class AsterixBuiltinFunctions {
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
-        addFunction(STARTS_WITH, ABooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_CONSTRUCTOR, OptionalAStringTypeComputer.INSTANCE, true);
         addFunction(BINARY_HEX_CONSTRUCTOR, OptionalABinaryTypeComputer.INSTANCE, true);
         addFunction(BINARY_BASE64_CONSTRUCTOR, OptionalABinaryTypeComputer.INSTANCE, true);
@@ -1229,7 +1223,8 @@ public class AsterixBuiltinFunctions {
                 || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
             return true;
         }
-        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(), signature.getArity());
+        fi = new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_NS, signature.getName(),
+                signature.getArity());
         finfo = getAsterixFunctionInfo(fi);
         if (builtinPublicFunctionsSet.keySet().contains(finfo)
                 || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
@@ -1342,7 +1337,8 @@ public class AsterixBuiltinFunctions {
         registeredFunctionsDomain.put(functionInfo, funcDomain);
     }
 
-    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer, boolean isFunctional) {
+    public static void addPrivateFunction(FunctionIdentifier fi, IResultTypeComputer typeComputer,
+            boolean isFunctional) {
         IFunctionInfo functionInfo = new AsterixFunctionInfo(fi, isFunctional);
         builtinPrivateFunctionsSet.put(functionInfo, functionInfo);
         funTypeComputer.put(functionInfo, typeComputer);

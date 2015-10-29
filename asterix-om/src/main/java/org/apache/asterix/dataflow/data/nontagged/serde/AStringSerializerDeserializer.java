@@ -31,15 +31,14 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
 
     private static final long serialVersionUID = 1L;
 
-    public static final AStringSerializerDeserializer INSTANCE = new AStringSerializerDeserializer();
+    private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
 
-    private AStringSerializerDeserializer() {
-    }
+    public AStringSerializerDeserializer() {}
 
     @Override
     public AString deserialize(DataInput in) throws HyracksDataException {
         try {
-            return new AString(UTF8StringSerializerDeserializer.INSTANCE.deserialize(in));
+            return new AString(utf8SerDer.deserialize(in));
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -48,7 +47,7 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
     @Override
     public void serialize(AString instance, DataOutput out) throws HyracksDataException {
         try {
-            UTF8StringSerializerDeserializer.INSTANCE.serialize(instance.getStringValue(), out);
+            utf8SerDer.serialize(instance.getStringValue(), out);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

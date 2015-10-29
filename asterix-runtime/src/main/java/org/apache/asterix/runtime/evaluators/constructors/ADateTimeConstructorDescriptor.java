@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -75,6 +76,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -85,7 +87,9 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
-                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
+                                int stringLength = utf8Ptr.getUTF8Length();
+                                int startOffset = utf8Ptr.getCharStartOffset();
                                 // the string to be parsed should be at least 14 characters: YYYYMMDDhhmmss
                                 if (stringLength < 14) {
                                     throw new AlgebricksException(errorMessage
@@ -93,21 +97,23 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                             + stringLength);
                                 }
                                 // +1 if it is negative (-)
-                                short timeOffset = (short) ((serString[3] == '-') ? 1 : 0);
+                                short timeOffset = (short) ((serString[startOffset] == '-') ? 1 : 0);
 
                                 timeOffset += 8;
 
-                                if (serString[3 + timeOffset] != 'T') {
+                                if (serString[startOffset + timeOffset] != 'T') {
                                     timeOffset += 2;
-                                    if (serString[3 + timeOffset] != 'T') {
+                                    if (serString[startOffset + timeOffset] != 'T') {
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
 
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, 3, timeOffset);
+                                long chrononTimeInMs = ADateParserFactory
+                                        .parseDatePart(serString, startOffset, timeOffset);
 
-                                chrononTimeInMs += ATimeParserFactory.parseTimePart(serString, 3 + timeOffset + 1,
-                                        stringLength - timeOffset - 1);
+                                chrononTimeInMs += ATimeParserFactory
+                                        .parseTimePart(serString, startOffset + timeOffset + 1,
+                                                stringLength - timeOffset - 1);
 
                                 aDateTime.setValue(chrononTimeInMs);
                                 datetimeSerde.serialize(aDateTime, out);

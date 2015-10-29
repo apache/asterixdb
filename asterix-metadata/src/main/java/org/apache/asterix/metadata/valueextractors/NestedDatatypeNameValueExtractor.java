@@ -43,6 +43,7 @@ public class NestedDatatypeNameValueExtractor implements IValueExtractor<String>
     public NestedDatatypeNameValueExtractor(String datatypeName) {
         this.datatypeName = datatypeName;
     }
+    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
 
     @Override
     public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
@@ -51,13 +52,13 @@ public class NestedDatatypeNameValueExtractor implements IValueExtractor<String>
         int recordLength = tuple.getFieldLength(2);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        String nestedType = ((AString) AObjectSerializerDeserializer.INSTANCE.deserialize(in)).getStringValue();
+        String nestedType = ((AString) aObjSerDer.deserialize(in)).getStringValue();
         if (nestedType.equals(datatypeName)) {
             recordStartOffset = tuple.getFieldStart(1);
             recordLength = tuple.getFieldLength(1);
             stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
             in = new DataInputStream(stream);
-            return ((AString) AObjectSerializerDeserializer.INSTANCE.deserialize(in)).getStringValue();
+            return ((AString) aObjSerDer.deserialize(in)).getStringValue();
         }
         return null;
     }

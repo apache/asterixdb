@@ -45,6 +45,7 @@ public class RecordBuilder implements IARecordBuilder {
     private final static int DEFAULT_NUM_OPEN_FIELDS = 10;
     private final static byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final static byte RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
+    private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
 
     private int openPartOffsetArraySize;
     private byte[] openPartOffsetArray;
@@ -226,9 +227,8 @@ public class RecordBuilder implements IARecordBuilder {
                 for (int i = 1; i < numberOfOpenFields; i++) {
                     if (utf8Comparator.compare(openBytes, (int) openPartOffsets[i - 1], openFieldNameLengths[i - 1],
                             openBytes, (int) openPartOffsets[i], openFieldNameLengths[i]) == 0) {
-                        String field = UTF8StringSerializerDeserializer.INSTANCE
-                                .deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
-                                        (int) openPartOffsets[i], openFieldNameLengths[i])));
+                        String field = utf8SerDer.deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
+                                (int) openPartOffsets[i], openFieldNameLengths[i])));
                         throw new AsterixException("Open fields " + (i - 1) + " and " + i
                                 + " have the same field name \"" + field + "\"");
                     }

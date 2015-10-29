@@ -39,8 +39,10 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -66,9 +68,10 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
                     private String errorMessage = "This can not be an instance of float";
-                    private final byte[] POSITIVE_INF = { 0, 3, 'I', 'N', 'F' };
-                    private final byte[] NEGATIVE_INF = { 0, 4, '-', 'I', 'N', 'F' };
-                    private final byte[] NAN = { 0, 3, 'N', 'a', 'N' };
+                    private final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
+                    private final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
+                    private final byte[] NAN = UTF8StringUtil.writeStringToBytes("NaN");
+
                     // private int offset = 3, value = 0, pointIndex = 0, eIndex
                     // = 1;
                     // private int integerPart = 0, fractionPart = 0,
@@ -86,6 +89,7 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -101,11 +105,13 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(),
                                         NEGATIVE_INF, 0, 6) == 0) {
                                     aFloat.setValue(Float.NEGATIVE_INFINITY);
-                                } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NAN, 0, 5) == 0) {
+                                } else if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NAN, 0, 5)
+                                        == 0) {
                                     aFloat.setValue(Float.NaN);
-                                } else
-                                    aFloat.setValue(Float.parseFloat(new String(serString, 3, outInput.getLength() - 3,
-                                            "UTF-8")));
+                                } else {
+                                    utf8Ptr.set(serString, 1, outInput.getLength() -1);
+                                    aFloat.setValue(Float.parseFloat(utf8Ptr.toString()));
+                                }
                                 floatSerde.serialize(aFloat, out);
 
                             } else if (serString[0] == SER_NULL_TYPE_TAG)

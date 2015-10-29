@@ -226,27 +226,22 @@ public class JObjectAccessors {
     }
 
     public static class JStringAccessor implements IJObjectAccessor {
-        private final ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
+        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
 
         @Override
         public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
                 throws HyracksDataException {
-            IJObject jObject = objectPool.allocate(BuiltinType.ASTRING);
+            byte[] b = pointable.getByteArray();
+            int s = pointable.getStartOffset();
+            int l = pointable.getLength();
 
-            try {
-                byte byteArray[] = pointable.getByteArray();
-                int len = pointable.getLength()-3;
-                int off = pointable.getStartOffset()+3;
-                baaos.reset();
-                if(off >= 0 && off <= byteArray.length && len >= 0 && off + len - byteArray.length <= 0) {
-                    baaos.write(byteArray, off, len);
-                    ((JString) jObject).setValue(JObjectUtil.getNormalizedString(baaos.toString("UTF-8")));
-                } else {
-                    ((JString) jObject).setValue("");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String v = null;
+            v = aStringSerDer.deserialize(
+                    new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1))).getStringValue();
+            JObjectUtil.getNormalizedString(v);
+
+            IJObject jObject = objectPool.allocate(BuiltinType.ASTRING);
+            ((JString) jObject).setValue(JObjectUtil.getNormalizedString(v));
             return jObject;
         }
     }
@@ -449,6 +444,7 @@ public class JObjectAccessors {
         private final JRecord jRecord;
         private final IJObject[] jObjects;
         private final LinkedHashMap<String, IJObject> openFields;
+        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
 
         public JRecordAccessor(ARecordType recordType, IObjectPool<IJObject, IAType> objectPool) {
             this.typeInfo = new TypeInfo(objectPool, null, null);
@@ -491,7 +487,8 @@ public class JObjectAccessors {
                                 // value is null
                                 fieldObject = null;
                             } else {
-                                fieldObject = pointableVisitor.visit((AListVisitablePointable) fieldPointable, typeInfo);
+                                fieldObject = pointableVisitor
+                                        .visit((AListVisitablePointable) fieldPointable, typeInfo);
                             }
                             break;
                         case ANY:
@@ -505,7 +502,7 @@ public class JObjectAccessors {
                         byte[] b = fieldName.getByteArray();
                         int s = fieldName.getStartOffset();
                         int l = fieldName.getLength();
-                        String v = AStringSerializerDeserializer.INSTANCE.deserialize(
+                        String v = aStringSerDer.deserialize(
                                 new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1))).getStringValue();
                         openFields.put(v, fieldObject);
                     }
@@ -540,7 +537,8 @@ public class JObjectAccessors {
         }
 
         @Override
-        public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool, IAType listType,
+        public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
+                IAType listType,
                 JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
             List<IVisitablePointable> itemTags = pointable.getItemTags();

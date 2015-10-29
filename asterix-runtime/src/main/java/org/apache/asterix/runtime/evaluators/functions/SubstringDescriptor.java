@@ -38,6 +38,8 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -59,12 +61,16 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
-                    private ICopyEvaluator evalString = args[0].createEvaluator(argOut);
-                    private ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
-                    private ICopyEvaluator evalLen = args[2].createEvaluator(argOut);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator evalString = args[0].createEvaluator(argOut);
+                    private final ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
+                    private final ICopyEvaluator evalLen = args[2].createEvaluator(argOut);
                     private final byte stt = ATypeTag.STRING.serialize();
+
+                    private final GrowableArray array = new GrowableArray();
+                    private final UTF8StringBuilder builder = new UTF8StringBuilder();
+                    private final UTF8StringPointable string = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -140,35 +146,21 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName()
                                     + ": expects type STRING for the first argument but got " + argOutTypeTag);
                         }
-                        int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
-                        int sStart = 3;
-                        int c = 0;
-                        int idxPos1 = 0;
-                        // skip to start
-                        while (idxPos1 < start && c < utflen) {
-                            c += UTF8StringPointable.charSize(bytes, sStart + c);
-                            ++idxPos1;
-                        }
-                        int startSubstr = c;
-                        int idxPos2 = 0;
-                        while (idxPos2 < len && c < utflen) {
-                            c += UTF8StringPointable.charSize(bytes, sStart + c);
-                            ++idxPos2;
-                        }
 
-                        if (idxPos2 < len) {
+                        string.set(bytes, 1, bytes.length);
+                        array.reset();
+                        try {
+                            UTF8StringPointable.substr(string, start, len, builder, array);
+                        } catch (StringIndexOutOfBoundsException e) {
                             throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName() + ": start="
-                                    + start + "\tlen=" + len + "\tgoing past the input length=" + (idxPos1 + idxPos2)
-                                    + ".");
+                                    + start + "\tgoing past the input length.");
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
 
-                        int substrByteLen = c - startSubstr;
                         try {
                             out.writeByte(stt);
-                            out.writeByte((byte) ((substrByteLen >>> 8) & 0xFF));
-                            out.writeByte((byte) ((substrByteLen >>> 0) & 0xFF));
-                            out.write(bytes, sStart + startSubstr, substrByteLen);
-
+                            out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }

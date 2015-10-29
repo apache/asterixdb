@@ -42,13 +42,24 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ARecordSerializerDeserializer implements ISerializerDeserializer<ARecord> {
     private static final long serialVersionUID = 1L;
 
-    public static final ARecordSerializerDeserializer SCHEMALESS_INSTANCE = new ARecordSerializerDeserializer();
+    public static final ARecordSerializerDeserializer CREATE_SCHEMALESS_INSTANCE() {
+        return new ARecordSerializerDeserializer();
+    }
+
+    private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+    private AObjectSerializerDeserializer aObjSerDer = null;
+    private AObjectSerializerDeserializer getObjSerDer() {
+        if (aObjSerDer == null){
+            aObjSerDer = new AObjectSerializerDeserializer();
+        }
+        return aObjSerDer;
+    }
 
     private ARecordType recordType;
     private int numberOfSchemaFields = 0;
@@ -139,8 +150,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     in.readInt();
                 }
                 for (int i = 0; i < numberOfOpenFields; i++) {
-                    fieldNames[i] = AStringSerializerDeserializer.INSTANCE.deserialize(in).getStringValue();
-                    openFields[i] = AObjectSerializerDeserializer.INSTANCE.deserialize(in);
+                    fieldNames[i] = aStringSerDer.deserialize(in).getStringValue();
+                    openFields[i] = getObjSerDer().deserialize(in);
                     fieldTypes[i] = openFields[i].getType();
                 }
                 ARecordType openPartRecType = new ARecordType(null, fieldNames, fieldTypes, true);
@@ -288,7 +299,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             return -1; // this record does not have an open part
 
         int numberOfOpenField = AInt32SerializerDeserializer.getInt(serRecord, openPartOffset);
-        int utflength = UTF8StringPointable.getUTFLength(fieldName, 1);
+        int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, 1);
+        int fieldUtfMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fieldUtflength);
 
         IBinaryHashFunction utf8HashFunction = AqlBinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                 .createBinaryHashFunction();
@@ -296,34 +308,33 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                 .createBinaryComparator();
 
-        int fieldNameHashCode = utf8HashFunction.hash(fieldName, 1, utflength);
+        int fieldNameHashCode = utf8HashFunction.hash(fieldName, 1, fieldUtflength + fieldUtfMetaLen);
 
         int offset = openPartOffset + 4;
         int fieldOffset = -1;
-        short recordFieldNameLength = 0;
         int mid = 0;
         int high = numberOfOpenField - 1;
         int low = 0;
         while (low <= high) {
             mid = (high + low) / 2;
-            // 8 = hash code (4) + offset to the (name + tag + value ) of the
-            // field (4).
+            // 8 = hash code (4) + offset to the (name + tag + value ) of the field (4).
             int h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid));
             if (h == fieldNameHashCode) {
                 fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid) + 4);
-                recordFieldNameLength = AInt16SerializerDeserializer.getShort(serRecord, fieldOffset);
+                // the utf8 comparator do not require to put the precise length, we can just pass a estimated limit.
                 if (utf8BinaryComparator
-                        .compare(serRecord, fieldOffset, recordFieldNameLength, fieldName, 1, utflength) == 0)
-                    return fieldOffset + 2 + utflength;
+                        .compare(serRecord, fieldOffset, serRecord.length,
+                                fieldName, 1, fieldUtflength + fieldUtfMetaLen) == 0)
+                    // since they are equal, we can directly use the meta length and the utf length.
+                    return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                 else { // this else part has not been tested yet
                     for (int j = mid + 1; j < numberOfOpenField; j++) {
                         h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j));
                         if (h == fieldNameHashCode) {
                             fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j) + 4);
-                            recordFieldNameLength = AInt16SerializerDeserializer.getShort(serRecord, fieldOffset);
-                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, recordFieldNameLength, fieldName,
-                                    1, utflength) == 0)
-                                return fieldOffset + 2 + utflength;
+                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName,
+                                    1, fieldUtflength) == 0)
+                                return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                         } else
                             break;
                     }

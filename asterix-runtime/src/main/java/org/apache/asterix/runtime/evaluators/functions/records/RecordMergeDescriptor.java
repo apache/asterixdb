@@ -90,6 +90,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
             @SuppressWarnings("unchecked")
             private final ISerializerDeserializer<ANull> nullSerDe = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
+            private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
 
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
@@ -220,7 +221,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         nameOutputStream.write(fieldNamePointable.getByteArray(),
                                 fieldNamePointable.getStartOffset() + 1, fieldNamePointable.getLength());
                         namedis.reset();
-                        String fieldName = AStringSerializerDeserializer.INSTANCE.deserialize(namedis).getStringValue();
+                        String fieldName = aStringSerDer.deserialize(namedis).getStringValue();
 
                         //Add the merged field
                         if (combinedType.isClosedField(fieldName)) {

@@ -18,31 +18,22 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.asterix.common.utils.UTF8CharSequence;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.hyracks.data.std.util.UTF8CharSequence;
 
 public class StringMatchesDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -64,54 +55,35 @@ public class StringMatchesDescriptor extends AbstractScalarFunctionDynamicDescri
 
                 DataOutput dout = output.getDataOutput();
 
-                return new AbstractBinaryStringBoolEval(dout, args[0], args[1], AsterixBuiltinFunctions.STRING_MATCHES) {
+                return new AbstractBinaryStringBoolEval(dout, args[0], args[1],
+                        AsterixBuiltinFunctions.STRING_MATCHES) {
 
                     private Pattern pattern = null;
                     private Matcher matcher = null;
-                    private ByteArrayAccessibleOutputStream lastPattern = new ByteArrayAccessibleOutputStream();
-                    private IBinaryComparator strComp = AqlBinaryComparatorFactoryProvider.INSTANCE
-                            .getBinaryComparatorFactory(BuiltinType.ASTRING, true).createBinaryComparator();
+                    private ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
+                    private UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
                     private UTF8CharSequence carSeq = new UTF8CharSequence();
 
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ASTRING);
-
                     @Override
-                    protected boolean compute(byte[] lBytes, int lLen, int lStart, byte[] rBytes, int rLen, int rStart,
-                            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1) throws AlgebricksException {
-                        try {
-                            boolean newPattern = false;
-                            if (pattern == null) {
-                                newPattern = true;
-                            } else {
-                                int c = strComp.compare(rBytes, rStart, rLen, lastPattern.getByteArray(), 0,
-                                        lastPattern.size());
-                                if (c != 0) {
-                                    newPattern = true;
-                                }
-                            }
-                            if (newPattern) {
-                                lastPattern.reset();
-                                lastPattern.write(rBytes, rStart, rLen);
-                                // ! object creation !
-                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(
-                                        lastPattern.getByteArray()));
-                                AString strPattern = (AString) stringSerde.deserialize(di);
-                                // pattern = Pattern.compile(toRegex(strPattern));
-                                pattern = Pattern.compile(strPattern.getStringValue());
-                            }
-
-                            carSeq.reset(array0, 1);
-                            if (newPattern) {
-                                matcher = pattern.matcher(carSeq);
-                            } else {
-                                matcher.reset(carSeq);
-                            }
-                            return matcher.find();
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                    protected boolean compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr)
+                            throws AlgebricksException {
+                        boolean newPattern = false;
+                        if (pattern == null || lastPatternPtr.compareTo(patternPtr) != 0) {
+                            newPattern = true;
                         }
+                        if (newPattern) {
+                            StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
+                            // ! object creation !
+                            pattern = Pattern.compile(lastPatternPtr.toString());
+                        }
+
+                        carSeq.reset(srcPtr);
+                        if (newPattern) {
+                            matcher = pattern.matcher(carSeq);
+                        } else {
+                            matcher.reset(carSeq);
+                        }
+                        return matcher.find();
                     }
 
                 };

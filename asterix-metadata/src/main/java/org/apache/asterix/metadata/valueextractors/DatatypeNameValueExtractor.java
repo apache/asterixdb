@@ -40,6 +40,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class DatatypeNameValueExtractor implements IValueExtractor<String> {
     private final String dataverseName;
     private final MetadataNode metadataNode;
+    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
 
     public DatatypeNameValueExtractor(String dataverseName, MetadataNode metadataNode) {
         this.dataverseName = dataverseName;
@@ -53,7 +54,7 @@ public class DatatypeNameValueExtractor implements IValueExtractor<String> {
         int recordLength = tuple.getFieldLength(2);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        String typeName = ((AString) AObjectSerializerDeserializer.INSTANCE.deserialize(in)).getStringValue();
+        String typeName = ((AString) aObjSerDer.deserialize(in)).getStringValue();
         try {
             if (metadataNode.getDatatype(jobId, dataverseName, typeName).getIsAnonymous()) {
                 // Get index 0 because it is anonymous type, and it is used in

@@ -42,7 +42,7 @@ public class AUUIDStringSerializerDeserializer implements ISerializerDeserialize
     @Override
     public AUUID deserialize(DataInput in) throws HyracksDataException {
         try {
-            return AUUID.fromString(new String(UTF8StringSerializerDeserializer.INSTANCE.deserialize(in)));
+            return AUUID.fromString(new String(new UTF8StringSerializerDeserializer().deserialize(in)));
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
@@ -52,7 +52,7 @@ public class AUUIDStringSerializerDeserializer implements ISerializerDeserialize
     @Override
     public void serialize(AUUID instance, DataOutput out) throws HyracksDataException {
         try {
-            UTF8StringSerializerDeserializer.INSTANCE.serialize(instance.toStringLiteralOnly(), out);
+            new UTF8StringSerializerDeserializer().serialize(instance.toStringLiteralOnly(), out);
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

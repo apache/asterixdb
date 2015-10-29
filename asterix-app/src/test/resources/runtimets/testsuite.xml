@@ -18,9 +18,9 @@
  !-->
 <!DOCTYPE test-suite [
 
-<!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
+        <!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
 
-]>
+        ]>
 <test-suite
         xmlns="urn:xml.testframework.asterix.apache.org"
         ResultOffsetPath="results"
@@ -4810,43 +4810,43 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="end-with1">
-                <output-dir compare="Text">end-with1</output-dir>
+            <compilation-unit name="ends-with1">
+                <output-dir compare="Text">ends-with1</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="end-with2">
-                <output-dir compare="Text">end-with2</output-dir>
+            <compilation-unit name="ends-with2">
+                <output-dir compare="Text">ends-with2</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="end-with3">
-                <output-dir compare="Text">end-with3</output-dir>
+            <compilation-unit name="ends-with3">
+                <output-dir compare="Text">ends-with3</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="end-with4">
-                <output-dir compare="Text">end-with4</output-dir>
+            <compilation-unit name="ends-with4">
+                <output-dir compare="Text">ends-with4</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="end-with5">
-                <output-dir compare="Text">end-with5</output-dir>
+            <compilation-unit name="ends-with5">
+                <output-dir compare="Text">ends-with5</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="ends-with_01">
-                <output-dir compare="Text">ends-with_01</output-dir>
+            <compilation-unit name="ends-with6">
+                <output-dir compare="Text">ends-with6</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="endwith02">
-                <output-dir compare="Text">endwith02</output-dir>
+            <compilation-unit name="ends-with7">
+                <output-dir compare="Text">ends-with7</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="endwith03">
-                <output-dir compare="Text">endwith03</output-dir>
+            <compilation-unit name="ends-with8">
+                <output-dir compare="Text">ends-with8</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
@@ -4975,44 +4975,44 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="start-with1">
-                <output-dir compare="Text">start-with1</output-dir>
+            <compilation-unit name="starts-with1">
+                <output-dir compare="Text">starts-with1</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="start-with2">
-                <output-dir compare="Text">start-with2</output-dir>
+            <compilation-unit name="starts-with2">
+                <output-dir compare="Text">starts-with2</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="start-with3">
-                <output-dir compare="Text">start-with3</output-dir>
+            <compilation-unit name="starts-with3">
+                <output-dir compare="Text">starts-with3</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="start-with4">
-                <output-dir compare="Text">start-with4</output-dir>
+            <compilation-unit name="starts-with4">
+                <output-dir compare="Text">starts-with4</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="start-with5">
-                <output-dir compare="Text">start-with5</output-dir>
+            <compilation-unit name="starts-with5">
+                <output-dir compare="Text">starts-with5</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="starts-with_01">
-                <output-dir compare="Text">starts-with_01</output-dir>
+            <compilation-unit name="starts-with6">
+                <output-dir compare="Text">starts-with6</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="string">
-            <compilation-unit name="startwith02">
-                <output-dir compare="Text">startwith02</output-dir>
+            <compilation-unit name="starts-with7">
+                <output-dir compare="Text">starts-with7</output-dir>
             </compilation-unit>
         </test-case>
         <!--
         <test-case FilePath="string">
-          <compilation-unit name="startwith03">
-            <output-dir compare="Text">startwith03</output-dir>
+          <compilation-unit name="starts-with8">
+            <output-dir compare="Text">starts-with8</output-dir>
           </compilation-unit>
         </test-case>
         -->
@@ -5194,6 +5194,11 @@
         <test-case FilePath="string">
             <compilation-unit name="uppercase">
                 <output-dir compare="Text">uppercase</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="string">
+            <compilation-unit name="varlen-encoding">
+                <output-dir compare="Text">varlen-encoding</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>
@@ -6204,6 +6209,11 @@
         <test-case FilePath="big-object">
             <compilation-unit name="big_object_join">
                 <output-dir compare="Text">big_object_join</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="big-object">
+            <compilation-unit name="big_object_load">
+                <output-dir compare="Text">big_object_load</output-dir>
             </compilation-unit>
         </test-case>
     </test-group>

@@ -23,12 +23,10 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.util.Arrays;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -38,6 +36,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -64,6 +63,11 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
     @SuppressWarnings("rawtypes")
     private ISerializerDeserializer strSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
+
+    private final UTF8StringPointable strPtr1st = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr2nd = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr3rd = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr4th = new UTF8StringPointable();
 
     public AbstractQuadStringStringEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
             ICopyEvaluatorFactory eval2, ICopyEvaluatorFactory eval3, FunctionIdentifier funcID)
@@ -108,22 +112,12 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
             throw new AlgebricksException(e);
         }
 
-        byte[] b0 = array0.getByteArray();
-        byte[] b1 = array1.getByteArray();
-        byte[] b2 = array2.getByteArray();
-        byte[] b3 = array3.getByteArray();
+        strPtr1st.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());
+        strPtr2nd.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
+        strPtr3rd.set(array2.getByteArray(), array2.getStartOffset() + 1, array2.getLength());
+        strPtr4th.set(array3.getByteArray(), array3.getStartOffset() + 1, array3.getLength());
 
-        int len0 = array0.getLength();
-        int len1 = array1.getLength();
-        int len2 = array2.getLength();
-        int len3 = array3.getLength();
-
-        int s0 = array0.getStartOffset();
-        int s1 = array1.getStartOffset();
-        int s2 = array2.getStartOffset();
-        int s3 = array3.getStartOffset();
-
-        String res = compute(b0, len0, s0, b1, len1, s1, b2, len2, s2, b3, len3, s3, array0, array1);
+        String res = compute(strPtr1st, strPtr2nd, strPtr3rd, strPtr4th);
         resultBuffer.setValue(res);
         try {
             strSerde.serialize(resultBuffer, dout);
@@ -132,30 +126,8 @@ public abstract class AbstractQuadStringStringEval implements ICopyEvaluator {
         }
     }
 
-    protected abstract String compute(byte[] b0, int l0, int s0, byte[] b1, int l1, int s1, byte[] b2, int l2, int s2,
-            byte[] b3, int l3, int s3, ArrayBackedValueStorage array0, ArrayBackedValueStorage array1)
-            throws AlgebricksException;
-
-    protected String toRegex(AString pattern) {
-        StringBuilder sb = new StringBuilder();
-        String str = pattern.getStringValue();
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '\\' && (i < str.length() - 1) && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
-                sb.append(str.charAt(i + 1));
-                ++i;
-            } else if (c == '%') {
-                sb.append(".*");
-            } else if (c == '_') {
-                sb.append(".");
-            } else {
-                if (Arrays.binarySearch(StringEvaluatorUtils.reservedRegexChars, c) >= 0) {
-                    sb.append('\\');
-                }
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
+    protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,
+            UTF8StringPointable strPtr3rd,
+            UTF8StringPointable strPtr4th) throws AlgebricksException;
 
 }

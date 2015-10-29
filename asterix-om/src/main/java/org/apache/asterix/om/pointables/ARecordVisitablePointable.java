@@ -38,6 +38,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.util.ResettableByteArrayOutputStream;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.api.dataflow.value.INullWriter;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
  * This class interprets the binary data representation of a record. One can
@@ -66,6 +67,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
     private final ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream typeDos = new DataOutputStream(typeBos);
+    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
@@ -82,7 +84,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
     /**
      * private constructor, to prevent constructing it arbitrarily
-     * 
+     *
      * @param inputType
      */
     public ARecordVisitablePointable(ARecordType inputType) {
@@ -113,7 +115,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                 // add type name Reference (including a astring type tag)
                 int nameStart = typeBos.size();
                 typeDos.writeByte(ATypeTag.STRING.serialize());
-                typeDos.writeUTF(fieldNameStrs[i]);
+                utf8Writer.writeUTF8(fieldNameStrs[i], typeDos);
                 int nameEnd = typeBos.size();
                 IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
                 typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
@@ -183,7 +185,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     nullBitMapOffset = s;
                     offsetArrayOffset = s
                             + (this.numberOfSchemaFields % 8 == 0 ? numberOfSchemaFields / 8
-                                    : numberOfSchemaFields / 8 + 1);
+                            : numberOfSchemaFields / 8 + 1);
                 } else {
                     offsetArrayOffset = s;
                 }
@@ -280,7 +282,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     public ARecordType getInputRecordType() {
         return inputRecType;
     }
-    
+
     @Override
     public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws AsterixException {
         return vistor.visit(this, tag);

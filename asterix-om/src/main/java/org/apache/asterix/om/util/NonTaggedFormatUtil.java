@@ -40,7 +40,9 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public final class NonTaggedFormatUtil {
 
@@ -141,11 +143,21 @@ public final class NonTaggedFormatUtil {
                 else
                     return AInt16SerializerDeserializer.getShort(serNonTaggedAObject, offset) * 16 + 2;
             case STRING:
+                if (tagged) {
+                    int len = UTF8StringUtil.getUTFLength(serNonTaggedAObject, offset + 1);
+                    return len + UTF8StringUtil.getNumBytesToStoreLength(len);
+                } else {
+                    int len = UTF8StringUtil.getUTFLength(serNonTaggedAObject, offset);
+                    return len + UTF8StringUtil.getNumBytesToStoreLength(len);
+                }
             case BINARY:
-                if (tagged)
-                    return AInt16SerializerDeserializer.getUnsignedShort(serNonTaggedAObject, offset + 1) + 2;
-                else
-                    return AInt16SerializerDeserializer.getUnsignedShort(serNonTaggedAObject, offset) + 2;
+                if (tagged) {
+                    int len = ByteArrayPointable.getContentLength(serNonTaggedAObject, offset + 1);
+                    return len + ByteArrayPointable.getNumberBytesToStoreMeta(len);
+                } else {
+                    int len = ByteArrayPointable.getContentLength(serNonTaggedAObject, offset);
+                    return len + ByteArrayPointable.getNumberBytesToStoreMeta(len);
+                }
             case RECORD:
                 if (tagged)
                     return ARecordSerializerDeserializer.getRecordLength(serNonTaggedAObject, offset + 1) - 1;
@@ -158,11 +170,13 @@ public final class NonTaggedFormatUtil {
                     return AOrderedListSerializerDeserializer.getOrderedListLength(serNonTaggedAObject, offset) - 1;
             case UNORDEREDLIST:
                 if (tagged)
-                    return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset + 1) - 1;
+                    return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset + 1)
+                            - 1;
                 else
                     return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset) - 1;
             default:
-                throw new NotImplementedException("No getLength implemented for a value of this type " + typeTag + " .");
+                throw new NotImplementedException(
+                        "No getLength implemented for a value of this type " + typeTag + " .");
         }
     }
 
@@ -177,7 +191,8 @@ public final class NonTaggedFormatUtil {
             case POINT3D:
                 return 3;
             default:
-                throw new NotImplementedException("getNumDimensions is not implemented for this type " + typeTag + " .");
+                throw new NotImplementedException(
+                        "getNumDimensions is not implemented for this type " + typeTag + " .");
         }
     }
 

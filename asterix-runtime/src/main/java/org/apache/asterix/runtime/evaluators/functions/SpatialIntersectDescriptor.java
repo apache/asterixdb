@@ -84,6 +84,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                     private final DoubleArray trianglesY0 = new DoubleArray();
                     private final DoubleArray trianglesX1 = new DoubleArray();
                     private final DoubleArray trianglesY1 = new DoubleArray();
+                    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
 
                     private boolean pointOnLine(double pX, double pY, double startX, double startY, double endX,
                             double endY) throws HyracksDataException {
@@ -1095,7 +1096,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                             }
 
                             ABoolean aResult = res ? (ABoolean.TRUE) : (ABoolean.FALSE);
-                            AObjectSerializerDeserializer.INSTANCE.serialize(aResult, out);
+                            aObjSerDer.serialize(aResult, out);
                         } catch (HyracksDataException hde) {
                             throw new AlgebricksException(hde);
                         }

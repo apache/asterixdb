@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.common.IStorageManagerInterface;
  * This operator is intended for using record ids to access data in external sources
  */
 public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperatorDescriptor {
-
     private static final long serialVersionUID = 1L;
     private final IControlledAdapterFactory adapterFactory;
     private final INullWriterFactory iNullWriterFactory;
@@ -53,8 +52,8 @@ public class ExternalLoopkupOperatorDiscriptor extends AbstractTreeIndexOperator
             ISearchOperationCallbackFactory searchOpCallbackFactory, boolean retainNull,
             INullWriterFactory iNullWriterFactory) {
         super(spec, 1, 1, outRecDesc, storageManager, lcManagerProvider, fileSplitProvider,
-                FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
+                new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
+                new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 externalFilesIndexDataFlowHelperFactory, null, propagateInput, retainNull, iNullWriterFactory, null,
                 searchOpCallbackFactory, null);
         this.adapterFactory = adapterFactory;

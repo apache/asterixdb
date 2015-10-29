@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -82,6 +83,7 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -104,10 +106,11 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                             if (argOut0.getByteArray()[0] == SER_DATE_TYPE_TAG) {
                                 intervalStart = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
-                                        + (argOut0.getByteArray()[2] & 0xff << 0);
-                                intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3,
-                                        stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
+                                int stringLength = utf8Ptr.getUTF8Length();
+                                intervalStart = ADateParserFactory
+                                        .parseDatePart(utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DATE for the first argument, but got "
@@ -117,10 +120,11 @@ public class AIntervalFromDateConstructorDescriptor extends AbstractScalarFuncti
                             if (argOut1.getByteArray()[0] == SER_DATE_TYPE_TAG) {
                                 intervalEnd = ADateSerializerDeserializer.getChronon(argOut1.getByteArray(), 1);
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                                int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                        + (argOut1.getByteArray()[2] & 0xff << 0);
-                                intervalEnd = ADateParserFactory.parseDatePart(argOut1.getByteArray(), 3, stringLength)
-                                        / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                                int stringLength = utf8Ptr.getUTF8Length();
+                                intervalEnd = ADateParserFactory
+                                        .parseDatePart(utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength) / GregorianCalendarSystem.CHRONON_OF_DAY;
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DATE for the second argument, but got "

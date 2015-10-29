@@ -54,6 +54,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ExternalFileIndexAccessor implements Serializable {
 
+    private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
     private static final long serialVersionUID = 1L;
     private ExternalBTreeDataflowHelper indexDataflowHelper;
     private ExternalLoopkupOperatorDiscriptor opDesc;
@@ -119,7 +120,7 @@ public class ExternalFileIndexAccessor implements Serializable {
             int recordLength = tuple.getFieldLength(FilesIndexDescription.FILE_PAYLOAD_INDEX);
             ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
             DataInput in = new DataInputStream(stream);
-            ARecord externalFileRecord = (ARecord) FilesIndexDescription.EXTERNAL_FILE_RECORD_SERDE.deserialize(in);
+            ARecord externalFileRecord = (ARecord) filesIndexDescription.EXTERNAL_FILE_RECORD_SERDE.deserialize(in);
             setExternalFileFromARecord(externalFileRecord, file);
         } else {
             // This should never happen

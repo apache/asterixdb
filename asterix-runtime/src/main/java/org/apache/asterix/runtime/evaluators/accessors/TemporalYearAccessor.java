@@ -44,6 +44,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.UTF8StringCharacterIterator;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescriptor {
@@ -85,6 +86,9 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
                     private final ICopyEvaluator eval = args[0].createEvaluator(argOut);
 
                     private final GregorianCalendarSystem calSystem = GregorianCalendarSystem.getInstance();
+
+                    private final UTF8StringPointable strExprPtr = new UTF8StringPointable();
+                    private final UTF8StringCharacterIterator strIter = new UTF8StringCharacterIterator();
 
                     // for output: type integer
                     @SuppressWarnings("unchecked")
@@ -129,18 +133,20 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
                                 return;
                             } else if (bytes[0] == SER_STRING_TYPE_TAG) {
                                 int year;
-                                if (UTF8StringPointable.charAt(bytes, 3) == '-') {
+                                strExprPtr.set(bytes, 1, bytes.length);
+                                strIter.reset(strExprPtr);
+                                char firstChar = strIter.next();
+                                if (firstChar == '-') {
                                     // in case of a negative year
                                     year = -1
-                                            * ((UTF8StringPointable.charAt(bytes, 4) - '0') * 1000
-                                                    + (UTF8StringPointable.charAt(bytes, 5) - '0') * 100
-                                                    + (UTF8StringPointable.charAt(bytes, 6) - '0') * 10 + (UTF8StringPointable
-                                                    .charAt(bytes, 7) - '0'));
+                                            * ((strIter.next() - '0') * 1000
+                                            + (strIter.next() - '0') * 100
+                                            + (strIter.next() - '0') * 10 + (strIter.next() - '0'));
                                 } else {
-                                    year = (UTF8StringPointable.charAt(bytes, 3) - '0') * 1000
-                                            + (UTF8StringPointable.charAt(bytes, 4) - '0') * 100
-                                            + (UTF8StringPointable.charAt(bytes, 5) - '0') * 10
-                                            + (UTF8StringPointable.charAt(bytes, 6) - '0');
+                                    year = (firstChar - '0') * 1000
+                                            + (strIter.next() - '0') * 100
+                                            + (strIter.next() - '0') * 10
+                                            + (strIter.next() - '0');
                                 }
                                 aMutableInt64.setValue(year);
                                 intSerde.serialize(aMutableInt64, out);

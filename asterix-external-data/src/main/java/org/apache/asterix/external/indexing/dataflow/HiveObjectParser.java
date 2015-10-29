@@ -58,6 +58,7 @@ import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 @SuppressWarnings("deprecation")
 public class HiveObjectParser implements IAsterixHDFSRecordParser {
@@ -75,6 +76,7 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser {
     private UnorderedListBuilder unorderedListBuilder;
     private boolean initialized = false;
     private List<StructField> fieldRefs;
+    private UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     @SuppressWarnings({ "unchecked" })
     @Override
@@ -308,7 +310,7 @@ public class HiveObjectParser implements IAsterixHDFSRecordParser {
     }
 
     private void parseString(Object obj, StringObjectInspector foi, DataOutput dataOutput) throws IOException {
-        dataOutput.writeUTF(foi.getPrimitiveJavaObject(obj));
+        utf8Writer.writeUTF8(foi.getPrimitiveJavaObject(obj), dataOutput);
     }
 
     private void parseTime(Object obj, TimestampObjectInspector foi, DataOutput dataOutput) throws IOException {

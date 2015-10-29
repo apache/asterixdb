@@ -41,7 +41,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 @SuppressWarnings("unchecked")
 public class FileIndexTupleTranslator {
-    private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(FilesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFieldCount());
+    private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
+    private ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFieldCount());
     private RecordBuilder recordBuilder = new RecordBuilder();
     private ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
     private AMutableInt32 aInt32 = new AMutableInt32(0);
@@ -57,11 +58,11 @@ public class FileIndexTupleTranslator {
         tupleBuilder.reset();
         //File Number
         aInt32.setValue(file.getFileNumber());
-        FilesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32, tupleBuilder.getDataOutput());
+        filesIndexDescription.FILE_INDEX_RECORD_DESCRIPTOR.getFields()[0].serialize(aInt32, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
         
         //File Record
-        recordBuilder.reset(FilesIndexDescription.EXTERNAL_FILE_RECORD_TYPE);
+        recordBuilder.reset(filesIndexDescription.EXTERNAL_FILE_RECORD_TYPE);
         // write field 0 (File Name)
         fieldValue.reset();
         aString.setValue(file.getFileName());

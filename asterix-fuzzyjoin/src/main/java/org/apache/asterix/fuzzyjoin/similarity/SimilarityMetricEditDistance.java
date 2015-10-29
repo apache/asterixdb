@@ -21,12 +21,10 @@ package org.apache.asterix.fuzzyjoin.similarity;
 
 import java.util.Arrays;
 
-import org.apache.asterix.fuzzyjoin.tokenizer.StringUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
-
-    private final int utf8SizeIndicatorSize = 2;
 
     // dp implementation only needs 2 rows
     private final int rows = 2;
@@ -159,8 +157,13 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
     // faster implementation for common case of string edit distance
     public int UTF8StringEditDistance(byte[] bytes, int fsStart, int ssStart) {
 
-        int fsLen = StringUtils.getStrLen(bytes, fsStart);
-        int ssLen = StringUtils.getStrLen(bytes, ssStart);
+        int fsLen = UTF8StringUtil.getStringLength(bytes, fsStart);
+        int ssLen = UTF8StringUtil.getStringLength(bytes, ssStart);
+
+        int fsUtfLen = UTF8StringUtil.getUTFLength(bytes, fsStart);
+        int ssUtfLen = UTF8StringUtil.getUTFLength(bytes, ssStart);
+        int fsMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fsUtfLen);
+        int ssMetaLen = UTF8StringUtil.getNumBytesToStoreLength(ssUtfLen);
 
         // reuse existing matrix if possible
         if (ssLen >= cols) {
@@ -168,8 +171,8 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
             matrix = new int[rows][cols];
         }
 
-        int fsDataStart = fsStart + utf8SizeIndicatorSize;
-        int ssDataStart = ssStart + utf8SizeIndicatorSize;
+        int fsDataStart = fsStart + fsMetaLen;
+        int ssDataStart = ssStart + ssMetaLen;
 
         // init matrix
         for (int i = 0; i <= ssLen; i++) {
@@ -183,19 +186,19 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         int fsPos = fsDataStart;
         for (int i = 1; i <= fsLen; i++) {
             matrix[currRow][0] = i;
-            char fsChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, fsPos));
+            char fsChar = Character.toLowerCase(UTF8StringUtil.charAt(bytes, fsPos));
 
             int ssPos = ssDataStart;
             for (int j = 1; j <= ssLen; j++) {
-                char ssChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, ssPos));
+                char ssChar = Character.toLowerCase(UTF8StringUtil.charAt(bytes, ssPos));
 
                 matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
                         matrix[prevRow][j - 1] + (fsChar == ssChar ? 0 : 1));
 
-                ssPos += StringUtils.charSize(bytes, ssPos);
+                ssPos += UTF8StringUtil.charSize(bytes, ssPos);
             }
 
-            fsPos += StringUtils.charSize(bytes, fsPos);
+            fsPos += UTF8StringUtil.charSize(bytes, fsPos);
 
             int tmp = currRow;
             currRow = prevRow;
@@ -207,8 +210,13 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
 
     public int UTF8StringEditDistance(byte[] bytes, int fsStart, int ssStart, int edThresh) {
 
-        int fsStrLen = StringUtils.getStrLen(bytes, fsStart);
-        int ssStrLen = StringUtils.getStrLen(bytes, ssStart);
+        int fsStrLen = UTF8StringUtil.getStringLength(bytes, fsStart);
+        int ssStrLen = UTF8StringUtil.getStringLength(bytes, ssStart);
+
+        int fsUtfLen = UTF8StringUtil.getUTFLength(bytes, fsStart);
+        int ssUtfLen = UTF8StringUtil.getUTFLength(bytes, ssStart);
+        int fsMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fsUtfLen);
+        int ssMetaLen = UTF8StringUtil.getNumBytesToStoreLength(ssUtfLen);
 
         // length filter
         if (Math.abs(fsStrLen - ssStrLen) > edThresh) {
@@ -220,25 +228,25 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         Arrays.fill(ssLcCount, 0);
 
         // compute letter counts for first string
-        int fsPos = fsStart + utf8SizeIndicatorSize;
-        int fsEnd = fsPos + StringUtils.getUTFLen(bytes, fsStart);;
+        int fsPos = fsStart + fsMetaLen;
+        int fsEnd = fsPos + fsUtfLen;;
         while (fsPos < fsEnd) {
-            char c = StringUtils.toLowerCase(StringUtils.charAt(bytes, fsPos));
+            char c = Character.toLowerCase(UTF8StringUtil.charAt(bytes, fsPos));
             if (c < 128) {
                 fsLcCount[c]++;
             }
-            fsPos += StringUtils.charSize(bytes, fsPos);
+            fsPos += UTF8StringUtil.charSize(bytes, fsPos);
         }
 
         // compute letter counts for second string
-        int ssPos = ssStart + utf8SizeIndicatorSize;
-        int ssEnd = ssPos + StringUtils.getUTFLen(bytes, ssStart);
+        int ssPos = ssStart + ssMetaLen;
+        int ssEnd = ssPos + ssUtfLen;
         while (ssPos < ssEnd) {
-            char c = StringUtils.toLowerCase(StringUtils.charAt(bytes, ssPos));
+            char c = Character.toLowerCase(UTF8StringUtil.charAt(bytes, ssPos));
             if (c < 128) {
                 ssLcCount[c]++;
             }
-            ssPos += StringUtils.charSize(bytes, ssPos);
+            ssPos += UTF8StringUtil.charSize(bytes, ssPos);
         }
 
         // apply filter
@@ -269,8 +277,14 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
     // checks whether the first string contains a similar string to the second string
     public int UTF8StringEditDistanceContains(byte[] bytes, int stringStart, int patternStart, int edThresh) {
 
-        int stringLen = StringUtils.getStrLen(bytes, stringStart);
-        int patternLen = StringUtils.getStrLen(bytes, patternStart);
+        int stringLen = UTF8StringUtil.getStringLength(bytes, stringStart);
+        int patternLen = UTF8StringUtil.getStringLength(bytes, patternStart);
+
+        int stringUTFLen = UTF8StringUtil.getUTFLength(bytes, stringStart);
+        int stringMetaLen = UTF8StringUtil.getNumBytesToStoreLength(stringUTFLen);
+
+        int patternUTFLen = UTF8StringUtil.getUTFLength(bytes, patternStart);
+        int patternMetaLen = UTF8StringUtil.getNumBytesToStoreLength(patternUTFLen);
 
         // reuse existing matrix if possible
         if (patternLen >= cols) {
@@ -278,8 +292,8 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
             matrix = new int[rows][cols];
         }
 
-        int stringDataStart = stringStart + utf8SizeIndicatorSize;
-        int patternDataStart = patternStart + utf8SizeIndicatorSize;
+        int stringDataStart = stringStart +  stringMetaLen;
+        int patternDataStart = patternStart + patternMetaLen;
 
         // init matrix
         for (int i = 0; i <= patternLen; i++) {
@@ -293,23 +307,23 @@ public class SimilarityMetricEditDistance implements IGenericSimilarityMetric {
         int stringPos = stringDataStart;
         for (int i = 1; i <= stringLen; i++) {
             matrix[currRow][0] = 0;
-            char stringChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, stringPos));
+            char stringChar = Character.toLowerCase(UTF8StringUtil.charAt(bytes, stringPos));
 
             int patternPos = patternDataStart;
             for (int j = 1; j <= patternLen; j++) {
-                char patternChar = StringUtils.toLowerCase(StringUtils.charAt(bytes, patternPos));
+                char patternChar = Character.toLowerCase(UTF8StringUtil.charAt(bytes, patternPos));
 
                 matrix[currRow][j] = Math.min(Math.min(matrix[prevRow][j] + 1, matrix[currRow][j - 1] + 1),
                         matrix[prevRow][j - 1] + (stringChar == patternChar ? 0 : 1));
 
-                patternPos += StringUtils.charSize(bytes, patternPos);
+                patternPos += UTF8StringUtil.charSize(bytes, patternPos);
 
                 if (j == patternLen && matrix[currRow][patternLen] < minEd) {
                     minEd = matrix[currRow][patternLen];
                 }
             }
 
-            stringPos += StringUtils.charSize(bytes, stringPos);
+            stringPos += UTF8StringUtil.charSize(bytes, stringPos);
 
             int tmp = currRow;
             currRow = prevRow;

@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -33,6 +34,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -49,9 +51,16 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
     private ICopyEvaluator evalLeft;
     private ICopyEvaluator evalRight;
     private final FunctionIdentifier funcID;
+
+    private final UTF8StringPointable leftPtr = new UTF8StringPointable();
+    private final UTF8StringPointable rightPtr = new UTF8StringPointable();
+
     @SuppressWarnings({ "rawtypes" })
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractBinaryStringBoolEval(DataOutput dout, ICopyEvaluatorFactory evalLeftFactory,
             ICopyEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws AlgebricksException {
@@ -70,12 +79,8 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         evalRight.evaluate(tuple);
 
         try {
-            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                boolSerde.serialize(ABoolean.TRUE, dout);
-                return;
-            } else if ((array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_STRING_TYPE_TAG)
-                    || (array0.getByteArray()[0] == SER_STRING_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG)) {
-                boolSerde.serialize(ABoolean.FALSE, dout);
+            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                nullSerde.serialize(ANull.NULL, dout);
                 return;
             } else if (array0.getByteArray()[0] != SER_STRING_TYPE_TAG
                     || array1.getByteArray()[0] != SER_STRING_TYPE_TAG) {
@@ -87,15 +92,10 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
             throw new AlgebricksException(e);
         }
 
-        byte[] b1 = array0.getByteArray();
-        byte[] b2 = array1.getByteArray();
+        leftPtr.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());
+        rightPtr.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
 
-        int lLen = array0.getLength();
-        int rLen = array1.getLength();
-
-        int lStart = array0.getStartOffset();
-        int rStart = array1.getStartOffset();
-        ABoolean res = compute(b1, lLen, lStart, b2, rLen, rStart, array0, array1) ? ABoolean.TRUE : ABoolean.FALSE;
+        ABoolean res = compute(leftPtr, rightPtr) ? ABoolean.TRUE : ABoolean.FALSE;
         try {
             boolSerde.serialize(res, dout);
         } catch (HyracksDataException e) {
@@ -103,34 +103,6 @@ public abstract class AbstractBinaryStringBoolEval implements ICopyEvaluator {
         }
     }
 
-    protected abstract boolean compute(byte[] lBytes, int lLen, int lStart, byte[] rBytes, int rLen, int rStart,
-            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1) throws AlgebricksException;
+    protected abstract boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws AlgebricksException;
 
-    protected String toRegex(AString pattern) {
-        StringBuilder sb = new StringBuilder();
-        String str = pattern.getStringValue();
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '\\' && (i < str.length() - 1) && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
-                sb.append(str.charAt(i + 1));
-                ++i;
-            } else if (c == '%') {
-                sb.append(".*");
-            } else if (c == '_') {
-                sb.append(".");
-            } else {
-                if (Arrays.binarySearch(reservedRegexChars, c) >= 0) {
-                    sb.append('\\');
-                }
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-
-    private final static char[] reservedRegexChars = new char[] { '\\', '(', ')', '[', ']', '{', '}', '.', '^', '$',
-            '*', '|' };
-    static {
-        Arrays.sort(reservedRegexChars);
-    }
 }

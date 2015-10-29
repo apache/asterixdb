@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -76,6 +77,7 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -85,11 +87,12 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                             byte[] serString = outInput.getByteArray();
 
                             if (serString[0] == SER_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, 1, outInput.getLength() - 1);
+                                int stringLength = utf8Ptr.getUTF8Length();
 
-                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
-
-                                ADurationParserFactory.parseDuration(serString, 3, stringLength, aYearMonthDuration,
-                                        ADurationParseOption.YEAR_MONTH);
+                                ADurationParserFactory
+                                        .parseDuration(serString, utf8Ptr.getCharStartOffset(), stringLength,
+                                                aYearMonthDuration, ADurationParseOption.YEAR_MONTH);
 
                                 yearMonthDurationSerde.serialize(aYearMonthDuration, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG) {

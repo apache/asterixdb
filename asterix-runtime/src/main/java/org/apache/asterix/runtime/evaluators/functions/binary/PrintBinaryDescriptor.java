@@ -19,8 +19,11 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryBase64Printer;
+import static org.apache.asterix.runtime.evaluators.functions.binary.ParseBinaryDescriptor.BASE64_FORMAT;
+import static org.apache.asterix.runtime.evaluators.functions.binary.ParseBinaryDescriptor.HEX_FORMAT;
+
+import java.io.IOException;
+
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -35,16 +38,16 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.IOException;
-
-import static org.apache.asterix.runtime.evaluators.functions.binary.ParseBinaryDescriptor.*;
+import org.apache.hyracks.util.bytes.Base64Printer;
+import org.apache.hyracks.util.bytes.HexPrinter;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final byte SER_STRING_BYTE = ATypeTag.STRING.serialize();
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.PRINT_BINARY;
     }
 
@@ -57,16 +60,22 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
     public final static ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.STRING };
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
                     throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
                     private StringBuilder stringBuilder = new StringBuilder();
+                    private final ByteArrayPointable byteArrayPtr = new ByteArrayPointable();
+                    private final UTF8StringPointable formatPointable = new UTF8StringPointable();
+                    private final UTF8StringWriter writer = new UTF8StringWriter();
 
-                    @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    @Override
+                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         ATypeTag arg0Tag = evaluateTuple(tuple, 0);
                         ATypeTag arg1Tag = evaluateTuple(tuple, 1);
 
@@ -77,25 +86,23 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_INPUT_TAGS, arg0Tag,
                                     arg1Tag);
 
-                            byte[] binaryBytes = storages[0].getByteArray();
-                            byte[] formatBytes = storages[1].getByteArray();
+                            byteArrayPtr.set(storages[0].getByteArray(), 1, storages[0].getLength());
+                            formatPointable.set(storages[1].getByteArray(), 1, storages[1].getLength());
 
-                            int lengthBinary = ByteArrayPointable.getLength(binaryBytes, 1);
-                            int lengthFormat = UTF8StringPointable.getUTFLength(formatBytes, 1);
+                            int lengthBinary = byteArrayPtr.getContentLength();
                             stringBuilder.setLength(0);
-                            if (isCaseIgnoreEqual(HEX_FORMAT, formatBytes, 3, lengthFormat)) {
-                                PrintTools
-                                        .printHexString(binaryBytes, 3, lengthBinary, stringBuilder);
-
-                            } else if (isCaseIgnoreEqual(BASE64_FORMAT, formatBytes, 3, lengthFormat)) {
-                                ABinaryBase64Printer
-                                        .printBase64Binary(binaryBytes, 3, lengthBinary, stringBuilder);
+                            if (HEX_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
+                                HexPrinter.printHexString(byteArrayPtr.getByteArray(),
+                                        byteArrayPtr.getContentStartOffset(), lengthBinary, stringBuilder);
+                            } else if (BASE64_FORMAT.ignoreCaseCompareTo(formatPointable) == 0) {
+                                Base64Printer.printBase64Binary(byteArrayPtr.getByteArray(),
+                                        byteArrayPtr.getContentStartOffset(), lengthBinary, stringBuilder);
                             } else {
                                 throw new AlgebricksException(getIdentifier().getName()
                                         + ": expects format indicator of \"hex\" or \"base64\" in the 2nd argument");
                             }
                             dataOutput.writeByte(SER_STRING_BYTE);
-                            dataOutput.writeUTF(stringBuilder.toString());
+                            writer.writeUTF8(stringBuilder.toString(), dataOutput);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         } catch (IOException e) {

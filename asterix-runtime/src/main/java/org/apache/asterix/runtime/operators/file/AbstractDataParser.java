@@ -72,8 +72,8 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayBase64ParserFactory;
-import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactory;
+import org.apache.hyracks.util.bytes.Base64Parser;
+import org.apache.hyracks.util.bytes.HexParser;
 
 /**
  * Base class for data parsers. Includes the common set of definitions for
@@ -88,7 +88,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableDouble aDouble = new AMutableDouble(0);
     protected AMutableFloat aFloat = new AMutableFloat(0);
     protected AMutableString aString = new AMutableString("");
-    protected AMutableBinary aBinary = new AMutableBinary(new byte[] {}, 0, 0);
+    protected AMutableBinary aBinary = new AMutableBinary(null, 0, 0);
     protected AMutableString aStringFieldName = new AMutableString("");
     protected AMutableUUID aUUID = new AMutableUUID(0, 0);
     // For temporal and spatial data types
@@ -105,8 +105,6 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableLine aLine = new AMutableLine(null, null);
     protected AMutableDate aDate = new AMutableDate(0);
 
-    private final byte[] base64ParserQuadruplet = new byte[4];
-
     // Serializers
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ADouble> doubleSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -114,6 +112,8 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
+    protected ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ABINARY);
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AFloat> floatSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.AFLOAT);
@@ -136,6 +136,9 @@ public abstract class AbstractDataParser implements IDataParser {
     protected ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ANULL);
 
+    protected final HexParser hexParser = new HexParser();
+    protected final Base64Parser base64Parser = new Base64Parser();
+
     // For UUID, we assume that the format is the string representation of UUID
     // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.
     // Thus, we need to call UUID.fromStringToAMuatbleUUID() to convert it to the internal representation (two long values).
@@ -144,6 +147,7 @@ public abstract class AbstractDataParser implements IDataParser {
             .getSerializerDeserializer(BuiltinType.AUUID);
 
     // To avoid race conditions, the serdes for temporal and spatial data types needs to be one per parser
+    // ^^^^^^^^^^^^^^^^^^^^^^^^ ??? then why all these serdes are static?
     @SuppressWarnings("unchecked")
     protected static final ISerializerDeserializer<ATime> timeSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ATIME);
@@ -177,9 +181,6 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected final static ISerializerDeserializer<ALine> lineSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ALINE);
-    @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ABinary> binarySerde = AqlSerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABINARY);
 
     protected String filename;
 
@@ -339,17 +340,15 @@ public abstract class AbstractDataParser implements IDataParser {
 
     protected void parseHexBinaryString(char[] input, int start, int length, DataOutput out)
             throws HyracksDataException {
-        byte[] newBytes = ByteArrayHexParserFactory.extractPointableArrayFromHexString(input, start, length,
-                aBinary.getBytes());
-        aBinary.setValue(newBytes, 0, newBytes.length);
+        hexParser.generateByteArrayFromHexString(input, start, length);
+        aBinary.setValue(hexParser.getByteArray(), 0, hexParser.getLength());
         binarySerde.serialize(aBinary, out);
     }
 
     protected void parseBase64BinaryString(char[] input, int start, int length, DataOutput out)
             throws HyracksDataException {
-        byte[] newBytes = ByteArrayBase64ParserFactory.extractPointableArrayFromBase64String(input, start, length,
-                aBinary.getBytes(), base64ParserQuadruplet);
-        aBinary.setValue(newBytes, 0, newBytes.length);
+        base64Parser.generatePureByteArrayFromBase64String(input, start, length);
+        aBinary.setValue(base64Parser.getByteArray(), 0, base64Parser.getLength());
         binarySerde.serialize(aBinary, out);
     }
 }

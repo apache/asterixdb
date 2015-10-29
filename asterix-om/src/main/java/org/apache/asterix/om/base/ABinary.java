@@ -19,11 +19,9 @@
 package org.apache.asterix.om.base;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.visitors.IOMVisitor;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,14 +55,8 @@ public class ABinary implements IAObject {
     }
 
     public int getLength() {
-        return getByteArrayContentLength() + SIZE_OF_LEADING_LENGTH_FIELD;
+        return length;
     }
-
-    public int getByteArrayContentLength() {
-        return ABinarySerializerDeserializer.getLength(bytes, start);
-    }
-
-    public static final int SIZE_OF_LEADING_LENGTH_FIELD = ByteArrayPointable.SIZE_OF_LENGTH;
 
     @Override
     public void accept(IOMVisitor visitor) throws AsterixException {
@@ -98,7 +90,7 @@ public class ABinary implements IAObject {
 
     @Override
     public int hash() {
-        int m = HASH_PREFIX <= getLength() ? HASH_PREFIX : getLength();
+        int m = Math.min(HASH_PREFIX, getLength());
         int h = 0;
         for (int i = 0; i < m; i++) {
             h += 31 * h + bytes[start + i];
@@ -109,10 +101,9 @@ public class ABinary implements IAObject {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        int validLength = getByteArrayContentLength();
-        int start = getStart() + SIZE_OF_LEADING_LENGTH_FIELD;
+        int start = getStart();
         sb.append("ABinary: [ ");
-        for (int i = 0; i < validLength; i++) {
+        for (int i = 0; i < getLength(); i++) {
             if (i > 0) {
                 sb.append(", ");
             }
@@ -127,10 +118,9 @@ public class ABinary implements IAObject {
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
-        int validLength = getByteArrayContentLength();
-        int start = getStart() + SIZE_OF_LEADING_LENGTH_FIELD;
+        int start = getStart();
         JSONArray byteArray = new JSONArray();
-        for (int i = 0; i < validLength; i++) {
+        for (int i = 0; i < getLength(); i++) {
             byteArray.put(bytes[start + i]);
         }
         json.put("ABinary", byteArray);

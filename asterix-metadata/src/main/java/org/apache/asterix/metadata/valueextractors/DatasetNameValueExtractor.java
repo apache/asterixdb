@@ -25,6 +25,7 @@ import java.io.DataInputStream;
 
 import org.apache.asterix.common.transactions.JobId;
 import org.apache.asterix.dataflow.data.nontagged.serde.AObjectSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.om.base.AString;
@@ -36,6 +37,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * contains a serialized representation of a Dataset metadata entity.
  */
 public class DatasetNameValueExtractor implements IValueExtractor<String> {
+    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
+
     @Override
     public String getValue(JobId jobId, ITupleReference tuple) throws MetadataException, HyracksDataException {
         byte[] serRecord = tuple.getFieldData(2);
@@ -43,6 +46,6 @@ public class DatasetNameValueExtractor implements IValueExtractor<String> {
         int recordLength = tuple.getFieldLength(2);
         ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
         DataInput in = new DataInputStream(stream);
-        return (((AString) AObjectSerializerDeserializer.INSTANCE.deserialize(in)).getStringValue());
+        return (((AString) aObjSerDer.deserialize(in)).getStringValue());
     }
 }

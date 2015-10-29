@@ -23,6 +23,8 @@ import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.util.bytes.HexPrinter;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -38,10 +40,10 @@ public class ABinaryHexPrinter implements IPrinter {
     }
 
     @Override public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        int validLength = ABinarySerializerDeserializer.getLength(b, s + 1);
-        int start = s + 1 + ABinarySerializerDeserializer.SIZE_OF_LENGTH;
+        int validLength = ByteArrayPointable.getContentLength(b, s + 1);
+        int start = s + 1 + ByteArrayPointable.getNumberBytesToStoreMeta(validLength);
         try {
-            PrintTools.printHexString(b, start, validLength, ps);
+            HexPrinter.printHexString(b, start, validLength, ps);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

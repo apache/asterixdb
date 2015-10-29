@@ -79,14 +79,6 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         if (!checkArgTypes(firstTypeTag, secondTypeTag))
             return;
 
-        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
-        if (itemTypeTag == ATypeTag.ANY)
-            throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
-
-        itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
-        if (itemTypeTag == ATypeTag.ANY)
-            throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
-
         try {
             editDistance = computeResult(argOut.getByteArray(), firstStart, secondStart, firstTypeTag);
         } catch (HyracksDataException e1) {
@@ -153,6 +145,22 @@ public class EditDistanceEvaluator implements ICopyEvaluator {
         if (typeTag1 != typeTag2) {
             throw new AlgebricksException("Incompatible argument types given in edit distance: " + typeTag1 + " "
                     + typeTag2);
+        }
+
+        // Since they are equal, check one tag is enough.
+        if (typeTag1 != ATypeTag.STRING && typeTag1 != ATypeTag.ORDEREDLIST) { // could be an list
+            throw new AlgebricksException(
+                    "Only String or OrderedList type are allowed in edit distance, but given : " + typeTag1);
+        }
+
+        if (typeTag1 == ATypeTag.ORDEREDLIST) {
+            itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[firstStart + 1]);
+            if (itemTypeTag == ATypeTag.ANY)
+                throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
+
+            itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[secondStart + 1]);
+            if (itemTypeTag == ATypeTag.ANY)
+                throw new AlgebricksException("\n Edit Distance can only be called on homogenous lists");
         }
 
         return true;

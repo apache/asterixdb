@@ -39,6 +39,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -63,7 +64,7 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
                     private String errorMessage = "This can not be an instance of null";
-                    private final byte[] NULL = { 0, 4, 'n', 'u', 'l', 'l' };
+                    private final byte[] NULL = UTF8StringUtil.writeStringToBytes("null");
                     IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                             .createBinaryComparator();
                     @SuppressWarnings("unchecked")
@@ -78,7 +79,7 @@ public class ANullConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NULL, 0, 6) == 0) {
+                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), NULL, 0, NULL.length) == 0) {
                                     nullSerde.serialize(ANull.NULL, out);
                                     return;
                                 } else

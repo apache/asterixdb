@@ -37,5 +37,5 @@ let $r12 := sub-binary($x, 1, 256) = $x
 let $r13 := sub-binary($x, 2, 256) = hex('bbccdd')
 let $r14 := sub-binary($x, 2, -1) = hex('')
 
-return  $r1 and $r2 and $r3 and $r4 and $r5 and $r6 and $r7 and $r8 and $r9 and $r10 and $r11 and $r12 and $r13 and $r14 
+return  [ $r1 ,$r2 ,$r3 ,$r4 ,$r5 , $r6 , $r7 , $r8 , $r9 , $r10 , $r11 , $r12 , $r13 , $r14 ]
 

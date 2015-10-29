@@ -19,7 +19,6 @@
 
 package org.apache.asterix.dataflow.data.nontagged.comparators;
 
-import org.apache.asterix.formats.nontagged.UTF8StringLowercasePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -31,6 +30,7 @@ import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.UTF8StringLowercasePointable;
 
 public class ListItemBinaryComparatorFactory implements IBinaryComparatorFactory {
 

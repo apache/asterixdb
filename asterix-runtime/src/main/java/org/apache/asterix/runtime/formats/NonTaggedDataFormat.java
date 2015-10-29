@@ -166,7 +166,7 @@ import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescri
 import org.apache.asterix.runtime.evaluators.functions.CastListDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastRecordDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.ContainsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CountHashedWordTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateCircleDescriptor;
@@ -182,7 +182,7 @@ import org.apache.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.EditDistanceListIsFilterable;
 import org.apache.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterable;
 import org.apache.asterix.runtime.evaluators.functions.EmbedTypeDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.EndsWithDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringEndsWithDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FlowRecordDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FuzzyEqDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
@@ -193,7 +193,7 @@ import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsSystemNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.LenDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.LikeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringLikeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
@@ -223,9 +223,8 @@ import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialIntersectDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.StartsWithDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringStartsWithDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringConcatDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.StringEndWithDescrtiptor;
 import org.apache.asterix.runtime.evaluators.functions.StringEqualDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringJoinDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringLengthDescriptor;
@@ -234,7 +233,6 @@ import org.apache.asterix.runtime.evaluators.functions.StringMatchesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringMatchesWithFlagDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReplaceWithFlagsDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.StringStartWithDescrtiptor;
 import org.apache.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringUpperCaseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.Substring2Descriptor;
@@ -402,16 +400,12 @@ public class NonTaggedDataFormat implements IDataFormat {
         List<IFunctionDescriptorFactory> temp = new ArrayList<IFunctionDescriptorFactory>();
 
         // format-independent
-        temp.add(ContainsDescriptor.FACTORY);
-        temp.add(EndsWithDescriptor.FACTORY);
-        temp.add(StartsWithDescriptor.FACTORY);
-        temp.add(SubstringDescriptor.FACTORY);
         temp.add(TidRunningAggregateDescriptor.FACTORY);
 
         // format-dependent
         temp.add(AndDescriptor.FACTORY);
         temp.add(OrDescriptor.FACTORY);
-        temp.add(LikeDescriptor.FACTORY);
+        temp.add(StringLikeDescriptor.FACTORY);
         temp.add(ScanCollectionDescriptor.FACTORY);
         temp.add(AnyCollectionMemberDescriptor.FACTORY);
         temp.add(ClosedRecordConstructorDescriptor.FACTORY);
@@ -460,9 +454,11 @@ public class NonTaggedDataFormat implements IDataFormat {
         temp.add(FindBinaryFromDescriptor.FACTORY);
 
         // String functions
+        temp.add(StringContainsDescriptor.FACTORY);
+        temp.add(StringEndsWithDescriptor.FACTORY);
+        temp.add(StringStartsWithDescriptor.FACTORY);
+        temp.add(SubstringDescriptor.FACTORY);
         temp.add(StringEqualDescriptor.FACTORY);
-        temp.add(StringStartWithDescrtiptor.FACTORY);
-        temp.add(StringEndWithDescrtiptor.FACTORY);
         temp.add(StringMatchesDescriptor.FACTORY);
         temp.add(StringLowerCaseDescriptor.FACTORY);
         temp.add(StringUpperCaseDescriptor.FACTORY);

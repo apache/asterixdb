@@ -41,7 +41,7 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
 
     private ICopyEvaluatorFactory recordEvalFactory;
     private ICopyEvaluatorFactory fldNameEvalFactory;
-    private ARecordType recordType;
+    private final ARecordType recordType;
 
     private final static byte SER_STRING_TYPE_TAG = ATypeTag.STRING.serialize();
 
@@ -72,10 +72,10 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
             private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
 
+            private ARecordType mRecordType = recordType.deepCopy(recordType);
             {
                 abvsFields[0] = new ArrayBackedValueStorage();
                 doFields[0] = abvsFields[0].getDataOutput();
-                recordType = recordType.deepCopy(recordType);
             }
 
             @Override
@@ -92,7 +92,7 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
                     abvsFields[0].reset();
                     doFields[0].write(serFldName);
 
-                    FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, recordType);
+                    FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, mRecordType);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

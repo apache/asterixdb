@@ -32,10 +32,10 @@ import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADateParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
+import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -93,6 +94,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -115,24 +117,27 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                             if (argOut0.getByteArray()[0] == SER_DATETIME_TYPE_TAG) {
                                 intervalStart = ADateTimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
-                                        + (argOut0.getByteArray()[2] & 0xff << 0);
+                                utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
+
+                                int stringLength = utf8Ptr.getUTF8Length();
+                                int startOffset = utf8Ptr.getCharStartOffset();
 
                                 // get offset for time part: +1 if it is negative (-)
-                                short timeOffset = (short) ((argOut0.getByteArray()[3] == '-') ? 1 : 0);
+                                short timeOffset = (short) ((argOut0.getByteArray()[startOffset] == '-') ? 1 : 0);
 
                                 timeOffset += 8;
 
-                                if (argOut0.getByteArray()[3 + timeOffset] != 'T') {
+                                if (argOut0.getByteArray()[startOffset + timeOffset] != 'T') {
                                     timeOffset += 2;
-                                    if (argOut0.getByteArray()[3 + timeOffset] != 'T') {
+                                    if (argOut0.getByteArray()[startOffset + timeOffset] != 'T') {
                                         throw new AlgebricksException(errorMessage + ": missing T");
                                     }
                                 }
 
-                                intervalStart = ADateParserFactory.parseDatePart(argOut0.getByteArray(), 3, timeOffset);
+                                intervalStart = ADateParserFactory
+                                        .parseDatePart(argOut0.getByteArray(), startOffset, timeOffset);
                                 intervalStart += ATimeParserFactory.parseTimePart(argOut0.getByteArray(),
-                                        3 + timeOffset + 1, stringLength - timeOffset - 1);
+                                        startOffset + timeOffset + 1, stringLength - timeOffset - 1);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/DATETIME for the first argument but got "
@@ -156,11 +161,12 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
 
                                 // duration
-                                int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                        + (argOut1.getByteArray()[2] & 0xff << 0);
+                                utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                                int stringLength = utf8Ptr.getUTF8Length();
 
-                                ADurationParserFactory.parseDuration(argOut1.getByteArray(), 3, stringLength,
-                                        aDuration, ADurationParseOption.All);
+                                ADurationParserFactory
+                                        .parseDuration(argOut1.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength, aDuration, ADurationParseOption.All);
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds(), false);
