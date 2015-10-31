@@ -76,6 +76,7 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
 
     protected boolean isActivated;
     protected final AtomicBoolean[] flushRequests;
+    protected boolean memoryComponentsAllocated = false;
 
     public AbstractLSMIndex(List<IVirtualBufferCache> virtualBufferCaches, IBufferCache diskBufferCache,
             ILSMIndexFileManager fileManager, IFileMapProvider diskFileMapProvider,
@@ -333,5 +334,11 @@ public abstract class AbstractLSMIndex implements ILSMIndexInternal {
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }
+    }
+
+    public abstract void allocateMemoryComponents() throws HyracksDataException;
+
+    public boolean isMemoryComponentsAllocated() {
+        return memoryComponentsAllocated;
     }
 }

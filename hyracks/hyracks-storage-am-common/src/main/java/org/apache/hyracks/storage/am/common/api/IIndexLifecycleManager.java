@@ -34,6 +34,4 @@ public interface IIndexLifecycleManager {
     public IIndex getIndex(String resourceName) throws HyracksDataException;
 
     public void unregister(String resourceName) throws HyracksDataException;
-
-    public IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException;
 }

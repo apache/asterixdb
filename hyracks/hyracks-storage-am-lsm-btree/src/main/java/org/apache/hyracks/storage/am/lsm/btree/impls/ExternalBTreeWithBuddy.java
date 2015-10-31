@@ -898,4 +898,9 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
         return files;
     }
+
+    @Override
+    public void allocateMemoryComponents() throws HyracksDataException {
+        //do nothing since external index never use memory components
+    }
 }

@@ -327,8 +327,11 @@ public class LSMHarness implements ILSMHarness {
         return modify(ctx, tryOperation, tuple, opType);
     }
 
-    protected boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
+    private boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple,
             LSMOperationType opType) throws HyracksDataException, IndexException {
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
         boolean failedOperation = false;
         if (!getAndEnterComponents(ctx, opType, tryOperation)) {
             return false;

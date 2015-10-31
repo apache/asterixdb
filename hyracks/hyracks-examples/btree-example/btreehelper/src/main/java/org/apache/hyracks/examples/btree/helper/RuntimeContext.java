@@ -63,7 +63,7 @@ public class RuntimeContext {
         ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
         localResourceRepository = localResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
-        lcManager = new IndexLifecycleManager(localResourceRepository);
+        lcManager = new IndexLifecycleManager();
     }
 
     public void close() throws HyracksDataException {

@@ -88,4 +88,11 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
             ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException;
 
+    /**
+     * Allocates the memory components of an LSM index in the buffer cache.
+     * @throws HyracksDataException
+     */
+    public void allocateMemoryComponents() throws HyracksDataException;
+
+    public boolean isMemoryComponentsAllocated();
 }
