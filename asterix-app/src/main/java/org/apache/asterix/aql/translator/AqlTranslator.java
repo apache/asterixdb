@@ -1825,7 +1825,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
             String kind = FunctionKind.SCALAR.toString();
             String body = cfs.getFunctionBody();
             if (cfs.getIsProcedure()) {
-                kind = FunctionKind.PROCEDURE.toString();
+                kind = "PROCEDURE";
 
                 AQLParser parser = new AQLParser(new StringReader(body));
                 List<Statement> statements = null;
@@ -1882,7 +1882,7 @@ public class AqlTranslator extends AbstractAqlTranslator {
                 throw new AlgebricksException("There is no dataverse with this name " + dataverse + ".");
             }
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, sig);
-            if (function == null || function.getKind() != FunctionKind.PROCEDURE.toString()) {
+            if (function == null || function.getKind() != "PROCEDURE") {
                 throw new AlgebricksException("Unknown function " + sig);
             }
 
