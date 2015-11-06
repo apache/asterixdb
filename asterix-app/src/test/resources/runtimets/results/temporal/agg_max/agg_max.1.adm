@@ -1,6 +1,5 @@
-[ {"m0": time("23:49:23.938Z")
-, "m1": date("2194-07-06")
-, "m2": datetime("2013-01-12T12:31:39.000Z")
-, "m3": day-time-duration("P3DT2S")
-, "m4": year-month-duration("P2Y5M")}
- ]
+{"m0": time("23:49:23.938Z")
+"m1": date("2194-07-06")
+"m2": datetime("2013-01-12T12:31:39.000Z")
+"m3": day-time-duration("P3DT2S")
+"m4": year-month-duration("P2Y5M")}

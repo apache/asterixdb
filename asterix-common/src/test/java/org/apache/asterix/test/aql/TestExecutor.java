@@ -424,7 +424,7 @@ public class TestExecutor {
                                         "127.0.0.1://../../../../../../asterix-app/");
                             }
 
-                            TestsUtils.executeUpdate(statement);
+                            TestsUtils.executeUpdate(statement, cUnit.getParameter());
                             break;
                         case "query":
                         case "async":
@@ -488,7 +488,7 @@ public class TestExecutor {
                             break;
                         case "txneu": //eu represents erroneous update
                             try {
-                                TestsUtils.executeUpdate(statement);
+                                TestsUtils.executeUpdate(statement, cUnit.getParameter());
                             } catch (Exception e) {
                                 //An exception is expected.
                                 failed = true;

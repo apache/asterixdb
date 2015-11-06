@@ -1,11 +1,10 @@
-[ { "tweet": { "id": 241, "topics": " can't stand verizon its network is bad:(" }, "similar-tweets": [ { "id": 112, "topics": " can't stand verizon its network is terrible:(" } ] }
-, { "tweet": { "id": 242, "topics": " love t-mobile the touch-screen is amazing" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 243, "topics": " like iphone its touch-screen is amazing:)" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 244, "topics": " hate iphone its voicemail-service is terrible" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 245, "topics": " hate sprint its touch-screen is bad:(" }, "similar-tweets": [ { "id": 60, "topics": " hate sprint its touch-screen is OMG:(" }, { "id": 196, "topics": " hate sprint the touch-screen is OMG:(" } ] }
-, { "tweet": { "id": 246, "topics": " can't stand sprint the plan is horrible" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 247, "topics": " can't stand sprint the speed is OMG" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 248, "topics": " like verizon its wireless is amazing" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 249, "topics": " dislike verizon its plan is bad:(" }, "similar-tweets": [  ] }
-, { "tweet": { "id": 250, "topics": " love samsung its touch-screen is amazing:)" }, "similar-tweets": [  ] }
- ]
+{ "tweet": { "id": 241, "topics": " can't stand verizon its network is bad:(" }, "similar-tweets": [ { "id": 112, "topics": " can't stand verizon its network is terrible:(" } ] }
+{ "tweet": { "id": 242, "topics": " love t-mobile the touch-screen is amazing" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 243, "topics": " like iphone its touch-screen is amazing:)" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 244, "topics": " hate iphone its voicemail-service is terrible" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 245, "topics": " hate sprint its touch-screen is bad:(" }, "similar-tweets": [ { "id": 60, "topics": " hate sprint its touch-screen is OMG:(" }, { "id": 196, "topics": " hate sprint the touch-screen is OMG:(" } ] }
+{ "tweet": { "id": 246, "topics": " can't stand sprint the plan is horrible" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 247, "topics": " can't stand sprint the speed is OMG" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 248, "topics": " like verizon its wireless is amazing" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 249, "topics": " dislike verizon its plan is bad:(" }, "similar-tweets": [  ] }
+{ "tweet": { "id": 250, "topics": " love samsung its touch-screen is amazing:)" }, "similar-tweets": [  ] }

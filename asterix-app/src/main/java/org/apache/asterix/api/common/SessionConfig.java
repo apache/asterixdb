@@ -87,6 +87,11 @@ public class SessionConfig {
      */
     public static final String FORMAT_CSV_HEADER = "format-csv-header";
 
+    /**
+     * Format flag: wrap results in outer array brackets (JSON or ADM).
+     */
+    public static final String FORMAT_WRAPPER_ARRAY = "format-wrapper-array";
+
     // Standard execution flags.
     private final boolean executeQuery;
     private final boolean generateJobSpec;

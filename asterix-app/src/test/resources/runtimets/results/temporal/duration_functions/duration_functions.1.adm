@@ -1,2 +1,1 @@
-[ { "dr1": day-time-duration("P52D"), "dr2": day-time-duration("P31DT1H1M1.111S"), "dr3": day-time-duration("PT7H56M42S"), "dr4": null }
- ]
+{ "dr1": day-time-duration("P52D"), "dr2": day-time-duration("P31DT1H1M1.111S"), "dr3": day-time-duration("PT7H56M42S"), "dr4": null }

@@ -1,56 +1,55 @@
-[ { "emp.id": 1, "emp.supvrid": null }
-, { "emp.id": 2, "emp.supvrid": 1 }
-, { "emp.id": 3, "emp.supvrid": 1 }
-, { "emp.id": 4, "emp.supvrid": "1" }
-, { "emp.id": 5, "emp.supvrid": 1.0d }
-, { "emp.id": 6, "emp.supvrid": null }
-, { "emp.id": 7, "emp.supvrid": 2 }
-, { "emp.id": 8, "emp.supvrid": 2 }
-, { "emp.id": 9, "emp.supvrid": "2" }
-, { "emp.id": 10, "emp.supvrid": 2.0d }
-, { "emp.id": 11, "emp.supvrid": null }
-, { "emp.id": 12, "emp.supvrid": 3 }
-, { "emp.id": 13, "emp.supvrid": 3 }
-, { "emp.id": 14, "emp.supvrid": "3" }
-, { "emp.id": 15, "emp.supvrid": 3.0d }
-, { "emp.id": 16, "emp.supvrid": null }
-, { "emp.id": 17, "emp.supvrid": 4 }
-, { "emp.id": 18, "emp.supvrid": 4 }
-, { "emp.id": 19, "emp.supvrid": "4" }
-, { "emp.id": 20, "emp.supvrid": 4.0d }
-, { "emp.id": 21, "emp.supvrid": null }
-, { "emp.id": 22, "emp.supvrid": 5 }
-, { "emp.id": 23, "emp.supvrid": 5 }
-, { "emp.id": 24, "emp.supvrid": "5" }
-, { "emp.id": 25, "emp.supvrid": 5.0d }
-, { "emp.id": 26, "emp.supvrid": null }
-, { "emp.id": 27, "emp.supvrid": 6 }
-, { "emp.id": 28, "emp.supvrid": 6 }
-, { "emp.id": 29, "emp.supvrid": "6" }
-, { "emp.id": 30, "emp.supvrid": 6.0d }
-, { "emp.id": 31, "emp.supvrid": null }
-, { "emp.id": 32, "emp.supvrid": 7 }
-, { "emp.id": 33, "emp.supvrid": 7 }
-, { "emp.id": 34, "emp.supvrid": "7" }
-, { "emp.id": 35, "emp.supvrid": 7.0d }
-, { "emp.id": 36, "emp.supvrid": null }
-, { "emp.id": 37, "emp.supvrid": 8 }
-, { "emp.id": 38, "emp.supvrid": 8 }
-, { "emp.id": 39, "emp.supvrid": "8" }
-, { "emp.id": 40, "emp.supvrid": 8.0d }
-, { "emp.id": 41, "emp.supvrid": null }
-, { "emp.id": 42, "emp.supvrid": 9 }
-, { "emp.id": 43, "emp.supvrid": 9 }
-, { "emp.id": 44, "emp.supvrid": "9" }
-, { "emp.id": 45, "emp.supvrid": 9.0d }
-, { "emp.id": 46, "emp.supvrid": null }
-, { "emp.id": 47, "emp.supvrid": 10 }
-, { "emp.id": 48, "emp.supvrid": 10 }
-, { "emp.id": 49, "emp.supvrid": "10" }
-, { "emp.id": 50, "emp.supvrid": 10.0d }
-, { "emp.id": 51, "emp.supvrid": point("80.1,-1000000.0") }
-, { "emp.id": 52, "emp.supvrid": point("5.1E-10,-1000000.0") }
-, { "emp.id": 53, "emp.supvrid": circle("10.1234,1.11 0.102") }
-, { "emp.id": 54, "emp.supvrid": time("12:54:54.039Z") }
-, { "emp.id": 55, "emp.supvrid": duration("P101YT12M") }
- ]
+{ "emp.id": 1, "emp.supvrid": null }
+{ "emp.id": 2, "emp.supvrid": 1 }
+{ "emp.id": 3, "emp.supvrid": 1 }
+{ "emp.id": 4, "emp.supvrid": "1" }
+{ "emp.id": 5, "emp.supvrid": 1.0d }
+{ "emp.id": 6, "emp.supvrid": null }
+{ "emp.id": 7, "emp.supvrid": 2 }
+{ "emp.id": 8, "emp.supvrid": 2 }
+{ "emp.id": 9, "emp.supvrid": "2" }
+{ "emp.id": 10, "emp.supvrid": 2.0d }
+{ "emp.id": 11, "emp.supvrid": null }
+{ "emp.id": 12, "emp.supvrid": 3 }
+{ "emp.id": 13, "emp.supvrid": 3 }
+{ "emp.id": 14, "emp.supvrid": "3" }
+{ "emp.id": 15, "emp.supvrid": 3.0d }
+{ "emp.id": 16, "emp.supvrid": null }
+{ "emp.id": 17, "emp.supvrid": 4 }
+{ "emp.id": 18, "emp.supvrid": 4 }
+{ "emp.id": 19, "emp.supvrid": "4" }
+{ "emp.id": 20, "emp.supvrid": 4.0d }
+{ "emp.id": 21, "emp.supvrid": null }
+{ "emp.id": 22, "emp.supvrid": 5 }
+{ "emp.id": 23, "emp.supvrid": 5 }
+{ "emp.id": 24, "emp.supvrid": "5" }
+{ "emp.id": 25, "emp.supvrid": 5.0d }
+{ "emp.id": 26, "emp.supvrid": null }
+{ "emp.id": 27, "emp.supvrid": 6 }
+{ "emp.id": 28, "emp.supvrid": 6 }
+{ "emp.id": 29, "emp.supvrid": "6" }
+{ "emp.id": 30, "emp.supvrid": 6.0d }
+{ "emp.id": 31, "emp.supvrid": null }
+{ "emp.id": 32, "emp.supvrid": 7 }
+{ "emp.id": 33, "emp.supvrid": 7 }
+{ "emp.id": 34, "emp.supvrid": "7" }
+{ "emp.id": 35, "emp.supvrid": 7.0d }
+{ "emp.id": 36, "emp.supvrid": null }
+{ "emp.id": 37, "emp.supvrid": 8 }
+{ "emp.id": 38, "emp.supvrid": 8 }
+{ "emp.id": 39, "emp.supvrid": "8" }
+{ "emp.id": 40, "emp.supvrid": 8.0d }
+{ "emp.id": 41, "emp.supvrid": null }
+{ "emp.id": 42, "emp.supvrid": 9 }
+{ "emp.id": 43, "emp.supvrid": 9 }
+{ "emp.id": 44, "emp.supvrid": "9" }
+{ "emp.id": 45, "emp.supvrid": 9.0d }
+{ "emp.id": 46, "emp.supvrid": null }
+{ "emp.id": 47, "emp.supvrid": 10 }
+{ "emp.id": 48, "emp.supvrid": 10 }
+{ "emp.id": 49, "emp.supvrid": "10" }
+{ "emp.id": 50, "emp.supvrid": 10.0d }
+{ "emp.id": 51, "emp.supvrid": point("80.1,-1000000.0") }
+{ "emp.id": 52, "emp.supvrid": point("5.1E-10,-1000000.0") }
+{ "emp.id": 53, "emp.supvrid": circle("10.1234,1.11 0.102") }
+{ "emp.id": 54, "emp.supvrid": time("12:54:54.039Z") }
+{ "emp.id": 55, "emp.supvrid": duration("P101YT12M") }

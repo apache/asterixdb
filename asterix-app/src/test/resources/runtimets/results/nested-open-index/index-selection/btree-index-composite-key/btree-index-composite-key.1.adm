@@ -1,2 +1,1 @@
-[ { "id": 881, "age": 38, "dept": "Sales", "fname": "Julio", "lname": "Isa" }
- ]
+{ "id": 881, "age": 38, "dept": "Sales", "fname": "Julio", "lname": "Isa" }

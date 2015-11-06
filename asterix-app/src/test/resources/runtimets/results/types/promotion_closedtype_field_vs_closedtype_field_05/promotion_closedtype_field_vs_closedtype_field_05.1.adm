@@ -1,21 +1,20 @@
-[ { "emp.id": -10, "dept.did": -10, "emp.empno": -10, "dept.dno": -10i32 }
-, { "emp.id": -9, "dept.did": -9, "emp.empno": -9, "dept.dno": -9i32 }
-, { "emp.id": -8, "dept.did": -8, "emp.empno": -8, "dept.dno": -8i32 }
-, { "emp.id": -7, "dept.did": -7, "emp.empno": -7, "dept.dno": -7i32 }
-, { "emp.id": -6, "dept.did": -6, "emp.empno": -6, "dept.dno": -6i32 }
-, { "emp.id": -5, "dept.did": -5, "emp.empno": -5, "dept.dno": -5i32 }
-, { "emp.id": -4, "dept.did": -4, "emp.empno": -4, "dept.dno": -4i32 }
-, { "emp.id": -3, "dept.did": -3, "emp.empno": -3, "dept.dno": -3i32 }
-, { "emp.id": -2, "dept.did": -2, "emp.empno": -2, "dept.dno": -2i32 }
-, { "emp.id": -1, "dept.did": -1, "emp.empno": -1, "dept.dno": -1i32 }
-, { "emp.id": 1, "dept.did": 1, "emp.empno": 1, "dept.dno": 1i32 }
-, { "emp.id": 2, "dept.did": 2, "emp.empno": 2, "dept.dno": 2i32 }
-, { "emp.id": 3, "dept.did": 3, "emp.empno": 3, "dept.dno": 3i32 }
-, { "emp.id": 4, "dept.did": 4, "emp.empno": 4, "dept.dno": 4i32 }
-, { "emp.id": 5, "dept.did": 5, "emp.empno": 5, "dept.dno": 5i32 }
-, { "emp.id": 6, "dept.did": 6, "emp.empno": 6, "dept.dno": 6i32 }
-, { "emp.id": 7, "dept.did": 7, "emp.empno": 7, "dept.dno": 7i32 }
-, { "emp.id": 8, "dept.did": 8, "emp.empno": 8, "dept.dno": 8i32 }
-, { "emp.id": 9, "dept.did": 9, "emp.empno": 9, "dept.dno": 9i32 }
-, { "emp.id": 10, "dept.did": 10, "emp.empno": 10, "dept.dno": 10i32 }
- ]
+{ "emp.id": -10, "dept.did": -10, "emp.empno": -10, "dept.dno": -10i32 }
+{ "emp.id": -9, "dept.did": -9, "emp.empno": -9, "dept.dno": -9i32 }
+{ "emp.id": -8, "dept.did": -8, "emp.empno": -8, "dept.dno": -8i32 }
+{ "emp.id": -7, "dept.did": -7, "emp.empno": -7, "dept.dno": -7i32 }
+{ "emp.id": -6, "dept.did": -6, "emp.empno": -6, "dept.dno": -6i32 }
+{ "emp.id": -5, "dept.did": -5, "emp.empno": -5, "dept.dno": -5i32 }
+{ "emp.id": -4, "dept.did": -4, "emp.empno": -4, "dept.dno": -4i32 }
+{ "emp.id": -3, "dept.did": -3, "emp.empno": -3, "dept.dno": -3i32 }
+{ "emp.id": -2, "dept.did": -2, "emp.empno": -2, "dept.dno": -2i32 }
+{ "emp.id": -1, "dept.did": -1, "emp.empno": -1, "dept.dno": -1i32 }
+{ "emp.id": 1, "dept.did": 1, "emp.empno": 1, "dept.dno": 1i32 }
+{ "emp.id": 2, "dept.did": 2, "emp.empno": 2, "dept.dno": 2i32 }
+{ "emp.id": 3, "dept.did": 3, "emp.empno": 3, "dept.dno": 3i32 }
+{ "emp.id": 4, "dept.did": 4, "emp.empno": 4, "dept.dno": 4i32 }
+{ "emp.id": 5, "dept.did": 5, "emp.empno": 5, "dept.dno": 5i32 }
+{ "emp.id": 6, "dept.did": 6, "emp.empno": 6, "dept.dno": 6i32 }
+{ "emp.id": 7, "dept.did": 7, "emp.empno": 7, "dept.dno": 7i32 }
+{ "emp.id": 8, "dept.did": 8, "emp.empno": 8, "dept.dno": 8i32 }
+{ "emp.id": 9, "dept.did": 9, "emp.empno": 9, "dept.dno": 9i32 }
+{ "emp.id": 10, "dept.did": 10, "emp.empno": 10, "dept.dno": 10i32 }

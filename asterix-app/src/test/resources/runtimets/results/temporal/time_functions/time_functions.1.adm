@@ -1,2 +1,1 @@
-[ { "time1": time("00:26:00.074Z"), "time2": time("23:35:49.938Z"), "time3": time("23:30:23.000Z"), "time4": time("18:26:00.074Z"), "time5": time("00:11:49.938Z"), "duration1": duration("-PT23H24M"), "duration2": duration("PT18H"), "c1": true, "c2": true, "null1": null, "null2": null, "null3": null, "null4": null, "null5": null, "null6": null }
- ]
+{ "time1": time("00:26:00.074Z"), "time2": time("23:35:49.938Z"), "time3": time("23:30:23.000Z"), "time4": time("18:26:00.074Z"), "time5": time("00:11:49.938Z"), "duration1": duration("-PT23H24M"), "duration2": duration("PT18H"), "c1": true, "c2": true, "null1": null, "null2": null, "null3": null, "null4": null, "null5": null, "null6": null }

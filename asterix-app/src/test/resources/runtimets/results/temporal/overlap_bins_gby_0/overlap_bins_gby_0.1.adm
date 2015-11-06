@@ -1,24 +1,23 @@
-[ { "tbin": interval-time("00:00:00.000Z, 01:30:00.000Z"), "interval": interval-time("00:27:13.432Z, 01:27:13.432Z"), "overlap": interval-time("00:27:13.432Z, 01:27:13.432Z") }
-, { "tbin": interval-time("07:30:00.000Z, 09:00:00.000Z"), "interval": interval-time("07:49:23.938Z, 10:49:23.938Z"), "overlap": interval-time("07:49:23.938Z, 09:00:00.000Z") }
-, { "tbin": interval-time("09:00:00.000Z, 10:30:00.000Z"), "interval": interval-time("07:49:23.938Z, 10:49:23.938Z"), "overlap": interval-time("09:00:00.000Z, 10:30:00.000Z") }
-, { "tbin": interval-time("09:00:00.000Z, 10:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("09:35:28.039Z, 10:30:00.000Z") }
-, { "tbin": interval-time("10:30:00.000Z, 12:00:00.000Z"), "interval": interval-time("07:49:23.938Z, 10:49:23.938Z"), "overlap": interval-time("10:30:00.000Z, 10:49:23.938Z") }
-, { "tbin": interval-time("10:30:00.000Z, 12:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("10:30:00.000Z, 12:00:00.000Z") }
-, { "tbin": interval-time("12:00:00.000Z, 13:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("12:00:00.000Z, 13:30:00.000Z") }
-, { "tbin": interval-time("12:00:00.000Z, 13:30:00.000Z"), "interval": interval-time("12:49:23.938Z, 15:49:23.938Z"), "overlap": interval-time("12:49:23.938Z, 13:30:00.000Z") }
-, { "tbin": interval-time("13:30:00.000Z, 15:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("13:30:00.000Z, 15:00:00.000Z") }
-, { "tbin": interval-time("13:30:00.000Z, 15:00:00.000Z"), "interval": interval-time("12:49:23.938Z, 15:49:23.938Z"), "overlap": interval-time("13:30:00.000Z, 15:00:00.000Z") }
-, { "tbin": interval-time("15:00:00.000Z, 16:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("15:00:00.000Z, 16:30:00.000Z") }
-, { "tbin": interval-time("15:00:00.000Z, 16:30:00.000Z"), "interval": interval-time("12:49:23.938Z, 15:49:23.938Z"), "overlap": interval-time("15:00:00.000Z, 15:49:23.938Z") }
-, { "tbin": interval-time("16:30:00.000Z, 18:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("16:30:00.000Z, 18:00:00.000Z") }
-, { "tbin": interval-time("16:30:00.000Z, 18:00:00.000Z"), "interval": interval-time("17:28:13.900Z, 17:28:32.900Z"), "overlap": interval-time("17:28:13.900Z, 17:28:32.900Z") }
-, { "tbin": interval-time("18:00:00.000Z, 19:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("18:00:00.000Z, 19:30:00.000Z") }
-, { "tbin": interval-time("18:00:00.000Z, 19:30:00.000Z"), "interval": interval-time("18:00:00.000Z, 20:00:00.000Z"), "overlap": interval-time("18:00:00.000Z, 19:30:00.000Z") }
-, { "tbin": interval-time("19:30:00.000Z, 21:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("19:30:00.000Z, 20:25:28.039Z") }
-, { "tbin": interval-time("19:30:00.000Z, 21:00:00.000Z"), "interval": interval-time("18:00:00.000Z, 20:00:00.000Z"), "overlap": interval-time("19:30:00.000Z, 20:00:00.000Z") }
-, { "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:22:38.000Z, 23:42:38.000Z"), "overlap": interval-time("23:22:38.000Z, 23:42:38.000Z") }
-, { "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:30:00.000Z, 23:32:00.000Z"), "overlap": interval-time("23:30:00.000Z, 23:32:00.000Z") }
-, { "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:49:23.938Z, 23:54:23.938Z"), "overlap": interval-time("23:49:23.938Z, 23:54:23.938Z") }
-, { "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:49:33.938Z, 23:50:03.938Z"), "overlap": interval-time("23:49:33.938Z, 23:50:03.938Z") }
-, { "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:58:17.038Z, 23:58:56.420Z"), "overlap": interval-time("23:58:17.038Z, 23:58:56.420Z") }
- ]
+{ "tbin": interval-time("00:00:00.000Z, 01:30:00.000Z"), "interval": interval-time("00:27:13.432Z, 01:27:13.432Z"), "overlap": interval-time("00:27:13.432Z, 01:27:13.432Z") }
+{ "tbin": interval-time("07:30:00.000Z, 09:00:00.000Z"), "interval": interval-time("07:49:23.938Z, 10:49:23.938Z"), "overlap": interval-time("07:49:23.938Z, 09:00:00.000Z") }
+{ "tbin": interval-time("09:00:00.000Z, 10:30:00.000Z"), "interval": interval-time("07:49:23.938Z, 10:49:23.938Z"), "overlap": interval-time("09:00:00.000Z, 10:30:00.000Z") }
+{ "tbin": interval-time("09:00:00.000Z, 10:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("09:35:28.039Z, 10:30:00.000Z") }
+{ "tbin": interval-time("10:30:00.000Z, 12:00:00.000Z"), "interval": interval-time("07:49:23.938Z, 10:49:23.938Z"), "overlap": interval-time("10:30:00.000Z, 10:49:23.938Z") }
+{ "tbin": interval-time("10:30:00.000Z, 12:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("10:30:00.000Z, 12:00:00.000Z") }
+{ "tbin": interval-time("12:00:00.000Z, 13:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("12:00:00.000Z, 13:30:00.000Z") }
+{ "tbin": interval-time("12:00:00.000Z, 13:30:00.000Z"), "interval": interval-time("12:49:23.938Z, 15:49:23.938Z"), "overlap": interval-time("12:49:23.938Z, 13:30:00.000Z") }
+{ "tbin": interval-time("13:30:00.000Z, 15:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("13:30:00.000Z, 15:00:00.000Z") }
+{ "tbin": interval-time("13:30:00.000Z, 15:00:00.000Z"), "interval": interval-time("12:49:23.938Z, 15:49:23.938Z"), "overlap": interval-time("13:30:00.000Z, 15:00:00.000Z") }
+{ "tbin": interval-time("15:00:00.000Z, 16:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("15:00:00.000Z, 16:30:00.000Z") }
+{ "tbin": interval-time("15:00:00.000Z, 16:30:00.000Z"), "interval": interval-time("12:49:23.938Z, 15:49:23.938Z"), "overlap": interval-time("15:00:00.000Z, 15:49:23.938Z") }
+{ "tbin": interval-time("16:30:00.000Z, 18:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("16:30:00.000Z, 18:00:00.000Z") }
+{ "tbin": interval-time("16:30:00.000Z, 18:00:00.000Z"), "interval": interval-time("17:28:13.900Z, 17:28:32.900Z"), "overlap": interval-time("17:28:13.900Z, 17:28:32.900Z") }
+{ "tbin": interval-time("18:00:00.000Z, 19:30:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("18:00:00.000Z, 19:30:00.000Z") }
+{ "tbin": interval-time("18:00:00.000Z, 19:30:00.000Z"), "interval": interval-time("18:00:00.000Z, 20:00:00.000Z"), "overlap": interval-time("18:00:00.000Z, 19:30:00.000Z") }
+{ "tbin": interval-time("19:30:00.000Z, 21:00:00.000Z"), "interval": interval-time("09:35:28.039Z, 20:25:28.039Z"), "overlap": interval-time("19:30:00.000Z, 20:25:28.039Z") }
+{ "tbin": interval-time("19:30:00.000Z, 21:00:00.000Z"), "interval": interval-time("18:00:00.000Z, 20:00:00.000Z"), "overlap": interval-time("19:30:00.000Z, 20:00:00.000Z") }
+{ "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:22:38.000Z, 23:42:38.000Z"), "overlap": interval-time("23:22:38.000Z, 23:42:38.000Z") }
+{ "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:30:00.000Z, 23:32:00.000Z"), "overlap": interval-time("23:30:00.000Z, 23:32:00.000Z") }
+{ "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:49:23.938Z, 23:54:23.938Z"), "overlap": interval-time("23:49:23.938Z, 23:54:23.938Z") }
+{ "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:49:33.938Z, 23:50:03.938Z"), "overlap": interval-time("23:49:33.938Z, 23:50:03.938Z") }
+{ "tbin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "interval": interval-time("23:58:17.038Z, 23:58:56.420Z"), "overlap": interval-time("23:58:17.038Z, 23:58:56.420Z") }

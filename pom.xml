@@ -147,31 +147,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                 <!-- We override the configuration plugin to override the descriptor to use for building
-                  the source release zip. Specifically, we would like to control the inclusions/exclusions.
-                  For example, we exclude the KEYS file from the zip -->
-                <executions>
-                    <execution>
-                    <!-- Use this id to match the id mentioned in the assembly plugin configuration in
-                     the apache parent POM under the apache-release profile -->
-                        <id>source-release-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <!-- combine.self should be override to replace the configuration in the parent POM -->
-                        <configuration combine.self="override">
-                            <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                            <descriptors>
-                                <descriptor>src/main/assembly/source.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                  </execution>
-              </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>

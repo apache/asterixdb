@@ -71,6 +71,9 @@ abstract class RESTAPIServlet extends HttpServlet {
         // First check the "output" servlet parameter.
         String output = request.getParameter("output");
         String accept = request.getHeader("Accept");
+        if (accept == null) {
+            accept = "";
+        }
         if (output != null) {
             if (output.equals("CSV")) {
                 format = OutputFormat.CSV;
@@ -79,23 +82,42 @@ abstract class RESTAPIServlet extends HttpServlet {
             }
         } else {
             // Second check the Accept: HTTP header.
-            if (accept != null) {
-                if (accept.contains("application/x-adm")) {
-                    format = OutputFormat.ADM;
-                } else if (accept.contains("text/csv")) {
-                    format = OutputFormat.CSV;
-                }
+            if (accept.contains("application/x-adm")) {
+                format = OutputFormat.ADM;
+            } else if (accept.contains("text/csv")) {
+                format = OutputFormat.CSV;
             }
         }
 
         // If it's JSON, check for the "lossless" flag
-        if (format == OutputFormat.CLEAN_JSON
-                && ("true".equals(request.getParameter("lossless")) || (accept != null && accept
-                        .contains("lossless=true")))) {
+        if (format == OutputFormat.CLEAN_JSON &&
+                ("true".equals(request.getParameter("lossless")) || accept.contains("lossless=true")) ) {
             format = OutputFormat.LOSSLESS_JSON;
         }
 
         SessionConfig sessionConfig = new SessionConfig(response.getWriter(), format);
+
+        // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
+        // "true" for JSON and "false" for ADM. (Not applicable for CSV.)
+        boolean wrapper_array;
+        switch (format) {
+            case CLEAN_JSON:
+            case LOSSLESS_JSON:
+                wrapper_array = true;
+                break;
+            default:
+                wrapper_array = false;
+                break;
+        }
+        String wrapper_param = request.getParameter("wrapper-array");
+        if (wrapper_param != null) {
+            wrapper_array = Boolean.valueOf(wrapper_param);
+        } else if (accept.contains("wrap-array=true")) {
+            wrapper_array = true;
+        } else if (accept.contains("wrap-array=false")) {
+            wrapper_array = false;
+        }
+        sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, wrapper_array);
 
         // Now that format is set, output the content-type
         switch (format) {
@@ -109,15 +131,15 @@ abstract class RESTAPIServlet extends HttpServlet {
                 break;
             case CSV: {
                 // Check for header parameter or in Accept:.
-                if ("present".equals(request.getParameter("header"))
-                        || (accept != null && accept.contains("header=present"))) {
+                if ("present".equals(request.getParameter("header")) ||
+                    accept.contains("header=present")) {
                     response.setContentType("text/csv; header=present");
                     sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, true);
                 } else {
                     response.setContentType("text/csv; header=absent");
                 }
             }
-        };
+        }
 
         return sessionConfig;
     }

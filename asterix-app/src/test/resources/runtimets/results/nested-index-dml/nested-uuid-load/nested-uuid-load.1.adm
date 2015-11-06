@@ -1,13 +1,12 @@
-[ { "tweetid": 1, "screen-name": "NathanGiesen@211" }
-, { "tweetid": 2, "screen-name": "ColineGeyer@63" }
-, { "tweetid": 3, "screen-name": "NathanGiesen@211" }
-, { "tweetid": 4, "screen-name": "NathanGiesen@211" }
-, { "tweetid": 5, "screen-name": "NathanGiesen@211" }
-, { "tweetid": 6, "screen-name": "ColineGeyer@63" }
-, { "tweetid": 7, "screen-name": "ChangEwing_573" }
-, { "tweetid": 8, "screen-name": "NathanGiesen@211" }
-, { "tweetid": 9, "screen-name": "NathanGiesen@211" }
-, { "tweetid": 10, "screen-name": "ColineGeyer@63" }
-, { "tweetid": 11, "screen-name": "NilaMilliron_tw" }
-, { "tweetid": 12, "screen-name": "OliJackson_512" }
- ]
+{ "tweetid": 1, "screen-name": "NathanGiesen@211" }
+{ "tweetid": 2, "screen-name": "ColineGeyer@63" }
+{ "tweetid": 3, "screen-name": "NathanGiesen@211" }
+{ "tweetid": 4, "screen-name": "NathanGiesen@211" }
+{ "tweetid": 5, "screen-name": "NathanGiesen@211" }
+{ "tweetid": 6, "screen-name": "ColineGeyer@63" }
+{ "tweetid": 7, "screen-name": "ChangEwing_573" }
+{ "tweetid": 8, "screen-name": "NathanGiesen@211" }
+{ "tweetid": 9, "screen-name": "NathanGiesen@211" }
+{ "tweetid": 10, "screen-name": "ColineGeyer@63" }
+{ "tweetid": 11, "screen-name": "NilaMilliron_tw" }
+{ "tweetid": 12, "screen-name": "OliJackson_512" }

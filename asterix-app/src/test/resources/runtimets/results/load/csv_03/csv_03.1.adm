@@ -1,5 +1,4 @@
-[ { "id": 1, "float": 0.1f, "floatq": 0.1f, "double": 0.1d, "doubleq": 0.1d, "string": "abc", "stringq": "abc" }
-, { "id": 2, "float": 0.2f, "floatq": null, "double": 0.2d, "doubleq": null, "string": "", "stringq": null }
-, { "id": 3, "float": 0.3f, "floatq": null, "double": 0.3d, "doubleq": null, "string": "", "stringq": null }
-, { "id": 4, "float": 0.4f, "floatq": null, "double": 0.4d, "doubleq": null, "string": "", "stringq": null }
- ]
+{ "id": 1, "float": 0.1f, "floatq": 0.1f, "double": 0.1d, "doubleq": 0.1d, "string": "abc", "stringq": "abc" }
+{ "id": 2, "float": 0.2f, "floatq": null, "double": 0.2d, "doubleq": null, "string": "", "stringq": null }
+{ "id": 3, "float": 0.3f, "floatq": null, "double": 0.3d, "doubleq": null, "string": "", "stringq": null }
+{ "id": 4, "float": 0.4f, "floatq": null, "double": 0.4d, "doubleq": null, "string": "", "stringq": null }

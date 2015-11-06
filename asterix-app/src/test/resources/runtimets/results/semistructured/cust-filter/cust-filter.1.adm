@@ -1,3 +1,2 @@
-[ { "custname": "Kenny Laychock", "custage": 15 }
-, { "custname": "Dorie Lave", "custage": 10 }
- ]
+{ "custname": "Kenny Laychock", "custage": 15 }
+{ "custname": "Dorie Lave", "custage": 10 }

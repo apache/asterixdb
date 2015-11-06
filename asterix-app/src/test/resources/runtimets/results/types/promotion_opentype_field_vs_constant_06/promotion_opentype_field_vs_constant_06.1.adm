@@ -1,4 +1,3 @@
-[ { "emp.id": 2, "emp.supvrid": 1 }
-, { "emp.id": 3, "emp.supvrid": 1 }
-, { "emp.id": 5, "emp.supvrid": 1.0d }
- ]
+{ "emp.id": 2, "emp.supvrid": 1 }
+{ "emp.id": 3, "emp.supvrid": 1 }
+{ "emp.id": 5, "emp.supvrid": 1.0d }

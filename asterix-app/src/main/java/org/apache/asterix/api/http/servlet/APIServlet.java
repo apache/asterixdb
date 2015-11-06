@@ -77,6 +77,7 @@ public class APIServlet extends HttpServlet {
         }
 
         String query = request.getParameter("query");
+        String wrapperArray = request.getParameter("wrapper-array");
         String printExprParam = request.getParameter("print-expr-tree");
         String printRewrittenExprParam = request.getParameter("print-rewritten-expr-tree");
         String printLogicalPlanParam = request.getParameter("print-logical-plan");
@@ -105,6 +106,7 @@ public class APIServlet extends HttpServlet {
             SessionConfig sessionConfig = new SessionConfig(out, format, true, isSet(executeQuery), true);
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csv_and_header);
+            sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, isSet(wrapperArray));
             sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             MetadataManager.INSTANCE.init();

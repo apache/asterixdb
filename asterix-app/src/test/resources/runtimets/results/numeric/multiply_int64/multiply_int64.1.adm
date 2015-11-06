@@ -1,2 +1,1 @@
-[ { "result1": -4, "result2": -8, "result3": -12, "result4": 16, "result5": 22.0f, "result6": 26.0d, "result7": null }
- ]
+{ "result1": -4, "result2": -8, "result3": -12, "result4": 16, "result5": 22.0f, "result6": 26.0d, "result7": null }

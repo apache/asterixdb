@@ -1,601 +1,600 @@
-[ { "partkey": 6, "pid": 1, "shipdate": "1992-04-05" }
-, { "partkey": 6, "pid": 2, "shipdate": "1992-04-25" }
-, { "partkey": 6, "pid": 3, "shipdate": "1992-04-29" }
-, { "partkey": 11, "pid": 1, "shipdate": "1992-02-14" }
-, { "partkey": 11, "pid": 2, "shipdate": "1992-07-20" }
-, { "partkey": 11, "pid": 3, "shipdate": "1992-08-03" }
-, { "partkey": 12, "pid": 1, "shipdate": "1992-07-04" }
-, { "partkey": 12, "pid": 2, "shipdate": "1992-07-17" }
-, { "partkey": 12, "pid": 3, "shipdate": "1992-09-02" }
-, { "partkey": 14, "pid": 1, "shipdate": "1992-07-17" }
-, { "partkey": 14, "pid": 2, "shipdate": "1992-11-30" }
-, { "partkey": 14, "pid": 3, "shipdate": "1993-05-10" }
-, { "partkey": 21, "pid": 1, "shipdate": "1992-07-31" }
-, { "partkey": 21, "pid": 2, "shipdate": "1992-09-09" }
-, { "partkey": 21, "pid": 3, "shipdate": "1993-01-09" }
-, { "partkey": 23, "pid": 1, "shipdate": "1992-04-04" }
-, { "partkey": 23, "pid": 2, "shipdate": "1992-06-19" }
-, { "partkey": 23, "pid": 3, "shipdate": "1992-06-29" }
-, { "partkey": 26, "pid": 1, "shipdate": "1992-02-23" }
-, { "partkey": 26, "pid": 2, "shipdate": "1992-05-09" }
-, { "partkey": 26, "pid": 3, "shipdate": "1993-01-04" }
-, { "partkey": 30, "pid": 1, "shipdate": "1992-04-10" }
-, { "partkey": 30, "pid": 2, "shipdate": "1992-05-18" }
-, { "partkey": 30, "pid": 3, "shipdate": "1992-05-21" }
-, { "partkey": 33, "pid": 1, "shipdate": "1992-03-22" }
-, { "partkey": 33, "pid": 2, "shipdate": "1993-02-17" }
-, { "partkey": 33, "pid": 3, "shipdate": "1993-02-21" }
-, { "partkey": 38, "pid": 1, "shipdate": "1992-04-06" }
-, { "partkey": 38, "pid": 2, "shipdate": "1992-04-15" }
-, { "partkey": 38, "pid": 3, "shipdate": "1992-08-27" }
-, { "partkey": 45, "pid": 1, "shipdate": "1992-07-16" }
-, { "partkey": 45, "pid": 2, "shipdate": "1993-06-24" }
-, { "partkey": 45, "pid": 3, "shipdate": "1993-09-15" }
-, { "partkey": 47, "pid": 1, "shipdate": "1992-03-11" }
-, { "partkey": 47, "pid": 2, "shipdate": "1993-05-30" }
-, { "partkey": 47, "pid": 3, "shipdate": "1993-06-06" }
-, { "partkey": 49, "pid": 1, "shipdate": "1992-04-29" }
-, { "partkey": 49, "pid": 2, "shipdate": "1992-06-14" }
-, { "partkey": 49, "pid": 3, "shipdate": "1992-08-13" }
-, { "partkey": 51, "pid": 1, "shipdate": "1992-03-11" }
-, { "partkey": 51, "pid": 2, "shipdate": "1992-05-15" }
-, { "partkey": 51, "pid": 3, "shipdate": "1992-05-17" }
-, { "partkey": 58, "pid": 1, "shipdate": "1992-05-16" }
-, { "partkey": 58, "pid": 2, "shipdate": "1992-10-30" }
-, { "partkey": 58, "pid": 3, "shipdate": "1993-04-10" }
-, { "partkey": 60, "pid": 1, "shipdate": "1992-02-14" }
-, { "partkey": 60, "pid": 2, "shipdate": "1992-07-01" }
-, { "partkey": 60, "pid": 3, "shipdate": "1992-07-15" }
-, { "partkey": 70, "pid": 1, "shipdate": "1992-04-06" }
-, { "partkey": 70, "pid": 2, "shipdate": "1992-06-11" }
-, { "partkey": 70, "pid": 3, "shipdate": "1992-06-25" }
-, { "partkey": 72, "pid": 1, "shipdate": "1992-09-16" }
-, { "partkey": 72, "pid": 2, "shipdate": "1992-10-02" }
-, { "partkey": 72, "pid": 3, "shipdate": "1992-10-17" }
-, { "partkey": 77, "pid": 1, "shipdate": "1992-08-18" }
-, { "partkey": 77, "pid": 2, "shipdate": "1992-12-23" }
-, { "partkey": 77, "pid": 3, "shipdate": "1993-06-19" }
-, { "partkey": 88, "pid": 1, "shipdate": "1992-04-24" }
-, { "partkey": 88, "pid": 2, "shipdate": "1992-06-26" }
-, { "partkey": 88, "pid": 3, "shipdate": "1992-12-18" }
-, { "partkey": 89, "pid": 1, "shipdate": "1992-04-18" }
-, { "partkey": 89, "pid": 2, "shipdate": "1992-04-19" }
-, { "partkey": 89, "pid": 3, "shipdate": "1992-05-27" }
-, { "partkey": 92, "pid": 1, "shipdate": "1992-02-11" }
-, { "partkey": 92, "pid": 2, "shipdate": "1992-09-30" }
-, { "partkey": 92, "pid": 3, "shipdate": "1993-01-04" }
-, { "partkey": 93, "pid": 1, "shipdate": "1992-05-28" }
-, { "partkey": 93, "pid": 2, "shipdate": "1992-06-24" }
-, { "partkey": 93, "pid": 3, "shipdate": "1992-09-11" }
-, { "partkey": 103, "pid": 1, "shipdate": "1992-03-28" }
-, { "partkey": 103, "pid": 2, "shipdate": "1992-05-08" }
-, { "partkey": 103, "pid": 3, "shipdate": "1992-07-11" }
-, { "partkey": 105, "pid": 1, "shipdate": "1992-02-14" }
-, { "partkey": 105, "pid": 2, "shipdate": "1992-06-01" }
-, { "partkey": 105, "pid": 3, "shipdate": "1992-07-14" }
-, { "partkey": 109, "pid": 1, "shipdate": "1992-06-06" }
-, { "partkey": 109, "pid": 2, "shipdate": "1992-11-20" }
-, { "partkey": 109, "pid": 3, "shipdate": "1992-12-23" }
-, { "partkey": 115, "pid": 1, "shipdate": "1992-03-13" }
-, { "partkey": 115, "pid": 2, "shipdate": "1992-05-29" }
-, { "partkey": 115, "pid": 3, "shipdate": "1992-06-17" }
-, { "partkey": 118, "pid": 1, "shipdate": "1992-06-18" }
-, { "partkey": 118, "pid": 2, "shipdate": "1992-09-27" }
-, { "partkey": 118, "pid": 3, "shipdate": "1992-10-02" }
-, { "partkey": 125, "pid": 1, "shipdate": "1992-03-15" }
-, { "partkey": 125, "pid": 2, "shipdate": "1992-03-29" }
-, { "partkey": 125, "pid": 3, "shipdate": "1992-05-24" }
-, { "partkey": 126, "pid": 1, "shipdate": "1992-07-28" }
-, { "partkey": 126, "pid": 2, "shipdate": "1992-08-28" }
-, { "partkey": 126, "pid": 3, "shipdate": "1992-09-06" }
-, { "partkey": 135, "pid": 1, "shipdate": "1992-05-02" }
-, { "partkey": 135, "pid": 2, "shipdate": "1992-05-11" }
-, { "partkey": 135, "pid": 3, "shipdate": "1992-05-29" }
-, { "partkey": 138, "pid": 1, "shipdate": "1992-06-20" }
-, { "partkey": 138, "pid": 2, "shipdate": "1992-11-21" }
-, { "partkey": 138, "pid": 3, "shipdate": "1993-02-28" }
-, { "partkey": 141, "pid": 1, "shipdate": "1992-01-13" }
-, { "partkey": 141, "pid": 2, "shipdate": "1992-02-01" }
-, { "partkey": 141, "pid": 3, "shipdate": "1992-06-22" }
-, { "partkey": 147, "pid": 1, "shipdate": "1992-06-10" }
-, { "partkey": 147, "pid": 2, "shipdate": "1992-09-04" }
-, { "partkey": 147, "pid": 3, "shipdate": "1992-12-03" }
-, { "partkey": 152, "pid": 1, "shipdate": "1992-06-23" }
-, { "partkey": 152, "pid": 2, "shipdate": "1993-05-19" }
-, { "partkey": 152, "pid": 3, "shipdate": "1993-10-31" }
-, { "partkey": 153, "pid": 1, "shipdate": "1992-02-22" }
-, { "partkey": 153, "pid": 2, "shipdate": "1992-06-02" }
-, { "partkey": 153, "pid": 3, "shipdate": "1992-06-29" }
-, { "partkey": 154, "pid": 1, "shipdate": "1992-02-18" }
-, { "partkey": 154, "pid": 2, "shipdate": "1992-02-20" }
-, { "partkey": 154, "pid": 3, "shipdate": "1992-05-14" }
-, { "partkey": 156, "pid": 1, "shipdate": "1992-04-24" }
-, { "partkey": 156, "pid": 2, "shipdate": "1992-06-17" }
-, { "partkey": 156, "pid": 3, "shipdate": "1992-07-01" }
-, { "partkey": 157, "pid": 1, "shipdate": "1992-07-26" }
-, { "partkey": 157, "pid": 2, "shipdate": "1992-08-11" }
-, { "partkey": 157, "pid": 3, "shipdate": "1992-08-25" }
-, { "partkey": 170, "pid": 1, "shipdate": "1992-08-07" }
-, { "partkey": 170, "pid": 2, "shipdate": "1993-03-17" }
-, { "partkey": 170, "pid": 3, "shipdate": "1993-06-19" }
-, { "partkey": 171, "pid": 1, "shipdate": "1992-11-09" }
-, { "partkey": 171, "pid": 2, "shipdate": "1994-01-22" }
-, { "partkey": 171, "pid": 3, "shipdate": "1995-01-02" }
-, { "partkey": 178, "pid": 1, "shipdate": "1992-05-23" }
-, { "partkey": 178, "pid": 2, "shipdate": "1992-08-18" }
-, { "partkey": 178, "pid": 3, "shipdate": "1992-11-02" }
-, { "partkey": 179, "pid": 1, "shipdate": "1992-05-30" }
-, { "partkey": 179, "pid": 2, "shipdate": "1992-06-02" }
-, { "partkey": 179, "pid": 3, "shipdate": "1992-09-20" }
-, { "partkey": 180, "pid": 1, "shipdate": "1992-03-07" }
-, { "partkey": 180, "pid": 2, "shipdate": "1992-05-23" }
-, { "partkey": 180, "pid": 3, "shipdate": "1992-06-21" }
-, { "partkey": 182, "pid": 1, "shipdate": "1992-03-02" }
-, { "partkey": 182, "pid": 2, "shipdate": "1992-04-02" }
-, { "partkey": 182, "pid": 3, "shipdate": "1992-04-28" }
-, { "partkey": 190, "pid": 1, "shipdate": "1992-04-14" }
-, { "partkey": 190, "pid": 2, "shipdate": "1992-07-17" }
-, { "partkey": 190, "pid": 3, "shipdate": "1992-10-12" }
-, { "partkey": 195, "pid": 1, "shipdate": "1992-04-10" }
-, { "partkey": 195, "pid": 2, "shipdate": "1992-05-07" }
-, { "partkey": 195, "pid": 3, "shipdate": "1992-05-28" }
-, { "partkey": 199, "pid": 1, "shipdate": "1992-03-14" }
-, { "partkey": 199, "pid": 2, "shipdate": "1992-08-02" }
-, { "partkey": 199, "pid": 3, "shipdate": "1992-11-20" }
-, { "partkey": 1, "pid": 1, "shipdate": "1992-02-15" }
-, { "partkey": 1, "pid": 2, "shipdate": "1992-03-30" }
-, { "partkey": 1, "pid": 3, "shipdate": "1992-07-17" }
-, { "partkey": 2, "pid": 1, "shipdate": "1992-06-23" }
-, { "partkey": 2, "pid": 2, "shipdate": "1992-07-01" }
-, { "partkey": 2, "pid": 3, "shipdate": "1992-07-18" }
-, { "partkey": 4, "pid": 1, "shipdate": "1992-05-02" }
-, { "partkey": 4, "pid": 2, "shipdate": "1992-11-03" }
-, { "partkey": 4, "pid": 3, "shipdate": "1992-11-18" }
-, { "partkey": 13, "pid": 1, "shipdate": "1992-04-01" }
-, { "partkey": 13, "pid": 2, "shipdate": "1992-04-26" }
-, { "partkey": 13, "pid": 3, "shipdate": "1992-05-04" }
-, { "partkey": 15, "pid": 1, "shipdate": "1992-05-18" }
-, { "partkey": 15, "pid": 2, "shipdate": "1992-05-24" }
-, { "partkey": 15, "pid": 3, "shipdate": "1993-04-14" }
-, { "partkey": 16, "pid": 1, "shipdate": "1992-09-11" }
-, { "partkey": 16, "pid": 2, "shipdate": "1992-09-25" }
-, { "partkey": 16, "pid": 3, "shipdate": "1992-11-17" }
-, { "partkey": 19, "pid": 1, "shipdate": "1992-07-19" }
-, { "partkey": 19, "pid": 2, "shipdate": "1992-10-21" }
-, { "partkey": 19, "pid": 3, "shipdate": "1992-12-22" }
-, { "partkey": 20, "pid": 1, "shipdate": "1992-06-15" }
-, { "partkey": 20, "pid": 2, "shipdate": "1992-07-29" }
-, { "partkey": 20, "pid": 3, "shipdate": "1992-10-18" }
-, { "partkey": 22, "pid": 1, "shipdate": "1992-06-21" }
-, { "partkey": 22, "pid": 2, "shipdate": "1992-06-25" }
-, { "partkey": 22, "pid": 3, "shipdate": "1992-11-20" }
-, { "partkey": 24, "pid": 1, "shipdate": "1992-04-12" }
-, { "partkey": 24, "pid": 2, "shipdate": "1992-08-06" }
-, { "partkey": 24, "pid": 3, "shipdate": "1992-08-08" }
-, { "partkey": 29, "pid": 1, "shipdate": "1992-05-25" }
-, { "partkey": 29, "pid": 2, "shipdate": "1992-06-01" }
-, { "partkey": 29, "pid": 3, "shipdate": "1992-07-25" }
-, { "partkey": 31, "pid": 1, "shipdate": "1992-07-14" }
-, { "partkey": 31, "pid": 2, "shipdate": "1992-09-24" }
-, { "partkey": 31, "pid": 3, "shipdate": "1992-09-29" }
-, { "partkey": 35, "pid": 1, "shipdate": "1992-03-11" }
-, { "partkey": 35, "pid": 2, "shipdate": "1992-04-06" }
-, { "partkey": 35, "pid": 3, "shipdate": "1992-05-26" }
-, { "partkey": 46, "pid": 1, "shipdate": "1992-04-28" }
-, { "partkey": 46, "pid": 2, "shipdate": "1992-05-08" }
-, { "partkey": 46, "pid": 3, "shipdate": "1992-05-21" }
-, { "partkey": 48, "pid": 1, "shipdate": "1992-05-10" }
-, { "partkey": 48, "pid": 2, "shipdate": "1992-06-03" }
-, { "partkey": 48, "pid": 3, "shipdate": "1992-06-15" }
-, { "partkey": 52, "pid": 1, "shipdate": "1992-05-31" }
-, { "partkey": 52, "pid": 2, "shipdate": "1992-09-03" }
-, { "partkey": 52, "pid": 3, "shipdate": "1992-09-21" }
-, { "partkey": 55, "pid": 1, "shipdate": "1992-01-16" }
-, { "partkey": 55, "pid": 2, "shipdate": "1992-05-11" }
-, { "partkey": 55, "pid": 3, "shipdate": "1992-06-17" }
-, { "partkey": 56, "pid": 1, "shipdate": "1992-01-16" }
-, { "partkey": 56, "pid": 2, "shipdate": "1992-03-02" }
-, { "partkey": 56, "pid": 3, "shipdate": "1992-06-18" }
-, { "partkey": 57, "pid": 1, "shipdate": "1992-01-16" }
-, { "partkey": 57, "pid": 2, "shipdate": "1992-07-06" }
-, { "partkey": 57, "pid": 3, "shipdate": "1992-09-21" }
-, { "partkey": 59, "pid": 1, "shipdate": "1992-02-09" }
-, { "partkey": 59, "pid": 2, "shipdate": "1992-03-17" }
-, { "partkey": 59, "pid": 3, "shipdate": "1992-06-12" }
-, { "partkey": 62, "pid": 1, "shipdate": "1992-02-01" }
-, { "partkey": 62, "pid": 2, "shipdate": "1992-03-26" }
-, { "partkey": 62, "pid": 3, "shipdate": "1992-06-19" }
-, { "partkey": 63, "pid": 1, "shipdate": "1992-02-07" }
-, { "partkey": 63, "pid": 2, "shipdate": "1992-06-15" }
-, { "partkey": 63, "pid": 3, "shipdate": "1993-02-07" }
-, { "partkey": 64, "pid": 1, "shipdate": "1992-02-13" }
-, { "partkey": 64, "pid": 2, "shipdate": "1992-02-14" }
-, { "partkey": 64, "pid": 3, "shipdate": "1992-03-10" }
-, { "partkey": 65, "pid": 1, "shipdate": "1992-03-02" }
-, { "partkey": 65, "pid": 2, "shipdate": "1992-04-14" }
-, { "partkey": 65, "pid": 3, "shipdate": "1992-06-26" }
-, { "partkey": 68, "pid": 1, "shipdate": "1992-04-13" }
-, { "partkey": 68, "pid": 2, "shipdate": "1992-06-08" }
-, { "partkey": 68, "pid": 3, "shipdate": "1992-06-22" }
-, { "partkey": 71, "pid": 1, "shipdate": "1992-11-10" }
-, { "partkey": 71, "pid": 2, "shipdate": "1993-01-10" }
-, { "partkey": 71, "pid": 3, "shipdate": "1993-02-28" }
-, { "partkey": 73, "pid": 1, "shipdate": "1992-01-08" }
-, { "partkey": 73, "pid": 2, "shipdate": "1992-09-16" }
-, { "partkey": 73, "pid": 3, "shipdate": "1993-07-02" }
-, { "partkey": 75, "pid": 1, "shipdate": "1992-03-27" }
-, { "partkey": 75, "pid": 2, "shipdate": "1992-05-12" }
-, { "partkey": 75, "pid": 3, "shipdate": "1992-09-19" }
-, { "partkey": 81, "pid": 1, "shipdate": "1992-04-11" }
-, { "partkey": 81, "pid": 2, "shipdate": "1992-06-22" }
-, { "partkey": 81, "pid": 3, "shipdate": "1992-12-30" }
-, { "partkey": 91, "pid": 1, "shipdate": "1992-05-22" }
-, { "partkey": 91, "pid": 2, "shipdate": "1992-06-21" }
-, { "partkey": 91, "pid": 3, "shipdate": "1992-12-03" }
-, { "partkey": 97, "pid": 1, "shipdate": "1992-01-27" }
-, { "partkey": 97, "pid": 2, "shipdate": "1992-03-22" }
-, { "partkey": 97, "pid": 3, "shipdate": "1992-04-21" }
-, { "partkey": 98, "pid": 1, "shipdate": "1992-10-06" }
-, { "partkey": 98, "pid": 2, "shipdate": "1992-12-09" }
-, { "partkey": 98, "pid": 3, "shipdate": "1993-03-09" }
-, { "partkey": 100, "pid": 1, "shipdate": "1992-03-24" }
-, { "partkey": 100, "pid": 2, "shipdate": "1992-03-24" }
-, { "partkey": 100, "pid": 3, "shipdate": "1992-06-18" }
-, { "partkey": 106, "pid": 1, "shipdate": "1992-07-09" }
-, { "partkey": 106, "pid": 2, "shipdate": "1992-07-31" }
-, { "partkey": 106, "pid": 3, "shipdate": "1992-10-02" }
-, { "partkey": 114, "pid": 1, "shipdate": "1992-11-19" }
-, { "partkey": 114, "pid": 2, "shipdate": "1992-11-22" }
-, { "partkey": 114, "pid": 3, "shipdate": "1993-03-22" }
-, { "partkey": 119, "pid": 1, "shipdate": "1992-05-08" }
-, { "partkey": 119, "pid": 2, "shipdate": "1992-05-27" }
-, { "partkey": 119, "pid": 3, "shipdate": "1992-09-07" }
-, { "partkey": 121, "pid": 1, "shipdate": "1992-04-23" }
-, { "partkey": 121, "pid": 2, "shipdate": "1992-06-09" }
-, { "partkey": 121, "pid": 3, "shipdate": "1992-06-23" }
-, { "partkey": 122, "pid": 1, "shipdate": "1992-03-12" }
-, { "partkey": 122, "pid": 2, "shipdate": "1992-04-09" }
-, { "partkey": 122, "pid": 3, "shipdate": "1992-06-05" }
-, { "partkey": 127, "pid": 1, "shipdate": "1992-06-04" }
-, { "partkey": 127, "pid": 2, "shipdate": "1992-07-02" }
-, { "partkey": 127, "pid": 3, "shipdate": "1994-01-13" }
-, { "partkey": 129, "pid": 1, "shipdate": "1992-03-31" }
-, { "partkey": 129, "pid": 2, "shipdate": "1992-05-28" }
-, { "partkey": 129, "pid": 3, "shipdate": "1992-08-15" }
-, { "partkey": 130, "pid": 1, "shipdate": "1992-04-03" }
-, { "partkey": 130, "pid": 2, "shipdate": "1992-05-23" }
-, { "partkey": 130, "pid": 3, "shipdate": "1992-08-20" }
-, { "partkey": 131, "pid": 1, "shipdate": "1992-02-27" }
-, { "partkey": 131, "pid": 2, "shipdate": "1992-03-03" }
-, { "partkey": 131, "pid": 3, "shipdate": "1992-05-14" }
-, { "partkey": 140, "pid": 1, "shipdate": "1992-03-20" }
-, { "partkey": 140, "pid": 2, "shipdate": "1992-04-27" }
-, { "partkey": 140, "pid": 3, "shipdate": "1992-08-03" }
-, { "partkey": 143, "pid": 1, "shipdate": "1992-04-17" }
-, { "partkey": 143, "pid": 2, "shipdate": "1992-09-01" }
-, { "partkey": 143, "pid": 3, "shipdate": "1992-09-05" }
-, { "partkey": 144, "pid": 1, "shipdate": "1992-07-05" }
-, { "partkey": 144, "pid": 2, "shipdate": "1992-08-25" }
-, { "partkey": 144, "pid": 3, "shipdate": "1992-09-17" }
-, { "partkey": 149, "pid": 1, "shipdate": "1992-03-22" }
-, { "partkey": 149, "pid": 2, "shipdate": "1992-04-29" }
-, { "partkey": 149, "pid": 3, "shipdate": "1992-05-14" }
-, { "partkey": 158, "pid": 1, "shipdate": "1992-08-01" }
-, { "partkey": 158, "pid": 2, "shipdate": "1992-08-29" }
-, { "partkey": 158, "pid": 3, "shipdate": "1992-09-18" }
-, { "partkey": 159, "pid": 1, "shipdate": "1992-05-07" }
-, { "partkey": 159, "pid": 2, "shipdate": "1992-06-03" }
-, { "partkey": 159, "pid": 3, "shipdate": "1992-07-10" }
-, { "partkey": 161, "pid": 1, "shipdate": "1992-03-29" }
-, { "partkey": 161, "pid": 2, "shipdate": "1992-06-18" }
-, { "partkey": 161, "pid": 3, "shipdate": "1992-08-28" }
-, { "partkey": 162, "pid": 1, "shipdate": "1992-04-10" }
-, { "partkey": 162, "pid": 2, "shipdate": "1992-05-03" }
-, { "partkey": 162, "pid": 3, "shipdate": "1992-06-11" }
-, { "partkey": 163, "pid": 1, "shipdate": "1992-02-09" }
-, { "partkey": 163, "pid": 2, "shipdate": "1992-04-27" }
-, { "partkey": 163, "pid": 3, "shipdate": "1992-06-01" }
-, { "partkey": 164, "pid": 1, "shipdate": "1992-03-25" }
-, { "partkey": 164, "pid": 2, "shipdate": "1992-04-17" }
-, { "partkey": 164, "pid": 3, "shipdate": "1992-06-06" }
-, { "partkey": 165, "pid": 1, "shipdate": "1992-03-21" }
-, { "partkey": 165, "pid": 2, "shipdate": "1992-04-01" }
-, { "partkey": 165, "pid": 3, "shipdate": "1992-04-12" }
-, { "partkey": 168, "pid": 1, "shipdate": "1992-05-06" }
-, { "partkey": 168, "pid": 2, "shipdate": "1992-07-20" }
-, { "partkey": 168, "pid": 3, "shipdate": "1992-10-07" }
-, { "partkey": 172, "pid": 1, "shipdate": "1992-09-06" }
-, { "partkey": 172, "pid": 2, "shipdate": "1993-05-01" }
-, { "partkey": 172, "pid": 3, "shipdate": "1993-06-16" }
-, { "partkey": 175, "pid": 1, "shipdate": "1992-10-09" }
-, { "partkey": 175, "pid": 2, "shipdate": "1992-11-09" }
-, { "partkey": 175, "pid": 3, "shipdate": "1992-11-10" }
-, { "partkey": 177, "pid": 1, "shipdate": "1992-04-05" }
-, { "partkey": 177, "pid": 2, "shipdate": "1992-12-25" }
-, { "partkey": 177, "pid": 3, "shipdate": "1993-01-16" }
-, { "partkey": 181, "pid": 1, "shipdate": "1992-07-01" }
-, { "partkey": 181, "pid": 2, "shipdate": "1992-11-04" }
-, { "partkey": 181, "pid": 3, "shipdate": "1992-12-14" }
-, { "partkey": 184, "pid": 1, "shipdate": "1992-04-12" }
-, { "partkey": 184, "pid": 2, "shipdate": "1992-04-12" }
-, { "partkey": 184, "pid": 3, "shipdate": "1992-04-30" }
-, { "partkey": 186, "pid": 1, "shipdate": "1992-07-26" }
-, { "partkey": 186, "pid": 2, "shipdate": "1992-11-25" }
-, { "partkey": 186, "pid": 3, "shipdate": "1992-11-27" }
-, { "partkey": 189, "pid": 1, "shipdate": "1992-06-16" }
-, { "partkey": 189, "pid": 2, "shipdate": "1992-06-20" }
-, { "partkey": 189, "pid": 3, "shipdate": "1992-07-20" }
-, { "partkey": 194, "pid": 1, "shipdate": "1992-02-14" }
-, { "partkey": 194, "pid": 2, "shipdate": "1992-06-20" }
-, { "partkey": 194, "pid": 3, "shipdate": "1992-12-15" }
-, { "partkey": 197, "pid": 1, "shipdate": "1993-08-22" }
-, { "partkey": 197, "pid": 2, "shipdate": "1994-02-24" }
-, { "partkey": 197, "pid": 3, "shipdate": "1994-03-03" }
-, { "partkey": 198, "pid": 1, "shipdate": "1992-04-21" }
-, { "partkey": 198, "pid": 2, "shipdate": "1992-09-12" }
-, { "partkey": 198, "pid": 3, "shipdate": "1992-12-27" }
-, { "partkey": 8, "pid": 1, "shipdate": "1992-09-25" }
-, { "partkey": 8, "pid": 2, "shipdate": "1992-11-15" }
-, { "partkey": 8, "pid": 3, "shipdate": "1993-02-13" }
-, { "partkey": 9, "pid": 1, "shipdate": "1992-04-29" }
-, { "partkey": 9, "pid": 2, "shipdate": "1992-04-30" }
-, { "partkey": 9, "pid": 3, "shipdate": "1992-06-01" }
-, { "partkey": 10, "pid": 1, "shipdate": "1992-05-13" }
-, { "partkey": 10, "pid": 2, "shipdate": "1992-11-25" }
-, { "partkey": 10, "pid": 3, "shipdate": "1992-12-01" }
-, { "partkey": 25, "pid": 1, "shipdate": "1992-02-04" }
-, { "partkey": 25, "pid": 2, "shipdate": "1992-07-23" }
-, { "partkey": 25, "pid": 3, "shipdate": "1992-08-01" }
-, { "partkey": 28, "pid": 1, "shipdate": "1992-03-16" }
-, { "partkey": 28, "pid": 2, "shipdate": "1992-10-13" }
-, { "partkey": 28, "pid": 3, "shipdate": "1992-11-04" }
-, { "partkey": 34, "pid": 1, "shipdate": "1992-07-03" }
-, { "partkey": 34, "pid": 2, "shipdate": "1992-07-20" }
-, { "partkey": 34, "pid": 3, "shipdate": "1992-11-23" }
-, { "partkey": 37, "pid": 1, "shipdate": "1992-08-30" }
-, { "partkey": 37, "pid": 2, "shipdate": "1992-10-03" }
-, { "partkey": 37, "pid": 3, "shipdate": "1993-01-31" }
-, { "partkey": 40, "pid": 1, "shipdate": "1992-02-07" }
-, { "partkey": 40, "pid": 2, "shipdate": "1992-04-28" }
-, { "partkey": 40, "pid": 3, "shipdate": "1992-05-03" }
-, { "partkey": 41, "pid": 1, "shipdate": "1992-12-13" }
-, { "partkey": 41, "pid": 2, "shipdate": "1993-01-18" }
-, { "partkey": 41, "pid": 3, "shipdate": "1993-04-13" }
-, { "partkey": 43, "pid": 1, "shipdate": "1992-06-18" }
-, { "partkey": 43, "pid": 2, "shipdate": "1992-06-30" }
-, { "partkey": 43, "pid": 3, "shipdate": "1992-08-28" }
-, { "partkey": 66, "pid": 1, "shipdate": "1992-05-07" }
-, { "partkey": 66, "pid": 2, "shipdate": "1992-09-11" }
-, { "partkey": 66, "pid": 3, "shipdate": "1992-10-10" }
-, { "partkey": 67, "pid": 1, "shipdate": "1992-05-13" }
-, { "partkey": 67, "pid": 2, "shipdate": "1993-01-08" }
-, { "partkey": 67, "pid": 3, "shipdate": "1993-11-03" }
-, { "partkey": 69, "pid": 1, "shipdate": "1992-05-31" }
-, { "partkey": 69, "pid": 2, "shipdate": "1992-06-05" }
-, { "partkey": 69, "pid": 3, "shipdate": "1992-07-01" }
-, { "partkey": 76, "pid": 1, "shipdate": "1992-10-22" }
-, { "partkey": 76, "pid": 2, "shipdate": "1993-04-19" }
-, { "partkey": 76, "pid": 3, "shipdate": "1993-06-12" }
-, { "partkey": 79, "pid": 1, "shipdate": "1992-08-05" }
-, { "partkey": 79, "pid": 2, "shipdate": "1992-08-10" }
-, { "partkey": 79, "pid": 3, "shipdate": "1993-04-08" }
-, { "partkey": 84, "pid": 1, "shipdate": "1992-09-08" }
-, { "partkey": 84, "pid": 2, "shipdate": "1993-05-15" }
-, { "partkey": 84, "pid": 3, "shipdate": "1993-05-20" }
-, { "partkey": 85, "pid": 1, "shipdate": "1992-02-28" }
-, { "partkey": 85, "pid": 2, "shipdate": "1992-05-28" }
-, { "partkey": 85, "pid": 3, "shipdate": "1992-06-27" }
-, { "partkey": 86, "pid": 1, "shipdate": "1992-05-25" }
-, { "partkey": 86, "pid": 2, "shipdate": "1992-11-18" }
-, { "partkey": 86, "pid": 3, "shipdate": "1993-03-01" }
-, { "partkey": 94, "pid": 1, "shipdate": "1992-05-20" }
-, { "partkey": 94, "pid": 2, "shipdate": "1992-07-03" }
-, { "partkey": 94, "pid": 3, "shipdate": "1992-07-26" }
-, { "partkey": 95, "pid": 1, "shipdate": "1992-02-24" }
-, { "partkey": 95, "pid": 2, "shipdate": "1992-03-14" }
-, { "partkey": 95, "pid": 3, "shipdate": "1992-11-17" }
-, { "partkey": 96, "pid": 1, "shipdate": "1992-06-18" }
-, { "partkey": 96, "pid": 2, "shipdate": "1992-09-26" }
-, { "partkey": 96, "pid": 3, "shipdate": "1992-11-25" }
-, { "partkey": 99, "pid": 1, "shipdate": "1992-05-01" }
-, { "partkey": 99, "pid": 2, "shipdate": "1993-04-18" }
-, { "partkey": 99, "pid": 3, "shipdate": "1993-06-09" }
-, { "partkey": 102, "pid": 1, "shipdate": "1992-08-19" }
-, { "partkey": 102, "pid": 2, "shipdate": "1992-08-21" }
-, { "partkey": 102, "pid": 3, "shipdate": "1992-10-25" }
-, { "partkey": 108, "pid": 1, "shipdate": "1992-07-28" }
-, { "partkey": 108, "pid": 2, "shipdate": "1992-08-01" }
-, { "partkey": 108, "pid": 3, "shipdate": "1992-09-07" }
-, { "partkey": 111, "pid": 1, "shipdate": "1992-07-05" }
-, { "partkey": 111, "pid": 2, "shipdate": "1992-07-28" }
-, { "partkey": 111, "pid": 3, "shipdate": "1992-08-13" }
-, { "partkey": 113, "pid": 1, "shipdate": "1992-06-08" }
-, { "partkey": 113, "pid": 2, "shipdate": "1992-08-13" }
-, { "partkey": 113, "pid": 3, "shipdate": "1992-08-25" }
-, { "partkey": 116, "pid": 1, "shipdate": "1992-03-22" }
-, { "partkey": 116, "pid": 2, "shipdate": "1992-05-17" }
-, { "partkey": 116, "pid": 3, "shipdate": "1992-06-24" }
-, { "partkey": 124, "pid": 1, "shipdate": "1992-06-15" }
-, { "partkey": 124, "pid": 2, "shipdate": "1992-08-09" }
-, { "partkey": 124, "pid": 3, "shipdate": "1992-09-13" }
-, { "partkey": 128, "pid": 1, "shipdate": "1992-03-05" }
-, { "partkey": 128, "pid": 2, "shipdate": "1992-05-02" }
-, { "partkey": 128, "pid": 3, "shipdate": "1992-08-24" }
-, { "partkey": 132, "pid": 1, "shipdate": "1992-04-17" }
-, { "partkey": 132, "pid": 2, "shipdate": "1992-06-14" }
-, { "partkey": 132, "pid": 3, "shipdate": "1992-07-06" }
-, { "partkey": 133, "pid": 1, "shipdate": "1992-06-08" }
-, { "partkey": 133, "pid": 2, "shipdate": "1992-11-17" }
-, { "partkey": 133, "pid": 3, "shipdate": "1993-01-18" }
-, { "partkey": 134, "pid": 1, "shipdate": "1992-05-17" }
-, { "partkey": 134, "pid": 2, "shipdate": "1992-05-20" }
-, { "partkey": 134, "pid": 3, "shipdate": "1992-05-29" }
-, { "partkey": 136, "pid": 1, "shipdate": "1992-05-19" }
-, { "partkey": 136, "pid": 2, "shipdate": "1992-05-21" }
-, { "partkey": 136, "pid": 3, "shipdate": "1992-06-07" }
-, { "partkey": 139, "pid": 1, "shipdate": "1992-04-12" }
-, { "partkey": 139, "pid": 2, "shipdate": "1992-06-28" }
-, { "partkey": 139, "pid": 3, "shipdate": "1992-09-12" }
-, { "partkey": 150, "pid": 1, "shipdate": "1992-05-01" }
-, { "partkey": 150, "pid": 2, "shipdate": "1992-05-02" }
-, { "partkey": 150, "pid": 3, "shipdate": "1992-05-25" }
-, { "partkey": 155, "pid": 1, "shipdate": "1992-09-28" }
-, { "partkey": 155, "pid": 2, "shipdate": "1992-11-25" }
-, { "partkey": 155, "pid": 3, "shipdate": "1993-05-14" }
-, { "partkey": 160, "pid": 1, "shipdate": "1992-05-07" }
-, { "partkey": 160, "pid": 2, "shipdate": "1992-07-04" }
-, { "partkey": 160, "pid": 3, "shipdate": "1992-08-18" }
-, { "partkey": 166, "pid": 1, "shipdate": "1992-08-11" }
-, { "partkey": 166, "pid": 2, "shipdate": "1992-08-14" }
-, { "partkey": 166, "pid": 3, "shipdate": "1993-04-22" }
-, { "partkey": 167, "pid": 1, "shipdate": "1992-06-02" }
-, { "partkey": 167, "pid": 2, "shipdate": "1993-01-31" }
-, { "partkey": 167, "pid": 3, "shipdate": "1993-02-15" }
-, { "partkey": 174, "pid": 1, "shipdate": "1992-06-25" }
-, { "partkey": 174, "pid": 2, "shipdate": "1992-11-02" }
-, { "partkey": 174, "pid": 3, "shipdate": "1992-12-02" }
-, { "partkey": 183, "pid": 1, "shipdate": "1992-04-24" }
-, { "partkey": 183, "pid": 2, "shipdate": "1992-10-24" }
-, { "partkey": 183, "pid": 3, "shipdate": "1993-01-08" }
-, { "partkey": 185, "pid": 1, "shipdate": "1992-04-30" }
-, { "partkey": 185, "pid": 2, "shipdate": "1992-06-20" }
-, { "partkey": 185, "pid": 3, "shipdate": "1992-07-23" }
-, { "partkey": 187, "pid": 1, "shipdate": "1992-04-01" }
-, { "partkey": 187, "pid": 2, "shipdate": "1992-05-30" }
-, { "partkey": 187, "pid": 3, "shipdate": "1992-06-01" }
-, { "partkey": 191, "pid": 1, "shipdate": "1992-07-31" }
-, { "partkey": 191, "pid": 2, "shipdate": "1992-08-29" }
-, { "partkey": 191, "pid": 3, "shipdate": "1992-09-22" }
-, { "partkey": 192, "pid": 1, "shipdate": "1992-02-19" }
-, { "partkey": 192, "pid": 2, "shipdate": "1992-08-10" }
-, { "partkey": 192, "pid": 3, "shipdate": "1992-09-02" }
-, { "partkey": 196, "pid": 1, "shipdate": "1992-03-02" }
-, { "partkey": 196, "pid": 2, "shipdate": "1992-03-04" }
-, { "partkey": 196, "pid": 3, "shipdate": "1992-06-11" }
-, { "partkey": 200, "pid": 1, "shipdate": "1992-04-19" }
-, { "partkey": 200, "pid": 2, "shipdate": "1993-01-06" }
-, { "partkey": 200, "pid": 3, "shipdate": "1993-10-17" }
-, { "partkey": 3, "pid": 1, "shipdate": "1992-04-25" }
-, { "partkey": 3, "pid": 2, "shipdate": "1992-05-24" }
-, { "partkey": 3, "pid": 3, "shipdate": "1993-01-03" }
-, { "partkey": 5, "pid": 1, "shipdate": "1992-05-02" }
-, { "partkey": 5, "pid": 2, "shipdate": "1992-06-14" }
-, { "partkey": 5, "pid": 3, "shipdate": "1993-01-06" }
-, { "partkey": 7, "pid": 1, "shipdate": "1992-04-12" }
-, { "partkey": 7, "pid": 2, "shipdate": "1993-02-11" }
-, { "partkey": 7, "pid": 3, "shipdate": "1993-06-25" }
-, { "partkey": 17, "pid": 1, "shipdate": "1992-07-23" }
-, { "partkey": 17, "pid": 2, "shipdate": "1993-03-01" }
-, { "partkey": 17, "pid": 3, "shipdate": "1993-05-06" }
-, { "partkey": 18, "pid": 1, "shipdate": "1992-04-12" }
-, { "partkey": 18, "pid": 2, "shipdate": "1992-04-21" }
-, { "partkey": 18, "pid": 3, "shipdate": "1992-05-21" }
-, { "partkey": 27, "pid": 1, "shipdate": "1992-07-05" }
-, { "partkey": 27, "pid": 2, "shipdate": "1992-07-14" }
-, { "partkey": 27, "pid": 3, "shipdate": "1992-08-17" }
-, { "partkey": 32, "pid": 1, "shipdate": "1992-09-22" }
-, { "partkey": 32, "pid": 2, "shipdate": "1992-09-25" }
-, { "partkey": 32, "pid": 3, "shipdate": "1992-10-07" }
-, { "partkey": 36, "pid": 1, "shipdate": "1992-02-26" }
-, { "partkey": 36, "pid": 2, "shipdate": "1992-07-03" }
-, { "partkey": 36, "pid": 3, "shipdate": "1993-01-06" }
-, { "partkey": 39, "pid": 1, "shipdate": "1992-05-26" }
-, { "partkey": 39, "pid": 2, "shipdate": "1992-11-12" }
-, { "partkey": 39, "pid": 3, "shipdate": "1992-11-15" }
-, { "partkey": 42, "pid": 1, "shipdate": "1992-10-23" }
-, { "partkey": 42, "pid": 2, "shipdate": "1992-11-04" }
-, { "partkey": 42, "pid": 3, "shipdate": "1992-12-12" }
-, { "partkey": 44, "pid": 1, "shipdate": "1992-02-14" }
-, { "partkey": 44, "pid": 2, "shipdate": "1992-06-11" }
-, { "partkey": 44, "pid": 3, "shipdate": "1992-11-29" }
-, { "partkey": 50, "pid": 1, "shipdate": "1992-04-22" }
-, { "partkey": 50, "pid": 2, "shipdate": "1992-07-31" }
-, { "partkey": 50, "pid": 3, "shipdate": "1992-09-23" }
-, { "partkey": 53, "pid": 1, "shipdate": "1992-01-14" }
-, { "partkey": 53, "pid": 2, "shipdate": "1992-05-22" }
-, { "partkey": 53, "pid": 3, "shipdate": "1992-10-04" }
-, { "partkey": 54, "pid": 1, "shipdate": "1992-04-07" }
-, { "partkey": 54, "pid": 2, "shipdate": "1992-05-01" }
-, { "partkey": 54, "pid": 3, "shipdate": "1992-06-24" }
-, { "partkey": 61, "pid": 1, "shipdate": "1993-07-14" }
-, { "partkey": 61, "pid": 2, "shipdate": "1993-07-15" }
-, { "partkey": 61, "pid": 3, "shipdate": "1993-09-29" }
-, { "partkey": 74, "pid": 1, "shipdate": "1992-03-21" }
-, { "partkey": 74, "pid": 2, "shipdate": "1992-03-22" }
-, { "partkey": 74, "pid": 3, "shipdate": "1992-10-21" }
-, { "partkey": 78, "pid": 1, "shipdate": "1992-03-04" }
-, { "partkey": 78, "pid": 2, "shipdate": "1992-04-04" }
-, { "partkey": 78, "pid": 3, "shipdate": "1992-05-06" }
-, { "partkey": 80, "pid": 1, "shipdate": "1992-05-18" }
-, { "partkey": 80, "pid": 2, "shipdate": "1992-09-02" }
-, { "partkey": 80, "pid": 3, "shipdate": "1993-06-07" }
-, { "partkey": 82, "pid": 1, "shipdate": "1992-07-17" }
-, { "partkey": 82, "pid": 2, "shipdate": "1992-10-18" }
-, { "partkey": 82, "pid": 3, "shipdate": "1992-12-11" }
-, { "partkey": 83, "pid": 1, "shipdate": "1992-06-09" }
-, { "partkey": 83, "pid": 2, "shipdate": "1992-08-04" }
-, { "partkey": 83, "pid": 3, "shipdate": "1992-09-21" }
-, { "partkey": 87, "pid": 1, "shipdate": "1992-09-30" }
-, { "partkey": 87, "pid": 2, "shipdate": "1992-12-02" }
-, { "partkey": 87, "pid": 3, "shipdate": "1993-01-06" }
-, { "partkey": 90, "pid": 1, "shipdate": "1992-02-25" }
-, { "partkey": 90, "pid": 2, "shipdate": "1992-06-07" }
-, { "partkey": 90, "pid": 3, "shipdate": "1992-08-21" }
-, { "partkey": 101, "pid": 1, "shipdate": "1992-08-17" }
-, { "partkey": 101, "pid": 2, "shipdate": "1992-09-27" }
-, { "partkey": 101, "pid": 3, "shipdate": "1992-12-28" }
-, { "partkey": 104, "pid": 1, "shipdate": "1992-03-17" }
-, { "partkey": 104, "pid": 2, "shipdate": "1992-11-08" }
-, { "partkey": 104, "pid": 3, "shipdate": "1994-01-22" }
-, { "partkey": 107, "pid": 1, "shipdate": "1992-05-22" }
-, { "partkey": 107, "pid": 2, "shipdate": "1992-07-30" }
-, { "partkey": 107, "pid": 3, "shipdate": "1992-08-05" }
-, { "partkey": 110, "pid": 1, "shipdate": "1992-09-18" }
-, { "partkey": 110, "pid": 2, "shipdate": "1992-11-01" }
-, { "partkey": 110, "pid": 3, "shipdate": "1993-01-01" }
-, { "partkey": 112, "pid": 1, "shipdate": "1992-09-13" }
-, { "partkey": 112, "pid": 2, "shipdate": "1992-10-09" }
-, { "partkey": 112, "pid": 3, "shipdate": "1993-01-15" }
-, { "partkey": 117, "pid": 1, "shipdate": "1992-05-04" }
-, { "partkey": 117, "pid": 2, "shipdate": "1993-03-18" }
-, { "partkey": 117, "pid": 3, "shipdate": "1993-07-10" }
-, { "partkey": 120, "pid": 1, "shipdate": "1992-03-23" }
-, { "partkey": 120, "pid": 2, "shipdate": "1992-04-28" }
-, { "partkey": 120, "pid": 3, "shipdate": "1992-06-29" }
-, { "partkey": 123, "pid": 1, "shipdate": "1992-02-01" }
-, { "partkey": 123, "pid": 2, "shipdate": "1992-06-20" }
-, { "partkey": 123, "pid": 3, "shipdate": "1992-11-22" }
-, { "partkey": 137, "pid": 1, "shipdate": "1992-05-23" }
-, { "partkey": 137, "pid": 2, "shipdate": "1992-07-05" }
-, { "partkey": 137, "pid": 3, "shipdate": "1992-09-12" }
-, { "partkey": 142, "pid": 1, "shipdate": "1992-10-14" }
-, { "partkey": 142, "pid": 2, "shipdate": "1993-05-14" }
-, { "partkey": 142, "pid": 3, "shipdate": "1993-07-11" }
-, { "partkey": 145, "pid": 1, "shipdate": "1992-01-25" }
-, { "partkey": 145, "pid": 2, "shipdate": "1992-08-16" }
-, { "partkey": 145, "pid": 3, "shipdate": "1992-10-25" }
-, { "partkey": 146, "pid": 1, "shipdate": "1992-05-21" }
-, { "partkey": 146, "pid": 2, "shipdate": "1993-06-21" }
-, { "partkey": 146, "pid": 3, "shipdate": "1993-08-02" }
-, { "partkey": 148, "pid": 1, "shipdate": "1992-01-15" }
-, { "partkey": 148, "pid": 2, "shipdate": "1992-02-27" }
-, { "partkey": 148, "pid": 3, "shipdate": "1992-04-22" }
-, { "partkey": 151, "pid": 1, "shipdate": "1992-01-26" }
-, { "partkey": 151, "pid": 2, "shipdate": "1992-07-30" }
-, { "partkey": 151, "pid": 3, "shipdate": "1992-12-19" }
-, { "partkey": 169, "pid": 1, "shipdate": "1992-03-31" }
-, { "partkey": 169, "pid": 2, "shipdate": "1992-06-05" }
-, { "partkey": 169, "pid": 3, "shipdate": "1992-06-07" }
-, { "partkey": 173, "pid": 1, "shipdate": "1992-06-17" }
-, { "partkey": 173, "pid": 2, "shipdate": "1992-09-15" }
-, { "partkey": 173, "pid": 3, "shipdate": "1992-09-30" }
-, { "partkey": 176, "pid": 1, "shipdate": "1992-02-01" }
-, { "partkey": 176, "pid": 2, "shipdate": "1992-04-28" }
-, { "partkey": 176, "pid": 3, "shipdate": "1992-09-24" }
-, { "partkey": 188, "pid": 1, "shipdate": "1992-09-15" }
-, { "partkey": 188, "pid": 2, "shipdate": "1993-04-08" }
-, { "partkey": 188, "pid": 3, "shipdate": "1993-05-03" }
-, { "partkey": 193, "pid": 1, "shipdate": "1992-05-05" }
-, { "partkey": 193, "pid": 2, "shipdate": "1992-08-21" }
-, { "partkey": 193, "pid": 3, "shipdate": "1993-02-12" }
- ]
+{ "partkey": 6, "pid": 1, "shipdate": "1992-04-05" }
+{ "partkey": 6, "pid": 2, "shipdate": "1992-04-25" }
+{ "partkey": 6, "pid": 3, "shipdate": "1992-04-29" }
+{ "partkey": 11, "pid": 1, "shipdate": "1992-02-14" }
+{ "partkey": 11, "pid": 2, "shipdate": "1992-07-20" }
+{ "partkey": 11, "pid": 3, "shipdate": "1992-08-03" }
+{ "partkey": 12, "pid": 1, "shipdate": "1992-07-04" }
+{ "partkey": 12, "pid": 2, "shipdate": "1992-07-17" }
+{ "partkey": 12, "pid": 3, "shipdate": "1992-09-02" }
+{ "partkey": 14, "pid": 1, "shipdate": "1992-07-17" }
+{ "partkey": 14, "pid": 2, "shipdate": "1992-11-30" }
+{ "partkey": 14, "pid": 3, "shipdate": "1993-05-10" }
+{ "partkey": 21, "pid": 1, "shipdate": "1992-07-31" }
+{ "partkey": 21, "pid": 2, "shipdate": "1992-09-09" }
+{ "partkey": 21, "pid": 3, "shipdate": "1993-01-09" }
+{ "partkey": 23, "pid": 1, "shipdate": "1992-04-04" }
+{ "partkey": 23, "pid": 2, "shipdate": "1992-06-19" }
+{ "partkey": 23, "pid": 3, "shipdate": "1992-06-29" }
+{ "partkey": 26, "pid": 1, "shipdate": "1992-02-23" }
+{ "partkey": 26, "pid": 2, "shipdate": "1992-05-09" }
+{ "partkey": 26, "pid": 3, "shipdate": "1993-01-04" }
+{ "partkey": 30, "pid": 1, "shipdate": "1992-04-10" }
+{ "partkey": 30, "pid": 2, "shipdate": "1992-05-18" }
+{ "partkey": 30, "pid": 3, "shipdate": "1992-05-21" }
+{ "partkey": 33, "pid": 1, "shipdate": "1992-03-22" }
+{ "partkey": 33, "pid": 2, "shipdate": "1993-02-17" }
+{ "partkey": 33, "pid": 3, "shipdate": "1993-02-21" }
+{ "partkey": 38, "pid": 1, "shipdate": "1992-04-06" }
+{ "partkey": 38, "pid": 2, "shipdate": "1992-04-15" }
+{ "partkey": 38, "pid": 3, "shipdate": "1992-08-27" }
+{ "partkey": 45, "pid": 1, "shipdate": "1992-07-16" }
+{ "partkey": 45, "pid": 2, "shipdate": "1993-06-24" }
+{ "partkey": 45, "pid": 3, "shipdate": "1993-09-15" }
+{ "partkey": 47, "pid": 1, "shipdate": "1992-03-11" }
+{ "partkey": 47, "pid": 2, "shipdate": "1993-05-30" }
+{ "partkey": 47, "pid": 3, "shipdate": "1993-06-06" }
+{ "partkey": 49, "pid": 1, "shipdate": "1992-04-29" }
+{ "partkey": 49, "pid": 2, "shipdate": "1992-06-14" }
+{ "partkey": 49, "pid": 3, "shipdate": "1992-08-13" }
+{ "partkey": 51, "pid": 1, "shipdate": "1992-03-11" }
+{ "partkey": 51, "pid": 2, "shipdate": "1992-05-15" }
+{ "partkey": 51, "pid": 3, "shipdate": "1992-05-17" }
+{ "partkey": 58, "pid": 1, "shipdate": "1992-05-16" }
+{ "partkey": 58, "pid": 2, "shipdate": "1992-10-30" }
+{ "partkey": 58, "pid": 3, "shipdate": "1993-04-10" }
+{ "partkey": 60, "pid": 1, "shipdate": "1992-02-14" }
+{ "partkey": 60, "pid": 2, "shipdate": "1992-07-01" }
+{ "partkey": 60, "pid": 3, "shipdate": "1992-07-15" }
+{ "partkey": 70, "pid": 1, "shipdate": "1992-04-06" }
+{ "partkey": 70, "pid": 2, "shipdate": "1992-06-11" }
+{ "partkey": 70, "pid": 3, "shipdate": "1992-06-25" }
+{ "partkey": 72, "pid": 1, "shipdate": "1992-09-16" }
+{ "partkey": 72, "pid": 2, "shipdate": "1992-10-02" }
+{ "partkey": 72, "pid": 3, "shipdate": "1992-10-17" }
+{ "partkey": 77, "pid": 1, "shipdate": "1992-08-18" }
+{ "partkey": 77, "pid": 2, "shipdate": "1992-12-23" }
+{ "partkey": 77, "pid": 3, "shipdate": "1993-06-19" }
+{ "partkey": 88, "pid": 1, "shipdate": "1992-04-24" }
+{ "partkey": 88, "pid": 2, "shipdate": "1992-06-26" }
+{ "partkey": 88, "pid": 3, "shipdate": "1992-12-18" }
+{ "partkey": 89, "pid": 1, "shipdate": "1992-04-18" }
+{ "partkey": 89, "pid": 2, "shipdate": "1992-04-19" }
+{ "partkey": 89, "pid": 3, "shipdate": "1992-05-27" }
+{ "partkey": 92, "pid": 1, "shipdate": "1992-02-11" }
+{ "partkey": 92, "pid": 2, "shipdate": "1992-09-30" }
+{ "partkey": 92, "pid": 3, "shipdate": "1993-01-04" }
+{ "partkey": 93, "pid": 1, "shipdate": "1992-05-28" }
+{ "partkey": 93, "pid": 2, "shipdate": "1992-06-24" }
+{ "partkey": 93, "pid": 3, "shipdate": "1992-09-11" }
+{ "partkey": 103, "pid": 1, "shipdate": "1992-03-28" }
+{ "partkey": 103, "pid": 2, "shipdate": "1992-05-08" }
+{ "partkey": 103, "pid": 3, "shipdate": "1992-07-11" }
+{ "partkey": 105, "pid": 1, "shipdate": "1992-02-14" }
+{ "partkey": 105, "pid": 2, "shipdate": "1992-06-01" }
+{ "partkey": 105, "pid": 3, "shipdate": "1992-07-14" }
+{ "partkey": 109, "pid": 1, "shipdate": "1992-06-06" }
+{ "partkey": 109, "pid": 2, "shipdate": "1992-11-20" }
+{ "partkey": 109, "pid": 3, "shipdate": "1992-12-23" }
+{ "partkey": 115, "pid": 1, "shipdate": "1992-03-13" }
+{ "partkey": 115, "pid": 2, "shipdate": "1992-05-29" }
+{ "partkey": 115, "pid": 3, "shipdate": "1992-06-17" }
+{ "partkey": 118, "pid": 1, "shipdate": "1992-06-18" }
+{ "partkey": 118, "pid": 2, "shipdate": "1992-09-27" }
+{ "partkey": 118, "pid": 3, "shipdate": "1992-10-02" }
+{ "partkey": 125, "pid": 1, "shipdate": "1992-03-15" }
+{ "partkey": 125, "pid": 2, "shipdate": "1992-03-29" }
+{ "partkey": 125, "pid": 3, "shipdate": "1992-05-24" }
+{ "partkey": 126, "pid": 1, "shipdate": "1992-07-28" }
+{ "partkey": 126, "pid": 2, "shipdate": "1992-08-28" }
+{ "partkey": 126, "pid": 3, "shipdate": "1992-09-06" }
+{ "partkey": 135, "pid": 1, "shipdate": "1992-05-02" }
+{ "partkey": 135, "pid": 2, "shipdate": "1992-05-11" }
+{ "partkey": 135, "pid": 3, "shipdate": "1992-05-29" }
+{ "partkey": 138, "pid": 1, "shipdate": "1992-06-20" }
+{ "partkey": 138, "pid": 2, "shipdate": "1992-11-21" }
+{ "partkey": 138, "pid": 3, "shipdate": "1993-02-28" }
+{ "partkey": 141, "pid": 1, "shipdate": "1992-01-13" }
+{ "partkey": 141, "pid": 2, "shipdate": "1992-02-01" }
+{ "partkey": 141, "pid": 3, "shipdate": "1992-06-22" }
+{ "partkey": 147, "pid": 1, "shipdate": "1992-06-10" }
+{ "partkey": 147, "pid": 2, "shipdate": "1992-09-04" }
+{ "partkey": 147, "pid": 3, "shipdate": "1992-12-03" }
+{ "partkey": 152, "pid": 1, "shipdate": "1992-06-23" }
+{ "partkey": 152, "pid": 2, "shipdate": "1993-05-19" }
+{ "partkey": 152, "pid": 3, "shipdate": "1993-10-31" }
+{ "partkey": 153, "pid": 1, "shipdate": "1992-02-22" }
+{ "partkey": 153, "pid": 2, "shipdate": "1992-06-02" }
+{ "partkey": 153, "pid": 3, "shipdate": "1992-06-29" }
+{ "partkey": 154, "pid": 1, "shipdate": "1992-02-18" }
+{ "partkey": 154, "pid": 2, "shipdate": "1992-02-20" }
+{ "partkey": 154, "pid": 3, "shipdate": "1992-05-14" }
+{ "partkey": 156, "pid": 1, "shipdate": "1992-04-24" }
+{ "partkey": 156, "pid": 2, "shipdate": "1992-06-17" }
+{ "partkey": 156, "pid": 3, "shipdate": "1992-07-01" }
+{ "partkey": 157, "pid": 1, "shipdate": "1992-07-26" }
+{ "partkey": 157, "pid": 2, "shipdate": "1992-08-11" }
+{ "partkey": 157, "pid": 3, "shipdate": "1992-08-25" }
+{ "partkey": 170, "pid": 1, "shipdate": "1992-08-07" }
+{ "partkey": 170, "pid": 2, "shipdate": "1993-03-17" }
+{ "partkey": 170, "pid": 3, "shipdate": "1993-06-19" }
+{ "partkey": 171, "pid": 1, "shipdate": "1992-11-09" }
+{ "partkey": 171, "pid": 2, "shipdate": "1994-01-22" }
+{ "partkey": 171, "pid": 3, "shipdate": "1995-01-02" }
+{ "partkey": 178, "pid": 1, "shipdate": "1992-05-23" }
+{ "partkey": 178, "pid": 2, "shipdate": "1992-08-18" }
+{ "partkey": 178, "pid": 3, "shipdate": "1992-11-02" }
+{ "partkey": 179, "pid": 1, "shipdate": "1992-05-30" }
+{ "partkey": 179, "pid": 2, "shipdate": "1992-06-02" }
+{ "partkey": 179, "pid": 3, "shipdate": "1992-09-20" }
+{ "partkey": 180, "pid": 1, "shipdate": "1992-03-07" }
+{ "partkey": 180, "pid": 2, "shipdate": "1992-05-23" }
+{ "partkey": 180, "pid": 3, "shipdate": "1992-06-21" }
+{ "partkey": 182, "pid": 1, "shipdate": "1992-03-02" }
+{ "partkey": 182, "pid": 2, "shipdate": "1992-04-02" }
+{ "partkey": 182, "pid": 3, "shipdate": "1992-04-28" }
+{ "partkey": 190, "pid": 1, "shipdate": "1992-04-14" }
+{ "partkey": 190, "pid": 2, "shipdate": "1992-07-17" }
+{ "partkey": 190, "pid": 3, "shipdate": "1992-10-12" }
+{ "partkey": 195, "pid": 1, "shipdate": "1992-04-10" }
+{ "partkey": 195, "pid": 2, "shipdate": "1992-05-07" }
+{ "partkey": 195, "pid": 3, "shipdate": "1992-05-28" }
+{ "partkey": 199, "pid": 1, "shipdate": "1992-03-14" }
+{ "partkey": 199, "pid": 2, "shipdate": "1992-08-02" }
+{ "partkey": 199, "pid": 3, "shipdate": "1992-11-20" }
+{ "partkey": 1, "pid": 1, "shipdate": "1992-02-15" }
+{ "partkey": 1, "pid": 2, "shipdate": "1992-03-30" }
+{ "partkey": 1, "pid": 3, "shipdate": "1992-07-17" }
+{ "partkey": 2, "pid": 1, "shipdate": "1992-06-23" }
+{ "partkey": 2, "pid": 2, "shipdate": "1992-07-01" }
+{ "partkey": 2, "pid": 3, "shipdate": "1992-07-18" }
+{ "partkey": 4, "pid": 1, "shipdate": "1992-05-02" }
+{ "partkey": 4, "pid": 2, "shipdate": "1992-11-03" }
+{ "partkey": 4, "pid": 3, "shipdate": "1992-11-18" }
+{ "partkey": 13, "pid": 1, "shipdate": "1992-04-01" }
+{ "partkey": 13, "pid": 2, "shipdate": "1992-04-26" }
+{ "partkey": 13, "pid": 3, "shipdate": "1992-05-04" }
+{ "partkey": 15, "pid": 1, "shipdate": "1992-05-18" }
+{ "partkey": 15, "pid": 2, "shipdate": "1992-05-24" }
+{ "partkey": 15, "pid": 3, "shipdate": "1993-04-14" }
+{ "partkey": 16, "pid": 1, "shipdate": "1992-09-11" }
+{ "partkey": 16, "pid": 2, "shipdate": "1992-09-25" }
+{ "partkey": 16, "pid": 3, "shipdate": "1992-11-17" }
+{ "partkey": 19, "pid": 1, "shipdate": "1992-07-19" }
+{ "partkey": 19, "pid": 2, "shipdate": "1992-10-21" }
+{ "partkey": 19, "pid": 3, "shipdate": "1992-12-22" }
+{ "partkey": 20, "pid": 1, "shipdate": "1992-06-15" }
+{ "partkey": 20, "pid": 2, "shipdate": "1992-07-29" }
+{ "partkey": 20, "pid": 3, "shipdate": "1992-10-18" }
+{ "partkey": 22, "pid": 1, "shipdate": "1992-06-21" }
+{ "partkey": 22, "pid": 2, "shipdate": "1992-06-25" }
+{ "partkey": 22, "pid": 3, "shipdate": "1992-11-20" }
+{ "partkey": 24, "pid": 1, "shipdate": "1992-04-12" }
+{ "partkey": 24, "pid": 2, "shipdate": "1992-08-06" }
+{ "partkey": 24, "pid": 3, "shipdate": "1992-08-08" }
+{ "partkey": 29, "pid": 1, "shipdate": "1992-05-25" }
+{ "partkey": 29, "pid": 2, "shipdate": "1992-06-01" }
+{ "partkey": 29, "pid": 3, "shipdate": "1992-07-25" }
+{ "partkey": 31, "pid": 1, "shipdate": "1992-07-14" }
+{ "partkey": 31, "pid": 2, "shipdate": "1992-09-24" }
+{ "partkey": 31, "pid": 3, "shipdate": "1992-09-29" }
+{ "partkey": 35, "pid": 1, "shipdate": "1992-03-11" }
+{ "partkey": 35, "pid": 2, "shipdate": "1992-04-06" }
+{ "partkey": 35, "pid": 3, "shipdate": "1992-05-26" }
+{ "partkey": 46, "pid": 1, "shipdate": "1992-04-28" }
+{ "partkey": 46, "pid": 2, "shipdate": "1992-05-08" }
+{ "partkey": 46, "pid": 3, "shipdate": "1992-05-21" }
+{ "partkey": 48, "pid": 1, "shipdate": "1992-05-10" }
+{ "partkey": 48, "pid": 2, "shipdate": "1992-06-03" }
+{ "partkey": 48, "pid": 3, "shipdate": "1992-06-15" }
+{ "partkey": 52, "pid": 1, "shipdate": "1992-05-31" }
+{ "partkey": 52, "pid": 2, "shipdate": "1992-09-03" }
+{ "partkey": 52, "pid": 3, "shipdate": "1992-09-21" }
+{ "partkey": 55, "pid": 1, "shipdate": "1992-01-16" }
+{ "partkey": 55, "pid": 2, "shipdate": "1992-05-11" }
+{ "partkey": 55, "pid": 3, "shipdate": "1992-06-17" }
+{ "partkey": 56, "pid": 1, "shipdate": "1992-01-16" }
+{ "partkey": 56, "pid": 2, "shipdate": "1992-03-02" }
+{ "partkey": 56, "pid": 3, "shipdate": "1992-06-18" }
+{ "partkey": 57, "pid": 1, "shipdate": "1992-01-16" }
+{ "partkey": 57, "pid": 2, "shipdate": "1992-07-06" }
+{ "partkey": 57, "pid": 3, "shipdate": "1992-09-21" }
+{ "partkey": 59, "pid": 1, "shipdate": "1992-02-09" }
+{ "partkey": 59, "pid": 2, "shipdate": "1992-03-17" }
+{ "partkey": 59, "pid": 3, "shipdate": "1992-06-12" }
+{ "partkey": 62, "pid": 1, "shipdate": "1992-02-01" }
+{ "partkey": 62, "pid": 2, "shipdate": "1992-03-26" }
+{ "partkey": 62, "pid": 3, "shipdate": "1992-06-19" }
+{ "partkey": 63, "pid": 1, "shipdate": "1992-02-07" }
+{ "partkey": 63, "pid": 2, "shipdate": "1992-06-15" }
+{ "partkey": 63, "pid": 3, "shipdate": "1993-02-07" }
+{ "partkey": 64, "pid": 1, "shipdate": "1992-02-13" }
+{ "partkey": 64, "pid": 2, "shipdate": "1992-02-14" }
+{ "partkey": 64, "pid": 3, "shipdate": "1992-03-10" }
+{ "partkey": 65, "pid": 1, "shipdate": "1992-03-02" }
+{ "partkey": 65, "pid": 2, "shipdate": "1992-04-14" }
+{ "partkey": 65, "pid": 3, "shipdate": "1992-06-26" }
+{ "partkey": 68, "pid": 1, "shipdate": "1992-04-13" }
+{ "partkey": 68, "pid": 2, "shipdate": "1992-06-08" }
+{ "partkey": 68, "pid": 3, "shipdate": "1992-06-22" }
+{ "partkey": 71, "pid": 1, "shipdate": "1992-11-10" }
+{ "partkey": 71, "pid": 2, "shipdate": "1993-01-10" }
+{ "partkey": 71, "pid": 3, "shipdate": "1993-02-28" }
+{ "partkey": 73, "pid": 1, "shipdate": "1992-01-08" }
+{ "partkey": 73, "pid": 2, "shipdate": "1992-09-16" }
+{ "partkey": 73, "pid": 3, "shipdate": "1993-07-02" }
+{ "partkey": 75, "pid": 1, "shipdate": "1992-03-27" }
+{ "partkey": 75, "pid": 2, "shipdate": "1992-05-12" }
+{ "partkey": 75, "pid": 3, "shipdate": "1992-09-19" }
+{ "partkey": 81, "pid": 1, "shipdate": "1992-04-11" }
+{ "partkey": 81, "pid": 2, "shipdate": "1992-06-22" }
+{ "partkey": 81, "pid": 3, "shipdate": "1992-12-30" }
+{ "partkey": 91, "pid": 1, "shipdate": "1992-05-22" }
+{ "partkey": 91, "pid": 2, "shipdate": "1992-06-21" }
+{ "partkey": 91, "pid": 3, "shipdate": "1992-12-03" }
+{ "partkey": 97, "pid": 1, "shipdate": "1992-01-27" }
+{ "partkey": 97, "pid": 2, "shipdate": "1992-03-22" }
+{ "partkey": 97, "pid": 3, "shipdate": "1992-04-21" }
+{ "partkey": 98, "pid": 1, "shipdate": "1992-10-06" }
+{ "partkey": 98, "pid": 2, "shipdate": "1992-12-09" }
+{ "partkey": 98, "pid": 3, "shipdate": "1993-03-09" }
+{ "partkey": 100, "pid": 1, "shipdate": "1992-03-24" }
+{ "partkey": 100, "pid": 2, "shipdate": "1992-03-24" }
+{ "partkey": 100, "pid": 3, "shipdate": "1992-06-18" }
+{ "partkey": 106, "pid": 1, "shipdate": "1992-07-09" }
+{ "partkey": 106, "pid": 2, "shipdate": "1992-07-31" }
+{ "partkey": 106, "pid": 3, "shipdate": "1992-10-02" }
+{ "partkey": 114, "pid": 1, "shipdate": "1992-11-19" }
+{ "partkey": 114, "pid": 2, "shipdate": "1992-11-22" }
+{ "partkey": 114, "pid": 3, "shipdate": "1993-03-22" }
+{ "partkey": 119, "pid": 1, "shipdate": "1992-05-08" }
+{ "partkey": 119, "pid": 2, "shipdate": "1992-05-27" }
+{ "partkey": 119, "pid": 3, "shipdate": "1992-09-07" }
+{ "partkey": 121, "pid": 1, "shipdate": "1992-04-23" }
+{ "partkey": 121, "pid": 2, "shipdate": "1992-06-09" }
+{ "partkey": 121, "pid": 3, "shipdate": "1992-06-23" }
+{ "partkey": 122, "pid": 1, "shipdate": "1992-03-12" }
+{ "partkey": 122, "pid": 2, "shipdate": "1992-04-09" }
+{ "partkey": 122, "pid": 3, "shipdate": "1992-06-05" }
+{ "partkey": 127, "pid": 1, "shipdate": "1992-06-04" }
+{ "partkey": 127, "pid": 2, "shipdate": "1992-07-02" }
+{ "partkey": 127, "pid": 3, "shipdate": "1994-01-13" }
+{ "partkey": 129, "pid": 1, "shipdate": "1992-03-31" }
+{ "partkey": 129, "pid": 2, "shipdate": "1992-05-28" }
+{ "partkey": 129, "pid": 3, "shipdate": "1992-08-15" }
+{ "partkey": 130, "pid": 1, "shipdate": "1992-04-03" }
+{ "partkey": 130, "pid": 2, "shipdate": "1992-05-23" }
+{ "partkey": 130, "pid": 3, "shipdate": "1992-08-20" }
+{ "partkey": 131, "pid": 1, "shipdate": "1992-02-27" }
+{ "partkey": 131, "pid": 2, "shipdate": "1992-03-03" }
+{ "partkey": 131, "pid": 3, "shipdate": "1992-05-14" }
+{ "partkey": 140, "pid": 1, "shipdate": "1992-03-20" }
+{ "partkey": 140, "pid": 2, "shipdate": "1992-04-27" }
+{ "partkey": 140, "pid": 3, "shipdate": "1992-08-03" }
+{ "partkey": 143, "pid": 1, "shipdate": "1992-04-17" }
+{ "partkey": 143, "pid": 2, "shipdate": "1992-09-01" }
+{ "partkey": 143, "pid": 3, "shipdate": "1992-09-05" }
+{ "partkey": 144, "pid": 1, "shipdate": "1992-07-05" }
+{ "partkey": 144, "pid": 2, "shipdate": "1992-08-25" }
+{ "partkey": 144, "pid": 3, "shipdate": "1992-09-17" }
+{ "partkey": 149, "pid": 1, "shipdate": "1992-03-22" }
+{ "partkey": 149, "pid": 2, "shipdate": "1992-04-29" }
+{ "partkey": 149, "pid": 3, "shipdate": "1992-05-14" }
+{ "partkey": 158, "pid": 1, "shipdate": "1992-08-01" }
+{ "partkey": 158, "pid": 2, "shipdate": "1992-08-29" }
+{ "partkey": 158, "pid": 3, "shipdate": "1992-09-18" }
+{ "partkey": 159, "pid": 1, "shipdate": "1992-05-07" }
+{ "partkey": 159, "pid": 2, "shipdate": "1992-06-03" }
+{ "partkey": 159, "pid": 3, "shipdate": "1992-07-10" }
+{ "partkey": 161, "pid": 1, "shipdate": "1992-03-29" }
+{ "partkey": 161, "pid": 2, "shipdate": "1992-06-18" }
+{ "partkey": 161, "pid": 3, "shipdate": "1992-08-28" }
+{ "partkey": 162, "pid": 1, "shipdate": "1992-04-10" }
+{ "partkey": 162, "pid": 2, "shipdate": "1992-05-03" }
+{ "partkey": 162, "pid": 3, "shipdate": "1992-06-11" }
+{ "partkey": 163, "pid": 1, "shipdate": "1992-02-09" }
+{ "partkey": 163, "pid": 2, "shipdate": "1992-04-27" }
+{ "partkey": 163, "pid": 3, "shipdate": "1992-06-01" }
+{ "partkey": 164, "pid": 1, "shipdate": "1992-03-25" }
+{ "partkey": 164, "pid": 2, "shipdate": "1992-04-17" }
+{ "partkey": 164, "pid": 3, "shipdate": "1992-06-06" }
+{ "partkey": 165, "pid": 1, "shipdate": "1992-03-21" }
+{ "partkey": 165, "pid": 2, "shipdate": "1992-04-01" }
+{ "partkey": 165, "pid": 3, "shipdate": "1992-04-12" }
+{ "partkey": 168, "pid": 1, "shipdate": "1992-05-06" }
+{ "partkey": 168, "pid": 2, "shipdate": "1992-07-20" }
+{ "partkey": 168, "pid": 3, "shipdate": "1992-10-07" }
+{ "partkey": 172, "pid": 1, "shipdate": "1992-09-06" }
+{ "partkey": 172, "pid": 2, "shipdate": "1993-05-01" }
+{ "partkey": 172, "pid": 3, "shipdate": "1993-06-16" }
+{ "partkey": 175, "pid": 1, "shipdate": "1992-10-09" }
+{ "partkey": 175, "pid": 2, "shipdate": "1992-11-09" }
+{ "partkey": 175, "pid": 3, "shipdate": "1992-11-10" }
+{ "partkey": 177, "pid": 1, "shipdate": "1992-04-05" }
+{ "partkey": 177, "pid": 2, "shipdate": "1992-12-25" }
+{ "partkey": 177, "pid": 3, "shipdate": "1993-01-16" }
+{ "partkey": 181, "pid": 1, "shipdate": "1992-07-01" }
+{ "partkey": 181, "pid": 2, "shipdate": "1992-11-04" }
+{ "partkey": 181, "pid": 3, "shipdate": "1992-12-14" }
+{ "partkey": 184, "pid": 1, "shipdate": "1992-04-12" }
+{ "partkey": 184, "pid": 2, "shipdate": "1992-04-12" }
+{ "partkey": 184, "pid": 3, "shipdate": "1992-04-30" }
+{ "partkey": 186, "pid": 1, "shipdate": "1992-07-26" }
+{ "partkey": 186, "pid": 2, "shipdate": "1992-11-25" }
+{ "partkey": 186, "pid": 3, "shipdate": "1992-11-27" }
+{ "partkey": 189, "pid": 1, "shipdate": "1992-06-16" }
+{ "partkey": 189, "pid": 2, "shipdate": "1992-06-20" }
+{ "partkey": 189, "pid": 3, "shipdate": "1992-07-20" }
+{ "partkey": 194, "pid": 1, "shipdate": "1992-02-14" }
+{ "partkey": 194, "pid": 2, "shipdate": "1992-06-20" }
+{ "partkey": 194, "pid": 3, "shipdate": "1992-12-15" }
+{ "partkey": 197, "pid": 1, "shipdate": "1993-08-22" }
+{ "partkey": 197, "pid": 2, "shipdate": "1994-02-24" }
+{ "partkey": 197, "pid": 3, "shipdate": "1994-03-03" }
+{ "partkey": 198, "pid": 1, "shipdate": "1992-04-21" }
+{ "partkey": 198, "pid": 2, "shipdate": "1992-09-12" }
+{ "partkey": 198, "pid": 3, "shipdate": "1992-12-27" }
+{ "partkey": 8, "pid": 1, "shipdate": "1992-09-25" }
+{ "partkey": 8, "pid": 2, "shipdate": "1992-11-15" }
+{ "partkey": 8, "pid": 3, "shipdate": "1993-02-13" }
+{ "partkey": 9, "pid": 1, "shipdate": "1992-04-29" }
+{ "partkey": 9, "pid": 2, "shipdate": "1992-04-30" }
+{ "partkey": 9, "pid": 3, "shipdate": "1992-06-01" }
+{ "partkey": 10, "pid": 1, "shipdate": "1992-05-13" }
+{ "partkey": 10, "pid": 2, "shipdate": "1992-11-25" }
+{ "partkey": 10, "pid": 3, "shipdate": "1992-12-01" }
+{ "partkey": 25, "pid": 1, "shipdate": "1992-02-04" }
+{ "partkey": 25, "pid": 2, "shipdate": "1992-07-23" }
+{ "partkey": 25, "pid": 3, "shipdate": "1992-08-01" }
+{ "partkey": 28, "pid": 1, "shipdate": "1992-03-16" }
+{ "partkey": 28, "pid": 2, "shipdate": "1992-10-13" }
+{ "partkey": 28, "pid": 3, "shipdate": "1992-11-04" }
+{ "partkey": 34, "pid": 1, "shipdate": "1992-07-03" }
+{ "partkey": 34, "pid": 2, "shipdate": "1992-07-20" }
+{ "partkey": 34, "pid": 3, "shipdate": "1992-11-23" }
+{ "partkey": 37, "pid": 1, "shipdate": "1992-08-30" }
+{ "partkey": 37, "pid": 2, "shipdate": "1992-10-03" }
+{ "partkey": 37, "pid": 3, "shipdate": "1993-01-31" }
+{ "partkey": 40, "pid": 1, "shipdate": "1992-02-07" }
+{ "partkey": 40, "pid": 2, "shipdate": "1992-04-28" }
+{ "partkey": 40, "pid": 3, "shipdate": "1992-05-03" }
+{ "partkey": 41, "pid": 1, "shipdate": "1992-12-13" }
+{ "partkey": 41, "pid": 2, "shipdate": "1993-01-18" }
+{ "partkey": 41, "pid": 3, "shipdate": "1993-04-13" }
+{ "partkey": 43, "pid": 1, "shipdate": "1992-06-18" }
+{ "partkey": 43, "pid": 2, "shipdate": "1992-06-30" }
+{ "partkey": 43, "pid": 3, "shipdate": "1992-08-28" }
+{ "partkey": 66, "pid": 1, "shipdate": "1992-05-07" }
+{ "partkey": 66, "pid": 2, "shipdate": "1992-09-11" }
+{ "partkey": 66, "pid": 3, "shipdate": "1992-10-10" }
+{ "partkey": 67, "pid": 1, "shipdate": "1992-05-13" }
+{ "partkey": 67, "pid": 2, "shipdate": "1993-01-08" }
+{ "partkey": 67, "pid": 3, "shipdate": "1993-11-03" }
+{ "partkey": 69, "pid": 1, "shipdate": "1992-05-31" }
+{ "partkey": 69, "pid": 2, "shipdate": "1992-06-05" }
+{ "partkey": 69, "pid": 3, "shipdate": "1992-07-01" }
+{ "partkey": 76, "pid": 1, "shipdate": "1992-10-22" }
+{ "partkey": 76, "pid": 2, "shipdate": "1993-04-19" }
+{ "partkey": 76, "pid": 3, "shipdate": "1993-06-12" }
+{ "partkey": 79, "pid": 1, "shipdate": "1992-08-05" }
+{ "partkey": 79, "pid": 2, "shipdate": "1992-08-10" }
+{ "partkey": 79, "pid": 3, "shipdate": "1993-04-08" }
+{ "partkey": 84, "pid": 1, "shipdate": "1992-09-08" }
+{ "partkey": 84, "pid": 2, "shipdate": "1993-05-15" }
+{ "partkey": 84, "pid": 3, "shipdate": "1993-05-20" }
+{ "partkey": 85, "pid": 1, "shipdate": "1992-02-28" }
+{ "partkey": 85, "pid": 2, "shipdate": "1992-05-28" }
+{ "partkey": 85, "pid": 3, "shipdate": "1992-06-27" }
+{ "partkey": 86, "pid": 1, "shipdate": "1992-05-25" }
+{ "partkey": 86, "pid": 2, "shipdate": "1992-11-18" }
+{ "partkey": 86, "pid": 3, "shipdate": "1993-03-01" }
+{ "partkey": 94, "pid": 1, "shipdate": "1992-05-20" }
+{ "partkey": 94, "pid": 2, "shipdate": "1992-07-03" }
+{ "partkey": 94, "pid": 3, "shipdate": "1992-07-26" }
+{ "partkey": 95, "pid": 1, "shipdate": "1992-02-24" }
+{ "partkey": 95, "pid": 2, "shipdate": "1992-03-14" }
+{ "partkey": 95, "pid": 3, "shipdate": "1992-11-17" }
+{ "partkey": 96, "pid": 1, "shipdate": "1992-06-18" }
+{ "partkey": 96, "pid": 2, "shipdate": "1992-09-26" }
+{ "partkey": 96, "pid": 3, "shipdate": "1992-11-25" }
+{ "partkey": 99, "pid": 1, "shipdate": "1992-05-01" }
+{ "partkey": 99, "pid": 2, "shipdate": "1993-04-18" }
+{ "partkey": 99, "pid": 3, "shipdate": "1993-06-09" }
+{ "partkey": 102, "pid": 1, "shipdate": "1992-08-19" }
+{ "partkey": 102, "pid": 2, "shipdate": "1992-08-21" }
+{ "partkey": 102, "pid": 3, "shipdate": "1992-10-25" }
+{ "partkey": 108, "pid": 1, "shipdate": "1992-07-28" }
+{ "partkey": 108, "pid": 2, "shipdate": "1992-08-01" }
+{ "partkey": 108, "pid": 3, "shipdate": "1992-09-07" }
+{ "partkey": 111, "pid": 1, "shipdate": "1992-07-05" }
+{ "partkey": 111, "pid": 2, "shipdate": "1992-07-28" }
+{ "partkey": 111, "pid": 3, "shipdate": "1992-08-13" }
+{ "partkey": 113, "pid": 1, "shipdate": "1992-06-08" }
+{ "partkey": 113, "pid": 2, "shipdate": "1992-08-13" }
+{ "partkey": 113, "pid": 3, "shipdate": "1992-08-25" }
+{ "partkey": 116, "pid": 1, "shipdate": "1992-03-22" }
+{ "partkey": 116, "pid": 2, "shipdate": "1992-05-17" }
+{ "partkey": 116, "pid": 3, "shipdate": "1992-06-24" }
+{ "partkey": 124, "pid": 1, "shipdate": "1992-06-15" }
+{ "partkey": 124, "pid": 2, "shipdate": "1992-08-09" }
+{ "partkey": 124, "pid": 3, "shipdate": "1992-09-13" }
+{ "partkey": 128, "pid": 1, "shipdate": "1992-03-05" }
+{ "partkey": 128, "pid": 2, "shipdate": "1992-05-02" }
+{ "partkey": 128, "pid": 3, "shipdate": "1992-08-24" }
+{ "partkey": 132, "pid": 1, "shipdate": "1992-04-17" }
+{ "partkey": 132, "pid": 2, "shipdate": "1992-06-14" }
+{ "partkey": 132, "pid": 3, "shipdate": "1992-07-06" }
+{ "partkey": 133, "pid": 1, "shipdate": "1992-06-08" }
+{ "partkey": 133, "pid": 2, "shipdate": "1992-11-17" }
+{ "partkey": 133, "pid": 3, "shipdate": "1993-01-18" }
+{ "partkey": 134, "pid": 1, "shipdate": "1992-05-17" }
+{ "partkey": 134, "pid": 2, "shipdate": "1992-05-20" }
+{ "partkey": 134, "pid": 3, "shipdate": "1992-05-29" }
+{ "partkey": 136, "pid": 1, "shipdate": "1992-05-19" }
+{ "partkey": 136, "pid": 2, "shipdate": "1992-05-21" }
+{ "partkey": 136, "pid": 3, "shipdate": "1992-06-07" }
+{ "partkey": 139, "pid": 1, "shipdate": "1992-04-12" }
+{ "partkey": 139, "pid": 2, "shipdate": "1992-06-28" }
+{ "partkey": 139, "pid": 3, "shipdate": "1992-09-12" }
+{ "partkey": 150, "pid": 1, "shipdate": "1992-05-01" }
+{ "partkey": 150, "pid": 2, "shipdate": "1992-05-02" }
+{ "partkey": 150, "pid": 3, "shipdate": "1992-05-25" }
+{ "partkey": 155, "pid": 1, "shipdate": "1992-09-28" }
+{ "partkey": 155, "pid": 2, "shipdate": "1992-11-25" }
+{ "partkey": 155, "pid": 3, "shipdate": "1993-05-14" }
+{ "partkey": 160, "pid": 1, "shipdate": "1992-05-07" }
+{ "partkey": 160, "pid": 2, "shipdate": "1992-07-04" }
+{ "partkey": 160, "pid": 3, "shipdate": "1992-08-18" }
+{ "partkey": 166, "pid": 1, "shipdate": "1992-08-11" }
+{ "partkey": 166, "pid": 2, "shipdate": "1992-08-14" }
+{ "partkey": 166, "pid": 3, "shipdate": "1993-04-22" }
+{ "partkey": 167, "pid": 1, "shipdate": "1992-06-02" }
+{ "partkey": 167, "pid": 2, "shipdate": "1993-01-31" }
+{ "partkey": 167, "pid": 3, "shipdate": "1993-02-15" }
+{ "partkey": 174, "pid": 1, "shipdate": "1992-06-25" }
+{ "partkey": 174, "pid": 2, "shipdate": "1992-11-02" }
+{ "partkey": 174, "pid": 3, "shipdate": "1992-12-02" }
+{ "partkey": 183, "pid": 1, "shipdate": "1992-04-24" }
+{ "partkey": 183, "pid": 2, "shipdate": "1992-10-24" }
+{ "partkey": 183, "pid": 3, "shipdate": "1993-01-08" }
+{ "partkey": 185, "pid": 1, "shipdate": "1992-04-30" }
+{ "partkey": 185, "pid": 2, "shipdate": "1992-06-20" }
+{ "partkey": 185, "pid": 3, "shipdate": "1992-07-23" }
+{ "partkey": 187, "pid": 1, "shipdate": "1992-04-01" }
+{ "partkey": 187, "pid": 2, "shipdate": "1992-05-30" }
+{ "partkey": 187, "pid": 3, "shipdate": "1992-06-01" }
+{ "partkey": 191, "pid": 1, "shipdate": "1992-07-31" }
+{ "partkey": 191, "pid": 2, "shipdate": "1992-08-29" }
+{ "partkey": 191, "pid": 3, "shipdate": "1992-09-22" }
+{ "partkey": 192, "pid": 1, "shipdate": "1992-02-19" }
+{ "partkey": 192, "pid": 2, "shipdate": "1992-08-10" }
+{ "partkey": 192, "pid": 3, "shipdate": "1992-09-02" }
+{ "partkey": 196, "pid": 1, "shipdate": "1992-03-02" }
+{ "partkey": 196, "pid": 2, "shipdate": "1992-03-04" }
+{ "partkey": 196, "pid": 3, "shipdate": "1992-06-11" }
+{ "partkey": 200, "pid": 1, "shipdate": "1992-04-19" }
+{ "partkey": 200, "pid": 2, "shipdate": "1993-01-06" }
+{ "partkey": 200, "pid": 3, "shipdate": "1993-10-17" }
+{ "partkey": 3, "pid": 1, "shipdate": "1992-04-25" }
+{ "partkey": 3, "pid": 2, "shipdate": "1992-05-24" }
+{ "partkey": 3, "pid": 3, "shipdate": "1993-01-03" }
+{ "partkey": 5, "pid": 1, "shipdate": "1992-05-02" }
+{ "partkey": 5, "pid": 2, "shipdate": "1992-06-14" }
+{ "partkey": 5, "pid": 3, "shipdate": "1993-01-06" }
+{ "partkey": 7, "pid": 1, "shipdate": "1992-04-12" }
+{ "partkey": 7, "pid": 2, "shipdate": "1993-02-11" }
+{ "partkey": 7, "pid": 3, "shipdate": "1993-06-25" }
+{ "partkey": 17, "pid": 1, "shipdate": "1992-07-23" }
+{ "partkey": 17, "pid": 2, "shipdate": "1993-03-01" }
+{ "partkey": 17, "pid": 3, "shipdate": "1993-05-06" }
+{ "partkey": 18, "pid": 1, "shipdate": "1992-04-12" }
+{ "partkey": 18, "pid": 2, "shipdate": "1992-04-21" }
+{ "partkey": 18, "pid": 3, "shipdate": "1992-05-21" }
+{ "partkey": 27, "pid": 1, "shipdate": "1992-07-05" }
+{ "partkey": 27, "pid": 2, "shipdate": "1992-07-14" }
+{ "partkey": 27, "pid": 3, "shipdate": "1992-08-17" }
+{ "partkey": 32, "pid": 1, "shipdate": "1992-09-22" }
+{ "partkey": 32, "pid": 2, "shipdate": "1992-09-25" }
+{ "partkey": 32, "pid": 3, "shipdate": "1992-10-07" }
+{ "partkey": 36, "pid": 1, "shipdate": "1992-02-26" }
+{ "partkey": 36, "pid": 2, "shipdate": "1992-07-03" }
+{ "partkey": 36, "pid": 3, "shipdate": "1993-01-06" }
+{ "partkey": 39, "pid": 1, "shipdate": "1992-05-26" }
+{ "partkey": 39, "pid": 2, "shipdate": "1992-11-12" }
+{ "partkey": 39, "pid": 3, "shipdate": "1992-11-15" }
+{ "partkey": 42, "pid": 1, "shipdate": "1992-10-23" }
+{ "partkey": 42, "pid": 2, "shipdate": "1992-11-04" }
+{ "partkey": 42, "pid": 3, "shipdate": "1992-12-12" }
+{ "partkey": 44, "pid": 1, "shipdate": "1992-02-14" }
+{ "partkey": 44, "pid": 2, "shipdate": "1992-06-11" }
+{ "partkey": 44, "pid": 3, "shipdate": "1992-11-29" }
+{ "partkey": 50, "pid": 1, "shipdate": "1992-04-22" }
+{ "partkey": 50, "pid": 2, "shipdate": "1992-07-31" }
+{ "partkey": 50, "pid": 3, "shipdate": "1992-09-23" }
+{ "partkey": 53, "pid": 1, "shipdate": "1992-01-14" }
+{ "partkey": 53, "pid": 2, "shipdate": "1992-05-22" }
+{ "partkey": 53, "pid": 3, "shipdate": "1992-10-04" }
+{ "partkey": 54, "pid": 1, "shipdate": "1992-04-07" }
+{ "partkey": 54, "pid": 2, "shipdate": "1992-05-01" }
+{ "partkey": 54, "pid": 3, "shipdate": "1992-06-24" }
+{ "partkey": 61, "pid": 1, "shipdate": "1993-07-14" }
+{ "partkey": 61, "pid": 2, "shipdate": "1993-07-15" }
+{ "partkey": 61, "pid": 3, "shipdate": "1993-09-29" }
+{ "partkey": 74, "pid": 1, "shipdate": "1992-03-21" }
+{ "partkey": 74, "pid": 2, "shipdate": "1992-03-22" }
+{ "partkey": 74, "pid": 3, "shipdate": "1992-10-21" }
+{ "partkey": 78, "pid": 1, "shipdate": "1992-03-04" }
+{ "partkey": 78, "pid": 2, "shipdate": "1992-04-04" }
+{ "partkey": 78, "pid": 3, "shipdate": "1992-05-06" }
+{ "partkey": 80, "pid": 1, "shipdate": "1992-05-18" }
+{ "partkey": 80, "pid": 2, "shipdate": "1992-09-02" }
+{ "partkey": 80, "pid": 3, "shipdate": "1993-06-07" }
+{ "partkey": 82, "pid": 1, "shipdate": "1992-07-17" }
+{ "partkey": 82, "pid": 2, "shipdate": "1992-10-18" }
+{ "partkey": 82, "pid": 3, "shipdate": "1992-12-11" }
+{ "partkey": 83, "pid": 1, "shipdate": "1992-06-09" }
+{ "partkey": 83, "pid": 2, "shipdate": "1992-08-04" }
+{ "partkey": 83, "pid": 3, "shipdate": "1992-09-21" }
+{ "partkey": 87, "pid": 1, "shipdate": "1992-09-30" }
+{ "partkey": 87, "pid": 2, "shipdate": "1992-12-02" }
+{ "partkey": 87, "pid": 3, "shipdate": "1993-01-06" }
+{ "partkey": 90, "pid": 1, "shipdate": "1992-02-25" }
+{ "partkey": 90, "pid": 2, "shipdate": "1992-06-07" }
+{ "partkey": 90, "pid": 3, "shipdate": "1992-08-21" }
+{ "partkey": 101, "pid": 1, "shipdate": "1992-08-17" }
+{ "partkey": 101, "pid": 2, "shipdate": "1992-09-27" }
+{ "partkey": 101, "pid": 3, "shipdate": "1992-12-28" }
+{ "partkey": 104, "pid": 1, "shipdate": "1992-03-17" }
+{ "partkey": 104, "pid": 2, "shipdate": "1992-11-08" }
+{ "partkey": 104, "pid": 3, "shipdate": "1994-01-22" }
+{ "partkey": 107, "pid": 1, "shipdate": "1992-05-22" }
+{ "partkey": 107, "pid": 2, "shipdate": "1992-07-30" }
+{ "partkey": 107, "pid": 3, "shipdate": "1992-08-05" }
+{ "partkey": 110, "pid": 1, "shipdate": "1992-09-18" }
+{ "partkey": 110, "pid": 2, "shipdate": "1992-11-01" }
+{ "partkey": 110, "pid": 3, "shipdate": "1993-01-01" }
+{ "partkey": 112, "pid": 1, "shipdate": "1992-09-13" }
+{ "partkey": 112, "pid": 2, "shipdate": "1992-10-09" }
+{ "partkey": 112, "pid": 3, "shipdate": "1993-01-15" }
+{ "partkey": 117, "pid": 1, "shipdate": "1992-05-04" }
+{ "partkey": 117, "pid": 2, "shipdate": "1993-03-18" }
+{ "partkey": 117, "pid": 3, "shipdate": "1993-07-10" }
+{ "partkey": 120, "pid": 1, "shipdate": "1992-03-23" }
+{ "partkey": 120, "pid": 2, "shipdate": "1992-04-28" }
+{ "partkey": 120, "pid": 3, "shipdate": "1992-06-29" }
+{ "partkey": 123, "pid": 1, "shipdate": "1992-02-01" }
+{ "partkey": 123, "pid": 2, "shipdate": "1992-06-20" }
+{ "partkey": 123, "pid": 3, "shipdate": "1992-11-22" }
+{ "partkey": 137, "pid": 1, "shipdate": "1992-05-23" }
+{ "partkey": 137, "pid": 2, "shipdate": "1992-07-05" }
+{ "partkey": 137, "pid": 3, "shipdate": "1992-09-12" }
+{ "partkey": 142, "pid": 1, "shipdate": "1992-10-14" }
+{ "partkey": 142, "pid": 2, "shipdate": "1993-05-14" }
+{ "partkey": 142, "pid": 3, "shipdate": "1993-07-11" }
+{ "partkey": 145, "pid": 1, "shipdate": "1992-01-25" }
+{ "partkey": 145, "pid": 2, "shipdate": "1992-08-16" }
+{ "partkey": 145, "pid": 3, "shipdate": "1992-10-25" }
+{ "partkey": 146, "pid": 1, "shipdate": "1992-05-21" }
+{ "partkey": 146, "pid": 2, "shipdate": "1993-06-21" }
+{ "partkey": 146, "pid": 3, "shipdate": "1993-08-02" }
+{ "partkey": 148, "pid": 1, "shipdate": "1992-01-15" }
+{ "partkey": 148, "pid": 2, "shipdate": "1992-02-27" }
+{ "partkey": 148, "pid": 3, "shipdate": "1992-04-22" }
+{ "partkey": 151, "pid": 1, "shipdate": "1992-01-26" }
+{ "partkey": 151, "pid": 2, "shipdate": "1992-07-30" }
+{ "partkey": 151, "pid": 3, "shipdate": "1992-12-19" }
+{ "partkey": 169, "pid": 1, "shipdate": "1992-03-31" }
+{ "partkey": 169, "pid": 2, "shipdate": "1992-06-05" }
+{ "partkey": 169, "pid": 3, "shipdate": "1992-06-07" }
+{ "partkey": 173, "pid": 1, "shipdate": "1992-06-17" }
+{ "partkey": 173, "pid": 2, "shipdate": "1992-09-15" }
+{ "partkey": 173, "pid": 3, "shipdate": "1992-09-30" }
+{ "partkey": 176, "pid": 1, "shipdate": "1992-02-01" }
+{ "partkey": 176, "pid": 2, "shipdate": "1992-04-28" }
+{ "partkey": 176, "pid": 3, "shipdate": "1992-09-24" }
+{ "partkey": 188, "pid": 1, "shipdate": "1992-09-15" }
+{ "partkey": 188, "pid": 2, "shipdate": "1993-04-08" }
+{ "partkey": 188, "pid": 3, "shipdate": "1993-05-03" }
+{ "partkey": 193, "pid": 1, "shipdate": "1992-05-05" }
+{ "partkey": 193, "pid": 2, "shipdate": "1992-08-21" }
+{ "partkey": 193, "pid": 3, "shipdate": "1993-02-12" }

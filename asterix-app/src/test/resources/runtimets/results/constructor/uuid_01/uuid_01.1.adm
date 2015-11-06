@@ -1,2 +1,1 @@
-[ { "uuid1": uuid("02a199ca-bf58-412e-bd9f-60a0c975a8ac"), "uuid2": uuid("8cea25ab-55f8-467e-929d-94888f754832") }
- ]
+{ "uuid1": uuid("02a199ca-bf58-412e-bd9f-60a0c975a8ac"), "uuid2": uuid("8cea25ab-55f8-467e-929d-94888f754832") }

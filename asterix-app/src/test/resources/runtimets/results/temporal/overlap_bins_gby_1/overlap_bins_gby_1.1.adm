@@ -1,12 +1,11 @@
-[ { "timebin": interval-time("00:00:00.000Z, 01:30:00.000Z"), "count": 1, "total_ms": 3600000 }
-, { "timebin": interval-time("07:30:00.000Z, 09:00:00.000Z"), "count": 1, "total_ms": 4236062 }
-, { "timebin": interval-time("09:00:00.000Z, 10:30:00.000Z"), "count": 2, "total_ms": 8671961 }
-, { "timebin": interval-time("10:30:00.000Z, 12:00:00.000Z"), "count": 2, "total_ms": 6563938 }
-, { "timebin": interval-time("12:00:00.000Z, 13:30:00.000Z"), "count": 2, "total_ms": 7836062 }
-, { "timebin": interval-time("13:30:00.000Z, 15:00:00.000Z"), "count": 2, "total_ms": 10800000 }
-, { "timebin": interval-time("15:00:00.000Z, 16:30:00.000Z"), "count": 2, "total_ms": 8363938 }
-, { "timebin": interval-time("16:30:00.000Z, 18:00:00.000Z"), "count": 2, "total_ms": 5419000 }
-, { "timebin": interval-time("18:00:00.000Z, 19:30:00.000Z"), "count": 2, "total_ms": 10800000 }
-, { "timebin": interval-time("19:30:00.000Z, 21:00:00.000Z"), "count": 2, "total_ms": 5128039 }
-, { "timebin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "count": 5, "total_ms": 1689382 }
- ]
+{ "timebin": interval-time("00:00:00.000Z, 01:30:00.000Z"), "count": 1, "total_ms": 3600000 }
+{ "timebin": interval-time("07:30:00.000Z, 09:00:00.000Z"), "count": 1, "total_ms": 4236062 }
+{ "timebin": interval-time("09:00:00.000Z, 10:30:00.000Z"), "count": 2, "total_ms": 8671961 }
+{ "timebin": interval-time("10:30:00.000Z, 12:00:00.000Z"), "count": 2, "total_ms": 6563938 }
+{ "timebin": interval-time("12:00:00.000Z, 13:30:00.000Z"), "count": 2, "total_ms": 7836062 }
+{ "timebin": interval-time("13:30:00.000Z, 15:00:00.000Z"), "count": 2, "total_ms": 10800000 }
+{ "timebin": interval-time("15:00:00.000Z, 16:30:00.000Z"), "count": 2, "total_ms": 8363938 }
+{ "timebin": interval-time("16:30:00.000Z, 18:00:00.000Z"), "count": 2, "total_ms": 5419000 }
+{ "timebin": interval-time("18:00:00.000Z, 19:30:00.000Z"), "count": 2, "total_ms": 10800000 }
+{ "timebin": interval-time("19:30:00.000Z, 21:00:00.000Z"), "count": 2, "total_ms": 5128039 }
+{ "timebin": interval-time("22:30:00.000Z, 00:00:00.000Z"), "count": 5, "total_ms": 1689382 }

@@ -1,3 +1,2 @@
-[ { "u": "1a2b", "recs": [ { "r": 1, "uid": "1a2b", "t": datetime("2000-01-01T01:00:00.000Z"), "event": "e1" }, { "r": 2, "uid": "1a2b", "t": datetime("2000-01-01T01:01:00.000Z"), "event": "e2" }, { "r": 5, "uid": "1a2b", "t": datetime("2000-01-01T01:04:00.000Z"), "event": "e1" }, { "r": 6, "uid": "1a2b", "t": datetime("2000-01-01T01:05:00.000Z"), "event": "e4" } ] }
-, { "u": "3c4d", "recs": [ { "r": 3, "uid": "3c4d", "t": datetime("2000-01-01T01:02:00.000Z"), "event": "e1" }, { "r": 4, "uid": "3c4d", "t": datetime("2000-01-01T01:03:00.000Z"), "event": "e3" } ] }
- ]
+{ "u": "1a2b", "recs": [ { "r": 1, "uid": "1a2b", "t": datetime("2000-01-01T01:00:00.000Z"), "event": "e1" }, { "r": 2, "uid": "1a2b", "t": datetime("2000-01-01T01:01:00.000Z"), "event": "e2" }, { "r": 5, "uid": "1a2b", "t": datetime("2000-01-01T01:04:00.000Z"), "event": "e1" }, { "r": 6, "uid": "1a2b", "t": datetime("2000-01-01T01:05:00.000Z"), "event": "e4" } ] }
+{ "u": "3c4d", "recs": [ { "r": 3, "uid": "3c4d", "t": datetime("2000-01-01T01:02:00.000Z"), "event": "e1" }, { "r": 4, "uid": "3c4d", "t": datetime("2000-01-01T01:03:00.000Z"), "event": "e3" } ] }

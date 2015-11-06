@@ -1,6 +1,5 @@
-[ { "cust_name": "Jodi Alex", "order_ids": [ 1 ] }
-, { "cust_name": "Jodi Rotruck", "order_ids": [ 10, 1000 ] }
-, { "cust_name": "Mary Carey", "order_ids": [  ] }
-, { "cust_name": "Mike Carey", "order_ids": [  ] }
-, { "cust_name": "Mike ley", "order_ids": [  ] }
- ]
+{ "cust_name": "Jodi Alex", "order_ids": [ 1 ] }
+{ "cust_name": "Jodi Rotruck", "order_ids": [ 10, 1000 ] }
+{ "cust_name": "Mary Carey", "order_ids": [  ] }
+{ "cust_name": "Mike Carey", "order_ids": [  ] }
+{ "cust_name": "Mike ley", "order_ids": [  ] }

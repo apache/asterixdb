@@ -1,2 +1,1 @@
-[ { "DataverseName": "externallibtest", "Name": "testlib", "Timestamp": "Mon Apr 22 23:36:55 PDT 2013" }
- ]
+{ "DataverseName": "externallibtest", "Name": "testlib", "Timestamp": "Mon Apr 22 23:36:55 PDT 2013" }

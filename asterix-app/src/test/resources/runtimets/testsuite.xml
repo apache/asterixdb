@@ -4444,7 +4444,19 @@
         </test-case>
         <test-case FilePath="scan">
             <compilation-unit name="alltypes_01">
+                <parameter name="wrapper-array" value="true"/>
+                <output-dir compare="Text">alltypes_01-wrapped</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="scan">
+            <compilation-unit name="alltypes_01">
                 <output-dir compare="Lossless-JSON">alltypes_01-losslessjson</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="scan">
+            <compilation-unit name="alltypes_01">
+                <parameter name="wrapper-array" value="false"/>
+                <output-dir compare="Lossless-JSON">alltypes_01-losslessjson-unwrapped</output-dir>
             </compilation-unit>
         </test-case>
         <test-case FilePath="scan">

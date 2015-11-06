@@ -1,2 +1,1 @@
-[ { "sql-min": "Alex", "sql-max": "Susan" }
- ]
+{ "sql-min": "Alex", "sql-max": "Susan" }

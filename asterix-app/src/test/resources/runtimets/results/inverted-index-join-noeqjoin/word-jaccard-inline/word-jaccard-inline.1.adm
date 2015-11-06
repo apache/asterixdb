@@ -1,7 +1,6 @@
-[ { "a": "Query Processing in Multidatabase Systems.", "b": "Dynamic Query Optimization and Query Processing in Multidatabase Systems 1.", "jacc": 0.5f }
-, { "a": "Active Database Systems.", "b": "Active Database Systems", "jacc": 1.0f }
-, { "a": "Specification and Execution of Transactional Workflows.", "b": "Specification and Execution of Transactional Workflows", "jacc": 1.0f }
-, { "a": "Integrated Office Systems.", "b": "Integrated Office Systems", "jacc": 1.0f }
-, { "a": "Integrated Office Systems.", "b": "Integrated Office Systems", "jacc": 1.0f }
-, { "a": "A Shared View of Sharing  The Treaty of Orlando.", "b": "A Shared View of Sharing  The Treaty of Orlando", "jacc": 1.0f }
- ]
+{ "a": "Query Processing in Multidatabase Systems.", "b": "Dynamic Query Optimization and Query Processing in Multidatabase Systems 1.", "jacc": 0.5f }
+{ "a": "Active Database Systems.", "b": "Active Database Systems", "jacc": 1.0f }
+{ "a": "Specification and Execution of Transactional Workflows.", "b": "Specification and Execution of Transactional Workflows", "jacc": 1.0f }
+{ "a": "Integrated Office Systems.", "b": "Integrated Office Systems", "jacc": 1.0f }
+{ "a": "Integrated Office Systems.", "b": "Integrated Office Systems", "jacc": 1.0f }
+{ "a": "A Shared View of Sharing  The Treaty of Orlando.", "b": "A Shared View of Sharing  The Treaty of Orlando", "jacc": 1.0f }

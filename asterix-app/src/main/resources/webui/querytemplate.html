@@ -220,7 +220,7 @@ $(document).ready(function() {
             </div>
 
             <div>
-              <label class="checkbox optlabel"> Output Format:<br/>
+              <label id="output-format" class="optlabel"> Output Format:<br/>
                 <select name="output-format" class="btn">
                   <option selected value="ADM">ADM</option>
                   <option value="CSV">CSV (no header)</option>
@@ -229,12 +229,13 @@ $(document).ready(function() {
                   <option value="LOSSLESS_JSON">JSON (lossless)</option>
                 </select>
               </label>
+              <label class="optlabel"><input type="checkbox" name="wrapper-array" value="true" /> Wrap results in outer array</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-expr-tree" value="true" /> Print parsed expressions</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-rewritten-expr-tree" value="true" /> Print rewritten expressions</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-logical-plan" value="true" /> Print logical plan</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-optimized-logical-plan" value="true" /> Print optimized logical plan</label>
               <label class="checkbox optlabel"><input type="checkbox" name="print-job" value="true" /> Print Hyracks job</label>
-              <label class="checkbox optlabel"><input type="checkbox" name="execute-query" value="true" checked/> Execute query</label>
+              <label class="optlabel"><input type="checkbox" name="execute-query" value="true" checked/> Execute query</label>
             </div>
           </form>
        </div>

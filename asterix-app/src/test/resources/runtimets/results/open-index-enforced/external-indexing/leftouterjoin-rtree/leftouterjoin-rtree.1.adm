@@ -1,10 +1,9 @@
-[ { "nearby-message": [ { "tweetid2": 1, "loc2": point("42.83,72.44") }, { "tweetid2": 55, "loc2": point("42.77,72.16") }, { "tweetid2": 114, "loc2": point("42.87,72.38") } ], "tweetid1": 1, "loc1": point("42.83,72.44") }
-, { "nearby-message": [ { "tweetid2": 2, "loc2": point("34.81,72.44") } ], "tweetid1": 2, "loc1": point("34.81,72.44") }
-, { "nearby-message": [ { "tweetid2": 3, "loc2": point("24.54,82.66") } ], "tweetid1": 3, "loc1": point("24.54,82.66") }
-, { "nearby-message": [ { "tweetid2": 4, "loc2": point("38.14,68.1") } ], "tweetid1": 4, "loc1": point("38.14,68.1") }
-, { "nearby-message": [ { "tweetid2": 5, "loc2": point("35.4,68.89") } ], "tweetid1": 5, "loc1": point("35.4,68.89") }
-, { "nearby-message": [ { "tweetid2": 6, "loc2": point("42.75,78.5") } ], "tweetid1": 6, "loc1": point("42.75,78.5") }
-, { "nearby-message": [ { "tweetid2": 7, "loc2": point("48.16,71.59") }, { "tweetid2": 42, "loc2": point("47.86,71.93") }, { "tweetid2": 192, "loc2": point("48.12,72.0") } ], "tweetid1": 7, "loc1": point("48.16,71.59") }
-, { "nearby-message": [ { "tweetid2": 8, "loc2": point("36.17,72.56") } ], "tweetid1": 8, "loc1": point("36.17,72.56") }
-, { "nearby-message": [ { "tweetid2": 9, "loc2": point("38.02,70.38") }, { "tweetid2": 51, "loc2": point("37.65,70.54") } ], "tweetid1": 9, "loc1": point("38.02,70.38") }
- ]
+{ "nearby-message": [ { "tweetid2": 1, "loc2": point("42.83,72.44") }, { "tweetid2": 55, "loc2": point("42.77,72.16") }, { "tweetid2": 114, "loc2": point("42.87,72.38") } ], "tweetid1": 1, "loc1": point("42.83,72.44") }
+{ "nearby-message": [ { "tweetid2": 2, "loc2": point("34.81,72.44") } ], "tweetid1": 2, "loc1": point("34.81,72.44") }
+{ "nearby-message": [ { "tweetid2": 3, "loc2": point("24.54,82.66") } ], "tweetid1": 3, "loc1": point("24.54,82.66") }
+{ "nearby-message": [ { "tweetid2": 4, "loc2": point("38.14,68.1") } ], "tweetid1": 4, "loc1": point("38.14,68.1") }
+{ "nearby-message": [ { "tweetid2": 5, "loc2": point("35.4,68.89") } ], "tweetid1": 5, "loc1": point("35.4,68.89") }
+{ "nearby-message": [ { "tweetid2": 6, "loc2": point("42.75,78.5") } ], "tweetid1": 6, "loc1": point("42.75,78.5") }
+{ "nearby-message": [ { "tweetid2": 7, "loc2": point("48.16,71.59") }, { "tweetid2": 42, "loc2": point("47.86,71.93") }, { "tweetid2": 192, "loc2": point("48.12,72.0") } ], "tweetid1": 7, "loc1": point("48.16,71.59") }
+{ "nearby-message": [ { "tweetid2": 8, "loc2": point("36.17,72.56") } ], "tweetid1": 8, "loc1": point("36.17,72.56") }
+{ "nearby-message": [ { "tweetid2": 9, "loc2": point("38.02,70.38") }, { "tweetid2": 51, "loc2": point("37.65,70.54") } ], "tweetid1": 9, "loc1": point("38.02,70.38") }

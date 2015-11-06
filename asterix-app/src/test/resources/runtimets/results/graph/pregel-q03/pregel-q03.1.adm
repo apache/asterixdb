@@ -1,11 +1,10 @@
-[ { "id": 0i64, "value": 0.0d, "edges": {{ { "destVertexId": 1i64, "cost": 1.0f } }} }
-, { "id": 1i64, "value": 1.0d, "edges": {{ { "destVertexId": 3i64, "cost": 4.0f }, { "destVertexId": 2i64, "cost": 3.0f } }} }
-, { "id": 2i64, "value": 4.0d, "edges": {{ { "destVertexId": 4i64, "cost": 5.0f }, { "destVertexId": 5i64, "cost": 23.0f } }} }
-, { "id": 3i64, "value": 5.0d, "edges": {{ { "destVertexId": 2i64, "cost": 1.0f }, { "destVertexId": 8i64, "cost": 13.0f } }} }
-, { "id": 4i64, "value": 9.0d, "edges": {{ { "destVertexId": 1i64, "cost": 5.0f }, { "destVertexId": 2i64, "cost": 8.0f }, { "destVertexId": 3i64, "cost": 23.0f }, { "destVertexId": 4i64, "cost": 12.0f } }} }
-, { "id": 5i64, "value": 27.0d, "edges": {{ { "destVertexId": 6i64, "cost": 12.0f }, { "destVertexId": 7i64, "cost": 17.0f } }} }
-, { "id": 6i64, "value": 39.0d, "edges": {{ { "destVertexId": 1i64, "cost": 12.0f }, { "destVertexId": 2i64, "cost": 1.0f } }} }
-, { "id": 7i64, "value": 44.0d, "edges": {{ { "destVertexId": 9i64, "cost": 100.0f } }} }
-, { "id": 8i64, "value": 18.0d, "edges": {{ { "destVertexId": 4i64, "cost": 11.0f } }} }
-, { "id": 9i64, "value": 144.0d, "edges": {{ { "destVertexId": 1i64, "cost": 16.0f }, { "destVertexId": 2i64, "cost": 9.0f } }} }
-]
+{ "id": 0i64, "value": 0.0d, "edges": {{ { "destVertexId": 1i64, "cost": 1.0f } }} }
+{ "id": 1i64, "value": 1.0d, "edges": {{ { "destVertexId": 3i64, "cost": 4.0f }, { "destVertexId": 2i64, "cost": 3.0f } }} }
+{ "id": 2i64, "value": 4.0d, "edges": {{ { "destVertexId": 4i64, "cost": 5.0f }, { "destVertexId": 5i64, "cost": 23.0f } }} }
+{ "id": 3i64, "value": 5.0d, "edges": {{ { "destVertexId": 2i64, "cost": 1.0f }, { "destVertexId": 8i64, "cost": 13.0f } }} }
+{ "id": 4i64, "value": 9.0d, "edges": {{ { "destVertexId": 1i64, "cost": 5.0f }, { "destVertexId": 2i64, "cost": 8.0f }, { "destVertexId": 3i64, "cost": 23.0f }, { "destVertexId": 4i64, "cost": 12.0f } }} }
+{ "id": 5i64, "value": 27.0d, "edges": {{ { "destVertexId": 6i64, "cost": 12.0f }, { "destVertexId": 7i64, "cost": 17.0f } }} }
+{ "id": 6i64, "value": 39.0d, "edges": {{ { "destVertexId": 1i64, "cost": 12.0f }, { "destVertexId": 2i64, "cost": 1.0f } }} }
+{ "id": 7i64, "value": 44.0d, "edges": {{ { "destVertexId": 9i64, "cost": 100.0f } }} }
+{ "id": 8i64, "value": 18.0d, "edges": {{ { "destVertexId": 4i64, "cost": 11.0f } }} }
+{ "id": 9i64, "value": 144.0d, "edges": {{ { "destVertexId": 1i64, "cost": 16.0f }, { "destVertexId": 2i64, "cost": 9.0f } }} }

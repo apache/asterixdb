@@ -1,2 +1,1 @@
-[ { "DataverseName": "backupDataverse", "DataFormat": "org.apache.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Wed Apr 24 16:13:46 PDT 2013", "PendingOp": 0 }
- ]
+{ "DataverseName": "backupDataverse", "DataFormat": "org.apache.asterix.runtime.formats.NonTaggedDataFormat", "Timestamp": "Wed Apr 24 16:13:46 PDT 2013", "PendingOp": 0 }

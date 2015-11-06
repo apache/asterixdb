@@ -1,2 +1,1 @@
-[ { "id": 1, "class": { "id": 1, "fullClassification": { "id": 1, "Kingdom": "Animalia", "lower": { "id": 1, "Phylum": "Chordata", "lower": { "id": 1, "Class": "Mammalia", "lower": { "id": 1, "Order": "Carnivora", "lower": { "id": 1, "Family": "Mustelinae", "lower": { "id": 1, "Genus": "Gulo", "lower": { "id": 1, "Species": "Gulo" } } } } } } } } }
- ]
+{ "id": 1, "class": { "id": 1, "fullClassification": { "id": 1, "Kingdom": "Animalia", "lower": { "id": 1, "Phylum": "Chordata", "lower": { "id": 1, "Class": "Mammalia", "lower": { "id": 1, "Order": "Carnivora", "lower": { "id": 1, "Family": "Mustelinae", "lower": { "id": 1, "Genus": "Gulo", "lower": { "id": 1, "Species": "Gulo" } } } } } } } } }
