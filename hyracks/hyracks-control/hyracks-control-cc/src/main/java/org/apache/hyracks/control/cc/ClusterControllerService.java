@@ -153,6 +153,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
     private ShutdownRun shutdownCallback;
 
+    private ICCApplicationEntryPoint aep;
+
     public ClusterControllerService(final CCConfig ccConfig) throws Exception {
         this.ccConfig = ccConfig;
         File jobLogFolder = new File(ccConfig.ccRoot, "logs/jobs");
@@ -243,6 +245,10 @@ public class ClusterControllerService extends AbstractRemoteService {
         datasetDirectoryService.init(executor);
         workQueue.start();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
+        if (aep != null) {
+            // Sometimes, there is no application entry point. Check hyracks-client project
+            aep.startupCompleted();
+        }
     }
 
     private void startApplication() throws Exception {
@@ -251,7 +257,7 @@ public class ClusterControllerService extends AbstractRemoteService {
         String className = ccConfig.appCCMainClass;
         if (className != null) {
             Class<?> c = Class.forName(className);
-            ICCApplicationEntryPoint aep = (ICCApplicationEntryPoint) c.newInstance();
+            aep = (ICCApplicationEntryPoint) c.newInstance();
             String[] args = ccConfig.appArgs == null ? null : ccConfig.appArgs.toArray(new String[ccConfig.appArgs
                     .size()]);
             aep.start(appCtx, args);
