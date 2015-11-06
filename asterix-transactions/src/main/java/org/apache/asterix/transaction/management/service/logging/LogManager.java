@@ -70,8 +70,10 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private LogFlusher logFlusher;
     private Future<Object> futureLogFlusher;
     private static final long SMALLEST_LOG_FILE_ID = 0;
+    private LinkedBlockingQueue<ILogRecord> flushLogsQ;
+    private final FlushLogsLogger flushLogsLogger;
 
-    public LogManager(TransactionSubsystem txnSubsystem) throws ACIDException {
+    public LogManager(TransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
         logManagerProperties = new LogManagerProperties(this.txnSubsystem.getTransactionProperties(),
                 this.txnSubsystem.getId());
@@ -82,6 +84,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         logFilePrefix = logManagerProperties.getLogFilePrefix();
         flushLSN = new MutableLong();
         appendLSN = new AtomicLong();
+        flushLogsQ = new LinkedBlockingQueue<>();
+        flushLogsLogger = new FlushLogsLogger();
         initializeLogManager(SMALLEST_LOG_FILE_ID);
     }
 
@@ -100,6 +104,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         getAndInitNewPage();
         logFlusher = new LogFlusher(this, emptyQ, flushQ);
         futureLogFlusher = txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(logFlusher);
+        if (!flushLogsLogger.isAlive()) {
+            txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().execute(flushLogsLogger);
+        }
     }
 
     @Override
@@ -108,7 +115,15 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             throw new IllegalStateException();
         }
 
-        syncLog(logRecord);
+        if (logRecord.getLogType() == LogType.FLUSH) {
+            flushLogsQ.offer(logRecord);
+            return;
+        }
+        appendToLogTail(logRecord);
+    }
+
+    private void appendToLogTail(ILogRecord logRecord) throws ACIDException {
+        syncAppendToLogTail(logRecord);
 
         if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)
                 && !logRecord.isFlushed()) {
@@ -124,16 +139,15 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private synchronized void syncLog(ILogRecord logRecord) throws ACIDException {
+    private synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
         ITransactionContext txnCtx = null;
 
         if (logRecord.getLogType() != LogType.FLUSH) {
             txnCtx = logRecord.getTxnCtx();
             if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
-                throw new ACIDException("Aborted job(" + txnCtx.getJobId()
-                        + ") tried to write non-abort type log record.");
+                throw new ACIDException(
+                        "Aborted job(" + txnCtx.getJobId() + ") tried to write non-abort type log record.");
             }
-
         }
         if (getLogFileOffset(appendLSN.get()) + logRecord.getLogSize() > logFileSize) {
             prepareNextLogFile();
@@ -394,7 +408,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return lsn / logFileSize;
     }
 
-    private boolean createFileIfNotExists(String path) throws IOException {
+    private static boolean createFileIfNotExists(String path) throws IOException {
         File file = new File(path);
         File parentFile = file.getParentFile();
         if (parentFile != null) {
@@ -403,7 +417,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return file.createNewFile();
     }
 
-    private boolean createNewDirectory(String path) throws IOException {
+    private static boolean createNewDirectory(String path) {
         return (new File(path)).mkdir();
     }
 
@@ -435,8 +449,31 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         List<Long> logFileIds = getLogFileIds();
         if (logFileIds != null) {
             return logFileIds.get(0) * logFileSize;
-        }else{
+        } else {
             throw new IllegalStateException("Couldn't find any log files.");
+        }
+    }
+
+    /**
+     * This class is used to log FLUSH logs.
+     * FLUSH logs are flushed on a different thread to avoid a possible deadlock in LogBuffer batchUnlock which calls PrimaryIndexOpeartionTracker.completeOperation
+     * The deadlock happens when PrimaryIndexOpeartionTracker.completeOperation results in generating a FLUSH log and there are no empty log buffers available to log it.
+     */
+    private class FlushLogsLogger extends Thread {
+        private ILogRecord logRecord;
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    logRecord = flushLogsQ.take();
+                    appendToLogTail(logRecord);
+                } catch (ACIDException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    //ignore
+                }
+            }
         }
     }
 }
