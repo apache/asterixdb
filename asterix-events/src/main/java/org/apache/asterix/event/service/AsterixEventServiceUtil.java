@@ -30,13 +30,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.InetAddress;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -50,7 +46,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.commons.io.IOUtils;
-
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.common.configuration.Coredump;
 import org.apache.asterix.common.configuration.Store;
@@ -179,26 +174,6 @@ public class AsterixEventServiceUtil {
         new File(asterixInstanceDir + File.separator + ASTERIX_CONFIGURATION_FILE).delete();
     }
 
-    private static void injectAsterixLogPropertyFile(String asterixInstanceDir, AsterixInstance asterixInstance)
-            throws IOException, EventException {
-        final String asterixJarPath = asterixJarPath(asterixInstance, asterixInstanceDir);
-        File sourceJar1 = new File(asterixJarPath);
-        Properties txnLogProperties = new Properties();
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { sourceJar1.toURI().toURL() });
-        InputStream in = urlClassLoader.getResourceAsStream(TXN_LOG_CONFIGURATION_FILE);
-        if (in != null) {
-            txnLogProperties.load(in);
-        }
-
-        writeAsterixLogConfigurationFile(asterixInstance, txnLogProperties);
-
-        File sourceJar2 = new File(asterixJarPath);
-        File replacementFile = new File(asterixInstanceDir + File.separator + "log.properties");
-        replaceInJar(sourceJar2, TXN_LOG_CONFIGURATION_FILE, replacementFile);
-
-        new File(asterixInstanceDir + File.separator + "log.properties").delete();
-    }
-
     private static void injectAsterixClusterConfigurationFile(String asterixInstanceDir, AsterixInstance asterixInstance)
             throws IOException, EventException, JAXBException {
         File sourceJar = new File(asterixJarPath(asterixInstance, asterixInstanceDir));
@@ -325,35 +300,7 @@ public class AsterixEventServiceUtil {
         os.close();
     }
 
-    private static void writeAsterixLogConfigurationFile(AsterixInstance asterixInstance, Properties logProperties)
-            throws IOException, EventException {
-        String asterixInstanceName = asterixInstance.getName();
-        Cluster cluster = asterixInstance.getCluster();
-        StringBuffer conf = new StringBuffer();
-        for (Map.Entry<Object, Object> p : logProperties.entrySet()) {
-            conf.append(p.getKey() + "=" + p.getValue() + "\n");
-        }
 
-        for (Node node : cluster.getNode()) {
-            String txnLogDir = node.getTxnLogDir() == null ? cluster.getTxnLogDir() : node.getTxnLogDir();
-            if (txnLogDir == null) {
-                throw new EventException("Transaction log directory (txn_log_dir) not configured for node: "
-                        + node.getId());
-            }
-            conf.append(asterixInstanceName + "_" + node.getId() + "." + TXN_LOG_DIR_KEY_SUFFIX + "=" + txnLogDir
-                    + "\n");
-        }
-        List<org.apache.asterix.common.configuration.Property> properties = asterixInstance.getAsterixConfiguration()
-                .getProperty();
-        for (org.apache.asterix.common.configuration.Property p : properties) {
-            if (p.getName().trim().toLowerCase().contains("log")) {
-                conf.append(p.getValue() + "=" + p.getValue());
-            }
-        }
-        dumpToFile(AsterixEventService.getAsterixDir() + File.separator + asterixInstanceName + File.separator
-                + "log.properties", conf.toString());
-
-    }
 
     public static void unzip(String sourceFile, String destDir) throws IOException {
         BufferedOutputStream dest = null;

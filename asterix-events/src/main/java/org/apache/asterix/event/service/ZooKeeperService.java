@@ -34,10 +34,11 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
-
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.event.error.EventException;
 import org.apache.asterix.event.model.AsterixInstance;
 import org.apache.asterix.installer.schema.conf.Configuration;
@@ -55,8 +56,10 @@ public class ZooKeeperService implements ILookupService {
     private boolean isRunning = false;
     private ZooKeeper zk;
     private String zkConnectionString;
-    private static final String ASTERIX_INSTANCE_BASE_PATH = "/Asterix";
-    private static final int DEFAULT_NODE_VERSION = -1;
+    public static final String ASTERIX_INSTANCE_BASE_PATH = File.separator + "Asterix";
+    public static final String ASTERIX_INSTANCE_STATE_PATH = File.separator + "state";
+    public static final String ASTERIX_INSTANCE_STATE_REPORT = File.separator + "clusterState";
+    public static final int DEFAULT_NODE_VERSION = -1;
     private LinkedBlockingQueue<String> msgQ = new LinkedBlockingQueue<String>();
     private ZooKeeperWatcher watcher = new ZooKeeperWatcher(msgQ);
 
@@ -144,6 +147,9 @@ public class ZooKeeperService implements ILookupService {
         ObjectOutputStream o = new ObjectOutputStream(b);
         o.writeObject(asterixInstance);
         zk.create(instanceBasePath, b.toByteArray(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        // Create a place to put the state of the cluster in
+        String instanceStatePath = instanceBasePath + ASTERIX_INSTANCE_STATE_PATH;
+        zk.create(instanceStatePath, new byte[0], Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
     }
 
     private void createRootIfNotExist() throws Exception {
@@ -153,6 +159,9 @@ public class ZooKeeperService implements ILookupService {
                 zk.create(ASTERIX_INSTANCE_BASE_PATH, "root".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             }
         } catch (Exception e) {
+            // Is this the right way to handle the exception (try again? forever?)
+            LOGGER.error("An error took place when creating the root in Zookeeper");
+            e.printStackTrace();
             createRootIfNotExist();
         }
     }
@@ -167,13 +176,21 @@ public class ZooKeeperService implements ILookupService {
         return readAsterixInstanceObject(asterixInstanceBytes);
     }
 
-    public boolean exists(String asterixInstanceName) throws Exception {
-        return zk.exists(ASTERIX_INSTANCE_BASE_PATH + File.separator + asterixInstanceName, false) != null;
+    public boolean exists(String path) throws Exception {
+        return zk.exists(ASTERIX_INSTANCE_BASE_PATH + File.separator + path, false) != null;
     }
 
     public void removeAsterixInstance(String name) throws Exception {
         if (!exists(name)) {
             throw new EventException("Asterix instance by name " + name + " does not exists.");
+        }
+        if (exists(name + ASTERIX_INSTANCE_STATE_PATH)) {
+            if (exists(name + ASTERIX_INSTANCE_STATE_PATH + File.separator + "clusterState")) {
+                zk.delete(ASTERIX_INSTANCE_BASE_PATH + File.separator + name + ASTERIX_INSTANCE_STATE_PATH
+                        + ASTERIX_INSTANCE_STATE_REPORT, DEFAULT_NODE_VERSION);
+            }
+            zk.delete(ASTERIX_INSTANCE_BASE_PATH + File.separator + name + ASTERIX_INSTANCE_STATE_PATH,
+                    DEFAULT_NODE_VERSION);
         }
         zk.delete(ASTERIX_INSTANCE_BASE_PATH + File.separator + name, DEFAULT_NODE_VERSION);
     }
@@ -202,6 +219,25 @@ public class ZooKeeperService implements ILookupService {
         writeAsterixInstance(updatedInstance);
     }
 
+    @Override
+    public ClusterStateWatcher startWatchingClusterState(String instanceName) {
+        ClusterStateWatcher watcher = new ClusterStateWatcher(zk, instanceName);
+        watcher.startMonitoringThread();
+        return watcher;
+    }
+
+    @Override
+    public void reportClusterState(String instanceName, ClusterState state) throws Exception {
+        String clusterStatePath = ZooKeeperService.ASTERIX_INSTANCE_BASE_PATH + File.separator + instanceName
+                + ASTERIX_INSTANCE_STATE_PATH;
+        Integer value = state.ordinal();
+        byte[] stateValue = new byte[] { value.byteValue() };
+        // Create a place to put the state of the cluster in
+        zk.create(clusterStatePath + ASTERIX_INSTANCE_STATE_REPORT, stateValue, Ids.OPEN_ACL_UNSAFE,
+                CreateMode.PERSISTENT);
+        return;
+    }
+
 }
 
 class ZooKeeperWatcher implements Watcher {
@@ -214,10 +250,8 @@ class ZooKeeperWatcher implements Watcher {
     }
 
     public void process(WatchedEvent wEvent) {
-        switch (wEvent.getState()) {
-            case SyncConnected:
-                msgQ.add("connected");
-                break;
+        if (wEvent.getState() == KeeperState.SyncConnected) {
+            msgQ.add("connected");
         }
     }
 

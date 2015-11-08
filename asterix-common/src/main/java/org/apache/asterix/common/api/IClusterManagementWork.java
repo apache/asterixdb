@@ -26,6 +26,7 @@ public interface IClusterManagementWork {
     }
 
     public enum ClusterState {
+        STARTING,
         ACTIVE,
         UNUSABLE
     }

@@ -21,7 +21,7 @@ package org.apache.asterix.installer.command;
 import java.io.File;
 
 import org.kohsuke.args4j.Option;
-
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.event.error.VerificationUtil;
 import org.apache.asterix.event.management.AsterixEventServiceClient;
 import org.apache.asterix.event.model.AsterixInstance;
@@ -30,6 +30,7 @@ import org.apache.asterix.event.model.AsterixRuntimeState;
 import org.apache.asterix.event.schema.pattern.Patterns;
 import org.apache.asterix.event.service.AsterixEventService;
 import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ClusterStateWatcher;
 import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.event.util.PatternCreator;
 import org.apache.asterix.installer.driver.InstallerDriver;
@@ -47,9 +48,18 @@ public class StartCommand extends AbstractCommand {
         Patterns asterixBinaryTransferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
                 asterixInstanceName, instance.getCluster());
         client.submit(asterixBinaryTransferPattern);
+        // Start the watcher
+        ClusterStateWatcher stateWatcher = ServiceProvider.INSTANCE.getLookupService().startWatchingClusterState(
+                asterixInstanceName);
         AsterixEventServiceUtil.createClusterProperties(instance.getCluster(), instance.getAsterixConfiguration());
-        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, instance.getCluster(), false);
+        Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, instance.getCluster(),
+                false);
         client.submit(patterns);
+        // Check the cluster state
+        ClusterState clusterState = stateWatcher.waitForClusterStart();
+        if (clusterState != ClusterState.ACTIVE) {
+            throw new Exception("CC failed to start");
+        }
         AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator
                 + InstallerDriver.ASTERIX_DIR + File.separator + asterixInstanceName);
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(instance);
