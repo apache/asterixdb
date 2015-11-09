@@ -3887,6 +3887,11 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="numeric">
+            <compilation-unit name="issue_1166">
+                <output-dir compare="Text">issue_1166</output-dir>
+            </compilation-unit>
+        </test-case>
+        <test-case FilePath="numeric">
             <compilation-unit name="multiply_int8">
                 <output-dir compare="Text">multiply_int8</output-dir>
             </compilation-unit>

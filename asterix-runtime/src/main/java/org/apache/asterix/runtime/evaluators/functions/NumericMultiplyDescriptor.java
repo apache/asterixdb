@@ -24,6 +24,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.lang.Math;
 
 public class NumericMultiplyDescriptor extends AbstractNumericArithmeticEval {
 
@@ -41,25 +42,11 @@ public class NumericMultiplyDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        int signLhs = lhs > 0 ? 1 : (lhs < 0 ? -1 : 0);
-        int signRhs = rhs > 0 ? 1 : (rhs < 0 ? -1 : 0);
-        long maximum = signLhs == signRhs ? Long.MAX_VALUE : Long.MIN_VALUE;
-
-        if (lhs != 0 && (rhs > 0 && rhs > maximum / lhs || rhs < 0 && rhs < maximum / lhs))
-            throw new HyracksDataException("Overflow Happened.");
-
-        return lhs * rhs;
+        return Math.multiplyExact(lhs, rhs);
     }
 
     @Override
     protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
-        int signLhs = lhs > 0 ? 1 : (lhs < 0 ? -1 : 0);
-        int signRhs = rhs > 0 ? 1 : (rhs < 0 ? -1 : 0);
-        double maximum = signLhs == signRhs ? Double.MAX_VALUE : -Double.MAX_VALUE;
-
-        if (lhs != 0 && (rhs > 0 && rhs > maximum / lhs || rhs < 0 && rhs < maximum / lhs))
-            throw new HyracksDataException("Overflow Happened.");
-
         return lhs * rhs;
     }
 
