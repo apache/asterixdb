@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -69,10 +68,10 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
                     rtreePolicyType,
                     runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            runtimeContextProvider.getIndexLifecycleManager()),
-                    new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider
+                            runtimeContextProvider.getDatasetLifecycleManager()),
+                    new BaseOperationTracker(runtimeContextProvider
+                            .getDatasetLifecycleManager(), datasetID, runtimeContextProvider
+                            .getDatasetLifecycleManager().getDatasetInfo(datasetID)), runtimeContextProvider
                             .getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
                             .createIOOperationCallback(), linearizeCmpFactory, btreeFields, -1, true);
         } catch (TreeIndexException e) {

@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -91,10 +90,10 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
                     rtreePolicyType,
                     runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            runtimeContextProvider.getIndexLifecycleManager()),
-                    new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider
+                            runtimeContextProvider.getDatasetLifecycleManager()),
+                    new BaseOperationTracker(runtimeContextProvider
+                            .getDatasetLifecycleManager(), datasetID, runtimeContextProvider
+                            .getDatasetLifecycleManager().getDatasetInfo(datasetID)), runtimeContextProvider
                             .getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
                             .createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
                     filterTypeTraits, filterCmpFactories, filterFields, true);

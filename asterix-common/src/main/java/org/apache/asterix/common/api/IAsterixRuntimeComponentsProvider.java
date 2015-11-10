@@ -19,7 +19,6 @@
 package org.apache.asterix.common.api;
 
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -35,7 +34,7 @@ public interface IAsterixRuntimeComponentsProvider {
 
     public IFileMapProvider getFileMapManager();
 
-    public IIndexLifecycleManager getIndexLifecycleManager();
+    public IDatasetLifecycleManager getDatasetLifecycleManager();
 
     public double getBloomFilterFalsePositiveRate();
 

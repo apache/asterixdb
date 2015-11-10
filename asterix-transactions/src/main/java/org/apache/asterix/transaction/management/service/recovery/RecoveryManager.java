@@ -47,8 +47,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.transactions.DatasetId;
@@ -70,7 +70,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -96,7 +95,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final static String RECOVERY_FILES_DIR_NAME = "recovery_temp";
     private static final long MEGABYTE = 1024L * 1024L;
     private Map<Integer, JobEntityCommits> jobId2WinnerEntitiesMap = null;
-    private static final long MAX_CACHED_ENTITY_COMMITS_PER_JOB_SIZE = 4 * MEGABYTE; //2MB;
+    private static final long MAX_CACHED_ENTITY_COMMITS_PER_JOB_SIZE = 4 * MEGABYTE; //4MB;
 
     /**
      * A file at a known location that contains the LSN of the last log record
@@ -105,7 +104,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private static final String CHECKPOINT_FILENAME_PREFIX = "checkpoint_";
     private SystemState state;
 
-    public RecoveryManager(TransactionSubsystem txnSubsystem) throws ACIDException {
+    public RecoveryManager(TransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
         this.logMgr = (LogManager) txnSubsystem.getLogManager();
         this.checkpointHistory = this.txnSubsystem.getTransactionProperties().getCheckpointHistory();
@@ -268,7 +267,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             boolean foundWinner = false;
 
             IAsterixAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
-            IIndexLifecycleManager indexLifecycleManager = appRuntimeContext.getIndexLifecycleManager();
+            //get datasetLifeCycleManager
+            IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                    .getDatasetLifecycleManager();
             ILocalResourceRepository localResourceRepository = appRuntimeContext.getLocalResourceRepository();
             Map<Long, LocalResource> resourcesMap = ((PersistentLocalResourceRepository) localResourceRepository)
                     .loadAndGetAllResources();
@@ -320,17 +321,17 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             //get index instance from IndexLifeCycleManager
                             //if index is not registered into IndexLifeCycleManager,
                             //create the index using LocalMetadata stored in LocalResourceRepository
-                            index = (ILSMIndex) indexLifecycleManager.getIndex(localResource.getResourceName());
+                            index = (ILSMIndex) datasetLifecycleManager.getIndex(localResource.getResourceName());
                             if (index == null) {
                                 //#. create index instance and register to indexLifeCycleManager
                                 localResourceMetadata = (ILocalResourceMetadata) localResource.getResourceObject();
                                 index = localResourceMetadata.createIndexInstance(appRuntimeContext,
                                         localResource.getResourceName(), localResource.getPartition());
-                                indexLifecycleManager.register(localResource.getResourceName(), index);
-                                indexLifecycleManager.open(localResource.getResourceName());
+                                datasetLifecycleManager.register(localResource.getResourceName(), index);
+                                datasetLifecycleManager.open(localResource.getResourceName());
 
                                 //#. get maxDiskLastLSN
-                                ILSMIndex lsmIndex = (ILSMIndex) index;
+                                ILSMIndex lsmIndex = index;
                                 maxDiskLastLsn = ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback())
                                         .getComponentLSN(lsmIndex.getImmutableComponents());
 
@@ -341,7 +342,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             }
 
                             if (LSN > maxDiskLastLsn) {
-                                redo(logRecord);
+                                redo(logRecord, datasetLifecycleManager);
                                 redoCount++;
                             }
                         }
@@ -361,7 +362,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             //close all indexes
             Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
             for (long r : resourceIdList) {
-                indexLifecycleManager.close(resourcesMap.get(r).getResourceName());
+                datasetLifecycleManager.close(resourcesMap.get(r).getResourceName());
             }
 
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -398,8 +399,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //right after the new checkpoint file is written.
         File[] prevCheckpointFiles = getPreviousCheckpointFiles();
 
-        DatasetLifecycleManager datasetLifecycleManager = (DatasetLifecycleManager) txnSubsystem
-                .getAsterixAppRuntimeContextProvider().getIndexLifecycleManager();
+        IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getDatasetLifecycleManager();
         //flush all in-memory components if it is the sharp checkpoint
         if (isSharpCheckpoint) {
             datasetLifecycleManager.flushAllDatasets();
@@ -474,9 +475,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     public long getMinFirstLSN() throws HyracksDataException {
-        IIndexLifecycleManager indexLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getIndexLifecycleManager();
-        List<IIndex> openIndexList = indexLifecycleManager.getOpenIndexes();
+        IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getDatasetLifecycleManager();
+        List<IIndex> openIndexList = datasetLifecycleManager.getOpenIndexes();
         long firstLSN;
         //the min first lsn can only be the current append or smaller
         long minFirstLSN = logMgr.getAppendLSN();
@@ -557,7 +558,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return parentDir.listFiles(filter);
     }
 
-    private String getCheckpointFileName(String baseDir, String suffix) {
+    private static String getCheckpointFileName(String baseDir, String suffix) {
         if (!baseDir.endsWith(System.getProperty("file.separator"))) {
             baseDir += System.getProperty("file.separator");
         }
@@ -703,6 +704,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             //undo loserTxn's effect
             LOGGER.log(Level.INFO, "undoing loser transaction's effect");
 
+            IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                    .getDatasetLifecycleManager();
             //TODO sort loser entities by smallest LSN to undo in one pass. 
             Iterator<Entry<TxnId, List<Long>>> iter = jobLoserEntity2LSNsMap.entrySet().iterator();
             int undoCount = 0;
@@ -719,7 +722,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     if (IS_DEBUG_MODE) {
                         LOGGER.info(logRecord.getLogRecordForDisplay());
                     }
-                    undo(logRecord);
+                    undo(logRecord, datasetLifecycleManager);
                     undoCount++;
                 }
             }
@@ -749,10 +752,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         // do nothing
     }
 
-    private void undo(ILogRecord logRecord) {
+    private static void undo(ILogRecord logRecord, IDatasetLifecycleManager datasetLifecycleManager) {
         try {
-            ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
+            ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(),
+                    logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
@@ -767,10 +770,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
     }
 
-    private void redo(ILogRecord logRecord) {
+    private static void redo(ILogRecord logRecord, IDatasetLifecycleManager datasetLifecycleManager) {
         try {
-            ILSMIndex index = (ILSMIndex) txnSubsystem.getAsterixAppRuntimeContextProvider().getIndexLifecycleManager()
-                    .getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
+            ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(),
+                    logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             if (logRecord.getNewOp() == IndexOperation.INSERT.ordinal()) {
@@ -982,7 +985,7 @@ class TxnId {
     public TxnId() {
     }
 
-    private void readPKValueIntoByteArray(ITupleReference pkValue, int pkSize, byte[] byteArrayPKValue) {
+    private static void readPKValueIntoByteArray(ITupleReference pkValue, int pkSize, byte[] byteArrayPKValue) {
         int readOffset = pkValue.getFieldStart(0);
         byte[] readBuffer = pkValue.getFieldData(0);
         for (int i = 0; i < pkSize; i++) {
@@ -1034,7 +1037,7 @@ class TxnId {
         }
     }
 
-    private boolean isEqual(byte[] a, byte[] b, int size) {
+    private static boolean isEqual(byte[] a, byte[] b, int size) {
         for (int i = 0; i < size; i++) {
             if (a[i] != b[i]) {
                 return false;
@@ -1043,7 +1046,7 @@ class TxnId {
         return true;
     }
 
-    private boolean isEqual(byte[] a, ITupleReference b, int size) {
+    private static boolean isEqual(byte[] a, ITupleReference b, int size) {
         int readOffset = b.getFieldStart(0);
         byte[] readBuffer = b.getFieldData(0);
         for (int i = 0; i < size; i++) {
@@ -1054,7 +1057,7 @@ class TxnId {
         return true;
     }
 
-    private boolean isEqual(ITupleReference a, ITupleReference b, int size) {
+    private static boolean isEqual(ITupleReference a, ITupleReference b, int size) {
         int aOffset = a.getFieldStart(0);
         byte[] aBuffer = a.getFieldData(0);
         int bOffset = b.getFieldStart(0);
@@ -1067,7 +1070,7 @@ class TxnId {
         return true;
     }
 
-    public void serialize(ByteBuffer buffer) throws IOException {
+    public void serialize(ByteBuffer buffer) {
         buffer.putInt(jobId);
         buffer.putInt(datasetId);
         buffer.putInt(pkHashValue);

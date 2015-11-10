@@ -21,7 +21,7 @@ package org.apache.asterix.runtime.operators.std;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
@@ -73,8 +73,7 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
                 try {
                     IAsterixAppRuntimeContext runtimeCtx = (IAsterixAppRuntimeContext) ctx.getJobletContext()
                             .getApplicationContext().getApplicationObject();
-                    DatasetLifecycleManager datasetLifeCycleManager = (DatasetLifecycleManager) runtimeCtx
-                            .getIndexLifecycleManager();
+                    IDatasetLifecycleManager datasetLifeCycleManager = runtimeCtx.getDatasetLifecycleManager();
                     ILockManager lockManager = runtimeCtx.getTransactionSubsystem().getLockManager();
                     ITransactionManager txnManager = runtimeCtx.getTransactionSubsystem().getTransactionManager();
                     // get the local transaction

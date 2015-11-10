@@ -85,8 +85,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class MetadataManager implements IMetadataManager {
     private static final int INITIAL_SLEEP_TIME = 64;
-    private static final int RETRY_MULTIPLIER = 4;
-    private static final int MAX_RETRY_COUNT = 6;
+    private static final int RETRY_MULTIPLIER = 5;
+    private static final int MAX_RETRY_COUNT = 10;
 
     // Set in init().
     public static MetadataManager INSTANCE;

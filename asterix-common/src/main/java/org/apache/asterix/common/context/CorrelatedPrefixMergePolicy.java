@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.common.api.IndexException;
@@ -42,11 +42,11 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
     private long maxMergableComponentSize;
     private int maxToleranceComponentCount;
 
-    private final DatasetLifecycleManager datasetLifecycleManager;
+    private final IDatasetLifecycleManager datasetLifecycleManager;
     private final int datasetID;
-    
+
     public CorrelatedPrefixMergePolicy(IIndexLifecycleManager datasetLifecycleManager, int datasetID) {
-        this.datasetLifecycleManager = (DatasetLifecycleManager) datasetLifecycleManager;
+        this.datasetLifecycleManager = (DatasetLifecycleManager)datasetLifecycleManager;
         this.datasetID = datasetID;
     }
 
@@ -70,7 +70,7 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
             }
         }
         if (fullMergeIsRequested) {
-            ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(NoOpOperationCallback.INSTANCE,
+            ILSMIndexAccessor accessor = index.createAccessor(NoOpOperationCallback.INSTANCE,
                     NoOpOperationCallback.INSTANCE);
             accessor.scheduleFullMerge(index.getIOOperationCallback());
             return;
@@ -113,7 +113,7 @@ public class CorrelatedPrefixMergePolicy implements ILSMMergePolicy {
                     // Reverse the components order back to its original order
                     Collections.reverse(mergableComponents);
 
-                    ILSMIndexAccessor accessor = (ILSMIndexAccessor) lsmIndex.createAccessor(
+                    ILSMIndexAccessor accessor = lsmIndex.createAccessor(
                             NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                     accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergableComponents);
                 }

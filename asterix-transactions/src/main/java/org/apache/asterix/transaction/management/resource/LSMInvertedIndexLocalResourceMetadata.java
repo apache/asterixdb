@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -90,10 +89,10 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                                runtimeContextProvider.getIndexLifecycleManager()),
-                        new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                                .getIndexLifecycleManager(), datasetID,
-                                ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                runtimeContextProvider.getDatasetLifecycleManager()),
+                        new BaseOperationTracker(runtimeContextProvider
+                                .getDatasetLifecycleManager(), datasetID,
+                                runtimeContextProvider.getDatasetLifecycleManager()
                                         .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
@@ -111,10 +110,9 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
                         filePath,
                         runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                                runtimeContextProvider.getIndexLifecycleManager()),
-                        new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                                .getIndexLifecycleManager(), datasetID,
-                                ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
+                                runtimeContextProvider.getDatasetLifecycleManager()),
+                        new BaseOperationTracker(runtimeContextProvider.getDatasetLifecycleManager(), datasetID,
+                                runtimeContextProvider.getDatasetLifecycleManager()
                                         .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,

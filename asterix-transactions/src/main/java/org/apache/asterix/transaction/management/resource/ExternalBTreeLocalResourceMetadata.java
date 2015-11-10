@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -57,10 +56,10 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
                 bloomFilterKeyFields,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        runtimeContextProvider.getIndexLifecycleManager()),
-                new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                        datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
-                                .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                        runtimeContextProvider.getDatasetLifecycleManager()),
+                new BaseOperationTracker(runtimeContextProvider.getDatasetLifecycleManager(),
+                        datasetID, runtimeContextProvider.getDatasetLifecycleManager()
+                        .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true);
         return lsmBTree;
     }

@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
@@ -42,16 +43,13 @@ import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.feeds.FeedManager;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
-import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -99,7 +97,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixBuildProperties buildProperties;
 
     private AsterixThreadExecutor threadExecutor;
-    private DatasetLifecycleManager indexLifecycleManager;
+    private IDatasetLifecycleManager datasetLifecycleManager;
     private IFileMapManager fileMapManager;
     private IBufferCache bufferCache;
     private ITransactionSubsystem txnSubsystem;
@@ -112,7 +110,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     private IFeedManager feedManager;
 
-    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) throws AsterixException {
+    public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
         this.ncApplicationContext = ncApplicationContext;
         compilerProperties = new AsterixCompilerProperties(ASTERIX_PROPERTIES_ACCESSOR);
         externalProperties = new AsterixExternalProperties(ASTERIX_PROPERTIES_ACCESSOR);
@@ -143,8 +141,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager, ncApplicationContext.getNodeId());
-        localResourceRepository = (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory
-                .createRepository();
+        localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
 
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
@@ -152,8 +149,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
                 txnProperties);
 
-        indexLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
-                MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID, (LogManager) txnSubsystem.getLogManager());
+        datasetLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
+                MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID, txnSubsystem.getLogManager());
 
         isShuttingdown = false;
 
@@ -165,7 +162,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         lccm.register((ILifeCycleComponent) bufferCache);
         lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getLogManager());
-        lccm.register((ILifeCycleComponent) indexLifecycleManager);
+        lccm.register((ILifeCycleComponent) datasetLifecycleManager);
         lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
     }
@@ -193,8 +190,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         return txnSubsystem;
     }
 
-    public IIndexLifecycleManager getIndexLifecycleManager() {
-        return indexLifecycleManager;
+    public IDatasetLifecycleManager getDatasetLifecycleManager() {
+        return datasetLifecycleManager;
     }
 
     public double getBloomFilterFalsePositiveRate() {
@@ -258,12 +255,12 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     @Override
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
-        return indexLifecycleManager.getVirtualBufferCaches(datasetID);
+        return datasetLifecycleManager.getVirtualBufferCaches(datasetID);
     }
 
     @Override
     public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
-        return indexLifecycleManager.getOperationTracker(datasetID);
+        return datasetLifecycleManager.getOperationTracker(datasetID);
     }
 
     @Override

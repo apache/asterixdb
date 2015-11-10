@@ -22,6 +22,7 @@ package org.apache.asterix.common.context;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
@@ -48,7 +49,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     private boolean flushOnExit = false;
     private boolean flushLogCreated = false;
 
-    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
+    public PrimaryIndexOperationTracker(IDatasetLifecycleManager datasetLifecycleManager, int datasetID,
             ILogManager logManager, DatasetInfo dsInfo) {
         super(datasetLifecycleManager, datasetID, dsInfo);
         this.logManager = logManager;
@@ -59,6 +60,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
+            if (!dsInfo.isMemoryAllocated()) {
+                datasetLifecycleManager.allocateDatasetMemory(dsInfo.getDatasetID());
+            }
             incrementNumActiveOperations(modificationCallback);
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             dsInfo.declareActiveIOOperation();
@@ -77,7 +81,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public synchronized void completeOperation(ILSMIndex index, LSMOperationType opType,
             ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             if (numActiveOperations.get() == 0) {
@@ -108,7 +112,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
 
         if (needsFlush || flushOnExit) {
-            //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is schedule.
+            //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is scheduled.
             for (ILSMIndex lsmIndex : indexes) {
                 AbstractLSMIndex abstractLSMIndex = ((AbstractLSMIndex) lsmIndex);
                 ILSMOperationTracker opTracker = abstractLSMIndex.getOperationTracker();
@@ -133,7 +137,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
     }
 
-    //Since this method is called sequentially by LogPage.notifyFlushTerminator in the sequence flush were scheduled.
+    //This method is called sequentially by LogPage.notifyFlushTerminator in the sequence flushes were scheduled.
     public synchronized void triggerScheduleFlush(LogRecord logRecord) throws HyracksDataException {
         for (ILSMIndex lsmIndex : dsInfo.getDatasetIndexes()) {
 
