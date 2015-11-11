@@ -16,23 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.common.buffercache;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.IResourceMemoryManager;
 
-public interface IIndexLifecycleManager extends IResourceMemoryManager {
-    public List<IIndex> getOpenIndexes();
+public class ResourceHeapBufferAllocator implements ICacheMemoryAllocator {
 
-    public void register(String resourceName, IIndex index) throws HyracksDataException;
+    final IResourceMemoryManager memoryManager;
+    final String resourceName;
 
-    public void open(String resourceName) throws HyracksDataException;
+    public ResourceHeapBufferAllocator(IResourceMemoryManager memoryManager, String resourceName) {
+        this.memoryManager = memoryManager;
+        this.resourceName = resourceName;
+    }
 
-    public void close(String resourceName) throws HyracksDataException;
+    @Override
+    public ByteBuffer[] allocate(int pageSize, int numPages) {
+        ByteBuffer[] buffers = new ByteBuffer[numPages];
+        for (int i = 0; i < numPages; ++i) {
+            buffers[i] = ByteBuffer.allocate(pageSize);
+        }
+        return buffers;
+    }
 
-    public IIndex getIndex(String resourceName) throws HyracksDataException;
-
-    public void unregister(String resourceName) throws HyracksDataException;
+    @Override
+    public ByteBuffer[] ensureAvailabilityThenAllocate(int pageSize, int numPages) throws HyracksDataException {
+        memoryManager.allocateMemory(resourceName);
+        return allocate(pageSize, numPages);
+    }
 }

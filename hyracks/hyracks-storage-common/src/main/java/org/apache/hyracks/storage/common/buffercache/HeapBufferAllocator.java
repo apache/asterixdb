@@ -20,6 +20,8 @@ package org.apache.hyracks.storage.common.buffercache;
 
 import java.nio.ByteBuffer;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class HeapBufferAllocator implements ICacheMemoryAllocator {
     @Override
     public ByteBuffer[] allocate(int pageSize, int numPages) {
@@ -28,5 +30,10 @@ public class HeapBufferAllocator implements ICacheMemoryAllocator {
             buffers[i] = ByteBuffer.allocate(pageSize);
         }
         return buffers;
+    }
+
+    @Override
+    public ByteBuffer[] ensureAvailabilityThenAllocate(int pageSize, int numPages) throws HyracksDataException {
+        return allocate(pageSize, numPages);
     }
 }

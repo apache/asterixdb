@@ -174,8 +174,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
             }
 
             if (!newPage) {
-                throw new HyracksDataException("Page " + BufferedFileHandle.getPageId(dpid)
-                        + " does not exist in file "
+                throw new HyracksDataException("Page " + BufferedFileHandle.getPageId(dpid) + " does not exist in file "
                         + fileMapManager.lookupFileName(BufferedFileHandle.getFileId(dpid)));
             }
 
@@ -238,7 +237,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
         pages.trimToSize();
         pages.ensureCapacity(numPages + OVERFLOW_PADDING);
-        ByteBuffer[] buffers = allocator.allocate(pageSize, numPages);
+        ByteBuffer[] buffers = allocator.ensureAvailabilityThenAllocate(pageSize, numPages);
         for (int i = 0; i < numPages; i++) {
             pages.add(new VirtualPage(buffers[i]));
             buckets[i] = new CacheBucket();

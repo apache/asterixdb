@@ -194,8 +194,8 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
     public void open(String resourceName) throws HyracksDataException {
         IndexInfo info = indexInfos.get(resourceName);
         if (info == null) {
-            throw new HyracksDataException("Failed to open index with resource name " + resourceName
-                    + " since it does not exist.");
+            throw new HyracksDataException(
+                    "Failed to open index with resource name " + resourceName + " since it does not exist.");
         }
 
         if (!info.isOpen) {
@@ -236,7 +236,8 @@ public class IndexLifecycleManager implements IIndexLifecycleManager, ILifeCycle
         indexInfos.remove(resourceName);
     }
 
-    private void allocateMemory(String resourceName) throws HyracksDataException {
+    @Override
+    public void allocateMemory(String resourceName) throws HyracksDataException {
         IndexInfo info = indexInfos.get(resourceName);
         if (info == null) {
             throw new HyracksDataException("Failed to allocate memory for index with resource ID " + resourceName
