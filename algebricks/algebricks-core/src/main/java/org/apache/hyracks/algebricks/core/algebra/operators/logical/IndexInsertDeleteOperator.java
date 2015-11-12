@@ -22,13 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
@@ -77,6 +75,18 @@ public class IndexInsertDeleteOperator extends AbstractLogicalOperator {
         for (int i = 0; i < secondaryKeyExprs.size(); i++) {
             if (visitor.transform(secondaryKeyExprs.get(i))) {
                 b = true;
+            }
+        }
+        if (filterExpr != null) {
+            if (visitor.transform(filterExpr)) {
+                b = true;
+            }
+        }
+        if (additionalFilteringExpressions != null) {
+            for (int i = 0; i < additionalFilteringExpressions.size(); i++) {
+                if (visitor.transform(additionalFilteringExpressions.get(i))) {
+                    b = true;
+                }
             }
         }
         return b;

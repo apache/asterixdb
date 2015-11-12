@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -86,7 +85,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent) throws AlgebricksException {
+    public String visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent)
+            throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("running-aggregate ").append(op.getVariables()).append(" <- ");
         pprintExprList(op.getExpressions(), buffer, indent);
@@ -185,7 +185,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitDistributeResultOperator(DistributeResultOperator op, Integer indent) throws AlgebricksException {
+    public String visitDistributeResultOperator(DistributeResultOperator op, Integer indent)
+            throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("distribute result ");
         pprintExprList(op.getExpressions(), buffer, indent);
@@ -258,9 +259,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "unnest-map " + op.getVariables() + " <- "
-                        + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        addIndent(buffer, indent).append("unnest-map " + op.getVariables() + " <- "
+                + op.getExpressionRef().getValue().accept(exprVisitor, indent));
         return buffer.toString();
     }
 
@@ -293,8 +293,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitScriptOperator(ScriptOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "script (in: " + op.getInputVariables() + ") (out: " + op.getOutputVariables() + ")");
+        addIndent(buffer, indent)
+                .append("script (in: " + op.getInputVariables() + ") (out: " + op.getOutputVariables() + ")");
         return buffer.toString();
     }
 
@@ -315,10 +315,17 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitInsertDeleteOperator(InsertDeleteOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        String header = op.getOperation() == Kind.INSERT ? "insert into " : "delete from ";
-        addIndent(buffer, indent).append(header).append(op.getDataSource()).append(" from ")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)).append(" partitioned by ");
+        if (op.getOperation() == Kind.INSERT)
+            addIndent(buffer, indent).append("insert ")
+                    .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)).append(" into ");
+        else
+            addIndent(buffer, indent).append("delete from ");
+        buffer.append(op.getDataSource()).append(" partitioned by ");
         pprintExprList(op.getPrimaryKeyExpressions(), buffer, indent);
+        if (op.getAdditionalFilteringExpressions() != null) {
+            buffer.append(" filtered by ");
+            pprintExprList(op.getAdditionalFilteringExpressions(), buffer, indent);
+        }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");
         }
@@ -329,10 +336,18 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     public String visitIndexInsertDeleteOperator(IndexInsertDeleteOperator op, Integer indent)
             throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        String header = op.getOperation() == Kind.INSERT ? "insert into " : "delete from ";
-        addIndent(buffer, indent).append(header).append(op.getIndexName()).append(" on ")
-                .append(op.getDataSourceIndex().getDataSource()).append(" from ");
+        addIndent(buffer, indent).append(op.getOperation() == Kind.INSERT ? "insert " : "delete ");
         pprintExprList(op.getSecondaryKeyExpressions(), buffer, indent);
+        buffer.append(op.getOperation() == Kind.INSERT ? " into " : " from ").append(op.getIndexName()).append(" on ")
+                .append(op.getDataSourceIndex().getDataSource()).append(" partitioned by ");
+        pprintExprList(op.getPrimaryKeyExpressions(), buffer, indent);
+        if (op.getFilterExpression() != null || op.getAdditionalFilteringExpressions() != null) {
+            buffer.append(" filtered by ");
+            if (op.getFilterExpression() != null)
+                buffer.append(op.getFilterExpression().getValue().accept(exprVisitor, indent));
+            if (op.getAdditionalFilteringExpressions() != null)
+                pprintExprList(op.getAdditionalFilteringExpressions(), buffer, indent);
+        }
         if (op.isBulkload()) {
             buffer.append(" [bulkload]");
         }
@@ -427,8 +442,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     public String visitExternalDataLookupOperator(ExternalDataLookupOperator op, Integer indent)
             throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "external-instant-lookup " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
+        addIndent(buffer, indent)
+                .append("external-instant-lookup " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
         return buffer.toString();
     }
 
