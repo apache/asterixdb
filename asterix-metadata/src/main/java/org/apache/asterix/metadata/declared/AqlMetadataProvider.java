@@ -182,6 +182,7 @@ import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescripto
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 
 public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, String> {
+    public static final String TEMP_DATASETS_STORAGE_FOLDER = "temp";
     private static Logger LOGGER = Logger.getLogger(AqlMetadataProvider.class.getName());
     private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
@@ -2195,7 +2196,8 @@ public class AqlMetadataProvider implements IMetadataProvider<AqlSourceId, Strin
                     for (int j = 0; j < nodeStores.length; j++) {
                         for (int k = 0; k < numIODevices; k++) {
                             File f = new File(ioDevices[k] + File.separator + nodeStores[j]
-                                    + (temp ? (File.separator + "temp") : "") + File.separator + relPathFile);
+                                    + (temp ? (File.separator + TEMP_DATASETS_STORAGE_FOLDER) : "") + File.separator
+                                    + relPathFile);
                             splitArray.add(new FileSplit(nd, new FileReference(f), k));
                         }
                     }

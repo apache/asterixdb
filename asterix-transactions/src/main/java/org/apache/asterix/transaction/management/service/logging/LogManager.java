@@ -38,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -56,21 +57,22 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final TransactionSubsystem txnSubsystem;
 
     private final LogManagerProperties logManagerProperties;
-    private final long logFileSize;
-    private final int logPageSize;
+    protected final long logFileSize;
+    protected final int logPageSize;
     private final int numLogPages;
     private final String logDir;
     private final String logFilePrefix;
     private final MutableLong flushLSN;
     private LinkedBlockingQueue<LogBuffer> emptyQ;
     private LinkedBlockingQueue<LogBuffer> flushQ;
-    private final AtomicLong appendLSN;
+    protected final AtomicLong appendLSN;
     private FileChannel appendChannel;
-    private LogBuffer appendPage;
+    protected LogBuffer appendPage;
     private LogFlusher logFlusher;
     private Future<Object> futureLogFlusher;
     private static final long SMALLEST_LOG_FILE_ID = 0;
-    private LinkedBlockingQueue<ILogRecord> flushLogsQ;
+    private final String nodeId;
+    protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
     private final FlushLogsLogger flushLogsLogger;
 
     public LogManager(TransactionSubsystem txnSubsystem) {
@@ -84,6 +86,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         logFilePrefix = logManagerProperties.getLogFilePrefix();
         flushLSN = new MutableLong();
         appendLSN = new AtomicLong();
+        nodeId = txnSubsystem.getId();
         flushLogsQ = new LinkedBlockingQueue<>();
         flushLogsLogger = new FlushLogsLogger();
         initializeLogManager(SMALLEST_LOG_FILE_ID);
@@ -122,7 +125,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendToLogTail(logRecord);
     }
 
-    private void appendToLogTail(ILogRecord logRecord) throws ACIDException {
+    protected void appendToLogTail(ILogRecord logRecord) throws ACIDException {
         syncAppendToLogTail(logRecord);
 
         if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT)
@@ -139,7 +142,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
+    protected synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
         ITransactionContext txnCtx = null;
 
         if (logRecord.getLogType() != LogType.FLUSH) {
@@ -168,7 +171,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendLSN.addAndGet(logRecord.getLogSize());
     }
 
-    private void getAndInitNewPage() {
+    protected void getAndInitNewPage() {
         appendPage = null;
         while (appendPage == null) {
             try {
@@ -182,7 +185,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         flushQ.offer(appendPage);
     }
 
-    private void prepareNextLogFile() {
+    protected void prepareNextLogFile() {
         appendLSN.addAndGet(logFileSize - getLogFileOffset(appendLSN.get()));
         appendChannel = getFileChannel(appendLSN.get(), true);
         appendPage.isLastPage(true);
@@ -452,6 +455,34 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         } else {
             throw new IllegalStateException("Couldn't find any log files.");
         }
+    }
+
+    @Override
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    @Override
+    public int getLogPageSize() {
+        return logPageSize;
+    }
+
+    @Override
+    public void renewLogFilesAndStartFromLSN(long LSNtoStartFrom) throws IOException {
+        terminateLogFlusher();
+        deleteAllLogFiles();
+        long newLogFile = getLogFileId(LSNtoStartFrom);
+        initializeLogManager(newLogFile + 1);
+    }
+
+    @Override
+    public void setReplicationManager(IReplicationManager replicationManager) {
+        throw new IllegalStateException("This log manager does not support replication");
+    }
+
+    @Override
+    public int getNumLogPages() {
+        return numLogPages;
     }
 
     /**

@@ -388,6 +388,7 @@
         <module>asterix-doc</module>
         <module>asterix-fuzzyjoin</module>
         <module>asterix-yarn</module>
+        <module>asterix-replication</module>
     </modules>
 
     <repositories>

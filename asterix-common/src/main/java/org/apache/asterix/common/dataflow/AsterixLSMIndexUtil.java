@@ -41,4 +41,10 @@ public class AsterixLSMIndexUtil {
             }
         }
     }
+
+    public static boolean lsmComponentFileHasLSN(AbstractLSMIndex lsmIndex, String componentFilePath) {
+        AbstractLSMIOOperationCallback ioOpCallback = (AbstractLSMIOOperationCallback) lsmIndex
+                .getIOOperationCallback();
+        return ioOpCallback.componentFileHasLSN(componentFilePath);
+    }
 }

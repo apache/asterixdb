@@ -25,6 +25,10 @@ import java.util.concurrent.Executor;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.replication.IRemoteRecoveryManager;
+import org.apache.asterix.common.replication.IReplicaResourcesManager;
+import org.apache.asterix.common.replication.IReplicationChannel;
+import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
@@ -76,4 +80,14 @@ public interface IAsterixAppRuntimeContext {
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID);
 
     public IFeedManager getFeedManager();
+
+    public IRemoteRecoveryManager getRemoteRecoveryManager();
+
+    public IReplicaResourcesManager getReplicaResourcesManager();
+
+    public IReplicationManager getReplicationManager();
+
+    public IReplicationChannel getReplicationChannel();
+
+    public void initializeResourceIdFactory() throws HyracksDataException;
 }

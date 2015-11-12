@@ -56,6 +56,7 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         logRecord.setDatasetId(datasetId);
         logRecord.setResourceId(resourceId);
         logRecord.setNewOp((byte) (indexOp.ordinal()));
+        logRecord.setNodeId(txnSubsystem.getId());
     }
 
     protected void log(int PKHash, ITupleReference newValue)

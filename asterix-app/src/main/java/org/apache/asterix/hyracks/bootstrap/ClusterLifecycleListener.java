@@ -33,6 +33,7 @@ import org.apache.asterix.common.api.IClusterManagementWorkResponse;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse.Status;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.event.schema.cluster.Node;
+import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.AddNodeWorkResponse;
 import org.apache.asterix.metadata.cluster.ClusterManager;
@@ -95,6 +96,18 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 LOGGER.info("NC: " + deadNode + " left");
             }
             AsterixClusterProperties.INSTANCE.removeNCConfiguration(deadNode);
+
+            //if metadata node failed, we need to rebind the proxy connection when it joins again.
+            //Note: the format for the NC should be (INSTANCE-NAME)_(NC-ID)
+            if (AsterixClusterProperties.INSTANCE.getCluster() != null) {
+                String instanceName = AsterixClusterProperties.INSTANCE.getCluster().getInstanceName();
+                String metadataNodeName = AsterixClusterProperties.INSTANCE.getCluster().getMetadataNode();
+                String completeMetadataNodeName = instanceName + "_" + metadataNodeName;
+                if (deadNode.equals(completeMetadataNodeName)) {
+                    MetadataManager.INSTANCE.rebindMetadataNode = true;
+                }
+            }
+
         }
         updateProgress(ClusterEventType.NODE_FAILURE, deadNodeIds);
         Set<IClusterEventsSubscriber> subscribers = ClusterManager.INSTANCE.getRegisteredClusterEventSubscribers();

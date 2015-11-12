@@ -26,12 +26,19 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.common.replication.AsterixReplicationJob;
+import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
+import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
+import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
@@ -45,11 +52,14 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final String ROOT_METADATA_DIRECTORY = "asterix_root_metadata";
     private static final String ROOT_METADATA_FILE_NAME_PREFIX = ".asterix_root_metadata";
     private static final long ROOT_LOCAL_RESOURCE_ID = -4321;
-    private static final String METADATA_FILE_NAME = ".metadata";
+    public static final String METADATA_FILE_NAME = ".metadata";
     private final Cache<String, LocalResource> resourceCache;
     private final String nodeId;
     private static final int MAX_CACHED_RESOURCES = 1000;
-
+    private IReplicationManager replicationManager;
+    private boolean isReplicationEnabled = false;
+    private Set<String> filesToBeReplicated;
+    
     public PersistentLocalResourceRepository(List<IODeviceHandle> devices, String nodeId) throws HyracksDataException {
         mountPoints = new String[devices.size()];
         this.nodeId = nodeId;
@@ -168,6 +178,12 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                     throw new HyracksDataException(e);
                 }
             }
+
+            //if replication enabled, send resource metadata info to remote nodes
+            if (isReplicationEnabled && resource.getResourceId() != ROOT_LOCAL_RESOURCE_ID) {
+                String filePath = getFileName(resource.getResourceName(), resource.getResourceId());
+                createReplicationJob(ReplicationOperation.REPLICATE, filePath);
+            }
         }
     }
 
@@ -177,6 +193,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         if (resourceFile.exists()) {
             resourceFile.delete();
             resourceCache.invalidate(name);
+            
+            //if replication enabled, delete resource from remote replicas
+            if (isReplicationEnabled && !resourceFile.getName().startsWith(ROOT_METADATA_FILE_NAME_PREFIX)) {
+                createReplicationJob(ReplicationOperation.DELETE, resourceFile.getAbsolutePath());
+            }
         } else {
             throw new HyracksDataException("Resource doesn't exist");
         }
@@ -310,7 +331,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    private LocalResource readLocalResource(File file) throws HyracksDataException {
+    public static LocalResource readLocalResource(File file) throws HyracksDataException {
         FileInputStream fis = null;
         ObjectInputStream oisFromFis = null;
 
@@ -348,4 +369,29 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         }
     };
+    public void setReplicationManager(IReplicationManager replicationManager) {
+        this.replicationManager = replicationManager;
+        isReplicationEnabled = replicationManager.isReplicationEnabled();
+
+        if (isReplicationEnabled) {
+            filesToBeReplicated = new HashSet<String>();
+        }
+    }
+
+    private void createReplicationJob(ReplicationOperation operation, String filePath) throws HyracksDataException {
+        filesToBeReplicated.clear();
+        filesToBeReplicated.add(filePath);
+        AsterixReplicationJob job = new AsterixReplicationJob(ReplicationJobType.METADATA, operation,
+                ReplicationExecutionType.SYNC, filesToBeReplicated);
+        try {
+            replicationManager.submitJob(job);
+        } catch (IOException e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public String[] getStorageMountingPoints() {
+        return mountPoints;
+    }
+
 }

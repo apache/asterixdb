@@ -74,6 +74,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         capacity = storageProperties.getMemoryComponentGlobalBudget();
         used = 0;
         logRecord = new LogRecord();
+        logRecord.setNodeId(logManager.getNodeId());
     }
 
     @Override
@@ -112,10 +113,10 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         if (dsInfo.indexes.containsKey(resourceID)) {
             throw new HyracksDataException("Index with resource ID " + resourceID + " already exists.");
         }
-        dsInfo.indexes.put(resourceID, new IndexInfo((ILSMIndex) index));
+        dsInfo.indexes.put(resourceID, new IndexInfo((ILSMIndex) index, dsInfo.datasetID, resourceID));
     }
 
-    private int getDIDfromResourceName(String resourceName) throws HyracksDataException {
+    public int getDIDfromResourceName(String resourceName) throws HyracksDataException {
         LocalResource lr = resourceRepository.getResourceByName(resourceName);
         if (lr == null) {
             return -1;
@@ -123,7 +124,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return ((ILocalResourceMetadata) lr.getResourceObject()).getDatasetID();
     }
 
-    private long getResourceIDfromResourceName(String resourceName) throws HyracksDataException {
+    public long getResourceIDfromResourceName(String resourceName) throws HyracksDataException {
         LocalResource lr = resourceRepository.getResourceByName(resourceName);
         if (lr == null) {
             return -1;
@@ -279,15 +280,25 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
     @Override
     public synchronized List<IIndex> getOpenIndexes() {
+        List<IndexInfo> openIndexesInfo = getOpenIndexesInfo();
         List<IIndex> openIndexes = new ArrayList<IIndex>();
+        for (IndexInfo iInfo : openIndexesInfo) {
+            openIndexes.add(iInfo.index);
+        }
+        return openIndexes;
+    }
+
+    @Override
+    public synchronized List<IndexInfo> getOpenIndexesInfo() {
+        List<IndexInfo> openIndexesInfo = new ArrayList<IndexInfo>();
         for (DatasetInfo dsInfo : datasetInfos.values()) {
             for (IndexInfo iInfo : dsInfo.indexes.values()) {
                 if (iInfo.isOpen) {
-                    openIndexes.add(iInfo.index);
+                    openIndexesInfo.add(iInfo);
                 }
             }
         }
-        return openIndexes;
+        return openIndexesInfo;
     }
 
     public List<IVirtualBufferCache> getVirtualBufferCaches(int datasetID) {
@@ -358,11 +369,27 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
     }
 
-    private class IndexInfo extends Info {
+    public class IndexInfo extends Info {
         private final ILSMIndex index;
+        private final long resourceId;
+        private final int datasetId;
 
-        public IndexInfo(ILSMIndex index) {
+        public IndexInfo(ILSMIndex index, int datasetId, long resourceId) {
             this.index = index;
+            this.datasetId = datasetId;
+            this.resourceId = resourceId;
+        }
+
+        public ILSMIndex getIndex() {
+            return index;
+        }
+
+        public long getResourceId() {
+            return resourceId;
+        }
+
+        public int getDatasetId() {
+            return datasetId;
         }
     }
 
@@ -456,14 +483,6 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                     + ", lastAccess: " + lastAccess + ", isRegistered: " + isRegistered + ", memoryAllocated: "
                     + memoryAllocated;
         }
-
-        public boolean isMemoryAllocated() {
-            return memoryAllocated;
-        }
-
-        public int getDatasetID() {
-            return datasetID;
-        }
     }
 
     @Override
@@ -520,7 +539,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private void flushDatasetOpenIndexes(DatasetInfo dsInfo, boolean asyncFlush) throws HyracksDataException {
         if (!dsInfo.isExternal) {
             synchronized (logRecord) {
-                logRecord.formFlushLogRecord(dsInfo.datasetID, null);
+                logRecord.formFlushLogRecord(dsInfo.datasetID, null, dsInfo.indexes.size());
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {
@@ -588,15 +607,19 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         removeDatasetFromCache(dsInfo.datasetID);
     }
 
+    public void closeAllDatasets() throws HyracksDataException {
+        for (DatasetInfo dsInfo : datasetInfos.values()) {
+            closeDataset(dsInfo);
+        }
+    }
+
     @Override
     public synchronized void stop(boolean dumpState, OutputStream outputStream) throws IOException {
         if (dumpState) {
             dumpState(outputStream);
         }
 
-        for (DatasetInfo dsInfo : datasetInfos.values()) {
-            closeDataset(dsInfo);
-        }
+        closeAllDatasets();
 
         datasetVirtualBufferCaches.clear();
         datasetOpTrackers.clear();

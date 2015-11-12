@@ -19,6 +19,7 @@
 package org.apache.asterix.common.transactions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -89,5 +90,25 @@ public interface IRecoveryManager {
      */
     public long checkpoint(boolean isSharpCheckpoint, long nonSharpCheckpointTargetLSN) throws ACIDException, HyracksDataException;
     
+    /**
+     * Performs recovery based on the passed logs
+     * @param remoteLogs the remote logs to be replayed
+     * @throws HyracksDataException
+     * @throws ACIDException
+     */
+    public void replayRemoteLogs(ArrayList<ILogRecord> remoteLogs) throws HyracksDataException, ACIDException;
+
+    /**
+     * 
+     * @return min first LSN of the open indexes (including remote indexes if replication is enabled)
+     * @throws HyracksDataException
+     */
+    public long getMinFirstLSN() throws HyracksDataException;
     
+    /**
+     * 
+     * @return min first LSN of the open indexes
+     * @throws HyracksDataException
+     */
+    public long getLocalMinFirstLSN() throws HyracksDataException;
 }

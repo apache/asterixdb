@@ -59,7 +59,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             incrementNumActiveOperations(modificationCallback);
-        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             dsInfo.declareActiveIOOperation();
         }
     }
@@ -68,7 +69,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Searches are immediately considered complete, because they should not prevent the execution of flushes.
-        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             completeOperation(index, opType, searchCallback, modificationCallback);
         }
     }
@@ -84,7 +86,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             } else if (numActiveOperations.get() < 0) {
                 throw new HyracksDataException("The number of active operations cannot be negative!");
             }
-        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             dsInfo.undeclareActiveIOOperation();
         }
     }
@@ -119,7 +122,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             }
 
             LogRecord logRecord = new LogRecord();
-            logRecord.formFlushLogRecord(datasetID, this);
+            logRecord.formFlushLogRecord(datasetID, this, logManager.getNodeId(), dsInfo.getDatasetIndexes().size());
 
             try {
                 logManager.log(logRecord);

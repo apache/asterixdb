@@ -19,22 +19,22 @@
 package org.apache.asterix.hyracks.bootstrap;
 
 import java.io.File;
+import java.io.IOException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-
 import org.apache.asterix.api.common.AsterixAppRuntimeContext;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
+import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
+import org.apache.asterix.common.context.DatasetLifecycleManager;
+import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.event.schema.cluster.Cluster;
@@ -44,12 +44,18 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.replication.storage.AsterixFilesUtil;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
 import org.apache.hyracks.api.application.INCApplicationContext;
 import org.apache.hyracks.api.application.INCApplicationEntryPoint;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private static final Logger LOGGER = Logger.getLogger(NCApplicationEntryPoint.class.getName());
@@ -66,7 +72,8 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
     private boolean isMetadataNode = false;
     private boolean stopInitiated = false;
     private SystemState systemState = SystemState.NEW_UNIVERSE;
-    private final long NON_SHARP_CHECKPOINT_TARGET_LSN = -1;
+    private boolean performedRemoteRecovery = false;
+    private boolean replicationEnabled = false;
 
     @Override
     public void start(INCApplicationContext ncAppCtx, String[] args) throws Exception {
@@ -100,6 +107,12 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         runtimeContext.initialize();
         ncApplicationContext.setApplicationObject(runtimeContext);
 
+        //if replication is enabled, check if there is a replica for this node
+        AsterixReplicationProperties asterixReplicationProperties = ((IAsterixPropertiesProvider) runtimeContext)
+                .getReplicationProperties();
+
+        replicationEnabled = asterixReplicationProperties.isReplicationEnabled();
+
         if (initialRun) {
             LOGGER.info("System is being initialized. (first run)");
             systemState = SystemState.NEW_UNIVERSE;
@@ -112,11 +125,42 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("System is in a state: " + systemState);
             }
 
+            if (replicationEnabled) {
+                if (systemState == SystemState.NEW_UNIVERSE || systemState == SystemState.CORRUPTED) {
+                    //try to perform remote recovery
+                    IRemoteRecoveryManager remoteRecoveryMgr = runtimeContext.getRemoteRecoveryManager();
+                    remoteRecoveryMgr.performRemoteRecovery();
+                    performedRemoteRecovery = true;
+                    systemState = SystemState.HEALTHY;
+                }
+            }
+
             if (systemState == SystemState.CORRUPTED) {
                 recoveryMgr.startRecovery(true);
             }
         }
 
+        if (replicationEnabled) {
+            startReplicationService();
+        }
+    }
+
+    private void startReplicationService() throws IOException {
+        //open replication channel
+        runtimeContext.getReplicationChannel().start();
+
+        //check the state of remote replicas
+        runtimeContext.getReplicationManager().initializeReplicasState();
+
+        if (performedRemoteRecovery) {
+            //notify remote replicas about the new IP Address if changed
+            //Note: this is a hack since each node right now maintains its own copy of the cluster configuration.
+            //Once the configuration is centralized on the CC, this step wont be needed.
+            runtimeContext.getReplicationManager().broadcastNewIPAddress();
+        }
+
+        //start replication after the state of remote replicas has been initialized. 
+        runtimeContext.getReplicationManager().startReplicationThreads();
     }
 
     @Override
@@ -128,13 +172,14 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
                 LOGGER.info("Stopping Asterix node controller: " + nodeId);
             }
 
-            IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-            recoveryMgr.checkpoint(true, NON_SHARP_CHECKPOINT_TARGET_LSN);
-
             if (isMetadataNode) {
                 MetadataBootstrap.stopUniverse();
             }
 
+            //clean any temporary files
+            performLocalCleanUp();
+
+            //Note: stopping recovery manager will make a sharp checkpoint
             ncApplicationContext.getLifeCycleComponentManager().stopAll(false);
             runtimeContext.deinitialize();
         } else {
@@ -211,7 +256,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         lccm.startAll();
 
         IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        recoveryMgr.checkpoint(true, NON_SHARP_CHECKPOINT_TARGET_LSN);
+        recoveryMgr.checkpoint(true, RecoveryManager.NON_SHARP_CHECKPOINT_TARGET_LSN);
 
         if (isMetadataNode) {
             IMetadataNode stub = null;
@@ -219,20 +264,31 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             proxy.setMetadataNode(stub);
         }
 
-        // Reclaim storage for temporary datasets.
-        String[] ioDevices = AsterixClusterProperties.INSTANCE.getIODevices(nodeId);
-        String[] nodeStores = metadataProperties.getStores().get(nodeId);
-        int numIoDevices = AsterixClusterProperties.INSTANCE.getNumberOfIODevices(nodeId);
-        for (int j = 0; j < nodeStores.length; j++) {
-            for (int k = 0; k < numIoDevices; k++) {
-                File f = new File(ioDevices[k] + File.separator + nodeStores[j] + File.separator + "temp");
-                f.delete();
-            }
+        //clean any temporary files
+        performLocalCleanUp();
+    }
+
+    private void performLocalCleanUp() throws IOException {
+        //delete working area files from failed jobs
+        runtimeContext.getIOManager().deleteWorkspaceFiles();
+
+        //reclaim storage for temporary datasets.
+        PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                .getLocalResourceRepository();
+
+        String[] storageMountingPoints = localResourceRepository.getStorageMountingPoints();
+        String storageFolderName = ((IAsterixPropertiesProvider) runtimeContext).getMetadataProperties().getStores()
+                .get(nodeId)[0];
+
+        for (String mountPoint : storageMountingPoints) {
+            String tempDatasetFolder = mountPoint + storageFolderName + File.separator
+                    + AqlMetadataProvider.TEMP_DATASETS_STORAGE_FOLDER;
+            AsterixFilesUtil.deleteFolder(tempDatasetFolder);
         }
 
         // TODO
-        // reclaim storage for orphaned index artifacts in NCs.
-
+        //reclaim storage for orphaned index artifacts in NCs.
+        //Note: currently LSM indexes invalid components are deleted when an index is activated.
     }
 
     private void updateOnNodeJoin() {

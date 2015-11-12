@@ -25,12 +25,13 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixFeedProperties;
-import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
@@ -39,10 +40,20 @@ import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.IFeedManager;
+import org.apache.asterix.common.replication.IRemoteRecoveryManager;
+import org.apache.asterix.common.replication.IReplicaResourcesManager;
+import org.apache.asterix.common.replication.IReplicationChannel;
+import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.feeds.FeedManager;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.om.util.AsterixClusterProperties;
+import org.apache.asterix.replication.management.ReplicationChannel;
+import org.apache.asterix.replication.management.ReplicationManager;
+import org.apache.asterix.replication.recovery.RemoteRecoveryManager;
+import org.apache.asterix.replication.storage.ReplicaResourcesManager;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionSubsystem;
 import org.apache.hyracks.api.application.INCApplicationContext;
@@ -95,6 +106,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     private AsterixTransactionProperties txnProperties;
     private AsterixFeedProperties feedProperties;
     private AsterixBuildProperties buildProperties;
+    private AsterixReplicationProperties replicationProperties;
 
     private AsterixThreadExecutor threadExecutor;
     private IDatasetLifecycleManager datasetLifecycleManager;
@@ -110,6 +122,11 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
     private IFeedManager feedManager;
 
+    private IReplicationChannel replicationChannel;
+    private IReplicationManager replicationManager;
+    private IRemoteRecoveryManager remoteRecoveryManager;
+    private IReplicaResourcesManager replicaResourcesManager;
+
     public AsterixAppRuntimeContext(INCApplicationContext ncApplicationContext) {
         this.ncApplicationContext = ncApplicationContext;
         compilerProperties = new AsterixCompilerProperties(ASTERIX_PROPERTIES_ACCESSOR);
@@ -119,6 +136,8 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         txnProperties = new AsterixTransactionProperties(ASTERIX_PROPERTIES_ACCESSOR);
         feedProperties = new AsterixFeedProperties(ASTERIX_PROPERTIES_ACCESSOR);
         buildProperties = new AsterixBuildProperties(ASTERIX_PROPERTIES_ACCESSOR);
+        replicationProperties = new AsterixReplicationProperties(ASTERIX_PROPERTIES_ACCESSOR,
+                AsterixClusterProperties.INSTANCE.getCluster());
     }
 
     public void initialize() throws IOException, ACIDException, AsterixException {
@@ -131,8 +150,6 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         ioManager = ncApplicationContext.getRootContext().getIOManager();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages());
-        bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
-                storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
 
         AsynchronousScheduler.INSTANCE.init(ncApplicationContext.getThreadFactory());
         lsmIOScheduler = AsynchronousScheduler.INSTANCE;
@@ -142,7 +159,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
                 ioManager, ncApplicationContext.getNodeId());
         localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
-        resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
+        initializeResourceIdFactory();
 
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
                 this);
@@ -157,14 +174,61 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
         feedManager = new FeedManager(ncApplicationContext.getNodeId(), feedProperties,
                 compilerProperties.getFrameSize());
 
+        if (replicationProperties.isReplicationEnabled()) {
+            String nodeId = ncApplicationContext.getNodeId();
+
+            replicaResourcesManager = new ReplicaResourcesManager(ioManager.getIODevices(),
+                    metadataProperties.getStores().get(nodeId)[0], nodeId, replicationProperties.getReplicationStore());
+
+            replicationManager = new ReplicationManager(nodeId, replicationProperties, replicaResourcesManager,
+                    txnSubsystem.getLogManager(), asterixAppRuntimeContextProvider);
+
+            //pass replication manager to replication required object
+            //LogManager to replicate logs
+            txnSubsystem.getLogManager().setReplicationManager(replicationManager);
+
+            //PersistentLocalResourceRepository to replicate metadata files and delete backups on drop index
+            ((PersistentLocalResourceRepository) localResourceRepository).setReplicationManager(replicationManager);
+
+            //initialize replication channel
+            replicationChannel = new ReplicationChannel(nodeId, replicationProperties, txnSubsystem.getLogManager(),
+                    replicaResourcesManager, replicationManager, ncApplicationContext,
+                    asterixAppRuntimeContextProvider);
+
+            remoteRecoveryManager = new RemoteRecoveryManager(replicationManager, this, replicationProperties);
+
+            bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
+                    storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory(),
+                    replicationManager);
+
+        } else {
+            bufferCache = new BufferCache(ioManager, prs, pcp, fileMapManager,
+                    storageProperties.getBufferCacheMaxOpenFiles(), ncApplicationContext.getThreadFactory());
+        }
+
         // The order of registration is important. The buffer cache must registered before recovery and transaction managers.
+        //Notes: registered components are stopped in reversed order
         ILifeCycleComponentManager lccm = ncApplicationContext.getLifeCycleComponentManager();
         lccm.register((ILifeCycleComponent) bufferCache);
-        lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
+        /**
+         * LogManager must be stopped after RecoveryManager, DatasetLifeCycleManager, and ReplicationManager
+         * to process any logs that might be generated during stopping these components
+         */
         lccm.register((ILifeCycleComponent) txnSubsystem.getLogManager());
-        lccm.register((ILifeCycleComponent) datasetLifecycleManager);
-        lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
         lccm.register((ILifeCycleComponent) txnSubsystem.getRecoveryManager());
+        /**
+         * ReplicationManager must be stopped after indexLifecycleManager so that any logs/files generated
+         * during closing datasets are sent to remote replicas
+         */
+        if (replicationManager != null) {
+            lccm.register(replicationManager);
+        }
+        /**
+         * Stopping indexLifecycleManager will flush and close all datasets.
+         */
+        lccm.register((ILifeCycleComponent) datasetLifecycleManager);
+        lccm.register((ILifeCycleComponent) txnSubsystem.getTransactionManager());
+        lccm.register((ILifeCycleComponent) txnSubsystem.getLockManager());
     }
 
     public boolean isShuttingdown() {
@@ -275,5 +339,35 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
     @Override
     public IFeedManager getFeedManager() {
         return feedManager;
+    }
+
+    @Override
+    public AsterixReplicationProperties getReplicationProperties() {
+        return replicationProperties;
+    }
+
+    @Override
+    public IReplicationChannel getReplicationChannel() {
+        return replicationChannel;
+    }
+
+    @Override
+    public IReplicaResourcesManager getReplicaResourcesManager() {
+        return replicaResourcesManager;
+    }
+
+    @Override
+    public IRemoteRecoveryManager getRemoteRecoveryManager() {
+        return remoteRecoveryManager;
+    }
+
+    @Override
+    public IReplicationManager getReplicationManager() {
+        return replicationManager;
+    }
+
+    @Override
+    public void initializeResourceIdFactory() throws HyracksDataException {
+        resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
     }
 }

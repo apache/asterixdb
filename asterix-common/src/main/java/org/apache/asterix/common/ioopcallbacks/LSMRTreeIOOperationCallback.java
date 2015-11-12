@@ -25,6 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeDiskComponent;
+import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager;
 
 public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback {
 
@@ -58,5 +59,15 @@ public class LSMRTreeIOOperationCallback extends AbstractLSMIOOperationCallback 
             maxLSN = Math.max(getTreeIndexLSN(rtreeComponent.getRTree()), maxLSN);
         }
         return maxLSN;
+    }
+
+    @Override
+    public boolean componentFileHasLSN(String componentFilePath) {
+        if (componentFilePath.endsWith(LSMRTreeFileManager.RTREE_STRING)
+                || componentFilePath.endsWith(LSMRTreeFileManager.BTREE_STRING)) {
+            return true;
+        }
+
+        return false;
     }
 }

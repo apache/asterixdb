@@ -24,4 +24,6 @@ public interface ILogBuffer {
 
     public void flush();
 
+    public void appendWithReplication(ILogRecord logRecord, long appendLSN);
+
 }

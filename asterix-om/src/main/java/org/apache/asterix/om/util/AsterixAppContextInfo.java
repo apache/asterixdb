@@ -26,6 +26,7 @@ import org.apache.asterix.common.config.AsterixFeedProperties;
 import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixStorageProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
@@ -54,6 +55,7 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     private AsterixTransactionProperties txnProperties;
     private AsterixFeedProperties feedProperties;
     private AsterixBuildProperties buildProperties;
+    private AsterixReplicationProperties replicationProperties;
 
     private IHyracksClientConnection hcc;
 
@@ -68,6 +70,8 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
         INSTANCE.storageProperties = new AsterixStorageProperties(propertiesAccessor);
         INSTANCE.txnProperties = new AsterixTransactionProperties(propertiesAccessor);
         INSTANCE.feedProperties = new AsterixFeedProperties(propertiesAccessor);
+        INSTANCE.replicationProperties = new AsterixReplicationProperties(propertiesAccessor,
+                AsterixClusterProperties.INSTANCE.getCluster());
         INSTANCE.hcc = hcc;
         INSTANCE.buildProperties = new AsterixBuildProperties(propertiesAccessor);
         Logger.getLogger("org.apache").setLevel(INSTANCE.externalProperties.getLogLevel());
@@ -134,5 +138,10 @@ public class AsterixAppContextInfo implements IAsterixApplicationContextInfo, IA
     @Override
     public IStorageManagerInterface getStorageManagerInterface() {
         return AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER;
+    }
+
+    @Override
+    public AsterixReplicationProperties getReplicationProperties() {
+        return replicationProperties;
     }
 }

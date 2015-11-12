@@ -72,6 +72,7 @@ public class CommitRuntime implements IPushRuntime {
         this.isWriteTransaction = isWriteTransaction;
         this.longHashes = new long[2];
         this.logRecord = new LogRecord();
+        logRecord.setNodeId(logMgr.getNodeId());
     }
 
     @Override

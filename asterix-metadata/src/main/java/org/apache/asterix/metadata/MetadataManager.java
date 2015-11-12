@@ -96,6 +96,7 @@ public class MetadataManager implements IMetadataManager {
     private final ReadWriteLock metadataLatch;
     private final AsterixMetadataProperties metadataProperties;
     private IHyracksClientConnection hcc;
+    public boolean rebindMetadataNode = false;
 
     public MetadataManager(IAsterixStateProxy proxy, AsterixMetadataProperties metadataProperties) {
         if (proxy == null) {
@@ -121,7 +122,7 @@ public class MetadataManager implements IMetadataManager {
     public void init() throws RemoteException, MetadataException {
         // Could be synchronized on any object. Arbitrarily chose proxy.
         synchronized (proxy) {
-            if (metadataNode != null) {
+            if (metadataNode != null && !rebindMetadataNode) {
                 return;
             }
             try {
@@ -130,6 +131,7 @@ public class MetadataManager implements IMetadataManager {
                 while (retry++ < MAX_RETRY_COUNT) {
                     metadataNode = proxy.getMetadataNode();
                     if (metadataNode != null) {
+                        rebindMetadataNode = false;
                         break;
                     }
                     Thread.sleep(sleep);
@@ -390,7 +392,8 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         try {
-            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(),datatype.getDataverseName(),datatype.getDatatypeName()));
+            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(),
+                    datatype.getDatatypeName()));
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -718,7 +721,6 @@ public class MetadataManager implements IMetadataManager {
         }
         return adapter;
     }
-  
 
     @Override
     public void dropLibrary(MetadataTransactionContext ctx, String dataverseName, String libraryName)
@@ -801,7 +803,6 @@ public class MetadataManager implements IMetadataManager {
         }
         return FeedPolicy;
     }
-   
 
     @Override
     public Feed getFeed(MetadataTransactionContext ctx, String dataverse, String feedName) throws MetadataException {
@@ -836,7 +837,6 @@ public class MetadataManager implements IMetadataManager {
         ctx.addFeed(feed);
     }
 
-  
     public List<DatasourceAdapter> getDataverseAdapters(MetadataTransactionContext mdTxnCtx, String dataverse)
             throws MetadataException {
         List<DatasourceAdapter> dataverseAdapters;
@@ -847,7 +847,7 @@ public class MetadataManager implements IMetadataManager {
         }
         return dataverseAdapters;
     }
-    
+
     public void dropFeedPolicy(MetadataTransactionContext mdTxnCtx, String dataverseName, String policyName)
             throws MetadataException {
         FeedPolicy feedPolicy = null;
@@ -859,7 +859,7 @@ public class MetadataManager implements IMetadataManager {
         }
         mdTxnCtx.dropFeedPolicy(feedPolicy);
     }
-    
+
     public List<FeedPolicy> getDataversePolicies(MetadataTransactionContext mdTxnCtx, String dataverse)
             throws MetadataException {
         List<FeedPolicy> dataverseFeedPolicies;
@@ -870,7 +870,6 @@ public class MetadataManager implements IMetadataManager {
         }
         return dataverseFeedPolicies;
     }
-
 
     @Override
     public List<ExternalFile> getDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
