@@ -48,10 +48,6 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
         }
     };
 
-    private final static byte[] currentUTF8 = new byte[6];
-    private final static byte[] tempStoreForLength = new byte[5];
-    private final byte stringTypeTag = ATypeTag.STRING.serialize();
-
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new ICopyEvaluatorFactory() {
@@ -66,6 +62,10 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                     private ICopyEvaluatorFactory listEvalFactory = args[0];
                     private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
+
+                    private final byte[] currentUTF8 = new byte[6];
+                    private final byte[] tempStoreForLength = new byte[5];
+                    private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {

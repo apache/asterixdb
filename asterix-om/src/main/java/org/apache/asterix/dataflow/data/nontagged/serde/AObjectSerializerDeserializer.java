@@ -210,6 +210,7 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             }
             case BINARY: {
                 aBinarySerDer.serialize((ABinary) instance, out);
+                break;
             }
             case DATE: {
                 ADateSerializerDeserializer.INSTANCE.serialize((ADate) instance, out);
@@ -261,12 +262,15 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             }
             case ORDEREDLIST: {
                 AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AOrderedList) instance, out);
+                break;
             }
             case UNORDEREDLIST: {
                 AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AUnorderedList) instance, out);
+                break;
             }
             case TYPE: {
                 ATypeSerializerDeserializer.INSTANCE.serialize((IAType) instance, out);
+                break;
             }
             default: {
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + t.getTypeTag()
