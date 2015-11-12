@@ -78,25 +78,16 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         FileReference file = new FileReference(new File(filePath));
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
         try {
-            return LSMRTreeUtils.createLSMTree(
-                    virtualBufferCaches,
-                    file,
-                    runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(),
-                    typeTraits,
-                    rtreeCmpFactories,
-                    btreeCmpFactories,
-                    valueProviderFactories,
-                    rtreePolicyType,
-                    runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+            return LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider.getBufferCache(),
+                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
-                    new BaseOperationTracker(runtimeContextProvider
-                            .getDatasetLifecycleManager(), datasetID, runtimeContextProvider
-                            .getDatasetLifecycleManager().getDatasetInfo(datasetID)), runtimeContextProvider
-                            .getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
-                            .createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
-                    filterTypeTraits, filterCmpFactories, filterFields, true);
+                    new BaseOperationTracker(datasetID,
+                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                    runtimeContextProvider.getLSMIOScheduler(),
+                    LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
+                    rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields, true);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

@@ -47,19 +47,14 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) {
         FileReference file = new FileReference(new File(filePath));
-        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(
-                file,
-                runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(),
-                typeTraits,
-                cmpFactories,
-                bloomFilterKeyFields,
+        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(file, runtimeContextProvider.getBufferCache(),
+                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getDatasetLifecycleManager()),
-                new BaseOperationTracker(runtimeContextProvider.getDatasetLifecycleManager(),
-                        datasetID, runtimeContextProvider.getDatasetLifecycleManager()
-                        .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                new BaseOperationTracker(datasetID,
+                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true);
         return lsmBTree;
     }

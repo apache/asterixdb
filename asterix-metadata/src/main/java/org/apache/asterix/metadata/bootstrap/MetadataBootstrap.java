@@ -231,8 +231,8 @@ public class MetadataBootstrap {
     public static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws Exception {
         String dataverseName = MetadataPrimaryIndexes.DATAVERSE_DATASET.getDataverseName();
         String dataFormat = NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT;
-        MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverseName, dataFormat,
-                IMetadataEntity.PENDING_NO_OP));
+        MetadataManager.INSTANCE.addDataverse(mdTxnCtx,
+                new Dataverse(dataverseName, dataFormat, IMetadataEntity.PENDING_NO_OP));
     }
 
     public static void insertInitialDatasets(MetadataTransactionContext mdTxnCtx) throws Exception {
@@ -269,8 +269,8 @@ public class MetadataBootstrap {
         getBuiltinTypes(types);
         getMetadataTypes(types);
         for (int i = 0; i < types.size(); i++) {
-            MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(dataverseName, types.get(i).getTypeName(),
-                    types.get(i), false));
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
+                    new Datatype(dataverseName, types.get(i).getTypeName(), types.get(i), false));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datatypes.");
@@ -279,10 +279,11 @@ public class MetadataBootstrap {
 
     public static void insertInitialIndexes(MetadataTransactionContext mdTxnCtx) throws Exception {
         for (int i = 0; i < secondaryIndexes.length; i++) {
-            MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(secondaryIndexes[i].getDataverseName(),
-                    secondaryIndexes[i].getIndexedDatasetName(), secondaryIndexes[i].getIndexName(), IndexType.BTREE,
-                    secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(), false,
-                    false, IMetadataEntity.PENDING_NO_OP));
+            MetadataManager.INSTANCE.addIndex(mdTxnCtx,
+                    new Index(secondaryIndexes[i].getDataverseName(), secondaryIndexes[i].getIndexedDatasetName(),
+                            secondaryIndexes[i].getIndexName(), IndexType.BTREE,
+                            secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(),
+                            false, false, IMetadataEntity.PENDING_NO_OP));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial indexes.");
@@ -382,31 +383,24 @@ public class MetadataBootstrap {
                 + IndexFileNameUtil.prepareFileName(metadataStore + File.separator + index.getFileNameRelativePath(),
                         runtimeContext.getMetaDataIODeviceId());
         FileReference file = new FileReference(new File(filePath));
-        List<IVirtualBufferCache> virtualBufferCaches = runtimeContext.getVirtualBufferCaches(index.getDatasetId()
-                .getId());
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContext
+                .getVirtualBufferCaches(index.getDatasetId().getId());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
         LSMBTree lsmBtree = null;
         long resourceID = -1;
-        ILSMOperationTracker opTracker = index.isPrimaryIndex() ? runtimeContext.getLSMBTreeOperationTracker(index
-                .getDatasetId().getId()) : new BaseOperationTracker(dataLifecycleManager,
-                index.getDatasetId().getId(), dataLifecycleManager.getDatasetInfo(index
-                        .getDatasetId().getId()));
+        ILSMOperationTracker opTracker = index.isPrimaryIndex()
+                ? runtimeContext.getLSMBTreeOperationTracker(index.getDatasetId().getId())
+                : new BaseOperationTracker(index.getDatasetId().getId(),
+                        dataLifecycleManager.getDatasetInfo(index.getDatasetId().getId()));
         final String path = file.getFile().getPath();
         if (create) {
-            lsmBtree = LSMBTreeUtils.createLSMTree(
-                    virtualBufferCaches,
-                    file,
-                    bufferCache,
-                    fileMapProvider,
-                    typeTraits,
-                    comparatorFactories,
-                    bloomFilterKeyFields,
-                    runtimeContext.getBloomFilterFalsePositiveRate(),
-                    runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
-                            GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager), opTracker,
-                    runtimeContext.getLSMIOScheduler(),
+            lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider, typeTraits,
+                    comparatorFactories, bloomFilterKeyFields, runtimeContext.getBloomFilterFalsePositiveRate(),
+                    runtimeContext.getMetadataMergePolicyFactory()
+                            .createMergePolicy(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
+                    opTracker, runtimeContext.getLSMIOScheduler(),
                     LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
                     null, null, null, null, true);
             lsmBtree.create();
@@ -425,19 +419,14 @@ public class MetadataBootstrap {
             resourceID = resource.getResourceId();
             lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(resource.getResourceName());
             if (lsmBtree == null) {
-                lsmBtree = LSMBTreeUtils.createLSMTree(
-                        virtualBufferCaches,
-                        file,
-                        bufferCache,
-                        fileMapProvider,
-                        typeTraits,
-                        comparatorFactories,
-                        bloomFilterKeyFields,
+                lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider,
+                        typeTraits, comparatorFactories, bloomFilterKeyFields,
                         runtimeContext.getBloomFilterFalsePositiveRate(),
                         runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
-                                GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager), opTracker,
-                        runtimeContext.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                                .createIOOperationCallback(), index.isPrimaryIndex(), null, null, null, null, true);
+                                GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
+                        opTracker, runtimeContext.getLSMIOScheduler(),
+                        LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
+                        null, null, null, null, true);
                 dataLifecycleManager.register(path, lsmBtree);
             }
         }

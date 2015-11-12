@@ -46,7 +46,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
-import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
+import org.apache.hyracks.storage.common.buffercache.ResourceHeapBufferAllocator;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.LocalResource;
 
@@ -185,14 +185,14 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         DatasetInfo dsInfo = datasetInfos.get(did);
         if (dsInfo == null || !dsInfo.isRegistered) {
-            throw new HyracksDataException("Failed to open index with resource ID " + resourceID
-                    + " since it does not exist.");
+            throw new HyracksDataException(
+                    "Failed to open index with resource ID " + resourceID + " since it does not exist.");
         }
 
         IndexInfo iInfo = dsInfo.indexes.get(resourceID);
         if (iInfo == null) {
-            throw new HyracksDataException("Failed to open index with resource ID " + resourceID
-                    + " since it does not exist.");
+            throw new HyracksDataException(
+                    "Failed to open index with resource ID " + resourceID + " since it does not exist.");
         }
         if (!dsInfo.isOpen && !dsInfo.isExternal) {
             initializeDatasetVirtualBufferCache(did);
@@ -314,12 +314,14 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private void initializeDatasetVirtualBufferCache(int datasetID) {
         List<IVirtualBufferCache> vbcs = new ArrayList<IVirtualBufferCache>();
         synchronized (datasetVirtualBufferCaches) {
-            int numPages = datasetID < firstAvilableUserDatasetID ? storageProperties
-                    .getMetadataMemoryComponentNumPages() : storageProperties.getMemoryComponentNumPages();
+            int numPages = datasetID < firstAvilableUserDatasetID
+                    ? storageProperties.getMetadataMemoryComponentNumPages()
+                    : storageProperties.getMemoryComponentNumPages();
             for (int i = 0; i < storageProperties.getMemoryComponentsNum(); i++) {
-                MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(new VirtualBufferCache(
-                        new HeapBufferAllocator(), storageProperties.getMemoryComponentPageSize(), numPages
-                                / storageProperties.getMemoryComponentsNum()));
+                MultitenantVirtualBufferCache vbc = new MultitenantVirtualBufferCache(
+                        new VirtualBufferCache(new ResourceHeapBufferAllocator(this, Integer.toString(datasetID)),
+                                storageProperties.getMemoryComponentPageSize(),
+                                numPages / storageProperties.getMemoryComponentsNum()));
                 vbcs.add(vbc);
             }
             datasetVirtualBufferCaches.put(datasetID, vbcs);
@@ -331,7 +333,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         synchronized (datasetOpTrackers) {
             ILSMOperationTracker opTracker = datasetOpTrackers.get(datasetID);
             if (opTracker == null) {
-                opTracker = new PrimaryIndexOperationTracker(this, datasetID, logManager, getDatasetInfo(datasetID));
+                opTracker = new PrimaryIndexOperationTracker(datasetID, logManager, getDatasetInfo(datasetID));
                 datasetOpTrackers.put(datasetID, opTracker);
             }
             return opTracker;
@@ -488,14 +490,15 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     public synchronized void scheduleAsyncFlushForLaggingDatasets(long targetLSN) throws HyracksDataException {
         //schedule flush for datasets with min LSN (Log Serial Number) < targetLSN
         for (DatasetInfo dsInfo : datasetInfos.values()) {
-            PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) getOperationTracker(dsInfo.datasetID);
+            PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) getOperationTracker(
+                    dsInfo.datasetID);
             synchronized (opTracker) {
                 for (IndexInfo iInfo : dsInfo.indexes.values()) {
                     AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) iInfo.index
                             .getIOOperationCallback();
                     if (!(((AbstractLSMIndex) iInfo.index).isCurrentMutableComponentEmpty()
-                            || ioCallback.hasPendingFlush() || opTracker.isFlushLogCreated() || opTracker
-                                .isFlushOnExit())) {
+                            || ioCallback.hasPendingFlush() || opTracker.isFlushLogCreated()
+                            || opTracker.isFlushOnExit())) {
                         long firstLSN = ioCallback.getFirstLSN();
                         if (firstLSN < targetLSN) {
                             opTracker.setFlushOnExit(true);
@@ -616,8 +619,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         sb.append("[Datasets]\n");
         sb.append(String.format(dsHeaderFormat, "DatasetID", "Open", "Reference Count", "Last Access"));
         for (DatasetInfo dsInfo : datasetInfos.values()) {
-            sb.append(String
-                    .format(dsFormat, dsInfo.datasetID, dsInfo.isOpen, dsInfo.referenceCount, dsInfo.lastAccess));
+            sb.append(
+                    String.format(dsFormat, dsInfo.datasetID, dsInfo.isOpen, dsInfo.referenceCount, dsInfo.lastAccess));
         }
         sb.append("\n");
 
@@ -626,20 +629,19 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         for (DatasetInfo dsInfo : datasetInfos.values()) {
             for (Map.Entry<Long, IndexInfo> entry : dsInfo.indexes.entrySet()) {
                 IndexInfo iInfo = entry.getValue();
-                sb.append(String.format(idxFormat, dsInfo.datasetID, entry.getKey(), iInfo.isOpen,
-                        iInfo.referenceCount, iInfo.index));
+                sb.append(String.format(idxFormat, dsInfo.datasetID, entry.getKey(), iInfo.isOpen, iInfo.referenceCount,
+                        iInfo.index));
             }
         }
 
         outputStream.write(sb.toString().getBytes());
     }
 
-    @Override
-    public synchronized void allocateDatasetMemory(int datasetId) throws HyracksDataException {
+    private synchronized void allocateDatasetMemory(int datasetId) throws HyracksDataException {
         DatasetInfo dsInfo = datasetInfos.get(datasetId);
         if (dsInfo == null) {
-            throw new HyracksDataException("Failed to allocate memory for dataset with ID " + datasetId
-                    + " since it is not open.");
+            throw new HyracksDataException(
+                    "Failed to allocate memory for dataset with ID " + datasetId + " since it is not open.");
         }
         synchronized (dsInfo) {
             // This is not needed for external datasets' indexes since they never use the virtual buffer cache.
@@ -664,8 +666,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     private synchronized void deallocateDatasetMemory(int datasetId) throws HyracksDataException {
         DatasetInfo dsInfo = datasetInfos.get(datasetId);
         if (dsInfo == null) {
-            throw new HyracksDataException("Failed to deallocate memory for dataset with ID " + datasetId
-                    + " since it is not open.");
+            throw new HyracksDataException(
+                    "Failed to deallocate memory for dataset with ID " + datasetId + " since it is not open.");
         }
         synchronized (dsInfo) {
             if (dsInfo.isOpen && dsInfo.memoryAllocated) {
@@ -676,5 +678,12 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                 dsInfo.memoryAllocated = false;
             }
         }
+    }
+
+    @Override
+    public synchronized void allocateMemory(String resourceName) throws HyracksDataException {
+        //a resource name in the case of DatasetLifecycleManager is a dataset id which is passed to the ResourceHeapBufferAllocator.
+        int did = Integer.parseInt(resourceName);
+        allocateDatasetMemory(did);
     }
 }

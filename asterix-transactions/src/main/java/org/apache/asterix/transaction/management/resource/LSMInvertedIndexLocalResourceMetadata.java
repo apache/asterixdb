@@ -77,43 +77,28 @@ public class LSMInvertedIndexLocalResourceMetadata extends AbstractLSMLocalResou
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
         try {
             if (isPartitioned) {
-                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(
-                        virtualBufferCaches,
-                        runtimeContextProvider.getFileMapManager(),
-                        invListTypeTraits,
-                        invListCmpFactories,
-                        tokenTypeTraits,
-                        tokenCmpFactories,
-                        tokenizerFactory,
-                        runtimeContextProvider.getBufferCache(),
-                        filePath,
-                        runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                return InvertedIndexUtils.createPartitionedLSMInvertedIndex(virtualBufferCaches,
+                        runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
+                        tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
+                        filePath, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getDatasetLifecycleManager()),
-                        new BaseOperationTracker(runtimeContextProvider
-                                .getDatasetLifecycleManager(), datasetID,
-                                runtimeContextProvider.getDatasetLifecycleManager()
-                                        .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                        new BaseOperationTracker(datasetID,
+                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                        runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                         filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);
             } else {
-                return InvertedIndexUtils.createLSMInvertedIndex(
-                        virtualBufferCaches,
-                        runtimeContextProvider.getFileMapManager(),
-                        invListTypeTraits,
-                        invListCmpFactories,
-                        tokenTypeTraits,
-                        tokenCmpFactories,
-                        tokenizerFactory,
-                        runtimeContextProvider.getBufferCache(),
-                        filePath,
-                        runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+                return InvertedIndexUtils.createLSMInvertedIndex(virtualBufferCaches,
+                        runtimeContextProvider.getFileMapManager(), invListTypeTraits, invListCmpFactories,
+                        tokenTypeTraits, tokenCmpFactories, tokenizerFactory, runtimeContextProvider.getBufferCache(),
+                        filePath, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                         mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                                 runtimeContextProvider.getDatasetLifecycleManager()),
-                        new BaseOperationTracker(runtimeContextProvider.getDatasetLifecycleManager(), datasetID,
-                                runtimeContextProvider.getDatasetLifecycleManager()
-                                        .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                        new BaseOperationTracker(datasetID,
+                                runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                        runtimeContextProvider.getLSMIOScheduler(),
                         LSMInvertedIndexIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(),
                         invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                         filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, true);

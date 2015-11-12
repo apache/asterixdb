@@ -60,18 +60,14 @@ public class ExternalBTreeWithBuddyLocalResourceMetadata extends AbstractLSMLoca
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
-        return LSMBTreeUtils.createExternalBTreeWithBuddy(
-                file,
-                runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(),
-                typeTraits,
-                btreeCmpFactories,
+        return LSMBTreeUtils.createExternalBTreeWithBuddy(file, runtimeContextProvider.getBufferCache(),
+                runtimeContextProvider.getFileMapManager(), typeTraits, btreeCmpFactories,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                         runtimeContextProvider.getDatasetLifecycleManager()),
-                new BaseOperationTracker(runtimeContextProvider.getDatasetLifecycleManager(),
-                        datasetID, runtimeContextProvider.getDatasetLifecycleManager()
-                                .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                new BaseOperationTracker(datasetID,
+                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeWithBuddyIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), buddyBtreeFields, -1,
                 true);
     }

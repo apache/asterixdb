@@ -22,7 +22,6 @@ package org.apache.asterix.common.context;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
@@ -49,9 +48,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     private boolean flushOnExit = false;
     private boolean flushLogCreated = false;
 
-    public PrimaryIndexOperationTracker(IDatasetLifecycleManager datasetLifecycleManager, int datasetID,
-            ILogManager logManager, DatasetInfo dsInfo) {
-        super(datasetLifecycleManager, datasetID, dsInfo);
+    public PrimaryIndexOperationTracker(int datasetID, ILogManager logManager, DatasetInfo dsInfo) {
+        super(datasetID, dsInfo);
         this.logManager = logManager;
         this.numActiveOperations = new AtomicInteger();
     }
@@ -60,9 +58,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
-            if (!dsInfo.isMemoryAllocated()) {
-                datasetLifecycleManager.allocateDatasetMemory(dsInfo.getDatasetID());
-            }
             incrementNumActiveOperations(modificationCallback);
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
             dsInfo.declareActiveIOOperation();
@@ -81,7 +76,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     @Override
     public synchronized void completeOperation(ILSMIndex index, LSMOperationType opType,
             ISearchOperationCallback searchCallback, IModificationOperationCallback modificationCallback)
-            throws HyracksDataException {
+                    throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
             if (numActiveOperations.get() == 0) {

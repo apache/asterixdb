@@ -57,23 +57,16 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
             int partition) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
         try {
-            return LSMRTreeUtils.createExternalRTree(
-                    file,
-                    runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(),
-                    typeTraits,
-                    rtreeCmpFactories,
-                    btreeCmpFactories,
-                    valueProviderFactories,
-                    rtreePolicyType,
-                    runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+            return LSMRTreeUtils.createExternalRTree(file, runtimeContextProvider.getBufferCache(),
+                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
                             runtimeContextProvider.getDatasetLifecycleManager()),
-                    new BaseOperationTracker(runtimeContextProvider
-                            .getDatasetLifecycleManager(), datasetID, runtimeContextProvider
-                            .getDatasetLifecycleManager().getDatasetInfo(datasetID)), runtimeContextProvider
-                            .getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
-                            .createIOOperationCallback(), linearizeCmpFactory, btreeFields, -1, true);
+                    new BaseOperationTracker(datasetID,
+                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                    runtimeContextProvider.getLSMIOScheduler(),
+                    LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
+                    btreeFields, -1, true);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

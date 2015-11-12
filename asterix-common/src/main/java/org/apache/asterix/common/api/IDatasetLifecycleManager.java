@@ -37,13 +37,6 @@ public interface IDatasetLifecycleManager extends IIndexLifecycleManager {
     IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException;
 
     /**
-     * Allocates the memory budget of the dataset in the virtual buffer cache.
-     * @param datasetID
-     * @throws HyracksDataException
-     */
-    void allocateDatasetMemory(int datasetID) throws HyracksDataException;
-
-    /**
      * Flushes all open datasets synchronously.
      * @throws HyracksDataException
      */

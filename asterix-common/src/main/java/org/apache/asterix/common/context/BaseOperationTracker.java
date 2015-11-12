@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.context;
 
-import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.DatasetLifecycleManager.DatasetInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
@@ -29,12 +28,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public class BaseOperationTracker implements ILSMOperationTracker {
 
-    protected final IDatasetLifecycleManager datasetLifecycleManager;
     protected final int datasetID;
     protected final DatasetInfo dsInfo;
 
-    public BaseOperationTracker(IDatasetLifecycleManager datasetLifecycleManager, int datasetID, DatasetInfo dsInfo) {
-        this.datasetLifecycleManager = datasetLifecycleManager;
+    public BaseOperationTracker(int datasetID, DatasetInfo dsInfo) {
         this.datasetID = datasetID;
         this.dsInfo = dsInfo;
     }
