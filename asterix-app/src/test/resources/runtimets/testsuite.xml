@@ -1351,6 +1351,13 @@
         -->
     </test-group>
     <test-group name="dml">
+         <test-case FilePath="dml">
+            <compilation-unit name="insert-duplicated-keys-from-query">
+                <output-dir compare="Text">insert-duplicated-keys-from-query</output-dir>
+                <expected-error>org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException
+                </expected-error>
+            </compilation-unit>
+        </test-case>
         <test-case FilePath="dml">
             <compilation-unit name="compact-dataset-and-its-indexes">
                 <output-dir compare="Text">compact-dataset-and-its-indexes</output-dir>
