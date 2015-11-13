@@ -18,15 +18,15 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
-import java.io.PrintStream;
-
-import org.apache.asterix.formats.nontagged.AqlLosslessJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+
+import java.io.PrintStream;
 
 public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
@@ -46,9 +46,9 @@ public class ANullableFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws AlgebricksException {
-                nullPrinter = (AqlLosslessJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
+                nullPrinter = (AqlCleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
                         .createPrinter();
-                fieldPrinter = (AqlLosslessJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getNullableType()))
+                fieldPrinter = (AqlCleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getNullableType()))
                         .createPrinter();
             }
 

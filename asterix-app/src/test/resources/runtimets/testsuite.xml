@@ -6744,6 +6744,11 @@
                 <output-dir compare="Clean-JSON">int01-cleanjson</output-dir>
             </compilation-unit>
         </test-case>
+        <test-case FilePath="json">
+            <compilation-unit name="issue-ASTERIXDB-1165">
+                <output-dir compare="Clean-JSON">issue-ASTERIXDB-1165</output-dir>
+            </compilation-unit>
+        </test-case>
     </test-group>
     <test-group name="csv">
         <test-case FilePath="csv">
