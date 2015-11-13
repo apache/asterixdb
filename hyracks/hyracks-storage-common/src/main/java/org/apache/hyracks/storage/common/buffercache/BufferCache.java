@@ -20,12 +20,7 @@ package org.apache.hyracks.storage.common.buffercache;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -485,6 +480,49 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             }
         }
         return buffer.toString();
+    }
+
+    @Override
+    public boolean isClean(){
+        List<Long> reachableDpids = new LinkedList<>();
+        synchronized (cachedPages) {
+            for (ICachedPageInternal internalPage : cachedPages) {
+            CachedPage c = (CachedPage) internalPage;
+                if (c.confiscated() ||
+                        c.latch.getReadLockCount() != 0 || c.latch.getWriteHoldCount() != 0) {
+                    return false;
+                }
+                if(c.valid){
+                    reachableDpids.add(c.dpid);
+                }
+            }
+        }
+        for(Long l: reachableDpids){
+            if(!canFindValidCachedPage(l)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean canFindValidCachedPage(long dpid){
+        int hash = hash(dpid);
+        CachedPage cPage = null;
+        CacheBucket bucket = pageMap[hash];
+        bucket.bucketLock.lock();
+        try {
+            cPage = bucket.cachedPage;
+            while (cPage != null) {
+                assert bucket.cachedPage != bucket.cachedPage.next;
+                if (cPage.dpid == dpid) {
+                    return true;
+                }
+                cPage = cPage.next;
+            }
+        } finally {
+            bucket.bucketLock.unlock();
+        }
+        return false;
     }
 
     private void read(CachedPage cPage) throws HyracksDataException {
