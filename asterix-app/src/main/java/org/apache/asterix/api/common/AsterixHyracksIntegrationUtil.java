@@ -43,9 +43,9 @@ public class AsterixHyracksIntegrationUtil {
 
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
 
-    private static ClusterControllerService cc;
-    private static NodeControllerService[] ncs = new NodeControllerService[NODES];
-    private static IHyracksClientConnection hcc;
+    public static ClusterControllerService cc;
+    public static NodeControllerService[] ncs = new NodeControllerService[NODES];
+    public static IHyracksClientConnection hcc;
 
     public static void init() throws Exception {
         CCConfig ccConfig = new CCConfig();

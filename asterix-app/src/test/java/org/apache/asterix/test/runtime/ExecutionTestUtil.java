@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.config.AsterixPropertiesAccessor;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -32,6 +33,8 @@ import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
 
 public class ExecutionTestUtil {
 
@@ -87,7 +90,17 @@ public class ExecutionTestUtil {
         }
     }
 
+    private static void validateBufferCacheState() {
+        for(NodeControllerService nc: AsterixHyracksIntegrationUtil.ncs){
+            IAsterixAppRuntimeContext appCtx = (IAsterixAppRuntimeContext) nc.getApplicationContext().getApplicationObject();
+            if(!((BufferCache)appCtx.getBufferCache()).isClean()){
+                throw new IllegalStateException();
+            }
+        }
+    }
+
     public static void tearDown() throws Exception {
+        validateBufferCacheState();
         AsterixHyracksIntegrationUtil.deinit();
         File outdir = new File(PATH_ACTUAL);
         File[] files = outdir.listFiles();
