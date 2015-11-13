@@ -106,7 +106,9 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
                 return lastReadSender;
             }
             if (!failSenders.isEmpty()) {
-                throw new HyracksDataException("Failure occurred on input");
+                // Do not throw exception here to allow the root cause exception gets propagated to the master first.
+                // Return a negative value to allow the nextFrame(...) call to be a non-op.
+                return -1;
             }
             for (int i = eosSenders.nextSetBit(0); i >= 0; i = eosSenders.nextSetBit(i)) {
                 channels[i].close();
@@ -127,8 +129,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     }
 
     public synchronized void close() throws HyracksDataException {
-        for (int i = closedSenders.nextClearBit(0); i >= 0 && i < nSenderPartitions; i = closedSenders
-                .nextClearBit(i + 1)) {
+        for (int i = closedSenders.nextClearBit(0); i >= 0
+                && i < nSenderPartitions; i = closedSenders.nextClearBit(i + 1)) {
             if (channels[i] != null) {
                 channels[i].close();
                 channels[i] = null;

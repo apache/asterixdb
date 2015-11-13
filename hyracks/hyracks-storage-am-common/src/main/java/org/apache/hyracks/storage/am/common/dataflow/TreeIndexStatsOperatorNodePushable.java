@@ -70,9 +70,9 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             int indexFileId = fileMapProvider.lookupFileId(treeIndexHelper.getFileReference());
             statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getFreePageManager(), indexFileId,
                     treeIndex.getRootPageId());
-            TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(), treeIndex
-                    .getInteriorFrameFactory().createFrame(), treeIndex.getFreePageManager().getMetaDataFrameFactory()
-                    .createFrame());
+            TreeIndexStats stats = statsGatherer.gatherStats(treeIndex.getLeafFrameFactory().createFrame(),
+                    treeIndex.getInteriorFrameFactory().createFrame(),
+                    treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame());
             // Write the stats output as a single string field.
             FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
@@ -81,13 +81,13 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
             utf8SerDer.serialize(stats.toString(), dos);
             tb.addFieldEndOffset();
             if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                throw new HyracksDataException(
-                        "Record size (" + tb.getSize() + ") larger than frame size (" + appender.getBuffer().capacity()
-                                + ")");
+                throw new HyracksDataException("Record size (" + tb.getSize() + ") larger than frame size ("
+                        + appender.getBuffer().capacity() + ")");
             }
             appender.flush(writer, false);
         } catch (Exception e) {
             writer.fail();
+            throw new HyracksDataException(e);
         } finally {
             writer.close();
             treeIndexHelper.close();

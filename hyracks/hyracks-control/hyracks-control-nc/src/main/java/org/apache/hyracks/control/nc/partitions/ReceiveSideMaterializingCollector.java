@@ -138,7 +138,9 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                     } else if (eos.get()) {
                         break;
                     } else if (failed.get()) {
-                        throw new HyracksDataException("Failure occurred on input");
+                        // Sends failure notification to its downstream.
+                        // It's not supposed to throw exception here because it is on the failure notification channel.
+                        mpw.fail();
                     } else {
                         try {
                             synchronized (this) {
@@ -153,8 +155,8 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                 }
                 mpw.close();
                 channel.close();
-                delegate.addPartitions(Collections.singleton(new PartitionChannel(pid,
-                        new MaterializedPartitionInputChannel(1, pid, manager))));
+                delegate.addPartitions(Collections
+                        .singleton(new PartitionChannel(pid, new MaterializedPartitionInputChannel(1, pid, manager))));
             } catch (HyracksException e) {
             }
         }

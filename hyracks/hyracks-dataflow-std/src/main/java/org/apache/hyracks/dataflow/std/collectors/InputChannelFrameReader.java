@@ -57,7 +57,9 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
             }
         }
         if (failed) {
-            throw new HyracksDataException("Failure occurred on input");
+            // Do not throw exception here to allow the root cause exception gets propagated to the master first.
+            // Return false to allow the nextFrame(...) call to be a non-op.
+            return false;
         }
         if (availableFrames <= 0 && eos) {
             return false;
@@ -67,12 +69,13 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
     }
 
     /**
-     * This implementation works under the truth that one Channel is never shared by two readers.
+     * This implementation works under the truth that one Channel is neverNonDeterministicChannelReader shared by two readers.
      * More precisely, one channel only has exact one reader and one writer side.
      *
-     * @param frame outputFrame
+     * @param frame
+     *            outputFrame
      * @return {@code true} if succeed to read the data from the channel to the {@code frame}.
-     * Otherwise return {@code false} if the end of stream is reached.
+     *         Otherwise return {@code false} if the end of stream is reached.
      * @throws HyracksDataException
      */
     @Override
