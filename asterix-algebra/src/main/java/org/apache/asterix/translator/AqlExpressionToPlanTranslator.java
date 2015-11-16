@@ -68,8 +68,12 @@ import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.ChannelDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
+import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
@@ -82,6 +86,7 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.ExecuteProcedureStatement;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -1668,36 +1673,36 @@ public class AqlExpressionToPlanTranslator extends AbstractAqlTranslator
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitCreateChannelStatement(CreateChannelStatement del,
+    public Pair<ILogicalOperator, LogicalVariable> visit(ChannelUnsubscribeStatement channelUnsubscribeStatement,
+            Mutable<ILogicalOperator> arg) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(ChannelSubscribeStatement channelSubscribeStatement,
             Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitDropChannelStatement(ChannelDropStatement del,
+    public Pair<ILogicalOperator, LogicalVariable> visit(ChannelDropStatement channelDropStatement,
+            Mutable<ILogicalOperator> arg) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(ExecuteProcedureStatement executeProcedureStatement,
             Mutable<ILogicalOperator> arg) throws AsterixException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitChannelSubscribeStatement(ChannelSubscribeStatement del,
-            Mutable<ILogicalOperator> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitChannelUnsubscribeStatement(ChannelUnsubscribeStatement del,
-            Mutable<ILogicalOperator> arg) throws AsterixException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Pair<ILogicalOperator, LogicalVariable> visitExecuteProcedureStatement(ExecuteProcedureStatement ep,
-            Mutable<ILogicalOperator> arg) throws AsterixException {
+    public Pair<ILogicalOperator, LogicalVariable> visit(CreateChannelStatement createChannelStatement,
+            Mutable<ILogicalOperator> arg) {
         // TODO Auto-generated method stub
         return null;
     }

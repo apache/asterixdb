@@ -20,13 +20,12 @@ package org.apache.asterix.lang.common.statement;
 
 import java.util.List;
 
-import org.apache.asterix.aql.base.Expression;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.expression.visitor.IAqlExpressionVisitor;
-import org.apache.asterix.aql.expression.visitor.IAqlVisitorWithVoidReturn;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class ExecuteProcedureStatement implements Statement {
     private final FunctionSignature functionSignature;
@@ -60,13 +59,8 @@ public class ExecuteProcedureStatement implements Statement {
     }
 
     @Override
-    public <R, T> R accept(IAqlExpressionVisitor<R, T> visitor, T arg) throws AsterixException {
-        return visitor.visitExecuteProcedureStatement(this, arg);
-    }
-
-    @Override
-    public <T> void accept(IAqlVisitorWithVoidReturn<T> visitor, T arg) throws AsterixException {
-        visitor.visit(this, arg);
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws AsterixException {
+        return visitor.visit(this, arg);
     }
 
 }

@@ -24,8 +24,12 @@ import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.statement.ChannelDropStatement;
+import org.apache.asterix.lang.common.statement.ChannelSubscribeStatement;
+import org.apache.asterix.lang.common.statement.ChannelUnsubscribeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateChannelStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
@@ -38,6 +42,7 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.ExecuteProcedureStatement;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDropStatement;
@@ -213,4 +218,29 @@ public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisit
     public R visit(FeedPolicyDropStatement dfs, T arg) throws AsterixException {
         return null;
     }
+
+    @Override
+    public R visit(ChannelUnsubscribeStatement channelUnsubscribeStatement, T arg) {
+        return null;
+    };
+
+    @Override
+    public R visit(ChannelSubscribeStatement channelSubscribeStatement, T arg) throws AsterixException {
+        return null;
+    };
+
+    @Override
+    public R visit(ChannelDropStatement channelDropStatement, T arg) {
+        return null;
+    };
+
+    @Override
+    public R visit(ExecuteProcedureStatement executeProcedureStatement, T arg) throws AsterixException {
+        return null;
+    };
+
+    @Override
+    public R visit(CreateChannelStatement createChannelStatement, T arg) {
+        return null;
+    };
 }
