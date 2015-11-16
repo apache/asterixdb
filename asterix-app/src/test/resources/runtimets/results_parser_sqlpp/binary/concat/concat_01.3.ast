@@ -1,0 +1,68 @@
+DataverseUse test
+Query:
+OrderedListConstructor [
+  OperatorExpr [
+    FunctionCall test.binary-concat@1[
+      OrderedListConstructor [
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [259911]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [bb]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [31]
+        ]
+      ]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [AA259911bb31]
+    ]
+  ]
+  OperatorExpr [
+    FunctionCall test.binary-concat@1[
+      OrderedListConstructor [
+      ]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] []
+    ]
+  ]
+  FunctionCall test.binary-concat@1[
+    OrderedListConstructor [
+      LiteralExpr [NULL]
+    ]
+  ]
+  FunctionCall test.binary-concat@1[
+    OrderedListConstructor [
+      LiteralExpr [NULL]
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [55]
+      ]
+    ]
+  ]
+  FunctionCall test.binary-concat@1[
+    OrderedListConstructor [
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aa]
+      ]
+      LiteralExpr [NULL]
+    ]
+  ]
+  FunctionCall test.binary-concat@1[
+    OrderedListConstructor [
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aa]
+      ]
+      LiteralExpr [NULL]
+      FunctionCall test.base64@1[
+        LiteralExpr [STRING] [asdf]
+      ]
+    ]
+  ]
+]

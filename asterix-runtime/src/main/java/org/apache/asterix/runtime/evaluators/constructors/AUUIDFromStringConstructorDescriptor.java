@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -81,6 +82,8 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                     private long lsb = 0;
                     private long tmpLongValue = 0;
 
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         try {
@@ -88,14 +91,14 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
+                                utf8Ptr.set(serString, 1, outInput.getLength()-1);
                                 msb = 0;
                                 lsb = 0;
                                 tmpLongValue = 0;
 
-                                // first byte: tag, next two bytes: length, so
-                                // we add 3 bytes.
+                                // first byte: tag, next x bytes: length
+                                int offset = utf8Ptr.getCharStartOffset();
                                 // First part - 8 bytes
-                                int offset = 3;
                                 msb = calculateLongFromHex(serString, offset, 8);
                                 msb <<= 16;
                                 offset += 8;

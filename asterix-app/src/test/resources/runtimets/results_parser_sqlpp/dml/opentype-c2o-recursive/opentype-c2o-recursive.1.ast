@@ -1,0 +1,30 @@
+DataverseUse testdv2
+TypeDecl AddressType [
+  open RecordType {
+    street : string,
+    city : string
+  }
+]
+TypeDecl Dept [
+  open RecordType {
+    name : string,
+    id : int64
+  }
+]
+TypeDecl testtype [
+  closed RecordType {
+    name : string,
+    id : string,
+    address : AddressType?,
+    department : UnorderedList <Dept>
+?
+  }
+]
+TypeDecl testtype2 [
+  open RecordType {
+    name : string,
+    id : string
+  }
+]
+DatasetDecl testds(testtype) partitioned by [[id]]
+DatasetDecl testds2(testtype2) partitioned by [[id]]

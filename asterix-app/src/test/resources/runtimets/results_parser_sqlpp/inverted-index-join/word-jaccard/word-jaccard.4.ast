@@ -1,0 +1,73 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.similarity-jaccard@2[
+        FunctionCall test.word-tokens@1[
+          FieldAccessor [
+            Variable [ Name=a ]
+            Field=title
+          ]
+        ]
+        FunctionCall test.word-tokens@1[
+          FieldAccessor [
+            Variable [ Name=b ]
+            Field=title
+          ]
+        ]
+      ]
+      >=
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=b ]
+    Field=id
+  ]
+  ASC
+

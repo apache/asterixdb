@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.asterix.common.utils.UTF8CharSequence;
 import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
@@ -45,8 +44,10 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.hyracks.data.std.util.UTF8CharSequence;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
@@ -92,6 +93,7 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private ICopyEvaluator evalPattern = args[1].createEvaluator(array0);
                     private ByteArrayAccessibleOutputStream lastPattern = new ByteArrayAccessibleOutputStream();
                     private UTF8CharSequence carSeq = new UTF8CharSequence();
+                    private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
                     private IBinaryComparator strComp = AqlBinaryComparatorFactoryProvider.INSTANCE
                             .getBinaryComparatorFactory(BuiltinType.ASTRING, true).createBinaryComparator();
                     @SuppressWarnings("unchecked")
@@ -153,7 +155,8 @@ public class RegExpDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                         + ": expects type STRING/NULL for the second input argument but got "
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(array0.getByteArray()[0]));
                             }
-                            carSeq.reset(array0, 1);
+                            utf8Ptr.set(array0.getByteArray(), 1, array0.getLength() - 1);
+                            carSeq.reset(utf8Ptr);
                             if (newPattern) {
                                 matcher = pattern.matcher(carSeq);
                             } else {

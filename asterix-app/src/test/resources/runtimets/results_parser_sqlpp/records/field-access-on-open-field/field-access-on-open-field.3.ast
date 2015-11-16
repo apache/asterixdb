@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=a ]
+  Field=zip
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+LetVariable [ Name=a ]
+  :=
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=address
+  ]

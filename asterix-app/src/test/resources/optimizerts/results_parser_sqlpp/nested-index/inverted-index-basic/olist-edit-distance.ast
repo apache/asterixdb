@@ -1,0 +1,71 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerTypetmp [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    interests : OrderedList [string]
+,
+    children : OrderedList [          open RecordType {
+            name : string,
+            age : int32?
+          }
+]
+
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    nested : CustomerTypetmp
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
+DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
+WriteOutputTo nc1:rttest/inverted-index-basic_olist-edit-distance.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=c ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.edit-distance@2[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=nested
+        ]
+        Field=interests
+      ]
+      OrderedListConstructor [
+        LiteralExpr [STRING] [computers]
+        LiteralExpr [STRING] [wine]
+        LiteralExpr [STRING] [walking]
+      ]
+    ]
+    <=
+    LiteralExpr [LONG] [1]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=nested
+    ]
+    Field=cid
+  ]
+  ASC
+

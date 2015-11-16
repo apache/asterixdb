@@ -1,0 +1,33 @@
+DataverseUse test
+TypeDecl AddressType [
+  open RecordType {
+    number : int64,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerNestedType [
+  closed RecordType {
+    cid : int64,
+    name : string,
+    age : int64?,
+    address : AddressType?,
+    interests : OrderedList [string]
+,
+    children : OrderedList [          open RecordType {
+            name : string,
+            age : int64?
+          }
+]
+
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    nested : CustomerNestedType
+  }
+]
+DatasetDecl Customerstmp(CustomerNestedType) partitioned by [[cid]]
+DatasetDecl Customers2tmp(CustomerNestedType) partitioned by [[cid]]
+DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
+DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]

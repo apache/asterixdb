@@ -22,10 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -34,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -70,10 +70,12 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     protected Mutable<ILogicalOperator> selectRef = null;
     protected SelectOperator select = null;
     protected AbstractFunctionCallExpression selectCond = null;
+    protected IVariableTypeEnvironment typeEnvironment = null;
     protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
+
     static {
         registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
@@ -93,7 +95,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         // Analyze select condition.
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new HashMap<IAccessMethod, AccessMethodAnalysisContext>();
-        if (!analyzeCondition(selectCond, subTree.assignsAndUnnests, analyzedAMs)) {
+        if (!analyzeCondition(selectCond, subTree.assignsAndUnnests, analyzedAMs, context, typeEnvironment)) {
             return false;
         }
 
@@ -103,7 +105,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         }
 
         fillSubTreeIndexExprs(subTree, analyzedAMs, context);
-        pruneIndexCandidates(analyzedAMs);
+        pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
 
         // Choose index to be applied.
         Pair<IAccessMethod, Index> chosenIndex = chooseIndex(analyzedAMs);
@@ -135,6 +137,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         // Set and analyze select.
         selectRef = opRef;
         select = (SelectOperator) op1;
+
+        typeEnvironment = context.getOutputTypeEnvironment(op1);
         // Check that the select's condition is a function call.
         ILogicalExpression condExpr = select.getCondition().getValue();
         if (condExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {

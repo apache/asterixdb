@@ -1,0 +1,24 @@
+DataverseUse test
+Query:
+SELECT [
+FieldAccessor [
+  Variable [ Name=s ]
+  Field=sensor
+]
+sensor
+Variable [ Name=r ]
+reading
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [sensors]
+  ]
+  AS
+  Variable [ Name=s ]
+,
+  FieldAccessor [
+    Variable [ Name=s ]
+    Field=readings
+  ]
+  AS
+  Variable [ Name=r ]
+]

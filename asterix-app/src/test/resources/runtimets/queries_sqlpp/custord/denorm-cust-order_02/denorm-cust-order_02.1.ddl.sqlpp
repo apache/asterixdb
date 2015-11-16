@@ -1,0 +1,68 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.AddressType as
+{
+  number : int64,
+  street : string,
+  city : string
+}
+
+create type test.CustomerType as
+{
+  cid : int64,
+  name : string,
+  age : int64?,
+  address : AddressType?,
+  lastorder : {
+      oid : int64,
+      total : float
+  }
+
+}
+
+create type test.OrderType as
+{
+  oid : int64,
+  cid : int64,
+  orderstatus : string,
+  orderpriority : string,
+  clerk : string,
+  total : float
+}
+
+create type test.CustomerOrdersType as
+{
+  cid : int64,
+  cust : CustomerType,
+  orders : [OrderType]
+}
+
+create  table Customers2(CustomerType) primary key cid;
+
+create  table Orders2(OrderType) primary key oid;
+
+create  table CustomerOrders2(CustomerOrdersType) primary key cid;
+

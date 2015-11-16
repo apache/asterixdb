@@ -72,13 +72,13 @@ public class InvertedIndexJobGenParams extends AccessMethodJobGenParams {
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         super.writeToFuncArgs(funcArgs);
         // Write search modifier type.
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchModifierType
-                .ordinal())));
+        funcArgs.add(new MutableObject<ILogicalExpression>(
+                AccessMethodUtils.createInt32Constant(searchModifierType.ordinal())));
         // Write similarity threshold.
         funcArgs.add(new MutableObject<ILogicalExpression>(new ConstantExpression(similarityThreshold)));
         // Write search key type.
-        funcArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchKeyType
-                .ordinal())));
+        funcArgs.add(
+                new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(searchKeyType.ordinal())));
         // Write key var list.
         writeVarList(keyVarList, funcArgs);
         // Write non-key var list.

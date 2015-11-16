@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary btree index in index subtree.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+use test;
+
+
+load  table TweetMessagesTmp using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter" (("path"="nc1://data/twitter/tw_for_indexleftouterjoin.adm"),("format"="adm"));
+
+insert into TweetMessages
+select element {'nested':c}
+from  TweetMessagesTmp as c
+where (c.tweetid < test.int64('125'))
+;
+insert into TweetMessages
+select element {'nested':{'tweetid':c.tweetid,'user':c.user,'sender-location':c."sender-location",'send-time':c."send-time",'referred-topics':c."referred-topics",'message-text':c."message-text",'countA':c.countA}}
+from  TweetMessagesTmp as c
+where (c.tweetid >= test.int64('125'))
+;

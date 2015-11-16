@@ -20,6 +20,7 @@ package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 
@@ -34,7 +35,8 @@ public class ADatePrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        // QQQ should be supported - issue 833
-        throw new AlgebricksException("'Date' type unsupported for CSV output");
+        ps.print("\"");
+        PrintTools.printDateString(b, s, l, ps);
+        ps.print("\"");
     }
 }

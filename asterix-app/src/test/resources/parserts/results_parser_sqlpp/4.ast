@@ -1,0 +1,67 @@
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [similar_sigs]
+    :
+    Variable [ Name=similar_sigs ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [SIGroup]
+  ]
+  AS
+  Variable [ Name=sig ]
+]
+LetVariable [ Name=similar_sigs ]
+  :=
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sig_name]
+        :
+        FieldAccessor [
+          Variable [ Name=similar_sig ]
+          Field=name
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [SIGroup]
+      ]
+      AS
+      Variable [ Name=similar_sig ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          Variable [ Name=similar_sig ]
+          !=
+          Variable [ Name=sig ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=similar_sig ]
+            Field=interests
+          ]
+          ~=
+          FieldAccessor [
+            Variable [ Name=sig ]
+            Field=interests
+          ]
+        ]
+      ]
+  )
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=sig ]
+      Field=name
+    ]
+    =
+    LiteralExpr [STRING] [Movie-Watchers]
+  ]

@@ -1,0 +1,76 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [user]
+    :
+    Variable [ Name=user ]
+  )
+  (
+    LiteralExpr [STRING] [visitor]
+    :
+    Variable [ Name=visitor ]
+  )
+  (
+    LiteralExpr [STRING] [user-lottery_numbers-len]
+    :
+    FunctionCall test.len@1[
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=lottery_numbers
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [visitor-lottery_numbers-len]
+    :
+    FunctionCall test.len@1[
+      FieldAccessor [
+        Variable [ Name=visitor ]
+        Field=lottery_numbers
+      ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Users]
+  ]
+  AS
+  Variable [ Name=user ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Visitors]
+  ]
+  AS
+  Variable [ Name=visitor ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.len@1[
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=lottery_numbers
+      ]
+    ]
+    =
+    FunctionCall test.len@1[
+      FieldAccessor [
+        Variable [ Name=visitor ]
+        Field=lottery_numbers
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=user ]
+    Field=uid
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=visitor ]
+    Field=vid
+  ]
+  ASC
+

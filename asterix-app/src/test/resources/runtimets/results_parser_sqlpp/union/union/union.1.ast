@@ -1,0 +1,13 @@
+DataverseUse TinySocial
+TypeDecl FacebookUserType [
+  open RecordType {
+    id : int64
+  }
+]
+TypeDecl FacebookMessageType [
+  open RecordType {
+    message_id : int64
+  }
+]
+DatasetDecl FacebookUsers(FacebookUserType) partitioned by [[id]]
+DatasetDecl FacebookMessages(FacebookMessageType) partitioned by [[message_id]]

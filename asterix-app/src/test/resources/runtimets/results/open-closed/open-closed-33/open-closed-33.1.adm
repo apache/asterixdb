@@ -1,4 +1,3 @@
-[ {{ "hiking", "scuba", "painting", "biking" }}
-, {{ "tennis", "scuba", "running", "biking" }}
-, {{ "gardening", "biking", "reading", "hiking", "fishing" }}
- ]
+{{ "hiking", "scuba", "painting", "biking" }}
+{{ "tennis", "scuba", "running", "biking" }}
+{{ "gardening", "biking", "reading", "hiking", "fishing" }}

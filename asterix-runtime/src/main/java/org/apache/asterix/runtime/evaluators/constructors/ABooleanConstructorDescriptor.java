@@ -40,6 +40,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -65,8 +66,8 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
                     private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(outInput);
                     private String errorMessage = "This can not be an instance of boolean";
-                    private final byte[] TRUE = { 0, 4, 't', 'r', 'u', 'e' };
-                    private final byte[] FALSE = { 0, 5, 'f', 'a', 'l', 's', 'e' };
+                    private final byte[] TRUE = UTF8StringUtil.writeStringToBytes("true");
+                    private final byte[] FALSE = UTF8StringUtil.writeStringToBytes("false");
                     IBinaryComparator utf8BinaryComparator = AqlBinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
                             .createBinaryComparator();
                     @SuppressWarnings("unchecked")
@@ -84,11 +85,12 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                if (utf8BinaryComparator.compare(serString, 1, outInput.getLength(), TRUE, 0, 6) == 0) {
+                                if (utf8BinaryComparator
+                                        .compare(serString, 1, outInput.getLength(), TRUE, 0, TRUE.length) == 0) {
                                     booleanSerde.serialize(ABoolean.TRUE, out);
                                     return;
                                 } else if (utf8BinaryComparator
-                                        .compare(serString, 1, outInput.getLength(), FALSE, 0, 7) == 0) {
+                                        .compare(serString, 1, outInput.getLength(), FALSE, 0, FALSE.length) == 0) {
                                     booleanSerde.serialize(ABoolean.FALSE, out);
                                     return;
                                 } else

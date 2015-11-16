@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
+import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILockManager;
@@ -28,6 +30,7 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
+import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
 import org.apache.asterix.transaction.management.service.recovery.CheckpointThread;
 import org.apache.asterix.transaction.management.service.recovery.RecoveryManager;
 
@@ -52,11 +55,24 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.txnProperties = txnProperties;
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(this);
-        this.logManager = new LogManager(this);
+
+        AsterixReplicationProperties asterixReplicationProperties = null;
+        if (asterixAppRuntimeContextProvider != null) {
+            asterixReplicationProperties = ((IAsterixPropertiesProvider) asterixAppRuntimeContextProvider
+                    .getAppContext()).getReplicationProperties();
+        }
+
+        if (asterixReplicationProperties != null && asterixReplicationProperties.isReplicationEnabled()) {
+            this.logManager = new LogManagerWithReplication(this);
+        } else {
+            this.logManager = new LogManager(this);
+        }
+
         this.recoveryManager = new RecoveryManager(this);
+
         if (asterixAppRuntimeContextProvider != null) {
             this.checkpointThread = new CheckpointThread(recoveryManager,
-                    asterixAppRuntimeContextProvider.getIndexLifecycleManager(),logManager,
+                    asterixAppRuntimeContextProvider.getDatasetLifecycleManager(),logManager,
                     this.txnProperties.getCheckpointLSNThreshold(), this.txnProperties.getCheckpointPollFrequency());
             this.checkpointThread.start();
         } else {

@@ -20,7 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.HashMap;
 
-import org.apache.asterix.aql.expression.VariableExpr;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 

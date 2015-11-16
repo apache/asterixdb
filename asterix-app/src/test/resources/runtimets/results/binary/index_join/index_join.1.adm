@@ -1,11 +1,10 @@
-[ { "cid": 1, "oid": 1 }
-, { "cid": 2, "oid": 2 }
-, { "cid": 3, "oid": 3 }
-, { "cid": 4, "oid": 4 }
-, { "cid": 5, "oid": 5 }
-, { "cid": 6, "oid": 6 }
-, { "cid": 7, "oid": 7 }
-, { "cid": 8, "oid": 8 }
-, { "cid": 9, "oid": 9 }
-, { "cid": 10, "oid": 10 }
- ]
+{ "cid": 1, "oid": 1 }
+{ "cid": 2, "oid": 2 }
+{ "cid": 3, "oid": 3 }
+{ "cid": 4, "oid": 4 }
+{ "cid": 5, "oid": 5 }
+{ "cid": 6, "oid": 6 }
+{ "cid": 7, "oid": 7 }
+{ "cid": 8, "oid": 8 }
+{ "cid": 9, "oid": 9 }
+{ "cid": 10, "oid": 10 }

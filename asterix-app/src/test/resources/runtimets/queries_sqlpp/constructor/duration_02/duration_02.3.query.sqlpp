@@ -1,0 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : test sub type duration (year-month-duration and day-time-duration) constructors 
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * issue        : 363
+ */
+
+use test;
+
+
+{'duration1':test."year-month-duration"('P30Y10M'),'duration2':test."day-time-duration"('P25DT13H12M50S'),'duration3':test."day-time-duration"('PT13H12M50S'),'duration4':test."year-month-duration"('P30Y'),'duration5':test."day-time-duration"('PT13H'),'duration6':test."year-month-duration"('-P30Y10M'),'duration7':test."day-time-duration"('-P25DT13H12M50S'),'duration8':test."day-time-duration"('-PT13H50S'),'duration9':test."day-time-duration"('P120D'),'duration10':test."year-month-duration"('-P28M'),'duration11':test."day-time-duration"('PT29M90.937S'),'duration12':test."year-month-duration"('P300Y15M')};

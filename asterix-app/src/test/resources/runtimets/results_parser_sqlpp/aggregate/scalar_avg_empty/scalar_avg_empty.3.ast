@@ -1,0 +1,7 @@
+Query:
+SELECT ELEMENT [
+FunctionCall null.avg@1[
+  OrderedListConstructor [
+  ]
+]
+]

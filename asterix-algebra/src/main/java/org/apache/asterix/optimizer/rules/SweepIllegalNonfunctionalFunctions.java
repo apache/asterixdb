@@ -21,7 +21,6 @@ package org.apache.asterix.optimizer.rules;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -76,7 +75,8 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -100,8 +100,8 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 if (!expr.isFunctional()) {
                     AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-                    throw new AlgebricksException("Found non-functional function " + fce.getFunctionIdentifier()
-                            + " in op " + op);
+                    throw new AlgebricksException(
+                            "Found non-functional function " + fce.getFunctionIdentifier() + " in op " + op);
                 }
             }
         }
@@ -291,10 +291,10 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
         }
 
         @Override
-        public Void visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg) throws AlgebricksException {
+        public Void visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg)
+                throws AlgebricksException {
             return null;
         }
-
     }
 
 }

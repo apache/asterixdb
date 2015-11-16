@@ -1,0 +1,91 @@
+DataverseUse fuzzyjoin
+Set simthreshold=.5f
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [dblp]
+    :
+    Variable [ Name=dblp ]
+  )
+  (
+    LiteralExpr [STRING] [csx]
+    :
+    Variable [ Name=csx ]
+  )
+  (
+    LiteralExpr [STRING] [dblp2]
+    :
+    Variable [ Name=dblp2 ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=dblp ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=csx ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=dblp2 ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall fuzzyjoin.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=dblp ]
+          Field=title
+        ]
+      ]
+      ~=
+      FunctionCall fuzzyjoin.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=csx ]
+          Field=title
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall fuzzyjoin.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=csx ]
+          Field=authors
+        ]
+      ]
+      ~=
+      FunctionCall fuzzyjoin.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=dblp2 ]
+          Field=authors
+        ]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=dblp ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=csx ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=dblp2 ]
+    Field=id
+  ]
+  ASC
+

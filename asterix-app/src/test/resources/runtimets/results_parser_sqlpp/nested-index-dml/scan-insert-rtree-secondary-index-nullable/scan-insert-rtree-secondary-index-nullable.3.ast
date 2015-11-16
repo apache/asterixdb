@@ -1,0 +1,2 @@
+DataverseUse test
+DatasetDecl MyMiniData(MyMiniRecord) partitioned by [[nested, id]]

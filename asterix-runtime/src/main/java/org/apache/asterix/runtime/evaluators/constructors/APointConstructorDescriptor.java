@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -72,6 +73,7 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -81,7 +83,8 @@ public class APointConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                String s = new String(serString, 3, outInput.getLength() - 3, "UTF-8");
+                                utf8Ptr.set(serString, 1, outInput.getLength()-1);
+                                String s = utf8Ptr.toString();
                                 aPoint.setValue(Double.parseDouble(s.substring(0, s.indexOf(','))),
                                         Double.parseDouble(s.substring(s.indexOf(',') + 1, s.length())));
                                 pointSerde.serialize(aPoint, out);

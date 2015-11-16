@@ -1,0 +1,62 @@
+DataverseUse test
+Set import-private-functions=true
+TypeDecl DBLPType [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/inverted-index-complex_ngram-jaccard-check-multi-let.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [Paper]
+    :
+    Variable [ Name=paper_tokens ]
+  )
+  (
+    LiteralExpr [STRING] [Query]
+    :
+    Variable [ Name=query_tokens ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+]
+LetVariable [ Name=paper_tokens ]
+  :=
+  FunctionCall test.gram-tokens@3[
+    FieldAccessor [
+      Variable [ Name=paper ]
+      Field=title
+    ]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [FALSE]
+  ]
+LetVariable [ Name=query_tokens ]
+  :=
+  FunctionCall test.gram-tokens@3[
+    LiteralExpr [STRING] [Transactions for Cooperative Environments]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [FALSE]
+  ]
+LetVariable [ Name=jacc ]
+  :=
+  FunctionCall test.similarity-jaccard-check@3[
+    Variable [ Name=paper_tokens ]
+    Variable [ Name=query_tokens ]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+Where
+  IndexAccessor [
+    Variable [ Name=jacc ]
+    Index:     Variable [ Name=jacc ]
+  ]

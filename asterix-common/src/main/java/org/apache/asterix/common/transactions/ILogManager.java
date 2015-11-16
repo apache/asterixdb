@@ -18,40 +18,71 @@
  */
 package org.apache.asterix.common.transactions;
 
+import java.io.IOException;
+
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.replication.IReplicationManager;
 
 public interface ILogManager {
 
     /**
      * Submits a logRecord to log Manager which appends it to the log tail
+     * 
      * @param logRecord
      * @throws ACIDException
      */
     public void log(ILogRecord logRecord) throws ACIDException;
 
     /**
-     * 
      * @param isRecoveryMode
      * @returnLogReader instance which enables reading the log files
      */
     public ILogReader getLogReader(boolean isRecoveryMode);
-    
+
     /**
-     * 
      * @return the last LSN the log manager used
      */
-    public long getAppendLSN(); 
-    
+    public long getAppendLSN();
+
     /**
      * Deletes all log partitions which have a maximum LSN less than checkpointLSN
+     * 
      * @param checkpointLSN
      */
     public void deleteOldLogFiles(long checkpointLSN);
-    
+
     /**
-     * 
      * @return the smallest readable LSN on the current log partitions
      */
     public long getReadableSmallestLSN();
+
+    /**
+     * @return The local NC ID
+     */
+    public String getNodeId();
+
+    /**
+     * Delete all log files and start new log partition > LSNtoStartFrom
+     * 
+     * @param LSNtoStartFrom
+     * @throws IOException
+     */
+    public void renewLogFilesAndStartFromLSN(long LSNtoStartFrom) throws IOException;
+
+    /**
+     * @return the log page size in bytes
+     */
+    public int getLogPageSize();
+
+    /**
+     * @param replicationManager
+     *            the replication manager to be used to replicate logs
+     */
+    public void setReplicationManager(IReplicationManager replicationManager);
+
+    /**
+     * @return the number of log pages
+     */
+    public int getNumLogPages();
 
 }

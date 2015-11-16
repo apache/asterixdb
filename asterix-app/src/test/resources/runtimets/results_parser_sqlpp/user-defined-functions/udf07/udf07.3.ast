@@ -1,0 +1,5 @@
+DataverseUse test
+Query:
+FunctionCall test.echo@1[
+  LiteralExpr [FLOAT] [1234.1]
+]

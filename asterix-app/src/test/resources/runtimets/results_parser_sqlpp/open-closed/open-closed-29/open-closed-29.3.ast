@@ -1,0 +1,35 @@
+DataverseUse testdv2
+Query:
+SELECT ELEMENT [
+Variable [ Name=d ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds01]
+  ]
+  AS
+  Variable [ Name=d ]
+]
+Where
+  QuantifiedExpression SOME [
+    [Variable [ Name=h ]
+    In
+      FieldAccessor [
+        Variable [ Name=d ]
+        Field=hobbies
+      ]
+    ]
+    Satifies [
+      OperatorExpr [
+        Variable [ Name=h ]
+        =
+        LiteralExpr [STRING] [hiking]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=d ]
+    Field=id
+  ]
+  ASC
+

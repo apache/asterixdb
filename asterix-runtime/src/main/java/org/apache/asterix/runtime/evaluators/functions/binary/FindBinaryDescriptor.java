@@ -41,24 +41,29 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override public IFunctionDescriptor createFunctionDescriptor() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
             return new FindBinaryDescriptor();
         }
     };
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.FIND_BINARY;
     }
 
     private static final ATypeTag[] EXPECTED_INPUT_TAG = { ATypeTag.BINARY, ATypeTag.BINARY };
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
                     throws AlgebricksException {
                 return new AbstractFindBinaryCopyEvaluator(output, args, getIdentifier().getName()) {
-                    @Override protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
+                    @Override
+                    protected int getFromOffset(IFrameTupleReference tuple) throws AlgebricksException {
                         return 0;
                     }
                 };
@@ -76,12 +81,15 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
 
         protected String functionName;
         protected AMutableInt64 result = new AMutableInt64(-1);
+        protected final ByteArrayPointable textPtr = new ByteArrayPointable();
+        protected final ByteArrayPointable wordPtr = new ByteArrayPointable();
 
         @SuppressWarnings("unchecked")
         protected ISerializerDeserializer<AInt64> intSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.AINT64);
 
-        @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        @Override
+        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
             ATypeTag textTag = evaluateTuple(tuple, 0);
             ATypeTag wordTag = evaluateTuple(tuple, 1);
             int fromOffset = getFromOffset(tuple);
@@ -93,11 +101,12 @@ public class FindBinaryDescriptor extends AbstractScalarFunctionDynamicDescripto
                 checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAG, textTag,
                         wordTag);
 
-                byte[] textBytes = storages[0].getByteArray();
-                byte[] wordBytes = storages[1].getByteArray();
-                int textLength = ByteArrayPointable.getLength(textBytes, 1);
-                int wordLength = ByteArrayPointable.getLength(wordBytes, 1);
-                result.setValue(1 + indexOf(textBytes, 3, textLength, wordBytes, 3, wordLength, fromOffset));
+                textPtr.set(storages[0].getByteArray(), 1, storages[0].getLength() - 1);
+                wordPtr.set(storages[1].getByteArray(), 1, storages[1].getLength() - 1);
+                result.setValue(
+                        1 + indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(), textPtr.getContentLength(),
+                                wordPtr.getByteArray(), wordPtr.getContentStartOffset(), wordPtr.getContentLength(),
+                                fromOffset));
                 intSerde.serialize(result, dataOutput);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);

@@ -1,0 +1,55 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [line0]
+    :
+    OperatorExpr [
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+      >
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line1]
+    :
+    OperatorExpr [
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+      <
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line2]
+    :
+    OperatorExpr [
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+      >=
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line3]
+    :
+    OperatorExpr [
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+      <=
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+    ]
+  )
+]

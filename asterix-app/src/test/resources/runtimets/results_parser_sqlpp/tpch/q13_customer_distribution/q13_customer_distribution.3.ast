@@ -1,0 +1,147 @@
+DataverseUse tpch
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c_count]
+    :
+    Variable [ Name=c_count ]
+  )
+  (
+    LiteralExpr [STRING] [custdist]
+    :
+    Variable [ Name=custdist ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [c_custkey]
+        :
+        Variable [ Name=c_custkey ]
+      )
+      (
+        LiteralExpr [STRING] [c_count]
+        :
+        FunctionCall tpch.sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=o_orderkey_count
+            ]
+            ]
+            FROM [              Variable [ Name=co ]
+              AS
+              Variable [ Name=i ]
+            ]
+          )
+        ]
+      )
+    ]
+    ]
+    FROM [      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [c_custkey]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_custkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [o_orderkey_count]
+            :
+            FunctionCall tpch.count@1[
+              (
+                SELECT ELEMENT [
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_orderkey
+                ]
+                ]
+                FROM [                  FunctionCall Metadata.dataset@1[
+                    LiteralExpr [STRING] [Orders]
+                  ]
+                  AS
+                  Variable [ Name=o ]
+                ]
+                Where
+                  OperatorExpr [
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=c ]
+                        Field=c_custkey
+                      ]
+                      =
+                      FieldAccessor [
+                        Variable [ Name=o ]
+                        Field=o_custkey
+                      ]
+                    ]
+                    and
+                    FunctionCall tpch.not@1[
+                      FunctionCall tpch.like@2[
+                        FieldAccessor [
+                          Variable [ Name=o ]
+                          Field=o_comment
+                        ]
+                        LiteralExpr [STRING] [%special%requests%]
+                      ]
+                    ]
+                  ]
+              )
+            ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Customer]
+          ]
+          AS
+          Variable [ Name=c ]
+        ]
+      )
+      AS
+      Variable [ Name=co ]
+    ]
+    Groupby
+      Variable [ Name=c_custkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=co ]
+        Field=c_custkey
+      ]
+      With
+      Variable [ Name=co ]
+
+  )
+  AS
+  Variable [ Name=gco ]
+]
+Groupby
+  Variable [ Name=c_count ]
+  :=
+  FieldAccessor [
+    Variable [ Name=gco ]
+    Field=c_count
+  ]
+  With
+  Variable [ Name=gco ]
+
+LetVariable [ Name=custdist ]
+  :=
+  FunctionCall tpch.count@1[
+    Variable [ Name=gco ]
+  ]
+Orderby
+  Variable [ Name=custdist ]
+  DESC
+  Variable [ Name=c_count ]
+  DESC
+

@@ -1,0 +1,14 @@
+DataverseUse testdvt
+TypeDecl testtype [
+  open RecordType {
+    id : string,
+    dateField : date?,
+    timeField : time?,
+    datetimeField : datetime?,
+    durationField : duration?,
+    intervalField : interval?,
+    yearMonthDurationField : year-month-duration?,
+    dayTimeDurationField : day-time-duration?
+  }
+]
+DatasetDecl testds(testtype)is an external dataset

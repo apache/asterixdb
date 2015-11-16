@@ -18,17 +18,17 @@
  */
 package org.apache.asterix.transaction.management.service.locking;
 
+import static org.mockito.Mockito.mock;
+
 import java.util.List;
 import java.util.concurrent.Executors;
 
 import org.apache.asterix.common.api.AsterixThreadExecutor;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.api.IIndex;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
@@ -40,7 +40,7 @@ import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
 
     AsterixThreadExecutor ate = new AsterixThreadExecutor(Executors.defaultThreadFactory());
-    IIndexLifecycleManager ilm = new IndexLifecycleManager();
+    IDatasetLifecycleManager dlcm = mock(IDatasetLifecycleManager.class);
 
     @Override
     public AsterixThreadExecutor getThreadExecutor() {
@@ -63,8 +63,8 @@ class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
     }
 
     @Override
-    public IIndexLifecycleManager getIndexLifecycleManager() {
-        return ilm;
+    public IDatasetLifecycleManager getDatasetLifecycleManager() {
+        return dlcm;
     }
 
     @Override
@@ -105,42 +105,5 @@ class TestRuntimeContextProvider implements IAsterixAppRuntimeContextProvider {
     @Override
     public IAsterixAppRuntimeContext getAppContext() {
         throw new UnsupportedOperationException();
-    }
-
-    static class IndexLifecycleManager implements IIndexLifecycleManager {
-        @Override
-        public List<IIndex> getOpenIndexes() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void register(String resourceName, IIndex index) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void open(String resourceName) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void close(String resourceName) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IIndex getIndex(String resourceName) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void unregister(String resourceName) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public IIndex getIndex(int datasetID, long resourceID) throws HyracksDataException {
-            throw new UnsupportedOperationException();
-        }
     }
 }

@@ -1,0 +1,23 @@
+DataverseUse test
+TypeDecl AddressType [
+  open RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int64,
+    name : string,
+    cashBack : int64,
+    age : int64?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int64,
+        total : float
+      }
+
+  }
+]
+DatasetDecl Customers(CustomerType)is an external dataset

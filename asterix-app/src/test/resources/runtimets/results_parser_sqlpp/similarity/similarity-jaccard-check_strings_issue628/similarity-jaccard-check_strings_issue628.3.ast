@@ -1,0 +1,81 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=v1 ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [query]
+    LiteralExpr [STRING] [processing]
+    LiteralExpr [STRING] [in]
+    LiteralExpr [STRING] [multidatabase]
+    LiteralExpr [STRING] [systems]
+  ]
+LetVariable [ Name=v2 ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [query]
+    LiteralExpr [STRING] [processing]
+    LiteralExpr [STRING] [in]
+    LiteralExpr [STRING] [object]
+    LiteralExpr [STRING] [oriented]
+    LiteralExpr [STRING] [database]
+    LiteralExpr [STRING] [systems]
+  ]
+LetVariable [ Name=v3 ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [dynamic]
+    LiteralExpr [STRING] [query]
+    LiteralExpr [STRING] [optimization]
+    LiteralExpr [STRING] [and]
+    LiteralExpr [STRING] [query]
+    LiteralExpr [STRING] [processing]
+    LiteralExpr [STRING] [in]
+    LiteralExpr [STRING] [multidatabase]
+    LiteralExpr [STRING] [systems]
+    LiteralExpr [STRING] [1]
+  ]
+LetVariable [ Name=v4 ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [transaction]
+    LiteralExpr [STRING] [management]
+    LiteralExpr [STRING] [in]
+    LiteralExpr [STRING] [multidatabase]
+    LiteralExpr [STRING] [systems]
+  ]
+LetVariable [ Name=v5 ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [overview]
+    LiteralExpr [STRING] [of]
+    LiteralExpr [STRING] [multidatabase]
+    LiteralExpr [STRING] [transaction]
+    LiteralExpr [STRING] [management]
+  ]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=v1 ]
+      Variable [ Name=v2 ]
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=v1 ]
+      Variable [ Name=v3 ]
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=v4 ]
+      Variable [ Name=v5 ]
+      LiteralExpr [FLOAT] [0.5]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

@@ -1,0 +1,192 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+TypeDecl PartSuppType [
+  closed RecordType {
+    ps_partkey : int32,
+    ps_suppkey : int32,
+    ps_availqty : int32,
+    ps_supplycost : double,
+    ps_comment : string
+  }
+]
+DatasetDecl LineItems(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
+DatasetDecl PartSupp(PartSuppType) partitioned by [[ps_partkey], [ps_suppkey]]
+WriteOutputTo nc1:/tmp/nested_loj.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cust]
+    :
+    Variable [ Name=c ]
+  )
+  (
+    LiteralExpr [STRING] [orders]
+    :
+    Variable [ Name=orders ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=orders ]
+  :=
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [order]
+        :
+        Variable [ Name=o ]
+      )
+      (
+        LiteralExpr [STRING] [items]
+        :
+        Variable [ Name=items ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Orders]
+      ]
+      AS
+      Variable [ Name=o ]
+    ]
+    LetVariable [ Name=items ]
+      :=
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [item]
+            :
+            Variable [ Name=l ]
+          )
+          (
+            LiteralExpr [STRING] [part_supplier]
+            :
+            Variable [ Name=partsupp ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [LineItems]
+          ]
+          AS
+          Variable [ Name=l ]
+        ]
+        LetVariable [ Name=partsupp ]
+          :=
+          (
+            SELECT ELEMENT [
+            Variable [ Name=ps ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [PartSupp]
+              ]
+              AS
+              Variable [ Name=ps ]
+            ]
+            Where
+              OperatorExpr [
+                OperatorExpr [
+                  FieldAccessor [
+                    Variable [ Name=ps ]
+                    Field=ps_partkey
+                  ]
+                  =
+                  FieldAccessor [
+                    Variable [ Name=l ]
+                    Field=l_partkey
+                  ]
+                ]
+                and
+                OperatorExpr [
+                  FieldAccessor [
+                    Variable [ Name=ps ]
+                    Field=ps_suppkey
+                  ]
+                  =
+                  FieldAccessor [
+                    Variable [ Name=l ]
+                    Field=l_suppkey
+                  ]
+                ]
+              ]
+          )
+        Where
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=l ]
+              Field=l_orderkey
+            ]
+            =
+            FieldAccessor [
+              Variable [ Name=o ]
+              Field=o_orderkey
+            ]
+          ]
+      )
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=o_custkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_custkey
+        ]
+      ]
+  )

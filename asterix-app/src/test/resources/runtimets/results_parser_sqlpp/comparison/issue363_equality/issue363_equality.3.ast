@@ -1,0 +1,257 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [duration]
+    :
+    OperatorExpr [
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+      =
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year-month-duration]
+    :
+    OperatorExpr [
+      FunctionCall null.year-month-duration@1[
+        LiteralExpr [STRING] [P3Y6M]
+      ]
+      =
+      FunctionCall null.year-month-duration@1[
+        LiteralExpr [STRING] [P3Y6M]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day-time-duration]
+    :
+    OperatorExpr [
+      FunctionCall null.day-time-duration@1[
+        LiteralExpr [STRING] [P3DT9H5M2.348S]
+      ]
+      =
+      FunctionCall null.day-time-duration@1[
+        LiteralExpr [STRING] [P3DT9H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point]
+    :
+    OperatorExpr [
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+      =
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line]
+    :
+    OperatorExpr [
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+      =
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [polygon]
+    :
+    OperatorExpr [
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+      =
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle]
+    :
+    OperatorExpr [
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+      =
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [rectangle]
+    :
+    OperatorExpr [
+      FunctionCall null.rectangle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
+      ]
+      =
+      FunctionCall null.rectangle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval]
+    :
+    OperatorExpr [
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [19991112T124935948-0700]
+        ]
+      ]
+      =
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [19991112T124935948-0700]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration2]
+    :
+    OperatorExpr [
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+      !=
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P4Y6M3DT9H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [year-month-duration2]
+    :
+    OperatorExpr [
+      FunctionCall null.year-month-duration@1[
+        LiteralExpr [STRING] [P3Y6M]
+      ]
+      !=
+      FunctionCall null.year-month-duration@1[
+        LiteralExpr [STRING] [P3Y7M]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [day-time-duration2]
+    :
+    OperatorExpr [
+      FunctionCall null.day-time-duration@1[
+        LiteralExpr [STRING] [P3DT9H5M2.348S]
+      ]
+      !=
+      FunctionCall null.day-time-duration@1[
+        LiteralExpr [STRING] [P3DT1H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point2]
+    :
+    OperatorExpr [
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.44,80.65]
+      ]
+      !=
+      FunctionCall null.point@1[
+        LiteralExpr [STRING] [47.4444,80.65]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line2]
+    :
+    OperatorExpr [
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.1234,11.1e-1 +10.2E-2,-11.22]
+      ]
+      !=
+      FunctionCall null.line@1[
+        LiteralExpr [STRING] [10.5678,11.1e-1 +10.2E-2,-11.22]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [polygon2]
+    :
+    OperatorExpr [
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+      !=
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle2]
+    :
+    OperatorExpr [
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 +10.5E-2]
+      ]
+      !=
+      FunctionCall null.circle@1[
+        LiteralExpr [STRING] [0.5678,-1.00e-10 +10.5E-2]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [rectangle2]
+    :
+    OperatorExpr [
+      FunctionCall null.rectangle@1[
+        LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
+      ]
+      !=
+      FunctionCall null.rectangle@1[
+        LiteralExpr [STRING] [0.5678,-1.00e-10 5.5487,0.48765]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [interval2]
+    :
+    OperatorExpr [
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [-1987-11-19T02:43:57.938+08:00]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [19991112T124935948-0700]
+        ]
+      ]
+      !=
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [-1983-11-19T02:43:57.938+08:00]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [19991112T124935948-0700]
+        ]
+      ]
+    ]
+  )
+]

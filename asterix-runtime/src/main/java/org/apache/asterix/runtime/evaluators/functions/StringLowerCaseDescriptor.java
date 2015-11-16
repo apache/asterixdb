@@ -38,8 +38,9 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.util.StringUtils;
 
 public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -61,9 +62,13 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
                 return new ICopyEvaluator() {
 
-                    private DataOutput out = output.getDataOutput();
-                    private ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
-                    private ICopyEvaluator eval = args[0].createEvaluator(outInput);
+                    private final DataOutput out = output.getDataOutput();
+                    private final ArrayBackedValueStorage outInput = new ArrayBackedValueStorage();
+                    private final ICopyEvaluator eval = args[0].createEvaluator(outInput);
+
+                    private final GrowableArray array = new GrowableArray();
+                    private final UTF8StringBuilder builder = new UTF8StringBuilder();
+                    private final UTF8StringPointable string = new UTF8StringPointable();
 
                     private final byte stt = ATypeTag.STRING.serialize();
 
@@ -80,19 +85,12 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
                             byte[] serString = outInput.getByteArray();
 
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                byte[] bytes = outInput.getByteArray();
-                                int len = UTF8StringPointable.getUTFLength(bytes, 1);
+                                string.set(serString, 1, serString.length);
+                                array.reset();
+                                UTF8StringPointable.lowercase(string, builder, array);
 
                                 out.writeByte(stt);
-                                StringUtils.writeUTF8Len(len, out);
-
-                                int pos = 3;
-                                while (pos < len + 3) {
-                                    char c1 = UTF8StringPointable.charAt(bytes, pos);
-                                    c1 = Character.toLowerCase(c1);
-                                    pos += UTF8StringPointable.charSize(bytes, pos);
-                                    StringUtils.writeCharAsModifiedUTF8(c1, out);
-                                }
+                                out.write(array.getByteArray(), 0, array.getLength());
                             } else if (serString[0] == SER_NULL_TYPE_TAG)
                                 nullSerde.serialize(ANull.NULL, out);
                             else

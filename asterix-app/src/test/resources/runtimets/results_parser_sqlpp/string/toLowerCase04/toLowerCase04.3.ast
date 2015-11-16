@@ -1,0 +1,49 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.lowercase@1[
+      FunctionCall null.codepoint-to-string@1[
+        OrderedListConstructor [
+          LiteralExpr [LONG] [65]
+          LiteralExpr [LONG] [66]
+          LiteralExpr [LONG] [67]
+          LiteralExpr [LONG] [68]
+          LiteralExpr [LONG] [69]
+          LiteralExpr [LONG] [70]
+          LiteralExpr [LONG] [71]
+          LiteralExpr [LONG] [72]
+          LiteralExpr [LONG] [73]
+          LiteralExpr [LONG] [74]
+          LiteralExpr [LONG] [75]
+          LiteralExpr [LONG] [76]
+          LiteralExpr [LONG] [77]
+          LiteralExpr [LONG] [78]
+          LiteralExpr [LONG] [79]
+          LiteralExpr [LONG] [80]
+          LiteralExpr [LONG] [81]
+          LiteralExpr [LONG] [82]
+          LiteralExpr [LONG] [83]
+          LiteralExpr [LONG] [84]
+          LiteralExpr [LONG] [85]
+          LiteralExpr [LONG] [86]
+          LiteralExpr [LONG] [87]
+          LiteralExpr [LONG] [88]
+          LiteralExpr [LONG] [89]
+          LiteralExpr [LONG] [90]
+        ]
+      ]
+    ]
+    FunctionCall null.lowercase@1[
+      FunctionCall null.string-concat@1[
+        OrderedListConstructor [
+          LiteralExpr [STRING] [ABCDEFGHIJKLMNOP]
+          LiteralExpr [STRING] [QRSTUVWXYZ]
+        ]
+      ]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

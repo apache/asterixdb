@@ -319,6 +319,10 @@ public class PatternCreator {
         patternList.addAll(createRemoveAsterixLogDirPattern(instance).getPattern());
         patternList.addAll(createRemoveAsterixRootMetadata(instance).getPattern());
         patternList.addAll(createRemoveAsterixTxnLogs(instance).getPattern());
+        if (instance.getCluster().getDataReplication() != null
+                && instance.getCluster().getDataReplication().isEnabled()) {
+            patternList.addAll(createRemoveAsterixReplicationPattern(instance).getPattern());
+        }
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }
@@ -642,6 +646,30 @@ public class PatternCreator {
             p = new Pattern(null, 1, null, event);
             patternList.add(p);
         }
+        Patterns patterns = new Patterns(patternList);
+        return patterns;
+    }
+    
+    private Patterns createRemoveAsterixReplicationPattern(AsterixInstance instance) throws Exception {
+
+        List<Pattern> patternList = new ArrayList<Pattern>();
+        Cluster cluster = instance.getCluster();
+
+        Nodeid nodeid = null;
+        String pargs = null;
+        Event event = null;
+        for (Node node : cluster.getNode()) {
+            String[] nodeIODevices;
+            String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
+            nodeIODevices = iodevices.trim().split(",");
+            for (String nodeIODevice : nodeIODevices) {
+                pargs = nodeIODevice + File.separator + cluster.getDataReplication().getReplicationStore();
+                nodeid = new Nodeid(new Value(null, node.getId()));
+                event = new Event("file_delete", nodeid, pargs);
+                patternList.add(new Pattern(null, 1, null, event));
+            }
+        }
+
         Patterns patterns = new Patterns(patternList);
         return patterns;
     }

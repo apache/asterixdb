@@ -1,0 +1,138 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cust_name]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [order_total]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=total
+    ]
+  )
+  (
+    LiteralExpr [STRING] [orderedlist]
+    :
+    Variable [ Name=ol ]
+  )
+  (
+    LiteralExpr [STRING] [unorderedlist]
+    :
+    Variable [ Name=ul ]
+  )
+  (
+    LiteralExpr [STRING] [ol_item1]
+    :
+    IndexAccessor [
+      Variable [ Name=ol ]
+      Index:       Variable [ Name=ol ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ol_item2]
+    :
+    IndexAccessor [
+      Variable [ Name=ol ]
+      Index:       Variable [ Name=ol ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ol_item5]
+    :
+    IndexAccessor [
+      Variable [ Name=ol ]
+      Index:       Variable [ Name=ol ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ul_item1]
+    :
+    IndexAccessor [
+      Variable [ Name=ul ]
+      Index: ANY
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+LetVariable [ Name=rec ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=lastorder
+  ]
+LetVariable [ Name=ol ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=oid
+    ]
+    FieldAccessor [
+      Variable [ Name=rec ]
+      Field=oid
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=cid
+    ]
+  ]
+LetVariable [ Name=ul ]
+  :=
+  UnorderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=oid
+    ]
+    FieldAccessor [
+      Variable [ Name=rec ]
+      Field=oid
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=cid
+    ]
+  ]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=cid
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=name
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=total
+  ]
+  ASC
+

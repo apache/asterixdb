@@ -1,0 +1,120 @@
+DataverseUse test
+TypeDecl TwitterUserType [
+  closed RecordType {
+    screen-name : string,
+    lang : string,
+    friends-count : int32,
+    statuses-count : int32,
+    name : string,
+    followers-count : int32
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : int64,
+    user : TwitterUserType,
+    sender-location : point,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
+WriteOutputTo nc1:rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [tweetid1]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=tweetid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [count1]
+    :
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=countA
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t2info]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [tweetid2]
+          :
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=tweetid
+          ]
+        )
+        (
+          LiteralExpr [STRING] [count2]
+          :
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=countB
+          ]
+        )
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [TweetMessages]
+        ]
+        AS
+        Variable [ Name=t2 ]
+      ]
+      Where
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=t1 ]
+            Field=countA
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=t2 ]
+            Field=countB
+          ]
+        ]
+      Orderby
+        FieldAccessor [
+          Variable [ Name=t2 ]
+          Field=tweetid
+        ]
+        ASC
+
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t1 ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=t1 ]
+      Field=tweetid
+    ]
+    <
+    FunctionCall test.int64@1[
+      LiteralExpr [STRING] [10]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t1 ]
+    Field=tweetid
+  ]
+  ASC
+

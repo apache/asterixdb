@@ -1,0 +1,130 @@
+DataverseUse TinySocial
+Query:
+LetVariable [ Name=lonelyusers ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=d ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [FacebookUsers]
+      ]
+      AS
+      Variable [ Name=d ]
+    ]
+    Where
+      OperatorExpr [
+        FunctionCall TinySocial.count@1[
+          FieldAccessor [
+            Variable [ Name=d ]
+            Field=friend-ids
+          ]
+        ]
+        <
+        LiteralExpr [LONG] [2]
+      ]
+  )
+LetVariable [ Name=lonelyusers2 ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=d ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [FacebookUsers]
+      ]
+      AS
+      Variable [ Name=d ]
+    ]
+    Where
+      OperatorExpr [
+        FunctionCall TinySocial.count@1[
+          FieldAccessor [
+            Variable [ Name=d ]
+            Field=friend-ids
+          ]
+        ]
+        <
+        LiteralExpr [LONG] [2]
+      ]
+  )
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [user1]
+    :
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [id]
+        :
+        FieldAccessor [
+          Variable [ Name=l1 ]
+          Field=id
+        ]
+      )
+      (
+        LiteralExpr [STRING] [name]
+        :
+        FieldAccessor [
+          Variable [ Name=l1 ]
+          Field=name
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [user2]
+    :
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [id]
+        :
+        FieldAccessor [
+          Variable [ Name=l2 ]
+          Field=id
+        ]
+      )
+      (
+        LiteralExpr [STRING] [name]
+        :
+        FieldAccessor [
+          Variable [ Name=l2 ]
+          Field=name
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  Variable [ Name=lonelyusers ]
+  AS
+  Variable [ Name=l1 ]
+,
+  Variable [ Name=lonelyusers2 ]
+  AS
+  Variable [ Name=l2 ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=l1 ]
+      Field=id
+    ]
+    <
+    FieldAccessor [
+      Variable [ Name=l2 ]
+      Field=id
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=l1 ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=l2 ]
+    Field=id
+  ]
+  ASC
+

@@ -27,7 +27,7 @@ use dataverse test;
 
 for $i in dataset('Line')
 group by $comment := $i.l_comment, $id := $i.l_orderkey with $i
-order by $id
+order by $id, string-length($comment), $comment
 return {
     "id": $id,
     "length": string-length($comment),

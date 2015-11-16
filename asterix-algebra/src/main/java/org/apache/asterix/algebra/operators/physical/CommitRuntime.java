@@ -72,6 +72,8 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
         this.longHashes = new long[2];
         this.logRecord = new LogRecord();
         this.isSink = isSink;
+        logRecord.setNodeId(logMgr.getNodeId());
+
     }
 
     @Override

@@ -1,0 +1,101 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  database inlined_q18_large_volume_customer if exists;
+create  database inlined_q18_large_volume_customer;
+
+use inlined_q18_large_volume_customer;
+
+
+create type inlined_q18_large_volume_customer.LineItemType as
+ closed {
+  l_orderkey : int32,
+  l_partkey : int32,
+  l_suppkey : int32,
+  l_linenumber : int32,
+  l_quantity : double,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+}
+
+create type inlined_q18_large_volume_customer.OrderType as
+ closed {
+  o_orderkey : int32,
+  o_custkey : int32,
+  o_orderstatus : string,
+  o_totalprice : double,
+  o_orderdate : string,
+  o_orderpriority : string,
+  o_clerk : string,
+  o_shippriority : int32,
+  o_comment : string
+}
+
+create type inlined_q18_large_volume_customer.CustomerType as
+ closed {
+  c_custkey : int32,
+  c_name : string,
+  c_address : string,
+  c_nationkey : int32,
+  c_phone : string,
+  c_acctbal : double,
+  c_mktsegment : string,
+  c_comment : string
+}
+
+create  nodegroup group1 if not exists  on 
+    nc1,
+    nc2
+;
+create  table LineItems(LineItemType) primary key l_orderkey,l_linenumber on group1;
+
+create  table Orders(OrderType) primary key o_orderkey on group1;
+
+create  table Customers(CustomerType) primary key c_custkey on group1;
+
+write output to nc1:"/tmp/inlined_q18_large_volume_customer.adm"
+select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':inlined_q18_large_volume_customer.sum((
+        select element j.l_quantity
+        from  l as j
+    ))}
+from  Customers as c,
+      Orders as o,
+      (
+    select element {'l_orderkey':l_orderkey,'t_sum_quantity':inlined_q18_large_volume_customer.sum((
+            select element i.l_quantity
+            from  l as i
+        ))}
+    from  LineItems as l
+    group by l.l_orderkey as l_orderkey
+) as t,
+      LineItems as l
+where ((c.c_custkey = o.o_custkey) and ((o.o_orderkey = t.l_orderkey) and (t.t_sum_quantity > 300)) and (l.l_orderkey = o.o_orderkey))
+group by c.c_name as c_name,c.c_custkey as c_custkey,o.o_orderkey as o_orderkey,o.o_orderdate as o_orderdate,o.o_totalprice as o_totalprice
+order by o_totalprice desc,o_orderdate
+limit 100
+;

@@ -1,0 +1,22 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [d0]
+    :
+    FunctionCall test.round-half-to-even@1[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [1.5]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d1]
+    :
+    FunctionCall test.round-half-to-even@1[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [2.5]
+      ]
+    ]
+  )
+]

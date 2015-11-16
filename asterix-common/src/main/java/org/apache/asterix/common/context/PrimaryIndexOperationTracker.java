@@ -48,9 +48,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     private boolean flushOnExit = false;
     private boolean flushLogCreated = false;
 
-    public PrimaryIndexOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID,
-            ILogManager logManager, DatasetInfo dsInfo) {
-        super(datasetLifecycleManager, datasetID, dsInfo);
+    public PrimaryIndexOperationTracker(int datasetID, ILogManager logManager, DatasetInfo dsInfo) {
+        super(datasetID, dsInfo);
         this.logManager = logManager;
         this.numActiveOperations = new AtomicInteger();
     }
@@ -60,7 +59,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             incrementNumActiveOperations(modificationCallback);
-        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             dsInfo.declareActiveIOOperation();
         }
     }
@@ -69,7 +69,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         // Searches are immediately considered complete, because they should not prevent the execution of flushes.
-        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             completeOperation(index, opType, searchCallback, modificationCallback);
         }
     }
@@ -85,7 +86,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             } else if (numActiveOperations.get() < 0) {
                 throw new HyracksDataException("The number of active operations cannot be negative!");
             }
-        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             dsInfo.undeclareActiveIOOperation();
         }
     }
@@ -108,7 +110,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
 
         if (needsFlush || flushOnExit) {
-            //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is schedule.
+            //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is scheduled.
             for (ILSMIndex lsmIndex : indexes) {
                 AbstractLSMIndex abstractLSMIndex = ((AbstractLSMIndex) lsmIndex);
                 ILSMOperationTracker opTracker = abstractLSMIndex.getOperationTracker();
@@ -120,7 +122,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             }
 
             LogRecord logRecord = new LogRecord();
-            logRecord.formFlushLogRecord(datasetID, this);
+            logRecord.formFlushLogRecord(datasetID, this, logManager.getNodeId(), dsInfo.getDatasetIndexes().size());
 
             try {
                 logManager.log(logRecord);
@@ -133,7 +135,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
     }
 
-    //Since this method is called sequentially by LogPage.notifyFlushTerminator in the sequence flush were scheduled.
+    //This method is called sequentially by LogPage.notifyFlushTerminator in the sequence flushes were scheduled.
     public synchronized void triggerScheduleFlush(LogRecord logRecord) throws HyracksDataException {
         for (ILSMIndex lsmIndex : dsInfo.getDatasetIndexes()) {
 

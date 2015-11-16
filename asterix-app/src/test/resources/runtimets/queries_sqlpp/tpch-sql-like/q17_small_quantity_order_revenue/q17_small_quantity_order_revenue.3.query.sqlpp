@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+declare function tmp() {
+(
+    select element {'t_partkey':l_partkey,'t_avg_quantity':(0.2 * tpch.avg((
+              select element i.l_quantity
+              from  l as i
+          )))}
+    from  LineItem as l
+    group by l.l_partkey as l_partkey
+)
+};
+select element (tpch.sum((
+      select element l.l_extendedprice
+      from  LineItem as l,
+            Part as p,
+            tpch.tmp() as t
+      where (((p.p_partkey = l.l_partkey) and (p.p_container = 'MED BOX')) and ((l.l_partkey = t.t_partkey) and (l.l_quantity < t.t_avg_quantity)))
+  )) / 7.0);

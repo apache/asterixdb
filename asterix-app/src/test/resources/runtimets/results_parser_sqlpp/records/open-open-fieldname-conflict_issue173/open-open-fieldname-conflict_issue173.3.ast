@@ -1,0 +1,28 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=fname1
+    ]
+    :
+    LiteralExpr [STRING] [john]
+  )
+  (
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=fname2
+    ]
+    :
+    LiteralExpr [STRING] [smith]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds]
+  ]
+  AS
+  Variable [ Name=x ]
+]

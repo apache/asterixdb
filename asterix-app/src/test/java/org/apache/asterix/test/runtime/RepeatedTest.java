@@ -32,13 +32,12 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
-import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.test.aql.TestExecutor;
 import org.apache.asterix.test.runtime.RepeatRule.Repeat;
 import org.apache.asterix.testframework.context.TestCaseContext;
 
 /**
  * Runs runtime test cases that have been identified in the repeatedtestsuite.xml.
- * 
  * Each test is run 10000 times.
  */
 class RepeatRule implements MethodRule {
@@ -85,7 +84,8 @@ class RepeatRule implements MethodRule {
 public class RepeatedTest extends ExecutionTest {
 
     private int count;
-    
+    private final TestExecutor testExecutor = new TestExecutor();
+
     @Parameters
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.DEFAULT_REPEADED_TESTSUITE_XML_NAME);
@@ -104,6 +104,6 @@ public class RepeatedTest extends ExecutionTest {
     @Repeat(times = 10000)
     public void test() throws Exception {
         System.err.println("***** Test Count: " + (++count) + " ******");
-        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
+        testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 }

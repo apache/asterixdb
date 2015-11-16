@@ -1,0 +1,44 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.substring-before@2[
+      LiteralExpr [STRING] [HEllow]
+      LiteralExpr [STRING] []
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    FunctionCall test.substring-before@2[
+      LiteralExpr [STRING] [HEllow]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    FunctionCall test.substring-before@2[
+      LiteralExpr [STRING] []
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    FunctionCall test.substring-before@2[
+      LiteralExpr [STRING] []
+      LiteralExpr [STRING] []
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    FunctionCall test.substring-before@2[
+      LiteralExpr [NULL]
+      LiteralExpr [NULL]
+    ]
+  )
+]

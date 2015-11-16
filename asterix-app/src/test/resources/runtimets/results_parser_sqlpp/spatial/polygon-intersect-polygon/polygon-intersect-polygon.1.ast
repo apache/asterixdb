@@ -1,0 +1,9 @@
+DataverseUse test
+TypeDecl MyRecord [
+  open RecordType {
+    id : int64,
+    point : point,
+    kwds : string
+  }
+]
+DatasetDecl MyData(MyRecord)is an external dataset

@@ -21,13 +21,11 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
-import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AInt32;
@@ -36,6 +34,8 @@ import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
@@ -61,6 +62,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 public class RTreeAccessMethod implements IAccessMethod {
 
     private static List<FunctionIdentifier> funcIdents = new ArrayList<FunctionIdentifier>();
+
     static {
         funcIdents.add(AsterixBuiltinFunctions.SPATIAL_INTERSECT);
     }
@@ -74,8 +76,10 @@ public class RTreeAccessMethod implements IAccessMethod {
 
     @Override
     public boolean analyzeFuncExprArgs(AbstractFunctionCallExpression funcExpr,
-            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx) {
-        boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx);
+            List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+        boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVar(funcExpr, analysisCtx, context,
+                typeEnvironment);
         if (!matches) {
             matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVars(funcExpr, analysisCtx);
         }
@@ -166,8 +170,8 @@ public class RTreeAccessMethod implements IAccessMethod {
 
     private ILogicalOperator createSecondaryToPrimaryPlan(OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, IOptimizableFuncExpr optFuncExpr,
-            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull,
-            boolean requiresBroadcast, IOptimizationContext context) throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
+            IOptimizationContext context) throws AlgebricksException {
         Dataset dataset = indexSubTree.dataset;
         ARecordType recordType = indexSubTree.recordType;
 
@@ -204,13 +208,11 @@ public class RTreeAccessMethod implements IAccessMethod {
             // Spatial object is the constant from the func expr we are optimizing.
             createMBR.getArguments().add(new MutableObject<ILogicalExpression>(searchKeyExpr));
             // The number of dimensions.
-            createMBR.getArguments().add(
-                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(
-                            numDimensions)))));
+            createMBR.getArguments().add(new MutableObject<ILogicalExpression>(
+                    new ConstantExpression(new AsterixConstantValue(new AInt32(numDimensions)))));
             // Which part of the MBR to extract.
-            createMBR.getArguments().add(
-                    new MutableObject<ILogicalExpression>(new ConstantExpression(
-                            new AsterixConstantValue(new AInt32(i)))));
+            createMBR.getArguments().add(new MutableObject<ILogicalExpression>(
+                    new ConstantExpression(new AsterixConstantValue(new AInt32(i)))));
             // Add a variable and its expr to the lists which will be passed into an assign op.
             LogicalVariable keyVar = context.newVar();
             keyVarList.add(keyVar);

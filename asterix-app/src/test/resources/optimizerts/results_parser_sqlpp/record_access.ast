@@ -1,0 +1,13 @@
+DataverseUse test
+WriteOutputTo nc1:/tmp/rec_access.adm
+Query:
+FieldAccessor [
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [a]
+      :
+      LiteralExpr [LONG] [2]
+    )
+  ]
+  Field=a
+]

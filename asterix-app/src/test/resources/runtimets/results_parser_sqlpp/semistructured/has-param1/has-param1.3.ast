@@ -1,0 +1,28 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+Variable [ Name=o ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  FunctionCall test.not@1[
+    FunctionCall test.is-null@1[
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=param1
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=oid
+  ]
+  ASC
+

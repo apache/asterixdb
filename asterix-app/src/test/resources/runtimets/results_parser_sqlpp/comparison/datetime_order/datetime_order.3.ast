@@ -1,0 +1,80 @@
+DataverseUse test
+Query:
+LetVariable [ Name=dt1 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2011-12-31T14:00:00-10:00]
+  ]
+LetVariable [ Name=dt2 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2012-01-01T00:00:00Z]
+  ]
+LetVariable [ Name=dt3 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2005-01-01T00:00:00+04:00]
+  ]
+LetVariable [ Name=dt4 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2011-12-31T13:00:00-11:00]
+  ]
+LetVariable [ Name=dt5 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2012-04-06T00:00:00Z]
+  ]
+LetVariable [ Name=dt6 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [-1937-07-07T23:00:00+08:00]
+  ]
+LetVariable [ Name=dt7 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [-1600-03-01T00:00:00.384+06:00]
+  ]
+LetVariable [ Name=dt8 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [-1600-02-29T23:59:59.999Z]
+  ]
+LetVariable [ Name=dt9 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2000-02-29T23:59:59.999Z]
+  ]
+LetVariable [ Name=dt10 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [2000-03-01T01:59:59.999+07:00]
+  ]
+LetVariable [ Name=dt11 ]
+  :=
+  FunctionCall test.datetime@1[
+    LiteralExpr [STRING] [-1600-03-01T00:00:00.384-06:00]
+  ]
+SELECT ELEMENT [
+Variable [ Name=dt ]
+]
+FROM [  OrderedListConstructor [
+    Variable [ Name=dt1 ]
+    Variable [ Name=dt2 ]
+    Variable [ Name=dt3 ]
+    Variable [ Name=dt4 ]
+    Variable [ Name=dt5 ]
+    Variable [ Name=dt6 ]
+    Variable [ Name=dt7 ]
+    Variable [ Name=dt8 ]
+    Variable [ Name=dt9 ]
+    Variable [ Name=dt10 ]
+    Variable [ Name=dt11 ]
+  ]
+  AS
+  Variable [ Name=dt ]
+]
+Orderby
+  Variable [ Name=dt ]
+  ASC
+

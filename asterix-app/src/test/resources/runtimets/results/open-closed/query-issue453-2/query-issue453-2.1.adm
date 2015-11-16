@@ -1,17 +1,16 @@
-[ { "id": 1, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": "a" }
-, { "id": 2, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": null }
-, { "id": 3, "int_m": 1, "int_o": 1, "string_m": "b", "string_o": "a" }
-, { "id": 4, "int_m": 1, "int_o": 1, "string_m": "b", "string_o": null }
-, { "id": 5, "int_m": 1, "int_o": null, "string_m": "a", "string_o": "a" }
-, { "id": 6, "int_m": 1, "int_o": null, "string_m": "a", "string_o": null }
-, { "id": 7, "int_m": 1, "int_o": null, "string_m": "b", "string_o": "a" }
-, { "id": 8, "int_m": 1, "int_o": null, "string_m": "b", "string_o": null }
-, { "id": 9, "int_m": 2, "int_o": 1, "string_m": "a", "string_o": "a" }
-, { "id": 10, "int_m": 2, "int_o": 1, "string_m": "a", "string_o": null }
-, { "id": 11, "int_m": 2, "int_o": 1, "string_m": "b", "string_o": "a" }
-, { "id": 12, "int_m": 2, "int_o": 1, "string_m": "b", "string_o": null }
-, { "id": 13, "int_m": 2, "int_o": null, "string_m": "a", "string_o": "a" }
-, { "id": 14, "int_m": 2, "int_o": null, "string_m": "a", "string_o": null }
-, { "id": 15, "int_m": 2, "int_o": null, "string_m": "b", "string_o": "a" }
-, { "id": 16, "int_m": 2, "int_o": null, "string_m": "b", "string_o": null }
- ]
+{ "id": 1, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": "a" }
+{ "id": 2, "int_m": 1, "int_o": 1, "string_m": "a", "string_o": null }
+{ "id": 3, "int_m": 1, "int_o": 1, "string_m": "b", "string_o": "a" }
+{ "id": 4, "int_m": 1, "int_o": 1, "string_m": "b", "string_o": null }
+{ "id": 5, "int_m": 1, "int_o": null, "string_m": "a", "string_o": "a" }
+{ "id": 6, "int_m": 1, "int_o": null, "string_m": "a", "string_o": null }
+{ "id": 7, "int_m": 1, "int_o": null, "string_m": "b", "string_o": "a" }
+{ "id": 8, "int_m": 1, "int_o": null, "string_m": "b", "string_o": null }
+{ "id": 9, "int_m": 2, "int_o": 1, "string_m": "a", "string_o": "a" }
+{ "id": 10, "int_m": 2, "int_o": 1, "string_m": "a", "string_o": null }
+{ "id": 11, "int_m": 2, "int_o": 1, "string_m": "b", "string_o": "a" }
+{ "id": 12, "int_m": 2, "int_o": 1, "string_m": "b", "string_o": null }
+{ "id": 13, "int_m": 2, "int_o": null, "string_m": "a", "string_o": "a" }
+{ "id": 14, "int_m": 2, "int_o": null, "string_m": "a", "string_o": null }
+{ "id": 15, "int_m": 2, "int_o": null, "string_m": "b", "string_o": "a" }
+{ "id": 16, "int_m": 2, "int_o": null, "string_m": "b", "string_o": null }

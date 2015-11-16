@@ -1,0 +1,26 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  FunctionCall test.starts-with@2[
+    Variable [ Name=x ]
+    LiteralExpr [STRING] [ba]
+  ]
+  FunctionCall test.starts-with@2[
+    Variable [ Name=y ]
+    LiteralExpr [STRING] [ba]
+  ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [STRING] [foofoo]
+  ]
+  AS
+  Variable [ Name=x ]
+,
+  OrderedListConstructor [
+    LiteralExpr [STRING] [barbar]
+  ]
+  AS
+  Variable [ Name=y ]
+]

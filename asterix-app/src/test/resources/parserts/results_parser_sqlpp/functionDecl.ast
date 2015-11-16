@@ -1,0 +1,16 @@
+FunctionDecl add([a, b]) {
+  OperatorExpr [
+    Variable [ Name=a ]
+    +
+    Variable [ Name=b ]
+  ]
+}
+
+FunctionDecl minus([a, b]) {
+  OperatorExpr [
+    Variable [ Name=a ]
+    -
+    Variable [ Name=b ]
+  ]
+}
+

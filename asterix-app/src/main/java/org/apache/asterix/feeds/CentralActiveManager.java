@@ -25,13 +25,13 @@ import java.util.List;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.parser.AQLParser;
 import org.apache.asterix.aql.translator.AqlTranslator;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.feeds.api.ICentralActiveManager;
 import org.apache.asterix.common.feeds.api.IActiveLoadManager;
 import org.apache.asterix.common.feeds.api.IFeedTrackingManager;
+import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.feeds.SocketMessageListener;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.hyracks.api.client.IHyracksClientConnection;

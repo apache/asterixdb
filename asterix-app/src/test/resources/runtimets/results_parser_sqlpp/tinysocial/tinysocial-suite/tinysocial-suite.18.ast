@@ -1,0 +1,77 @@
+DataverseUse TinySocial
+Set simfunction=jaccard
+Set simthreshold=0.3
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [tweet]
+    :
+    Variable [ Name=t ]
+  )
+  (
+    LiteralExpr [STRING] [similar-tweets]
+    :
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=t2 ]
+        Field=referred-topics
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [TweetMessages]
+        ]
+        AS
+        Variable [ Name=t2 ]
+      ]
+      Where
+        OperatorExpr [
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=t2 ]
+              Field=referred-topics
+            ]
+            ~=
+            FieldAccessor [
+              Variable [ Name=t ]
+              Field=referred-topics
+            ]
+          ]
+          and
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=t2 ]
+              Field=tweetid
+            ]
+            !=
+            FieldAccessor [
+              Variable [ Name=t ]
+              Field=tweetid
+            ]
+          ]
+        ]
+      Orderby
+        FieldAccessor [
+          Variable [ Name=t2 ]
+          Field=tweetid
+        ]
+        ASC
+
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t ]
+    Field=tweetid
+  ]
+  ASC
+

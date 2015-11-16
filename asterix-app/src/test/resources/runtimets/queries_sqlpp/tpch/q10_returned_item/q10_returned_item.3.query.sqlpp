@@ -1,0 +1,43 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+select element {'c_custkey':c_custkey,'c_name':c_name,'revenue':revenue,'c_acctbal':c_acctbal,'n_name':n_name,'c_address':c_address,'c_phone':c_phone,'c_comment':c_comment}
+from  (
+    select element {'c_custkey':ocn.c_custkey,'c_name':ocn.c_name,'c_acctbal':ocn.c_acctbal,'n_name':ocn.n_name,'c_address':ocn.c_address,'c_phone':ocn.c_phone,'c_comment':ocn.c_comment,'l_extendedprice':l.l_extendedprice,'l_discount':l.l_discount}
+    from  LineItem as l,
+          (
+        select element {'c_custkey':c.c_custkey,'c_name':c.c_name,'c_acctbal':c.c_acctbal,'n_name':n.n_name,'c_address':c.c_address,'c_phone':c.c_phone,'c_comment':c.c_comment,'o_orderkey':o.o_orderkey}
+        from  Orders as o,
+              Customer as c,
+              Nation as n
+        where (((c.c_custkey = o.o_custkey) and (o.o_orderdate >= '1993-10-01') and (o.o_orderdate < '1994-01-01')) and (c.c_nationkey = n.n_nationkey))
+    ) as ocn
+    where ((l.l_orderkey = ocn.o_orderkey) and (l.l_returnflag = 'R'))
+) as locn
+group by locn.c_custkey as c_custkey,locn.c_name as c_name,locn.c_acctbal as c_acctbal,locn.c_phone as c_phone,locn.n_name as n_name,locn.c_address as c_address,locn.c_comment as c_comment
+with  revenue as tpch.sum((
+      select element (i.l_extendedprice * (1 - i.l_discount))
+      from  locn as i
+  ))
+order by revenue desc
+limit 20
+;

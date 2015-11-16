@@ -41,6 +41,10 @@ public class AsterixLSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUp
 
     private final boolean isPrimary;
 
+    public boolean isPrimary() {
+        return isPrimary;
+    }
+
     public AsterixLSMInsertDeleteOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, IRecordDescriptorProvider recordDescProvider, IndexOperation op,
             boolean isPrimary) {

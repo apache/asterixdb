@@ -19,8 +19,8 @@
 package org.apache.asterix.transaction.management.service.transaction;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManagerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -65,9 +65,9 @@ public class AsterixRuntimeComponentsProvider implements IIndexLifecycleManagerP
     }
 
     @Override
-    public IIndexLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
+    public IDatasetLifecycleManager getLifecycleManager(IHyracksTaskContext ctx) {
         return ((IAsterixAppRuntimeContext) ctx.getJobletContext().getApplicationContext().getApplicationObject())
-                .getIndexLifecycleManager();
+                .getDatasetLifecycleManager();
     }
 
     @Override

@@ -1,0 +1,56 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [1970-01-01]
+    :
+    FunctionCall test.day-of-week@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [1970-01-01]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [2013-08-06]
+    :
+    FunctionCall test.day-of-week@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [2013-08-06]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [-2013-08-06]
+    :
+    FunctionCall test.day-of-week@1[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [-2013-08-06]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [1913-08-06T15:53:28Z]
+    :
+    FunctionCall test.day-of-week@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1913-08-06T15:53:28Z]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [-1913-08-10T15:53:28Z]
+    :
+    FunctionCall test.day-of-week@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [-1913-08-10T15:53:28Z]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null]
+    :
+    FunctionCall test.day-of-week@1[
+      LiteralExpr [NULL]
+    ]
+  )
+]

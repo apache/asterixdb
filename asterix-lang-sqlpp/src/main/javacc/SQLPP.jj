@@ -1,0 +1,2910 @@
+options {
+
+
+       STATIC = false;
+
+}
+
+
+PARSER_BEGIN(SQLPPParser)
+
+package org.apache.asterix.lang.sqlpp.parser;
+
+// For SQL++ ParserTokenManager
+import org.apache.xerces.util.IntStack;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.asterix.common.annotations.AutoDataGen;
+import org.apache.asterix.common.annotations.DateBetweenYearsDataGen;
+import org.apache.asterix.common.annotations.DatetimeAddRandHoursDataGen;
+import org.apache.asterix.common.annotations.DatetimeBetweenYearsDataGen;
+import org.apache.asterix.common.annotations.FieldIntervalDataGen;
+import org.apache.asterix.common.annotations.FieldValFileDataGen;
+import org.apache.asterix.common.annotations.FieldValFileSameIndexDataGen;
+import org.apache.asterix.common.annotations.IRecordFieldDataGen;
+import org.apache.asterix.common.annotations.InsertRandIntDataGen;
+import org.apache.asterix.common.annotations.ListDataGen;
+import org.apache.asterix.common.annotations.ListValFileDataGen;
+import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.annotations.TypeDataGen;
+import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
+import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Literal;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.clause.GroupbyClause;
+import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.clause.LimitClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.clause.UpdateClause;
+import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.context.RootScopeFactory;
+import org.apache.asterix.lang.common.context.Scope;
+import org.apache.asterix.lang.common.expression.AbstractAccessor;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.FieldBinding;
+import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.IfExpr;
+import org.apache.asterix.lang.common.expression.IndexAccessor;
+import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.OperatorExpr;
+import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
+import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
+import org.apache.asterix.lang.common.expression.TypeExpression;
+import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
+import org.apache.asterix.lang.common.expression.UnaryExpr;
+import org.apache.asterix.lang.common.expression.UnaryExpr.Sign;
+import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.DoubleLiteral;
+import org.apache.asterix.lang.common.literal.FalseLiteral;
+import org.apache.asterix.lang.common.literal.FloatLiteral;
+import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
+import org.apache.asterix.lang.common.literal.NullLiteral;
+import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
+import org.apache.asterix.lang.common.parser.ScopeChecker;
+import org.apache.asterix.lang.common.statement.CompactStatement;
+import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
+import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
+import org.apache.asterix.lang.common.statement.CreateFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
+import org.apache.asterix.lang.common.statement.CreateIndexStatement;
+import org.apache.asterix.lang.common.statement.CreatePrimaryFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateSecondaryFeedStatement;
+import org.apache.asterix.lang.common.statement.DatasetDecl;
+import org.apache.asterix.lang.common.statement.DataverseDecl;
+import org.apache.asterix.lang.common.statement.DataverseDropStatement;
+import org.apache.asterix.lang.common.statement.DeleteStatement;
+import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
+import org.apache.asterix.lang.common.statement.DropStatement;
+import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
+import org.apache.asterix.lang.common.statement.FeedDropStatement;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.FunctionDropStatement;
+import org.apache.asterix.lang.common.statement.IndexDropStatement;
+import org.apache.asterix.lang.common.statement.InsertStatement;
+import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
+import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
+import org.apache.asterix.lang.common.statement.NodegroupDecl;
+import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.RefreshExternalDatasetStatement;
+import org.apache.asterix.lang.common.statement.RunStatement;
+import org.apache.asterix.lang.common.statement.SetStatement;
+import org.apache.asterix.lang.common.statement.TypeDecl;
+import org.apache.asterix.lang.common.statement.TypeDropStatement;
+import org.apache.asterix.lang.common.statement.UpdateStatement;
+import org.apache.asterix.lang.common.statement.WriteStatement;
+import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
+import org.apache.asterix.lang.sqlpp.clause.FromClause;
+import org.apache.asterix.lang.sqlpp.clause.FromTerm;
+import org.apache.asterix.lang.sqlpp.clause.HavingClause;
+import org.apache.asterix.lang.sqlpp.clause.JoinClause;
+import org.apache.asterix.lang.sqlpp.clause.NestClause;
+import org.apache.asterix.lang.sqlpp.clause.Projection;
+import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
+import org.apache.asterix.lang.sqlpp.clause.SelectClause;
+import org.apache.asterix.lang.sqlpp.clause.SelectElement;
+import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
+import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
+import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.optype.JoinType;
+import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
+import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.metadata.bootstrap.MetadataConstants;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+
+
+
+public class SQLPPParser extends ScopeChecker implements IParser {
+
+    // optimizer hints
+    private static final String AUTO_HINT = "auto";
+    private static final String BROADCAST_JOIN_HINT = "bcast";
+    private static final String COMPOSE_VAL_FILES_HINT = "compose-val-files";
+    private static final String DATE_BETWEEN_YEARS_HINT = "date-between-years";
+    private static final String DATETIME_ADD_RAND_HOURS_HINT = "datetime-add-rand-hours";
+    private static final String DATETIME_BETWEEN_YEARS_HINT = "datetime-between-years";
+    private static final String HASH_GROUP_BY_HINT = "hash";
+    private static final String INDEXED_NESTED_LOOP_JOIN_HINT = "indexnl";
+    private static final String INMEMORY_HINT = "inmem";
+    private static final String INSERT_RAND_INT_HINT = "insert-rand-int";
+    private static final String INTERVAL_HINT = "interval";
+    private static final String LIST_HINT = "list";
+    private static final String LIST_VAL_FILE_HINT = "list-val-file";
+    private static final String RANGE_HINT = "range";
+    private static final String SKIP_SECONDARY_INDEX_SEARCH_HINT = "skip-index";
+    private static final String VAL_FILE_HINT = "val-files";
+    private static final String VAL_FILE_SAME_INDEX_HINT = "val-file-same-idx";
+
+    private static final String GEN_FIELDS_HINT = "gen-fields";
+
+    // data generator hints
+    private static final String DGEN_HINT = "dgen";
+
+    private static class IndexParams {
+      public IndexType type;
+      public int gramLength;
+
+      public IndexParams(IndexType type, int gramLength) {
+        this.type = type;
+        this.gramLength = gramLength;
+      }
+    };
+
+    private static class FunctionName {
+       public String dataverse = null;
+       public String library = null;
+       public String function = null;
+       public String hint = null;
+    }
+
+    private static String getHint(Token t) {
+        if (t.specialToken == null) {
+            return null;
+        }
+        String s = t.specialToken.image;
+        int n = s.length();
+        if (n < 2) {
+            return null;
+        }
+        return s.substring(1).trim();
+    }
+
+    private static IRecordFieldDataGen parseFieldDataGen(String hint) throws ParseException {
+      IRecordFieldDataGen rfdg = null;
+      String splits[] = hint.split(" +");
+      if (splits[0].equals(VAL_FILE_HINT)) {
+        File[] valFiles = new File[splits.length - 1];
+        for (int k=1; k<splits.length; k++) {
+          valFiles[k-1] = new File(splits[k]);
+        }
+        rfdg = new FieldValFileDataGen(valFiles);
+      } else if (splits[0].equals(VAL_FILE_SAME_INDEX_HINT)) {
+        rfdg = new FieldValFileSameIndexDataGen(new File(splits[1]), splits[2]);
+      } else if (splits[0].equals(LIST_VAL_FILE_HINT)) {
+        rfdg = new ListValFileDataGen(new File(splits[1]), Integer.parseInt(splits[2]), Integer.parseInt(splits[3]));
+      } else if (splits[0].equals(LIST_HINT)) {
+        rfdg = new ListDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+      } else if (splits[0].equals(INTERVAL_HINT)) {
+        FieldIntervalDataGen.ValueType vt;
+        if (splits[1].equals("int")) {
+          vt = FieldIntervalDataGen.ValueType.INT;
+        } else if (splits[1].equals("long")) {
+          vt = FieldIntervalDataGen.ValueType.LONG;
+        } else if (splits[1].equals("float")) {
+          vt = FieldIntervalDataGen.ValueType.FLOAT;
+        } else if (splits[1].equals("double")) {
+          vt = FieldIntervalDataGen.ValueType.DOUBLE;
+        } else {
+          throw new ParseException("Unknown type for interval data gen: " + splits[1]);
+        }
+        rfdg = new FieldIntervalDataGen(vt, splits[2], splits[3]);
+      } else if (splits[0].equals(INSERT_RAND_INT_HINT)) {
+        rfdg = new InsertRandIntDataGen(splits[1], splits[2]);
+      } else if (splits[0].equals(DATE_BETWEEN_YEARS_HINT)) {
+        rfdg = new DateBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+      } else if (splits[0].equals(DATETIME_BETWEEN_YEARS_HINT)) {
+        rfdg = new DatetimeBetweenYearsDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]));
+      } else if (splits[0].equals(DATETIME_ADD_RAND_HOURS_HINT)) {
+        rfdg = new DatetimeAddRandHoursDataGen(Integer.parseInt(splits[1]), Integer.parseInt(splits[2]), splits[3]);
+      } else if (splits[0].equals(AUTO_HINT)) {
+        rfdg = new AutoDataGen(splits[1]);
+      }
+      return rfdg;
+    }
+
+    public SQLPPParser(String s){
+        this(new StringReader(s));
+        super.setInput(s);
+    }
+
+    public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, AsterixException {
+        File file = new File(args[0]);
+        Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        SQLPPParser parser = new SQLPPParser(fis);
+        List<Statement> st = parser.parse();
+        //st.accept(new SQLPPPrintVisitor(), 0);
+    }
+
+    public List<Statement> parse() throws AsterixException {
+        try {
+            return Statement();
+        } catch (Error e) {
+            // this is here as the JavaCharStream that's below the lexer somtimes throws Errors that are not handled
+            // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
+            throw new AsterixException(new ParseException(e.getMessage()));
+        } catch (ParseException e) {
+            throw new AsterixException(e.getMessage());
+        }
+    }
+}
+
+PARSER_END(SQLPPParser)
+
+
+List<Statement> Statement() throws ParseException:
+{
+  scopeStack.push(RootScopeFactory.createRootScope(this));
+  List<Statement> decls = new ArrayList<Statement>();
+  Statement stmt = null;
+}
+{
+  ( stmt = SingleStatement() (<SEMICOLON>)*
+    {
+      decls.add(stmt);
+    }
+  )*
+  <EOF>
+  {
+    return decls;
+  }
+}
+
+Statement SingleStatement() throws ParseException:
+{
+  Statement stmt = null;
+}
+{
+  (
+    stmt = DataverseDeclaration()
+    | stmt = FunctionDeclaration()
+    | stmt = CreateStatement()
+    | stmt = LoadStatement()
+    | stmt = DropStatement()
+    | stmt = WriteStatement()
+    | stmt = SetStatement()
+    | stmt = InsertStatement()
+    | stmt = DeleteStatement()
+    | stmt = UpdateStatement()
+    | stmt = FeedStatement()
+    | stmt = CompactStatement()
+    | stmt = Query() <SEMICOLON>
+    | stmt = RefreshExternalDatasetStatement()
+    | stmt = RunStatement()
+  )
+  {
+    return stmt;
+  }
+}
+
+DataverseDecl DataverseDeclaration() throws ParseException:
+{
+  String dvName = null;
+}
+{
+  <USE> dvName = Identifier()
+    {
+      defaultDataverse = dvName;
+      return new DataverseDecl(new Identifier(dvName));
+    }
+}
+
+Statement CreateStatement() throws ParseException:
+{
+  String hint = null;
+  boolean dgen = false;
+  Statement stmt = null;
+}
+{
+  <CREATE>
+  (
+    {
+      hint = getHint(token);
+      if (hint != null && hint.startsWith(DGEN_HINT)) {
+        dgen = true;
+      }
+    }
+    stmt = TypeSpecification(hint, dgen)
+    | stmt = NodegroupSpecification()
+    | stmt = DatasetSpecification()
+    | stmt = IndexSpecification()
+    | stmt = DataverseSpecification()
+    | stmt = FunctionSpecification()
+    | stmt = FeedSpecification()
+    | stmt = FeedPolicySpecification()
+  )
+  {
+    return stmt;
+  }
+}
+
+TypeDecl TypeSpecification(String hint, boolean dgen) throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  TypeExpression typeExpr = null;
+}
+{
+  <TYPE> nameComponents = TypeName() ifNotExists = IfNotExists()
+  <AS> typeExpr = TypeExpr()
+    {
+      long numValues = -1;
+      String filename = null;
+      if (dgen) {
+        String splits[] = hint.split(" +");
+        if (splits.length != 3) {
+          throw new ParseException("Expecting /*+ dgen <filename> <numberOfItems> */");
+        }
+        filename = splits[1];
+        numValues = Long.parseLong(splits[2]);
+      }
+      TypeDataGen tddg = new TypeDataGen(dgen, filename, numValues);
+      return new TypeDecl(nameComponents.first, nameComponents.second, typeExpr, tddg, ifNotExists);
+    }
+}
+
+
+NodegroupDecl NodegroupSpecification() throws ParseException:
+{
+  String name = null;
+  String tmp = null;
+  boolean ifNotExists = false;
+  List<Identifier>ncNames = null;
+}
+{
+  <NODEGROUP> name = Identifier()
+  ifNotExists = IfNotExists() <ON> tmp = Identifier()
+    {
+      ncNames = new ArrayList<Identifier>();
+      ncNames.add(new Identifier(tmp));
+    }
+  ( <COMMA> tmp = Identifier()
+    {
+      ncNames.add(new Identifier(tmp));
+    }
+  )*
+    {
+      return new NodegroupDecl(new Identifier(name), ncNames, ifNotExists);
+    }
+}
+
+DatasetDecl DatasetSpecification() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  String typeName = null;
+  String adapterName = null;
+  Map<String,String> properties = null;
+  Map<String,String> compactionPolicyProperties = null;
+  FunctionSignature appliedFunction = null;
+  List<List<String>> primaryKeyFields = null;
+  String nodeGroupName = null;
+  Map<String,String> hints = new HashMap<String,String>();
+  DatasetDecl dsetDecl = null;
+  boolean autogenerated = false;
+  String compactionPolicy = null;
+  boolean temp = false;
+  List<String> filterField = null;
+}
+{
+  (
+    <EXTERNAL> <DATASET> nameComponents = QualifiedName()
+    <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
+    ifNotExists = IfNotExists()
+    <USING> adapterName = AdapterName() properties = Configuration()
+    (<ON> nodeGroupName = Identifier() )?
+    ( <HINTS> hints = Properties() )?
+    ( <USING> <COMPACTION> <POLICY> compactionPolicy = CompactionPolicy() (LOOKAHEAD(1) compactionPolicyProperties = Configuration())? )?
+      {
+        ExternalDetailsDecl edd = new ExternalDetailsDecl();
+        edd.setAdapter(adapterName);
+        edd.setProperties(properties);
+        dsetDecl = new DatasetDecl(nameComponents.first,
+                                   nameComponents.second,
+                                   new Identifier(typeName),
+                                   nodeGroupName != null? new Identifier(nodeGroupName): null,
+                                   compactionPolicy,
+                                   compactionPolicyProperties,
+                                   hints,
+                                   DatasetType.EXTERNAL,
+                                   edd,
+                                   ifNotExists);
+      }
+
+    | (<INTERNAL> | <TEMPORARY> { temp = true; })? 
+    <DATASET> nameComponents = QualifiedName()
+    <LEFTPAREN> typeName = Identifier() <RIGHTPAREN>
+    ifNotExists = IfNotExists()
+    primaryKeyFields = PrimaryKey()
+    (<AUTOGENERATED> { autogenerated = true; } )?
+    (<ON> nodeGroupName = Identifier() )?
+    ( <HINTS> hints = Properties() )?
+    ( <USING> <COMPACTION> <POLICY> compactionPolicy = CompactionPolicy() (LOOKAHEAD(1) compactionPolicyProperties = Configuration())? )?
+    ( LOOKAHEAD(2) <WITH> <FILTER> <ON>  filterField = NestedField() )?
+      {
+        InternalDetailsDecl idd = new InternalDetailsDecl(primaryKeyFields,
+                                                          autogenerated,
+                                                          filterField,
+                                                          temp);
+        dsetDecl = new DatasetDecl(nameComponents.first,
+                                   nameComponents.second,
+                                   new Identifier(typeName),
+                                   nodeGroupName != null ? new Identifier(nodeGroupName) : null,
+                                   compactionPolicy,
+                                   compactionPolicyProperties,
+                                   hints,
+                                   DatasetType.INTERNAL,
+                                   idd,
+                                   ifNotExists);
+      }
+  )
+    {
+      return dsetDecl;
+    }
+}
+
+RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseException:
+{
+  RefreshExternalDatasetStatement redss = new RefreshExternalDatasetStatement();
+  Pair<Identifier,Identifier> nameComponents = null;
+  String datasetName = null;
+}
+{
+    <REFRESH> <EXTERNAL> <DATASET> nameComponents = QualifiedName()
+    {
+    redss.setDataverseName(nameComponents.first);
+    redss.setDatasetName(nameComponents.second);
+    return redss;
+    }
+}
+
+RunStatement RunStatement() throws ParseException:
+{
+  String system = null;
+  String tmp;
+  ArrayList<String> parameters = new  ArrayList<String>();
+  Pair<Identifier,Identifier> nameComponentsFrom = null;
+  Pair<Identifier,Identifier> nameComponentsTo = null;
+}
+{
+  <RUN> system = Identifier()<LEFTPAREN> ( tmp = Identifier() [<COMMA>]
+    {
+      parameters.add(tmp);
+    }
+  )*<RIGHTPAREN>
+  <FROM> <DATASET> nameComponentsFrom  = QualifiedName()
+  <TO> <DATASET> nameComponentsTo  = QualifiedName()
+    {
+      return new RunStatement(system, parameters, nameComponentsFrom.first, nameComponentsFrom.second, nameComponentsTo.first, nameComponentsTo.second);
+    }
+}
+
+CreateIndexStatement IndexSpecification() throws ParseException:
+{
+  CreateIndexStatement cis = new CreateIndexStatement();
+  String indexName = null;
+  boolean ifNotExists = false;
+  Pair<Identifier,Identifier> nameComponents = null;
+  Pair<List<String>, TypeExpression> fieldPair = null;
+  IndexParams indexType = null;
+  boolean enforced = false;
+}
+{
+  <INDEX> indexName = Identifier()
+  ifNotExists = IfNotExists()
+  <ON> nameComponents = QualifiedName()
+  <LEFTPAREN> ( fieldPair = OpenField()
+    {
+      cis.addFieldExprPair(fieldPair);
+    }
+  ) (<COMMA> fieldPair = OpenField()
+    {
+      cis.addFieldExprPair(fieldPair);
+    }
+  )* <RIGHTPAREN> ( <TYPE> indexType = IndexType() )? ( <ENFORCED> { enforced = true; } )?
+    {
+      cis.setIndexName(new Identifier(indexName));
+      cis.setIfNotExists(ifNotExists);
+      cis.setDataverseName(nameComponents.first);
+      cis.setDatasetName(nameComponents.second);
+      if (indexType != null) {
+        cis.setIndexType(indexType.type);
+        cis.setGramLength(indexType.gramLength);
+      }
+      cis.setEnforced(enforced);
+      return cis;
+    }
+}
+
+String CompactionPolicy() throws ParseException :
+{
+  String compactionPolicy = null;
+}
+{
+  compactionPolicy = Identifier()
+    {
+      return compactionPolicy;
+    }
+}
+
+String FilterField() throws ParseException :
+{
+  String filterField = null;
+}
+{
+  filterField = Identifier()
+    {
+      return filterField;
+    }
+}
+
+IndexParams IndexType() throws ParseException:
+{
+  IndexType type = null;
+  int gramLength = 0;
+}
+{
+  (<BTREE>
+    {
+      type = IndexType.BTREE;
+    }
+  | <RTREE>
+    {
+      type = IndexType.RTREE;
+    }
+  | <KEYWORD>
+    {
+      type = IndexType.LENGTH_PARTITIONED_WORD_INVIX;
+    }
+  | <NGRAM> <LEFTPAREN> <INTEGER_LITERAL>
+    {
+      type = IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
+      gramLength = Integer.valueOf(token.image);
+    }
+  <RIGHTPAREN>)
+    {
+      return new IndexParams(type, gramLength);
+    }
+}
+
+CreateDataverseStatement DataverseSpecification() throws ParseException :
+{
+  String dvName = null;
+  boolean ifNotExists = false;
+  String format = null;
+}
+{
+  <DATAVERSE> dvName = Identifier()
+  ifNotExists = IfNotExists()
+  ( LOOKAHEAD(1) <WITH> <FORMAT> format = QuotedString() )?
+    {
+      return new CreateDataverseStatement(new Identifier(dvName), format, ifNotExists);
+    }
+}
+
+CreateFunctionStatement FunctionSpecification() throws ParseException:
+{
+  FunctionSignature signature;
+  boolean ifNotExists = false;
+  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  String functionBody;
+  VarIdentifier var = null;
+  Expression functionBodyExpr;
+  Token beginPos;
+  Token endPos;
+  FunctionName fctName = null;
+
+  createNewScope();
+}
+{
+  <FUNCTION> fctName = FunctionName()
+  ifNotExists = IfNotExists()
+  paramList = ParameterList()
+  <LEFTBRACE>
+  {
+     beginPos = token;
+  }
+  functionBodyExpr = Expression() <RIGHTBRACE>
+    {
+      endPos = token;
+      functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
+      // TODO use fctName.library
+      signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
+      getCurrentScope().addFunctionDescriptor(signature, false);
+      removeCurrentScope();
+      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+    }
+}
+
+CreateFeedStatement FeedSpecification() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  String adapterName = null;
+  Map<String,String> properties = null;
+  FunctionSignature appliedFunction = null;
+  CreateFeedStatement cfs = null;
+  Pair<Identifier,Identifier> sourceNameComponents = null;
+  
+}
+{
+  (
+    <SECONDARY> <FEED>  nameComponents = QualifiedName() ifNotExists = IfNotExists()
+      <FROM> <FEED> sourceNameComponents = QualifiedName() (appliedFunction = ApplyFunction())?
+      {
+        cfs = new CreateSecondaryFeedStatement(nameComponents,
+                                   sourceNameComponents, appliedFunction, ifNotExists);
+      }
+     |
+     (<PRIMARY>)? <FEED> nameComponents = QualifiedName() ifNotExists = IfNotExists()
+      <USING> adapterName = AdapterName() properties = Configuration() (appliedFunction = ApplyFunction())?  
+       {
+        cfs = new CreatePrimaryFeedStatement(nameComponents,
+                                    adapterName, properties, appliedFunction, ifNotExists);
+       }
+  )
+    {
+      return cfs;
+    }
+}
+
+CreateFeedPolicyStatement FeedPolicySpecification() throws ParseException:
+{
+  String policyName = null;  
+  String basePolicyName = null; 
+  String sourcePolicyFile = null;
+  String definition = null;
+  boolean ifNotExists = false;
+  Map<String,String> properties = null;
+  CreateFeedPolicyStatement cfps = null;
+}
+{
+  (
+    <INGESTION> <POLICY>  policyName = Identifier() ifNotExists = IfNotExists()
+      <FROM> 
+      (<POLICY> basePolicyName = Identifier() properties = Configuration() (<DEFINITION> definition = QuotedString())?  
+      {
+        cfps = new CreateFeedPolicyStatement(policyName,
+                                   basePolicyName, properties, definition, ifNotExists);
+      }
+     | <PATH> sourcePolicyFile = Identifier() (<DEFINITION> definition = QuotedString())?  
+       {
+        cfps = new CreateFeedPolicyStatement(policyName, sourcePolicyFile, definition, ifNotExists);
+       }
+     ) 
+       
+  )
+    {
+      return cfps;
+    }
+}
+
+
+
+List<VarIdentifier> ParameterList() throws ParseException:
+{
+  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  VarIdentifier var = null;
+}
+{
+  <LEFTPAREN> (<IDENTIFIER>
+    {
+      var = new VarIdentifier();
+      var.setValue(token.image);
+      paramList.add(var);
+      getCurrentScope().addNewVarSymbolToScope(var);
+    }
+  (<COMMA> <IDENTIFIER>
+    {
+      var = new VarIdentifier();
+      var.setValue(token.image);
+      paramList.add(var);
+      getCurrentScope().addNewVarSymbolToScope(var);
+    }
+  )*)? <RIGHTPAREN>
+    {
+      return paramList;
+    }
+}
+
+boolean IfNotExists() throws ParseException:
+{
+}
+{
+  ( LOOKAHEAD(1) <IF> ("not exists"|"NOT EXISTS")
+    {
+      return true;
+    }
+  )?
+    {
+      return false;
+    }
+}
+
+FunctionSignature ApplyFunction() throws ParseException:
+{
+  FunctionName functioName = null;
+  FunctionSignature funcSig = null;
+}
+{
+  <APPLY> <FUNCTION> functioName = FunctionName()
+    {
+       String fqFunctionName = functioName.library == null ? functioName.function : functioName.library + "#" + functioName.function;
+       return new FunctionSignature(functioName.dataverse, fqFunctionName, 1);
+    }
+}
+
+String GetPolicy() throws ParseException:
+{
+  String policy = null;
+}
+{
+   <USING> <POLICY> policy = Identifier()
+   {
+     return policy;
+   }
+
+}
+
+FunctionSignature FunctionSignature() throws ParseException:
+{
+  FunctionName fctName = null;
+  int arity = 0;
+}
+{
+  fctName = FunctionName() <ATT> <INTEGER_LITERAL>
+    {
+      arity = new Integer(token.image);
+      if (arity < 0 && arity != FunctionIdentifier.VARARGS) {
+        throw new ParseException(" invalid arity:" + arity);
+      }
+
+      // TODO use fctName.library
+      String fqFunctionName = fctName.library == null ? fctName.function : fctName.library + "#" + fctName.function;
+      return new FunctionSignature(fctName.dataverse, fqFunctionName, arity);
+    }
+}
+
+List<List<String>> PrimaryKey() throws ParseException:
+{
+  List<String> tmp = null;
+  List<List<String>> primaryKeyFields = new ArrayList<List<String>>();
+}
+{
+  <PRIMARY> <KEY> tmp = NestedField()
+    {
+      primaryKeyFields.add(tmp);
+    }
+  ( <COMMA> tmp = NestedField()
+    {
+      primaryKeyFields.add(tmp);
+    }
+  )*
+    {
+      return primaryKeyFields;
+    }
+}
+
+Statement DropStatement() throws ParseException:
+{
+  String id = null;
+  Pair<Identifier,Identifier> pairId = null;
+  Triple<Identifier,Identifier,Identifier> tripleId = null;
+  FunctionSignature funcSig = null;
+  boolean ifExists = false;
+  Statement stmt = null;
+}
+{
+  <DROP>
+  (
+    <DATASET> pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new DropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | <INDEX> tripleId = DoubleQualifiedName() ifExists = IfExists()
+      {
+        stmt = new IndexDropStatement(tripleId.first, tripleId.second, tripleId.third, ifExists);
+      }
+    | <NODEGROUP> id = Identifier() ifExists = IfExists()
+      {
+        stmt = new NodeGroupDropStatement(new Identifier(id), ifExists);
+      }
+    | <TYPE> pairId = TypeName() ifExists = IfExists()
+      {
+        stmt = new TypeDropStatement(pairId.first, pairId.second, ifExists);
+      }
+    | <DATAVERSE> id = Identifier() ifExists = IfExists()
+      {
+        stmt = new DataverseDropStatement(new Identifier(id), ifExists);
+      }
+    | <FUNCTION> funcSig = FunctionSignature() ifExists = IfExists()
+      {
+        stmt = new FunctionDropStatement(funcSig, ifExists);
+      }
+    | <FEED> pairId = QualifiedName() ifExists = IfExists()
+      {
+        stmt = new FeedDropStatement(pairId.first, pairId.second, ifExists);
+      }
+  )
+  {
+    return stmt;
+  }
+}
+
+boolean IfExists() throws ParseException :
+{
+}
+{
+  ( LOOKAHEAD(1) <IF> <EXISTS>
+    {
+      return true;
+    }
+  )?
+    {
+      return false;
+    }
+}
+
+InsertStatement InsertStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  Query query;
+}
+{
+  <INSERT> <INTO> nameComponents = QualifiedName() query = Query()
+    {
+      query.setTopLevel(false);
+      return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
+    }
+}
+
+DeleteStatement DeleteStatement() throws ParseException:
+{
+  VariableExpr var = null;
+  Expression condition = null;
+  Pair<Identifier, Identifier> nameComponents;
+  // This is related to the new metadata lock management
+  setDataverses(new ArrayList<String>());
+  setDatasets(new ArrayList<String>());
+
+}
+{
+  <DELETE> var = Variable()
+    {
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+    }
+  <FROM> nameComponents  = QualifiedName()
+  (<WHERE> condition = Expression())?
+    {
+      // First we get the dataverses and datasets that we want to lock
+      List<String> dataverses = getDataverses();
+      List<String> datasets = getDatasets();
+      // we remove the pointer to the dataverses and datasets
+      setDataverses(null);
+      setDatasets(null);
+      return new DeleteStatement(var, nameComponents.first, nameComponents.second,
+          condition, getVarCounter(), dataverses, datasets);
+    }
+}
+
+UpdateStatement UpdateStatement() throws ParseException:
+{
+  VariableExpr vars;
+  Expression target;
+  Expression condition;
+  UpdateClause uc;
+  List<UpdateClause> ucs = new ArrayList<UpdateClause>();
+}
+{
+  <UPDATE> vars = Variable() <IN> target = Expression()
+  <WHERE> condition = Expression()
+  <LEFTPAREN> (uc = UpdateClause()
+    {
+      ucs.add(uc);
+    }
+  (<COMMA> uc = UpdateClause()
+    {
+      ucs.add(uc);
+    }
+  )*) <RIGHTPAREN>
+    {
+      return new UpdateStatement(vars, target, condition, ucs);
+    }
+}
+
+UpdateClause UpdateClause() throws ParseException:
+{
+  Expression target = null;
+  Expression value = null ;
+  InsertStatement is = null;
+  DeleteStatement ds = null;
+  UpdateStatement us = null;
+  Expression condition = null;
+  UpdateClause ifbranch = null;
+  UpdateClause elsebranch = null;
+}
+{
+   (<SET> target = Expression() <EQ> value = Expression()
+   | is = InsertStatement()
+   | ds = DeleteStatement()
+   | us = UpdateStatement()
+   | <IF> <LEFTPAREN> condition = Expression() <RIGHTPAREN>
+     <THEN> ifbranch = UpdateClause()
+     [LOOKAHEAD(1) <ELSE> elsebranch = UpdateClause()]
+     {
+       return new UpdateClause(target, value, is, ds, us, condition, ifbranch, elsebranch);
+     }
+   )
+}
+
+Statement SetStatement() throws ParseException:
+{
+  String pn = null;
+  String pv = null;
+}
+{
+  <SET> pn = Identifier() pv = QuotedString()
+    {
+      return new SetStatement(pn, pv);
+    }
+}
+
+Statement WriteStatement() throws ParseException:
+{
+  String nodeName = null;
+  String fileName = null;
+  Query query;
+  String writerClass = null;
+  Pair<Identifier,Identifier> nameComponents = null;
+}
+{
+  <WRITE> <OUTPUT> <TO> nodeName = Identifier() <COLON> fileName = QuotedString()
+    ( <USING> writerClass = QuotedString() )?
+    {
+      return new WriteStatement(new Identifier(nodeName), fileName, writerClass);
+    }
+}
+
+LoadStatement LoadStatement() throws ParseException:
+{
+  Identifier dataverseName = null;
+  Identifier datasetName = null;
+  boolean alreadySorted = false;
+  String adapterName;
+  Map<String,String> properties;
+  Pair<Identifier,Identifier> nameComponents = null;
+}
+{
+  <LOAD> <DATASET> nameComponents = QualifiedName()
+    {
+      dataverseName = nameComponents.first;
+      datasetName = nameComponents.second;
+    }
+  <USING> adapterName = AdapterName() properties = Configuration()
+  (<PRESORTED>
+    {
+      alreadySorted = true;
+    }
+  )?
+    {
+      return new LoadStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
+    }
+}
+
+
+String AdapterName() throws ParseException :
+{
+  String adapterName = null;
+}
+{
+  adapterName = Identifier()
+    {
+      return adapterName;
+    }
+}
+
+Statement CompactStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> nameComponents = null;
+  Statement stmt = null;
+}
+{
+  <COMPACT> <DATASET> nameComponents = QualifiedName()
+    {
+      stmt = new CompactStatement(nameComponents.first, nameComponents.second);
+    }
+    {
+      return stmt;
+    }
+}
+
+Statement FeedStatement() throws ParseException:
+{
+  Pair<Identifier,Identifier> feedNameComponents = null;
+  Pair<Identifier,Identifier> datasetNameComponents = null;
+
+  Map<String,String> configuration = null;
+  Statement stmt = null;
+  String policy = null;
+}
+{
+  (
+    <CONNECT> <FEED> feedNameComponents = QualifiedName() <TO> <DATASET> datasetNameComponents = QualifiedName() (policy = GetPolicy())?
+      {
+        stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, policy, getVarCounter());
+      }
+    | <DISCONNECT> <FEED> feedNameComponents = QualifiedName() <FROM> <DATASET> datasetNameComponents = QualifiedName()
+      {
+        stmt = new DisconnectFeedStatement(feedNameComponents, datasetNameComponents);
+      }
+  )
+    {
+      return stmt;
+    }
+}
+
+Map<String,String> Configuration()  throws ParseException :
+{
+    Map<String,String> configuration = new LinkedHashMap<String,String>();
+    Pair<String, String> keyValuePair = null;
+}
+{
+  <LEFTPAREN> ( keyValuePair = KeyValuePair()
+    {
+      configuration.put(keyValuePair.first, keyValuePair.second);
+    }
+  ( <COMMA> keyValuePair = KeyValuePair()
+    {
+      configuration.put(keyValuePair.first, keyValuePair.second);
+    }
+  )* )? <RIGHTPAREN>
+    {
+      return configuration;
+    }
+}
+
+Pair<String, String> KeyValuePair() throws ParseException:
+{
+  String key;
+  String value;
+}
+{
+  <LEFTPAREN> key = QuotedString() <EQ> value = QuotedString() <RIGHTPAREN>
+    {
+      return new Pair<String, String>(key, value);
+    }
+}
+
+Map<String,String> Properties() throws ParseException:
+{
+  Map<String,String> properties = new HashMap<String,String>();
+  Pair<String, String> property;
+}
+{
+  (LOOKAHEAD(1) <LEFTPAREN> property = Property()
+    {
+      properties.put(property.first, property.second);
+    }
+  ( <COMMA> property = Property()
+    {
+      properties.put(property.first, property.second);
+    }
+  )* <RIGHTPAREN> )?
+    {
+      return properties;
+    }
+}
+
+Pair<String, String> Property() throws ParseException:
+{
+  String key;
+  String value;
+}
+{
+  key = Identifier() <EQ> ( value = QuotedString() | <INTEGER_LITERAL>
+    {
+      try {
+        value = "" + Long.valueOf(token.image);
+      } catch (NumberFormatException nfe) {
+        throw new ParseException("inapproriate value: " + token.image);
+      }
+    }
+  )
+    {
+      return new Pair<String, String>(key.toUpperCase(), value);
+    }
+}
+
+TypeExpression IndexedTypeExpr() throws ParseException:
+{
+  TypeExpression typeExpr = null;
+}
+{
+  (
+      typeExpr = TypeReference()
+    | typeExpr = OrderedListTypeDef()
+    | typeExpr = UnorderedListTypeDef()
+  )
+  {
+    return typeExpr;
+  }
+}
+
+TypeExpression TypeExpr() throws ParseException:
+{
+  TypeExpression typeExpr = null;
+}
+{
+  (
+      typeExpr = RecordTypeDef()
+    | typeExpr = TypeReference()
+    | typeExpr = OrderedListTypeDef()
+    | typeExpr = UnorderedListTypeDef()
+  )
+  {
+    return typeExpr;
+  }
+}
+
+RecordTypeDefinition RecordTypeDef() throws ParseException:
+{
+  RecordTypeDefinition recType = new RecordTypeDefinition();
+  RecordTypeDefinition.RecordKind recordKind = null;
+}
+{
+  ( <CLOSED> { recordKind = RecordTypeDefinition.RecordKind.CLOSED; }
+    | <OPEN> { recordKind = RecordTypeDefinition.RecordKind.OPEN; } )?
+   <LEFTBRACE>
+    {
+      String hint = getHint(token);
+      if (hint != null) {
+        String splits[] = hint.split(" +");
+        if (splits[0].equals(GEN_FIELDS_HINT)) {
+          if (splits.length != 5) {
+            throw new ParseException("Expecting: /*+ gen-fields <type> <min> <max> <prefix>*/");
+          }
+          if (!splits[1].equals("int")) {
+            throw new ParseException("The only supported type for gen-fields is int.");
+          }
+          UndeclaredFieldsDataGen ufdg = new UndeclaredFieldsDataGen(UndeclaredFieldsDataGen.Type.INT,
+             Integer.parseInt(splits[2]), Integer.parseInt(splits[3]), splits[4]);
+          recType.setUndeclaredFieldsDataGen(ufdg);
+        }
+      }
+
+    }
+        (
+          RecordField(recType)
+          ( <COMMA>  RecordField(recType) )*
+        )?
+   <RIGHTBRACE>
+   {
+      if (recordKind == null) {
+        recordKind = RecordTypeDefinition.RecordKind.OPEN;
+      }
+      recType.setRecordKind(recordKind);
+      return recType;
+   }
+}
+
+void RecordField(RecordTypeDefinition recType) throws ParseException:
+{
+  String fieldName;
+  TypeExpression type = null;
+  boolean nullable = false;
+}
+{
+  fieldName = Identifier()
+    {
+      String hint = getHint(token);
+      IRecordFieldDataGen rfdg = hint != null ? parseFieldDataGen(hint) : null;
+    }
+  <COLON> type =  TypeExpr() (<QUES> { nullable = true; } )?
+    {
+      recType.addField(fieldName, type, nullable, rfdg);
+    }
+}
+
+TypeReferenceExpression TypeReference() throws ParseException:
+{
+  String id = null;
+}
+{
+ id = Identifier()
+   {
+     if (id.equalsIgnoreCase("int")) {
+        id = "int64";
+     }
+
+     return new TypeReferenceExpression(new Identifier(id));
+   }
+}
+
+OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
+{
+  TypeExpression type = null;
+}
+{
+  <LEFTBRACKET>
+    ( type =  TypeExpr() )
+  <RIGHTBRACKET>
+  {
+    return new OrderedListTypeDefinition(type);
+  }
+}
+
+
+UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
+{
+  TypeExpression type = null;
+}
+{
+  <LEFTDBLBRACE>
+    ( type =  TypeExpr() )
+  <RIGHTDBLBRACE>
+  {
+    return new UnorderedListTypeDefinition(type);
+  }
+}
+
+FunctionName FunctionName() throws ParseException:
+{
+  String first = null;
+  String second = null;
+  String third = null;
+  boolean secondAfterDot = false;
+}
+{
+  first = Identifier() 
+  {
+    FunctionName result = new FunctionName();
+    result.hint = getHint(token);
+  } 
+  ( <DOT> second = Identifier()
+    {
+      secondAfterDot = true;
+    }
+  (<SHARP> third = Identifier())? | <SHARP> second = Identifier() )?
+    {
+      if (second == null) {
+        result.dataverse = defaultDataverse;
+        result.library = null;
+        result.function = first;
+      } else if (third == null) {
+        if (secondAfterDot) {
+          result.dataverse = first;
+          result.library   = null;
+          result.function = second;
+        } else {
+          result.dataverse = defaultDataverse;
+          result.library   = first;
+          result.function = second;
+        }
+      } else {
+        result.dataverse = first;
+        result.library   = second;
+        result.function  = third;
+      }
+
+      if (result.function.equalsIgnoreCase("int")) {
+            result.function = "int64";
+      }
+      return result;
+    }
+}
+
+Pair<Identifier,Identifier> TypeName() throws ParseException:
+{
+  Pair<Identifier,Identifier> name = null;
+}
+{
+  name = QualifiedName()
+    {
+      if (name.first == null) {
+        name.first = new Identifier(defaultDataverse);
+      }
+      return name;
+    }
+}
+
+String Identifier() throws ParseException:
+{
+  String lit = null;
+}
+{
+  (<IDENTIFIER>
+    {
+      return token.image;
+    }
+  | lit = QuotedString()
+    {
+      return lit;
+    }
+  )
+}
+
+Pair<List<String>, TypeExpression> OpenField() throws ParseException:
+{
+  TypeExpression fieldType = null;
+  List<String> fieldList = null;
+}
+{
+  fieldList = NestedField()
+  ( <COLON> fieldType =  IndexedTypeExpr() )?
+  {
+    return new Pair<List<String>, TypeExpression>(fieldList, fieldType);
+  }
+}
+
+List<String> NestedField() throws ParseException:
+{
+  List<String> exprList = new ArrayList<String>();
+  String lit = null;
+}
+{
+  lit = Identifier()
+  {
+    exprList.add(lit);
+  }
+  (<DOT>
+    lit = Identifier()
+    {
+      exprList.add(lit);
+    }
+  )*
+  {
+    return exprList;
+  }
+}
+
+
+String QuotedString() throws ParseException:
+{
+}
+{
+  <QUOTED_STRING>
+    {
+      return removeQuotesAndEscapes(token.image);
+    }
+}
+
+
+String StringLiteral() throws ParseException:
+{
+}
+{
+  <STRING_LITERAL>
+    {
+      return removeQuotesAndEscapes(token.image);
+    }
+}
+
+Pair<Identifier,Identifier> QualifiedName() throws ParseException:
+{
+  String first = null;
+  String second = null;
+}
+{
+  first = Identifier() (<DOT> second = Identifier())?
+  {
+    Identifier id1 = null;
+    Identifier id2 = null;
+    if (second == null) {
+      id2 = new Identifier(first);
+    } else
+    {
+      id1 = new Identifier(first);
+      id2 = new Identifier(second);
+    }
+    return new Pair<Identifier,Identifier>(id1, id2);
+  }
+}
+
+Triple<Identifier,Identifier,Identifier> DoubleQualifiedName() throws ParseException:
+{
+  String first = null;
+  String second = null;
+  String third = null;
+}
+{
+  first = Identifier() <DOT> second = Identifier() (<DOT> third = Identifier())?
+  {
+    Identifier id1 = null;
+    Identifier id2 = null;
+    Identifier id3 = null;
+    if (third == null) {
+      id2 = new Identifier(first);
+      id3 = new Identifier(second);
+    } else {
+      id1 = new Identifier(first);
+      id2 = new Identifier(second);
+      id3 = new Identifier(third);
+    }
+    return new Triple<Identifier,Identifier,Identifier>(id1, id2, id3);
+  }
+}
+
+FunctionDecl FunctionDeclaration() throws ParseException:
+{
+  FunctionDecl funcDecl;
+  FunctionSignature signature;
+  String functionName;
+  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  Expression funcBody;
+  createNewScope();
+}
+{
+  <DECLARE> <FUNCTION> functionName = Identifier()
+  paramList = ParameterList()
+  <LEFTBRACE> funcBody = Expression() <RIGHTBRACE>
+    {
+      signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
+      getCurrentScope().addFunctionDescriptor(signature, false);
+      funcDecl = new FunctionDecl(signature, paramList, funcBody);
+      removeCurrentScope();
+      return funcDecl;
+    }
+}
+
+
+Query Query() throws ParseException:
+{
+  Query query = new Query();
+  // we set the pointers to the dataverses and datasets lists to fill them with entities to be locked
+  setDataverses(query.getDataverses());
+  setDatasets(query.getDatasets());
+  Expression expr;
+}
+{
+  (
+  expr = Expression()
+  |
+  expr = SelectExpression(false)
+  )
+  {
+    query.setBody(expr);
+    query.setVarCounter(getVarCounter());
+    // we remove the pointers to the locked entities before we return the query object
+    setDataverses(null);
+    setDatasets(null);
+    return query;
+  }
+}
+
+
+
+Expression Expression():
+{
+  Expression expr = null;
+  Expression exprP = null;
+}
+{
+(
+    LOOKAHEAD(2)
+    expr = OperatorExpr()
+    | expr = IfThenElse()
+    | expr = QuantifiedExpression()
+)
+    {
+      return (exprP==null) ? expr : exprP;
+    }
+}
+
+
+
+Expression OperatorExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = AndExpr()
+    (
+
+      <OR>
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+          op.addOperand(operand);
+        op.setCurrentop(true);
+        }
+      op.addOperator(token.image);
+    }
+
+    operand = AndExpr()
+    {
+      op.addOperand(operand);
+    }
+
+    )*
+
+    {
+      return op==null? operand: op;
+    }
+}
+
+Expression AndExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = RelExpr()
+    (
+
+      <AND>
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+          op.addOperand(operand);
+        op.setCurrentop(true);
+        }
+      op.addOperator(token.image);
+    }
+
+    operand = RelExpr()
+    {
+      op.addOperand(operand);
+    }
+
+    )*
+
+    {
+      return op==null? operand: op;
+    }
+}
+
+
+
+Expression RelExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+  boolean broadcast = false;
+  IExpressionAnnotation annotation = null;
+}
+{
+    operand = AddExpr()
+    {
+      if (operand instanceof VariableExpr) {
+        String hint = getHint(token);
+        if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
+          broadcast = true;
+        }
+      }
+    }
+
+    (
+      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> |<SIMILAR>)
+        {
+          String mhint = getHint(token);
+          if (mhint != null) {
+            if (mhint.equals(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+            annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
+          } else if (mhint.equals(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+            annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
+          }
+        }
+          if (op == null) {
+            op = new OperatorExpr();
+            op.addOperand(operand, broadcast);
+          op.setCurrentop(true);
+          broadcast = false;
+          }
+        op.addOperator(token.image);
+      }
+
+       operand = AddExpr()
+      {
+         broadcast = false;
+         if (operand instanceof VariableExpr) {
+           String hint = getHint(token);
+           if (hint != null && hint.equals(BROADCAST_JOIN_HINT)) {
+             broadcast = true;
+           }
+         }
+         op.addOperand(operand, broadcast);
+      }
+    )?
+
+     {
+       if (annotation != null) {
+         op.addHint(annotation);
+       }
+       return op==null? operand: op;
+     }
+}
+
+Expression AddExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = MultExpr()
+    ( 
+       LOOKAHEAD(1)
+      (<PLUS> | <MINUS>)
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+        op.addOperand(operand);
+        op.setCurrentop(true);
+        }
+      ((OperatorExpr)op).addOperator(token.image);
+    }
+
+    operand = MultExpr()
+    {
+      op.addOperand(operand);
+    }
+    )*
+
+    {
+       return op==null? operand: op;
+    }
+}
+
+Expression MultExpr()throws ParseException:
+{
+  OperatorExpr op = null;
+  Expression operand = null;
+}
+{
+    operand = UnaryExpr()
+
+    (( <MUL> | <DIV> | <MOD> | <CARET> | <IDIV>)
+      {
+        if (op == null) {
+          op = new OperatorExpr();
+        op.addOperand(operand);
+        op.setCurrentop(true);
+        }
+      op.addOperator(token.image);
+    }
+    operand = UnaryExpr()
+    {
+       op.addOperand(operand);
+    }
+    )*
+
+     {
+       return op==null?operand:op;
+     }
+}
+
+Expression UnaryExpr() throws ParseException:
+{
+    Expression uexpr = null;
+    Expression expr = null;
+}
+{   
+    ( (<PLUS> | <MINUS>)
+    {
+        uexpr = new UnaryExpr();
+        if("+".equals(token.image))
+            ((UnaryExpr)uexpr).setSign(Sign.POSITIVE);
+        else if("-".equals(token.image))
+            ((UnaryExpr)uexpr).setSign(Sign.NEGATIVE);
+        else
+            throw new ParseException();
+    }
+    )?
+
+    expr = ValueExpr()
+    {
+        if(uexpr!=null){
+            ((UnaryExpr)uexpr).setExpr(expr);
+            return uexpr;
+        }
+        else{
+            return expr;
+        }
+    }
+}
+
+Expression ValueExpr()throws ParseException:
+{
+  Expression expr = null;
+  Identifier ident = null;
+  AbstractAccessor fa = null;
+  Expression indexExpr = null;
+}
+{
+  expr = PrimaryExpr() (
+     ident = Field()
+     {
+      fa = (fa == null ? new FieldAccessor(expr, ident)
+                       : new FieldAccessor(fa, ident));
+     }
+     | indexExpr = Index()
+     {
+      fa = (fa == null ? new IndexAccessor(expr, indexExpr)
+                       : new IndexAccessor(fa, indexExpr));
+     }
+    )*
+    {
+      return fa == null ? expr : fa;
+    }
+}
+
+Identifier Field() throws ParseException:
+{
+  String ident = null;
+}
+{
+   <DOT> ident = Identifier()
+    {
+      return new Identifier(ident);
+    }
+}
+
+Expression Index() throws ParseException:
+{
+    Expression expr = null;
+}
+{
+  <LEFTBRACKET> ( expr = Expression()
+    {
+        if(expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
+        {
+            Literal lit = ((LiteralExpr)expr).getValue();
+            if(lit.getLiteralType() != Literal.Type.INTEGER &&
+               lit.getLiteralType() != Literal.Type.LONG) {
+                throw new ParseException("Index should be an INTEGER");
+            }
+        }
+    }
+
+      | <QUES> // ANY
+
+      )
+
+   <RIGHTBRACKET>
+    {
+      return expr;
+    }
+}
+
+
+Expression PrimaryExpr()throws ParseException:
+{
+  Expression expr = null;
+}
+{
+  ( LOOKAHEAD(4)
+    expr = FunctionCallExpr()
+  | expr = Literal()
+  | expr = VariableRef()
+  | expr = ListConstructor()
+  | expr = RecordConstructor()
+  | expr = ParenthesizedExpression()
+  )
+    {
+      return expr;
+    }
+}
+
+Expression Literal() throws ParseException:
+{
+  LiteralExpr lit = new LiteralExpr();
+  String str = null;
+}
+{
+  ( str = StringLiteral()
+    {
+      lit.setValue(new StringLiteral(str));
+    }
+  | <INTEGER_LITERAL>
+    {
+      lit.setValue(new LongIntegerLiteral(new Long(token.image)));
+    }
+  | <FLOAT_LITERAL>
+    {
+      lit.setValue(new FloatLiteral(new Float(token.image)));
+    }
+  | <DOUBLE_LITERAL>
+    {
+      lit.setValue(new DoubleLiteral(new Double(token.image)));
+    }
+  | <NULL>
+    {
+      lit.setValue(NullLiteral.INSTANCE);
+    }
+  | <TRUE>
+    {
+      lit.setValue(TrueLiteral.INSTANCE);
+    }
+  | <FALSE>
+    {
+      lit.setValue(FalseLiteral.INSTANCE);
+    }
+  )
+    {
+      return lit;
+    }
+}
+
+
+VariableExpr VariableRef() throws ParseException:
+{
+    VariableExpr varExp = new VariableExpr();
+    VarIdentifier var = new VarIdentifier();
+}
+{
+    { String id = null; }
+    (<IDENTIFIER> { id = token.image; } | id = QuotedString())
+    {
+     Identifier ident = lookupSymbol(id);
+     if (isInForbiddenScopes(id)) {
+       throw new ParseException("Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
+     }
+     if(ident != null) { // exist such ident
+       varExp.setIsNewVar(false);
+       varExp.setVar((VarIdentifier)ident);
+     } else {
+       varExp.setVar(var);
+     }
+     var.setValue(id);
+     return varExp;
+    }
+}
+
+
+VariableExpr Variable() throws ParseException:
+{
+    VariableExpr varExp = new VariableExpr();
+    VarIdentifier var = new VarIdentifier();
+}
+{
+    { String id = null; }
+    (<IDENTIFIER> { id = token.image; } | id = QuotedString())
+    {
+     Identifier ident = lookupSymbol(id);
+     if(ident != null) { // exist such ident
+       varExp.setIsNewVar(false);
+     }
+     varExp.setVar(var);
+     var.setValue(token.image);
+     return varExp;
+    }
+}
+
+Expression ListConstructor() throws ParseException:
+{
+    Expression expr = null;
+}
+{
+    (
+        expr = OrderedListConstructor() | expr = UnorderedListConstructor()
+    )
+
+    {
+      return expr;
+    }
+}
+
+
+ListConstructor OrderedListConstructor() throws ParseException:
+{
+      ListConstructor expr = new ListConstructor();
+      List<Expression> exprList = null;
+      expr.setType(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR);
+}
+{
+    <LEFTBRACKET> exprList = ExpressionList() <RIGHTBRACKET>
+    {
+      expr.setExprList(exprList);
+      return expr;
+    }
+}
+
+ListConstructor UnorderedListConstructor() throws ParseException:
+{
+      ListConstructor expr = new ListConstructor();
+      List<Expression> exprList = null;
+      expr.setType(ListConstructor.Type.UNORDERED_LIST_CONSTRUCTOR);
+}
+{
+    <LEFTDBLBRACE> exprList = ExpressionList() <RIGHTDBLBRACE>
+    {
+      expr.setExprList(exprList);
+      return expr;
+    }
+}
+
+List<Expression> ExpressionList() throws ParseException:
+{
+      Expression expr = null;
+      List<Expression> list = null;
+      List<Expression> exprList = new ArrayList<Expression>();
+}
+{
+    (
+      expr = Expression() { exprList.add(expr); }
+      (LOOKAHEAD(1) <COMMA> list = ExpressionList() { exprList.addAll(list); })?
+    )?
+    (LOOKAHEAD(1) Comma())?
+    {
+        return exprList;
+    }
+}
+
+void Comma():
+{}
+{
+   <COMMA>
+}
+
+RecordConstructor RecordConstructor() throws ParseException:
+{
+      RecordConstructor expr = new RecordConstructor();
+      FieldBinding tmp = null;
+      List<FieldBinding> fbList = new ArrayList<FieldBinding>();
+}
+{
+    <LEFTBRACE> (tmp = FieldBinding()
+    {
+      fbList.add(tmp);
+    }
+    (<COMMA> tmp = FieldBinding() { fbList.add(tmp);  })*)? <RIGHTBRACE>
+    {
+      expr.setFbList(fbList);
+      return expr;
+    }
+}
+
+FieldBinding FieldBinding() throws ParseException:
+{
+    FieldBinding fb = new FieldBinding();
+    Expression left, right;
+}
+{
+    left = Expression() <COLON> right = Expression()
+    {
+      fb.setLeftExpr(left);
+      fb.setRightExpr(right);
+      return fb;
+    }
+}
+
+
+Expression FunctionCallExpr() throws ParseException:
+{
+  CallExpr callExpr;
+  List<Expression> argList = new ArrayList<Expression>();
+  Expression tmp;
+  int arity = 0;
+  FunctionName funcName = null;
+  String hint = null;
+}
+{
+  funcName = FunctionName()
+    {
+      hint = funcName.hint;
+    }
+  <LEFTPAREN> (tmp = Expression()
+    {
+      argList.add(tmp);
+      arity ++;
+    }
+  (<COMMA> tmp = Expression()
+    {
+      argList.add(tmp);
+      arity++;
+    }
+  )*)? <RIGHTPAREN>
+    {
+      // TODO use funcName.library
+      String fqFunctionName = funcName.library == null ? funcName.function : funcName.library + "#" + funcName.function;
+      FunctionSignature signature
+        = lookupFunctionSignature(funcName.dataverse, fqFunctionName, arity);
+      if (signature == null) {
+        signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
+      }
+      callExpr = new CallExpr(signature,argList);
+      if (hint != null) {
+        if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
+          callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
+        } else if (hint.startsWith(SKIP_SECONDARY_INDEX_SEARCH_HINT)) {
+          callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
+        }
+      }
+      return callExpr;
+    }
+}
+
+Expression ParenthesizedExpression() throws ParseException:
+{
+  Expression expr;
+}
+{
+    (
+    LOOKAHEAD(2)
+    <LEFTPAREN> expr = Expression() <RIGHTPAREN>
+    |
+    expr = Subquery()
+    )
+    {
+      return expr;
+    }
+}
+
+Expression IfThenElse() throws ParseException:
+{
+  Expression condExpr;
+  Expression thenExpr;
+  Expression elseExpr;
+  IfExpr ifExpr = new IfExpr();
+}
+{
+    <IF> <LEFTPAREN> condExpr = Expression() <RIGHTPAREN> <THEN> thenExpr = Expression() <ELSE> elseExpr = Expression()
+
+    {
+      ifExpr.setCondExpr(condExpr);
+      ifExpr.setThenExpr(thenExpr);
+      ifExpr.setElseExpr(elseExpr);
+      return ifExpr;
+    }
+}
+
+SelectExpression SelectExpression(boolean subquery) throws ParseException: {
+  List<LetClause> letClauses = new ArrayList<LetClause>();
+  SelectSetOperation selectSetOperation;
+  OrderbyClause orderbyClause = null;
+  LimitClause limitClause = null;
+  createNewScope();
+} {
+    ( letClauses = LetClause() )?
+    selectSetOperation = SelectSetOperation()
+    (orderbyClause = OrderbyClause() {})?
+    (limitClause = LimitClause() {})?
+    {
+      return new SelectExpression(letClauses, selectSetOperation, orderbyClause, limitClause, subquery);
+    }
+}
+
+SelectSetOperation SelectSetOperation() throws ParseException: {
+  SetOperationInput setOperationInputLeft;
+  List<SetOperationRight> setOperationRights = new ArrayList<SetOperationRight>();
+}
+{
+  {
+      SelectBlock selectBlockLeft = null;
+      SelectExpression subqueryLeft = null;
+      Expression expr = null;
+  }
+  selectBlockLeft = SelectBlock()
+  {
+     setOperationInputLeft = new SetOperationInput(selectBlockLeft, subqueryLeft);
+  }
+  (
+    {
+      SetOpType opType = SetOpType.UNION;
+      boolean setSemantics = true;
+      SelectBlock selectBlockRight = null;
+      SelectExpression subqueryRight = null;
+    }
+    (<UNION> {opType = SetOpType.UNION;} |<INTERSECT> {opType = SetOpType.INTERSECT;} |<EXCEPT> {opType = SetOpType.EXCEPT;}) (<ALL> {setSemantics = false;} )?
+    (selectBlockRight = SelectBlock()| subqueryRight = Subquery())
+    {
+        setOperationRights.add(new SetOperationRight(opType, setSemantics, new SetOperationInput(selectBlockRight, subqueryRight)));
+    }
+  )*
+  {
+    return new SelectSetOperation(setOperationInputLeft, setOperationRights);
+  }
+}
+
+SelectExpression Subquery() throws ParseException: {
+   SelectExpression selectExpr = null;
+}
+{
+  <LEFTPAREN> selectExpr = SelectExpression(true) {} <RIGHTPAREN>
+  {
+    return selectExpr;
+  }
+}
+
+SelectBlock SelectBlock() throws ParseException: {
+  SelectClause selectClause = null;
+  FromClause fromClause = null;
+  List<LetClause> fromLetClauses = null;
+  WhereClause whereClause = null;
+  GroupbyClause groupbyClause = null;
+  List<LetClause> gbyLetClauses = null;
+  HavingClause havingClause = null;
+}
+{
+  (
+     selectClause = SelectClause()
+     (
+        LOOKAHEAD(1)
+        fromClause = FromClause()
+        (
+            LOOKAHEAD(1)
+            fromLetClauses = LetClause()
+        )?
+     )?
+     (whereClause = WhereClause())?
+     (
+        groupbyClause = GroupbyClause()
+        (
+            LOOKAHEAD(1)
+            gbyLetClauses = LetClause()
+        )?
+        (havingClause = HavingClause())?
+     )?
+    |
+     fromClause = FromClause()
+     (
+        LOOKAHEAD(1)
+        fromLetClauses = LetClause()
+     )?
+     (whereClause = WhereClause())?
+     (
+        groupbyClause = GroupbyClause()
+        (
+            gbyLetClauses = LetClause()
+        )?
+        (havingClause = HavingClause())?
+     )?
+     selectClause = SelectClause()
+  )
+  {
+    return new SelectBlock(selectClause, fromClause, fromLetClauses, whereClause, groupbyClause, gbyLetClauses, havingClause);
+  }
+}
+
+SelectClause SelectClause() throws ParseException: {
+  SelectRegular selectRegular = null;
+  SelectElement selectElement = null;
+  boolean distinct = false;
+}
+{
+  <SELECT> (<ALL>|<DISTINCT> {distinct = true; } )? 
+  (
+    selectRegular = SelectRegular()
+    | 
+    selectElement = SelectElement()
+  )
+  {
+    return new SelectClause(selectElement, selectRegular, distinct);
+  }
+}
+
+SelectRegular SelectRegular() throws ParseException: {
+  List<Projection> projections = new ArrayList<Projection>(); 
+}
+{
+   {
+      Projection projection = null;
+   }
+   projection = Projection() { projections.add(projection); } 
+   ( LOOKAHEAD(2) <COMMA> 
+      projection = Projection() {projections.add(projection);}
+   )*
+  {
+    return new SelectRegular(projections);
+  }
+}
+
+SelectElement SelectElement() throws ParseException: {
+  Expression expr = null;
+  String name = null;
+}
+{
+  (<RAW>|<ELEMENT>|<VALUE>) expr = Expression()
+  {
+    return new SelectElement(expr);
+  }
+}
+
+Projection Projection() throws ParseException: {
+  Expression expr = null;
+  Identifier identifier = null;
+  String name = null;
+  boolean star = false;
+  boolean exprStar = false;
+}
+{
+  (
+    LOOKAHEAD(2)
+    expr= Expression() (<AS>)? name = Identifier()
+    | expr = Expression() <DOT> <MUL> {exprStar = true; }
+    | <MUL> {star = true; }
+  )
+  {
+    return new Projection(expr, name, star, exprStar);
+  }
+}
+
+FromClause FromClause() throws ParseException :
+{
+  List<FromTerm> fromTerms = new ArrayList<FromTerm>();
+  extendCurrentScope();
+}
+{
+  {
+    FromTerm fromTerm = null;
+  }
+    <FROM> fromTerm = FromTerm() { fromTerms.add(fromTerm); } 
+    (LOOKAHEAD(2) <COMMA> fromTerm = FromTerm() { fromTerms.add(fromTerm); } )*
+  {
+    return new FromClause(fromTerms);
+  }
+}
+
+FromTerm FromTerm() throws ParseException :
+{
+  Expression leftExpr = null;
+  VariableExpr leftVar = null; 
+  VariableExpr posVar = null;
+  List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
+}
+{
+  leftExpr = Expression() (<AS>)? leftVar = Variable() (<AT> posVar = Variable())?
+  (
+     {JoinType joinType = JoinType.INNER; }
+     (joinType = JoinType())?
+     {
+       AbstractBinaryCorrelateClause correlateClause = null;
+     }
+     (correlateClause = JoinClause(joinType)
+      |
+      correlateClause = NestClause(joinType)
+      |
+      correlateClause = UnnestClause(joinType)
+     )
+     {
+        correlateClauses.add(correlateClause);
+     }
+  )*
+  {
+    return new FromTerm(leftExpr, leftVar, posVar, correlateClauses);
+  }
+}
+
+JoinClause JoinClause(JoinType joinType) throws ParseException :
+{
+    Expression rightExpr = null;
+    VariableExpr rightVar = null;
+    VariableExpr posVar = null;
+    Expression conditionExpr = null;
+}
+{
+  <JOIN> rightExpr = Expression() (<AS>)? rightVar = Variable() (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
+  {
+    return new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
+  }
+}
+
+NestClause NestClause(JoinType joinType) throws ParseException :
+{
+    Expression rightExpr = null;
+    VariableExpr rightVar = null;
+    VariableExpr posVar = null;
+    Expression conditionExpr = null;
+}
+{
+  <NEST> rightExpr = Expression() (<AS>)? rightVar = Variable() (<AT> posVar = Variable())?  <ON> conditionExpr = Expression()
+  {
+    return new NestClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
+  }
+}
+
+UnnestClause UnnestClause(JoinType joinType) throws ParseException :
+{
+    Expression rightExpr;
+    VariableExpr rightVar;
+    VariableExpr posVar = null;
+}
+{
+  (<UNNEST>|<CORRELATE>|<FLATTEN>) rightExpr = Expression() (<AS>)? rightVar = Variable() (<AT> posVar = Variable())?
+  {
+    return new UnnestClause(joinType, rightExpr, rightVar, posVar);
+  }
+}
+
+
+JoinType JoinType() throws ParseException :
+{
+   JoinType joinType = JoinType.INNER;
+}
+{
+     (<INNER>|<LEFT> (<OUTER>)? {joinType = JoinType.LEFTOUTER; })
+     {
+       return joinType;
+     }
+}
+
+List<LetClause> LetClause() throws ParseException:
+{
+    List<LetClause> letList = new ArrayList<LetClause>();
+    LetClause letClause;
+}
+{
+    (
+     (<LET>|<LETTING>) letClause = LetElement() { letList.add(letClause); } (LOOKAHEAD(1) <COMMA> letClause = LetElement() { letList.add(letClause); })*
+     |
+     <WITH> letClause = WithElement() { letList.add(letClause); } (LOOKAHEAD(1) <COMMA> letClause = WithElement() { letList.add(letClause); })*
+    )
+    {
+      return letList;
+    }
+}
+
+WhereClause WhereClause()throws ParseException :
+{
+  WhereClause wc = new WhereClause();
+  Expression whereExpr;
+}
+{
+    <WHERE> whereExpr = Expression()
+    {
+      wc.setWhereExpr(whereExpr);
+      return wc;
+    }
+}
+
+OrderbyClause OrderbyClause()throws ParseException :
+{
+    OrderbyClause oc = new OrderbyClause();
+    Expression orderbyExpr;
+    List<Expression> orderbyList = new ArrayList<Expression>();
+    List<OrderbyClause.OrderModifier> modifierList = new ArrayList<OrderbyClause.OrderModifier >();
+    int numOfOrderby = 0;
+}
+{
+    <ORDER>
+      {
+        String hint = getHint(token);
+        if (hint != null) {
+          if (hint.startsWith(INMEMORY_HINT)) {
+            String splits[] = hint.split(" +");
+            int numFrames = Integer.parseInt(splits[1]);
+            int numTuples = Integer.parseInt(splits[2]);
+            oc.setNumFrames(numFrames);
+            oc.setNumTuples(numTuples);
+          }
+        }
+      }
+    <BY> orderbyExpr = Expression()
+    {
+      orderbyList.add(orderbyExpr);
+      OrderbyClause.OrderModifier modif = OrderbyClause.OrderModifier.ASC;
+    }
+    ( (<ASC> { modif = OrderbyClause.OrderModifier.ASC; })
+    | (<DESC> { modif = OrderbyClause.OrderModifier.DESC; }))?
+    {
+      modifierList.add(modif);
+    }
+
+    (LOOKAHEAD(2) <COMMA> orderbyExpr = Expression()
+    {
+      orderbyList.add(orderbyExpr);
+      modif = OrderbyClause.OrderModifier.ASC;
+    }
+    ( (<ASC> { modif = OrderbyClause.OrderModifier.ASC; })
+    | (<DESC> { modif = OrderbyClause.OrderModifier.DESC; }))?
+    {
+      modifierList.add(modif);
+    }
+    )*
+
+    {
+      oc.setModifierList(modifierList);
+      oc.setOrderbyList(orderbyList);
+      return oc;
+    }
+}
+
+GroupbyClause GroupbyClause()throws ParseException :
+{
+    GroupbyClause gbc = new GroupbyClause();
+    List<GbyVariableExpressionPair> vePairList = new ArrayList<GbyVariableExpressionPair>();
+    VariableExpr var = null;
+    VariableExpr withVar = null;
+    Expression expr = null;
+    VariableExpr decorVar = null;
+    Expression decorExpr = null;
+}
+{
+      {
+        Scope newScope = extendCurrentScopeNoPush(true);
+        // extendCurrentScope(true);
+      }
+    <GROUP>
+      {
+         String hint = getHint(token);
+         if (hint != null && hint.equals(HASH_GROUP_BY_HINT)) {
+           gbc.setHashGroupByHint(true);
+         }
+      }
+    <BY> (
+       expr = Expression()
+       (LOOKAHEAD(1) (<AS>)?
+        var = Variable()
+        {
+            newScope.addNewVarSymbolToScope(var.getVar());
+        })?
+        {
+            GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);
+            vePairList.add(pair1);
+        }
+       ( LOOKAHEAD(1) <COMMA>
+         expr = Expression()
+         (LOOKAHEAD(1)  (<AS>)?
+         var = Variable()
+         {
+             newScope.addNewVarSymbolToScope(var.getVar());
+         })?
+         {
+             GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);
+             vePairList.add(pair2);
+         }
+        )*
+    )
+    {
+      gbc.setGbyPairList(vePairList);
+      gbc.setDecorPairList(new ArrayList<GbyVariableExpressionPair>());
+      gbc.setWithVarList(new ArrayList<VariableExpr>());
+      replaceCurrentScope(newScope);
+      return gbc;
+    }
+}
+
+HavingClause HavingClause() throws ParseException:
+{
+   Expression filterExpr = null;
+}
+{
+    <HAVING> filterExpr = Expression()
+    {
+       return new HavingClause(filterExpr);
+    }
+}
+
+LimitClause LimitClause() throws ParseException:
+{
+    LimitClause lc = new LimitClause();
+    Expression expr;
+    pushForbiddenScope(getCurrentScope());
+}
+{
+    <LIMIT> expr = Expression()    { lc.setLimitExpr(expr);    }
+    (<OFFSET> expr = Expression() { lc.setOffset(expr);    })?
+
+  {
+    popForbiddenScope();
+    return lc;
+  }
+}
+
+QuantifiedExpression QuantifiedExpression()throws ParseException:
+{
+  QuantifiedExpression qc = new QuantifiedExpression();
+  List<QuantifiedPair> quantifiedList = new ArrayList<QuantifiedPair>();
+  Expression satisfiesExpr;
+  VariableExpr var;
+  Expression inExpr;
+  QuantifiedPair pair;
+}
+{
+  {
+    createNewScope();
+  }
+
+   (      (<SOME>  {  qc.setQuantifier(QuantifiedExpression.Quantifier.SOME);	})
+        | (<EVERY> {  qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY);	}))
+    var = Variable() <IN> inExpr = Expression()
+    {
+      pair = new QuantifiedPair(var, inExpr);
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+      quantifiedList.add(pair);
+    }
+    (
+    <COMMA> var = Variable() <IN> inExpr = Expression()
+    {
+      pair = new QuantifiedPair(var, inExpr);
+      getCurrentScope().addNewVarSymbolToScope(var.getVar());
+      quantifiedList.add(pair);
+    }
+    )*
+     <SATISFIES> satisfiesExpr = Expression()
+     {
+       qc.setSatisfiesExpr(satisfiesExpr);
+       qc.setQuantifiedList(quantifiedList);
+       removeCurrentScope();
+       return qc;
+     }
+}
+
+LetClause LetElement() throws ParseException:
+{
+    LetClause lc = new LetClause();
+    VariableExpr varExp;
+    Expression beExp;
+    extendCurrentScope();
+}
+{
+    varExp = Variable() <EQ> beExp = Expression()
+    {
+      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
+      lc.setVarExpr(varExp);
+      lc.setBindingExpr(beExp);
+      return lc;
+    }
+}
+
+LetClause WithElement() throws ParseException:
+{
+    LetClause lc = new LetClause();
+    VariableExpr varExp;
+    Expression beExp;
+    extendCurrentScope();
+}
+{
+    varExp = Variable() <AS> beExp = Expression()
+    {
+      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
+      lc.setVarExpr(varExp);
+      lc.setBindingExpr(beExp);
+      return lc;
+    }
+}
+
+TOKEN_MGR_DECLS:
+{
+    public int commentDepth = 0;
+    public IntStack lexerStateStack = new IntStack();
+
+    public void pushState() {
+      lexerStateStack.push( curLexState );
+    }
+
+    public void popState(String token) {
+      if (lexerStateStack.size() > 0) {
+         SwitchTo( lexerStateStack.pop() );
+      } else {
+         int errorLine = input_stream.getEndLine();
+         int errorColumn = input_stream.getEndColumn();
+         String msg = "Lexical error at line " + errorLine + ", column " + errorColumn + ". Encountered \"" + token
+             + "\" but state stack is empty.";
+         throw new TokenMgrError(msg, -1);
+      }
+    }
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN [IGNORE_CASE]:
+{
+  <ALL : "all">
+  | <AND : "and">
+  | <APPLY : "apply">
+  | <AS : "as">
+  | <ASC : "asc">
+  | <AT : "at">
+  | <AUTOGENERATED : "autogenerated">
+  | <BTREE : "btree">
+  | <BY : "by">
+  | <CASE : "case">
+  | <CLOSED : "closed">
+  | <CREATE : "create">
+  | <COMPACTION : "compaction">
+  | <COMPACT : "compact">
+  | <CONNECT : "connect">
+  | <CORRELATE : "correlate">
+  | <DATASET : "table">
+  | <DATAVERSE : "database">
+  | <DECLARE : "declare">
+  | <DEFINITION : "definition">
+  | <DELETE : "delete">
+  | <DESC : "desc">
+  | <DISCONNECT : "disconnect">
+  | <DISTINCT : "distinct">
+  | <DROP : "drop">
+  | <ELEMENT : "element">
+  | <ELSE : "else">
+  | <ENFORCED : "enforced">
+  | <EVERY : "every">
+  | <EXCEPT : "except">
+  | <EXISTS : "exists">
+  | <EXTERNAL : "external">
+  | <FEED : "feed">
+  | <FILTER : "filter">
+  | <FLATTEN : "flatten">
+  | <FOR : "for">
+  | <FORMAT : "format">
+  | <FROM : "from">
+  | <FULL : "full">
+  | <FUNCTION : "function">
+  | <GROUP : "group">
+  | <HAVING : "having">
+  | <HINTS : "hints">
+  | <IF : "if">
+  | <INTO : "into">
+  | <IN : "in">
+  | <INDEX : "index">
+  | <INGESTION : "ingestion">
+  | <INNER : "inner">
+  | <INSERT : "insert">
+  | <INTERNAL : "internal">
+  | <INTERSECT : "intersect">
+  | <JOIN : "join">
+  | <KEYWORD : "keyword">
+  | <KEY : "key">
+  | <LEFT : "left">
+  | <LETTING : "letting">
+  | <LET : "let">
+  | <LIMIT : "limit">
+  | <LOAD : "load">
+  | <NEST : "nest">
+  | <NODEGROUP : "nodegroup">
+  | <NGRAM : "ngram">
+  | <OFFSET : "offset">
+  | <ON : "on">
+  | <OPEN : "open">
+  | <OR : "or">
+  | <ORDER : "order">
+  | <OUTER : "outer">
+  | <OUTPUT : "output">
+  | <PATH : "path">
+  | <POLICY : "policy">
+  | <PRESORTED : "pre-sorted">
+  | <PRIMARY : "primary">
+  | <RAW : "raw">
+  | <REFRESH : "refresh">
+  | <RETURN : "return">
+  | <RTREE : "rtree">
+  | <RUN : "run">
+  | <SATISFIES : "satisfies">
+  | <SECONDARY : "secondary">
+  | <SELECT : "select">
+  | <SET : "set">
+  | <SOME : "some">
+  | <TEMPORARY : "temporary">
+  | <THEN : "then">
+  | <TYPE : "type">
+  | <TO : "to">
+  | <UNION : "union">
+  | <UNNEST : "unnest">
+  | <VALUE : "value">
+  | <WHEN : "when">
+  | <WHERE : "where">
+  | <WITH : "with">
+  | <WRITE : "write">
+  | <UPDATE : "update">
+  | <USE : "use">
+  | <USING : "using">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <CARET : "^">
+  | <DIV : "/">
+  | <IDIV : "idiv">
+  | <MINUS : "-">
+  | <MOD : "%">
+  | <MUL : "*">
+  | <PLUS : "+">
+
+  | <LEFTPAREN : "(">
+  | <RIGHTPAREN : ")">
+  | <LEFTBRACKET : "[">
+  | <RIGHTBRACKET : "]">
+
+  | <ATT : "@">
+  | <COLON : ":">
+  | <COMMA : ",">
+  | <DOT : ".">
+  | <QUES : "?">
+  | <SEMICOLON : ";">
+  | <SHARP : "#">
+
+  | <LT : "<">
+  | <GT : ">">
+  | <LE : "<=">
+  | <GE : ">=">
+  | <EQ : "=">
+  | <NE : "!=">
+  | <SIMILAR : "~=">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <LEFTBRACE : "{"> { pushState(); } : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+    <RIGHTBRACE : "}"> { popState("}"); }
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <LEFTDBLBRACE : "{{"> { pushState(); } : IN_DBL_BRACE
+}
+
+<IN_DBL_BRACE>
+TOKEN :
+{
+    <RIGHTDBLBRACE : "}}"> { popState("}}"); }
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <INTEGER_LITERAL : (<DIGIT>)+ >
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <NULL : "null">
+  | <TRUE : "true">
+  | <FALSE : "false">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <#DIGIT : ["0" - "9"]>
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN:
+{
+    < DOUBLE_LITERAL: <DIGITS>
+        | <DIGITS> ( "." <DIGITS> )?
+        | "." <DIGITS>
+    >
+  | < FLOAT_LITERAL: <DIGITS> ( "f" | "F" )
+        | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
+        | "." <DIGITS> ( "f" | "F" )
+    >
+  | <DIGITS : (<DIGIT>)+ >
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <#LETTER : ["A" - "Z", "a" - "z"]>
+  | <SPECIALCHARS : ["$", "_"]>
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    // backslash u + 4 hex digits escapes are handled in the underlying JavaCharStream
+    <QUOTED_STRING : "\"" (
+          <EscapeQuot>
+        | <EscapeBslash>
+        | <EscapeSlash>
+        | <EscapeBspace>
+        | <EscapeFormf>
+        | <EscapeNl>
+        | <EscapeCr>
+        | <EscapeTab>
+        | ~["\"","\\"])* "\"">
+  | <STRING_LITERAL : "\'" (
+          <EscapeQuot>
+        | <EscapeApos>
+        | <EscapeBslash>
+        | <EscapeSlash>
+        | <EscapeBspace>
+        | <EscapeFormf>
+        | <EscapeNl>
+        | <EscapeCr>
+        | <EscapeTab>
+        | ~["\'","\\"])* "\'">
+  | < #EscapeQuot: "\\\"" >
+  | < #EscapeApos: "\\\'" >
+  | < #EscapeBslash: "\\\\" >
+  | < #EscapeSlash: "\\/" >
+  | < #EscapeBspace: "\\b" >
+  | < #EscapeFormf: "\\f" >
+  | < #EscapeNl: "\\n" >
+  | < #EscapeCr: "\\r" >
+  | < #EscapeTab: "\\t" >
+}
+
+<DEFAULT,IN_DBL_BRACE>
+TOKEN :
+{
+    <IDENTIFIER : <LETTER> (<LETTER> | <DIGIT> | <SPECIALCHARS>)*>
+}
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    " "
+  | "\t"
+  | "\r"
+  | "\n"
+}
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"//" (~["\n"])* "\n">
+}
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")?>
+}
+
+<DEFAULT,IN_DBL_BRACE>
+SKIP:
+{
+    <"/*"> { pushState(); } : INSIDE_COMMENT
+}
+
+<INSIDE_COMMENT>
+SPECIAL_TOKEN:
+{
+    <"+"(" ")*(~["*"])*>
+}
+
+<INSIDE_COMMENT>
+SKIP:
+{
+    <"/*"> { pushState(); }
+}
+
+<INSIDE_COMMENT>
+SKIP:
+{
+    <"*/"> { popState("*/"); }
+  | <~[]>
+}

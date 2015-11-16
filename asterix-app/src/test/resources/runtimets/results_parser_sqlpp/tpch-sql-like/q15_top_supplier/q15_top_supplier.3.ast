@@ -1,0 +1,189 @@
+DataverseUse tpch
+FunctionDecl revenue([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [supplier_no]
+        :
+        Variable [ Name=l_suppkey ]
+      )
+      (
+        LiteralExpr [STRING] [total_revenue]
+        :
+        FunctionCall tpch.sum@1[
+          (
+            SELECT ELEMENT [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=l_extendedprice
+              ]
+              *
+              OperatorExpr [
+                LiteralExpr [LONG] [1]
+                -
+                FieldAccessor [
+                  Variable [ Name=i ]
+                  Field=l_discount
+                ]
+              ]
+            ]
+            ]
+            FROM [              Variable [ Name=l ]
+              AS
+              Variable [ Name=i ]
+            ]
+          )
+        ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=LineItem ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_shipdate
+          ]
+          >=
+          LiteralExpr [STRING] [1996-01-01]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_shipdate
+          ]
+          <
+          LiteralExpr [STRING] [1996-04-01]
+        ]
+      ]
+    Groupby
+      Variable [ Name=l_suppkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_suppkey
+      ]
+
+  )
+}
+
+Query:
+LetVariable [ Name=m ]
+  :=
+  FunctionCall tpch.max@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=r2 ]
+        Field=total_revenue
+      ]
+      ]
+      FROM [        FunctionCall tpch.revenue@0[
+        ]
+        AS
+        Variable [ Name=r2 ]
+      ]
+    )
+  ]
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [s_suppkey]
+    :
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=s_suppkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_name]
+    :
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=s_name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_address]
+    :
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=s_address
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_phone]
+    :
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=s_phone
+    ]
+  )
+  (
+    LiteralExpr [STRING] [total_revenue]
+    :
+    FieldAccessor [
+      Variable [ Name=r ]
+      Field=total_revenue
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Supplier]
+  ]
+  AS
+  Variable [ Name=s ]
+,
+  FunctionCall tpch.revenue@0[
+  ]
+  AS
+  Variable [ Name=r ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=s ]
+        Field=s_suppkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=r ]
+        Field=supplier_no
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=r ]
+        Field=total_revenue
+      ]
+      <
+      OperatorExpr [
+        Variable [ Name=m ]
+        +
+        LiteralExpr [DOUBLE] [1.0E-9]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=r ]
+        Field=total_revenue
+      ]
+      >
+      OperatorExpr [
+        Variable [ Name=m ]
+        -
+        LiteralExpr [DOUBLE] [1.0E-9]
+      ]
+    ]
+  ]

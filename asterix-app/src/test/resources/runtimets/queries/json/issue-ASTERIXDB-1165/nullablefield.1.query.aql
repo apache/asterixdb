@@ -1,0 +1,2 @@
+count(for $u in [1,2,3] return $u)
+

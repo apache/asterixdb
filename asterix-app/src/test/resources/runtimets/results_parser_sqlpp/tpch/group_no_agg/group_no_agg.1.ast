@@ -1,0 +1,9 @@
+DataverseUse tpch
+TypeDecl RegionType [
+  closed RecordType {
+    r_regionkey : int32,
+    r_name : string,
+    r_comment : string
+  }
+]
+DatasetDecl Regions_group_no_agg(RegionType) partitioned by [[r_regionkey]]

@@ -1,0 +1,101 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [a]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [b]
+    :
+    Variable [ Name=b ]
+  )
+  (
+    LiteralExpr [STRING] [jacc]
+    :
+    Variable [ Name=jacc ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+LetVariable [ Name=jacc ]
+  :=
+  FunctionCall test.similarity-jaccard@2[
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=interests
+    ]
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=interests
+    ]
+  ]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      Variable [ Name=jacc ]
+      >=
+      LiteralExpr [FLOAT] [0.9]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=cid
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=cid
+      ]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.len@1[
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=interests
+        ]
+      ]
+      >
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.len@1[
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=interests
+        ]
+      ]
+      >
+      LiteralExpr [LONG] [1]
+    ]
+  ]
+Orderby
+  Variable [ Name=jacc ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=cid
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=b ]
+    Field=cid
+  ]
+  ASC
+

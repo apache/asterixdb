@@ -27,6 +27,8 @@
 drop dataverse test if exists;
 create dataverse test;
 
+use dataverse test;
+
 create type test.Emp as closed {
 id: int64,
 fname: string,

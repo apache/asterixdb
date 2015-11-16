@@ -1,0 +1,51 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [emp.id]
+    :
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [emp.supvrid]
+    :
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=supvrid
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [empDataset]
+  ]
+  AS
+  Variable [ Name=emp ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=emp ]
+      Field=supvrid
+    ]
+    =
+    FunctionCall test.float@1[
+      LiteralExpr [STRING] [1.0]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=emp ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=emp ]
+    Field=supvrid
+  ]
+  ASC
+

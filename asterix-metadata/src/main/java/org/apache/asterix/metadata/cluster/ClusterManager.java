@@ -54,8 +54,6 @@ public class ClusterManager implements IClusterManager {
 
     public static ClusterManager INSTANCE = new ClusterManager();
 
-    private static String eventsDir = System.getenv("user.dir") + File.separator + "eventrix";
-
     private static AsterixEventServiceClient client;
 
     private static ILookupService lookupService;
@@ -117,7 +115,8 @@ public class ClusterManager implements IClusterManager {
             String hostId = node.getId();
             String nodeControllerId = asterixInstanceName + "_" + node.getId();
             String iodevices = node.getIodevices() == null ? cluster.getIodevices() : node.getIodevices();
-            Pattern startNC = PatternCreator.INSTANCE.createNCStartPattern(ccHost, hostId, nodeControllerId, iodevices, false);
+            Pattern startNC = PatternCreator.INSTANCE.createNCStartPattern(ccHost, hostId, nodeControllerId, iodevices,
+                    false);
             pattern.add(startNC);
             Patterns startNCPattern = new Patterns(pattern);
             client.submit(startNCPattern);
@@ -169,5 +168,9 @@ public class ClusterManager implements IClusterManager {
     @Override
     public Set<IClusterEventsSubscriber> getRegisteredClusterEventSubscribers() {
         return eventSubscribers;
+    }
+
+    public static ILookupService getLookupService() {
+        return lookupService;
     }
 }

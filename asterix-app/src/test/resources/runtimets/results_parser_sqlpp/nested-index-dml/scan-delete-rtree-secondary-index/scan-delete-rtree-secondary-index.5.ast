@@ -1,0 +1,55 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  FunctionCall test.spatial-intersect@2[
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=nested
+      ]
+      Field=point
+    ]
+    FunctionCall test.create-polygon@1[
+      OrderedListConstructor [
+        LiteralExpr [DOUBLE] [0.0]
+        LiteralExpr [DOUBLE] [1.0]
+        LiteralExpr [DOUBLE] [0.0]
+        LiteralExpr [DOUBLE] [4.0]
+        LiteralExpr [DOUBLE] [12.0]
+        LiteralExpr [DOUBLE] [4.0]
+        LiteralExpr [DOUBLE] [12.0]
+        LiteralExpr [DOUBLE] [1.0]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=nested
+    ]
+    Field=id
+  ]
+  ASC
+

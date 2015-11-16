@@ -1,0 +1,211 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c_name]
+    :
+    Variable [ Name=c_name ]
+  )
+  (
+    LiteralExpr [STRING] [c_custkey]
+    :
+    Variable [ Name=c_custkey ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderkey]
+    :
+    Variable [ Name=o_orderkey ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderdate]
+    :
+    Variable [ Name=o_orderdate ]
+  )
+  (
+    LiteralExpr [STRING] [o_totalprice]
+    :
+    Variable [ Name=o_totalprice ]
+  )
+  (
+    LiteralExpr [STRING] [sum_quantity]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=j ]
+          Field=l_quantity
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=j ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customer]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+,
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [l_orderkey]
+        :
+        Variable [ Name=l_orderkey ]
+      )
+      (
+        LiteralExpr [STRING] [t_sum_quantity]
+        :
+        FunctionCall tpch.sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=l_quantity
+            ]
+            ]
+            FROM [              Variable [ Name=l ]
+              AS
+              Variable [ Name=i ]
+            ]
+          )
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItem]
+      ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Groupby
+      Variable [ Name=l_orderkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+      With
+      Variable [ Name=l ]
+      Variable [ Name=c ]
+      Variable [ Name=o ]
+
+  )
+  AS
+  Variable [ Name=t ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_custkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_custkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=o_orderkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=l_orderkey
+        ]
+      ]
+      and
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=t_sum_quantity
+        ]
+        >
+        LiteralExpr [LONG] [30]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderkey
+      ]
+    ]
+  ]
+Groupby
+  Variable [ Name=c_name ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=c_name
+  ]
+  Variable [ Name=c_custkey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=c_custkey
+  ]
+  Variable [ Name=o_orderkey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderkey
+  ]
+  Variable [ Name=o_orderdate ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderdate
+  ]
+  Variable [ Name=o_totalprice ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_totalprice
+  ]
+  With
+  Variable [ Name=c ]
+  Variable [ Name=t ]
+  Variable [ Name=l ]
+  Variable [ Name=o ]
+
+Orderby
+  Variable [ Name=o_totalprice ]
+  DESC
+  Variable [ Name=o_orderdate ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [100]

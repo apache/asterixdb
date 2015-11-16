@@ -1,0 +1,10 @@
+DataverseUse test
+Query:
+IndexAccessor [
+  UnorderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [1]
+  ]
+  Index: ANY
+]

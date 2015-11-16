@@ -1,11 +1,10 @@
-[ { "nation_key": 21, "sum_price": [ { "orderdate": "1994-02-27", "sum_price": 198360.22d }, { "orderdate": "1992-07-07", "sum_price": 180692.9d }, { "orderdate": "1996-06-28", "sum_price": 139915.23d } ] }
-, { "nation_key": 23, "sum_price": [ { "orderdate": "1993-06-08", "sum_price": 161307.05d }, { "orderdate": "1995-12-07", "sum_price": 153048.74d }, { "orderdate": "1994-08-22", "sum_price": 147071.86d } ] }
-, { "nation_key": 1, "sum_price": [ { "orderdate": "1993-05-26", "sum_price": 221036.31d }, { "orderdate": "1992-03-20", "sum_price": 216230.27000000002d }, { "orderdate": "1993-12-24", "sum_price": 211925.95d } ] }
-, { "nation_key": 2, "sum_price": [ { "orderdate": "1996-03-01", "sum_price": 218697.85d }, { "orderdate": "1996-08-13", "sum_price": 217709.03d }, { "orderdate": "1992-08-21", "sum_price": 207364.8d } ] }
-, { "nation_key": 4, "sum_price": [ { "orderdate": "1993-09-20", "sum_price": 226806.66d }, { "orderdate": "1992-03-04", "sum_price": 219709.6d }, { "orderdate": "1996-01-06", "sum_price": 190490.78d } ] }
-, { "nation_key": 19, "sum_price": [ { "orderdate": "1993-12-29", "sum_price": 328959.87d }, { "orderdate": "1997-08-04", "sum_price": 244636.7d }, { "orderdate": "1996-11-20", "sum_price": 222274.54d } ] }
-, { "nation_key": 20, "sum_price": [ { "orderdate": "1993-01-31", "sum_price": 190960.69d }, { "orderdate": "1998-07-17", "sum_price": 187156.38d }, { "orderdate": "1993-03-25", "sum_price": 167017.39d } ] }
-, { "nation_key": 22, "sum_price": [ { "orderdate": "1998-02-27", "sum_price": 263411.29d }, { "orderdate": "1993-04-11", "sum_price": 221636.83d }, { "orderdate": "1993-05-07", "sum_price": 220715.14d } ] }
-, { "nation_key": 0, "sum_price": [ { "orderdate": "1997-01-13", "sum_price": 241837.88d }, { "orderdate": "1997-01-21", "sum_price": 240284.95d }, { "orderdate": "1997-08-24", "sum_price": 231831.35d } ] }
-, { "nation_key": 3, "sum_price": [ { "orderdate": "1997-04-23", "sum_price": 351762.82999999996d }, { "orderdate": "1995-11-13", "sum_price": 242588.87d }, { "orderdate": "1993-07-15", "sum_price": 214494.39d } ] }
- ]
+{ "nation_key": 21, "sum_price": [ { "orderdate": "1994-02-27", "sum_price": 198360.22d }, { "orderdate": "1992-07-07", "sum_price": 180692.9d }, { "orderdate": "1996-06-28", "sum_price": 139915.23d } ] }
+{ "nation_key": 23, "sum_price": [ { "orderdate": "1993-06-08", "sum_price": 161307.05d }, { "orderdate": "1995-12-07", "sum_price": 153048.74d }, { "orderdate": "1994-08-22", "sum_price": 147071.86d } ] }
+{ "nation_key": 1, "sum_price": [ { "orderdate": "1993-05-26", "sum_price": 221036.31d }, { "orderdate": "1992-03-20", "sum_price": 216230.27000000002d }, { "orderdate": "1993-12-24", "sum_price": 211925.95d } ] }
+{ "nation_key": 2, "sum_price": [ { "orderdate": "1996-03-01", "sum_price": 218697.85d }, { "orderdate": "1996-08-13", "sum_price": 217709.03d }, { "orderdate": "1992-08-21", "sum_price": 207364.8d } ] }
+{ "nation_key": 4, "sum_price": [ { "orderdate": "1993-09-20", "sum_price": 226806.66d }, { "orderdate": "1992-03-04", "sum_price": 219709.6d }, { "orderdate": "1996-01-06", "sum_price": 190490.78d } ] }
+{ "nation_key": 19, "sum_price": [ { "orderdate": "1993-12-29", "sum_price": 328959.87d }, { "orderdate": "1997-08-04", "sum_price": 244636.7d }, { "orderdate": "1996-11-20", "sum_price": 222274.54d } ] }
+{ "nation_key": 20, "sum_price": [ { "orderdate": "1993-01-31", "sum_price": 190960.69d }, { "orderdate": "1998-07-17", "sum_price": 187156.38d }, { "orderdate": "1993-03-25", "sum_price": 167017.39d } ] }
+{ "nation_key": 22, "sum_price": [ { "orderdate": "1998-02-27", "sum_price": 263411.29d }, { "orderdate": "1993-04-11", "sum_price": 221636.83d }, { "orderdate": "1993-05-07", "sum_price": 220715.14d } ] }
+{ "nation_key": 0, "sum_price": [ { "orderdate": "1997-01-13", "sum_price": 241837.88d }, { "orderdate": "1997-01-21", "sum_price": 240284.95d }, { "orderdate": "1997-08-24", "sum_price": 231831.35d } ] }
+{ "nation_key": 3, "sum_price": [ { "orderdate": "1997-04-23", "sum_price": 351762.82999999996d }, { "orderdate": "1995-11-13", "sum_price": 242588.87d }, { "orderdate": "1993-07-15", "sum_price": 214494.39d } ] }

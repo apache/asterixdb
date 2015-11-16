@@ -1,0 +1,50 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [num]
+    :
+    Variable [ Name=p ]
+  )
+  (
+    LiteralExpr [STRING] [name]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [user-since]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=user-since
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    Variable [ Name=fb ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [FacebookUsers]
+      ]
+      AS
+      Variable [ Name=fb ]
+    ]
+    Orderby
+      FieldAccessor [
+        Variable [ Name=fb ]
+        Field=name
+      ]
+      ASC
+
+  )
+  AS
+  Variable [ Name=i ]
+  AT
+  Variable [ Name=p ]
+]

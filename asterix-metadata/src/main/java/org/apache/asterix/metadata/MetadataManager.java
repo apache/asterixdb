@@ -86,8 +86,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class MetadataManager implements IMetadataManager {
     private static final int INITIAL_SLEEP_TIME = 64;
-    private static final int RETRY_MULTIPLIER = 4;
-    private static final int MAX_RETRY_COUNT = 6;
+    private static final int RETRY_MULTIPLIER = 5;
+    private static final int MAX_RETRY_COUNT = 10;
 
     // Set in init().
     public static MetadataManager INSTANCE;
@@ -97,6 +97,7 @@ public class MetadataManager implements IMetadataManager {
     private final ReadWriteLock metadataLatch;
     private final AsterixMetadataProperties metadataProperties;
     private IHyracksClientConnection hcc;
+    public boolean rebindMetadataNode = false;
 
     public MetadataManager(IAsterixStateProxy proxy, AsterixMetadataProperties metadataProperties) {
         if (proxy == null) {
@@ -122,7 +123,7 @@ public class MetadataManager implements IMetadataManager {
     public void init() throws RemoteException, MetadataException {
         // Could be synchronized on any object. Arbitrarily chose proxy.
         synchronized (proxy) {
-            if (metadataNode != null) {
+            if (metadataNode != null && !rebindMetadataNode) {
                 return;
             }
             try {
@@ -131,6 +132,7 @@ public class MetadataManager implements IMetadataManager {
                 while (retry++ < MAX_RETRY_COUNT) {
                     metadataNode = proxy.getMetadataNode();
                     if (metadataNode != null) {
+                        rebindMetadataNode = false;
                         break;
                     }
                     Thread.sleep(sleep);
@@ -391,8 +393,8 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         try {
-            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(),
-                    datatype.getDatatypeName()));
+            ctx.addDatatype(
+                    metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(), datatype.getDatatypeName()));
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -434,8 +436,9 @@ public class MetadataManager implements IMetadataManager {
                 //concurrent access to UTF8StringPointable comparator in ARecordType object.
                 //see issue 510
                 ARecordType aRecType = (ARecordType) datatype.getDatatype();
-                return new Datatype(datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(
-                        aRecType.getTypeName(), aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
+                return new Datatype(
+                        datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(aRecType.getTypeName(),
+                                aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
                         datatype.getIsAnonymous());
             } catch (AsterixException | HyracksDataException e) {
                 throw new MetadataException(e);
@@ -701,7 +704,8 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException {
+    public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
+            throws MetadataException {
         try {
             metadataNode.dropAdapter(ctx.getJobId(), dataverseName, name);
         } catch (RemoteException e) {
@@ -948,7 +952,8 @@ public class MetadataManager implements IMetadataManager {
 
     //TODO: Optimize <-- use keys instead of object -->
     @Override
-    public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException {
+    public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
+            throws MetadataException {
         try {
             metadataNode.dropExternalFiles(mdTxnCtx.getJobId(), dataset);
         } catch (RemoteException e) {

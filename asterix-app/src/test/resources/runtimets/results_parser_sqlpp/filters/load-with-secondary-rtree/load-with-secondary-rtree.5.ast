@@ -1,0 +1,50 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=m ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookMessages]
+  ]
+  AS
+  Variable [ Name=m ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.spatial-intersect@2[
+      FieldAccessor [
+        Variable [ Name=m ]
+        Field=sender-location
+      ]
+      FunctionCall test.create-polygon@1[
+        OrderedListConstructor [
+          LiteralExpr [DOUBLE] [40.0]
+          LiteralExpr [DOUBLE] [79.87]
+          LiteralExpr [DOUBLE] [30.0]
+          LiteralExpr [DOUBLE] [75.0]
+          LiteralExpr [DOUBLE] [50.0]
+          LiteralExpr [DOUBLE] [80.0]
+          LiteralExpr [DOUBLE] [10.0]
+          LiteralExpr [DOUBLE] [10.0]
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=m ]
+        Field=send-time
+      ]
+      <
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2012-11-20T10:10:00.000Z]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=m ]
+    Field=send-time
+  ]
+  ASC
+

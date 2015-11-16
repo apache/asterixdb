@@ -28,12 +28,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 
 public class BaseOperationTracker implements ILSMOperationTracker {
 
-    protected final DatasetLifecycleManager datasetLifecycleManager;
     protected final int datasetID;
-    protected DatasetInfo dsInfo;
-    
-    public BaseOperationTracker(DatasetLifecycleManager datasetLifecycleManager, int datasetID, DatasetInfo dsInfo) {
-        this.datasetLifecycleManager = datasetLifecycleManager;
+    protected final DatasetInfo dsInfo;
+
+    public BaseOperationTracker(int datasetID, DatasetInfo dsInfo) {
         this.datasetID = datasetID;
         this.dsInfo = dsInfo;
     }
@@ -41,7 +39,8 @@ public class BaseOperationTracker implements ILSMOperationTracker {
     @Override
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             dsInfo.declareActiveIOOperation();
         }
     }
@@ -49,7 +48,8 @@ public class BaseOperationTracker implements ILSMOperationTracker {
     @Override
     public void afterOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
-        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE) {
+        if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
+                || opType == LSMOperationType.REPLICATE) {
             dsInfo.undeclareActiveIOOperation();
         }
     }
@@ -59,10 +59,6 @@ public class BaseOperationTracker implements ILSMOperationTracker {
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
     }
 
-    public void setDatasetInfo(DatasetInfo dsInfo){
-        this.dsInfo = dsInfo;
-    }
-    
     public void exclusiveJobCommitted() throws HyracksDataException {
     }
 }

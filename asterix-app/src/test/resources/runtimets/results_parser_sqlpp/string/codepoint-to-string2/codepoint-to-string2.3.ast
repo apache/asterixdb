@@ -1,0 +1,23 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [f1]
+    :
+    FunctionCall test.codepoint-to-string@1[
+      OrderedListConstructor [
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [f2]
+    :
+    FunctionCall test.codepoint-to-string@1[
+      OrderedListConstructor [
+        LiteralExpr [LONG] [97]
+        LiteralExpr [LONG] [98]
+        LiteralExpr [LONG] [99]
+      ]
+    ]
+  )
+]

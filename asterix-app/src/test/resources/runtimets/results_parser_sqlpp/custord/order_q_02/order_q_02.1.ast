@@ -1,0 +1,14 @@
+DataverseUse test
+TypeDecl OrderType [
+  open RecordType {
+    oid : int64,
+    cid : int64,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float,
+    items : OrderedList [int64]
+
+  }
+]
+DatasetDecl Orders(OrderType)is an external dataset

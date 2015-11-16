@@ -1,0 +1,117 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [aid]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [bid]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [apt]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=nested
+      ]
+      Field=point
+    ]
+  )
+  (
+    LiteralExpr [STRING] [bp]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=nested
+      ]
+      Field=point
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData1]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.spatial-intersect@2[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=point
+      ]
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=point
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=id
+      ]
+      !=
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=nested
+    ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=nested
+    ]
+    Field=id
+  ]
+  ASC
+

@@ -1,0 +1,62 @@
+DataverseUse gby-using-orderby-desc
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int32,
+        total : float
+      }
+
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+WriteOutputTo nc1:rttest/gby-using-orderby-desc.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [name]
+    :
+    Variable [ Name=name ]
+  )
+  (
+    LiteralExpr [STRING] [age]
+    :
+    FunctionCall Metadata.dataset@1[
+      LiteralExpr [STRING] [age]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Groupby
+  Variable [ Name=name ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=name
+  ]
+  With
+  Variable [ Name=c ]
+
+Orderby
+  Variable [ Name=name ]
+  DESC
+  Variable [ Name=age ]
+  ASC
+

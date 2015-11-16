@@ -24,7 +24,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 
 /**
  * Describes a function expression that is optimizable by an access method.
@@ -36,7 +35,7 @@ public interface IOptimizableFuncExpr {
 
     public int getNumLogicalVars();
 
-    public int getNumConstantVals();
+    public int getNumConstantAtRuntimeExpr();
 
     public LogicalVariable getLogicalVar(int index);
 
@@ -56,7 +55,7 @@ public interface IOptimizableFuncExpr {
 
     public OptimizableOperatorSubTree getOperatorSubTree(int index);
 
-    public IAlgebricksConstantValue getConstantVal(int index);
+    public ILogicalExpression getConstantAtRuntimeExpr(int index);
 
     public int findLogicalVar(LogicalVariable var);
 
@@ -71,4 +70,10 @@ public interface IOptimizableFuncExpr {
     public void setSourceVar(int index, LogicalVariable var);
 
     public LogicalVariable getSourceVar(int index);
+
+    void setConstType(int index, IAType fieldType);
+
+    IAType getConstantType(int index);
+
+    void setConstantAtRuntimeExpr(int index, ILogicalExpression expr);
 }

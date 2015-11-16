@@ -19,11 +19,10 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.util.Arrays;
 
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -33,6 +32,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -50,8 +50,15 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
     @SuppressWarnings("rawtypes")
     private ISerializerDeserializer boolSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            .getSerializerDeserializer(BuiltinType.ANULL);
 
     private final FunctionIdentifier funcID;
+
+    private final UTF8StringPointable strPtr1st = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr2nd = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr3rd = new UTF8StringPointable();
 
     public AbstractTripleStringBoolEval(DataOutput dout, ICopyEvaluatorFactory eval0, ICopyEvaluatorFactory eval1,
             ICopyEvaluatorFactory eval2, FunctionIdentifier funcID) throws AlgebricksException {
@@ -73,12 +80,9 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         eval2.evaluate(tuple);
 
         try {
-            if ((array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_STRING_TYPE_TAG)
-                    || (array1.getByteArray()[0] == SER_NULL_TYPE_TAG && array0.getByteArray()[0] == SER_STRING_TYPE_TAG)) {
-                boolSerde.serialize(ABoolean.FALSE, dout);
-                return;
-            } else if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG && array1.getByteArray()[0] == SER_NULL_TYPE_TAG) {
-                boolSerde.serialize(ABoolean.TRUE, dout);
+            if (array0.getByteArray()[0] == SER_NULL_TYPE_TAG || array1.getByteArray()[0] == SER_NULL_TYPE_TAG
+                    || array2.getByteArray()[0] == SER_NULL_TYPE_TAG) {
+                nullSerde.serialize(ANull.NULL, dout);
                 return;
             }
 
@@ -95,19 +99,11 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
             throw new AlgebricksException(e);
         }
 
-        byte[] b0 = array0.getByteArray();
-        byte[] b1 = array1.getByteArray();
-        byte[] b2 = array2.getByteArray();
+        strPtr1st.set(array0.getByteArray(), array0.getStartOffset() + 1, array0.getLength());
+        strPtr2nd.set(array1.getByteArray(), array1.getStartOffset() + 1, array1.getLength());
+        strPtr3rd.set(array2.getByteArray(), array2.getStartOffset() + 1, array2.getLength());
 
-        int len0 = array0.getLength();
-        int len1 = array1.getLength();
-        int len2 = array2.getLength();
-
-        int s0 = array0.getStartOffset();
-        int s1 = array1.getStartOffset();
-        int s2 = array2.getStartOffset();
-
-        ABoolean res = compute(b0, len0, s0, b1, len1, s1, b2, len2, s2, array0, array1) ? ABoolean.TRUE
+        ABoolean res = compute(strPtr1st, strPtr2nd, strPtr3rd) ? ABoolean.TRUE
                 : ABoolean.FALSE;
         try {
             boolSerde.serialize(res, dout);
@@ -116,28 +112,7 @@ public abstract class AbstractTripleStringBoolEval implements ICopyEvaluator {
         }
     }
 
-    protected abstract boolean compute(byte[] b0, int l0, int s0, byte[] b1, int l1, int s1, byte[] b2, int l2, int s2,
-            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1) throws AlgebricksException;
+    protected abstract boolean compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,
+            UTF8StringPointable strPtr3rd) throws AlgebricksException;
 
-    protected String toRegex(AString pattern) {
-        StringBuilder sb = new StringBuilder();
-        String str = pattern.getStringValue();
-        for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            if (c == '\\' && (i < str.length() - 1) && (str.charAt(i + 1) == '_' || str.charAt(i + 1) == '%')) {
-                sb.append(str.charAt(i + 1));
-                ++i;
-            } else if (c == '%') {
-                sb.append(".*");
-            } else if (c == '_') {
-                sb.append(".");
-            } else {
-                if (Arrays.binarySearch(StringEvaluatorUtils.reservedRegexChars, c) >= 0) {
-                    sb.append('\\');
-                }
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
 }

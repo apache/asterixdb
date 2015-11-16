@@ -1,0 +1,25 @@
+DataverseUse test
+TypeDecl TestType [
+  open RecordType {
+    id : int32,
+    salary : double?,
+    name : string,
+    durtn : duration?,
+    inter : interval,
+    dt : date?,
+    tm : time,
+    pt : point?
+  }
+]
+TypeDecl TestType [
+  open RecordType {
+    id : int32,
+    salary : double?,
+    name : string,
+    durtn : duration?,
+    inter : interval,
+    dt : date?,
+    tm : time,
+    pt : point?
+  }
+]

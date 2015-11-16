@@ -1,0 +1,27 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=l ]
+]
+FROM [  FunctionCall null.foo1@0[
+  ]
+  AS
+  Variable [ Name=l ]
+]
+UNION ALL 
+  SELECT ELEMENT [
+  Variable [ Name=l ]
+  ]
+  FROM [    FunctionCall null.foo2@0[
+    ]
+    AS
+    Variable [ Name=l ]
+  ]
+UNION ALL 
+  SELECT ELEMENT [
+  Variable [ Name=l ]
+  ]
+  FROM [    FunctionCall null.foo3@0[
+    ]
+    AS
+    Variable [ Name=l ]
+  ]

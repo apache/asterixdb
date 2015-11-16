@@ -18,16 +18,16 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.json.clean;
 
-import java.io.PrintStream;
-import java.util.List;
-
-import org.apache.asterix.formats.nontagged.AqlLosslessJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.AqlCleanJSONPrinterFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+
+import java.io.PrintStream;
+import java.util.List;
 
 public class AUnionPrinterFactory implements IPrinterFactory {
 
@@ -52,7 +52,7 @@ public class AUnionPrinterFactory implements IPrinterFactory {
                 unionList = unionType.getUnionList();
                 printers = new IPrinter[unionType.getUnionList().size()];
                 for (int i = 0; i < printers.length; i++) {
-                    printers[i] = (AqlLosslessJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList()
+                    printers[i] = (AqlCleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getUnionList()
                             .get(i))).createPrinter();
                     printers[i].init();
                 }

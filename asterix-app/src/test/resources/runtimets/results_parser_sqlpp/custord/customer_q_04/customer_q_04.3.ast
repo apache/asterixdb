@@ -1,0 +1,120 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [custname]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [age]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=age
+    ]
+  )
+  (
+    LiteralExpr [STRING] [MathcashBack]
+    :
+    Variable [ Name=rec ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=rec ]
+  :=
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [cashBack]
+      :
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=cashBack
+      ]
+    )
+    (
+      LiteralExpr [STRING] [cashBack+5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=cashBack
+        ]
+        +
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [cashBack-5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=cashBack
+        ]
+        -
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [cashBack*5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=cashBack
+        ]
+        *
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [cashBack/5]
+      :
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=cashBack
+        ]
+        /
+        LiteralExpr [LONG] [5]
+      ]
+    )
+    (
+      LiteralExpr [STRING] [-cashBack]
+      :
+      NEGATIVE FieldAccessor [
+  Variable [ Name=c ]
+  Field=cashBack
+]
+    )
+  ]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    >=
+    FunctionCall test.int32@1[
+      LiteralExpr [STRING] [3]
+    ]
+  ]

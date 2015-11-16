@@ -37,7 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.util.StringUtils;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -48,52 +48,11 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
         }
     };
 
-    private final static byte[] currentUTF8 = new byte[6];
-    private final byte stringTypeTag = ATypeTag.STRING.serialize();
-
     @Override
     public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args) {
         return new ICopyEvaluatorFactory() {
 
             private static final long serialVersionUID = 1L;
-
-            private int codePointToUTF8(int c) {
-                if (c < 0x80) {
-                    currentUTF8[0] = (byte) (c & 0x7F /* mask 7 lsb: 0b1111111 */);
-                    return 1;
-                } else if (c < 0x0800) {
-                    currentUTF8[0] = (byte) (c >> 6 & 0x1F | 0xC0);
-                    currentUTF8[1] = (byte) (c & 0x3F | 0x80);
-                    return 2;
-                } else if (c < 0x010000) {
-                    currentUTF8[0] = (byte) (c >> 12 & 0x0F | 0xE0);
-                    currentUTF8[1] = (byte) (c >> 6 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte) (c & 0x3F | 0x80);
-                    return 3;
-                } else if (c < 0x200000) {
-                    currentUTF8[0] = (byte) (c >> 18 & 0x07 | 0xF0);
-                    currentUTF8[1] = (byte) (c >> 12 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte) (c >> 6 & 0x3F | 0x80);
-                    currentUTF8[3] = (byte) (c & 0x3F | 0x80);
-                    return 4;
-                } else if (c < 0x4000000) {
-                    currentUTF8[0] = (byte) (c >> 24 & 0x03 | 0xF8);
-                    currentUTF8[1] = (byte) (c >> 18 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte) (c >> 12 & 0x3F | 0x80);
-                    currentUTF8[3] = (byte) (c >> 6 & 0x3F | 0x80);
-                    currentUTF8[4] = (byte) (c & 0x3F | 0x80);
-                    return 5;
-                } else if (c < 0x80000000) {
-                    currentUTF8[0] = (byte) (c >> 30 & 0x01 | 0xFC);
-                    currentUTF8[1] = (byte) (c >> 24 & 0x3F | 0x80);
-                    currentUTF8[2] = (byte) (c >> 18 & 0x3F | 0x80);
-                    currentUTF8[3] = (byte) (c >> 12 & 0x3F | 0x80);
-                    currentUTF8[4] = (byte) (c >> 6 & 0x3F | 0x80);
-                    currentUTF8[5] = (byte) (c & 0x3F | 0x80);
-                    return 6;
-                }
-                return 0;
-            }
 
             @Override
             public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
@@ -103,6 +62,10 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                     private ICopyEvaluatorFactory listEvalFactory = args[0];
                     private ArrayBackedValueStorage outInputList = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
+
+                    private final byte[] currentUTF8 = new byte[6];
+                    private final byte[] tempStoreForLength = new byte[5];
+                    private final byte stringTypeTag = ATypeTag.STRING.serialize();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -139,17 +102,17 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                     int codePoint = 0;
                                     codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
                                             serOrderedList, itemOffset, 1);
-                                    utf_8_len += codePointToUTF8(codePoint);
+                                    utf_8_len += UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
                                 }
                                 out.writeByte(stringTypeTag);
-                                StringUtils.writeUTF8Len(utf_8_len, out);
+                                UTF8StringUtil.writeUTF8Length(utf_8_len, tempStoreForLength, out);
                                 for (int i = 0; i < size; i++) {
                                     int itemOffset = AOrderedListSerializerDeserializer
                                             .getItemOffset(serOrderedList, i);
                                     int codePoint = 0;
                                     codePoint = ATypeHierarchy.getIntegerValueWithDifferentTypeTagPosition(
                                             serOrderedList, itemOffset, 1);
-                                    utf_8_len = codePointToUTF8(codePoint);
+                                    utf_8_len = UTF8StringUtil.codePointToUTF8(codePoint, currentUTF8);
                                     for (int j = 0; j < utf_8_len; j++) {
                                         out.writeByte(currentUTF8[j]);
                                     }

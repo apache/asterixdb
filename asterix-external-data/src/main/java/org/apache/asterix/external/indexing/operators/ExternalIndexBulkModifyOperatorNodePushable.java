@@ -36,9 +36,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 
 public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOperatorNodePushable {
 
+    private final FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
     private final int[] deletedFiles;
     private ArrayTupleBuilder buddyBTreeTupleBuilder = new ArrayTupleBuilder(
-            FilesIndexDescription.FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFieldCount());
+            filesIndexDescription.FILE_BUDDY_BTREE_RECORD_DESCRIPTOR.getFieldCount());
     private AMutableInt32 fileNumber = new AMutableInt32(0);
     private ArrayTupleReference deleteTuple = new ArrayTupleReference();
 
@@ -65,7 +66,7 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
             // Delete files
             for (int i = 0; i < deletedFiles.length; i++) {
                 fileNumber.setValue(deletedFiles[i]);
-                FilesIndexDescription.getBuddyBTreeTupleFromFileNumber(deleteTuple, buddyBTreeTupleBuilder, fileNumber);
+                filesIndexDescription.getBuddyBTreeTupleFromFileNumber(deleteTuple, buddyBTreeTupleBuilder, fileNumber);
                 ((ITwoPCIndexBulkLoader) bulkLoader).delete(deleteTuple);
             }
         } catch (Exception e) {

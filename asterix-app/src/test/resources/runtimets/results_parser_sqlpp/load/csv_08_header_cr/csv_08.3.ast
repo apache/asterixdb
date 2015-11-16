@@ -1,0 +1,97 @@
+DataverseUse temp
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [float]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=float
+    ]
+  )
+  (
+    LiteralExpr [STRING] [double]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=double
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date-before]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=date
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date-after]
+    :
+    FunctionCall temp.date@1[
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=date
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time-before]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=time
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time-after]
+    :
+    FunctionCall temp.time@1[
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=time
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime-before]
+    :
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=datetime
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime-after]
+    :
+    FunctionCall temp.datetime@1[
+      FieldAccessor [
+        Variable [ Name=i ]
+        Field=datetime
+      ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds]
+  ]
+  AS
+  Variable [ Name=i ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=i ]
+    Field=id
+  ]
+  ASC
+

@@ -1,0 +1,6 @@
+DataverseUse testdv1
+Query:
+SELECT ELEMENT [
+FunctionCall testdv1.fun01@0[
+]
+]

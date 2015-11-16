@@ -1,2 +1,1 @@
-[ { "c1": "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "c2": "abcdefghijklmnopqrstuvwxyz", "c3": "!\"#$%&'()*+,-./01234567?@" }
- ]
+{ "c1": "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "c2": "abcdefghijklmnopqrstuvwxyz", "c3": "!\"#$%&'()*+,-./01234567?@" }

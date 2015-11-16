@@ -19,48 +19,47 @@
 package org.apache.asterix.installer.test;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Logger;
 import java.util.List;
-import java.io.InputStream;
-import java.io.FilenameFilter;
-import java.lang.ProcessBuilder;
-import java.nio.charset.StandardCharsets;
+import java.util.logging.Logger;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.Assert;
-import org.junit.runners.Parameterized.Parameters;
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-
-import org.apache.asterix.test.aql.TestsUtils;
-import org.apache.asterix.testframework.context.TestCaseContext;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runners.Parameterized.Parameters;
 
 public class AsterixClusterLifeCycleIT {
 
-    private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources",
-            "integrationts", "lifecycle" }, File.separator);
-    private static final String CLUSTER_BASE = StringUtils.join(
-            new String[] { "src", "test", "resources", "clusterts" }, File.separator);
+    private static final String PATH_BASE = StringUtils
+            .join(new String[] { "src", "test", "resources", "integrationts", "lifecycle" }, File.separator);
+    private static final String CLUSTER_BASE = StringUtils
+            .join(new String[] { "src", "test", "resources", "clusterts" }, File.separator);
     private static final String PATH_ACTUAL = "ittest" + File.separator;
     private static String managixFolderName;
     private static final Logger LOGGER = Logger.getLogger(AsterixClusterLifeCycleIT.class.getName());
     private static List<TestCaseContext> testCaseCollection;
     private static File asterixProjectDir = new File(System.getProperty("user.dir"));
+    private final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        //testcase setup
+        // testcase setup
         TestCaseContext.Builder b = new TestCaseContext.Builder();
         testCaseCollection = b.build(new File(PATH_BASE));
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        //vagrant setup
+        // vagrant setup
         File installerTargetDir = new File(asterixProjectDir, "target");
         System.out.println(managixFolderName);
         managixFolderName = installerTargetDir.list(new FilenameFilter() {
@@ -71,8 +70,8 @@ public class AsterixClusterLifeCycleIT {
             }
 
         })[0];
-        invoke("cp", "-r", installerTargetDir.toString() + "/" + managixFolderName, asterixProjectDir + "/"
-                + CLUSTER_BASE);
+        invoke("cp", "-r", installerTargetDir.toString() + "/" + managixFolderName,
+                asterixProjectDir + "/" + CLUSTER_BASE);
 
         logOutput(remoteInvoke("cp -r /vagrant/" + managixFolderName + " /tmp/asterix").getInputStream());
 
@@ -83,7 +82,8 @@ public class AsterixClusterLifeCycleIT {
         String pout = processOut(p);
         LOGGER.info(pout);
         Assert.assertTrue(checkOutput(pout, "ACTIVE"));
-        //TODO: I should check for 'WARNING' here, but issue 764 stops this from being reliable 
+        // TODO: I should check for 'WARNING' here, but issue 764 stops this
+        // from being reliable
         LOGGER.info("Test start active cluster instance PASSED");
 
         Process stop = managixInvoke("stop -n vagrant-ssh");
@@ -106,8 +106,10 @@ public class AsterixClusterLifeCycleIT {
     }
 
     public static boolean checkOutput(InputStream input, String requiredSubString) {
-        //right now im just going to look at the output, which is wholly inadequate
-        //TODO: try using cURL to actually poke the instance to see if it is more alive
+        // right now im just going to look at the output, which is wholly
+        // inadequate
+        // TODO: try using cURL to actually poke the instance to see if it is
+        // more alive
         String candidate;
         try {
             candidate = IOUtils.toString(input, StandardCharsets.UTF_8.name());
@@ -157,8 +159,8 @@ public class AsterixClusterLifeCycleIT {
 
     @Test
     public void StartStopActiveInstance() throws Exception {
-        //TODO: is the instance actually live?
-        //TODO: is ZK still running?
+        // TODO: is the instance actually live?
+        // TODO: is ZK still running?
         try {
             Process start = managixInvoke("start -n vagrant-ssh");
             Assert.assertTrue(checkOutput(start.getInputStream(), "ACTIVE"));
@@ -172,7 +174,7 @@ public class AsterixClusterLifeCycleIT {
 
     public void test() throws Exception {
         for (TestCaseContext testCaseCtx : testCaseCollection) {
-            TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx, null, false);
+            testExecutor.executeTest(PATH_ACTUAL, testCaseCtx, null, false);
         }
     }
 

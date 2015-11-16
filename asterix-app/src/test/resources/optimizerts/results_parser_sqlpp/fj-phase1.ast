@@ -1,0 +1,111 @@
+DataverseUse rares03
+TypeDecl UserType [
+  open RecordType {
+    uid : int32,
+    name : string,
+    lottery_numbers : UnorderedList <int32>
+
+  }
+]
+TypeDecl VisitorType [
+  open RecordType {
+    vid : int32,
+    name : string,
+    lottery_numbers : UnorderedList <int32>
+
+  }
+]
+DatasetDecl Users(UserType) partitioned by [[uid]]
+DatasetDecl Visitors(VisitorType) partitioned by [[vid]]
+WriteOutputTo nc1:/tmp/rares03.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [uid]
+    :
+    FieldAccessor [
+      Variable [ Name=user ]
+      Field=uid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [tokens]
+    :
+    Variable [ Name=tokens ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Users]
+  ]
+  AS
+  Variable [ Name=user ]
+]
+LetVariable [ Name=tokens ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      FieldAccessor [
+        Variable [ Name=user ]
+        Field=lottery_numbers
+      ]
+      AS
+      Variable [ Name=lottery_number ]
+,
+      (
+        SELECT ELEMENT [
+        Variable [ Name=item ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Users]
+          ]
+          AS
+          Variable [ Name=user ]
+,
+          FieldAccessor [
+            Variable [ Name=user ]
+            Field=lottery_numbers
+          ]
+          AS
+          Variable [ Name=lottery_number ]
+        ]
+        Groupby
+          Variable [ Name=item ]
+          :=
+          Variable [ Name=lottery_number ]
+          With
+          Variable [ Name=lottery_number ]
+          Variable [ Name=user ]
+          Variable [ Name=lottery_number ]
+          Variable [ Name=tokens ]
+          Variable [ Name=user ]
+
+        LetVariable [ Name=count ]
+          :=
+          FunctionCall rares03.count@1[
+            Variable [ Name=user ]
+          ]
+        Orderby
+          Variable [ Name=count ]
+          DESC
+
+      )
+      AS
+      Variable [ Name=token ]
+      AT
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=lottery_number ]
+        =
+        Variable [ Name=token ]
+      ]
+    Orderby
+      Variable [ Name=token ]
+      ASC
+
+  )

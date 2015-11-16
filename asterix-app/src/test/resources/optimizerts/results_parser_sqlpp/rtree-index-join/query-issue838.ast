@@ -1,0 +1,88 @@
+DataverseUse twitter
+TypeDecl TweetMessageType [
+  closed RecordType {
+    tweetid : int64,
+    sender-location : point,
+    text : string
+  }
+]
+TypeDecl TweetHistorySubscription [
+  open RecordType {
+    subscription-id : int32,
+    location : point
+  }
+]
+DatasetDecl TweetHistorySubscriptions(TweetHistorySubscription) partitioned by [[subscription-id]]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
+WriteOutputTo nc1:rttest/query-issue838.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [subscription-id]
+    :
+    FieldAccessor [
+      Variable [ Name=sub ]
+      Field=subscription-id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [changeSet]
+    :
+    LiteralExpr [LONG] [1]
+  )
+  (
+    LiteralExpr [STRING] [execution-time]
+    :
+    FunctionCall twitter.current-datetime@0[
+    ]
+  )
+  (
+    LiteralExpr [STRING] [message-text]
+    :
+    Variable [ Name=text ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetHistorySubscriptions]
+  ]
+  AS
+  Variable [ Name=sub ]
+,
+  (
+    SELECT ELEMENT [
+    Variable [ Name=tweet ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [TweetMessages]
+      ]
+      AS
+      Variable [ Name=tweet ]
+    ]
+    LetVariable [ Name=circle ]
+      :=
+      FunctionCall twitter.create-circle@2[
+        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [location]
+        ]
+        LiteralExpr [DOUBLE] [30.0]
+      ]
+    Where
+      FunctionCall twitter.spatial-intersect@2[
+        FieldAccessor [
+          Variable [ Name=tweet ]
+          Field=sender-location
+        ]
+        Variable [ Name=circle ]
+      ]
+  )
+  AS
+  Variable [ Name=text ]
+]
+LetVariable [ Name=location ]
+  :=
+  FieldAccessor [
+    Variable [ Name=sub ]
+    Field=location
+  ]

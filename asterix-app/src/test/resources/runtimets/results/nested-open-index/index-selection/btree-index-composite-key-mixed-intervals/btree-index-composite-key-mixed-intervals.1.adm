@@ -1,9 +1,8 @@
-[ { "id": 215, "age": 46, "dept": "IT", "fname": "Karina", "lname": "Michelsen" }
-, { "id": 219, "age": 27, "dept": "Payroll", "fname": "Kurt", "lname": "Petermann" }
-, { "id": 463, "age": 28, "dept": "IT", "fname": "Marcie", "lname": "States" }
-, { "id": 589, "age": 27, "dept": "IT", "fname": "Lorrie", "lname": "Sharon" }
-, { "id": 681, "age": 34, "dept": "IT", "fname": "Max", "lname": "Teachout" }
-, { "id": 781, "age": 46, "dept": "Payroll", "fname": "Karina", "lname": "Tuthill" }
-, { "id": 955, "age": 33, "dept": "HR", "fname": "Max", "lname": "Mell" }
-, { "id": 965, "age": 31, "dept": "Payroll", "fname": "Micco", "lname": "Mercy" }
- ]
+{ "id": 215, "age": 46, "dept": "IT", "fname": "Karina", "lname": "Michelsen" }
+{ "id": 219, "age": 27, "dept": "Payroll", "fname": "Kurt", "lname": "Petermann" }
+{ "id": 463, "age": 28, "dept": "IT", "fname": "Marcie", "lname": "States" }
+{ "id": 589, "age": 27, "dept": "IT", "fname": "Lorrie", "lname": "Sharon" }
+{ "id": 681, "age": 34, "dept": "IT", "fname": "Max", "lname": "Teachout" }
+{ "id": 781, "age": 46, "dept": "Payroll", "fname": "Karina", "lname": "Tuthill" }
+{ "id": 955, "age": 33, "dept": "HR", "fname": "Max", "lname": "Mell" }
+{ "id": 965, "age": 31, "dept": "Payroll", "fname": "Micco", "lname": "Mercy" }

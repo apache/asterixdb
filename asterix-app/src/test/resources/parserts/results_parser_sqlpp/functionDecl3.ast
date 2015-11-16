@@ -1,0 +1,9 @@
+FunctionDecl function with spaces([a, b]) {
+  LiteralExpr [STRING] [string with spaces]
+}
+
+Query:
+FunctionCall null.function with spaces@2[
+  LiteralExpr [LONG] [1]
+  LiteralExpr [LONG] [2]
+]

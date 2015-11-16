@@ -1,0 +1,137 @@
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [overlap1]
+    :
+    FunctionCall null.get-overlapping-interval@2[
+      FunctionCall null.interval-from-time@2[
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [11:23:39]
+        ]
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [18:27:19]
+        ]
+      ]
+      FunctionCall null.interval-from-time@2[
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [12:23:39]
+        ]
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [23:18:00]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap2]
+    :
+    FunctionCall null.get-overlapping-interval@2[
+      FunctionCall null.interval-from-time@2[
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [12:23:39]
+        ]
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [18:27:19]
+        ]
+      ]
+      FunctionCall null.interval-from-time@2[
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [07:19:39]
+        ]
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [09:18:00]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap3]
+    :
+    FunctionCall null.get-overlapping-interval@2[
+      FunctionCall null.interval-from-date@2[
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [1980-11-30]
+        ]
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [1999-09-09]
+        ]
+      ]
+      FunctionCall null.interval-from-date@2[
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [2013-01-01]
+        ]
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [2014-01-01]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap4]
+    :
+    FunctionCall null.get-overlapping-interval@2[
+      FunctionCall null.interval-from-date@2[
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [1980-11-30]
+        ]
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [2099-09-09]
+        ]
+      ]
+      FunctionCall null.interval-from-date@2[
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [2013-01-01]
+        ]
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [2014-01-01]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap5]
+    :
+    FunctionCall null.get-overlapping-interval@2[
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [1844-03-03T11:19:39]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-10-30T18:27:19]
+        ]
+      ]
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [1989-03-04T12:23:39]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2009-10-10T23:18:00]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [overlap6]
+    :
+    FunctionCall null.get-overlapping-interval@2[
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [1989-03-04T12:23:39]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-10-30T18:27:19]
+        ]
+      ]
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [1844-03-03T11:19:39]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [1888-10-10T23:18:00]
+        ]
+      ]
+    ]
+  )
+]
+]

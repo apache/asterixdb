@@ -1,0 +1,62 @@
+DataverseUse fuzzyjoin
+TypeDecl TOKENSRANKEDADMType [
+  closed RecordType {
+    token : int32,
+    rank : int32
+  }
+]
+DatasetDecl TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by [[rank]]
+WriteOutputTo nc1:rttest/introhashpartitionmerge.adm
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=token2 ]
+  Field=rank
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TOKENSRANKEDADM]
+  ]
+  AS
+  Variable [ Name=token1 ]
+,
+  (
+    SELECT ELEMENT [
+    Variable [ Name=tokenRanked ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [TOKENSRANKEDADM]
+      ]
+      AS
+      Variable [ Name=tokenRanked ]
+    ]
+    Orderby
+      FieldAccessor [
+        Variable [ Name=tokenRanked ]
+        Field=rank
+      ]
+      ASC
+
+  )
+  AS
+  Variable [ Name=token2 ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=token1 ]
+      Field=token
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=token2 ]
+      Field=token
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=token2 ]
+    Field=rank
+  ]
+  ASC
+

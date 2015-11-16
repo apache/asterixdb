@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Testcase Name  : open-closed-29.aql
+ * Description    : Query for undeclared data from an open type internal dataset
+ *                : use the some keyword in the where clause
+ * Status         : Yes
+ * Date           : 31st May 2012
+ */
+
+use testdv2;
+
+
+insert into testds02
+select element {'id':'001','name':'Person One','hobbies':{{'scuba','music'}}};
+insert into testds02
+select element {'id':'002','name':'Person Two','hobbies':{{'fishing','dance'}}};
+insert into testds02
+select element {'id':'003','name':'Person Three','hobbies':{{'hiking','surfing'}}};
+insert into testds01
+select element d
+from  testds02 as d
+;

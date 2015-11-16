@@ -1,0 +1,62 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [hello world]
+      LiteralExpr [LONG] [7]
+      LiteralExpr [LONG] [5]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [hello world]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [11]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [hello world]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [9]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [ABCD]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [2]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [ABCD]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [4]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [UC Irvine]
+      LiteralExpr [LONG] [4]
+      OperatorExpr [
+        FunctionCall null.string-length@1[
+          LiteralExpr [STRING] [UC Irvine]
+        ]
+        -
+        LiteralExpr [LONG] [3]
+      ]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [UC Irvine]
+      LiteralExpr [LONG] [1]
+      FunctionCall null.string-length@1[
+        LiteralExpr [STRING] [UC Irvine]
+      ]
+    ]
+    FunctionCall null.substring@3[
+      FunctionCall null.substring@2[
+        LiteralExpr [STRING] [UC Irvine]
+        LiteralExpr [LONG] [4]
+      ]
+      LiteralExpr [LONG] [1]
+      FunctionCall null.string-length@1[
+        LiteralExpr [STRING] [Irvine]
+      ]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

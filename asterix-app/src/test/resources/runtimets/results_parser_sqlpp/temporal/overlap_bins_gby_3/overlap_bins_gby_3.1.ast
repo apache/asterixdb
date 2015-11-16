@@ -1,0 +1,10 @@
+DataverseUse multitask
+TypeDecl LogType [
+  closed RecordType {
+    row_id : int32,
+    time : time,
+    duration : int32,
+    app : string
+  }
+]
+DatasetDecl logs(LogType) partitioned by [[row_id]]

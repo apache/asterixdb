@@ -1,0 +1,23 @@
+DataverseUse test
+TypeDecl AddressType [
+  open RecordType {
+    number : int64,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  open RecordType {
+    cid : int64,
+    name : string,
+    age : int64?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int64,
+        total : float
+      }
+
+  }
+]
+DatasetDecl c1(CustomerType) partitioned by [[cid]]
+DatasetDecl c2(CustomerType) partitioned by [[cid]]

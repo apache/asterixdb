@@ -1,0 +1,121 @@
+DataverseUse test
+Query:
+OrderedListConstructor [
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.find-binary@2[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] []
+        ]
+      ]
+      =
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.find-binary@2[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aa]
+        ]
+      ]
+      =
+      LiteralExpr [LONG] [1]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.find-binary@3[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aa]
+        ]
+        LiteralExpr [LONG] [1]
+      ]
+      =
+      LiteralExpr [LONG] [5]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.find-binary@3[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabb]
+        ]
+        LiteralExpr [LONG] [0]
+      ]
+      =
+      FunctionCall test.find-binary@2[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabb]
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.find-binary@2[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [11]
+        ]
+      ]
+      =
+      LiteralExpr [LONG] [0]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.find-binary@2[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [ccddaa]
+        ]
+      ]
+      =
+      LiteralExpr [LONG] [3]
+    ]
+    and
+    OperatorExpr [
+      FunctionCall test.find-binary@2[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccddaa]
+        ]
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [ccddaabb]
+        ]
+      ]
+      =
+      LiteralExpr [LONG] [0]
+    ]
+  ]
+  FunctionCall test.find-binary@2[
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [aabbccddaa]
+    ]
+    LiteralExpr [NULL]
+  ]
+  FunctionCall test.find-binary@2[
+    LiteralExpr [NULL]
+    LiteralExpr [NULL]
+  ]
+  FunctionCall test.find-binary@2[
+    LiteralExpr [NULL]
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [aabbccddaa]
+    ]
+  ]
+]

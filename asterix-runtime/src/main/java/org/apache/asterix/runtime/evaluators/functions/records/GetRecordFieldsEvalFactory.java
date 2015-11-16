@@ -43,7 +43,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
     private static final long serialVersionUID = 1L;
 
     private ICopyEvaluatorFactory recordEvalFactory;
-    private ARecordType recordType;
+    private final ARecordType recordType;
 
     private final byte SER_NULL_TYPE_TAG = ATypeTag.NULL.serialize();
     private final byte SER_RECORD_TYPE_TAG = ATypeTag.RECORD.serialize();
@@ -69,9 +69,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
             private DataOutput out = output.getDataOutput();
             private RecordFieldsUtil rfu = new RecordFieldsUtil();
 
-            {
-                recordType = recordType.deepCopy(recordType);
-            }
+            protected ARecordType mRecordType = recordType.deepCopy(recordType);
 
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                 outInput0.reset();
@@ -93,7 +91,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
                 recordPointable.set(outInput0.getByteArray(), outInput0.getStartOffset(), outInput0.getLength());
 
                 try {
-                    rfu.processRecord(recordPointable, recordType, out, 0);
+                    rfu.processRecord(recordPointable, mRecordType, out, 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (AsterixException e) {

@@ -23,9 +23,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
-import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;

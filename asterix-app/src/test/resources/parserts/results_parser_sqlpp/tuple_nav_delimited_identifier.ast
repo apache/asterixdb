@@ -1,0 +1,11 @@
+Query:
+FieldAccessor [
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [e]
+      :
+      LiteralExpr [LONG] [1]
+    )
+  ]
+  Field=e
+]

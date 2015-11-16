@@ -1,0 +1,38 @@
+DataverseUse twitter
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [tweetid]
+    :
+    FieldAccessor [
+      Variable [ Name=test ]
+      Field=tweetid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [screen-name]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=test ]
+        Field=user
+      ]
+      Field=screen-name
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=test ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=test ]
+    Field=tweetid
+  ]
+  ASC
+

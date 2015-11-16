@@ -1,0 +1,46 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=c ]
+  Field=nested
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=ed ]
+  :=
+  FunctionCall test.edit-distance-check@3[
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=nested
+      ]
+      Field=interests
+    ]
+    OrderedListConstructor [
+      LiteralExpr [STRING] [computers]
+      LiteralExpr [STRING] [wine]
+      LiteralExpr [STRING] [walking]
+    ]
+    LiteralExpr [LONG] [3]
+  ]
+Where
+  IndexAccessor [
+    Variable [ Name=ed ]
+    Index:     Variable [ Name=ed ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=nested
+    ]
+    Field=cid
+  ]
+  ASC
+

@@ -1,0 +1,35 @@
+DataverseUse group_no_agg
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
+WriteOutputTo nc1:/tmp/.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=name ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Groupby
+  Variable [ Name=name ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=c_name
+  ]
+  With
+  Variable [ Name=c ]
+

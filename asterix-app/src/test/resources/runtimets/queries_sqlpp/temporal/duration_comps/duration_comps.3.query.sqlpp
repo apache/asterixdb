@@ -1,0 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+set "import-private-functions" "true";
+
+{'yearMonthGreaterComp':test."year-month-duration-greater-than"(test.duration('P13M'),test.duration('P1Y')),'dayTimeGreaterComp':test."day-time-duration-greater-than"(test.duration('P1D'),test.duration('-P3D')),'yearMonthLessComp':test."year-month-duration-less-than"(test.duration('P13M'),test.duration('P1Y')),'dayTimeLessComp':test."day-time-duration-less-than"(test.duration('P1D'),test.duration('-P3D')),'equal1':test."duration-equal"(test.duration('P1D'),test.duration('PT24H')),'equal2':test."duration-equal"(test.duration('-P3D'),test.duration('PT24H')),'equal3':test."duration-equal"(test."duration-from-months"(test."months-from-year-month-duration"(test."get-year-month-duration"(test.duration('P1Y')))),test.duration('P1Y')),'equal4':test."duration-equal"(test."duration-from-ms"(test."ms-from-day-time-duration"(test."get-day-time-duration"(test.duration('-P3D')))),test.duration('-P3D'))};

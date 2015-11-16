@@ -1,0 +1,37 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [20]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [30]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [6]
+    LiteralExpr [LONG] [44]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [13]
+    LiteralExpr [LONG] [17]
+    LiteralExpr [LONG] [992]
+    LiteralExpr [LONG] [19]
+    LiteralExpr [LONG] [40]
+    LiteralExpr [LONG] [50]
+    LiteralExpr [LONG] [60]
+    LiteralExpr [LONG] [25]
+    LiteralExpr [LONG] [45]
+    LiteralExpr [LONG] [65]
+    LiteralExpr [LONG] [75]
+  ]
+  AS
+  Variable [ Name=a ]
+]
+Where
+  FunctionCall test.isOdd@1[
+    Variable [ Name=a ]
+  ]

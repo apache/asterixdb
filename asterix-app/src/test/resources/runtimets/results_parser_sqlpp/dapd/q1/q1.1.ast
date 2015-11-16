@@ -1,0 +1,26 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    street : string,
+    city : string,
+    zip : string,
+    latlong : point
+  }
+]
+TypeDecl UserType [
+  open RecordType {
+    name : string,
+    email : string,
+    interests : UnorderedList <string>
+,
+    address : AddressType,
+    member_of : UnorderedList <          open RecordType {
+            sig_id : int64,
+            chapter_name : string,
+            member_since : date
+          }
+>
+
+  }
+]
+DatasetDecl User(UserType)is an external dataset

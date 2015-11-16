@@ -1,0 +1,39 @@
+DataverseUse test
+TypeDecl AddressType [
+  open RecordType {
+    number : int64,
+    street : string,
+    city : string
+  }
+]
+TypeDecl AllType [
+  open RecordType {
+    id : int64,
+    string : string,
+    float : float,
+    double : double,
+    boolean : boolean,
+    int8 : int8,
+    int16 : int16,
+    int32 : int32,
+    int64 : int64,
+    unorderedList : UnorderedList <string>
+,
+    orderedList : OrderedList [string]
+,
+    record : AddressType,
+    date : date,
+    time : time,
+    datetime : datetime,
+    duration : duration,
+    point : point,
+    point3d : point3d,
+    line : line,
+    rectangle : rectangle,
+    polygon : polygon,
+    circle : circle,
+    binary : binary,
+    uuid : uuid
+  }
+]
+DatasetDecl All(AllType)is an external dataset

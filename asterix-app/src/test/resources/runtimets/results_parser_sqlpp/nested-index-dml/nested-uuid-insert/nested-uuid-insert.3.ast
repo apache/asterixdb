@@ -1,0 +1,20 @@
+DataverseUse twitter
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=test ]
+      Field=nested
+    ]
+    Field=nested
+  ]
+  Field=message-text
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [doublenests]
+  ]
+  AS
+  Variable [ Name=test ]
+]

@@ -367,6 +367,8 @@ public class JObjects {
 
     public static final class JString extends JObject {
 
+        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+
         public JString(String v) {
             super(new AMutableString(v));
         }
@@ -388,7 +390,7 @@ public class JObjects {
                     throw new HyracksDataException(e);
                 }
             }
-            AStringSerializerDeserializer.INSTANCE.serialize((AString) value, dataOutput);
+            aStringSerDer.serialize((AString) value, dataOutput);
         }
 
         @Override
@@ -976,6 +978,8 @@ public class JObjects {
         private ARecordType recordType;
         private IJObject[] fields;
         private Map<String, IJObject> openFields;
+        private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+
 
         public JRecord(ARecordType recordType, IJObject[] fields) {
             this.recordType = recordType;
@@ -1104,7 +1108,7 @@ public class JObjects {
                         openFieldValue.reset();
                         nameValue.setValue(entry.getKey());
                         openFieldName.getDataOutput().write(ATypeTag.STRING.serialize());
-                        AStringSerializerDeserializer.INSTANCE.serialize(nameValue, openFieldName.getDataOutput());
+                        aStringSerDer.serialize(nameValue, openFieldName.getDataOutput());
                         entry.getValue().serialize(openFieldValue.getDataOutput(), true);
                         recordBuilder.addField(openFieldName, openFieldValue);
                     }

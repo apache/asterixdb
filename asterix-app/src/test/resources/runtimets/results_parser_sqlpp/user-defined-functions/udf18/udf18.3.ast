@@ -1,0 +1,7 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+FunctionCall test.not@1[
+  FunctionCall test.fn06@0[
+  ]
+]

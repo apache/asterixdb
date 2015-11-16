@@ -1,0 +1,133 @@
+DataverseUse tpch
+FunctionDecl q22_customer_tmp([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [c_acctbal]
+        :
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_acctbal
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_custkey]
+        :
+        FieldAccessor [
+          Variable [ Name=c ]
+          Field=c_custkey
+        ]
+      )
+      (
+        LiteralExpr [STRING] [cntrycode]
+        :
+        FunctionCall tpch.substring@3[
+          FieldAccessor [
+            Variable [ Name=c ]
+            Field=c_phone
+          ]
+          LiteralExpr [LONG] [1]
+          LiteralExpr [LONG] [2]
+        ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=Customer ]
+      AS
+      Variable [ Name=c ]
+    ]
+  )
+}
+
+Query:
+LetVariable [ Name=avg ]
+  :=
+  FunctionCall tpch.avg@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_acctbal
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Customer]
+        ]
+        AS
+        Variable [ Name=c ]
+      ]
+      Where
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=c ]
+            Field=c_acctbal
+          ]
+          >
+          LiteralExpr [DOUBLE] [0.0]
+        ]
+    )
+  ]
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cntrycode]
+    :
+    Variable [ Name=cntrycode ]
+  )
+  (
+    LiteralExpr [STRING] [numcust]
+    :
+    FunctionCall tpch.count@1[
+      Variable [ Name=ct ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [totacctbal]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=c_acctbal
+        ]
+        ]
+        FROM [          Variable [ Name=ct ]
+          AS
+          Variable [ Name=i ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  FunctionCall tpch.q22_customer_tmp@0[
+  ]
+  AS
+  Variable [ Name=ct ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=ct ]
+      Field=c_acctbal
+    ]
+    >
+    Variable [ Name=avg ]
+  ]
+Groupby
+  Variable [ Name=cntrycode ]
+  :=
+  FieldAccessor [
+    Variable [ Name=ct ]
+    Field=cntrycode
+  ]
+  With
+  Variable [ Name=ct ]
+  Variable [ Name=avg ]
+
+Orderby
+  Variable [ Name=cntrycode ]
+  ASC
+

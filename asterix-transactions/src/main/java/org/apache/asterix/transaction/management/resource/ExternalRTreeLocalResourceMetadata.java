@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -58,23 +57,16 @@ public class ExternalRTreeLocalResourceMetadata extends LSMRTreeLocalResourceMet
             int partition) throws HyracksDataException {
         FileReference file = new FileReference(new File(filePath));
         try {
-            return LSMRTreeUtils.createExternalRTree(
-                    file,
-                    runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(),
-                    typeTraits,
-                    rtreeCmpFactories,
-                    btreeCmpFactories,
-                    valueProviderFactories,
-                    rtreePolicyType,
-                    runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+            return LSMRTreeUtils.createExternalRTree(file, runtimeContextProvider.getBufferCache(),
+                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            runtimeContextProvider.getIndexLifecycleManager()),
-                    new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider
-                            .getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
-                            .createIOOperationCallback(), linearizeCmpFactory, btreeFields, -1, true);
+                            runtimeContextProvider.getDatasetLifecycleManager()),
+                    new BaseOperationTracker(datasetID,
+                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                    runtimeContextProvider.getLSMIOScheduler(),
+                    LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
+                    btreeFields, -1, true);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

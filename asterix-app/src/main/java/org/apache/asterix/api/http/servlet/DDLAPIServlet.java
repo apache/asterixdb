@@ -23,8 +23,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.base.Statement.Kind;
+import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class DDLAPIServlet extends RESTAPIServlet {
     private static final long serialVersionUID = 1L;

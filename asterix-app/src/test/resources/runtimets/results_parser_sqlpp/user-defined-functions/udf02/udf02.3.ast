@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.getFirst@1[
+  Variable [ Name=a ]
+]
+]
+FROM [  OrderedListConstructor [
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+    ]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [4]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

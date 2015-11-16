@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use tpch;
+
+
+select element {'c_name':c_name,'c_custkey':c_custkey,'o_orderkey':o_orderkey,'o_orderdate':o_orderdate,'o_totalprice':o_totalprice,'sum_quantity':tpch.sum((
+        select element j.l_quantity
+        from  l as j
+    ))}
+from  Customer as c,
+      Orders as o,
+      (
+    select element {'l_orderkey':l_orderkey,'t_sum_quantity':tpch.sum((
+            select element i.l_quantity
+            from  l as i
+        ))}
+    from  LineItem as l
+    group by l.l_orderkey as l_orderkey
+) as t,
+      LineItem as l
+where ((c.c_custkey = o.o_custkey) and ((o.o_orderkey = t.l_orderkey) and (t.t_sum_quantity > 30)) and (l.l_orderkey = o.o_orderkey))
+group by c.c_name as c_name,c.c_custkey as c_custkey,o.o_orderkey as o_orderkey,o.o_orderdate as o_orderdate,o.o_totalprice as o_totalprice
+order by o_totalprice desc,o_orderdate
+limit 100
+;

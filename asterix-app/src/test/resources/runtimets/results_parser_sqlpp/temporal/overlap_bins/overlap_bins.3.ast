@@ -1,0 +1,63 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [timebins]
+    :
+    FunctionCall null.overlap-bins@3[
+      FunctionCall null.interval-from-time@2[
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [17:23:37]
+        ]
+        FunctionCall null.time@1[
+          LiteralExpr [STRING] [18:30:21]
+        ]
+      ]
+      FunctionCall null.time@1[
+        LiteralExpr [STRING] [00:00:00]
+      ]
+      FunctionCall null.day-time-duration@1[
+        LiteralExpr [STRING] [PT30M]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datebins]
+    :
+    FunctionCall null.overlap-bins@3[
+      FunctionCall null.interval-from-date@2[
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [1984-03-17]
+        ]
+        FunctionCall null.date@1[
+          LiteralExpr [STRING] [2013-08-22]
+        ]
+      ]
+      FunctionCall null.date@1[
+        LiteralExpr [STRING] [1990-01-01]
+      ]
+      FunctionCall null.year-month-duration@1[
+        LiteralExpr [STRING] [P20Y]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetimebins]
+    :
+    FunctionCall null.overlap-bins@3[
+      FunctionCall null.interval-from-datetime@2[
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [1800-01-01T23:59:48.938]
+        ]
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2015-07-26T13:28:30.218]
+        ]
+      ]
+      FunctionCall null.datetime@1[
+        LiteralExpr [STRING] [1900-01-01T00:00:00.000]
+      ]
+      FunctionCall null.year-month-duration@1[
+        LiteralExpr [STRING] [P100Y]
+      ]
+    ]
+  )
+]

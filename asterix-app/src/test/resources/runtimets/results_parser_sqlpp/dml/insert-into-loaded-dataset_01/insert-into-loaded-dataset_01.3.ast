@@ -1,0 +1,43 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=c ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineID]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=l_suppkey
+      ]
+      <
+      LiteralExpr [LONG] [100]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=l_linenumber
+      ]
+      <
+      LiteralExpr [LONG] [5]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=l_orderkey
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=l_linenumber
+  ]
+  ASC
+

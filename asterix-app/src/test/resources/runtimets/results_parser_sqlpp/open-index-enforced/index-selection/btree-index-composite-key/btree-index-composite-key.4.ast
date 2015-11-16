@@ -1,0 +1,72 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [fname]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=fname
+    ]
+  )
+  (
+    LiteralExpr [STRING] [lname]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=lname
+    ]
+  )
+  (
+    LiteralExpr [STRING] [age]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=age
+    ]
+  )
+  (
+    LiteralExpr [STRING] [dept]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=dept
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [employeeOpen]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=fname
+      ]
+      =
+      LiteralExpr [STRING] [Julio]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=lname
+      ]
+      =
+      LiteralExpr [STRING] [Isa]
+    ]
+  ]

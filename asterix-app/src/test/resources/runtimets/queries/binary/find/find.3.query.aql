@@ -30,4 +30,4 @@ let $r7 := find-binary($x, hex('ccddaabb')) = 0
 let $r8 := find-binary($x, null)
 let $r9 := find-binary(null, null)
 let $r0 := find-binary(null, $x)
-return [ $r1 and $r2 and $r3 and $r4 and $r5 and $r6 and $r7, $r8, $r9 , $r0]
+return [ $r1 , $r2 , $r3 , $r4 , $r5 , $r6 , $r7, $r8, $r9 , $r0]

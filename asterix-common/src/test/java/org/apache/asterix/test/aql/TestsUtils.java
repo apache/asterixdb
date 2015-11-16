@@ -29,25 +29,32 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
+import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpException;
+import org.json.JSONObject;
 
 public class TestsUtils {
 
@@ -205,28 +212,42 @@ public class TestsUtils {
             // In future this may be changed depending on the requested
             // output format sent to the servlet.
             String errorBody = method.getResponseBodyAsString();
-            JSONObject result = new JSONObject(errorBody);
-            String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
-                    result.getString("stacktrace") };
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
-            throw new Exception("HTTP operation failed: " + errors[0] + "\nSTATUS LINE: " + method.getStatusLine()
-                    + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
+            JSONObject result = null;
+            try {
+                result = new JSONObject(errorBody);
+            } catch (Exception e) {
+                throw new Exception(errorBody);
+            }
+            if (result != null) {
+                String[] errors = { result.getJSONArray("error-code").getString(0), result.getString("summary"),
+                        result.getString("stacktrace") };
+                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errors[2]);
+                throw new Exception("HTTP operation failed: " + errors[0] + "\nSTATUS LINE: " + method.getStatusLine()
+                        + "\nSUMMARY: " + errors[1] + "\nSTACKTRACE: " + errors[2]);
+            }
         }
         return statusCode;
     }
 
     // Executes Query and returns results as JSONArray
-    public static InputStream executeQuery(String str, OutputFormat fmt) throws Exception {
+    public static InputStream executeQuery(String str, OutputFormat fmt, List<CompilationUnit.Parameter> params) throws Exception {
         final String url = "http://localhost:19002/query";
 
         HttpMethodBase method = null;
         if(str.length() + url.length() < MAX_URL_LENGTH ){
             //Use GET for small-ish queries
             method = new GetMethod(url);
-            method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
+            NameValuePair[] parameters = new NameValuePair[params.size() + 1];
+            parameters[0] = new NameValuePair("query", str);
+            int i = 1;
+            for (CompilationUnit.Parameter param : params) {
+                parameters[i++] = new NameValuePair(param.getName(), param.getValue());
+            }
+            method.setQueryString(parameters);
         }
         else{
             //Use POST for bigger ones to avoid 413 FULL_HEAD
+            // QQQ POST API doesn't allow encoding additional parameters
             method = new PostMethod(url);
             ((PostMethod)method).setRequestEntity(new StringRequestEntity(str));
         }
@@ -241,7 +262,7 @@ public class TestsUtils {
 
     // To execute Update statements
     // Insert and Delete statements are executed here
-    public static void executeUpdate(String str) throws Exception {
+    public static void executeUpdate(String str, List<CompilationUnit.Parameter> params) throws Exception {
         final String url = "http://localhost:19002/update";
 
         // Create a method instance.
@@ -256,7 +277,7 @@ public class TestsUtils {
     }
 
     //Executes AQL in either async or async-defer mode.
-    public static InputStream executeAnyAQLAsync(String str, boolean defer, OutputFormat fmt) throws Exception {
+    public static InputStream executeAnyAQLAsync(String str, boolean defer, OutputFormat fmt, List<CompilationUnit.Parameter> params) throws Exception {
         final String url = "http://localhost:19002/aql";
 
         // Create a method instance.
@@ -286,7 +307,7 @@ public class TestsUtils {
 
         // Create a method instance.
         GetMethod method = new GetMethod(url);
-        method.setQueryString(new NameValuePair[] { new NameValuePair("handle", handle) });
+        method.setQueryString(new NameValuePair[]{new NameValuePair("handle", handle)});
         method.setRequestHeader("Accept", fmt.mimeType());
 
         // Provide custom retry handler is necessary
@@ -383,6 +404,11 @@ public class TestsUtils {
 
     public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
             boolean isDmlRecoveryTest) throws Exception {
+        executeTest(actualPath, testCaseCtx, pb, isDmlRecoveryTest, null);
+    }
+
+    public static void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
+            boolean isDmlRecoveryTest, TestGroup failedGroup) throws Exception {
 
         File testFile;
         File expectedResultFile;
@@ -395,7 +421,8 @@ public class TestsUtils {
 
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            LOGGER.info("Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
+            LOGGER.info(
+                    "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             testFileCtxs = testCaseCtx.getTestFiles(cUnit);
             expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
             for (TestFileContext ctx : testFileCtxs) {
@@ -414,7 +441,7 @@ public class TestsUtils {
                                         .replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                             }
 
-                            TestsUtils.executeUpdate(statement);
+                            TestsUtils.executeUpdate(statement, cUnit.getParameter());
                             break;
                         case "query":
                         case "async":
@@ -429,11 +456,11 @@ public class TestsUtils {
                             InputStream resultStream = null;
                             OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
                             if (ctx.getType().equalsIgnoreCase("query"))
-                                resultStream = executeQuery(statement, fmt);
+                                resultStream = executeQuery(statement, fmt, cUnit.getParameter());
                             else if (ctx.getType().equalsIgnoreCase("async"))
-                                resultStream = executeAnyAQLAsync(statement, false, fmt);
+                                resultStream = executeAnyAQLAsync(statement, false, fmt, cUnit.getParameter());
                             else if (ctx.getType().equalsIgnoreCase("asyncdefer"))
-                                resultStream = executeAnyAQLAsync(statement, true, fmt);
+                                resultStream = executeAnyAQLAsync(statement, true, fmt, cUnit.getParameter());
 
                             if (queryCount >= expectedResultFileCtxs.size()) {
                                 throw new IllegalStateException("no result file for " + testFile.toString() + "; queryCount: " + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
@@ -455,7 +482,7 @@ public class TestsUtils {
                             executeManagixCommand(statement);
                             break;
                         case "txnqbc": //qbc represents query before crash
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit), cUnit.getParameter());
                             qbcFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
@@ -463,7 +490,7 @@ public class TestsUtils {
                             TestsUtils.writeOutputToFile(qbcFile, resultStream);
                             break;
                         case "txnqar": //qar represents query after recovery
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit), cUnit.getParameter());
                             qarFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");
@@ -477,7 +504,7 @@ public class TestsUtils {
                             break;
                         case "txneu": //eu represents erroneous update
                             try {
-                                TestsUtils.executeUpdate(statement);
+                                TestsUtils.executeUpdate(statement, cUnit.getParameter());
                             } catch (Exception e) {
                                 //An exception is expected.
                                 failed = true;
@@ -524,16 +551,22 @@ public class TestsUtils {
                     }
 
                 } catch (Exception e) {
+
                     System.err.println("testFile " + testFile.toString() + " raised an exception:");
+
                     e.printStackTrace();
                     if (cUnit.getExpectedError().isEmpty()) {
                         System.err.println("...Unexpected!");
+                        if (failedGroup != null) {
+                            failedGroup.getTestCase().add(testCaseCtx.getTestCase());
+                        }
                         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                     } else {
                         LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
                                 + " failed as expected: " + e.getMessage());
                         System.err.println("...but that was expected.");
                     }
+
                 }
             }
         }

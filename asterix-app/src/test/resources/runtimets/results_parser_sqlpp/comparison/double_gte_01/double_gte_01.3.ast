@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [DOUBLE] [0.8]
+    LiteralExpr [DOUBLE] [0.8999999761581421]
+    LiteralExpr [DOUBLE] [0.9]
+    LiteralExpr [DOUBLE] [0.901]
+  ]
+  AS
+  Variable [ Name=i ]
+]
+Where
+  OperatorExpr [
+    Variable [ Name=i ]
+    >=
+    LiteralExpr [DOUBLE] [0.9]
+  ]

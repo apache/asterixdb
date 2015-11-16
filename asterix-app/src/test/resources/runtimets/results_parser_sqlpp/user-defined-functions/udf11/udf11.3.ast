@@ -1,0 +1,10 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  FunctionCall test.OList@0[
+  ]
+  AS
+  Variable [ Name=a ]
+]

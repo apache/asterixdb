@@ -100,8 +100,8 @@ public class ResultUtils {
         int bytesRead = resultReader.read(frame);
         ByteBufferInputStream bbis = new ByteBufferInputStream();
 
-        // Whether we need to separate top-level ADM instances with commas
-        boolean need_commas = true;
+        // Whether we are wrapping the output sequence in an array
+        boolean wrap_array = false;
         // Whether this is the first instance being output
         boolean notfirst = false;
 
@@ -114,16 +114,16 @@ public class ResultUtils {
         }
 
         switch (conf.fmt()) {
-            case CSV:
-                need_commas = false;
-                break;
             case LOSSLESS_JSON:
             case CLEAN_JSON:
             case ADM:
-                // Conveniently, LOSSLESS_JSON and ADM have the same syntax for an
-                // "ordered list", and our representation of the result of a
-                // statement is an ordered list of instances.
-                conf.out().print("[ ");
+                if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
+                    // Conveniently, LOSSLESS_JSON and ADM have the same syntax for an
+                    // "ordered list", and our representation of the result of a
+                    // statement is an ordered list of instances.
+                    conf.out().print("[ ");
+                    wrap_array = true;
+                }
                 break;
         }
 
@@ -145,7 +145,7 @@ public class ResultUtils {
                             }
                         }
                         result = new String(recordBytes, 0, numread, UTF_8);
-                        if (need_commas && notfirst) {
+                        if (wrap_array && notfirst) {
                             conf.out().print(", ");
                         }
                         notfirst = true;
@@ -167,15 +167,8 @@ public class ResultUtils {
 
         conf.out().flush();
 
-        switch (conf.fmt()) {
-            case LOSSLESS_JSON:
-            case CLEAN_JSON:
-            case ADM:
-                conf.out().println(" ]");
-                break;
-            case CSV:
-                // Nothing to do
-                break;
+        if (wrap_array) {
+            conf.out().println(" ]");
         }
 
         if (conf.is(SessionConfig.FORMAT_HTML)) {

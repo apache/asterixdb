@@ -1,0 +1,34 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/similarity_edit-distance-to-edit-distance-check_05.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=o ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.edit-distance@2[
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=authors
+      ]
+      LiteralExpr [STRING] [Michael J. Carey]
+    ]
+    >=
+    LiteralExpr [LONG] [2]
+  ]

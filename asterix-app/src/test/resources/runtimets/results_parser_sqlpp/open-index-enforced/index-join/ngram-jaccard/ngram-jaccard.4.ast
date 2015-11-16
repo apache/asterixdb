@@ -1,0 +1,78 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLPOpen]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.similarity-jaccard@2[
+        FunctionCall test.gram-tokens@3[
+          FieldAccessor [
+            Variable [ Name=a ]
+            Field=title
+          ]
+          LiteralExpr [LONG] [3]
+          LiteralExpr [FALSE]
+        ]
+        FunctionCall test.gram-tokens@3[
+          FieldAccessor [
+            Variable [ Name=b ]
+            Field=title
+          ]
+          LiteralExpr [LONG] [3]
+          LiteralExpr [FALSE]
+        ]
+      ]
+      >=
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=id
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=id
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=b ]
+    Field=id
+  ]
+  ASC
+

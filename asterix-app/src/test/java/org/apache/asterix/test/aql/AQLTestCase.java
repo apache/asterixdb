@@ -27,18 +27,15 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
 
-import junit.framework.TestCase;
-
-import org.junit.Test;
-
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.parser.AQLParser;
-import org.apache.asterix.aql.parser.ParseException;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.aql.parser.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.junit.Test;
+
+import junit.framework.TestCase;
 
 public class AQLTestCase extends TestCase {
 
@@ -54,11 +51,10 @@ public class AQLTestCase extends TestCase {
             AlgebricksException {
         Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
         AQLParser parser = new AQLParser(fis);
-        List<Statement> statements;
         GlobalConfig.ASTERIX_LOGGER.info(queryFile.toString());
         try {
-            statements = parser.parse();
-        } catch (ParseException e) {
+            parser.parse();
+        } catch (Exception e) {
             GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + fis);
             StringWriter sw = new StringWriter();
             PrintWriter writer = new PrintWriter(sw);

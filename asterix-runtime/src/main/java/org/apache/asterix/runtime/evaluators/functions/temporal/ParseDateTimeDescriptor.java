@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -85,6 +86,7 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                             .getSerializerDeserializer(BuiltinType.ADATETIME);
 
                     private AMutableDateTime aDateTime = new AMutableDateTime(0);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -109,25 +111,28 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
                                         + ")");
                             }
-                            int length0 = (argOut0.getByteArray()[1] & 0xff << 8)
-                                    + (argOut0.getByteArray()[2] & 0xff << 0);
-                            int length1 = (argOut1.getByteArray()[1] & 0xff << 8)
-                                    + (argOut1.getByteArray()[2] & 0xff << 0);
+                            utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength()-1);
+                            int start0 = utf8Ptr.getCharStartOffset();
+                            int length0 = utf8Ptr.getUTF8Length();
+
+                            utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength()-1);
+                            int start1 = utf8Ptr.getCharStartOffset();
+                            int length1 = utf8Ptr.getUTF8Length();
                             long chronon = 0;
 
-                            int formatStart = 3;
+                            int formatStart = start1;
                             int formatLength = 0;
                             boolean processSuccessfully = false;
-                            while (!processSuccessfully && formatStart < 3 + length1) {
+                            while (!processSuccessfully && formatStart < start1 + length1) {
                                 // search for "|"
                                 formatLength = 0;
-                                for (; formatStart + formatLength < 3 + length1; formatLength++) {
+                                for (; formatStart + formatLength < start1 + length1; formatLength++) {
                                     if (argOut1.getByteArray()[formatStart + formatLength] == '|') {
                                         break;
                                     }
                                 }
                                 try {
-                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), 3, length0,
+                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), start0, length0,
                                             argOut1.getByteArray(), formatStart, formatLength,
                                             DateTimeParseMode.DATETIME);
                                 } catch (AsterixTemporalTypeParseException ex) {

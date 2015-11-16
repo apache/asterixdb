@@ -1,0 +1,74 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [d0]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [0.555]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d1]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [0.322]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d2]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [NaN]
+      ]
+      LiteralExpr [LONG] [3]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d3]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [INF]
+      ]
+      LiteralExpr [LONG] [4]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d4]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [-INF]
+      ]
+      LiteralExpr [LONG] [5]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d5]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [-0.0]
+      ]
+      LiteralExpr [LONG] [6]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [d6]
+    :
+    FunctionCall test.round-half-to-even@2[
+      FunctionCall test.double@1[
+        LiteralExpr [STRING] [0.0]
+      ]
+      LiteralExpr [LONG] [0]
+    ]
+  )
+]

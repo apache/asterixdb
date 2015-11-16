@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -79,25 +78,16 @@ public class LSMRTreeLocalResourceMetadata extends AbstractLSMLocalResourceMetad
         FileReference file = new FileReference(new File(filePath));
         List<IVirtualBufferCache> virtualBufferCaches = runtimeContextProvider.getVirtualBufferCaches(datasetID);
         try {
-            return LSMRTreeUtils.createLSMTree(
-                    virtualBufferCaches,
-                    file,
-                    runtimeContextProvider.getBufferCache(),
-                    runtimeContextProvider.getFileMapManager(),
-                    typeTraits,
-                    rtreeCmpFactories,
-                    btreeCmpFactories,
-                    valueProviderFactories,
-                    rtreePolicyType,
-                    runtimeContextProvider.getBloomFilterFalsePositiveRate(),
+            return LSMRTreeUtils.createLSMTree(virtualBufferCaches, file, runtimeContextProvider.getBufferCache(),
+                    runtimeContextProvider.getFileMapManager(), typeTraits, rtreeCmpFactories, btreeCmpFactories,
+                    valueProviderFactories, rtreePolicyType, runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                     mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                            runtimeContextProvider.getIndexLifecycleManager()),
-                    new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager(), datasetID, ((DatasetLifecycleManager) runtimeContextProvider
-                            .getIndexLifecycleManager()).getDatasetInfo(datasetID)), runtimeContextProvider
-                            .getLSMIOScheduler(), LSMRTreeIOOperationCallbackFactory.INSTANCE
-                            .createIOOperationCallback(), linearizeCmpFactory, rtreeFields, btreeFields,
-                    filterTypeTraits, filterCmpFactories, filterFields, true);
+                            runtimeContextProvider.getDatasetLifecycleManager()),
+                    new BaseOperationTracker(datasetID,
+                            runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                    runtimeContextProvider.getLSMIOScheduler(),
+                    LSMRTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), linearizeCmpFactory,
+                    rtreeFields, btreeFields, filterTypeTraits, filterCmpFactories, filterFields, true);
         } catch (TreeIndexException e) {
             throw new HyracksDataException(e);
         }

@@ -1,2 +1,1 @@
-[ { "overlap1": interval-time("12:23:39.000Z, 18:27:19.000Z"), "overlap2": null, "overlap3": null, "overlap4": interval-date("2013-01-01, 2014-01-01"), "overlap5": interval-datetime("1989-03-04T12:23:39.000Z, 2000-10-30T18:27:19.000Z"), "overlap6": null }
- ]
+{ "overlap1": interval-time("12:23:39.000Z, 18:27:19.000Z"), "overlap2": null, "overlap3": null, "overlap4": interval-date("2013-01-01, 2014-01-01"), "overlap5": interval-datetime("1989-03-04T12:23:39.000Z, 2000-10-30T18:27:19.000Z"), "overlap6": null }

@@ -1,0 +1,128 @@
+DataverseUse tpch
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+DatasetDecl LineItems_q1(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
+WriteOutputTo nc1:rttest/tpch_q1_pricing_summary_report_nt.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_returnflag]
+    :
+    Variable [ Name=l_returnflag ]
+  )
+  (
+    LiteralExpr [STRING] [l_linestatus]
+    :
+    Variable [ Name=l_linestatus ]
+  )
+  (
+    LiteralExpr [STRING] [count_suppkey]
+    :
+    FunctionCall tpch.count@1[
+      Variable [ Name=g ]
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [l_returnflag]
+        :
+        Variable [ Name=l_returnflag ]
+      )
+      (
+        LiteralExpr [STRING] [l_linestatus]
+        :
+        Variable [ Name=l_linestatus ]
+      )
+      (
+        LiteralExpr [STRING] [l_suppkey]
+        :
+        Variable [ Name=l_suppkey ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItems_q1]
+      ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_shipdate
+        ]
+        <=
+        LiteralExpr [STRING] [1998-09-02]
+      ]
+    Groupby
+      Variable [ Name=l_returnflag ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_returnflag
+      ]
+      Variable [ Name=l_linestatus ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_linestatus
+      ]
+      Variable [ Name=l_suppkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_suppkey
+      ]
+      With
+      Variable [ Name=l ]
+
+  )
+  AS
+  Variable [ Name=g ]
+]
+Groupby
+  Variable [ Name=l_returnflag ]
+  :=
+  FieldAccessor [
+    Variable [ Name=g ]
+    Field=l_returnflag
+  ]
+  Variable [ Name=l_linestatus ]
+  :=
+  FieldAccessor [
+    Variable [ Name=g ]
+    Field=l_linestatus
+  ]
+  With
+  Variable [ Name=g ]
+
+Orderby
+  Variable [ Name=l_returnflag ]
+  ASC
+  Variable [ Name=l_linestatus ]
+  ASC
+

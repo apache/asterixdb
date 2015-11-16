@@ -1,0 +1,16 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+IfExpr [
+  Condition:
+    OperatorExpr [
+      LiteralExpr [LONG] [2]
+      >
+      LiteralExpr [LONG] [1]
+    ]
+  Then:
+    LiteralExpr [LONG] [20]
+  Else:
+    LiteralExpr [LONG] [10]
+]
+]

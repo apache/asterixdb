@@ -1,0 +1,40 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TestSet]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=x ]
+        Field=id
+      ]
+      =
+      LiteralExpr [STRING] [one]
+    ]
+    or
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=x ]
+        Field=id
+      ]
+      =
+      LiteralExpr [STRING] [two]
+    ]
+    or
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=x ]
+        Field=id
+      ]
+      =
+      LiteralExpr [STRING] [two]
+    ]
+  ]

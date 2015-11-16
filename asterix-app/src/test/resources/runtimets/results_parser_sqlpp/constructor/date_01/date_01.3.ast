@@ -1,0 +1,74 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [date1]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [2010-10-30]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date2]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [1987-11-19]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date3]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [-1987-11-19]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date4]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [0001-12-27]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date5]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [-1951-12-27]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date6]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [-2043-11-19]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date7]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [-19280329]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date8]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [19280329]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date9]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [19000228]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date10]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [20000229]
+    ]
+  )
+]

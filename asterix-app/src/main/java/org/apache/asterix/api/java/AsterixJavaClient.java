@@ -26,11 +26,9 @@ import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.Job;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.base.Statement;
-import org.apache.asterix.aql.parser.AQLParser;
-import org.apache.asterix.aql.parser.ParseException;
 import org.apache.asterix.aql.translator.AqlTranslator;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -59,7 +57,7 @@ public class AsterixJavaClient {
 
     public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,
             boolean printOptimizedPlan, boolean printPhysicalOpsOnly, boolean generateBinaryRuntime, boolean printJob)
-            throws Exception {
+                    throws Exception {
         queryJobSpec = null;
         dmlJobs = null;
 
@@ -72,17 +70,11 @@ public class AsterixJavaClient {
             builder.append((char) ch);
         }
         AQLParser parser = new AQLParser(builder.toString());
-        List<Statement> aqlStatements;
-        try {
-            aqlStatements = parser.parse();
-        } catch (ParseException pe) {
-            throw new AsterixException(pe);
-        }
+        List<Statement> aqlStatements = parser.parse();
         MetadataManager.INSTANCE.init();
 
         SessionConfig conf = new SessionConfig(writer, OutputFormat.ADM, optimize, true, generateBinaryRuntime);
-        conf.setOOBData(false, printRewrittenExpressions, printLogicalPlan,
-                        printOptimizedPlan, printJob);
+        conf.setOOBData(false, printRewrittenExpressions, printLogicalPlan, printOptimizedPlan, printJob);
         if (printPhysicalOpsOnly) {
             conf.set(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS, true);
         }

@@ -1,10 +1,9 @@
-[ { "t2info": [  ], "tweetid1": 1, "count1": 1 }
-, { "t2info": [ { "tweetid2": 60, "count2": 2 } ], "tweetid1": 2, "count1": 2 }
-, { "t2info": [ { "tweetid2": 105, "count2": 3 }, { "tweetid2": 206, "count2": 3 } ], "tweetid1": 3, "count1": 3 }
-, { "t2info": [  ], "tweetid1": 4, "count1": 4 }
-, { "t2info": [ { "tweetid2": 138, "count2": 5 }, { "tweetid2": 175, "count2": 5 } ], "tweetid1": 5, "count1": 5 }
-, { "t2info": [ { "tweetid2": 148, "count2": 6 } ], "tweetid1": 6, "count1": 6 }
-, { "t2info": [ { "tweetid2": 125, "count2": 7 } ], "tweetid1": 7, "count1": 7 }
-, { "t2info": [  ], "tweetid1": 8, "count1": 8 }
-, { "t2info": [ { "tweetid2": 141, "count2": 9 } ], "tweetid1": 9, "count1": 9 }
- ]
+{ "t2info": [  ], "tweetid1": 1, "count1": 1 }
+{ "t2info": [ { "tweetid2": 60, "count2": 2 } ], "tweetid1": 2, "count1": 2 }
+{ "t2info": [ { "tweetid2": 105, "count2": 3 }, { "tweetid2": 206, "count2": 3 } ], "tweetid1": 3, "count1": 3 }
+{ "t2info": [  ], "tweetid1": 4, "count1": 4 }
+{ "t2info": [ { "tweetid2": 138, "count2": 5 }, { "tweetid2": 175, "count2": 5 } ], "tweetid1": 5, "count1": 5 }
+{ "t2info": [ { "tweetid2": 148, "count2": 6 } ], "tweetid1": 6, "count1": 6 }
+{ "t2info": [ { "tweetid2": 125, "count2": 7 } ], "tweetid1": 7, "count1": 7 }
+{ "t2info": [  ], "tweetid1": 8, "count1": 8 }
+{ "t2info": [ { "tweetid2": 141, "count2": 9 } ], "tweetid1": 9, "count1": 9 }

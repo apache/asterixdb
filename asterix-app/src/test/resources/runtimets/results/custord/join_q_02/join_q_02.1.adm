@@ -1,4 +1,3 @@
-[ { "cust_name": "Jodi Alex", "order_total": 7.206f, "orderedlist": [ 1, 48, 5 ], "unorderedlist": {{ 1, 48, 5 }} }
-, { "cust_name": "Jodi Rotruck", "order_total": 14.2326f, "orderedlist": [ 10, 66, 775 ], "unorderedlist": {{ 10, 66, 775 }} }
-, { "cust_name": "Jodi Rotruck", "order_total": 97.20656f, "orderedlist": [ 1000, 66, 775 ], "unorderedlist": {{ 1000, 66, 775 }} }
- ]
+{ "cust_name": "Jodi Alex", "order_total": 7.206f, "orderedlist": [ 1, 48, 5 ], "unorderedlist": {{ 1, 48, 5 }} }
+{ "cust_name": "Jodi Rotruck", "order_total": 14.2326f, "orderedlist": [ 10, 66, 775 ], "unorderedlist": {{ 10, 66, 775 }} }
+{ "cust_name": "Jodi Rotruck", "order_total": 97.20656f, "orderedlist": [ 1000, 66, 775 ], "unorderedlist": {{ 1000, 66, 775 }} }

@@ -1,0 +1,18 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [rectangle1]
+    :
+    FunctionCall test.rectangle@1[
+      LiteralExpr [STRING] [5.1,11.8 87.6,15.6548]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [rectangle2]
+    :
+    FunctionCall test.rectangle@1[
+      LiteralExpr [STRING] [0.1234,-1.00e-10 5.5487,0.48765]
+    ]
+  )
+]

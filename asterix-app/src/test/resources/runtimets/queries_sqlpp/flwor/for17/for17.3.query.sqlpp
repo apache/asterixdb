@@ -1,0 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description     : Test union of two lists
+ * Expected Result : Success
+ * Date            : 24th July 2012
+ */
+
+select element (
+    select element a
+    from  [{'id':1234,'name':'John Doe','age':56,'salary':50000,'dept':'HR'}] as a
+)
+    union
+    (
+    select element b
+    from  [{'id':3424,'name':'Roger Sanders','age':46,'salary':60000,'dept':'Publishing'}] as b
+);

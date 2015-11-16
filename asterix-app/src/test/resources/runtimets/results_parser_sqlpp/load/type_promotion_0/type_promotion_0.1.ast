@@ -1,0 +1,37 @@
+DataverseUse TestDataverse
+TypeDecl TestType [
+  open RecordType {
+    id : int64,
+    int8 : int8,
+    int16 : int16,
+    int32 : int32,
+    int64 : int64,
+    float : float,
+    double : double,
+    int8_u : UnorderedList <int8>
+?,
+    int8_o : OrderedList [int8]
+?,
+    int16_u : UnorderedList <int16>
+?,
+    int16_o : OrderedList [int16]
+?,
+    int32_u : UnorderedList <int32>
+?,
+    int32_o : OrderedList [int32]
+?,
+    int64_u : UnorderedList <int64>
+?,
+    int64_o : OrderedList [int64]
+?,
+    float_u : UnorderedList <float>
+?,
+    float_o : OrderedList [float]
+?,
+    double_u : UnorderedList <double>
+?,
+    double_o : OrderedList [double]
+?
+  }
+]
+DatasetDecl TestSet(TestType) partitioned by [[id]]

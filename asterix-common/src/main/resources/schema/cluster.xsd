@@ -44,7 +44,11 @@
 	<xs:element name="http_port" type="xs:integer" />
 	<xs:element name="debug_port" type="xs:integer" />
 	<xs:element name="metadata_node" type="xs:string" />
-	
+	<xs:element name="enabled" type="xs:boolean" />
+	<xs:element name="replication_port" type="xs:integer" />
+	<xs:element name="replication_factor" type="xs:integer" />
+	<xs:element name="replication_store" type="xs:string" />
+	<xs:element name="replication_time_out" type="xs:integer" />
 
 	<!-- definition of complex elements -->
 	<xs:element name="working_dir">
@@ -68,6 +72,18 @@
 				<xs:element ref="cl:cluster_port" />
 				<xs:element ref="cl:http_port" />
 				<xs:element ref="cl:debug_port" minOccurs="0" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="data_replication">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="cl:enabled" />
+				<xs:element ref="cl:replication_port" />
+				<xs:element ref="cl:replication_factor" />
+				<xs:element ref="cl:replication_store" />
+				<xs:element ref="cl:replication_time_out" />
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -126,6 +142,7 @@
 				<xs:element ref="cl:iodevices" minOccurs="0" />
 				<xs:element ref="cl:working_dir" />
 				<xs:element ref="cl:metadata_node" />
+				<xs:element ref="cl:data_replication" minOccurs="0" />
 				<xs:element ref="cl:master_node" />
 				<xs:element ref="cl:node" maxOccurs="unbounded" />
 				<xs:element ref="cl:substitute_nodes" />

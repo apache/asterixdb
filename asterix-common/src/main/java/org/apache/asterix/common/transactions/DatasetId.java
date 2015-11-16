@@ -25,6 +25,11 @@ public class DatasetId implements Serializable {
      * 
      */
     private static final long serialVersionUID = 1L;
+    /**
+     * The number of bytes used to represent {@link DatasetId} value.
+     */
+    public static final int BYTES = Integer.BYTES;
+
     int id;
 
     public DatasetId(int id) {

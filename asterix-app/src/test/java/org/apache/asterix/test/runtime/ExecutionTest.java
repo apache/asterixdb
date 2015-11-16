@@ -19,11 +19,23 @@
 package org.apache.asterix.test.runtime;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.asterix.common.config.AsterixPropertiesAccessor;
+import org.apache.asterix.common.config.AsterixTransactionProperties;
+import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
+import org.apache.asterix.external.util.IdentitiyResolverFactory;
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.test.aql.TestsUtils;
+import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.xml.TestGroup;
+import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.AfterClass;
@@ -32,15 +44,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.common.config.AsterixPropertiesAccessor;
-import org.apache.asterix.common.config.AsterixTransactionProperties;
-import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.external.dataset.adapter.FileSystemBasedAdapter;
-import org.apache.asterix.external.util.IdentitiyResolverFactory;
-import org.apache.asterix.test.aql.TestsUtils;
-import org.apache.asterix.testframework.context.TestCaseContext;
 
 /**
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.
@@ -51,12 +54,15 @@ public class ExecutionTest {
     protected static final Logger LOGGER = Logger.getLogger(ExecutionTest.class.getName());
 
     protected static final String PATH_ACTUAL = "rttest" + File.separator;
-    protected static final String PATH_BASE = StringUtils.join(
-            new String[] { "src", "test", "resources", "runtimets" }, File.separator);
+    protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
+            File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
 
     protected static AsterixTransactionProperties txnProperties;
+    private final static TestExecutor testExecutor = new TestExecutor();
+
+    protected static TestGroup FailedGroup;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -84,10 +90,14 @@ public class ExecutionTest {
 
         HDFSCluster.getInstance().setup();
 
-        // Set the node resolver to be the identity resolver that expects node names
+        // Set the node resolver to be the identity resolver that expects node
+        // names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(FileSystemBasedAdapter.NODE_RESOLVER_FACTORY_PROPERTY,
                 IdentitiyResolverFactory.class.getName());
+
+        FailedGroup = new TestGroup();
+        FailedGroup.setName("failed");
     }
 
     @AfterClass
@@ -100,9 +110,26 @@ public class ExecutionTest {
         }
         // clean up the files written by the ASTERIX storage manager
         for (String d : AsterixHyracksIntegrationUtil.getDataDirs()) {
-            TestsUtils.deleteRec(new File(d));
+            testExecutor.deleteRec(new File(d));
         }
         HDFSCluster.getInstance().cleanup();
+
+        if (FailedGroup != null && FailedGroup.getTestCase().size() > 0) {
+            File temp = File.createTempFile("failed", ".xml");
+            javax.xml.bind.JAXBContext jaxbCtx = null;
+            jaxbCtx = javax.xml.bind.JAXBContext.newInstance(TestSuite.class.getPackage().getName());
+            javax.xml.bind.Marshaller marshaller = null;
+            marshaller = jaxbCtx.createMarshaller();
+            marshaller.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            TestSuite failedSuite = new TestSuite();
+            failedSuite.setResultOffsetPath("results");
+            failedSuite.setQueryOffsetPath("queries");
+            failedSuite.getTestGroup().add(FailedGroup);
+            marshaller.marshal(failedSuite, temp);
+            System.err.println("The failed.xml is written to :" + temp.getAbsolutePath()
+                    + ". You can copy it to only.xml by the following cmd:" + "\rcp " + temp.getAbsolutePath() + " "
+                    + Paths.get("./src/test/resources/runtimets/only.xml").toAbsolutePath());
+        }
     }
 
     private static void deleteTransactionLogs() throws Exception {
@@ -141,6 +168,6 @@ public class ExecutionTest {
 
     @Test
     public void test() throws Exception {
-            TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false);
+        TestsUtils.executeTest(PATH_ACTUAL, tcCtx, null, false, FailedGroup);
     }
 }

@@ -1,0 +1,11 @@
+DataverseUse twitter
+TypeDecl Tweet [
+  open RecordType {
+    id : int64,
+    tweetid : int64,
+    loc : point,
+    time : datetime,
+    text : string
+  }
+]
+DatasetDecl TwitterData(Tweet)is an external dataset

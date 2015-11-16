@@ -1,0 +1,442 @@
+DataverseUse q08_group_by
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+TypeDecl SupplierType [
+  closed RecordType {
+    s_suppkey : int32,
+    s_name : string,
+    s_address : string,
+    s_nationkey : int32,
+    s_phone : string,
+    s_acctbal : double,
+    s_comment : string
+  }
+]
+TypeDecl NationType [
+  closed RecordType {
+    n_nationkey : int32,
+    n_name : string,
+    n_regionkey : int32,
+    n_comment : string
+  }
+]
+TypeDecl RegionType [
+  closed RecordType {
+    r_regionkey : int32,
+    r_name : string,
+    r_comment : string
+  }
+]
+TypeDecl PartType [
+  closed RecordType {
+    p_partkey : int32,
+    p_name : string,
+    p_mfgr : string,
+    p_brand : string,
+    p_type : string,
+    p_size : int32,
+    p_container : string,
+    p_retailprice : double,
+    p_comment : string
+  }
+]
+DatasetDecl LineItem(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+DatasetDecl Customer(CustomerType) partitioned by [[c_custkey]]
+DatasetDecl Supplier(SupplierType) partitioned by [[s_suppkey]]
+DatasetDecl Nation(NationType) partitioned by [[n_nationkey]]
+DatasetDecl Region(RegionType) partitioned by [[r_regionkey]]
+DatasetDecl Part(PartType) partitioned by [[p_partkey]]
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [o_orderdate]
+    :
+    FieldAccessor [
+      Variable [ Name=lnrcop ]
+      Field=o_orderdate
+    ]
+  )
+  (
+    LiteralExpr [STRING] [l_discount]
+    :
+    FieldAccessor [
+      Variable [ Name=lnrcop ]
+      Field=l_discount
+    ]
+  )
+  (
+    LiteralExpr [STRING] [l_extendedprice]
+    :
+    FieldAccessor [
+      Variable [ Name=lnrcop ]
+      Field=l_extendedprice
+    ]
+  )
+  (
+    LiteralExpr [STRING] [l_suppkey]
+    :
+    FieldAccessor [
+      Variable [ Name=lnrcop ]
+      Field=l_suppkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [s_nationkey]
+    :
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=s_nationkey
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Supplier]
+  ]
+  AS
+  Variable [ Name=s ]
+,
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [o_orderdate]
+        :
+        FieldAccessor [
+          Variable [ Name=lnrco ]
+          Field=o_orderdate
+        ]
+      )
+      (
+        LiteralExpr [STRING] [l_discount]
+        :
+        FieldAccessor [
+          Variable [ Name=lnrco ]
+          Field=l_discount
+        ]
+      )
+      (
+        LiteralExpr [STRING] [l_extendedprice]
+        :
+        FieldAccessor [
+          Variable [ Name=lnrco ]
+          Field=l_extendedprice
+        ]
+      )
+      (
+        LiteralExpr [STRING] [l_suppkey]
+        :
+        FieldAccessor [
+          Variable [ Name=lnrco ]
+          Field=l_suppkey
+        ]
+      )
+    ]
+    ]
+    FROM [      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [o_orderdate]
+            :
+            FieldAccessor [
+              Variable [ Name=nrco ]
+              Field=o_orderdate
+            ]
+          )
+          (
+            LiteralExpr [STRING] [l_partkey]
+            :
+            FieldAccessor [
+              Variable [ Name=l ]
+              Field=l_partkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [l_discount]
+            :
+            FieldAccessor [
+              Variable [ Name=l ]
+              Field=l_discount
+            ]
+          )
+          (
+            LiteralExpr [STRING] [l_extendedprice]
+            :
+            FieldAccessor [
+              Variable [ Name=l ]
+              Field=l_extendedprice
+            ]
+          )
+          (
+            LiteralExpr [STRING] [l_suppkey]
+            :
+            FieldAccessor [
+              Variable [ Name=l ]
+              Field=l_suppkey
+            ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [LineItem]
+          ]
+          AS
+          Variable [ Name=l ]
+,
+          (
+            SELECT ELEMENT [
+            RecordConstructor [
+              (
+                LiteralExpr [STRING] [o_orderdate]
+                :
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_orderdate
+                ]
+              )
+              (
+                LiteralExpr [STRING] [o_orderkey]
+                :
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_orderkey
+                ]
+              )
+            ]
+            ]
+            FROM [              FunctionCall Metadata.dataset@1[
+                LiteralExpr [STRING] [Orders]
+              ]
+              AS
+              Variable [ Name=o ]
+,
+              (
+                SELECT ELEMENT [
+                RecordConstructor [
+                  (
+                    LiteralExpr [STRING] [c_custkey]
+                    :
+                    FieldAccessor [
+                      Variable [ Name=c ]
+                      Field=c_custkey
+                    ]
+                  )
+                ]
+                ]
+                FROM [                  FunctionCall Metadata.dataset@1[
+                    LiteralExpr [STRING] [Customer]
+                  ]
+                  AS
+                  Variable [ Name=c ]
+,
+                  (
+                    SELECT ELEMENT [
+                    RecordConstructor [
+                      (
+                        LiteralExpr [STRING] [n_nationkey]
+                        :
+                        FieldAccessor [
+                          Variable [ Name=n1 ]
+                          Field=n_nationkey
+                        ]
+                      )
+                    ]
+                    ]
+                    FROM [                      FunctionCall Metadata.dataset@1[
+                        LiteralExpr [STRING] [Nation]
+                      ]
+                      AS
+                      Variable [ Name=n1 ]
+,
+                      FunctionCall Metadata.dataset@1[
+                        LiteralExpr [STRING] [Region]
+                      ]
+                      AS
+                      Variable [ Name=r1 ]
+                    ]
+                    Where
+                      OperatorExpr [
+                        OperatorExpr [
+                          FieldAccessor [
+                            Variable [ Name=n1 ]
+                            Field=n_regionkey
+                          ]
+                          =
+                          FieldAccessor [
+                            Variable [ Name=r1 ]
+                            Field=r_regionkey
+                          ]
+                        ]
+                        and
+                        OperatorExpr [
+                          FieldAccessor [
+                            Variable [ Name=r1 ]
+                            Field=r_name
+                          ]
+                          =
+                          LiteralExpr [STRING] [AMERICA]
+                        ]
+                      ]
+                  )
+                  AS
+                  Variable [ Name=nr ]
+                ]
+                Where
+                  OperatorExpr [
+                    FieldAccessor [
+                      Variable [ Name=c ]
+                      Field=c_nationkey
+                    ]
+                    =
+                    FieldAccessor [
+                      Variable [ Name=nr ]
+                      Field=n_nationkey
+                    ]
+                  ]
+              )
+              AS
+              Variable [ Name=nrc ]
+            ]
+            Where
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=nrc ]
+                  Field=c_custkey
+                ]
+                =
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_custkey
+                ]
+              ]
+          )
+          AS
+          Variable [ Name=nrco ]
+        ]
+        Where
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_orderkey
+              ]
+              =
+              FieldAccessor [
+                Variable [ Name=nrco ]
+                Field=o_orderkey
+              ]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=nrco ]
+                Field=o_orderdate
+              ]
+              >=
+              LiteralExpr [STRING] [1995-01-01]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=nrco ]
+                Field=o_orderdate
+              ]
+              <=
+              LiteralExpr [STRING] [1996-12-31]
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=lnrco ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Part]
+      ]
+      AS
+      Variable [ Name=p ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_partkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=lnrco ]
+            Field=l_partkey
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=p ]
+            Field=p_type
+          ]
+          =
+          LiteralExpr [STRING] [ECONOMY ANODIZED STEEL]
+        ]
+      ]
+  )
+  AS
+  Variable [ Name=lnrcop ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=s_suppkey
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=lnrcop ]
+      Field=l_suppkey
+    ]
+  ]

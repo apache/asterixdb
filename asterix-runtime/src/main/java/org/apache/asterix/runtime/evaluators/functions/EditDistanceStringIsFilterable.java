@@ -89,6 +89,8 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
         private final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
                 .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
+        private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+
         public EditDistanceStringIsFilterableEvaluator(ICopyEvaluatorFactory[] args, IDataOutputProvider output)
                 throws AlgebricksException {
             this.output = output;
@@ -110,14 +112,9 @@ public class EditDistanceStringIsFilterable extends AbstractScalarFunctionDynami
                 throw new AlgebricksException(AsterixBuiltinFunctions.EDIT_DISTANCE_STRING_IS_FILTERABLE.getName()
                         + ": expects input type STRING as first argument, but got " + typeTag + ".");
             }
-            int utf8Length = UTF8StringPointable.getUTFLength(argBuf.getByteArray(), 1);
-            int pos = 3;
-            long strLen = 0;
-            int end = pos + utf8Length;
-            while (pos < end) {
-                strLen++;
-                pos += UTF8StringPointable.charSize(argBuf.getByteArray(), pos);
-            }
+
+            utf8Ptr.set(argBuf.getByteArray(), 1, argBuf.getLength());
+            int strLen = utf8Ptr.getStringLength();
 
             // Check type and extract edit-distance threshold.
             argBuf.reset();

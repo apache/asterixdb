@@ -1,0 +1,33 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    street : string,
+    city : string,
+    zip : string,
+    latlong : point
+  }
+]
+TypeDecl EventType [
+  closed RecordType {
+    event_id : int64,
+    name : string,
+    location : AddressType?,
+    organizers : UnorderedList <          open RecordType {
+            name : string
+          }
+>
+,
+    sponsoring_sigs : OrderedList [          open RecordType {
+            sig_id : int64,
+            chapter_name : string
+          }
+]
+,
+    interest_keywords : UnorderedList <string>
+,
+    price : double?,
+    start_time : datetime,
+    end_time : datetime
+  }
+]
+DatasetDecl Event(EventType)is an external dataset

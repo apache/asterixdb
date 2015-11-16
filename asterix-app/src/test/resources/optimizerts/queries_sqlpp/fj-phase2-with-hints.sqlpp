@@ -1,0 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  database fuzzyjoin_078 if exists;
+create  database fuzzyjoin_078;
+
+use fuzzyjoin_078;
+
+
+create type fuzzyjoin_078.DBLPType as
+{
+  id : int32,
+  dblpid : string,
+  title : string,
+  authors : string,
+  misc : string
+}
+
+create  nodegroup group1 if not exists  on 
+    nc1,
+    nc2
+;
+create  table DBLP_fuzzyjoin_078(DBLPType) primary key id on group1;
+
+write output to nc1:"rttest/fuzzyjoin_078.adm"
+select element {'id':paperDBLP.id,'tokens':tokensDBLP}
+from  DBLP_fuzzyjoin_078 as paperDBLP
+with  unrankedTokensDBLP as fuzzyjoin_078."counthashed-word-tokens"(paperDBLP.title),
+      tokensDBLP as (
+      select element i
+      from  unrankedTokensDBLP as token,
+            (
+          select element tokenGroupped
+          from  DBLP_fuzzyjoin_078 as paper,
+                fuzzyjoin_078."counthashed-word-tokens"(paper.title) as token
+          /* +hash */
+          group by token as tokenGroupped
+          order by fuzzyjoin_078.count(paper),tokenGroupped
+      ) as tokenRanked at i
+      where (token = tokenRanked)
+      order by i
+  )
+order by paperDBLP.id
+;

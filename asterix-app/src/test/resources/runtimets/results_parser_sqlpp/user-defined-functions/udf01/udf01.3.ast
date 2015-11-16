@@ -1,0 +1,22 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.echo@1[
+  Variable [ Name=a ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [6]
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [10]
+  ]
+  AS
+  Variable [ Name=a ]
+]

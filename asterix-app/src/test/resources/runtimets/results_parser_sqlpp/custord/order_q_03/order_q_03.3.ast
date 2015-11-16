@@ -1,0 +1,137 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [orderid]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=oid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ordertot]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=total
+    ]
+  )
+  (
+    LiteralExpr [STRING] [list]
+    :
+    Variable [ Name=c1 ]
+  )
+  (
+    LiteralExpr [STRING] [item1]
+    :
+    IndexAccessor [
+      Variable [ Name=c1 ]
+      Index:       Variable [ Name=c1 ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [item2]
+    :
+    IndexAccessor [
+      Variable [ Name=c1 ]
+      Index:       Variable [ Name=c1 ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [item3]
+    :
+    IndexAccessor [
+      Variable [ Name=c1 ]
+      Index:       Variable [ Name=c1 ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+LetVariable [ Name=c1 ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=orderstatus
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=clerk
+    ]
+  ]
+LetVariable [ Name=c2 ]
+  :=
+  UnorderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=orderstatus
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=clerk
+    ]
+  ]
+LetVariable [ Name=c3 ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=heList
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=openlist
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=loc
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=line
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=poly
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=lastorder
+    ]
+  ]
+LetVariable [ Name=c4 ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=heList
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=openlist
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=loc
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=line
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=poly
+    ]
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=lastorder
+    ]
+  ]

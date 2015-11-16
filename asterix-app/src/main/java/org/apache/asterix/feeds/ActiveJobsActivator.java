@@ -73,6 +73,7 @@ public class ActiveJobsActivator implements Runnable {
                 }
         }
     }
+    //not currently in use
     /*
         public void reviveFeed(String dataverse, String feedName, String dataset, String feedPolicy) {
             PrintWriter writer = new PrintWriter(System.out, true);

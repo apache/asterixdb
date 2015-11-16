@@ -26,7 +26,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 
 /**
  * General-purpose implementation of IOptimizableFuncExpr that supports any
@@ -40,16 +39,18 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final List<List<String>> fieldNames;
     protected final IAType[] fieldTypes;
     protected final OptimizableOperatorSubTree[] subTrees;
-    protected final IAlgebricksConstantValue[] constantVals;
+    protected final ILogicalExpression[] constantAtRuntimeExpressions;
+    protected final IAType[] constantAtRuntimeExpressionTypes;
     protected boolean partialField;
 
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable[] logicalVars,
-            IAlgebricksConstantValue[] constantVals) {
+            ILogicalExpression[] constantExpressions, IAType[] constantExpressionTypes) {
         this.funcExpr = funcExpr;
         this.logicalVars = logicalVars;
         this.sourceVars = new LogicalVariable[logicalVars.length];
         this.logicalExprs = new ILogicalExpression[logicalVars.length];
-        this.constantVals = constantVals;
+        this.constantAtRuntimeExpressionTypes = constantExpressionTypes;
+        this.constantAtRuntimeExpressions = constantExpressions;
         this.fieldNames = new ArrayList<List<String>>();
         for (int i = 0; i < logicalVars.length; i++) {
             fieldNames.add(new ArrayList<String>());
@@ -66,12 +67,13 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
 
     // Special, more convenient c'tor for simple binary functions.
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable logicalVar,
-            IAlgebricksConstantValue constantVal) {
+            ILogicalExpression constantExpression, IAType constantExpressionType) {
         this.funcExpr = funcExpr;
         this.logicalVars = new LogicalVariable[] { logicalVar };
         this.sourceVars = new LogicalVariable[1];
         this.logicalExprs = new ILogicalExpression[1];
-        this.constantVals = new IAlgebricksConstantValue[] { constantVal };
+        this.constantAtRuntimeExpressions = new ILogicalExpression[] { constantExpression };
+        this.constantAtRuntimeExpressionTypes = new IAType[] { constantExpressionType };
         this.fieldNames = new ArrayList<List<String>>();
         for (int i = 0; i < logicalVars.length; i++) {
             fieldNames.add(new ArrayList<String>());
@@ -96,8 +98,8 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     }
 
     @Override
-    public int getNumConstantVals() {
-        return constantVals.length;
+    public int getNumConstantAtRuntimeExpr() {
+        return constantAtRuntimeExpressions.length;
     }
 
     @Override
@@ -136,8 +138,23 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     }
 
     @Override
-    public IAlgebricksConstantValue getConstantVal(int index) {
-        return constantVals[index];
+    public ILogicalExpression getConstantAtRuntimeExpr(int index) {
+        return constantAtRuntimeExpressions[index];
+    }
+
+    @Override
+    public void setConstType(int index, IAType fieldType) {
+        constantAtRuntimeExpressionTypes[index] = fieldType;
+    }
+
+    @Override
+    public IAType getConstantType(int index) {
+        return constantAtRuntimeExpressionTypes[index];
+    }
+
+    @Override
+    public void setConstantAtRuntimeExpr(int index, ILogicalExpression expr) {
+        constantAtRuntimeExpressions[index] = expr;
     }
 
     @Override

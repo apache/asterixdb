@@ -1,0 +1,112 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+      >
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+        Index:         OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    OperatorExpr [
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+        Index:         OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+      >=
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+      <
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+        Index:         OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result4]
+    :
+    OperatorExpr [
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+        Index:         OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+      <=
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result5]
+    :
+    OperatorExpr [
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+      =
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+        Index:         OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result6]
+    :
+    OperatorExpr [
+      IndexAccessor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+        Index:         OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+      !=
+      FunctionCall test.float@1[
+        LiteralExpr [STRING] [-6.5d]
+      ]
+    ]
+  )
+]

@@ -25,8 +25,8 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeseriali
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -42,6 +42,8 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -82,6 +84,7 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private StringBuilder sbder = new StringBuilder();
+                    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -109,14 +112,14 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                             long chronon = ADateSerializerDeserializer.getChronon(argOut0.getByteArray(), 1)
                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
-                            int formatLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                    + (argOut1.getByteArray()[2] & 0xff << 0);
+                            int formatLength = UTF8StringUtil.getUTFLength(argOut1.getByteArray(), 1);
+                            int offset = UTF8StringUtil.getNumBytesToStoreLength(formatLength);
                             sbder.delete(0, sbder.length());
-                            DT_UTILS.printDateTime(chronon, 0, argOut1.getByteArray(), 3, formatLength, sbder,
+                            DT_UTILS.printDateTime(chronon, 0, argOut1.getByteArray(), 1 + offset, formatLength, sbder,
                                     DateTimeParseMode.DATE_ONLY);
 
                             out.writeByte(ATypeTag.STRING.serialize());
-                            out.writeUTF(sbder.toString());
+                            utf8Writer.writeUTF8(sbder.toString(), out);
 
                         } catch (IOException ex) {
                             throw new AlgebricksException(ex);

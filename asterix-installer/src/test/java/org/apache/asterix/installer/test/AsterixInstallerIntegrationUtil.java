@@ -169,6 +169,10 @@ public class AsterixInstallerIntegrationUtil {
             case INACTIVE:
                 command = "start -n " + ASTERIX_INSTANCE_NAME;
                 break;
+            case UNUSABLE:
+                command = "delete -n " + ASTERIX_INSTANCE_NAME;
+                cmdHandler.processCommand(command.split(" "));
+                throw new Exception("Cluster state was Unusable");
         }
         cmdHandler.processCommand(command.split(" "));
     }

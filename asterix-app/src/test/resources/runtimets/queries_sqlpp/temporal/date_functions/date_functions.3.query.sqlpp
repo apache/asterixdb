@@ -1,0 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+set "import-private-functions" "true";
+
+{'date1':test."date-from-unix-time-in-days"(15600),'date2':test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')),'date3':test."get-date-from-datetime"(test.datetime('2012-10-11T02:30:23+03:00')),'date4':(test."date-from-unix-time-in-days"(15600) + test.duration('-P2Y1M90DT30H')),'date5':(test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M')),'duration1':((test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M')) - test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z'))),'duration2':((test."date-from-unix-time-in-days"(15600) + test.duration('-P2Y1M90DT30H')) - test."date-from-unix-time-in-days"(15600)),'c1':(test."date-from-unix-time-in-days"(15600) = ((test."date-from-unix-time-in-days"(15600) + test.duration('-P2Y1M90DT30H')) + (test."date-from-unix-time-in-days"(15600) - (test."date-from-unix-time-in-days"(15600) + test.duration('-P2Y1M90DT30H'))))),'c2':(test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) = ((test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M')) + (test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) - (test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M'))))),'null1':test."date-from-unix-time-in-days"(null),'null2':test."get-date-from-datetime"(null),'null3':(null + test.duration('-P2Y1M90DT30H')),'null4':(test."date-from-unix-time-in-days"(15600) + null),'null5':(null - test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z'))),'null6':((test."get-date-from-datetime"(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M')) - null)};

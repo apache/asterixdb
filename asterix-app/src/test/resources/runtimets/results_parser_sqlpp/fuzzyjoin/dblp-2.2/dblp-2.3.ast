@@ -1,0 +1,106 @@
+DataverseUse fuzzyjoin
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    Variable [ Name=idDBLP ]
+  )
+  (
+    LiteralExpr [STRING] [prefixToken]
+    :
+    Variable [ Name=prefixTokenDBLP ]
+  )
+  (
+    LiteralExpr [STRING] [tokens]
+    :
+    Variable [ Name=tokensDBLP ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paperDBLP ]
+,
+  FunctionCall fuzzyjoin.subset-collection@3[
+    FunctionCall Metadata.dataset@1[
+      LiteralExpr [STRING] [tokensDBLP]
+    ]
+    LiteralExpr [LONG] [0]
+    FunctionCall fuzzyjoin.prefix-len-jaccard@2[
+      FunctionCall fuzzyjoin.len@1[
+        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [tokensDBLP]
+        ]
+      ]
+      LiteralExpr [FLOAT] [0.5]
+    ]
+  ]
+  AS
+  Variable [ Name=prefixTokenDBLP ]
+]
+LetVariable [ Name=idDBLP ]
+  :=
+  FieldAccessor [
+    Variable [ Name=paperDBLP ]
+    Field=id
+  ]
+LetVariable [ Name=tokensUnrankedDBLP ]
+  :=
+  FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paperDBLP ]
+      Field=title
+    ]
+  ]
+LetVariable [ Name=lenDBLP ]
+  :=
+  FunctionCall fuzzyjoin.len@1[
+    Variable [ Name=tokensUnrankedDBLP ]
+  ]
+LetVariable [ Name=tokensDBLP ]
+  :=
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=tokenRanked ]
+      Field=rank
+    ]
+    ]
+    FROM [      Variable [ Name=tokensUnrankedDBLP ]
+      AS
+      Variable [ Name=tokenUnranked ]
+,
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [TOKENSRANKEDADM]
+      ]
+      AS
+      Variable [ Name=tokenRanked ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=tokenUnranked ]
+        =
+        FieldAccessor [
+          Variable [ Name=tokenRanked ]
+          Field=token
+        ]
+      ]
+    Orderby
+      FieldAccessor [
+        Variable [ Name=tokenRanked ]
+        Field=rank
+      ]
+      ASC
+
+  )
+Orderby
+  Variable [ Name=idDBLP ]
+  ASC
+  Variable [ Name=prefixTokenDBLP ]
+  ASC
+

@@ -22,31 +22,22 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.asterix.common.utils.UTF8CharSequence;
-import org.apache.asterix.formats.nontagged.AqlBinaryComparatorFactoryProvider;
-import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
-import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.hyracks.data.std.util.UTF8CharSequence;
 
 public class StringMatchesWithFlagDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -71,76 +62,39 @@ public class StringMatchesWithFlagDescriptor extends AbstractScalarFunctionDynam
 
                 return new AbstractTripleStringBoolEval(dout, args[0], args[1], args[2],
                         AsterixBuiltinFunctions.STRING_MATCHES_WITH_FLAG) {
-
                     private Pattern pattern = null;
                     private Matcher matcher = null;
-                    private String strPattern = "";
-                    private int flags = 0;
-                    private ByteArrayAccessibleOutputStream lastPattern = new ByteArrayAccessibleOutputStream();
-                    private ByteArrayAccessibleOutputStream lastFlags = new ByteArrayAccessibleOutputStream();
-                    private IBinaryComparator strComp = AqlBinaryComparatorFactoryProvider.INSTANCE
-                            .getBinaryComparatorFactory(BuiltinType.ASTRING, true).createBinaryComparator();
+                    private ByteArrayAccessibleOutputStream lastPatternStorage = new ByteArrayAccessibleOutputStream();
+                    private ByteArrayAccessibleOutputStream lastFlagsStorage = new ByteArrayAccessibleOutputStream();
+                    private UTF8StringPointable lastPatternPtr = new UTF8StringPointable();
+                    private UTF8StringPointable lastFlagPtr = new UTF8StringPointable();
                     private UTF8CharSequence carSeq = new UTF8CharSequence();
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ASTRING);
 
                     @Override
-                    protected boolean compute(byte[] b0, int l0, int s0, byte[] b1, int l1, int s1, byte[] b2, int l2,
-                            int s2, ArrayBackedValueStorage array0, ArrayBackedValueStorage array1)
-                            throws AlgebricksException {
-                        try {
-                            boolean newPattern = false;
-                            boolean newFlags = false;
+                    protected boolean compute(UTF8StringPointable strSrc, UTF8StringPointable strPattern,
+                            UTF8StringPointable strFlag) throws AlgebricksException {
+                        final boolean newPattern = (pattern == null || lastPatternPtr.compareTo(strPattern) != 0);
+                        final boolean newFlag = (pattern == null || lastFlagPtr.compareTo(strFlag) != 0);
 
-                            AString astrPattern;
-                            AString astrFlags;
-
-                            if (pattern == null) {
-                                newPattern = true;
-                                newFlags = true;
-                            } else {
-                                int c = strComp.compare(b1, s1, l1, lastPattern.getByteArray(), 0, lastPattern.size());
-                                if (c != 0) {
-                                    newPattern = true;
-                                }
-
-                                c = strComp.compare(b2, s2, l2, lastFlags.getByteArray(), 0, lastFlags.size());
-                                if (c != 0) {
-                                    newFlags = true;
-                                }
-                            }
-                            if (newPattern) {
-                                lastPattern.reset();
-                                lastPattern.write(b1, s1, l1);
-                                // ! object creation !
-                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(
-                                        lastPattern.getByteArray()));
-                                astrPattern = (AString) stringSerde.deserialize(di);
-                                // strPattern = toRegex(astrPattern);
-                                strPattern = astrPattern.getStringValue();
-                            }
-                            if (newFlags) {
-                                lastFlags.reset();
-                                lastFlags.write(b2, s2, l2);
-                                // ! object creation !
-                                DataInputStream di = new DataInputStream(new ByteArrayInputStream(
-                                        lastFlags.getByteArray()));
-                                astrFlags = (AString) stringSerde.deserialize(di);
-                                flags = StringEvaluatorUtils.toFlag(astrFlags);
-                            }
-
-                            pattern = Pattern.compile(strPattern, flags);
-                            carSeq.reset(array0, 1);
-                            if (newPattern) {
-                                matcher = pattern.matcher(carSeq);
-                            } else {
-                                matcher.reset(carSeq);
-                            }
-                            return matcher.find();
-                        } catch (HyracksDataException e) {
-                            throw new AlgebricksException(e);
+                        if (newPattern) {
+                            StringEvaluatorUtils.copyResetUTF8Pointable(strPattern, lastPatternStorage, lastPatternPtr);
                         }
+
+                        if (newFlag) {
+                            StringEvaluatorUtils.copyResetUTF8Pointable(strFlag, lastFlagsStorage, lastFlagPtr);
+                        }
+
+                        if (newPattern || newFlag) {
+                            pattern = Pattern.compile(lastPatternPtr.toString(),
+                                    StringEvaluatorUtils.toFlag(lastFlagPtr.toString()));
+                        }
+                        carSeq.reset(strSrc);
+                        if (newPattern || newFlag) {
+                            matcher = pattern.matcher(carSeq);
+                        } else {
+                            matcher.reset(carSeq);
+                        }
+                        return matcher.find();
                     }
                 };
             }

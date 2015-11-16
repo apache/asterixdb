@@ -1,0 +1,65 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  database rares03 if exists;
+create  database rares03;
+
+use rares03;
+
+
+create type rares03.UserType as
+{
+  uid : int32,
+  name : string,
+  lottery_numbers : {{int32}}
+}
+
+create type rares03.VisitorType as
+{
+  vid : int32,
+  name : string,
+  lottery_numbers : {{int32}}
+}
+
+create  nodegroup group1 if not exists  on 
+    nc1,
+    nc2
+;
+create  table Users(UserType) primary key uid on group1;
+
+create  table Visitors(VisitorType) primary key vid on group1;
+
+write output to nc1:"/tmp/rares03.adm"
+select element {'uid':user.uid,'tokens':tokens}
+from  Users as user
+with  tokens as (
+      select element i
+      from  user.lottery_numbers as lottery_number,
+            (
+          select element item
+          from  Users as user,
+                user.lottery_numbers as lottery_number
+          group by lottery_number as item
+          with  count as rares03.count(user)
+          order by count desc
+      ) as token at i
+      where (lottery_number = token)
+      order by token
+  )
+;

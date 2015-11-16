@@ -19,9 +19,8 @@
 package org.apache.asterix.optimizer.rules;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
-import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
 import org.apache.asterix.om.types.AOrderedListType;

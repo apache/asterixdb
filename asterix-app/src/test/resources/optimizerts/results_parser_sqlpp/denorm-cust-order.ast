@@ -1,0 +1,98 @@
+DataverseUse custorder
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    lastorder :       open RecordType {
+        oid : int32,
+        total : float
+      }
+
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    oid : int32,
+    cid : int32,
+    orderstatus : string,
+    orderpriority : string,
+    clerk : string,
+    total : float
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[cid]]
+DatasetDecl Orders(OrderType) partitioned by [[oid]]
+WriteOutputTo nc1:/tmp/custorder.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cid]
+    :
+    Variable [ Name=cid ]
+  )
+  (
+    LiteralExpr [STRING] [cust]
+    :
+    FunctionCall Metadata.dataset@1[
+      LiteralExpr [STRING] [cust]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [cnt-orders]
+    :
+    FunctionCall custorder.count@1[
+      Variable [ Name=o ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [orders]
+    :
+    Variable [ Name=o ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=cid
+    ]
+  ]
+Groupby
+  Variable [ Name=cid ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=cid
+  ]
+  With
+  Variable [ Name=c ]
+  Variable [ Name=o ]
+

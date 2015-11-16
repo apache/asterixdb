@@ -1,0 +1,18 @@
+DataverseUse testdv2
+Query:
+SELECT ELEMENT [
+Variable [ Name=d ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testds2]
+  ]
+  AS
+  Variable [ Name=d ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=d ]
+    Field=id
+  ]
+  ASC
+

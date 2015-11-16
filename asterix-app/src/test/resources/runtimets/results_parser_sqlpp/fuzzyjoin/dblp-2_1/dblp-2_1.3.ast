@@ -1,0 +1,103 @@
+DataverseUse fuzzyjoin
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=paperDBLP ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [tokens]
+    :
+    Variable [ Name=tokensDBLP ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paperDBLP ]
+]
+LetVariable [ Name=tokensDBLP ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=paperDBLP ]
+          Field=title
+        ]
+      ]
+      AS
+      Variable [ Name=tokenUnranked ]
+,
+      (
+        SELECT ELEMENT [
+        Variable [ Name=tokenGroupped ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [DBLP]
+          ]
+          AS
+          Variable [ Name=paper ]
+,
+          FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+            FieldAccessor [
+              Variable [ Name=paper ]
+              Field=title
+            ]
+          ]
+          AS
+          Variable [ Name=token ]
+        ]
+        Groupby
+          Variable [ Name=tokenGroupped ]
+          :=
+          Variable [ Name=token ]
+          With
+          Variable [ Name=paper ]
+          Variable [ Name=token ]
+          Variable [ Name=tokenUnranked ]
+          Variable [ Name=tokensDBLP ]
+          Variable [ Name=paperDBLP ]
+
+        Orderby
+          FunctionCall fuzzyjoin.count@1[
+            Variable [ Name=paper ]
+          ]
+          ASC
+          Variable [ Name=tokenGroupped ]
+          ASC
+
+      )
+      AS
+      Variable [ Name=tokenRanked ]
+      AT
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=tokenUnranked ]
+        =
+        Variable [ Name=tokenRanked ]
+      ]
+    Orderby
+      Variable [ Name=i ]
+      ASC
+
+  )
+Orderby
+  FieldAccessor [
+    Variable [ Name=paperDBLP ]
+    Field=id
+  ]
+  ASC
+

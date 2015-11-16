@@ -51,7 +51,7 @@ public class ActiveRuntimeInputHandler implements IFrameWriter {
     private final ActiveJobId activeJobId;
     private final ActiveRuntimeId runtimeId;
     private final FeedPolicyAccessor feedPolicyAccessor;
-    private final boolean bufferingEnabled;
+    private boolean bufferingEnabled;
     private final IExceptionHandler exceptionHandler;
     private final FeedFrameDiscarder discarder;
     private final FeedFrameSpiller spiller;
@@ -429,5 +429,13 @@ public class ActiveRuntimeInputHandler implements IFrameWriter {
                 LOGGER.warning("Throttling " + throttlingEnabled + " for " + this.activeJobId + "[" + runtimeId + "]");
             }
         }
+    }
+
+    public boolean isBufferingEnabled() {
+        return bufferingEnabled;
+    }
+
+    public void setBufferingEnabled(boolean bufferingEnabled) {
+        this.bufferingEnabled = bufferingEnabled;
     }
 }

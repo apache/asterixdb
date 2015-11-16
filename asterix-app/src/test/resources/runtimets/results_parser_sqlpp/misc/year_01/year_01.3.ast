@@ -1,0 +1,7 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.get-year@1[
+  LiteralExpr [STRING] [1996-12-01]
+]
+]

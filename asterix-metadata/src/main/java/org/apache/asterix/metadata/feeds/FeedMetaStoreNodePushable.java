@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.dataflow.AsterixLSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.feeds.FeedConnectionId;
 import org.apache.asterix.common.feeds.ActiveRuntime;
 import org.apache.asterix.common.feeds.ActiveRuntimeInputHandler;
@@ -130,6 +131,12 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
         this.inputSideHandler = new ActiveRuntimeInputHandler(ctx, connectionId, runtimeId, coreOperator,
                 policyEnforcer.getFeedPolicyAccessor(), true, fta, recordDesc, feedManager,
                 nPartitions);
+        if(coreOperator instanceof AsterixLSMInsertDeleteOperatorNodePushable){
+            AsterixLSMInsertDeleteOperatorNodePushable indexOp = (AsterixLSMInsertDeleteOperatorNodePushable) coreOperator;
+            if(!indexOp.isPrimary()){
+                inputSideHandler.setBufferingEnabled(false);
+            }
+        }
         setupBasicRuntime(inputSideHandler);
     }
 

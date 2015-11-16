@@ -1,0 +1,63 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.echo@1[
+  Variable [ Name=a ]
+]
+]
+FROM [  OrderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [name]
+        :
+        LiteralExpr [STRING] [John]
+      )
+      (
+        LiteralExpr [STRING] [age]
+        :
+        LiteralExpr [LONG] [45]
+      )
+      (
+        LiteralExpr [STRING] [id]
+        :
+        LiteralExpr [LONG] [123]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [name]
+        :
+        LiteralExpr [STRING] [Jim]
+      )
+      (
+        LiteralExpr [STRING] [age]
+        :
+        LiteralExpr [LONG] [55]
+      )
+      (
+        LiteralExpr [STRING] [id]
+        :
+        LiteralExpr [LONG] [103]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [name]
+        :
+        LiteralExpr [STRING] [Bill]
+      )
+      (
+        LiteralExpr [STRING] [age]
+        :
+        LiteralExpr [LONG] [35]
+      )
+      (
+        LiteralExpr [STRING] [id]
+        :
+        LiteralExpr [LONG] [125]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

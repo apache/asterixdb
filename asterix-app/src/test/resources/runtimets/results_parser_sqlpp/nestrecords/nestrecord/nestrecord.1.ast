@@ -1,0 +1,15 @@
+DataverseUse testdv2
+TypeDecl AddressType [
+  open RecordType {
+    street : string,
+    city : string
+  }
+]
+TypeDecl testtype [
+  open RecordType {
+    name : string,
+    id : string,
+    address : AddressType?
+  }
+]
+DatasetDecl testds(testtype) partitioned by [[id]]

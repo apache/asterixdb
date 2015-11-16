@@ -1,5 +1,4 @@
-[ { "id": 1, "float": 0.1f, "stringa": "test\",1a", "stringb": "test\"1b" }
-, { "id": 2, "float": 0.2f, "stringa": "test2a", "stringb": "test2b" }
-, { "id": 3, "float": 0.3f, "stringa": "test,3a,3a,3a", "stringb": "\"\"test\"\"" }
-, { "id": 4, "float": 0.4f, "stringa": "test\"4a\",4a", "stringb": " test with\nline break " }
- ]
+{ "id": 1, "float": 0.1f, "stringa": "test\",1a", "stringb": "test\"1b" }
+{ "id": 2, "float": 0.2f, "stringa": "test2a", "stringb": "test2b" }
+{ "id": 3, "float": 0.3f, "stringa": "test,3a,3a,3a", "stringb": "\"\"test\"\"" }
+{ "id": 4, "float": 0.4f, "stringa": "test\"4a\",4a", "stringb": " test with\nline break " }

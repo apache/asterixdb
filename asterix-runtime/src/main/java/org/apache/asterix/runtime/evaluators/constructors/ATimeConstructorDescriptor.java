@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -75,6 +76,7 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -85,7 +87,9 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
 
-                                int stringLength = (serString[1] & 0xff << 8) + (serString[2] & 0xff << 0);
+                                utf8Ptr.set(serString, 1, outInput.getLength()-1);
+                                int stringLength = utf8Ptr.getUTF8Length();
+                                int startOffset = utf8Ptr.getCharStartOffset();
 
                                 // the string to be parsed should be at least 6 characters: hhmmss
                                 if (stringLength < 6) {
@@ -94,7 +98,7 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                             + stringLength);
                                 }
 
-                                int chrononTimeInMs = ATimeParserFactory.parseTimePart(serString, 3, stringLength);
+                                int chrononTimeInMs = ATimeParserFactory.parseTimePart(serString, startOffset, stringLength);
 
                                 if (chrononTimeInMs < 0) {
                                     chrononTimeInMs += GregorianCalendarSystem.CHRONON_OF_DAY;

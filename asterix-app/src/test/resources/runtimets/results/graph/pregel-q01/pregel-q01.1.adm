@@ -1,13 +1,12 @@
-[ { "tweetid": 1i64, "rank-value": 0.07349647505081802d, "populated-by": {{ { "tweetid": 2i64, "value": 0.0f }, { "tweetid": 3i64, "value": 0.0f } }} }
-, { "tweetid": 2i64, "rank-value": 0.10497306443795257d, "populated-by": {{ { "tweetid": 7i64, "value": 0.0f }, { "tweetid": 1i64, "value": 0.0f } }} }
-, { "tweetid": 3i64, "rank-value": 0.09458886502271134d, "populated-by": {{ { "tweetid": 8i64, "value": 0.0f }, { "tweetid": 6i64, "value": 0.0f } }} }
-, { "tweetid": 4i64, "rank-value": 0.04783722202788025d, "populated-by": {{ { "tweetid": 1i64, "value": 0.0f }, { "tweetid": 3i64, "value": 0.0f } }} }
-, { "tweetid": 5i64, "rank-value": 0.051587222027880256d, "populated-by": {{ { "tweetid": 8i64, "value": 0.0f }, { "tweetid": 6i64, "value": 0.0f } }} }
-, { "tweetid": 6i64, "rank-value": 0.0822549135142923d, "populated-by": {{ { "tweetid": 4i64, "value": 0.0f }, { "tweetid": 5i64, "value": 0.0f } }} }
-, { "tweetid": 7i64, "rank-value": 0.14484555969829038d, "populated-by": {{ { "tweetid": 2i64, "value": 0.0f }, { "tweetid": 7i64, "value": 0.0f } }} }
-, { "tweetid": 8i64, "rank-value": 0.0710049135142923d, "populated-by": {{ { "tweetid": 3i64, "value": 0.0f }, { "tweetid": 7i64, "value": 0.0f } }} }
-, { "tweetid": 9i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 6i64, "value": 0.0f }, { "tweetid": 2i64, "value": 0.0f } }} }
-, { "tweetid": 10i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 4i64, "value": 0.0f }, { "tweetid": 5i64, "value": 0.0f } }} }
-, { "tweetid": 11i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 6i64, "value": 0.0f }, { "tweetid": 3i64, "value": 0.0f } }} }
-, { "tweetid": 12i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 6i64, "value": 0.0f }, { "tweetid": 5i64, "value": 0.0f } }} }
-]
+{ "tweetid": 1i64, "rank-value": 0.07349647505081802d, "populated-by": {{ { "tweetid": 2i64, "value": 0.0f }, { "tweetid": 3i64, "value": 0.0f } }} }
+{ "tweetid": 2i64, "rank-value": 0.10497306443795257d, "populated-by": {{ { "tweetid": 7i64, "value": 0.0f }, { "tweetid": 1i64, "value": 0.0f } }} }
+{ "tweetid": 3i64, "rank-value": 0.09458886502271134d, "populated-by": {{ { "tweetid": 8i64, "value": 0.0f }, { "tweetid": 6i64, "value": 0.0f } }} }
+{ "tweetid": 4i64, "rank-value": 0.04783722202788025d, "populated-by": {{ { "tweetid": 1i64, "value": 0.0f }, { "tweetid": 3i64, "value": 0.0f } }} }
+{ "tweetid": 5i64, "rank-value": 0.051587222027880256d, "populated-by": {{ { "tweetid": 8i64, "value": 0.0f }, { "tweetid": 6i64, "value": 0.0f } }} }
+{ "tweetid": 6i64, "rank-value": 0.0822549135142923d, "populated-by": {{ { "tweetid": 4i64, "value": 0.0f }, { "tweetid": 5i64, "value": 0.0f } }} }
+{ "tweetid": 7i64, "rank-value": 0.14484555969829038d, "populated-by": {{ { "tweetid": 2i64, "value": 0.0f }, { "tweetid": 7i64, "value": 0.0f } }} }
+{ "tweetid": 8i64, "rank-value": 0.0710049135142923d, "populated-by": {{ { "tweetid": 3i64, "value": 0.0f }, { "tweetid": 7i64, "value": 0.0f } }} }
+{ "tweetid": 9i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 6i64, "value": 0.0f }, { "tweetid": 2i64, "value": 0.0f } }} }
+{ "tweetid": 10i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 4i64, "value": 0.0f }, { "tweetid": 5i64, "value": 0.0f } }} }
+{ "tweetid": 11i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 6i64, "value": 0.0f }, { "tweetid": 3i64, "value": 0.0f } }} }
+{ "tweetid": 12i64, "rank-value": 0.008823529411764706d, "populated-by": {{ { "tweetid": 6i64, "value": 0.0f }, { "tweetid": 5i64, "value": 0.0f } }} }

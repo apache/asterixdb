@@ -22,17 +22,15 @@ import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.asterix.aoya.AsterixYARNClient;
+import org.apache.asterix.test.aql.TestExecutor;
+import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.apache.asterix.aoya.AsterixYARNClient;
-import org.apache.asterix.test.aql.TestsUtils;
-import org.apache.asterix.testframework.context.TestCaseContext;
-
 public class AsterixYARNLibraryTestIT {
-    private static final String LIBRARY_NAME = "testlib";
     private static final String LIBRARY_DATAVERSE = "externallibtest";
     private static final String INSTANCE_NAME = "asterix-lib-test";
     private static final String PATH_BASE = "src/test/resources/library";
@@ -46,6 +44,7 @@ public class AsterixYARNLibraryTestIT {
     private static List<TestCaseContext> testCaseCollection;
     private static final String LIBRARY_PATH = "asterix-external-data" + File.separator + "target" + File.separator
             + "testlib-zip-binary-assembly.zip";
+    private static final TestExecutor testExecutor = new TestExecutor();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -64,7 +63,8 @@ public class AsterixYARNLibraryTestIT {
 
         String asterixExternalLibraryPath = new File(System.getProperty("user.dir")).getParentFile().getAbsolutePath()
                 + File.separator + LIBRARY_PATH;
-        command = "-n " + INSTANCE_NAME + " -l " + asterixExternalLibraryPath + " -ld " + LIBRARY_DATAVERSE + " -bc " + parameterPath + " libinstall";
+        command = "-n " + INSTANCE_NAME + " -l " + asterixExternalLibraryPath + " -ld " + LIBRARY_DATAVERSE + " -bc "
+                + parameterPath + " libinstall";
         executeAoyaCommand(command);
 
         command = "-n " + INSTANCE_NAME + " -bc " + parameterPath + " start";
@@ -76,7 +76,8 @@ public class AsterixYARNLibraryTestIT {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        String command = "-n " + INSTANCE_NAME + " -zip " +  aoyaServerPath + " -f" + " -bc " + parameterPath + " destroy";
+        String command = "-n " + INSTANCE_NAME + " -zip " + aoyaServerPath + " -f" + " -bc " + parameterPath
+                + " destroy";
         executeAoyaCommand(command);
         instance.tearDown();
     }
@@ -84,7 +85,7 @@ public class AsterixYARNLibraryTestIT {
     @Test
     public void test() throws Exception {
         for (TestCaseContext testCaseCtx : testCaseCollection) {
-            TestsUtils.executeTest(PATH_ACTUAL, testCaseCtx, null, false);
+            testExecutor.executeTest(PATH_ACTUAL, testCaseCtx, null, false);
         }
     }
 

@@ -1,0 +1,34 @@
+DataverseUse test
+WriteOutputTo nc1:rttest/unnest-to-join_01.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=y ]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [6]
+  ]
+  AS
+  Variable [ Name=x ]
+,
+  OrderedListConstructor [
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [6]
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+  ]
+  AS
+  Variable [ Name=y ]
+]
+Where
+  OperatorExpr [
+    Variable [ Name=x ]
+    =
+    Variable [ Name=y ]
+  ]

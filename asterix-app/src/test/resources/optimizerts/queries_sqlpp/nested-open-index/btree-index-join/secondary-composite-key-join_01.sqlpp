@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Notice the query hint to use an indexed nested-loops join plan in both predicates.
+ *              : We expect a plan to have a self-join, which probes dataset Names’s secondary index.
+ * Expected Res : Success
+ * Date         : 11th November 2014
+ */
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.Nametmp as
+{
+  id : int32
+}
+
+create type test.NameType as
+{
+  nested : Nametmp
+}
+
+create  table Names(NameType) primary key nested.id;
+
+create  index Name_idx  on Names (nested.fname:string,lnested.name:string) type btree enforced;
+
+write output to nc1:"rttest/btree-index-join_secondary-composite-key-prefix-join_01.adm"
+select element {'emp1':emp1,'emp2':emp2}
+from  Names as emp1,
+      Names as emp2
+where ((emp1.nested.fname /*+ indexnl */  > emp2.nested.fname) and (emp1.nested.lname /*+ indexnl */  > emp2.nested.lname))
+;

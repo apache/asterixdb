@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Testcase Name  :  open-closed-17.aql
+ * Description    :  Test open type dataset by inserting additional data along with inserting data for existing fields.
+ * Success        :  Yes
+ * Date           :  March 30th 2012
+ */
+
+use test;
+
+
+insert into tdtst
+{'id_8':100,'id_16':1011,'id_32':23455,'id_64':34567,'fp':87.618629f,'name':'John','dt':'03-21-1982','tm':test.time('10:50:56:200+05:00'),'dt_tm':test.datetime('2011-12-31T14:00:00-10:00'),'lat_lon':test.point('100.0,200.0'),'mydata':{{'this is my additional data'}}};

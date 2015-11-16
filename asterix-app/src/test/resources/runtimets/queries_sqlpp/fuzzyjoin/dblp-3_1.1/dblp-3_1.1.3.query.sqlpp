@@ -1,0 +1,71 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use fuzzyjoin;
+
+
+set "import-private-functions" "true";
+
+select element {'left':paperLeft,'right':paperRight,'sim':ridpair.sim}
+from  (
+    select element {'idLeft':idLeft,'idRight':idRight,'sim':sim[0]}
+    from  DBLP as paperLeft,
+          fuzzyjoin."subset-collection"(tokensLeft,0,fuzzyjoin."prefix-len-jaccard"(lenLeft,0.500000f)) as prefixTokenLeft,
+          DBLP as paperRight,
+          fuzzyjoin."subset-collection"(tokensRight,0,fuzzyjoin."prefix-len-jaccard"(lenRight,0.500000f)) as prefixTokenRight
+    with  lenLeft as fuzzyjoin.len(fuzzyjoin."counthashed-word-tokens"(paperLeft.title)),
+          tokensLeft as (
+          select element i
+          from  fuzzyjoin."counthashed-word-tokens"(paperLeft.title) as tokenUnranked,
+                (
+              select element tokenGroupped
+              from  DBLP as paper,
+                    fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+              /* +hash */
+              group by token as tokenGroupped
+              order by fuzzyjoin.count(paper),tokenGroupped
+          ) as tokenRanked at i
+          where (tokenUnranked = tokenRanked)
+          order by i
+      ),
+          lenRight as fuzzyjoin.len(fuzzyjoin."counthashed-word-tokens"(paperRight.title)),
+          tokensRight as (
+          select element i
+          from  fuzzyjoin."counthashed-word-tokens"(paperRight.title) as tokenUnranked,
+                (
+              select element tokenGroupped
+              from  DBLP as paper,
+                    fuzzyjoin."counthashed-word-tokens"(paper.title) as token
+              /* +hash */
+              group by token as tokenGroupped
+              order by fuzzyjoin.count(paper),tokenGroupped
+          ) as tokenRanked at i
+          where (tokenUnranked = tokenRanked)
+          order by i
+      ),
+          sim as fuzzyjoin."similarity-jaccard-prefix"(lenLeft,tokensLeft,lenRight,tokensRight,prefixTokenLeft,0.500000f)
+    where ((prefixTokenLeft = prefixTokenRight) and ((sim >= 0.500000f) and (paperLeft.id < paperRight.id)))
+    /* +hash */
+    group by paperLeft.id as idLeft,paperRight.id as idRight
+) as ridpair,
+      DBLP as paperLeft,
+      DBLP as paperRight
+where ((ridpair.idLeft = paperLeft.id) and (ridpair.idRight = paperRight.id))
+order by paperLeft.id,paperRight.id
+;

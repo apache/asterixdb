@@ -19,25 +19,27 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.Arrays;
+
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.asterix.dataflow.data.nontagged.printers.adm.ABinaryHexPrinter;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.Arrays;
-
-import static org.junit.Assert.*;
-
 public class ABinaryPrinterTest {
 
-    public static byte[] generateABinaryBytesByStringContent(String content){
-        String padding = "000000" + content;
-        byte [] bytes = DatatypeConverter.parseHexBinary(padding);
-        ByteArrayPointable.putLength(content.length() / 2, bytes, 1);
-        return bytes;
+    public static byte[] generateABinaryBytesByStringContent(String content) {
+        byte[] bytes = DatatypeConverter.parseHexBinary(content);
+        ByteArrayPointable ptr = ByteArrayPointable.generatePointableFromPureBytes(bytes);
+        byte[] ret = new byte[ptr.getLength() + 1];
+        System.arraycopy(ptr.getByteArray(), ptr.getStartOffset(), ret, 1, ptr.getLength());
+        return ret;
     }
 
     public static void testOneInputString(String input) throws AlgebricksException {
@@ -45,13 +47,13 @@ public class ABinaryPrinterTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
 
-        byte [] bytes = generateABinaryBytesByStringContent(input);
+        byte[] bytes = generateABinaryBytesByStringContent(input);
         ABinaryHexPrinter.INSTANCE.print(bytes, 0, bytes.length, ps);
 
         String pureHex = baos.toString();
         assertTrue(pureHex.startsWith("hex("));
         assertTrue(pureHex.endsWith("\")"));
-        assertTrue(pureHex.substring(5,pureHex.length()-2).equalsIgnoreCase(input));
+        assertTrue(pureHex.substring(5, pureHex.length() - 2).equalsIgnoreCase(input));
     }
 
     @Test
@@ -62,10 +64,11 @@ public class ABinaryPrinterTest {
     }
 
     @Test
-    public void testSpecialString() throws Exception{
+    public void testLongString() throws Exception {
         testOneInputString("");
-        char [] chars = new char[(ByteArrayPointable.MAX_LENGTH ) * 2];
-        Arrays.fill(chars, 'F');
-        testOneInputString(new String(chars));
+        int aVeryLongLength = 65540;
+        char[] aVeryLongHexString = new char[aVeryLongLength * 2];
+        Arrays.fill(aVeryLongHexString, 'F');
+        testOneInputString(new String(aVeryLongHexString));
     }
 }

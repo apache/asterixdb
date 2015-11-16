@@ -55,24 +55,9 @@ public class StringEqualDescriptor extends AbstractScalarFunctionDynamicDescript
                 return new AbstractBinaryStringBoolEval(dout, args[0], args[1], AsterixBuiltinFunctions.STRING_EQUAL) {
 
                     @Override
-                    protected boolean compute(byte[] lBytes, int lLen, int lStart, byte[] rBytes, int rLen, int rStart,
-                            ArrayBackedValueStorage array0, ArrayBackedValueStorage array1) {
-                        int len = UTF8StringPointable.getUTFLength(lBytes, 1);
-
-                        if (len != UTF8StringPointable.getUTFLength(rBytes, 1))
-                            return false;
-
-                        int pos = 3;
-                        while (pos < len + 3) {
-                            char c1 = UTF8StringPointable.charAt(lBytes, pos);
-                            char c2 = UTF8StringPointable.charAt(rBytes, pos);
-                            if (c1 != c2)
-                                return false;
-
-                            pos += UTF8StringPointable.charSize(lBytes, pos);
-                        }
-
-                        return true;
+                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right)
+                            throws AlgebricksException {
+                        return left.compareTo(right) == 0;
                     }
 
                 };

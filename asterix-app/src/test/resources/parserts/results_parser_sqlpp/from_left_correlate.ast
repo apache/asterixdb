@@ -1,0 +1,157 @@
+DataverseUse test_022
+Query:
+SELECT [
+FieldAccessor [
+  Variable [ Name=sl ]
+  Field=location
+]
+location
+FieldAccessor [
+  Variable [ Name=sr ]
+  Field=gas
+]
+gas
+FieldAccessor [
+  Variable [ Name=sr ]
+  Field=readings
+]
+readings
+]
+FROM [  UnorderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sensor]
+        :
+        LiteralExpr [LONG] [1]
+      )
+      (
+        LiteralExpr [STRING] [location]
+        :
+        FunctionCall test_022.point@1[
+          LiteralExpr [STRING] [0.0,0.0]
+        ]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sensor]
+        :
+        LiteralExpr [LONG] [2]
+      )
+      (
+        LiteralExpr [STRING] [location]
+        :
+        FunctionCall test_022.point@1[
+          LiteralExpr [STRING] [0.0,1.0]
+        ]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sensor]
+        :
+        LiteralExpr [LONG] [3]
+      )
+      (
+        LiteralExpr [STRING] [location]
+        :
+        FunctionCall test_022.point@1[
+          LiteralExpr [STRING] [0.0,1.0]
+        ]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=sl ]
+  LEFTOUTER UNNEST
+    UnorderedListConstructor [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [id]
+          :
+          LiteralExpr [LONG] [1]
+        )
+        (
+          LiteralExpr [STRING] [sensor]
+          :
+          LiteralExpr [LONG] [1]
+        )
+        (
+          LiteralExpr [STRING] [gas]
+          :
+          LiteralExpr [STRING] [co2]
+        )
+        (
+          LiteralExpr [STRING] [readings]
+          :
+          UnorderedListConstructor [
+            LiteralExpr [DOUBLE] [0.2]
+            LiteralExpr [DOUBLE] [0.3]
+          ]
+        )
+      ]
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [id]
+          :
+          LiteralExpr [LONG] [2]
+        )
+        (
+          LiteralExpr [STRING] [sensor]
+          :
+          LiteralExpr [LONG] [2]
+        )
+        (
+          LiteralExpr [STRING] [gas]
+          :
+          LiteralExpr [STRING] [co2]
+        )
+        (
+          LiteralExpr [STRING] [readings]
+          :
+          UnorderedListConstructor [
+            LiteralExpr [DOUBLE] [0.4]
+            LiteralExpr [DOUBLE] [0.2]
+          ]
+        )
+      ]
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [id]
+          :
+          LiteralExpr [LONG] [3]
+        )
+        (
+          LiteralExpr [STRING] [sensor]
+          :
+          LiteralExpr [LONG] [2]
+        )
+        (
+          LiteralExpr [STRING] [gas]
+          :
+          LiteralExpr [STRING] [no2]
+        )
+        (
+          LiteralExpr [STRING] [readings]
+          :
+          UnorderedListConstructor [
+            LiteralExpr [DOUBLE] [0.1]
+          ]
+        )
+      ]
+    ]
+     AS
+    Variable [ Name=sr ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=sl ]
+      Field=sensor
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=sr ]
+      Field=sensor
+    ]
+  ]

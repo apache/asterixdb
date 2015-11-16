@@ -1,0 +1,7 @@
+DataverseUse test
+TypeDecl Schema [
+  closed RecordType {
+    id : int32
+  }
+]
+DatasetDecl mydataset(Schema) partitioned by [[id]]

@@ -1,0 +1,59 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=r ]
+]
+FROM [  UnorderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sensor]
+        :
+        LiteralExpr [LONG] [1]
+      )
+      (
+        LiteralExpr [STRING] [readings]
+        :
+        UnorderedListConstructor [
+          LiteralExpr [DOUBLE] [0.2]
+          LiteralExpr [DOUBLE] [0.3]
+        ]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sensor]
+        :
+        LiteralExpr [LONG] [2]
+      )
+      (
+        LiteralExpr [STRING] [readings]
+        :
+        UnorderedListConstructor [
+          LiteralExpr [DOUBLE] [0.4]
+          LiteralExpr [DOUBLE] [0.2]
+        ]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [sensor]
+        :
+        LiteralExpr [LONG] [3]
+      )
+      (
+        LiteralExpr [STRING] [readings]
+        :
+        UnorderedListConstructor [
+        ]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=s ]
+  LEFTOUTER UNNEST
+    FieldAccessor [
+      Variable [ Name=s ]
+      Field=readings
+    ]
+     AS
+    Variable [ Name=r ]
+]

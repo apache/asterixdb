@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.ILocalResourceMetadata;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -38,7 +39,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -76,7 +76,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.storage.am.common.api.IIndexLifecycleManager;
 import org.apache.hyracks.storage.am.common.util.IndexFileNameUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeUtils;
@@ -107,7 +106,7 @@ public class MetadataBootstrap {
 
     private static IBufferCache bufferCache;
     private static IFileMapProvider fileMapProvider;
-    private static IIndexLifecycleManager indexLifecycleManager;
+    private static IDatasetLifecycleManager dataLifecycleManager;
     private static ILocalResourceRepository localResourceRepository;
     private static IIOManager ioManager;
 
@@ -156,7 +155,7 @@ public class MetadataBootstrap {
         nodeNames = metadataProperties.getNodeNames();
         // nodeStores = asterixProperity.getStores();
 
-        indexLifecycleManager = runtimeContext.getIndexLifecycleManager();
+        dataLifecycleManager = runtimeContext.getDatasetLifecycleManager();
         localResourceRepository = runtimeContext.getLocalResourceRepository();
         bufferCache = runtimeContext.getBufferCache();
         fileMapProvider = runtimeContext.getFileMapManager();
@@ -233,8 +232,8 @@ public class MetadataBootstrap {
     public static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws Exception {
         String dataverseName = MetadataPrimaryIndexes.DATAVERSE_DATASET.getDataverseName();
         String dataFormat = NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT;
-        MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(dataverseName, dataFormat,
-                IMetadataEntity.PENDING_NO_OP));
+        MetadataManager.INSTANCE.addDataverse(mdTxnCtx,
+                new Dataverse(dataverseName, dataFormat, IMetadataEntity.PENDING_NO_OP));
     }
 
     public static void insertInitialDatasets(MetadataTransactionContext mdTxnCtx) throws Exception {
@@ -271,8 +270,8 @@ public class MetadataBootstrap {
         getBuiltinTypes(types);
         getMetadataTypes(types);
         for (int i = 0; i < types.size(); i++) {
-            MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(dataverseName, types.get(i).getTypeName(),
-                    types.get(i), false));
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx,
+                    new Datatype(dataverseName, types.get(i).getTypeName(), types.get(i), false));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial datatypes.");
@@ -281,10 +280,11 @@ public class MetadataBootstrap {
 
     public static void insertInitialIndexes(MetadataTransactionContext mdTxnCtx) throws Exception {
         for (int i = 0; i < secondaryIndexes.length; i++) {
-            MetadataManager.INSTANCE.addIndex(mdTxnCtx, new Index(secondaryIndexes[i].getDataverseName(),
-                    secondaryIndexes[i].getIndexedDatasetName(), secondaryIndexes[i].getIndexName(), IndexType.BTREE,
-                    secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(), false,
-                    false, IMetadataEntity.PENDING_NO_OP));
+            MetadataManager.INSTANCE.addIndex(mdTxnCtx,
+                    new Index(secondaryIndexes[i].getDataverseName(), secondaryIndexes[i].getIndexedDatasetName(),
+                            secondaryIndexes[i].getIndexName(), IndexType.BTREE,
+                            secondaryIndexes[i].getPartitioningExpr(), secondaryIndexes[i].getPartitioningExprType(),
+                            false, false, IMetadataEntity.PENDING_NO_OP));
         }
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Finished inserting initial indexes.");
@@ -384,31 +384,24 @@ public class MetadataBootstrap {
                 + IndexFileNameUtil.prepareFileName(metadataStore + File.separator + index.getFileNameRelativePath(),
                         runtimeContext.getMetaDataIODeviceId());
         FileReference file = new FileReference(new File(filePath));
-        List<IVirtualBufferCache> virtualBufferCaches = runtimeContext.getVirtualBufferCaches(index.getDatasetId()
-                .getId());
+        List<IVirtualBufferCache> virtualBufferCaches = runtimeContext
+                .getVirtualBufferCaches(index.getDatasetId().getId());
         ITypeTraits[] typeTraits = index.getTypeTraits();
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         int[] bloomFilterKeyFields = index.getBloomFilterKeyFields();
         LSMBTree lsmBtree = null;
         long resourceID = -1;
-        ILSMOperationTracker opTracker = index.isPrimaryIndex() ? runtimeContext.getLSMBTreeOperationTracker(index
-                .getDatasetId().getId()) : new BaseOperationTracker((DatasetLifecycleManager) indexLifecycleManager,
-                index.getDatasetId().getId(), ((DatasetLifecycleManager) indexLifecycleManager).getDatasetInfo(index
-                        .getDatasetId().getId()));
+        ILSMOperationTracker opTracker = index.isPrimaryIndex()
+                ? runtimeContext.getLSMBTreeOperationTracker(index.getDatasetId().getId())
+                : new BaseOperationTracker(index.getDatasetId().getId(),
+                        dataLifecycleManager.getDatasetInfo(index.getDatasetId().getId()));
         final String path = file.getFile().getPath();
         if (create) {
-            lsmBtree = LSMBTreeUtils.createLSMTree(
-                    virtualBufferCaches,
-                    file,
-                    bufferCache,
-                    fileMapProvider,
-                    typeTraits,
-                    comparatorFactories,
-                    bloomFilterKeyFields,
-                    runtimeContext.getBloomFilterFalsePositiveRate(),
-                    runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
-                            GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, indexLifecycleManager), opTracker,
-                    runtimeContext.getLSMIOScheduler(),
+            lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider, typeTraits,
+                    comparatorFactories, bloomFilterKeyFields, runtimeContext.getBloomFilterFalsePositiveRate(),
+                    runtimeContext.getMetadataMergePolicyFactory()
+                            .createMergePolicy(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
+                    opTracker, runtimeContext.getLSMIOScheduler(),
                     LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
                     null, null, null, null, true);
             lsmBtree.create();
@@ -421,26 +414,21 @@ public class MetadataBootstrap {
                     localResourceMetadata, LocalResource.LSMBTreeResource);
             ILocalResourceFactory localResourceFactory = localResourceFactoryProvider.getLocalResourceFactory();
             localResourceRepository.insert(localResourceFactory.createLocalResource(resourceID, path, 0));
-            indexLifecycleManager.register(path, lsmBtree);
+            dataLifecycleManager.register(path, lsmBtree);
         } else {
             final LocalResource resource = localResourceRepository.getResourceByName(path);
             resourceID = resource.getResourceId();
-            lsmBtree = (LSMBTree) indexLifecycleManager.getIndex(resource.getResourceName());
+            lsmBtree = (LSMBTree) dataLifecycleManager.getIndex(resource.getResourceName());
             if (lsmBtree == null) {
-                lsmBtree = LSMBTreeUtils.createLSMTree(
-                        virtualBufferCaches,
-                        file,
-                        bufferCache,
-                        fileMapProvider,
-                        typeTraits,
-                        comparatorFactories,
-                        bloomFilterKeyFields,
+                lsmBtree = LSMBTreeUtils.createLSMTree(virtualBufferCaches, file, bufferCache, fileMapProvider,
+                        typeTraits, comparatorFactories, bloomFilterKeyFields,
                         runtimeContext.getBloomFilterFalsePositiveRate(),
                         runtimeContext.getMetadataMergePolicyFactory().createMergePolicy(
-                                GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, indexLifecycleManager), opTracker,
-                        runtimeContext.getLSMIOScheduler(), LSMBTreeIOOperationCallbackFactory.INSTANCE
-                                .createIOOperationCallback(), index.isPrimaryIndex(), null, null, null, null, true);
-                indexLifecycleManager.register(path, lsmBtree);
+                                GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, dataLifecycleManager),
+                        opTracker, runtimeContext.getLSMIOScheduler(),
+                        LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), index.isPrimaryIndex(),
+                        null, null, null, null, true);
+                dataLifecycleManager.register(path, lsmBtree);
             }
         }
 

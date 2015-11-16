@@ -1,11 +1,10 @@
-[ { "tweet": { "id": 241, "topics": {{ "verizon", "network" }} }, "similar-tweets": [ { "id": 40, "topics": {{ "verizon", "network" }} }, { "id": 45, "topics": {{ "verizon", "network" }} }, { "id": 46, "topics": {{ "verizon", "network" }} }, { "id": 112, "topics": {{ "verizon", "network" }} } ] }
-, { "tweet": { "id": 242, "topics": {{ "t-mobile", "touch-screen" }} }, "similar-tweets": [ { "id": 47, "topics": {{ "t-mobile", "touch-screen" }} }, { "id": 150, "topics": {{ "t-mobile", "touch-screen" }} }, { "id": 228, "topics": {{ "t-mobile", "touch-screen" }} } ] }
-, { "tweet": { "id": 243, "topics": {{ "iphone", "touch-screen" }} }, "similar-tweets": [ { "id": 186, "topics": {{ "iphone", "touch-screen" }} } ] }
-, { "tweet": { "id": 244, "topics": {{ "iphone", "voicemail-service" }} }, "similar-tweets": [ { "id": 184, "topics": {{ "iphone", "voicemail-service" }} } ] }
-, { "tweet": { "id": 245, "topics": {{ "sprint", "touch-screen" }} }, "similar-tweets": [ { "id": 60, "topics": {{ "sprint", "touch-screen" }} }, { "id": 168, "topics": {{ "sprint", "touch-screen" }} }, { "id": 196, "topics": {{ "sprint", "touch-screen" }} } ] }
-, { "tweet": { "id": 246, "topics": {{ "sprint", "plan" }} }, "similar-tweets": [ { "id": 49, "topics": {{ "sprint", "plan" }} }, { "id": 130, "topics": {{ "sprint", "plan" }} } ] }
-, { "tweet": { "id": 247, "topics": {{ "sprint", "speed" }} }, "similar-tweets": [ { "id": 59, "topics": {{ "sprint", "speed" }} }, { "id": 208, "topics": {{ "sprint", "speed" }} }, { "id": 237, "topics": {{ "sprint", "speed" }} } ] }
-, { "tweet": { "id": 248, "topics": {{ "verizon", "wireless" }} }, "similar-tweets": [  ] }
-, { "tweet": { "id": 249, "topics": {{ "verizon", "plan" }} }, "similar-tweets": [ { "id": 179, "topics": {{ "verizon", "plan" }} }, { "id": 181, "topics": {{ "verizon", "plan" }} }, { "id": 212, "topics": {{ "verizon", "plan" }} } ] }
-, { "tweet": { "id": 250, "topics": {{ "samsung", "touch-screen" }} }, "similar-tweets": [ { "id": 124, "topics": {{ "samsung", "touch-screen" }} } ] }
- ]
+{ "tweet": { "id": 241, "topics": {{ "verizon", "network" }} }, "similar-tweets": [ { "id": 40, "topics": {{ "verizon", "network" }} }, { "id": 45, "topics": {{ "verizon", "network" }} }, { "id": 46, "topics": {{ "verizon", "network" }} }, { "id": 112, "topics": {{ "verizon", "network" }} } ] }
+{ "tweet": { "id": 242, "topics": {{ "t-mobile", "touch-screen" }} }, "similar-tweets": [ { "id": 47, "topics": {{ "t-mobile", "touch-screen" }} }, { "id": 150, "topics": {{ "t-mobile", "touch-screen" }} }, { "id": 228, "topics": {{ "t-mobile", "touch-screen" }} } ] }
+{ "tweet": { "id": 243, "topics": {{ "iphone", "touch-screen" }} }, "similar-tweets": [ { "id": 186, "topics": {{ "iphone", "touch-screen" }} } ] }
+{ "tweet": { "id": 244, "topics": {{ "iphone", "voicemail-service" }} }, "similar-tweets": [ { "id": 184, "topics": {{ "iphone", "voicemail-service" }} } ] }
+{ "tweet": { "id": 245, "topics": {{ "sprint", "touch-screen" }} }, "similar-tweets": [ { "id": 60, "topics": {{ "sprint", "touch-screen" }} }, { "id": 168, "topics": {{ "sprint", "touch-screen" }} }, { "id": 196, "topics": {{ "sprint", "touch-screen" }} } ] }
+{ "tweet": { "id": 246, "topics": {{ "sprint", "plan" }} }, "similar-tweets": [ { "id": 49, "topics": {{ "sprint", "plan" }} }, { "id": 130, "topics": {{ "sprint", "plan" }} } ] }
+{ "tweet": { "id": 247, "topics": {{ "sprint", "speed" }} }, "similar-tweets": [ { "id": 59, "topics": {{ "sprint", "speed" }} }, { "id": 208, "topics": {{ "sprint", "speed" }} }, { "id": 237, "topics": {{ "sprint", "speed" }} } ] }
+{ "tweet": { "id": 248, "topics": {{ "verizon", "wireless" }} }, "similar-tweets": [  ] }
+{ "tweet": { "id": 249, "topics": {{ "verizon", "plan" }} }, "similar-tweets": [ { "id": 179, "topics": {{ "verizon", "plan" }} }, { "id": 181, "topics": {{ "verizon", "plan" }} }, { "id": 212, "topics": {{ "verizon", "plan" }} } ] }
+{ "tweet": { "id": 250, "topics": {{ "samsung", "touch-screen" }} }, "similar-tweets": [ { "id": 124, "topics": {{ "samsung", "touch-screen" }} } ] }

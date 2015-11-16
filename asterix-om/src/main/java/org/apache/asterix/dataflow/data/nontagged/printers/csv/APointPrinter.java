@@ -35,6 +35,10 @@ public class APointPrinter implements IPrinter {
 
     @Override
     public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        throw new AlgebricksException("'Point' type unsupported for CSV output");
+        ps.print("\"[");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 1));
+        ps.print(", ");
+        ps.print(ADoubleSerializerDeserializer.getDouble(b, s + 9));
+        ps.print("]\"");
     }
 }

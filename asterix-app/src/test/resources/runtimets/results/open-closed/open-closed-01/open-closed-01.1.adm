@@ -1,2 +1,1 @@
-[ { "id": 123, "name": "John Doe", "hobbies": {{ "scuba", "music" }} }
- ]
+{ "id": 123, "name": "John Doe", "hobbies": {{ "scuba", "music" }} }

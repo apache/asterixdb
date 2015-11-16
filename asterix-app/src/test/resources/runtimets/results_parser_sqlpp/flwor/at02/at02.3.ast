@@ -1,0 +1,94 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [group]
+    :
+    Variable [ Name=g ]
+  )
+  (
+    LiteralExpr [STRING] [item]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [num]
+          :
+          Variable [ Name=p ]
+        )
+        (
+          LiteralExpr [STRING] [mid]
+          :
+          FieldAccessor [
+            Variable [ Name=a ]
+            Field=message-id
+          ]
+        )
+      ]
+      ]
+      FROM [        (
+          SELECT ELEMENT [
+          Variable [ Name=ii ]
+          ]
+          FROM [            Variable [ Name=m ]
+            AS
+            Variable [ Name=ii ]
+          ]
+          Orderby
+            FieldAccessor [
+              Variable [ Name=ii ]
+              Field=message-id
+            ]
+            ASC
+
+        )
+        AS
+        Variable [ Name=a ]
+        AT
+        Variable [ Name=p ]
+      ]
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS
+  Variable [ Name=u ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookMessages]
+  ]
+  AS
+  Variable [ Name=m ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=u ]
+      Field=id
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=m ]
+      Field=author-id
+    ]
+  ]
+Groupby
+  Variable [ Name=g ]
+  :=
+  FieldAccessor [
+    Variable [ Name=u ]
+    Field=id
+  ]
+  With
+  Variable [ Name=u ]
+  Variable [ Name=m ]
+
+Orderby
+  Variable [ Name=g ]
+  ASC
+

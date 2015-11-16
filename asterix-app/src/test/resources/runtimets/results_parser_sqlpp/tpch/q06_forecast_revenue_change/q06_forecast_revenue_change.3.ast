@@ -1,0 +1,78 @@
+DataverseUse tpch
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [revenue]
+    :
+    FunctionCall tpch.sum@1[
+      (
+        SELECT ELEMENT [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_extendedprice
+          ]
+          *
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_discount
+          ]
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [LineItem]
+          ]
+          AS
+          Variable [ Name=l ]
+        ]
+        Where
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipdate
+              ]
+              >=
+              LiteralExpr [STRING] [1994-01-01]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_shipdate
+              ]
+              <
+              LiteralExpr [STRING] [1995-01-01]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_discount
+              ]
+              >=
+              LiteralExpr [DOUBLE] [0.05]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_discount
+              ]
+              <=
+              LiteralExpr [DOUBLE] [0.07]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              <
+              LiteralExpr [LONG] [24]
+            ]
+          ]
+      )
+    ]
+  )
+]

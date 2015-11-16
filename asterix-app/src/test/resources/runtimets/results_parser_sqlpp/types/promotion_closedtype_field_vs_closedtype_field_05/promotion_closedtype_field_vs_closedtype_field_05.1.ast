@@ -1,0 +1,17 @@
+DataverseUse test
+TypeDecl empInfoType [
+  open RecordType {
+    id : int64,
+    empno : int64,
+    name : string
+  }
+]
+TypeDecl deptInfoType [
+  open RecordType {
+    did : int64,
+    dno : int32,
+    dname : string
+  }
+]
+DatasetDecl empDataset(empInfoType) partitioned by [[id]]
+DatasetDecl deptDataset(deptInfoType) partitioned by [[did]]

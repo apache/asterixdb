@@ -1,0 +1,31 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [10]
+    NEGATIVE LiteralExpr [LONG] [30]
+    NEGATIVE LiteralExpr [LONG] [21]
+    LiteralExpr [LONG] [50]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+Where
+  QuantifiedExpression SOME [
+    [Variable [ Name=y ]
+    In
+      OrderedListConstructor [
+        NEGATIVE LiteralExpr [LONG] [20]
+        NEGATIVE LiteralExpr [LONG] [40]
+      ]
+    ]
+    Satifies [
+      OperatorExpr [
+        Variable [ Name=y ]
+        >
+        Variable [ Name=x ]
+      ]
+    ]
+  ]

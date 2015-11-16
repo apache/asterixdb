@@ -1,0 +1,11 @@
+DataverseUse foo
+TypeDecl bartype [
+  open RecordType {
+    id : int32,
+    nest_rec :       open RecordType {
+        id : int32
+      }
+
+  }
+]
+DatasetDecl baz(bartype) partitioned by [[id]]

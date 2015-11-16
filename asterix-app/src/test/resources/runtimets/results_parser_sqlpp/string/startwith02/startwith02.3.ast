@@ -1,0 +1,77 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [Hello]
+      LiteralExpr [STRING] [H]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [Hello]
+      FunctionCall null.lowercase@1[
+        LiteralExpr [STRING] [He]
+      ]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [Hello]
+      LiteralExpr [STRING] []
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [Hello]
+      LiteralExpr [STRING] [ ]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [Hello]
+      LiteralExpr [NULL]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [abcdef]
+      FunctionCall null.lowercase@1[
+        LiteralExpr [STRING] [ABCDEf]
+      ]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [abcdef]
+      LiteralExpr [STRING] [abcdef]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [abcdef]
+      LiteralExpr [STRING] [abc ]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [abc\tdef]
+      LiteralExpr [STRING] [abc\t]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [ abcdef]
+      LiteralExpr [STRING] [abc]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [0x1FF]
+      LiteralExpr [STRING] [0]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [<ID>]
+      LiteralExpr [STRING] [<]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [aBCDEFghI]
+      FunctionCall null.codepoint-to-string@1[
+        OrderedListConstructor [
+          LiteralExpr [LONG] [41]
+        ]
+      ]
+    ]
+    FunctionCall null.start-with@2[
+      LiteralExpr [STRING] [AbCDEFghI]
+      FunctionCall null.codepoint-to-string@1[
+        OrderedListConstructor [
+          LiteralExpr [LONG] [41]
+        ]
+      ]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

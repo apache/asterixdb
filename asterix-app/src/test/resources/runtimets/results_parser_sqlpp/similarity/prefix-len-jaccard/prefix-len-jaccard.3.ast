@@ -1,0 +1,37 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  FunctionCall test.prefix-len-jaccard@2[
+    LiteralExpr [LONG] [5]
+    LiteralExpr [FLOAT] [0.8]
+  ]
+  FunctionCall test.prefix-len-jaccard@2[
+    LiteralExpr [LONG] [5]
+    LiteralExpr [FLOAT] [0.9]
+  ]
+  FunctionCall test.prefix-len-jaccard@2[
+    LiteralExpr [LONG] [10]
+    LiteralExpr [FLOAT] [0.8]
+  ]
+  FunctionCall test.prefix-len-jaccard@2[
+    LiteralExpr [LONG] [10]
+    LiteralExpr [FLOAT] [0.9]
+  ]
+  FunctionCall test.prefix-len-jaccard@2[
+    LiteralExpr [LONG] [15]
+    LiteralExpr [FLOAT] [0.8]
+  ]
+  FunctionCall test.prefix-len-jaccard@2[
+    LiteralExpr [LONG] [15]
+    LiteralExpr [FLOAT] [0.9]
+  ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+  ]
+  AS
+  Variable [ Name=l ]
+]

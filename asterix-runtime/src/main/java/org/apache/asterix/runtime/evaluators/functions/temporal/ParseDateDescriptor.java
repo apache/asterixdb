@@ -26,8 +26,8 @@ import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.AsterixTemporalTypeParseException;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -42,13 +42,13 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <b>|(bar)</b> is a special separator used to separate different formatting options.
  * Multiple format strings can be used by separating them using <b>|(bar)</b>, and the parsing will be successful only when the format string has the <b>exact</b> match with the given data string. This means that a time string like <it>08:23:12 AM</it> will not be valid for the format string <it>h:m:s</it> as there is no AM/PM format character in the format string.
- * <p/>
  */
 public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -91,6 +91,7 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             .getSerializerDeserializer(BuiltinType.ADATE);
 
                     private AMutableDate aDate = new AMutableDate(0);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -115,25 +116,28 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0])
                                         + ")");
                             }
-                            int length0 = (argOut0.getByteArray()[1] & 0xff << 8)
-                                    + (argOut0.getByteArray()[2] & 0xff << 0);
-                            int length1 = (argOut1.getByteArray()[1] & 0xff << 8)
-                                    + (argOut1.getByteArray()[2] & 0xff << 0);
+                            utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
+                            int start0 = utf8Ptr.getCharStartOffset();
+                            int length0 = utf8Ptr.getUTF8Length();
+
+                            utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                            int start1 = utf8Ptr.getCharStartOffset();
+                            int length1 = utf8Ptr.getUTF8Length();
                             long chronon = 0;
 
-                            int formatStart = 3;
+                            int formatStart = start1;
                             int formatLength = 0;
                             boolean processSuccessfully = false;
-                            while (!processSuccessfully && formatStart < 3 + length1) {
+                            while (!processSuccessfully && formatStart < start1 + length1) {
                                 // search for "|"
                                 formatLength = 0;
-                                for (; formatStart + formatLength < 3 + length1; formatLength++) {
+                                for (; formatStart + formatLength < start1 + length1; formatLength++) {
                                     if (argOut1.getByteArray()[formatStart + formatLength] == '|') {
                                         break;
                                     }
                                 }
                                 try {
-                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), 3, length0,
+                                    chronon = DT_UTILS.parseDateTime(argOut0.getByteArray(), start0, length0,
                                             argOut1.getByteArray(), formatStart, formatLength,
                                             DateTimeParseMode.DATE_ONLY);
                                 } catch (AsterixTemporalTypeParseException ex) {

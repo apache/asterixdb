@@ -1,0 +1,34 @@
+DataverseUse test
+Query:
+OrderedListConstructor [
+  FunctionCall test.hex@1[
+    LiteralExpr [STRING] [ABCDEF0123456789]
+  ]
+  FunctionCall test.hex@1[
+    LiteralExpr [STRING] [abcdef0123456789]
+  ]
+  FunctionCall test.hex@1[
+    LiteralExpr [STRING] [0A0B0C0D0E0F]
+  ]
+  FunctionCall test.hex@1[
+    LiteralExpr [STRING] [01020304050607080900]
+  ]
+  FunctionCall test.hex@1[
+    LiteralExpr [STRING] []
+  ]
+  FunctionCall test.base64@1[
+    LiteralExpr [STRING] [0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/]
+  ]
+  FunctionCall test.base64@1[
+    LiteralExpr [STRING] []
+  ]
+  FunctionCall test.base64@1[
+    LiteralExpr [STRING] [QXN0ZXJpeA==]
+  ]
+  FunctionCall test.base64@1[
+    LiteralExpr [STRING] [QXN0ZXJpeAE=]
+  ]
+  FunctionCall test.base64@1[
+    LiteralExpr [STRING] [QXN0ZXJpeAE8]
+  ]
+]

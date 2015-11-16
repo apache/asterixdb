@@ -23,7 +23,9 @@
  * Date           :  20th April 2012
  */
 
-for $a in [matches("hello",null),
+for $a in [
+null,
+matches("hello",null),
 matches("hello","helllo"),
 matches("hello"," "),
 matches(null,"hello"),

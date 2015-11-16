@@ -1,0 +1,38 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/similarity_jaccard-to-jaccard-check_07.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=paper ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+]
+Where
+  OperatorExpr [
+    FunctionCall test.similarity-jaccard@2[
+      FunctionCall test.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=paper ]
+          Field=title
+        ]
+      ]
+      FunctionCall test.word-tokens@1[
+        LiteralExpr [STRING] [Transactions for Cooperative Environments]
+      ]
+    ]
+    <
+    LiteralExpr [FLOAT] [0.8]
+  ]

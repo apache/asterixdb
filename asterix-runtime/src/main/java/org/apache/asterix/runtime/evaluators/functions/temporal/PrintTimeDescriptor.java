@@ -39,8 +39,10 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -81,6 +83,8 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             .getSerializerDeserializer(BuiltinType.ANULL);
 
                     private StringBuilder sbder = new StringBuilder();
+                    private final UTF8StringWriter writer = new UTF8StringWriter();
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -107,14 +111,14 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             }
 
                             long chronon = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
-                            int formatLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                    + (argOut1.getByteArray()[2] & 0xff << 0);
+                            utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                            int formatLength = utf8Ptr.getUTF8Length();
                             sbder.delete(0, sbder.length());
-                            DT_UTILS.printDateTime(chronon, 0, argOut1.getByteArray(), 3, formatLength, sbder,
-                                    DateTimeParseMode.TIME_ONLY);
+                            DT_UTILS.printDateTime(chronon, 0, utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                    formatLength, sbder, DateTimeParseMode.TIME_ONLY);
 
                             out.writeByte(ATypeTag.STRING.serialize());
-                            out.writeUTF(sbder.toString());
+                            writer.writeUTF8(sbder.toString(), out);
 
                         } catch (IOException ex) {
                             throw new AlgebricksException(ex);

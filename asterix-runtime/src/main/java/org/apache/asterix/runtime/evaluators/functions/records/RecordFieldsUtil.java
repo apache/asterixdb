@@ -76,11 +76,12 @@ public class RecordFieldsUtil {
             AListPointable.ALLOCATOR);
 
     private final static AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "fields");
+    //Better not be a static object.
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<AString> stringSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ASTRING);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
+    protected final ISerializerDeserializer<ABoolean> booleanSerde = AqlSerializerDeserializerProvider.INSTANCE
             .getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final static ARecordType openType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;

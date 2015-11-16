@@ -1,2 +1,1 @@
-[ { "emp.id": 1, "emp.age": 1 }
- ]
+{ "emp.id": 1, "emp.age": 1 }

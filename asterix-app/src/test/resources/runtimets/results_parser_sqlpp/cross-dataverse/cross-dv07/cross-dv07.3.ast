@@ -1,0 +1,30 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=l ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [test.employee]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=fname
+      ]
+      =
+      LiteralExpr [STRING] [Julio]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=lname
+      ]
+      =
+      LiteralExpr [STRING] [Isa]
+    ]
+  ]

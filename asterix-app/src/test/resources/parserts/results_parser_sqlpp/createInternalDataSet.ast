@@ -1,0 +1,2 @@
+DatasetDecl ds1(someType) partitioned by [[id]]
+DatasetDecl ds2(someType) partitioned by [[id]]

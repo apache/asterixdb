@@ -1,5 +1,4 @@
-[ { "date": date("-2012-12-12"), "time": time("23:49:12.390Z"), "datetime": datetime("2012-12-12T00:00:00.001Z"), "duration": duration("P20Y19DT4H14M23.34S"), "interval": interval-datetime("2012-12-12T00:00:00.001Z, 2013-08-10T22:10:15.398Z"), "ymduration": null, "dtduration": null }
-, { "date": null, "time": time("04:12:12.219Z"), "datetime": datetime("1920-12-21T11:29:18.478Z"), "duration": null, "interval": interval-time("04:29:30.000Z, 07:59:59.999Z"), "ymduration": null, "dtduration": null }
-, { "date": null, "time": null, "datetime": datetime("-0290-03-22T17:59:48.999Z"), "duration": duration("-P27Y148D"), "interval": interval-date("-2012-03-17, 2013-04-01"), "ymduration": null, "dtduration": null }
-, { "date": null, "time": null, "datetime": null, "duration": null, "interval": null, "ymduration": year-month-duration("P31Y2M"), "dtduration": day-time-duration("-P148D") }
- ]
+{ "date": date("-2012-12-12"), "time": time("23:49:12.390Z"), "datetime": datetime("2012-12-12T00:00:00.001Z"), "duration": duration("P20Y19DT4H14M23.34S"), "interval": interval-datetime("2012-12-12T00:00:00.001Z, 2013-08-10T22:10:15.398Z"), "ymduration": null, "dtduration": null }
+{ "date": null, "time": time("04:12:12.219Z"), "datetime": datetime("1920-12-21T11:29:18.478Z"), "duration": null, "interval": interval-time("04:29:30.000Z, 07:59:59.999Z"), "ymduration": null, "dtduration": null }
+{ "date": null, "time": null, "datetime": datetime("-0290-03-22T17:59:48.999Z"), "duration": duration("-P27Y148D"), "interval": interval-date("-2012-03-17, 2013-04-01"), "ymduration": null, "dtduration": null }
+{ "date": null, "time": null, "datetime": null, "duration": null, "interval": null, "ymduration": year-month-duration("P31Y2M"), "dtduration": day-time-duration("-P148D") }

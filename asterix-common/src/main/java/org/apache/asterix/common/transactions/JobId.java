@@ -22,6 +22,10 @@ import java.io.Serializable;
 
 public class JobId implements Serializable {
     private static final long serialVersionUID = 1L;
+    /**
+     * The number of bytes used to represent {@link JobId} value.
+     */
+    public static final int BYTES = Integer.BYTES;
 
     private int id;
 

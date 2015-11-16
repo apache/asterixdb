@@ -1,0 +1,87 @@
+DataverseUse TinySocial
+Set simfunction=edit-distance
+Set simthreshold=3
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=fbu ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [name]
+    :
+    FieldAccessor [
+      Variable [ Name=fbu ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [similar-users]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [twitter-screenname]
+          :
+          FieldAccessor [
+            Variable [ Name=tu ]
+            Field=screen-name
+          ]
+        )
+        (
+          LiteralExpr [STRING] [twitter-name]
+          :
+          FieldAccessor [
+            Variable [ Name=tu ]
+            Field=name
+          ]
+        )
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [TweetMessages]
+        ]
+        AS
+        Variable [ Name=t ]
+      ]
+      LetVariable [ Name=tu ]
+        :=
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=user
+        ]
+      Where
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=tu ]
+            Field=name
+          ]
+          ~=
+          FieldAccessor [
+            Variable [ Name=fbu ]
+            Field=name
+          ]
+        ]
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [FacebookUsers]
+  ]
+  AS
+  Variable [ Name=fbu ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=fbu ]
+    Field=id
+  ]
+  ASC
+

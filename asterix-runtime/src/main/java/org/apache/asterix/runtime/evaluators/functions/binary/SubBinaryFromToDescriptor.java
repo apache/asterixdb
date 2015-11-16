@@ -35,6 +35,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -80,6 +81,8 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
             this.functionName = functionName;
         }
 
+        private ByteArrayPointable byteArrayPointable = new ByteArrayPointable();
+        private byte[] metaBuffer = new byte[5];
         protected final String functionName;
 
         static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INT32 };
@@ -96,30 +99,33 @@ public class SubBinaryFromToDescriptor extends AbstractScalarFunctionDynamicDesc
                 }
                 checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAGS, argTag0, argTag1);
 
-                byte[] binaryBytes = storages[0].getByteArray();
+                byteArrayPointable.set(storages[0].getByteArray(), 1, storages[0].getLength() - 1);
                 byte[] startBytes = storages[1].getByteArray();
 
-                int start = 0;
+                int subStart = 0;
 
                 // strange SQL index convention
-                start = ATypeHierarchy.getIntegerValue(startBytes, 0) - 1;
+                subStart = ATypeHierarchy.getIntegerValue(startBytes, 0) - 1;
 
-                int totalLength = ByteArrayPointable.getLength(binaryBytes, 1);
+                int totalLength = byteArrayPointable.getContentLength();
                 int subLength = getSubLength(tuple);
 
-                if (start < 0) {
-                    start = 0;
+                if (subStart < 0) {
+                    subStart = 0;
                 }
 
-                if (start >= totalLength || subLength < 0) {
+                if (subStart >= totalLength || subLength < 0) {
                     subLength = 0;
-                } else if (start + subLength > totalLength) {
-                    subLength = totalLength - start;
+                } else if (subLength > totalLength // for the IntMax case
+                        || subStart + subLength > totalLength) {
+                    subLength = totalLength - subStart;
                 }
 
                 dataOutput.write(ATypeTag.BINARY.serialize());
-                dataOutput.writeShort(subLength);
-                dataOutput.write(binaryBytes, 1 + ByteArrayPointable.SIZE_OF_LENGTH + start, subLength);
+                int metaLength = VarLenIntEncoderDecoder.encode(subLength, metaBuffer, 0);
+                dataOutput.write(metaBuffer, 0, metaLength);
+                dataOutput.write(byteArrayPointable.getByteArray(),
+                        byteArrayPointable.getContentStartOffset() + subStart, subLength);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             } catch (IOException e) {

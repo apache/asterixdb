@@ -1,0 +1,250 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [date1]
+    :
+    FunctionCall test.date-from-unix-time-in-days@1[
+      LiteralExpr [LONG] [15600]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date2]
+    :
+    FunctionCall test.get-date-from-datetime@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date3]
+    :
+    FunctionCall test.get-date-from-datetime@1[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2012-10-11T02:30:23+03:00]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date4]
+    :
+    OperatorExpr [
+      FunctionCall test.date-from-unix-time-in-days@1[
+        LiteralExpr [LONG] [15600]
+      ]
+      +
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [-P2Y1M90DT30H]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date5]
+    :
+    OperatorExpr [
+      FunctionCall test.get-date-from-datetime@1[
+        FunctionCall test.datetime@1[
+          LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+        ]
+      ]
+      +
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [P300Y900MT360000M]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration1]
+    :
+    OperatorExpr [
+      OperatorExpr [
+        FunctionCall test.get-date-from-datetime@1[
+          FunctionCall test.datetime@1[
+            LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+          ]
+        ]
+        +
+        FunctionCall test.duration@1[
+          LiteralExpr [STRING] [P300Y900MT360000M]
+        ]
+      ]
+      -
+      FunctionCall test.get-date-from-datetime@1[
+        FunctionCall test.datetime@1[
+          LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration2]
+    :
+    OperatorExpr [
+      OperatorExpr [
+        FunctionCall test.date-from-unix-time-in-days@1[
+          LiteralExpr [LONG] [15600]
+        ]
+        +
+        FunctionCall test.duration@1[
+          LiteralExpr [STRING] [-P2Y1M90DT30H]
+        ]
+      ]
+      -
+      FunctionCall test.date-from-unix-time-in-days@1[
+        LiteralExpr [LONG] [15600]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c1]
+    :
+    OperatorExpr [
+      FunctionCall test.date-from-unix-time-in-days@1[
+        LiteralExpr [LONG] [15600]
+      ]
+      =
+      OperatorExpr [
+        OperatorExpr [
+          FunctionCall test.date-from-unix-time-in-days@1[
+            LiteralExpr [LONG] [15600]
+          ]
+          +
+          FunctionCall test.duration@1[
+            LiteralExpr [STRING] [-P2Y1M90DT30H]
+          ]
+        ]
+        +
+        OperatorExpr [
+          FunctionCall test.date-from-unix-time-in-days@1[
+            LiteralExpr [LONG] [15600]
+          ]
+          -
+          OperatorExpr [
+            FunctionCall test.date-from-unix-time-in-days@1[
+              LiteralExpr [LONG] [15600]
+            ]
+            +
+            FunctionCall test.duration@1[
+              LiteralExpr [STRING] [-P2Y1M90DT30H]
+            ]
+          ]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c2]
+    :
+    OperatorExpr [
+      FunctionCall test.get-date-from-datetime@1[
+        FunctionCall test.datetime@1[
+          LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+        ]
+      ]
+      =
+      OperatorExpr [
+        OperatorExpr [
+          FunctionCall test.get-date-from-datetime@1[
+            FunctionCall test.datetime@1[
+              LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+            ]
+          ]
+          +
+          FunctionCall test.duration@1[
+            LiteralExpr [STRING] [P300Y900MT360000M]
+          ]
+        ]
+        +
+        OperatorExpr [
+          FunctionCall test.get-date-from-datetime@1[
+            FunctionCall test.datetime@1[
+              LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+            ]
+          ]
+          -
+          OperatorExpr [
+            FunctionCall test.get-date-from-datetime@1[
+              FunctionCall test.datetime@1[
+                LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+              ]
+            ]
+            +
+            FunctionCall test.duration@1[
+              LiteralExpr [STRING] [P300Y900MT360000M]
+            ]
+          ]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null1]
+    :
+    FunctionCall test.date-from-unix-time-in-days@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null2]
+    :
+    FunctionCall test.get-date-from-datetime@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null3]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      +
+      FunctionCall test.duration@1[
+        LiteralExpr [STRING] [-P2Y1M90DT30H]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null4]
+    :
+    OperatorExpr [
+      FunctionCall test.date-from-unix-time-in-days@1[
+        LiteralExpr [LONG] [15600]
+      ]
+      +
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null5]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      -
+      FunctionCall test.get-date-from-datetime@1[
+        FunctionCall test.datetime@1[
+          LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null6]
+    :
+    OperatorExpr [
+      OperatorExpr [
+        FunctionCall test.get-date-from-datetime@1[
+          FunctionCall test.datetime@1[
+            LiteralExpr [STRING] [1327-12-02T23:35:49.938Z]
+          ]
+        ]
+        +
+        FunctionCall test.duration@1[
+          LiteralExpr [STRING] [P300Y900MT360000M]
+        ]
+      ]
+      -
+      LiteralExpr [NULL]
+    ]
+  )
+]

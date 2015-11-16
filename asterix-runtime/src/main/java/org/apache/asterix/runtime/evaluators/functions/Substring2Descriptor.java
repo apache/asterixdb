@@ -36,6 +36,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -66,6 +68,10 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                     private ICopyEvaluator evalStart = args[1].createEvaluator(argOut);
                     private final byte stt = ATypeTag.STRING.serialize();
 
+                    private final GrowableArray array = new GrowableArray();
+                    private final UTF8StringBuilder builder = new UTF8StringBuilder();
+                    private final UTF8StringPointable string = new UTF8StringPointable();
+
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut.reset();
@@ -86,29 +92,20 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
                                     + ": expects type STRING for the first argument but got "
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut.getByteArray()[0]));
                         }
-                        int utflen = UTF8StringPointable.getUTFLength(bytes, 1);
-                        int sStart = 3;
-                        int c = 0;
-                        int idxPos1 = 0;
-
-                        // skip to start
-                        while (idxPos1 < start && c < utflen) {
-                            c += UTF8StringPointable.charSize(bytes, sStart + c);
-                            ++idxPos1;
-                        }
-                        int startSubstr = c;
-
-                        while (c < utflen) {
-                            c += UTF8StringPointable.charSize(bytes, sStart + c);
+                        string.set(bytes, 1, bytes.length);
+                        array.reset();
+                        try {
+                            UTF8StringPointable.substr(string, start, Integer.MAX_VALUE, builder, array);
+                        } catch (StringIndexOutOfBoundsException e) {
+                            throw new AlgebricksException(AsterixBuiltinFunctions.SUBSTRING.getName() + ": start="
+                                    + start + "\tgoing past the input length.");
+                        } catch (IOException e) {
+                            throw new AlgebricksException(e);
                         }
 
-                        int substrByteLen = c - startSubstr;
                         try {
                             out.writeByte(stt);
-                            out.writeByte((byte) ((substrByteLen >>> 8) & 0xFF));
-                            out.writeByte((byte) ((substrByteLen >>> 0) & 0xFF));
-                            out.write(bytes, sStart + startSubstr, substrByteLen);
-
+                            out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }

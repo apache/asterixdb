@@ -57,9 +57,18 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
 
     private static final long serialVersionUID = 1L;
 
-    public static final AObjectSerializerDeserializer INSTANCE = new AObjectSerializerDeserializer();
+    private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
+    private final ABinarySerializerDeserializer aBinarySerDer = new ABinarySerializerDeserializer();
+    private ARecordSerializerDeserializer aRecordSerDer = null;
 
-    private AObjectSerializerDeserializer() {
+    private ARecordSerializerDeserializer getRecordSerDer() {
+        if (aRecordSerDer == null) {
+            aRecordSerDer = ARecordSerializerDeserializer.CREATE_SCHEMALESS_INSTANCE();
+        }
+        return aRecordSerDer;
+    }
+
+    public AObjectSerializerDeserializer() {
     }
 
     @Override
@@ -91,10 +100,10 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 return ADoubleSerializerDeserializer.INSTANCE.deserialize(in);
             }
             case STRING: {
-                return AStringSerializerDeserializer.INSTANCE.deserialize(in);
+                return aStringSerDer.deserialize(in);
             }
             case BINARY: {
-                return ABinarySerializerDeserializer.INSTANCE.deserialize(in);
+                return aBinarySerDer.deserialize(in);
             }
             case DATE: {
                 return ADateSerializerDeserializer.INSTANCE.deserialize(in);
@@ -136,7 +145,7 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 return ACircleSerializerDeserializer.INSTANCE.deserialize(in);
             }
             case RECORD: {
-                return ARecordSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
+                return getRecordSerDer().deserialize(in);
             }
             case ORDEREDLIST: {
                 return AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
@@ -196,11 +205,12 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 break;
             }
             case STRING: {
-                AStringSerializerDeserializer.INSTANCE.serialize((AString) instance, out);
+                aStringSerDer.serialize((AString) instance, out);
                 break;
             }
             case BINARY: {
-                ABinarySerializerDeserializer.INSTANCE.serialize((ABinary) instance, out);
+                aBinarySerDer.serialize((ABinary) instance, out);
+                break;
             }
             case DATE: {
                 ADateSerializerDeserializer.INSTANCE.serialize((ADate) instance, out);
@@ -247,17 +257,20 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 break;
             }
             case RECORD: {
-                ARecordSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((ARecord) instance, out);
+                getRecordSerDer().serialize((ARecord) instance, out);
                 break;
             }
             case ORDEREDLIST: {
                 AOrderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AOrderedList) instance, out);
+                break;
             }
             case UNORDEREDLIST: {
                 AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.serialize((AUnorderedList) instance, out);
+                break;
             }
             case TYPE: {
                 ATypeSerializerDeserializer.INSTANCE.serialize((IAType) instance, out);
+                break;
             }
             default: {
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + t.getTypeTag()

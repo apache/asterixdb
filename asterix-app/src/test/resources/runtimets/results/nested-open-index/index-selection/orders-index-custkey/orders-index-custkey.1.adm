@@ -1,11 +1,10 @@
-[ { "o_orderkey": 7, "o_custkey": 40 }
-, { "o_orderkey": 323, "o_custkey": 40 }
-, { "o_orderkey": 421, "o_custkey": 40 }
-, { "o_orderkey": 642, "o_custkey": 40 }
-, { "o_orderkey": 866, "o_custkey": 40 }
-, { "o_orderkey": 1698, "o_custkey": 40 }
-, { "o_orderkey": 2051, "o_custkey": 40 }
-, { "o_orderkey": 2215, "o_custkey": 40 }
-, { "o_orderkey": 2625, "o_custkey": 40 }
-, { "o_orderkey": 2817, "o_custkey": 40 }
- ]
+{ "o_orderkey": 7, "o_custkey": 40 }
+{ "o_orderkey": 323, "o_custkey": 40 }
+{ "o_orderkey": 421, "o_custkey": 40 }
+{ "o_orderkey": 642, "o_custkey": 40 }
+{ "o_orderkey": 866, "o_custkey": 40 }
+{ "o_orderkey": 1698, "o_custkey": 40 }
+{ "o_orderkey": 2051, "o_custkey": 40 }
+{ "o_orderkey": 2215, "o_custkey": 40 }
+{ "o_orderkey": 2625, "o_custkey": 40 }
+{ "o_orderkey": 2817, "o_custkey": 40 }

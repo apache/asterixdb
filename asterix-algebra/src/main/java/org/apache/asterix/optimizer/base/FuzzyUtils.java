@@ -21,8 +21,7 @@ package org.apache.asterix.optimizer.base;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
-import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;

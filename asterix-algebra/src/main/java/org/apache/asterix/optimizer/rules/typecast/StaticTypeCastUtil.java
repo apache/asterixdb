@@ -27,8 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
-import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;

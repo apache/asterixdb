@@ -1,0 +1,24 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [average]
+    :
+    FunctionCall test.sql-avg@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=x ]
+          Field=int16Field
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Numeric]
+          ]
+          AS
+          Variable [ Name=x ]
+        ]
+      )
+    ]
+  )
+]

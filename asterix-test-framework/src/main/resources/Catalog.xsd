@@ -131,7 +131,17 @@
                         </xs:simpleContent>
                      </xs:complexType>
                   </xs:element>
-
+                  <xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Parameter to send to the HTTP API.
+                        </xs:documentation>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" />
+                        <xs:attribute name="value" type="xs:string" />
+                     </xs:complexType>
+                  </xs:element>
 
                   <!-- Zero or more expected errors for this query -->
 
@@ -209,6 +219,8 @@
          <xs:enumeration value="Lossless-JSON"/>
          <xs:enumeration value="CSV"/>
          <xs:enumeration value="CSV_Header"/>
+         <xs:enumeration value="AST"/>
+         <xs:enumeration value="PLAN"/>
       </xs:restriction>
    </xs:simpleType>
 

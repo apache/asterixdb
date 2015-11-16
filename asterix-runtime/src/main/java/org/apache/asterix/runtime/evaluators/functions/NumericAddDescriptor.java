@@ -24,6 +24,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.lang.Math;
 
 public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
 
@@ -41,13 +42,7 @@ public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     protected long evaluateInteger(long x, long y) throws HyracksDataException {
-        long z = x + y;
-        if (x > 0) {
-            if (y > 0 && z < 0)
-                throw new ArithmeticException("Overflow adding " + x + " + " + y);
-        } else if (y < 0 && z > 0)
-            throw new ArithmeticException("Underflow adding " + x + " + " + y);
-        return z;
+        return Math.addExact(x, y);
     }
 
     @Override

@@ -1,0 +1,117 @@
+DataverseUse fuzzyjoin_078
+TypeDecl DBLPType [
+  open RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP_fuzzyjoin_078(DBLPType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/fuzzyjoin_078.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=paperDBLP ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [tokens]
+    :
+    Variable [ Name=tokensDBLP ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
+  ]
+  AS
+  Variable [ Name=paperDBLP ]
+]
+LetVariable [ Name=unrankedTokensDBLP ]
+  :=
+  FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paperDBLP ]
+      Field=title
+    ]
+  ]
+LetVariable [ Name=tokensDBLP ]
+  :=
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      Variable [ Name=unrankedTokensDBLP ]
+      AS
+      Variable [ Name=token ]
+,
+      (
+        SELECT ELEMENT [
+        Variable [ Name=tokenGroupped ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
+          ]
+          AS
+          Variable [ Name=paper ]
+,
+          FunctionCall fuzzyjoin_078.counthashed-word-tokens@1[
+            FieldAccessor [
+              Variable [ Name=paper ]
+              Field=title
+            ]
+          ]
+          AS
+          Variable [ Name=token ]
+        ]
+        Groupby
+          Variable [ Name=tokenGroupped ]
+          :=
+          Variable [ Name=token ]
+          With
+          Variable [ Name=paper ]
+          Variable [ Name=token ]
+          Variable [ Name=token ]
+          Variable [ Name=tokensDBLP ]
+          Variable [ Name=unrankedTokensDBLP ]
+          Variable [ Name=paperDBLP ]
+
+        Orderby
+          FunctionCall fuzzyjoin_078.count@1[
+            Variable [ Name=paper ]
+          ]
+          ASC
+          Variable [ Name=tokenGroupped ]
+          ASC
+
+      )
+      AS
+      Variable [ Name=tokenRanked ]
+      AT
+      Variable [ Name=i ]
+    ]
+    Where
+      OperatorExpr [
+        Variable [ Name=token ]
+        =
+        Variable [ Name=tokenRanked ]
+      ]
+    Orderby
+      Variable [ Name=i ]
+      ASC
+
+  )
+Orderby
+  FieldAccessor [
+    Variable [ Name=paperDBLP ]
+    Field=id
+  ]
+  ASC
+

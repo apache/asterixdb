@@ -1,0 +1,372 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c_custkey]
+    :
+    Variable [ Name=c_custkey ]
+  )
+  (
+    LiteralExpr [STRING] [c_name]
+    :
+    Variable [ Name=c_name ]
+  )
+  (
+    LiteralExpr [STRING] [revenue]
+    :
+    Variable [ Name=revenue ]
+  )
+  (
+    LiteralExpr [STRING] [c_acctbal]
+    :
+    Variable [ Name=c_acctbal ]
+  )
+  (
+    LiteralExpr [STRING] [n_name]
+    :
+    Variable [ Name=n_name ]
+  )
+  (
+    LiteralExpr [STRING] [c_address]
+    :
+    Variable [ Name=c_address ]
+  )
+  (
+    LiteralExpr [STRING] [c_phone]
+    :
+    Variable [ Name=c_phone ]
+  )
+  (
+    LiteralExpr [STRING] [c_comment]
+    :
+    Variable [ Name=c_comment ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [c_custkey]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=c_custkey
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_name]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=c_name
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_acctbal]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=c_acctbal
+        ]
+      )
+      (
+        LiteralExpr [STRING] [n_name]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=n_name
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_address]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=c_address
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_phone]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=c_phone
+        ]
+      )
+      (
+        LiteralExpr [STRING] [c_comment]
+        :
+        FieldAccessor [
+          Variable [ Name=ocn ]
+          Field=c_comment
+        ]
+      )
+      (
+        LiteralExpr [STRING] [l_extendedprice]
+        :
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_extendedprice
+        ]
+      )
+      (
+        LiteralExpr [STRING] [l_discount]
+        :
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_discount
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItem]
+      ]
+      AS
+      Variable [ Name=l ]
+,
+      (
+        SELECT ELEMENT [
+        RecordConstructor [
+          (
+            LiteralExpr [STRING] [c_custkey]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_custkey
+            ]
+          )
+          (
+            LiteralExpr [STRING] [c_name]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_name
+            ]
+          )
+          (
+            LiteralExpr [STRING] [c_acctbal]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_acctbal
+            ]
+          )
+          (
+            LiteralExpr [STRING] [n_name]
+            :
+            FieldAccessor [
+              Variable [ Name=n ]
+              Field=n_name
+            ]
+          )
+          (
+            LiteralExpr [STRING] [c_address]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_address
+            ]
+          )
+          (
+            LiteralExpr [STRING] [c_phone]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_phone
+            ]
+          )
+          (
+            LiteralExpr [STRING] [c_comment]
+            :
+            FieldAccessor [
+              Variable [ Name=c ]
+              Field=c_comment
+            ]
+          )
+          (
+            LiteralExpr [STRING] [o_orderkey]
+            :
+            FieldAccessor [
+              Variable [ Name=o ]
+              Field=o_orderkey
+            ]
+          )
+        ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Orders]
+          ]
+          AS
+          Variable [ Name=o ]
+,
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Customer]
+          ]
+          AS
+          Variable [ Name=c ]
+,
+          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [Nation]
+          ]
+          AS
+          Variable [ Name=n ]
+        ]
+        Where
+          OperatorExpr [
+            OperatorExpr [
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=c ]
+                  Field=c_custkey
+                ]
+                =
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_custkey
+                ]
+              ]
+              and
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_orderdate
+                ]
+                >=
+                LiteralExpr [STRING] [1993-10-01]
+              ]
+              and
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=o ]
+                  Field=o_orderdate
+                ]
+                <
+                LiteralExpr [STRING] [1994-01-01]
+              ]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=c ]
+                Field=c_nationkey
+              ]
+              =
+              FieldAccessor [
+                Variable [ Name=n ]
+                Field=n_nationkey
+              ]
+            ]
+          ]
+      )
+      AS
+      Variable [ Name=ocn ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_orderkey
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=ocn ]
+            Field=o_orderkey
+          ]
+        ]
+        and
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_returnflag
+          ]
+          =
+          LiteralExpr [STRING] [R]
+        ]
+      ]
+  )
+  AS
+  Variable [ Name=locn ]
+]
+Groupby
+  Variable [ Name=c_custkey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=c_custkey
+  ]
+  Variable [ Name=c_name ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=c_name
+  ]
+  Variable [ Name=c_acctbal ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=c_acctbal
+  ]
+  Variable [ Name=c_phone ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=c_phone
+  ]
+  Variable [ Name=n_name ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=n_name
+  ]
+  Variable [ Name=c_address ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=c_address
+  ]
+  Variable [ Name=c_comment ]
+  :=
+  FieldAccessor [
+    Variable [ Name=locn ]
+    Field=c_comment
+  ]
+  With
+  Variable [ Name=locn ]
+
+LetVariable [ Name=revenue ]
+  :=
+  FunctionCall tpch.sum@1[
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_extendedprice
+        ]
+        *
+        OperatorExpr [
+          LiteralExpr [LONG] [1]
+          -
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=l_discount
+          ]
+        ]
+      ]
+      ]
+      FROM [        Variable [ Name=locn ]
+        AS
+        Variable [ Name=i ]
+      ]
+    )
+  ]
+Orderby
+  Variable [ Name=revenue ]
+  DESC
+
+Limit
+  LiteralExpr [LONG] [20]

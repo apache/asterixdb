@@ -1,0 +1,139 @@
+DataverseUse test
+TypeDecl TwitterUserType [
+  closed RecordType {
+    screen-name : string,
+    lang : string,
+    friends-count : int32,
+    statuses-count : int32,
+    name : string,
+    followers-count : int32
+  }
+]
+TypeDecl TweetMessageNestedType [
+  open RecordType {
+    tweetid : int64,
+    user : TwitterUserType,
+    sender-location : point,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    countA : int32,
+    countB : int32
+  }
+]
+TypeDecl TweetMessageType [
+  closed RecordType {
+    nested : TweetMessageNestedType
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[nested, tweetid]]
+WriteOutputTo nc1:rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [t1]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=t1 ]
+        Field=nested
+      ]
+      Field=tweetid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t2]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=t2 ]
+        Field=nested
+      ]
+      Field=tweetid
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sim]
+    :
+    IndexAccessor [
+      Variable [ Name=sim ]
+      Index:       Variable [ Name=sim ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t1 ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TweetMessages]
+  ]
+  AS
+  Variable [ Name=t2 ]
+]
+LetVariable [ Name=sim ]
+  :=
+  FunctionCall test.similarity-jaccard-check@3[
+    FunctionCall test.word-tokens@1[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=t1 ]
+          Field=nested
+        ]
+        Field=message-text
+      ]
+    ]
+    FunctionCall test.word-tokens@1[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=t2 ]
+          Field=nested
+        ]
+        Field=message-text
+      ]
+    ]
+    LiteralExpr [FLOAT] [0.6]
+  ]
+Where
+  OperatorExpr [
+    IndexAccessor [
+      Variable [ Name=sim ]
+      Index:       Variable [ Name=sim ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=t1 ]
+          Field=nested
+        ]
+        Field=tweetid
+      ]
+      <
+      FunctionCall test.int64@1[
+        LiteralExpr [STRING] [20]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=t2 ]
+          Field=nested
+        ]
+        Field=tweetid
+      ]
+      !=
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=t1 ]
+          Field=nested
+        ]
+        Field=tweetid
+      ]
+    ]
+  ]

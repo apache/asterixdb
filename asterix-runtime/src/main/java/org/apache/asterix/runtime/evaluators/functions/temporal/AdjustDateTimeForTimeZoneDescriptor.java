@@ -39,8 +39,10 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -86,6 +88,9 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
 
                     private GregorianCalendarSystem calInstance = GregorianCalendarSystem.getInstance();
 
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+                    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
+
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         argOut0.reset();
@@ -112,7 +117,9 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                                         + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argOut1.getByteArray()[0]));
                             }
 
-                            int timezone = ATimeParserFactory.parseTimezonePart(argOut1.getByteArray(), 3);
+                            utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                            int timezone = ATimeParserFactory
+                                    .parseTimezonePart(utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset());
 
                             if (!calInstance.validateTimeZone(timezone)) {
                                 throw new AlgebricksException(FID.getName() + ": wrong format for a time zone string!");
@@ -128,8 +135,7 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                                     Fields.MILLISECOND, true);
 
                             out.writeByte(SER_STRING_TYPE_TAG);
-                            out.writeUTF(sbder.toString());
-
+                            utf8Writer.writeUTF8(sbder.toString(), out);
                         } catch (Exception e1) {
                             throw new AlgebricksException(e1);
                         }

@@ -1,2 +1,1 @@
-[ { "result1": true, "result3": false, "result4": false, "result5": true }
- ]
+{ "result1": true, "result3": null, "result4": null, "result5": null }

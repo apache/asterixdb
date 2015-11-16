@@ -23,16 +23,15 @@ import java.io.Serializable;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class FunctionSignature implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String namespace;
     private String name;
     private int arity;
-    private String rep;
 
     public FunctionSignature(String namespace, String name, int arity) {
         this.namespace = namespace;
         this.name = name;
         this.arity = arity;
-        rep = namespace + "." + name + "@" + arity;
     }
 
     @Override
@@ -47,6 +46,7 @@ public class FunctionSignature implements Serializable {
         }
     }
 
+    @Override
     public String toString() {
         return namespace + "." + name + "@" + arity;
     }

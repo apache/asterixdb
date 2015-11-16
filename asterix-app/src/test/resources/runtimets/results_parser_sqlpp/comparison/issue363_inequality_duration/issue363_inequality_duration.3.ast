@@ -1,0 +1,55 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [duration0]
+    :
+    OperatorExpr [
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P300Y6M3DT9H5M2.348S]
+      ]
+      >
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration1]
+    :
+    OperatorExpr [
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+      <
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P300Y6M3DT9H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration2]
+    :
+    OperatorExpr [
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P300Y6M3DT9H5M2.348S]
+      ]
+      >=
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration3]
+    :
+    OperatorExpr [
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P3Y6M3DT9H5M2.348S]
+      ]
+      <=
+      FunctionCall null.duration@1[
+        LiteralExpr [STRING] [P300Y6M3DT9H5M2.348S]
+      ]
+    ]
+  )
+]

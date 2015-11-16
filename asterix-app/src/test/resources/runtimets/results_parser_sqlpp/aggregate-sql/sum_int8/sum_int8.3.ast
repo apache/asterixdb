@@ -1,0 +1,25 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.sql-sum@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=x ]
+    ]
+    FROM [      OrderedListConstructor [
+        FunctionCall test.int8@1[
+          LiteralExpr [STRING] [1]
+        ]
+        FunctionCall test.int8@1[
+          LiteralExpr [STRING] [2]
+        ]
+        FunctionCall test.int8@1[
+          LiteralExpr [STRING] [3]
+        ]
+      ]
+      AS
+      Variable [ Name=x ]
+    ]
+  )
+]
+]

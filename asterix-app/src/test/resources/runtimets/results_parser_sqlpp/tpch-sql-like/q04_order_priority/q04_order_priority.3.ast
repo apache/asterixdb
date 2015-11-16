@@ -1,0 +1,109 @@
+DataverseUse tpch
+FunctionDecl tmp([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [o_orderkey]
+        :
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_orderkey
+        ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=LineItem ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Where
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_commitdate
+        ]
+        <
+        FieldAccessor [
+          Variable [ Name=l ]
+          Field=l_receiptdate
+        ]
+      ]
+  )
+}
+
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [order_priority]
+    :
+    Variable [ Name=o_orderpriority ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall tpch.count@1[
+      Variable [ Name=o ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+,
+  FunctionCall tpch.tmp@0[
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=t ]
+        Field=o_orderkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderdate
+      ]
+      >=
+      LiteralExpr [STRING] [1993-07-01]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderdate
+      ]
+      <
+      LiteralExpr [STRING] [1993-10-01]
+    ]
+  ]
+Groupby
+  Variable [ Name=o_orderpriority ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderpriority
+  ]
+  With
+  Variable [ Name=t ]
+  Variable [ Name=o ]
+
+Orderby
+  Variable [ Name=o_orderpriority ]
+  ASC
+

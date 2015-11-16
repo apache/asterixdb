@@ -1,0 +1,43 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FunctionCall test.min@1[
+  Variable [ Name=y ]
+]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+LetVariable [ Name=y ]
+  :=
+  (
+    SELECT ELEMENT [
+    FunctionCall test.min@1[
+      Variable [ Name=i ]
+    ]
+    ]
+    FROM [      OrderedListConstructor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+          LiteralExpr [LONG] [2]
+          LiteralExpr [LONG] [3]
+        ]
+        OrderedListConstructor [
+          LiteralExpr [LONG] [10]
+          LiteralExpr [LONG] [20]
+          LiteralExpr [LONG] [30]
+        ]
+        OrderedListConstructor [
+          NEGATIVE LiteralExpr [LONG] [2]
+          NEGATIVE LiteralExpr [LONG] [5]
+          LiteralExpr [LONG] [0]
+        ]
+      ]
+      AS
+      Variable [ Name=i ]
+    ]
+  )

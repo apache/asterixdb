@@ -19,13 +19,13 @@
 
 package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
-import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
-import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.data.IPrinter;
-
 import java.io.IOException;
 import java.io.PrintStream;
+
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.util.bytes.HexPrinter;
 
 public class ABinaryHexPrinter implements IPrinter {
     private ABinaryHexPrinter() {
@@ -33,19 +33,21 @@ public class ABinaryHexPrinter implements IPrinter {
 
     public static final ABinaryHexPrinter INSTANCE = new ABinaryHexPrinter();
 
-    @Override public void init() throws AlgebricksException {
-
+    @Override
+    public void init() throws AlgebricksException {
     }
 
-    @Override public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
-        int validLength = ABinarySerializerDeserializer.getLength(b, s + 1);
-        int start = s + 1 + ABinarySerializerDeserializer.SIZE_OF_LENGTH;
+    @Override
+    public void print(byte[] b, int s, int l, PrintStream ps) throws AlgebricksException {
+        int validLength = ByteArrayPointable.getContentLength(b, s + 1);
+        int start = s + 1 + ByteArrayPointable.getNumberBytesToStoreMeta(validLength);
         try {
             ps.print("hex(\"");
-            PrintTools.printHexString(b, start, validLength, ps);
+            HexPrinter.printHexString(b, start, validLength, ps);
             ps.print("\")");
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
     }
+
 }

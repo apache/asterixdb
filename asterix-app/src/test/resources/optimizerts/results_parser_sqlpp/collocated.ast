@@ -1,0 +1,65 @@
+DataverseUse colocated
+TypeDecl UserType [
+  open RecordType {
+    uid : int32,
+    name : string,
+    lottery_numbers : UnorderedList <int32>
+
+  }
+]
+TypeDecl VisitorType [
+  open RecordType {
+    vid : int32,
+    name : string,
+    lottery_numbers : UnorderedList <int32>
+
+  }
+]
+DatasetDecl Users(UserType) partitioned by [[uid]]
+DatasetDecl Visitors(VisitorType) partitioned by [[vid]]
+WriteOutputTo nc1:/tmp/fuzzy1.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [user_name]
+    :
+    FieldAccessor [
+      Variable [ Name=user ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [visitor_name]
+    :
+    FieldAccessor [
+      Variable [ Name=visitor ]
+      Field=name
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Users]
+  ]
+  AS
+  Variable [ Name=user ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Visitors]
+  ]
+  AS
+  Variable [ Name=visitor ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=user ]
+      Field=uid
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=visitor ]
+      Field=vid
+    ]
+  ]

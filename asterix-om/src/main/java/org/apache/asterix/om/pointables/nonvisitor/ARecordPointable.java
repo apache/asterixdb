@@ -38,7 +38,8 @@ import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /*
  * This class interprets the binary data representation of a record.
@@ -115,11 +116,11 @@ public class ARecordPointable extends AbstractPointable {
     private static final int OPEN_FIELD_OFFSET_SIZE = 4;
     private static final int OPEN_FIELD_HEADER = OPEN_FIELD_HASH_SIZE + OPEN_FIELD_OFFSET_SIZE;
 
-    private static final int STRING_LENGTH_SIZE = 2;
-
     private static boolean isOpen(ARecordType recordType) {
         return recordType == null || recordType.isOpen();
     }
+
+    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     public int getSchemeFieldCount(ARecordType recordType) {
         return recordType.getFieldNames().length;
@@ -231,7 +232,7 @@ public class ARecordPointable extends AbstractPointable {
 
     public void getClosedFieldName(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException {
         dOut.writeByte(ATypeTag.STRING.serialize());
-        dOut.writeUTF(getClosedFieldName(recordType, fieldId));
+        utf8Writer.writeUTF8(getClosedFieldName(recordType, fieldId), dOut);
     }
 
     public byte getClosedFieldTag(ARecordType recordType, int fieldId) {
@@ -301,8 +302,8 @@ public class ARecordPointable extends AbstractPointable {
     }
 
     public int getOpenFieldNameSize(ARecordType recordType, int fieldId) {
-        return UTF8StringPointable.getUTFLength(bytes, getOpenFieldNameOffset(recordType, fieldId))
-                + STRING_LENGTH_SIZE;
+        int utfleng = UTF8StringUtil.getUTFLength(bytes, getOpenFieldNameOffset(recordType, fieldId));
+        return utfleng + UTF8StringUtil.getNumBytesToStoreLength(utfleng);
     }
 
     public int getOpenFieldNameOffset(ARecordType recordType, int fieldId) {

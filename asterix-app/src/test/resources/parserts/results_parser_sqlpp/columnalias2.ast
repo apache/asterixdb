@@ -1,0 +1,54 @@
+Query:
+SELECT [
+FunctionCall null.SQRT@1[
+  OperatorExpr [
+    FieldAccessor [
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [t]
+      ]
+      Field=a
+    ]
+    *
+    FieldAccessor [
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [t]
+      ]
+      Field=b
+    ]
+  ]
+]
+root
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tbl_name]
+  ]
+  AS
+  Variable [ Name=root ]
+]
+Groupby
+  FieldAccessor [
+    Variable [ Name=root ]
+    Field=id
+  ]
+  With
+  Variable [ Name=root ]
+
+LetVariable [ Name=u ]
+  :=
+  FieldAccessor [
+    Variable [ Name=root ]
+    Field=time
+  ]
+ HAVING
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=root ]
+      Field=orders
+    ]
+    >
+    LiteralExpr [LONG] [0]
+  ]
+Orderby
+  Variable [ Name=u ]
+  ASC
+

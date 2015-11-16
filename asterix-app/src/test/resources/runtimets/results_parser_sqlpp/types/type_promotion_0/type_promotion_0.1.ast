@@ -1,0 +1,16 @@
+DataverseUse TestVerse
+TypeDecl Int64TestType [
+  open RecordType {
+    myint64 : int64,
+    myoptint64 : int64?,
+    myint32 : int32,
+    myoptint32 : int32?,
+    myint16 : int16,
+    myoptint16 : int16?,
+    mydouble : double,
+    myoptdouble : double?,
+    myfloat : float,
+    myoptfloat : float?
+  }
+]
+DatasetDecl Int64Test(Int64TestType) partitioned by [[myint64]]

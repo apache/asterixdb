@@ -1,0 +1,138 @@
+DataverseUse multitask
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [timebin]
+    :
+    Variable [ Name=bin ]
+  )
+  (
+    LiteralExpr [STRING] [subgroups]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [subgid]
+          :
+          Variable [ Name=subgid ]
+        )
+        (
+          LiteralExpr [STRING] [item_count]
+          :
+          FunctionCall multitask.count@1[
+            Variable [ Name=i ]
+          ]
+        )
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [logs]
+        ]
+        AS
+        Variable [ Name=i ]
+      ]
+      Where
+        FunctionCall multitask.interval-covers@2[
+          Variable [ Name=bin ]
+          FunctionCall multitask.interval-start-from-time@2[
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=time
+            ]
+            FunctionCall multitask.duration-from-ms@1[
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=duration
+              ]
+            ]
+          ]
+        ]
+      Groupby
+        Variable [ Name=subgid ]
+        :=
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=app
+        ]
+        With
+        Variable [ Name=i ]
+        Variable [ Name=bin ]
+
+      Orderby
+        Variable [ Name=subgid ]
+        ASC
+        FunctionCall multitask.count@1[
+          Variable [ Name=i ]
+        ]
+        ASC
+
+    )
+  )
+]
+]
+FROM [  FunctionCall multitask.overlap-bins@3[
+    FunctionCall multitask.interval-from-time@2[
+      FunctionCall multitask.min@1[
+        (
+          SELECT ELEMENT [
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=time
+          ]
+          ]
+          FROM [            FunctionCall Metadata.dataset@1[
+              LiteralExpr [STRING] [logs]
+            ]
+            AS
+            Variable [ Name=i ]
+          ]
+        )
+      ]
+      FunctionCall multitask.max@1[
+        (
+          SELECT ELEMENT [
+          OperatorExpr [
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=time
+            ]
+            +
+            FunctionCall multitask.duration-from-ms@1[
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=i ]
+                  Field=duration
+                ]
+                *
+                LiteralExpr [LONG] [1000]
+              ]
+            ]
+          ]
+          ]
+          FROM [            FunctionCall Metadata.dataset@1[
+              LiteralExpr [STRING] [logs]
+            ]
+            AS
+            Variable [ Name=i ]
+          ]
+        )
+      ]
+    ]
+    FunctionCall multitask.time@1[
+      LiteralExpr [STRING] [00:00:00.000]
+    ]
+    FunctionCall multitask.day-time-duration@1[
+      LiteralExpr [STRING] [PT1M]
+    ]
+  ]
+  AS
+  Variable [ Name=bin ]
+]
+Orderby
+  FunctionCall multitask.get-interval-start@1[
+    Variable [ Name=bin ]
+  ]
+  ASC
+

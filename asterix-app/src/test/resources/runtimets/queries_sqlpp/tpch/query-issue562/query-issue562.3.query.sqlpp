@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue562
+ * https://code.google.com/p/asterixdb/issues/detail?id=562
+ * Expected Res : SUCCESS
+ * Date         : 15th Jan. 2015
+ */
+
+use tpch;
+
+
+declare function q22_customer_tmp() {
+(
+    select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':phone_substr}
+    from  Customer as c
+    with  phone_substr as tpch.substring(c.c_phone,1,2)
+    where ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17'))
+)
+};
+with  avg as tpch.avg((
+      select element c.c_acctbal
+      from  Customer as c
+      with  phone_substr as tpch.substring(c.c_phone,1,2)
+      where ((c.c_acctbal > 0.0) and ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17')))
+  ))
+select element {'cntrycode':cntrycode,'numcust':tpch.count(ct),'totacctbal':tpch.sum((
+        select element i.c_acctbal
+        from  ct as i
+    ))}
+from  tpch.q22_customer_tmp() as ct
+where (tpch.count((
+    select element o
+    from  Orders as o
+    where (ct.c_custkey = o.o_custkey)
+)) = 0)
+group by ct.cntrycode as cntrycode
+order by cntrycode
+;

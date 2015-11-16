@@ -41,6 +41,7 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -80,7 +81,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             eval.evaluate(tuple);
                             byte[] serString = outInput.getByteArray();
                             if (serString[0] == SER_STRING_TYPE_TAG) {
-                                int len = UTF8StringPointable.getUTFLength(outInput.getByteArray(), 1);
+                                int len = UTF8StringUtil.getUTFLength(outInput.getByteArray(), 1);
                                 result.setValue((long) len);
                                 int64Serde.serialize(result, out);
                             } else if (serString[0] == SER_NULL_TYPE_TAG)

@@ -1,0 +1,58 @@
+DataverseUse twitter
+TypeDecl Tweet [
+  open RecordType {
+    id : int32,
+    tweetid : int64,
+    loc : point,
+    time : datetime,
+    text : string
+  }
+]
+DatasetDecl TwitterData(Tweet)is an external dataset
+WriteOutputTo nc1:/tmp/count-tweets.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [word]
+    :
+    Variable [ Name=tok ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall twitter.count@1[
+      Variable [ Name=token ]
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [TwitterData]
+  ]
+  AS
+  Variable [ Name=t ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tokens]
+  ]
+  AS
+  Variable [ Name=token ]
+]
+LetVariable [ Name=tokens ]
+  :=
+  FunctionCall twitter.word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=t ]
+      Field=text
+    ]
+  ]
+Groupby
+  Variable [ Name=tok ]
+  :=
+  Variable [ Name=token ]
+  With
+  Variable [ Name=tokens ]
+  Variable [ Name=t ]
+  Variable [ Name=token ]
+

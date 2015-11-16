@@ -1,0 +1,7 @@
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  LiteralExpr [LONG] [1]
+  LiteralExpr [LONG] [2]
+]
+]

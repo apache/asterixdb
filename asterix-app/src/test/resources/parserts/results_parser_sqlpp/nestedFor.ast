@@ -1,0 +1,56 @@
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [name]
+    :
+    FieldAccessor [
+      Variable [ Name=user ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [movie]
+    :
+    FieldAccessor [
+      Variable [ Name=mv ]
+      Field=movie
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [User]
+  ]
+  AS
+  Variable [ Name=user ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Movie]
+  ]
+  AS
+  Variable [ Name=mv ]
+]
+Where
+  QuantifiedExpression SOME [
+    [Variable [ Name=i ]
+    In
+      FieldAccessor [
+        Variable [ Name=user ]
+        Field=interests
+      ]
+    ]
+    Satifies [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=movie
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=mv ]
+          Field=movie
+        ]
+      ]
+    ]
+  ]

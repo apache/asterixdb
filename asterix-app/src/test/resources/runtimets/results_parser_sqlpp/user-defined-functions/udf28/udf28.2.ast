@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Metadata.Function]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=x ]
+      Field=DataverseName
+    ]
+    =
+    LiteralExpr [STRING] [test]
+  ]

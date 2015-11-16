@@ -1,0 +1,44 @@
+DataverseUse fuzzyjoin
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+Variable [ Name=tokenGroupped ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+,
+  FunctionCall fuzzyjoin.counthashed-word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paper ]
+      Field=title
+    ]
+  ]
+  AS
+  Variable [ Name=token ]
+]
+LetVariable [ Name=paperid ]
+  :=
+  FieldAccessor [
+    Variable [ Name=paper ]
+    Field=id
+  ]
+Groupby
+  Variable [ Name=tokenGroupped ]
+  :=
+  Variable [ Name=token ]
+  With
+  Variable [ Name=paperid ]
+  Variable [ Name=paper ]
+  Variable [ Name=token ]
+
+Orderby
+  FunctionCall fuzzyjoin.count@1[
+    Variable [ Name=paperid ]
+  ]
+  ASC
+  Variable [ Name=tokenGroupped ]
+  ASC
+

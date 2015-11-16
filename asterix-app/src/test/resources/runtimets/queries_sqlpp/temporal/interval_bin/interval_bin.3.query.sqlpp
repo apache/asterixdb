@@ -1,0 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * Interval_bin test case: test the interval-bin function
+ * Expected result: success
+ **/
+
+use test;
+
+
+{'bin1':test."interval-bin"(test.date('2010-10-30'),test.date('1990-01-01'),test."year-month-duration"('P1Y')),'bin2':test."interval-bin"(test.date('2010-10-30'),test.date('-1990-01-01'),test."year-month-duration"('P1Y')),'bin3':test."interval-bin"(test.datetime('-1987-11-19T23:49:23.938'),test.datetime('1990-01-01T00:00:00.000Z'),test."year-month-duration"('P6M')),'bin4':test."interval-bin"(test.datetime('-1987-11-19T23:49:23.938'),test.datetime('-1990-01-01T00:00:00.000Z'),test."day-time-duration"('PT12H')),'bin5':test."interval-bin"(test.time('12:23:34.930+07:00'),test.time('12:00:00'),test."day-time-duration"('PT2H')),'bin6':test."interval-bin"(null,test.date('-0023-01-01'),test."year-month-duration"('P6M')),'bin7':test."interval-bin"(test.date('2010-10-30'),null,test."year-month-duration"('P6M')),'bin8':test."interval-bin"(test.date('2010-10-30'),test.date('-0023-01-01'),null)};

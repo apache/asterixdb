@@ -66,8 +66,8 @@ public class ExternalFilesIndexOperatorDescriptor extends AbstractTreeIndexOpera
             IFileSplitProvider fileSplitProvider, IIndexDataflowHelperFactory dataflowHelperFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider, List<ExternalFile> files, boolean createNewIndex) {
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider,
-                FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
+                new FilesIndexDescription().EXTERNAL_FILE_INDEX_TYPE_TRAITS,
+                new FilesIndexDescription().FILES_INDEX_COMP_FACTORIES, FilesIndexDescription.BLOOM_FILTER_FIELDS,
                 dataflowHelperFactory, null, false, false, null, localResourceFactoryProvider,
                 NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
         this.createNewIndex = createNewIndex;

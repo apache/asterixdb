@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,6 +63,8 @@ public class ARecordType extends AbstractComplexType {
     private final int serializedFieldNameOffsets[];
     private final long hashCodeIndexPairs[];
 
+    private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
+
     /**
      * @param typeName
      *            the name of the type
@@ -88,6 +92,7 @@ public class ARecordType extends AbstractComplexType {
                 .createBinaryHashFunction();
         ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
         DataOutputStream dos = new DataOutputStream(baaos);
+        UTF8StringWriter writer = new UTF8StringWriter();
         serializedFieldNameOffsets = new int[fieldNames.length];
         hashCodeIndexPairs = new long[fieldNames.length];
 
@@ -95,7 +100,7 @@ public class ARecordType extends AbstractComplexType {
         for (int i = 0; i < fieldNames.length; i++) {
             serializedFieldNameOffsets[i] = baaos.size();
             try {
-                dos.writeUTF(fieldNames[i]);
+                writer.writeUTF8(fieldNames[i], dos);
             } catch (IOException e) {
                 throw new AsterixException(e);
             }
@@ -116,7 +121,7 @@ public class ARecordType extends AbstractComplexType {
         int j;
         for (int i = 0; i < fieldNames.length; i++) {
             j = findFieldPosition(serializedFieldNames, serializedFieldNameOffsets[i],
-                    UTF8StringPointable.getStringLength(serializedFieldNames, serializedFieldNameOffsets[i]));
+                    UTF8StringUtil.getStringLength(serializedFieldNames, serializedFieldNameOffsets[i]));
             if (j != i) {
                 throw new AsterixException("Closed fields " + j + " and " + i + " have the same field name \""
                         + fieldNames[i] + "\"");
@@ -156,7 +161,7 @@ public class ARecordType extends AbstractComplexType {
 
         while (i < hashCodeIndexPairs.length && (int) (hashCodeIndexPairs[i] >>> 32) == probeFieldHash) {
             fIndex = (int) hashCodeIndexPairs[i];
-            int cFieldLength = UTF8StringPointable.getStringLength(serializedFieldNames,
+            int cFieldLength = UTF8StringUtil.getStringLength(serializedFieldNames,
                     serializedFieldNameOffsets[fIndex]);
             if (fieldNameComparator.compare(serializedFieldNames, serializedFieldNameOffsets[fIndex], cFieldLength,
                     bytes, start, length) == 0) {
@@ -221,7 +226,7 @@ public class ARecordType extends AbstractComplexType {
     public int findFieldPosition(String fieldName) throws IOException {
         ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
         DataOutputStream dos = new DataOutputStream(baaos);
-        UTF8StringSerializerDeserializer.INSTANCE.serialize(fieldName, dos);
+        utf8SerDer.serialize(fieldName, dos);
         return findFieldPosition(baaos.getByteArray(), 0, baaos.getByteArray().length);
     }
 

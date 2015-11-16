@@ -23,7 +23,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.asterix.aql.base.Statement.Kind;
+import org.apache.asterix.lang.common.base.Statement.Kind;
 
 public class AQLAPIServlet extends RESTAPIServlet {
 

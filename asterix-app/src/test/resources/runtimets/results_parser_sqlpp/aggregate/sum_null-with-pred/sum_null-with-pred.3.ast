@@ -1,0 +1,30 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+SELECT ELEMENT [
+FunctionCall test.sum@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=sal
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [tdst]
+      ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Where
+      FunctionCall test.not@1[
+        FunctionCall test.is-null@1[
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=sal
+          ]
+        ]
+      ]
+  )
+]
+]

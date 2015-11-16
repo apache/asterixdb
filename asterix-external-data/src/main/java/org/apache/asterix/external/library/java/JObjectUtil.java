@@ -392,7 +392,7 @@ public class JObjectUtil {
                         dis.readInt();
                     }
                     for (int i = 0; i < numberOfOpenFields; i++) {
-                        fieldNames[i] = AStringSerializerDeserializer.INSTANCE.deserialize(dis).getStringValue();
+                        fieldNames[i] = new AStringSerializerDeserializer().deserialize(dis).getStringValue();
                         ATypeTag openFieldTypeTag = SerializerDeserializerUtil.deserializeTag(dis);
                         openFields[i] = getJType(openFieldTypeTag, null, dis, objectPool);
                         fieldTypes[i] = openFields[i].getIAObject().getType();

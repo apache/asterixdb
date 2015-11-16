@@ -76,7 +76,7 @@ public abstract class AbstractCopyEvaluator implements ICopyEvaluator {
     private static final String THIRD = "3rd";
     private static final String TH = "th";
 
-    public static String idToString(int i) {
+    public static String rankToString(int i) {
         String prefix = "";
         if (i >= 10) {
             prefix = String.valueOf(i / 10);
@@ -99,7 +99,7 @@ public abstract class AbstractCopyEvaluator implements ICopyEvaluator {
             if (expected[i] != actual[i]) {
                 if (!ATypeHierarchy.canPromote(actual[i], expected[i])
                         && !ATypeHierarchy.canPromote(expected[i], actual[i])) {
-                    throw new AlgebricksException(title + ": expects " + expected[i] + " at " + idToString(i + 1)
+                    throw new AlgebricksException(title + ": expects " + expected[i] + " at " + rankToString(i + 1)
                             + " argument, but got " + actual[i]);
                 }
             }

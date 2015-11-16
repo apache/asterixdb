@@ -1,0 +1,59 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [customerid]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [orderedlist]
+    :
+    Variable [ Name=n ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+LetVariable [ Name=rec ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=lastorder
+  ]
+LetVariable [ Name=m ]
+  :=
+  OrderedListConstructor [
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=cid
+    ]
+    FieldAccessor [
+      Variable [ Name=rec ]
+      Field=oid
+    ]
+  ]
+LetVariable [ Name=n ]
+  :=
+  OrderedListConstructor [
+    IndexAccessor [
+      Variable [ Name=m ]
+      Index: ANY
+    ]
+    IndexAccessor [
+      Variable [ Name=m ]
+      Index:       Variable [ Name=m ]
+    ]
+    IndexAccessor [
+      Variable [ Name=m ]
+      Index:       Variable [ Name=m ]
+    ]
+  ]

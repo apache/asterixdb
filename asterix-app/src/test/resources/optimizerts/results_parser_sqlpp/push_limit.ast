@@ -1,0 +1,63 @@
+DataverseUse tpch
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+WriteOutputTo nc1:/tmp/push_limit.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [price]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_totalprice
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_orderdate
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=o_totalprice
+    ]
+    >
+    LiteralExpr [LONG] [100]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderkey
+  ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [10]
+  Offset
+    LiteralExpr [LONG] [5]

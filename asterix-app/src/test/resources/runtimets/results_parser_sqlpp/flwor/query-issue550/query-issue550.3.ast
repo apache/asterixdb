@@ -1,0 +1,186 @@
+Query:
+LetVariable [ Name=sample ]
+  :=
+  UnorderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [r]
+        :
+        LiteralExpr [LONG] [1]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        LiteralExpr [STRING] [1a2b]
+      )
+      (
+        LiteralExpr [STRING] [t]
+        :
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-01-01T01:00:00]
+        ]
+      )
+      (
+        LiteralExpr [STRING] [event]
+        :
+        LiteralExpr [STRING] [e1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [r]
+        :
+        LiteralExpr [LONG] [2]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        LiteralExpr [STRING] [1a2b]
+      )
+      (
+        LiteralExpr [STRING] [t]
+        :
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-01-01T01:01:00]
+        ]
+      )
+      (
+        LiteralExpr [STRING] [event]
+        :
+        LiteralExpr [STRING] [e2]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [r]
+        :
+        LiteralExpr [LONG] [3]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        LiteralExpr [STRING] [3c4d]
+      )
+      (
+        LiteralExpr [STRING] [t]
+        :
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-01-01T01:02:00]
+        ]
+      )
+      (
+        LiteralExpr [STRING] [event]
+        :
+        LiteralExpr [STRING] [e1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [r]
+        :
+        LiteralExpr [LONG] [4]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        LiteralExpr [STRING] [3c4d]
+      )
+      (
+        LiteralExpr [STRING] [t]
+        :
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-01-01T01:03:00]
+        ]
+      )
+      (
+        LiteralExpr [STRING] [event]
+        :
+        LiteralExpr [STRING] [e3]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [r]
+        :
+        LiteralExpr [LONG] [5]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        LiteralExpr [STRING] [1a2b]
+      )
+      (
+        LiteralExpr [STRING] [t]
+        :
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-01-01T01:04:00]
+        ]
+      )
+      (
+        LiteralExpr [STRING] [event]
+        :
+        LiteralExpr [STRING] [e1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [r]
+        :
+        LiteralExpr [LONG] [6]
+      )
+      (
+        LiteralExpr [STRING] [uid]
+        :
+        LiteralExpr [STRING] [1a2b]
+      )
+      (
+        LiteralExpr [STRING] [t]
+        :
+        FunctionCall null.datetime@1[
+          LiteralExpr [STRING] [2000-01-01T01:05:00]
+        ]
+      )
+      (
+        LiteralExpr [STRING] [event]
+        :
+        LiteralExpr [STRING] [e4]
+      )
+    ]
+  ]
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [u]
+    :
+    Variable [ Name=u ]
+  )
+  (
+    LiteralExpr [STRING] [recs]
+    :
+    (
+      SELECT ELEMENT [
+      Variable [ Name=srec ]
+      ]
+      FROM [        Variable [ Name=s ]
+        AS
+        Variable [ Name=srec ]
+      ]
+    )
+  )
+]
+]
+FROM [  Variable [ Name=sample ]
+  AS
+  Variable [ Name=s ]
+]
+Groupby
+  Variable [ Name=u ]
+  :=
+  FieldAccessor [
+    Variable [ Name=s ]
+    Field=uid
+  ]
+  With
+  Variable [ Name=s ]
+  Variable [ Name=sample ]
+

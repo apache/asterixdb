@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.apache.asterix</groupId>
+		<artifactId>asterix</artifactId>
+		<version>0.8.8-SNAPSHOT</version>
+	</parent>
+	<artifactId>asterix-replication</artifactId>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<fork>true</fork>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/*.class</include>
+						<include>**/*.txt</include>
+					</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+						<phase>package</phase>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-common</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.asterix</groupId>
+			<artifactId>asterix-metadata</artifactId>
+			<version>0.8.8-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hyracks</groupId>
+			<artifactId>hyracks-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hyracks</groupId>
+			<artifactId>hyracks-storage-am-common</artifactId>
+		</dependency>
+	</dependencies>
+
+</project>

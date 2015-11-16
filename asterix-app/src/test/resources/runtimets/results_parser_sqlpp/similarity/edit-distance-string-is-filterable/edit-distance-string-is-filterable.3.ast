@@ -1,0 +1,140 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+LetVariable [ Name=a ]
+  :=
+  LiteralExpr [STRING] []
+LetVariable [ Name=b ]
+  :=
+  LiteralExpr [STRING] [abcdefghij]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [0]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [0]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=a ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [0]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [0]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [5]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [5]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [6]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [0]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [0]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [TRUE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [FALSE]
+    ]
+    FunctionCall test.edit-distance-string-is-filterable@4[
+      Variable [ Name=b ]
+      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [3]
+      LiteralExpr [TRUE]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

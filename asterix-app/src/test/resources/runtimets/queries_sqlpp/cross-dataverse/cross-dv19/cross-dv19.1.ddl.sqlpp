@@ -1,0 +1,69 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Create internal and external datasets in more than one dataverse and query metadata to verify entries in Metadata.
+ * Expected Res : Success
+ * Date         : Sep 20 2012
+ */
+
+drop  database test1 if exists;
+drop  database test2 if exists;
+create  database test1;
+
+create  database test2;
+
+create type test1.testtype as
+{
+  id : int32,
+  name : string,
+  loc : point,
+  time : datetime
+}
+
+create type test2.testtype as
+{
+  id : int32,
+  name : string?,
+  loc : point,
+  time : datetime
+}
+
+create type test1.Tweet as
+{
+  id : int32,
+  tweetid : int64,
+  loc : point,
+  time : datetime,
+  text : string
+}
+
+create  table test1.t1(testtype) primary key id;
+
+create  table test2.t2(testtype) primary key id;
+
+create  table test2.t3(testtype) primary key id;
+
+create  table test1.t2(testtype) primary key id;
+
+create  table test1.t3(testtype) primary key id;
+
+create  table test2.t4(testtype) primary key id;
+
+create external  table test1.TwitterData(Tweet) using "org.apache.asterix.external.dataset.adapter.NCFileSystemAdapter"(("path"="nc1://data/twitter/extrasmalltweets.txt"),("format"="adm"));
+

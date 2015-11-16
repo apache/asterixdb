@@ -1,0 +1,60 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [hex]
+    :
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FunctionCall test.print-binary@2[
+          FunctionCall test.parse-binary@2[
+            Variable [ Name=i ]
+            LiteralExpr [STRING] [hex]
+          ]
+          LiteralExpr [STRING] [hex]
+        ]
+        =
+        Variable [ Name=i ]
+      ]
+      ]
+      FROM [        OrderedListConstructor [
+          LiteralExpr [STRING] [ABCDEF0123456789]
+          LiteralExpr [STRING] [0A0B0C0D0E0F]
+          LiteralExpr [STRING] [01020304050607080900]
+          LiteralExpr [STRING] []
+        ]
+        AS
+        Variable [ Name=i ]
+      ]
+    )
+  )
+  (
+    LiteralExpr [STRING] [base64]
+    :
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FunctionCall test.print-binary@2[
+          FunctionCall test.parse-binary@2[
+            Variable [ Name=j ]
+            LiteralExpr [STRING] [base64]
+          ]
+          LiteralExpr [STRING] [base64]
+        ]
+        =
+        Variable [ Name=j ]
+      ]
+      ]
+      FROM [        OrderedListConstructor [
+          LiteralExpr [STRING] [0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/]
+          LiteralExpr [STRING] [QXN0ZXJpeA==]
+          LiteralExpr [STRING] [QXN0ZXJpeAE=]
+          LiteralExpr [STRING] [QXN0ZXJpeAE8]
+        ]
+        AS
+        Variable [ Name=j ]
+      ]
+    )
+  )
+]

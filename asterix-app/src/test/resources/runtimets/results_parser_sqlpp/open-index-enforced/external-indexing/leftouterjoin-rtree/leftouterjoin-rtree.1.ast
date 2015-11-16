@@ -1,0 +1,21 @@
+DataverseUse test
+TypeDecl TwitterUserType [
+  closed RecordType {
+    screen-name : string,
+    lang : string,
+    friends-count : int64,
+    statuses-count : int64,
+    name : string,
+    followers-count : int64
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    user : TwitterUserType,
+    send-time : datetime,
+    referred-topics : UnorderedList <string>
+,
+    message-text : string
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType)is an external dataset

@@ -1,0 +1,87 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl CSXType [
+  closed RecordType {
+    id : int32,
+    csxid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl CSX(CSXType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/inverted-index-join-noeqjoin_word-fuzzyeq-jaccard.adm
+Set simfunction=jaccard
+Set simthreshold=0.5f
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [atitle]
+    :
+    FieldAccessor [
+      Variable [ Name=a ]
+      Field=title
+    ]
+  )
+  (
+    LiteralExpr [STRING] [btitle]
+    :
+    FieldAccessor [
+      Variable [ Name=b ]
+      Field=title
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CSX]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FunctionCall test.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=title
+        ]
+      ]
+      ~=
+      FunctionCall test.word-tokens@1[
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=title
+        ]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=a ]
+        Field=id
+      ]
+      <
+      FieldAccessor [
+        Variable [ Name=b ]
+        Field=id
+      ]
+    ]
+  ]

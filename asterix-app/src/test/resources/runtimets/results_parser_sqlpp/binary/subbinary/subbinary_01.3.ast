@@ -1,0 +1,197 @@
+DataverseUse test
+Query:
+OperatorExpr [
+  OperatorExpr [
+    FunctionCall test.sub-binary@2[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] []
+      ]
+      LiteralExpr [LONG] [0]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] []
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@2[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] []
+      ]
+      LiteralExpr [LONG] [1]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] []
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@2[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] []
+      ]
+      NEGATIVE LiteralExpr [LONG] [1]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] []
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [1]
+      FunctionCall test.binary-length@1[
+        FunctionCall test.hex@1[
+          LiteralExpr [STRING] [aabbccdd]
+        ]
+      ]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [aabbccdd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [bb]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@2[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [2]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [bbccdd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [5]
+      LiteralExpr [LONG] [0]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] []
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [1]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [dd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [2]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [bbcc]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@2[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [0]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [aabbccdd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@2[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      NEGATIVE LiteralExpr [LONG] [1]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [aabbccdd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [256]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [aabbccdd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [256]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [bbccdd]
+    ]
+  ]
+  and
+  OperatorExpr [
+    FunctionCall test.sub-binary@3[
+      FunctionCall test.hex@1[
+        LiteralExpr [STRING] [aabbccdd]
+      ]
+      LiteralExpr [LONG] [2]
+      NEGATIVE LiteralExpr [LONG] [1]
+    ]
+    =
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] []
+    ]
+  ]
+]

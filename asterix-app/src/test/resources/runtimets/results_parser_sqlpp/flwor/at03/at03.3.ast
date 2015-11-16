@@ -1,0 +1,85 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [user-since]
+    :
+    Variable [ Name=fus ]
+  )
+  (
+    LiteralExpr [STRING] [users]
+    :
+    (
+      SELECT ELEMENT [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [num]
+          :
+          Variable [ Name=ip ]
+        )
+        (
+          LiteralExpr [STRING] [name]
+          :
+          FieldAccessor [
+            Variable [ Name=f ]
+            Field=name
+          ]
+        )
+      ]
+      ]
+      FROM [        (
+          SELECT ELEMENT [
+          Variable [ Name=i1 ]
+          ]
+          FROM [            Variable [ Name=i ]
+            AS
+            Variable [ Name=i1 ]
+          ]
+          Orderby
+            FieldAccessor [
+              Variable [ Name=i1 ]
+              Field=name
+            ]
+            ASC
+
+        )
+        AS
+        Variable [ Name=f ]
+        AT
+        Variable [ Name=ip ]
+      ]
+    )
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    Variable [ Name=fb ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [FacebookUsers]
+      ]
+      AS
+      Variable [ Name=fb ]
+    ]
+  )
+  AS
+  Variable [ Name=i ]
+]
+Groupby
+  Variable [ Name=fus ]
+  :=
+  FunctionCall test.get-year@1[
+    FieldAccessor [
+      Variable [ Name=i ]
+      Field=user-since
+    ]
+  ]
+  With
+  Variable [ Name=i ]
+
+Orderby
+  Variable [ Name=fus ]
+  ASC
+

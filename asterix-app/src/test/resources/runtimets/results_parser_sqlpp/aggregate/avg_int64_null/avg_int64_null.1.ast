@@ -1,0 +1,13 @@
+DataverseUse test
+TypeDecl NumericType [
+  open RecordType {
+    id : int32,
+    int8Field : int8?,
+    int16Field : int16?,
+    int32Field : int32?,
+    int64Field : int64?,
+    floatField : float?,
+    doubleField : double?
+  }
+]
+DatasetDecl Numeric(NumericType)is an external dataset

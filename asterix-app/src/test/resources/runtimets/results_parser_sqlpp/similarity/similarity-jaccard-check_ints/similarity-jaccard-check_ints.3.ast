@@ -1,0 +1,140 @@
+DataverseUse test
+Query:
+LetVariable [ Name=a ]
+  :=
+  OrderedListConstructor [
+  ]
+LetVariable [ Name=b ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+  ]
+LetVariable [ Name=c ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [1]
+  ]
+LetVariable [ Name=d ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [11]
+    LiteralExpr [LONG] [4]
+  ]
+LetVariable [ Name=e ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [11]
+    LiteralExpr [LONG] [12]
+    LiteralExpr [LONG] [13]
+    LiteralExpr [LONG] [14]
+    LiteralExpr [LONG] [15]
+    LiteralExpr [LONG] [16]
+    LiteralExpr [LONG] [17]
+    LiteralExpr [LONG] [18]
+    LiteralExpr [LONG] [19]
+    LiteralExpr [LONG] [20]
+    LiteralExpr [LONG] [21]
+  ]
+LetVariable [ Name=f ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [7]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+    LiteralExpr [LONG] [10]
+    LiteralExpr [LONG] [11]
+  ]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+      LiteralExpr [FLOAT] [0.0]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+      LiteralExpr [FLOAT] [0.0]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+      LiteralExpr [FLOAT] [0.1]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+      LiteralExpr [FLOAT] [0.1]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=c ]
+      Variable [ Name=d ]
+      LiteralExpr [FLOAT] [0.6]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=d ]
+      Variable [ Name=c ]
+      LiteralExpr [FLOAT] [0.6]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=c ]
+      Variable [ Name=d ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=d ]
+      Variable [ Name=c ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=e ]
+      Variable [ Name=f ]
+      LiteralExpr [FLOAT] [0.05]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=f ]
+      Variable [ Name=e ]
+      LiteralExpr [FLOAT] [0.05]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=e ]
+      Variable [ Name=f ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=f ]
+      Variable [ Name=e ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

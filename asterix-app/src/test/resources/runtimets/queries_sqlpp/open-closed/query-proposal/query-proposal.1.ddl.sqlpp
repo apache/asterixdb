@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description     : Insert open data into internal dataset and query the open data
+ * Expected Result : Success
+ * Date            : 23rd October 2012
+ * Notes           : This test was written to cover the scenario which is used in the proposal.
+ */
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.TweetMessageType as
+{
+  tweetid : string,
+  user : {
+      "screen-name" : string,
+      lang : string,
+      friends_count : int64,
+      statuses_count : int64,
+      name : string,
+      followers_count : int64
+  }
+,
+  "sender-location" : point?,
+  "send-time" : datetime,
+  "referred-topics" : {{string}},
+  "message-text" : string
+}
+
+create  table TweetMessages(TweetMessageType) primary key tweetid;
+

@@ -1,2 +1,1 @@
-[ { "sql-count1": 0, "average1": null, "sql-sum1": null, "sql-min1": null, "sql-max1": null, "sql-count2": 0, "average2": null, "sql-sum2": null, "sql-min2": null, "sql-max2": null }
- ]
+{ "sql-count1": 0, "average1": null, "sql-sum1": null, "sql-min1": null, "sql-max1": null, "sql-count2": 0, "average2": null, "sql-sum2": null, "sql-min2": null, "sql-max2": null }

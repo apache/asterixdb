@@ -21,16 +21,15 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
+import java.util.Set;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
-import org.apache.asterix.aql.util.FunctionUtils;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.metadata.declared.AqlSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -47,6 +46,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -57,7 +58,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -122,32 +123,47 @@ public class AccessMethodUtils {
     }
 
     public static boolean analyzeFuncExprArgsForOneConstAndVar(AbstractFunctionCallExpression funcExpr,
-            AccessMethodAnalysisContext analysisCtx) {
-        IAlgebricksConstantValue constFilterVal = null;
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+        ILogicalExpression constExpression = null;
+        IAType constantExpressionType = null;
         LogicalVariable fieldVar = null;
         ILogicalExpression arg1 = funcExpr.getArguments().get(0).getValue();
         ILogicalExpression arg2 = funcExpr.getArguments().get(1).getValue();
-        // One of the args must be a constant, and the other arg must be a variable.
-        if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT
+        // One of the args must be a runtime constant, and the other arg must be a variable.
+        if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE
                 && arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            return false;
+        }
+        if (arg2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             // The arguments of contains() function are asymmetrical, we can only use index if it is on the first argument
-            if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.CONTAINS) {
+            if (funcExpr.getFunctionIdentifier() == AsterixBuiltinFunctions.STRING_CONTAINS) {
                 return false;
             }
-            ConstantExpression constExpr = (ConstantExpression) arg1;
-            constFilterVal = constExpr.getValue();
+            IAType expressionType = constantRuntimeResultType(arg1, context, typeEnvironment);
+            if (expressionType == null) {
+                //Not constant at runtime
+                return false;
+            }
+            constantExpressionType = expressionType;
+            constExpression = arg1;
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg2;
             fieldVar = varExpr.getVariableReference();
-        } else if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE
-                && arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-            ConstantExpression constExpr = (ConstantExpression) arg2;
-            constFilterVal = constExpr.getValue();
+        } else if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            IAType expressionType = constantRuntimeResultType(arg2, context, typeEnvironment);
+            if (expressionType == null) {
+                //Not constant at runtime
+                return false;
+            }
+            constantExpressionType = expressionType;
+            constExpression = arg2;
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg1;
             fieldVar = varExpr.getVariableReference();
         } else {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, constFilterVal);
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, constExpression,
+                constantExpressionType);
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr))
@@ -170,8 +186,8 @@ public class AccessMethodUtils {
         } else {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVar1,
-                fieldVar2 }, null);
+        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr,
+                new LogicalVariable[] { fieldVar1, fieldVar2 }, new ILogicalExpression[0], new IAType[0]);
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.matchedFuncExprs) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr))
@@ -214,8 +230,8 @@ public class AccessMethodUtils {
                 case SINGLE_PARTITION_WORD_INVIX:
                 case SINGLE_PARTITION_NGRAM_INVIX: {
                     for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes()
-                                .get(i), index.getKeyFieldNames().get(i), recordType);
+                        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(
+                                index.getKeyFieldTypes().get(i), index.getKeyFieldNames().get(i), recordType);
                         dest.add(keyPairType.first);
                     }
                     break;
@@ -259,7 +275,7 @@ public class AccessMethodUtils {
 
     public static void appendSecondaryIndexOutputVars(Dataset dataset, ARecordType recordType, Index index,
             boolean primaryKeysOnly, IOptimizationContext context, List<LogicalVariable> dest)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         int numPrimaryKeys = 0;
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             numPrimaryKeys = IndexingConstants.getRIDSize(dataset);
@@ -308,18 +324,29 @@ public class AccessMethodUtils {
      * Returns the search key expression which feeds a secondary-index search. If we are optimizing a selection query then this method returns
      * the a ConstantExpression from the first constant value in the optimizable function expression.
      * If we are optimizing a join, then this method returns the VariableReferenceExpression that should feed the secondary index probe.
-     *
+     * 
      * @throws AlgebricksException
      */
     public static Pair<ILogicalExpression, Boolean> createSearchKeyExpr(IOptimizableFuncExpr optFuncExpr,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
             // Type Checking and type promotion is done here
             IAType fieldType = optFuncExpr.getFieldType(0);
-            IAObject constantObj = ((AsterixConstantValue) optFuncExpr.getConstantVal(0)).getObject();
-            ATypeTag constantValueTag = constantObj.getType().getTypeTag();
+
+            ILogicalExpression constantAtRuntimeExpression = null;
+            AsterixConstantValue constantValue = null;
+            ATypeTag constantValueTag = null;
+
+            constantAtRuntimeExpression = optFuncExpr.getConstantAtRuntimeExpr(0);
+
+            if (constantAtRuntimeExpression.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                constantValue = (AsterixConstantValue) ((ConstantExpression) constantAtRuntimeExpression).getValue();
+            }
+
+            constantValueTag = optFuncExpr.getConstantType(0).getTypeTag();
+
             // type casting applied?
             boolean typeCastingApplied = false;
             // type casting happened from real (FLOAT, DOUBLE) value -> INT value?
@@ -327,9 +354,9 @@ public class AccessMethodUtils {
             AsterixConstantValue replacedConstantValue = null;
 
             // if the constant type and target type does not match, we do a type conversion
-            if (constantValueTag != fieldType.getTypeTag()) {
-                replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(constantObj,
-                        fieldType.getTypeTag());
+            if (constantValueTag != fieldType.getTypeTag() && constantValue != null) {
+                replacedConstantValue = ATypeHierarchy.getAsterixConstantValueFromNumericTypeObject(
+                        constantValue.getObject(), fieldType.getTypeTag());
                 if (replacedConstantValue != null) {
                     typeCastingApplied = true;
                 }
@@ -358,17 +385,16 @@ public class AccessMethodUtils {
                 return new Pair<ILogicalExpression, Boolean>(new ConstantExpression(replacedConstantValue),
                         realTypeConvertedToIntegerType);
             } else {
-                return new Pair<ILogicalExpression, Boolean>(new ConstantExpression(optFuncExpr.getConstantVal(0)),
-                        false);
+                return new Pair<ILogicalExpression, Boolean>(optFuncExpr.getConstantAtRuntimeExpr(0), false);
             }
         } else {
             // We are optimizing a join query. Determine which variable feeds the secondary index.
             if (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree) {
-                return new Pair<ILogicalExpression, Boolean>(new VariableReferenceExpression(
-                        optFuncExpr.getLogicalVar(0)), false);
+                return new Pair<ILogicalExpression, Boolean>(
+                        new VariableReferenceExpression(optFuncExpr.getLogicalVar(0)), false);
             } else {
-                return new Pair<ILogicalExpression, Boolean>(new VariableReferenceExpression(
-                        optFuncExpr.getLogicalVar(1)), false);
+                return new Pair<ILogicalExpression, Boolean>(
+                        new VariableReferenceExpression(optFuncExpr.getLogicalVar(1)), false);
             }
         }
     }
@@ -376,7 +402,8 @@ public class AccessMethodUtils {
     /**
      * Returns the first expr optimizable by this index.
      */
-    public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex, AccessMethodAnalysisContext analysisCtx) {
+    public static IOptimizableFuncExpr chooseFirstOptFuncExpr(Index chosenIndex,
+            AccessMethodAnalysisContext analysisCtx) {
         List<Pair<Integer, Integer>> indexExprs = analysisCtx.getIndexExprs(chosenIndex);
         int firstExprIndex = indexExprs.get(0).first;
         return analysisCtx.matchedFuncExprs.get(firstExprIndex);
@@ -408,7 +435,8 @@ public class AccessMethodUtils {
         // This is the operator that jobgen will be looking for. It contains an unnest function that has all necessary arguments to determine
         // which index to use, which variables contain the index-search keys, what is the original dataset, etc.
         UnnestMapOperator secondaryIndexUnnestOp = new UnnestMapOperator(secondaryIndexUnnestVars,
-                new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes, retainInput);
+                new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes,
+                retainInput);
         secondaryIndexUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         context.computeAndSetTypeEnvironmentForOperator(secondaryIndexUnnestOp);
         secondaryIndexUnnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
@@ -418,7 +446,7 @@ public class AccessMethodUtils {
     public static UnnestMapOperator createPrimaryIndexUnnestMap(AbstractDataSourceOperator dataSourceOp,
             Dataset dataset, ARecordType recordType, ILogicalOperator inputOp, IOptimizationContext context,
             boolean sortPrimaryKeys, boolean retainInput, boolean retainNull, boolean requiresBroadcast)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         List<LogicalVariable> primaryKeyVars = AccessMethodUtils.getPrimaryKeyVarsFromSecondaryUnnestMap(dataset,
                 inputOp);
         // Optionally add a sort on the primary-index keys before searching the primary index.
@@ -428,8 +456,8 @@ public class AccessMethodUtils {
             for (LogicalVariable pkVar : primaryKeyVars) {
                 Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
                         new VariableReferenceExpression(pkVar));
-                order.getOrderExpressions().add(
-                        new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+                order.getOrderExpressions()
+                        .add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
             }
             // The secondary-index search feeds into the sort.
             order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
@@ -493,12 +521,14 @@ public class AccessMethodUtils {
                             .equals(AlgebricksBuiltinFunctions.NOT)) {
                         ScalarFunctionCallExpression notFuncExpr = (ScalarFunctionCallExpression) selectOp
                                 .getCondition().getValue();
-                        if (notFuncExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        if (notFuncExpr.getArguments().get(0).getValue()
+                                .getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                             if (((AbstractFunctionCallExpression) notFuncExpr.getArguments().get(0).getValue())
                                     .getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_NULL)) {
                                 isNullFuncExpr = (ScalarFunctionCallExpression) notFuncExpr.getArguments().get(0)
                                         .getValue();
-                                if (isNullFuncExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                if (isNullFuncExpr.getArguments().get(0).getValue()
+                                        .getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                                     foundSelectNonNull = true;
                                     break;
                                 }
@@ -544,8 +574,8 @@ public class AccessMethodUtils {
     }
 
     private static void writeVarList(List<LogicalVariable> varList, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
-                new AsterixConstantValue(new AInt32(varList.size()))));
+        Mutable<ILogicalExpression> numKeysRef = new MutableObject<ILogicalExpression>(
+                new ConstantExpression(new AsterixConstantValue(new AInt32(varList.size()))));
         funcArgs.add(numKeysRef);
         for (LogicalVariable keyVar : varList) {
             Mutable<ILogicalExpression> keyVarRef = new MutableObject<ILogicalExpression>(
@@ -555,8 +585,8 @@ public class AccessMethodUtils {
     }
 
     private static void addStringArg(String argument, List<Mutable<ILogicalExpression>> funcArgs) {
-        Mutable<ILogicalExpression> stringRef = new MutableObject<ILogicalExpression>(new ConstantExpression(
-                new AsterixConstantValue(new AString(argument))));
+        Mutable<ILogicalExpression> stringRef = new MutableObject<ILogicalExpression>(
+                new ConstantExpression(new AsterixConstantValue(new AString(argument))));
         funcArgs.add(stringRef);
     }
 
@@ -569,10 +599,10 @@ public class AccessMethodUtils {
         // add a sort on the RID fields before fetching external data.
         OrderOperator order = new OrderOperator();
         for (LogicalVariable pkVar : primaryKeyVars) {
-            Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                    pkVar));
-            order.getOrderExpressions().add(
-                    new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
+            Mutable<ILogicalExpression> vRef = new MutableObject<ILogicalExpression>(
+                    new VariableReferenceExpression(pkVar));
+            order.getOrderExpressions()
+                    .add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER, vRef));
         }
         // The secondary-index search feeds into the sort.
         order.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
@@ -609,5 +639,17 @@ public class AccessMethodUtils {
         externalLookupOp.setPhysicalOperator(new ExternalDataLookupPOperator(dataSourceId, dataset, recordType,
                 secondaryIndex, primaryKeyVars, false, retainInput, retainNull));
         return externalLookupOp;
+    }
+
+    //If the expression is constant at runtime, runturn the type
+    public static IAType constantRuntimeResultType(ILogicalExpression expr, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+        Set<LogicalVariable> usedVariables = new HashSet<LogicalVariable>();
+        expr.getUsedVariables(usedVariables);
+        if (usedVariables.size() > 0) {
+            return null;
+        }
+        return (IAType) context.getExpressionTypeComputer().getType(expr, context.getMetadataProvider(),
+                typeEnvironment);
     }
 }

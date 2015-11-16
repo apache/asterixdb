@@ -1,0 +1,36 @@
+Query:
+SELECT ELEMENT [
+FunctionCall null.count@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=l ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [Metadata.Dataset]
+      ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Where
+      OperatorExpr [
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=DataverseName
+          ]
+          =
+          LiteralExpr [STRING] [student]
+        ]
+        or
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=DataverseName
+          ]
+          =
+          LiteralExpr [STRING] [teacher]
+        ]
+      ]
+  )
+]
+]

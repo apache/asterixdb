@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.translator;
 
-import org.apache.asterix.aql.base.Literal;
-import org.apache.asterix.aql.literal.DoubleLiteral;
-import org.apache.asterix.aql.literal.FloatLiteral;
-import org.apache.asterix.aql.literal.IntegerLiteral;
-import org.apache.asterix.aql.literal.LongIntegerLiteral;
-import org.apache.asterix.aql.literal.StringLiteral;
+import org.apache.asterix.lang.common.base.Literal;
+import org.apache.asterix.lang.common.literal.DoubleLiteral;
+import org.apache.asterix.lang.common.literal.FloatLiteral;
+import org.apache.asterix.lang.common.literal.IntegerLiteral;
+import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AFloat;

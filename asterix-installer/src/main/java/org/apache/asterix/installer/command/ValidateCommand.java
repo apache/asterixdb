@@ -123,6 +123,8 @@ public class ValidateCommand extends AbstractCommand {
                     }
                 }
             }
+
+            valid = valid & validateReplicationProperties(cluster);
         }
 
         if (valid) {
@@ -255,6 +257,79 @@ public class ValidateCommand extends AbstractCommand {
 
         if (valid) {
             valid = valid & checkPasswordLessSSHLogin(System.getProperty("user.name"), zk.getServers().getServer());
+        }
+
+        return valid;
+    }
+
+    private boolean validateReplicationProperties(Cluster cluster) {
+        boolean valid = true;
+
+        //if replication is disabled, no need to validate the settings
+        if (cluster.getDataReplication() != null && cluster.getDataReplication().isEnabled()) {
+
+            if (cluster.getDataReplication().getReplicationFactor() == null) {
+                if (cluster.getNode().size() >= 3) {
+                    LOGGER.warn("Replication factor not defined. Using default value (3) " + WARNING);
+
+                } else {
+                    valid = false;
+                    LOGGER.fatal("Replication factor not defined for data repliaction. " + ERROR);
+                }
+
+            }
+
+            //replication factor = 1 means no replication
+            if (cluster.getDataReplication().getReplicationFactor().intValue() == 1) {
+                LOGGER.warn("Replication factor is set to 1. Disabling data replication" + WARNING);
+                return true;
+            }
+
+            if (cluster.getDataReplication().getReplicationFactor().intValue() > cluster.getNode().size()) {
+                LOGGER.fatal("Replication factor = " + cluster.getDataReplication().getReplicationFactor().intValue()
+                        + "  requires at least " + cluster.getDataReplication().getReplicationFactor().intValue()
+                        + " nodes in the cluster" + ERROR);
+                valid = false;
+            }
+
+            if (cluster.getDataReplication().getReplicationStore() == null
+                    || cluster.getDataReplication().getReplicationStore().length() == 0) {
+                valid = false;
+                LOGGER.fatal("Replication store not defined. " + ERROR);
+            }
+
+            if (cluster.getDataReplication().getReplicationPort() == null
+                    || cluster.getDataReplication().getReplicationPort().toString().length() == 0) {
+                valid = false;
+                LOGGER.fatal("Replication data port not defined for data repliaction. " + ERROR);
+            }
+
+            if (cluster.getDataReplication().getReplicationTimeOut() == null
+                    || (cluster.getDataReplication().getReplicationTimeOut().intValue() + "").length() == 0) {
+                LOGGER.warn("Replication maximum wait time not defined. Using default value (60 seconds) " + WARNING);
+            }
+
+            //validate all nodes have the same number of io devices
+            int numOfIODevices = 0;
+            Set<Integer> ioDevicesCount = new HashSet<Integer>();
+            for (int i = 0; i < cluster.getNode().size(); i++) {
+                Node node = cluster.getNode().get(i);
+
+                if (node.getIodevices() != null) {
+                    numOfIODevices = node.getIodevices().length() - node.getIodevices().replace(",", "").length();
+                } else {
+                    numOfIODevices = cluster.getIodevices().length() - cluster.getIodevices().replace(",", "").length();
+                }
+
+                ioDevicesCount.add(numOfIODevices);
+
+                if (ioDevicesCount.size() > 1) {
+                    valid = false;
+                    LOGGER.fatal("Replication requires all nodes to have the same number of IO devices." + ERROR);
+                    break;
+                }
+            }
+
         }
 
         return valid;

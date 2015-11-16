@@ -1,0 +1,20 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int64,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl DBLPTypeOpen [
+  open RecordType {
+    id : int64,
+    dblpid : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+DatasetDecl DBLPOpen(DBLPTypeOpen) partitioned by [[id]]

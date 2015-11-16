@@ -1,0 +1,148 @@
+DataverseUse test
+Set output-record-type=AllType
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    LiteralExpr [LONG] [10]
+  )
+  (
+    LiteralExpr [STRING] [string]
+    :
+    FunctionCall test.string@1[
+      LiteralExpr [STRING] [Nancy]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [float]
+    :
+    LiteralExpr [FLOAT] [32.5]
+  )
+  (
+    LiteralExpr [STRING] [double]
+    :
+    FunctionCall test.double@1[
+      LiteralExpr [STRING] [-2013.5938237483274]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [boolean]
+    :
+    LiteralExpr [TRUE]
+  )
+  (
+    LiteralExpr [STRING] [int8]
+    :
+    FunctionCall test.int8@1[
+      LiteralExpr [STRING] [125]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [int16]
+    :
+    FunctionCall test.int16@1[
+      LiteralExpr [STRING] [32765]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [int32]
+    :
+    FunctionCall test.int32@1[
+      LiteralExpr [STRING] [294967295]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [int64]
+    :
+    FunctionCall test.int64@1[
+      LiteralExpr [STRING] [1700000000000000000]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [date]
+    :
+    FunctionCall test.date@1[
+      LiteralExpr [STRING] [-2011-01-27]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [time]
+    :
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [12:20:30Z]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime]
+    :
+    FunctionCall test.datetime@1[
+      LiteralExpr [STRING] [-1951-12-27T12:20:30]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration]
+    :
+    FunctionCall test.duration@1[
+      LiteralExpr [STRING] [P10Y11M12DT10H50M30S]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point]
+    :
+    FunctionCall test.point@1[
+      LiteralExpr [STRING] [41.00,44.00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [point3d]
+    :
+    FunctionCall test.point3d@1[
+      LiteralExpr [STRING] [44.00,13.00,41.00]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [line]
+    :
+    FunctionCall test.line@1[
+      LiteralExpr [STRING] [10.1,11.1 10.2,11.2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [rectangle]
+    :
+    FunctionCall test.rectangle@1[
+      LiteralExpr [STRING] [5.1,11.8 87.6,15.6548]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [polygon]
+    :
+    FunctionCall test.polygon@1[
+      LiteralExpr [STRING] [1.2,1.3 2.1,2.5 3.5,3.6 4.6,4.8]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circle]
+    :
+    FunctionCall test.circle@1[
+      LiteralExpr [STRING] [10.1,11.1 10.2]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [binary]
+    :
+    FunctionCall test.hex@1[
+      LiteralExpr [STRING] [ABCDEF0123456789]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [uuid]
+    :
+    FunctionCall test.uuid@1[
+      LiteralExpr [STRING] [5c848e5c-6b6a-498f-8452-8847a2957421]
+    ]
+  )
+]
+]

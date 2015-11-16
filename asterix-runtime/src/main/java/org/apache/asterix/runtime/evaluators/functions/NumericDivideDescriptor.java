@@ -41,8 +41,12 @@ public class NumericDivideDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        if (rhs == 0)
-            throw new HyracksDataException("Divide by Zero.");
+        if (rhs == 0) {
+            throw new ArithmeticException("Division by Zero.");
+        }
+        if ( (lhs == Long.MIN_VALUE) && (rhs == -1L) ) {
+            throw new ArithmeticException(("Overflow in integer division"));
+        }
         return lhs / rhs;
     }
 

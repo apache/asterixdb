@@ -20,21 +20,21 @@ package org.apache.asterix.common.transactions;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.replication.IReplicationThread;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface ILogRecord {
-
-    public static final int JOB_TERMINATE_LOG_SIZE = 13; //JOB_COMMIT or ABORT log type
-    public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 25;
-    public static final int UPDATE_LOG_BASE_SIZE = 54;
-    public static final int FLUSH_LOG_SIZE = 17;
-
 
     public enum RECORD_STATUS{
         TRUNCATED,
         BAD_CHKSUM,
         OK
     }
+
+    public static final int JOB_TERMINATE_LOG_SIZE = 18; //JOB_COMMIT or ABORT log type
+    public static final int ENTITY_COMMIT_LOG_BASE_SIZE = 30;
+    public static final int UPDATE_LOG_BASE_SIZE = 59;
+    public static final int FLUSH_LOG_SIZE = 22;
 
     public LogRecord.RECORD_STATUS readLogRecord(ByteBuffer buffer);
 
@@ -114,5 +114,27 @@ public interface ILogRecord {
     public void computeAndSetPKValueSize();
 
     public void setPKValue(ITupleReference PKValue);
+
+    public String getNodeId();
+
+    public void setNodeId(String nodeId);
+
+    public int serialize(ByteBuffer buffer);
+
+    public void deserialize(ByteBuffer buffer, boolean remoteRecoveryLog, String localNodeId);
+
+    public void setReplicationThread(IReplicationThread replicationThread);
+
+    public void setLogSource(byte logSource);
+
+    public byte getLogSource();
+
+    public int getSerializedLogSize();
+
+    public void writeLogRecord(ByteBuffer buffer, long appendLSN);
+
+    public ByteBuffer getSerializedLog();
+
+    public void formJobTerminateLogRecord(int jobId, boolean isCommit, String nodeId);
 
 }

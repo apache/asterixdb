@@ -235,9 +235,10 @@ public class ExternalIndexingOperations {
                 .splitProviderAndPartitionConstraintsForFilesIndex(dataset.getDataverseName(),
                         dataset.getDatasetName(), getFilesIndexName(dataset.getDatasetName()), true);
         IFileSplitProvider secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
+        FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
         ILocalResourceMetadata localResourceMetadata = new ExternalBTreeLocalResourceMetadata(
-                FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, false, dataset.getDatasetId(),
+                filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
+                filesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, false, dataset.getDatasetId(),
                 mergePolicyFactory, mergePolicyFactoryProperties);
         PersistentLocalResourceFactoryProvider localResourceFactoryProvider = new PersistentLocalResourceFactoryProvider(
                 localResourceMetadata, LocalResource.ExternalBTreeResource);
@@ -263,7 +264,6 @@ public class ExternalIndexingOperations {
      * @param jobSpec
      * @param itemType
      * @param dataset
-     * @param format
      * @param files
      * @param indexerDesc
      * @return
@@ -751,10 +751,11 @@ public class ExternalIndexingOperations {
                         dataset.getDatasetId()), AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
                 LSMBTreeIOOperationCallbackFactory.INSTANCE, storageProperties.getBloomFilterFalsePositiveRate(),
                 ExternalDatasetsRegistry.INSTANCE.getDatasetVersion(dataset), true);
+        FilesIndexDescription filesIndexDescription = new FilesIndexDescription();
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
                 AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER, AsterixRuntimeComponentsProvider.RUNTIME_PROVIDER,
-                secondaryFileSplitProvider, FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
-                FilesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, indexDataflowHelperFactory,
+                secondaryFileSplitProvider, filesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS,
+                filesIndexDescription.FILES_INDEX_COMP_FACTORIES, new int[] { 0 }, indexDataflowHelperFactory,
                 NoOpOperationCallbackFactory.INSTANCE);
         spec.addRoot(compactOp);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,

@@ -1,4 +1,3 @@
-[ { "myint64": 11, "myoptint64": 3, "myint32": 2i32, "myoptint32": 3i32, "myint16": 9i16, "myoptint16": 10i16, "mydouble": 2.0d, "myoptdouble": 32.0d, "myfloat": 9.0f, "myoptfloat": null }
-, { "myint64": 12, "myoptint64": null, "myint32": 2i32, "myoptint32": null, "myint16": 9i16, "myoptint16": null, "mydouble": 2.119999885559082d, "myoptdouble": null, "myfloat": 9.0f, "myoptfloat": null }
-, { "myint64": 13, "myoptint64": 13, "myint32": 2i32, "myoptint32": 3i32, "myint16": 9i16, "myoptint16": 10i16, "mydouble": 2.119999885559082d, "myoptdouble": 32.0d, "myfloat": 9.0f, "myoptfloat": 328.0f }
- ]
+{ "myint64": 11, "myoptint64": 3, "myint32": 2i32, "myoptint32": 3i32, "myint16": 9i16, "myoptint16": 10i16, "mydouble": 2.0d, "myoptdouble": 32.0d, "myfloat": 9.0f, "myoptfloat": null }
+{ "myint64": 12, "myoptint64": null, "myint32": 2i32, "myoptint32": null, "myint16": 9i16, "myoptint16": null, "mydouble": 2.119999885559082d, "myoptdouble": null, "myfloat": 9.0f, "myoptfloat": null }
+{ "myint64": 13, "myoptint64": 13, "myint32": 2i32, "myoptint32": 3i32, "myint16": 9i16, "myoptint16": 10i16, "mydouble": 2.119999885559082d, "myoptdouble": 32.0d, "myfloat": 9.0f, "myoptfloat": 328.0f }

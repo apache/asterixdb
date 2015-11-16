@@ -32,20 +32,6 @@ import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 public class AInt8Printer implements IPrinter {
 
     private static final String SUFFIX_STRING = "i8";
-    private static byte[] _suffix;
-    private static int _suffix_count;
-    static {
-        ByteArrayAccessibleOutputStream interm = new ByteArrayAccessibleOutputStream();
-        DataOutput dout = new DataOutputStream(interm);
-        try {
-            dout.writeUTF(SUFFIX_STRING);
-            interm.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        _suffix = interm.getByteArray();
-        _suffix_count = interm.size();
-    }
 
     public static final AInt8Printer INSTANCE = new AInt8Printer();
 
@@ -59,7 +45,7 @@ public class AInt8Printer implements IPrinter {
         byte o = AInt8SerializerDeserializer.getByte(b, s + 1);
         try {
             WriteValueTools.writeInt(o, ps);
-            WriteValueTools.writeUTF8StringNoQuotes(_suffix, 0, _suffix_count, ps);
+            WriteValueTools.writeUTF8StringNoQuotes(SUFFIX_STRING, ps);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

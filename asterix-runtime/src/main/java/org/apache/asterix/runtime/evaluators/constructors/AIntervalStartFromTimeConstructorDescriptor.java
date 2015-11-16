@@ -30,11 +30,11 @@ import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
+import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -47,6 +47,7 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
@@ -91,6 +92,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                             .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -113,11 +115,13 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                             if (argOut0.getByteArray()[0] == SER_TIME_TYPE_TAG) {
                                 intervalStart = ATimeSerializerDeserializer.getChronon(argOut0.getByteArray(), 1);
                             } else if (argOut0.getByteArray()[0] == SER_STRING_TYPE_TAG) {
-                                int stringLength = (argOut0.getByteArray()[1] & 0xff << 8)
-                                        + (argOut0.getByteArray()[2] & 0xff << 0);
+                                utf8Ptr.set(argOut0.getByteArray(), 1, argOut0.getLength() - 1);
 
-                                intervalStart = ATimeParserFactory.parseTimePart(argOut0.getByteArray(), 3,
-                                        stringLength);
+                                int stringLength = utf8Ptr.getUTF8Length();
+
+                                intervalStart = ATimeParserFactory
+                                        .parseTimePart(argOut0.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength);
                             } else {
                                 throw new AlgebricksException(FID.getName()
                                         + ": expects NULL/STRING/TIME for the first argument, but got "
@@ -147,11 +151,12 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                             } else if (argOut1.getByteArray()[0] == SER_STRING_TYPE_TAG) {
                                 // duration
 
-                                int stringLength = (argOut1.getByteArray()[1] & 0xff << 8)
-                                        + (argOut1.getByteArray()[2] & 0xff << 0);
+                                utf8Ptr.set(argOut1.getByteArray(), 1, argOut1.getLength() - 1);
+                                int stringLength = utf8Ptr.getUTF8Length();
 
-                                ADurationParserFactory.parseDuration(argOut1.getByteArray(), 3, stringLength,
-                                        aDuration, ADurationParseOption.All);
+                                ADurationParserFactory
+                                        .parseDuration(argOut1.getByteArray(), utf8Ptr.getCharStartOffset(),
+                                                stringLength, aDuration, ADurationParseOption.All);
 
                                 if (aDuration.getMonths() != 0) {
                                     throw new AlgebricksException(FID.getName()

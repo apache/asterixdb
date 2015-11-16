@@ -1,0 +1,17 @@
+Query:
+OrderedListConstructor [
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [r1]
+      :
+      LiteralExpr [LONG] [1234]
+    )
+  ]
+  RecordConstructor [
+    (
+      LiteralExpr [STRING] [r2]
+      :
+      LiteralExpr [LONG] [456]
+    )
+  ]
+]

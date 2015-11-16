@@ -1,0 +1,39 @@
+Query:
+FieldAccessor [
+  FieldAccessor [
+    FieldAccessor [
+      RecordConstructor [
+        (
+          LiteralExpr [STRING] [n]
+          :
+          LiteralExpr [LONG] [1]
+        )
+        (
+          LiteralExpr [STRING] [a1 a2]
+          :
+          RecordConstructor [
+            (
+              LiteralExpr [STRING] [n]
+              :
+              LiteralExpr [LONG] [2]
+            )
+            (
+              LiteralExpr [STRING] [b1 b2]
+              :
+              RecordConstructor [
+                (
+                  LiteralExpr [STRING] [n]
+                  :
+                  LiteralExpr [LONG] [3]
+                )
+              ]
+            )
+          ]
+        )
+      ]
+      Field=a1 a2
+    ]
+    Field=b1 b2
+  ]
+  Field=n
+]

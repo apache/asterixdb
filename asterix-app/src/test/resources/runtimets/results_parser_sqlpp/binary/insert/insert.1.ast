@@ -1,0 +1,15 @@
+DataverseUse test
+TypeDecl UserTypeOpen [
+  open RecordType {
+    id : int64
+  }
+]
+TypeDecl UserTypeClose [
+  closed RecordType {
+    id : int64,
+    name : string,
+    md5 : binary
+  }
+]
+DatasetDecl UserOpen(UserTypeOpen) partitioned by [[id]]
+DatasetDecl UserCopyClose(UserTypeClose) partitioned by [[md5]]

@@ -26,13 +26,12 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.algebra.base.LogicalOperatorDeepCopyVisitor;
-import org.apache.asterix.aql.base.Clause;
-import org.apache.asterix.aql.expression.Identifier;
 import org.apache.asterix.aqlplus.parser.AQLPlusParser;
 import org.apache.asterix.aqlplus.parser.ParseException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.IAType;

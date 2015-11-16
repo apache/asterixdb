@@ -53,6 +53,7 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
  * This class is to do the runtime type cast for a record. It is ONLY visible to
@@ -94,6 +95,8 @@ class ARecordCaster {
     private boolean[] openFields;
     private int[] fieldNamesSortedIndex;
     private int[] reqFieldNamesSortedIndex;
+
+    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
     public ARecordCaster() {
         try {
@@ -182,7 +185,7 @@ class ARecordCaster {
             // add type name pointable (including a string type tag)
             int nameStart = bos.size();
             dos.write(ATypeTag.STRING.serialize());
-            dos.writeUTF(fname);
+            utf8Writer.writeUTF8(fname, dos);
             int nameEnd = bos.size();
             IVisitablePointable typeNamePointable = allocator.allocateEmpty();
             typeNamePointable.set(bos.getByteArray(), nameStart, nameEnd - nameStart);

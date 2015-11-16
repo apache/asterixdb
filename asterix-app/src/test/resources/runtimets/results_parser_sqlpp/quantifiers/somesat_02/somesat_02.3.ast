@@ -1,0 +1,43 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+FieldAccessor [
+  Variable [ Name=x ]
+  Field=cid
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [CustomerSomeSat02]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+Where
+  QuantifiedExpression SOME [
+    [Variable [ Name=y ]
+    In
+      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [OrdersSomeSat02]
+      ]
+    ]
+    Satifies [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=y ]
+          Field=cid
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=x ]
+          Field=cid
+        ]
+      ]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=x ]
+    Field=cid
+  ]
+  ASC
+

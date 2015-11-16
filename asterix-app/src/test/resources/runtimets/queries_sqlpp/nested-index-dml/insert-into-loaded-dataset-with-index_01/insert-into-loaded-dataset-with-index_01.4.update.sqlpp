@@ -1,0 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use TinySocial;
+
+
+insert into TweetMessages
+select element {'tweetid':'13','user':{'screen-name':'NathanGiesen@211','lang':'en','friends_count':39339,'statuses_count':473,'name':'Nathan Giesen','followers_count':49416},'sender-location':TinySocial.point('47.44,80.65'),'send-time':TinySocial.datetime('2008-04-26T10:10:00'),'referred-topics':{{'t-mobile','customization'}},'message-text':' love t-mobile its customization is good:)'};
+insert into TweetMessages
+select element {'tweetid':'14','user':{'screen-name':'OliJackson_512','lang':'en','friends_count':445,'statuses_count':164,'name':'Oli Jackson','followers_count':22649},'sender-location':TinySocial.point('24.82,94.63'),'send-time':TinySocial.datetime('2010-02-13T10:10:00'),'referred-topics':{{'samsung','voice-command'}},'message-text':' like samsung the voice-command is amazing:)'};

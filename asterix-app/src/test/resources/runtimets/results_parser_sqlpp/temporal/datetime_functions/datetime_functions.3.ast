@@ -1,0 +1,226 @@
+DataverseUse test
+Set import-private-functions=true
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [datetime1]
+    :
+    FunctionCall test.datetime-from-unix-time-in-ms@1[
+      LiteralExpr [LONG] [956007429]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime1secs]
+    :
+    FunctionCall test.datetime-from-unix-time-in-secs@1[
+      LiteralExpr [LONG] [1356048000]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime2]
+    :
+    FunctionCall test.datetime-from-date-time@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [1327-12-02]
+      ]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [15:35:49.938-0800]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime3]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+      +
+      OperatorExpr [
+        FunctionCall test.datetime-from-date-time@2[
+          FunctionCall test.date@1[
+            LiteralExpr [STRING] [1327-12-02]
+          ]
+          FunctionCall test.time@1[
+            LiteralExpr [STRING] [15:35:49.938-0800]
+          ]
+        ]
+        -
+        FunctionCall test.datetime-from-unix-time-in-ms@1[
+          LiteralExpr [LONG] [956007429]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [duration1]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-date-time@2[
+        FunctionCall test.date@1[
+          LiteralExpr [STRING] [1327-12-02]
+        ]
+        FunctionCall test.time@1[
+          LiteralExpr [STRING] [15:35:49.938-0800]
+        ]
+      ]
+      -
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c1]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+      =
+      OperatorExpr [
+        OperatorExpr [
+          FunctionCall test.datetime-from-unix-time-in-ms@1[
+            LiteralExpr [LONG] [956007429]
+          ]
+          -
+          OperatorExpr [
+            FunctionCall test.datetime-from-unix-time-in-ms@1[
+              LiteralExpr [LONG] [956007429]
+            ]
+            +
+            OperatorExpr [
+              FunctionCall test.datetime-from-date-time@2[
+                FunctionCall test.date@1[
+                  LiteralExpr [STRING] [1327-12-02]
+                ]
+                FunctionCall test.time@1[
+                  LiteralExpr [STRING] [15:35:49.938-0800]
+                ]
+              ]
+              -
+              FunctionCall test.datetime-from-unix-time-in-ms@1[
+                LiteralExpr [LONG] [956007429]
+              ]
+            ]
+          ]
+        ]
+        +
+        OperatorExpr [
+          FunctionCall test.datetime-from-unix-time-in-ms@1[
+            LiteralExpr [LONG] [956007429]
+          ]
+          +
+          OperatorExpr [
+            FunctionCall test.datetime-from-date-time@2[
+              FunctionCall test.date@1[
+                LiteralExpr [STRING] [1327-12-02]
+              ]
+              FunctionCall test.time@1[
+                LiteralExpr [STRING] [15:35:49.938-0800]
+              ]
+            ]
+            -
+            FunctionCall test.datetime-from-unix-time-in-ms@1[
+              LiteralExpr [LONG] [956007429]
+            ]
+          ]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null1]
+    :
+    FunctionCall test.datetime-from-unix-time-in-ms@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null1secs]
+    :
+    FunctionCall test.datetime-from-unix-time-in-secs@1[
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null2]
+    :
+    FunctionCall test.datetime-from-date-time@2[
+      LiteralExpr [NULL]
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [15:35:49.938-0800]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null3]
+    :
+    FunctionCall test.datetime-from-date-time@2[
+      FunctionCall test.date@1[
+        LiteralExpr [STRING] [1327-12-02]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null4]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      -
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null5]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-date-time@2[
+        FunctionCall test.date@1[
+          LiteralExpr [STRING] [1327-12-02]
+        ]
+        FunctionCall test.time@1[
+          LiteralExpr [STRING] [15:35:49.938-0800]
+        ]
+      ]
+      -
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null6]
+    :
+    OperatorExpr [
+      LiteralExpr [NULL]
+      +
+      OperatorExpr [
+        FunctionCall test.datetime-from-date-time@2[
+          FunctionCall test.date@1[
+            LiteralExpr [STRING] [1327-12-02]
+          ]
+          FunctionCall test.time@1[
+            LiteralExpr [STRING] [15:35:49.938-0800]
+          ]
+        ]
+        -
+        FunctionCall test.datetime-from-unix-time-in-ms@1[
+          LiteralExpr [LONG] [956007429]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null7]
+    :
+    OperatorExpr [
+      FunctionCall test.datetime-from-unix-time-in-ms@1[
+        LiteralExpr [LONG] [956007429]
+      ]
+      +
+      LiteralExpr [NULL]
+    ]
+  )
+]

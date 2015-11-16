@@ -1,0 +1,55 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [l_linenumber]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_linenumber
+    ]
+  )
+  (
+    LiteralExpr [STRING] [l_l_orderkey]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=l_orderkey
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+      >=
+      LiteralExpr [LONG] [0]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+      <
+      LiteralExpr [LONG] [100]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=l ]
+    Field=l_linenumber
+  ]
+  ASC
+

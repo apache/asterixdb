@@ -1,0 +1,69 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=paper ]
+        Field=nested
+      ]
+      Field=id
+    ]
+  )
+  (
+    LiteralExpr [STRING] [title]
+    :
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=paper ]
+        Field=nested
+      ]
+      Field=title
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+]
+Where
+  IndexAccessor [
+    FunctionCall test.edit-distance-contains@3[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=paper ]
+          Field=nested
+        ]
+        Field=title
+      ]
+      LiteralExpr [STRING] [Multmedia]
+      LiteralExpr [LONG] [1]
+    ]
+    Index:     FunctionCall test.edit-distance-contains@3[
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=paper ]
+          Field=nested
+        ]
+        Field=title
+      ]
+      LiteralExpr [STRING] [Multmedia]
+      LiteralExpr [LONG] [1]
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    FieldAccessor [
+      Variable [ Name=paper ]
+      Field=nested
+    ]
+    Field=id
+  ]
+  ASC
+

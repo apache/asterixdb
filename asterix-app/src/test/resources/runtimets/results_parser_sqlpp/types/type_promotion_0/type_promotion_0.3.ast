@@ -1,0 +1,11 @@
+DataverseUse TestVerse
+Query:
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Int64Test]
+  ]
+  AS
+  Variable [ Name=i ]
+]

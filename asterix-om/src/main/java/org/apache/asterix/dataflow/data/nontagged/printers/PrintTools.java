@@ -29,7 +29,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.bytes.HexPrinter;
+import org.apache.hyracks.util.string.UTF8StringUtil;
+
 public class PrintTools {
+
 
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
     private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
@@ -185,13 +190,13 @@ public class PrintTools {
     }
 
     public static void writeUTF8StringAsCSV(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = UTF8StringPointable.getUTFLength(b, s);
-        int position = s + 2; // skip 2 bytes containing string size
+        int stringLength = UTF8StringUtil.getUTFLength(b, s);
+        int position = s + UTF8StringUtil.getNumBytesToStoreLength(stringLength);
         int maxPosition = position + stringLength;
         os.write('"');
         while (position < maxPosition) {
-            char c = UTF8StringPointable.charAt(b, position);
-            int sz = UTF8StringPointable.charSize(b, position);
+            char c = UTF8StringUtil.charAt(b, position);
+            int sz = UTF8StringUtil.charSize(b, position);
             if (c == '"') {
                 os.write('"');
             }
@@ -202,13 +207,13 @@ public class PrintTools {
     }
 
     public static void writeUTF8StringAsJSON(byte[] b, int s, int l, OutputStream os) throws IOException {
-        int stringLength = UTF8StringPointable.getUTFLength(b, s);
-        int position = s + 2; // skip 2 bytes containing string size
-        int maxPosition = position + stringLength;
+        int utfLength = UTF8StringUtil.getUTFLength(b, s);
+        int position = s + UTF8StringUtil.getNumBytesToStoreLength(utfLength); // skip 2 bytes containing string size
+        int maxPosition = position + utfLength;
         os.write('"');
         while (position < maxPosition) {
-            char c = UTF8StringPointable.charAt(b, position);
-            int sz = UTF8StringPointable.charSize(b, position);
+            char c = UTF8StringUtil.charAt(b, position);
+            int sz = UTF8StringUtil.charSize(b, position);
             switch (c) {
                 // escape
                 case '\b':
@@ -296,27 +301,9 @@ public class PrintTools {
         os.write('u');
         os.write('0');
         os.write('0');
-        os.write(hex((c >>> 4) & 0x0f, CASE.LOWER_CASE));
-        os.write(hex(c & 0x0f, CASE.LOWER_CASE));
+        os.write(HexPrinter.hex((c >>> 4) & 0x0f, HexPrinter.CASE.LOWER_CASE));
+        os.write(HexPrinter.hex(c & 0x0f, HexPrinter.CASE.LOWER_CASE));
     }
 
-    public static Appendable printHexString(byte[] bytes, int start, int length, Appendable appendable)
-            throws IOException {
-        for (int i = 0; i < length; ++i) {
-            appendable.append((char) hex((bytes[start + i] >>> 4) & 0x0f, CASE.UPPER_CASE));
-            appendable.append((char) hex((bytes[start + i] & 0x0f), CASE.UPPER_CASE));
-        }
-        return appendable;
-    }
-
-    public static byte hex(int i, CASE c) {
-        switch (c) {
-            case LOWER_CASE:
-                return (byte) (i < 10 ? i + '0' : i + ('a' - 10));
-            case UPPER_CASE:
-                return (byte) (i < 10 ? i + '0' : i + ('A' - 10));
-        }
-        return Byte.parseByte(null);
-    }
 
 }

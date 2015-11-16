@@ -60,6 +60,7 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private DataOutput out = output.getDataOutput();
                     private ArrayBackedValueStorage argOut = new ArrayBackedValueStorage();
                     private ICopyEvaluator eval = args[0].createEvaluator(argOut);
+                    private final AObjectSerializerDeserializer aObjSerDer = new AObjectSerializerDeserializer();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -68,7 +69,7 @@ public class IsNullDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         boolean isNull = argOut.getByteArray()[argOut.getStartOffset()] == SER_NULL_TYPE_TAG;
                         ABoolean res = isNull ? ABoolean.TRUE : ABoolean.FALSE;
                         try {
-                            AObjectSerializerDeserializer.INSTANCE.serialize(res, out);
+                            aObjSerDer.serialize(res, out);
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);
                         }

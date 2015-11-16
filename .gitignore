@@ -12,6 +12,9 @@ bin
 asterix-app/rttest/
 asterix-app/mdtest/
 asterix-app/opttest/
+asterix-app/parserts/
+asterix-app/opt_parserts/
+asterix-app/runtime_parserts/
 asterix-installer/ittest/
 build
 asterix_logs
@@ -22,3 +25,4 @@ bin/
 .idea/
 asterix.ipr
 asterix.iws
+git.properties

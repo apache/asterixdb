@@ -20,14 +20,16 @@ package org.apache.asterix.common.config;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Properties;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -50,6 +52,7 @@ public class AsterixPropertiesAccessor {
     private final Map<String, String> coredumpConfig;
     private final Map<String, Property> asterixConfigurationParams;
     private final Map<String, String> transactionLogDirs;
+    private final Map<String, String> asterixBuildProperties;
 
     public AsterixPropertiesAccessor() throws AsterixException {
         String fileName = System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY);
@@ -96,6 +99,13 @@ public class AsterixPropertiesAccessor {
         for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
             transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
         }
+        Properties p = new Properties();
+        try {
+            p.load(getClass().getClassLoader().getResourceAsStream("git.properties"));
+            asterixBuildProperties = new HashMap<String, String>((Map)p);
+        } catch(IOException e) {
+            throw new AsterixException(e);
+        }
 
     }
 
@@ -125,6 +135,10 @@ public class AsterixPropertiesAccessor {
 
     public Map<String, String> getCoredumpConfig() {
         return coredumpConfig;
+    }
+
+    public Map<String, String> getBuildProperties(){
+        return asterixBuildProperties;
     }
 
     public void putCoredumpPaths(String nodeId, String coredumpPath) {

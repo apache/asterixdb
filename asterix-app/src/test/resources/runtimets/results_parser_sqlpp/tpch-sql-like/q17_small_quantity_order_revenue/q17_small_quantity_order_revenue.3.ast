@@ -1,0 +1,134 @@
+DataverseUse tpch
+FunctionDecl tmp([]) {
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [t_partkey]
+        :
+        Variable [ Name=l_partkey ]
+      )
+      (
+        LiteralExpr [STRING] [t_avg_quantity]
+        :
+        OperatorExpr [
+          LiteralExpr [DOUBLE] [0.2]
+          *
+          FunctionCall tpch.avg@1[
+            (
+              SELECT ELEMENT [
+              FieldAccessor [
+                Variable [ Name=i ]
+                Field=l_quantity
+              ]
+              ]
+              FROM [                Variable [ Name=l ]
+                AS
+                Variable [ Name=i ]
+              ]
+            )
+          ]
+        ]
+      )
+    ]
+    ]
+    FROM [      Variable [ Name=LineItem ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Groupby
+      Variable [ Name=l_partkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_partkey
+      ]
+
+  )
+}
+
+Query:
+SELECT ELEMENT [
+OperatorExpr [
+  FunctionCall tpch.sum@1[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_extendedprice
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [LineItem]
+        ]
+        AS
+        Variable [ Name=l ]
+,
+        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Part]
+        ]
+        AS
+        Variable [ Name=p ]
+,
+        FunctionCall tpch.tmp@0[
+        ]
+        AS
+        Variable [ Name=t ]
+      ]
+      Where
+        OperatorExpr [
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_partkey
+              ]
+              =
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_partkey
+              ]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=p ]
+                Field=p_container
+              ]
+              =
+              LiteralExpr [STRING] [MED BOX]
+            ]
+          ]
+          and
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_partkey
+              ]
+              =
+              FieldAccessor [
+                Variable [ Name=t ]
+                Field=t_partkey
+              ]
+            ]
+            and
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=l ]
+                Field=l_quantity
+              ]
+              <
+              FieldAccessor [
+                Variable [ Name=t ]
+                Field=t_avg_quantity
+              ]
+            ]
+          ]
+        ]
+    )
+  ]
+  /
+  LiteralExpr [DOUBLE] [7.0]
+]
+]

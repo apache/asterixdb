@@ -1,0 +1,23 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+{'year1':test."get-year"(test.date('2010-10-30')),'year2':test."get-year"(test.datetime('1987-11-19T23:49:23.938')),'year3':test."get-year"(test.date('-1987-11-19')),'year4':test."get-year"(test.date('09280329')),'year5':test."get-year"(test.datetime('19371229T20030628')),'year6':test."get-year"(test.string('-0003-01-09T23:12:12.39-07:00')),'year7':test."get-year"(test.duration('P3Y73M632DT49H743M3948.94S')),'year8':test."get-year"(test."year-month-duration"('P8Y12M')),'year-null':test."get-year"(null),'month1':test."get-month"(test.date('2010-10-30')),'month2':test."get-month"(test.datetime('1987-11-19T23:49:23.938')),'month3':test."get-month"(test.date('-1987-11-19')),'month4':test."get-month"(test.date('09280329')),'month5':test."get-month"(test.datetime('19371229T20030628')),'month6':test."get-month"(test.duration('P3Y73M632DT49H743M3948.94S')),'month7':test."get-month"(test."year-month-duration"('P8Y12M')),'month-null':test."get-month"(null),'day1':test."get-day"(test.date('2010-10-30')),'day2':test."get-day"(test.datetime('1987-11-19T23:49:23.938')),'day3':test."get-day"(test.date('-1987-11-19')),'day4':test."get-day"(test.date('09280329')),'day5':test."get-day"(test.datetime('19371229T20030628')),'day6':test."get-day"(test.duration('P3Y73M632DT49H743M3948.94S')),'day7':test."get-day"(test."day-time-duration"('P32DT49H743M3948.94S')),'day-null':test."get-day"(null),'hour1':test."get-hour"(test.datetime('1987-11-19T23:49:23.938')),'hour2':test."get-hour"(test.datetime('19371229T20030628')),'hour3':test."get-hour"(test.time('12:23:34.930+07:00')),'hour4':test."get-hour"(test.duration('P3Y73M632DT49H743M3948.94S')),'hour5':test."get-hour"(test."day-time-duration"('P32DT49H743M3948.94S')),'hour-null':test."get-hour"(null),'min1':test."get-minute"(test.datetime('1987-11-19T23:49:23.938')),'min2':test."get-minute"(test.datetime('19371229T20030628')),'min3':test."get-minute"(test.time('12:23:34.930+07:00')),'min4':test."get-minute"(test.duration('P3Y73M632DT49H743M3948.94S')),'min5':test."get-minute"(test."day-time-duration"('P32DT49H743M3948.94S')),'min-null':test."get-minute"(null),'second1':test."get-second"(test.datetime('1987-11-19T23:49:23.938')),'second2':test."get-second"(test.datetime('19371229T20030628')),'second3':test."get-second"(test.time('12:23:34.930+07:00')),'second4':test."get-second"(test.duration('P3Y73M632DT49H743M3948.94S')),'second5':test."get-second"(test."day-time-duration"('P32DT49H743M3948.94S')),'second-null':test."get-second"(null),'ms1':test."get-millisecond"(test.datetime('1987-11-19T23:49:23.938')),'ms2':test."get-millisecond"(test.datetime('19371229T20030628')),'ms3':test."get-millisecond"(test.time('12:23:34.930+07:00')),'ms4':test."get-millisecond"(test.duration('P3Y73M632DT49H743M3948.94S')),'ms5':test."get-millisecond"(test."day-time-duration"('P32DT49H743M3948.94S')),'ms-null':test."get-millisecond"(null)};

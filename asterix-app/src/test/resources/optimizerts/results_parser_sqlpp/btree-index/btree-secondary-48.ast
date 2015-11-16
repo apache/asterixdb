@@ -1,0 +1,58 @@
+DataverseUse test
+WriteOutputTo nc1:rttest/btree-index_btree-secondary-48.adm
+TypeDecl TestType [
+  open RecordType {
+    id : int32,
+    fname : string,
+    lname : string
+  }
+]
+DatasetDecl testdst(TestType) partitioned by [[id]]
+Query:
+SELECT ELEMENT [
+Variable [ Name=emp ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [testdst]
+  ]
+  AS
+  Variable [ Name=emp ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emp ]
+        Field=fname
+      ]
+      >=
+      LiteralExpr [STRING] [Craig]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emp ]
+        Field=lname
+      ]
+      >=
+      LiteralExpr [STRING] [Kevin]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emp ]
+        Field=fname
+      ]
+      <=
+      LiteralExpr [STRING] [Mary]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=emp ]
+        Field=lname
+      ]
+      <=
+      LiteralExpr [STRING] [Tomes]
+    ]
+  ]

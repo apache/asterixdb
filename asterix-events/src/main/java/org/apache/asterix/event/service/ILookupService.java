@@ -20,6 +20,7 @@ package org.apache.asterix.event.service;
 
 import java.util.List;
 
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.event.model.AsterixInstance;
 import org.apache.asterix.installer.schema.conf.Configuration;
 
@@ -42,4 +43,8 @@ public interface ILookupService {
     public List<AsterixInstance> getAsterixInstances() throws Exception;
 
     public void updateAsterixInstance(AsterixInstance updatedInstance) throws Exception;
+
+    public void reportClusterState(String instanceName, ClusterState active) throws Exception;
+
+    public ClusterStateWatcher startWatchingClusterState(String asterixInstanceName);
 }

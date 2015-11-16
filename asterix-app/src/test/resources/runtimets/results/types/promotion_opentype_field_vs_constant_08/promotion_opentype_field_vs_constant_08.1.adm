@@ -1,2 +1,1 @@
-[ { "emp.id": 51, "emp.supvrid": point("80.1,-1000000.0") }
- ]
+{ "emp.id": 51, "emp.supvrid": point("80.1,-1000000.0") }

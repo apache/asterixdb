@@ -1,0 +1,54 @@
+DataverseUse test
+TypeDecl MyRecord [
+  closed RecordType {
+    id : int32,
+    point : point,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle,
+    circle : circle
+  }
+]
+DatasetDecl MyData(MyRecord) partitioned by [[id]]
+WriteOutputTo nc1:rttest/index_rtree-secondary-index.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [id]
+    :
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=id
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [MyData]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  FunctionCall test.spatial-intersect@2[
+    FieldAccessor [
+      Variable [ Name=o ]
+      Field=point
+    ]
+    FunctionCall test.create-polygon@1[
+      OrderedListConstructor [
+        LiteralExpr [DOUBLE] [4.0]
+        LiteralExpr [DOUBLE] [1.0]
+        LiteralExpr [DOUBLE] [4.0]
+        LiteralExpr [DOUBLE] [4.0]
+        LiteralExpr [DOUBLE] [12.0]
+        LiteralExpr [DOUBLE] [4.0]
+        LiteralExpr [DOUBLE] [12.0]
+        LiteralExpr [DOUBLE] [1.0]
+      ]
+    ]
+  ]

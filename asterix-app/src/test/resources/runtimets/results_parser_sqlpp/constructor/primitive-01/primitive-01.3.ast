@@ -1,0 +1,38 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [$a]
+    :
+    FunctionCall null.int8@1[
+      LiteralExpr [STRING] [-127]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [$b]
+    :
+    FunctionCall null.int8@1[
+      LiteralExpr [STRING] [127]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [$c]
+    :
+    FunctionCall null.int8@1[
+      LiteralExpr [STRING] [0]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [$d]
+    :
+    FunctionCall null.int8@1[
+      LiteralExpr [STRING] [1]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [$e]
+    :
+    FunctionCall null.int8@1[
+      LiteralExpr [STRING] [-1]
+    ]
+  )
+]

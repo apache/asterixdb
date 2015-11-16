@@ -25,6 +25,9 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
     private static final String EXTERNAL_WEBPORT_KEY = "web.port";
     private static int EXTERNAL_WEBPORT_DEFAULT = 19001;
 
+    private static final String EXTERNAL_SECONDARY_WEBPORT_KEY = "web.secondary.port";
+    private static int EXTERNAL_SECONDARY_WEBPORT_DEFAULT = 19005;
+
     private static final String EXTERNAL_LOGLEVEL_KEY = "log.level";
     private static Level EXTERNAL_LOGLEVEL_DEFAULT = Level.WARNING;
 
@@ -52,6 +55,11 @@ public class AsterixExternalProperties extends AbstractAsterixProperties {
 
     public int getWebInterfacePort() {
         return accessor.getProperty(EXTERNAL_WEBPORT_KEY, EXTERNAL_WEBPORT_DEFAULT,
+                PropertyInterpreters.getIntegerPropertyInterpreter());
+    }
+
+    public int getSecondaryWebInterfacePort() {
+        return accessor.getProperty(EXTERNAL_SECONDARY_WEBPORT_KEY, EXTERNAL_SECONDARY_WEBPORT_DEFAULT,
                 PropertyInterpreters.getIntegerPropertyInterpreter());
     }
 

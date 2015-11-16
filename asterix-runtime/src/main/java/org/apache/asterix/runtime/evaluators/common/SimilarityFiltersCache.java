@@ -30,6 +30,7 @@ import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 
 public class SimilarityFiltersCache {
+    private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
 
     private final ByteBufferInputStream bbis = new ByteBufferInputStream();
     private final DataInputStream dis = new DataInputStream(bbis);
@@ -44,7 +45,7 @@ public class SimilarityFiltersCache {
             bbis.setByteBuffer(ByteBuffer.wrap(similarityNameBytes), 1);
             String similarityName;
             try {
-                similarityName = UTF8StringSerializerDeserializer.INSTANCE.deserialize(dis);
+                similarityName = utf8SerDer.deserialize(dis);
             } catch (HyracksDataException e) {
                 throw new AlgebricksException(e);
             }

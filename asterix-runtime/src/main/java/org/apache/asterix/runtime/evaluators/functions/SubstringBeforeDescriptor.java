@@ -34,6 +34,8 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.GrowableArray;
+import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -66,6 +68,11 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                     private ICopyEvaluator evalPattern = args[1].createEvaluator(array1);
                     private final byte stt = ATypeTag.STRING.serialize();
 
+                    private final GrowableArray array = new GrowableArray();
+                    private final UTF8StringBuilder builder = new UTF8StringBuilder();
+                    private final UTF8StringPointable stringPtr = new UTF8StringPointable();
+                    private final UTF8StringPointable patternPtr = new UTF8StringPointable();
+
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         array0.reset();
@@ -84,37 +91,17 @@ public class SubstringBeforeDescriptor extends AbstractScalarFunctionDynamicDesc
                                     + EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pattern[0]) + ").");
                         }
 
-                        int srcLen = UTF8StringPointable.getUTFLength(src, 1);
-                        int patternLen = UTF8StringPointable.getUTFLength(pattern, 1);
-                        int posSrc = 3;
-                        int posPattern = 3;
-
-                        int offset = 0;
-                        while (posSrc - 3 < srcLen - patternLen) {
-                            while (posPattern + offset - 3 < patternLen && posSrc + offset - 3 < srcLen) {
-                                char c1 = UTF8StringPointable.charAt(src, posSrc + offset);
-                                char c2 = UTF8StringPointable.charAt(pattern, posPattern + offset);
-                                if (c1 != c2)
-                                    break;
-                                offset++;
-                            }
-                            if (offset == patternLen) {
-                                break;
-                            }
-                            posSrc += UTF8StringPointable.charSize(src, posSrc);
-                        }
-                        int startSubstr = 3;
-
-                        int substrByteLen = posSrc - startSubstr;
+                        stringPtr.set(src, 1, src.length);
+                        patternPtr.set(pattern, 1, pattern.length);
+                        array.reset();
                         try {
+                            UTF8StringPointable.substrBefore(stringPtr, patternPtr, builder, array);
                             out.writeByte(stt);
-                            out.writeByte((byte) ((substrByteLen >>> 8) & 0xFF));
-                            out.writeByte((byte) ((substrByteLen >>> 0) & 0xFF));
-                            out.write(src, startSubstr, substrByteLen);
-
+                            out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
                             throw new AlgebricksException(e);
                         }
+
                     }
                 };
             }

@@ -1,0 +1,51 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [polygonArea]
+    :
+    FunctionCall test.spatial-area@1[
+      FunctionCall test.create-polygon@1[
+        OrderedListConstructor [
+          LiteralExpr [DOUBLE] [1.0]
+          LiteralExpr [DOUBLE] [1.0]
+          LiteralExpr [DOUBLE] [1.0]
+          LiteralExpr [DOUBLE] [4.0]
+          LiteralExpr [DOUBLE] [3.0]
+          LiteralExpr [DOUBLE] [4.0]
+          LiteralExpr [DOUBLE] [3.0]
+          LiteralExpr [DOUBLE] [1.0]
+        ]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [circleArea]
+    :
+    FunctionCall test.spatial-area@1[
+      FunctionCall test.create-circle@2[
+        FunctionCall test.create-point@2[
+          LiteralExpr [DOUBLE] [0.0]
+          LiteralExpr [DOUBLE] [0.0]
+        ]
+        LiteralExpr [DOUBLE] [1.0]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [rectangleArea]
+    :
+    FunctionCall test.spatial-area@1[
+      FunctionCall test.create-rectangle@2[
+        FunctionCall test.create-point@2[
+          LiteralExpr [DOUBLE] [0.0]
+          LiteralExpr [DOUBLE] [5.0]
+        ]
+        FunctionCall test.create-point@2[
+          LiteralExpr [DOUBLE] [8.0]
+          LiteralExpr [DOUBLE] [8.0]
+        ]
+      ]
+    ]
+  )
+]

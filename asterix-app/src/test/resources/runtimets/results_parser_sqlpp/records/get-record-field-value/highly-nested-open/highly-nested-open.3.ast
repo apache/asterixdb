@@ -1,0 +1,24 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=result ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Animals]
+  ]
+  AS
+  Variable [ Name=test ]
+]
+LetVariable [ Name=result ]
+  :=
+  FunctionCall test.get-record-field-value@2[
+    Variable [ Name=test ]
+    LiteralExpr [STRING] [class]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=result ]
+    Field=id
+  ]
+  ASC
+

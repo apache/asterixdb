@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import com.google.common.math.LongMath;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -40,14 +41,10 @@ public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
      */
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        double result = Math.pow(lhs, rhs);
-        if (result > Long.MAX_VALUE) {
-            throw new ArithmeticException("Overflow of caret operation: " + lhs + " ^ " + rhs);
+        if(rhs > Integer.MAX_VALUE){
+            throw new ArithmeticException("Exponent cannot be larger than 2^31-1");
         }
-        if (result < Long.MIN_VALUE) {
-            throw new ArithmeticException("Underflow of caret operation: " + lhs + " ^ " + rhs);
-        }
-        return (long) result;
+        return LongMath.checkedPow(lhs, (int) rhs);
     }
 
     /* (non-Javadoc)

@@ -21,7 +21,7 @@ package org.apache.asterix.installer.command;
 import java.io.File;
 
 import org.kohsuke.args4j.Option;
-
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.configuration.AsterixConfiguration;
 import org.apache.asterix.event.error.VerificationUtil;
 import org.apache.asterix.event.management.AsterixEventServiceClient;
@@ -32,6 +32,7 @@ import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.asterix.event.schema.pattern.Patterns;
 import org.apache.asterix.event.service.AsterixEventService;
 import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.asterix.event.service.ClusterStateWatcher;
 import org.apache.asterix.event.service.ServiceProvider;
 import org.apache.asterix.event.util.PatternCreator;
 import org.apache.asterix.installer.driver.InstallerDriver;
@@ -64,17 +65,25 @@ public class CreateCommand extends AbstractCommand {
         AsterixEventServiceUtil.createClusterProperties(cluster, asterixConfiguration);
         AsterixEventServiceClient eventrixClient = AsterixEventService.getAsterixEventServiceClient(cluster, true,
                 false);
-
+        // Store the cluster initially in Zookeeper and start watching
+        ServiceProvider.INSTANCE.getLookupService().writeAsterixInstance(asterixInstance);
+        ClusterStateWatcher stateWatcher = ServiceProvider.INSTANCE.getLookupService().startWatchingClusterState(
+                asterixInstanceName);
         Patterns asterixBinarytrasnferPattern = PatternCreator.INSTANCE.getAsterixBinaryTransferPattern(
                 asterixInstanceName, cluster);
         eventrixClient.submit(asterixBinarytrasnferPattern);
-
         Patterns patterns = PatternCreator.INSTANCE.getStartAsterixPattern(asterixInstanceName, cluster, true);
         eventrixClient.submit(patterns);
 
+        // Check the cluster state
+        ClusterState clusterState = stateWatcher.waitForClusterStart();
+        if (clusterState != ClusterState.ACTIVE) {
+            throw new Exception("CC failed to start");
+        }
+
         AsterixRuntimeState runtimeState = VerificationUtil.getAsterixRuntimeState(asterixInstance);
         VerificationUtil.updateInstanceWithRuntimeDescription(asterixInstance, runtimeState, true);
-        ServiceProvider.INSTANCE.getLookupService().writeAsterixInstance(asterixInstance);
+        ServiceProvider.INSTANCE.getLookupService().updateAsterixInstance(asterixInstance);
         AsterixEventServiceUtil.deleteDirectory(InstallerDriver.getManagixHome() + File.separator
                 + InstallerDriver.ASTERIX_DIR + File.separator + asterixInstanceName);
         LOGGER.info(asterixInstance.getDescription(false));

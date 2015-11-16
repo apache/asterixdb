@@ -1,0 +1,45 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description      :  Test for clause of the position variable in FLWOR expression using tpch
+ * Expected Result  :  Success
+ * Date             :  07/18/2013
+ */
+
+use test;
+
+
+select element si
+from
+    ( select element {'xx':xx,'x':x,'uid':uid}
+      from  Orders as x
+      where (x.o_custkey < 4)
+      group by x.o_custkey as uid
+      with  xx as (
+            select element {'uid':uid,'seq':i,'item':y.o_orderkey}
+            from  (
+                select element xxx
+                from  x as xxx
+                order by xxx.o_orderkey
+            ) as y at i
+        )
+      order by uid
+    ) as gen0,
+    gen0.xx as si
+;

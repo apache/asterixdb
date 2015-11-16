@@ -34,10 +34,9 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.util.StringUtils;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -68,6 +67,7 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private ArrayBackedValueStorage outInputSep = new ArrayBackedValueStorage();
                     private ICopyEvaluator evalList = listEvalFactory.createEvaluator(outInputList);
                     private ICopyEvaluator evalSep = sepEvalFactory.createEvaluator(outInputSep);
+                    private final byte[] tempLengthArray = new byte[5];
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
@@ -96,31 +96,32 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                             try {
                                 // calculate length first
                                 int utf_8_len = 0;
-                                int sep_len = UTF8StringPointable.getUTFLength(serSep, 1);
+                                int sep_len = UTF8StringUtil.getUTFLength(serSep, 1);
+                                int sep_meta_len = UTF8StringUtil.getNumBytesToStoreLength(sep_len);
 
                                 for (int i = 0; i < size; i++) {
                                     int itemOffset = AOrderedListSerializerDeserializer
                                             .getItemOffset(serOrderedList, i);
 
-                                    int currentSize = UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);
+                                    int currentSize = UTF8StringUtil.getUTFLength(serOrderedList, itemOffset);
                                     if (i != size - 1 && currentSize != 0) {
                                         utf_8_len += sep_len;
                                     }
                                     utf_8_len += currentSize;
                                 }
                                 out.writeByte(stringTypeTag);
-                                StringUtils.writeUTF8Len(utf_8_len, out);
+                                int length = UTF8StringUtil.encodeUTF8Length(utf_8_len, tempLengthArray, 0);
+                                out.write(tempLengthArray, 0, length);
                                 for (int i = 0; i < size; i++) {
                                     int itemOffset = AOrderedListSerializerDeserializer
                                             .getItemOffset(serOrderedList, i);
-                                    utf_8_len = UTF8StringPointable.getUTFLength(serOrderedList, itemOffset);
-                                    for (int j = 0; j < utf_8_len; j++) {
-                                        out.writeByte(serOrderedList[2 + itemOffset + j]);
-                                    }
+                                    utf_8_len = UTF8StringUtil.getUTFLength(serOrderedList, itemOffset);
+                                    out.write(serOrderedList,
+                                            itemOffset + UTF8StringUtil.getNumBytesToStoreLength(utf_8_len), utf_8_len);
                                     if (i == size - 1 || utf_8_len == 0)
                                         continue;
                                     for (int j = 0; j < sep_len; j++) {
-                                        out.writeByte(serSep[3 + j]);
+                                        out.writeByte(serSep[1 + sep_meta_len + j]);
                                     }
                                 }
                             } catch (AsterixException ex) {

@@ -1,0 +1,14 @@
+DataverseUse testdv2
+TypeDecl testtype01 [
+  closed RecordType {
+    id : string,
+    name : string?
+  }
+]
+TypeDecl testtype02 [
+  closed RecordType {
+    id : string
+  }
+]
+DatasetDecl testds01(testtype01) partitioned by [[id]]
+DatasetDecl testds02(testtype02) partitioned by [[id]]

@@ -1,0 +1,260 @@
+DataverseUse inlined_q18_large_volume_customer
+TypeDecl LineItemType [
+  closed RecordType {
+    l_orderkey : int32,
+    l_partkey : int32,
+    l_suppkey : int32,
+    l_linenumber : int32,
+    l_quantity : double,
+    l_extendedprice : double,
+    l_discount : double,
+    l_tax : double,
+    l_returnflag : string,
+    l_linestatus : string,
+    l_shipdate : string,
+    l_commitdate : string,
+    l_receiptdate : string,
+    l_shipinstruct : string,
+    l_shipmode : string,
+    l_comment : string
+  }
+]
+TypeDecl OrderType [
+  closed RecordType {
+    o_orderkey : int32,
+    o_custkey : int32,
+    o_orderstatus : string,
+    o_totalprice : double,
+    o_orderdate : string,
+    o_orderpriority : string,
+    o_clerk : string,
+    o_shippriority : int32,
+    o_comment : string
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    c_custkey : int32,
+    c_name : string,
+    c_address : string,
+    c_nationkey : int32,
+    c_phone : string,
+    c_acctbal : double,
+    c_mktsegment : string,
+    c_comment : string
+  }
+]
+DatasetDecl LineItems(LineItemType) partitioned by [[l_orderkey], [l_linenumber]]
+DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
+DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
+WriteOutputTo nc1:/tmp/inlined_q18_large_volume_customer.adm
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c_name]
+    :
+    Variable [ Name=c_name ]
+  )
+  (
+    LiteralExpr [STRING] [c_custkey]
+    :
+    Variable [ Name=c_custkey ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderkey]
+    :
+    Variable [ Name=o_orderkey ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderdate]
+    :
+    Variable [ Name=o_orderdate ]
+  )
+  (
+    LiteralExpr [STRING] [o_totalprice]
+    :
+    Variable [ Name=o_totalprice ]
+  )
+  (
+    LiteralExpr [STRING] [sum_quantity]
+    :
+    FunctionCall inlined_q18_large_volume_customer.sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=j ]
+          Field=l_quantity
+        ]
+        ]
+        FROM [          Variable [ Name=l ]
+          AS
+          Variable [ Name=j ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Orders]
+  ]
+  AS
+  Variable [ Name=o ]
+,
+  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [l_orderkey]
+        :
+        Variable [ Name=l_orderkey ]
+      )
+      (
+        LiteralExpr [STRING] [t_sum_quantity]
+        :
+        FunctionCall inlined_q18_large_volume_customer.sum@1[
+          (
+            SELECT ELEMENT [
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=l_quantity
+            ]
+            ]
+            FROM [              Variable [ Name=l ]
+              AS
+              Variable [ Name=i ]
+            ]
+          )
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [LineItems]
+      ]
+      AS
+      Variable [ Name=l ]
+    ]
+    Groupby
+      Variable [ Name=l_orderkey ]
+      :=
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+      With
+      Variable [ Name=l ]
+      Variable [ Name=c ]
+      Variable [ Name=o ]
+
+  )
+  AS
+  Variable [ Name=t ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItems]
+  ]
+  AS
+  Variable [ Name=l ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=c ]
+        Field=c_custkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_custkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=o_orderkey
+        ]
+        =
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=l_orderkey
+        ]
+      ]
+      and
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=t ]
+          Field=t_sum_quantity
+        ]
+        >
+        LiteralExpr [LONG] [300]
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_orderkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=o_orderkey
+      ]
+    ]
+  ]
+Groupby
+  Variable [ Name=c_name ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=c_name
+  ]
+  Variable [ Name=c_custkey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=c_custkey
+  ]
+  Variable [ Name=o_orderkey ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderkey
+  ]
+  Variable [ Name=o_orderdate ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_orderdate
+  ]
+  Variable [ Name=o_totalprice ]
+  :=
+  FieldAccessor [
+    Variable [ Name=o ]
+    Field=o_totalprice
+  ]
+  With
+  Variable [ Name=c ]
+  Variable [ Name=t ]
+  Variable [ Name=l ]
+  Variable [ Name=o ]
+
+Orderby
+  Variable [ Name=o_totalprice ]
+  DESC
+  Variable [ Name=o_orderdate ]
+  ASC
+
+Limit
+  LiteralExpr [LONG] [100]

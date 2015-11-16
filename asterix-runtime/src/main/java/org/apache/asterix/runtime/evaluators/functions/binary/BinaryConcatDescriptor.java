@@ -19,6 +19,8 @@
 
 package org.apache.asterix.runtime.evaluators.functions.binary;
 
+import java.io.IOException;
+
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -34,31 +36,36 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import java.io.IOException;
+import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override public IFunctionDescriptor createFunctionDescriptor() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
             return new BinaryConcatDescriptor();
         }
     };
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.BINARY_CONCAT;
     }
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
                     throws AlgebricksException {
                 return new AbstractCopyEvaluator(output, args) {
 
                     private final AsterixListAccessor listAccessor = new AsterixListAccessor();
                     private final byte SER_BINARY_TYPE = ATypeTag.BINARY.serialize();
+                    private final byte[] metaBuffer = new byte[5];
 
-                    @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+                    @Override
+                    public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                         ATypeTag typeTag = evaluateTuple(tuple, 0);
                         if (typeTag != ATypeTag.UNORDEREDLIST && typeTag != ATypeTag.ORDEREDLIST) {
                             throw new AlgebricksException(getIdentifier().getName()
@@ -79,19 +86,19 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                     throw new AlgebricksException(getIdentifier().getName()
                                             + ": expects type STRING/NULL for the list item but got " + itemType);
                                 }
-                                concatLength += ByteArrayPointable.getLength(storages[0].getByteArray(), itemOffset);
-                            }
-                            if (concatLength > ByteArrayPointable.MAX_LENGTH) {
-                                throw new AlgebricksException("the concatenated binary is too long.");
+                                concatLength += ByteArrayPointable.getContentLength(storages[0].getByteArray(),
+                                        itemOffset);
                             }
                             dataOutput.writeByte(SER_BINARY_TYPE);
-                            dataOutput.writeShort(concatLength);
+                            int metaLen = VarLenIntEncoderDecoder.encode(concatLength, metaBuffer, 0);
+                            dataOutput.write(metaBuffer, 0, metaLen);
 
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
-                                int length = ByteArrayPointable.getLength(storages[0].getByteArray(), itemOffset);
+                                int length = ByteArrayPointable.getContentLength(storages[0].getByteArray(),
+                                        itemOffset);
                                 dataOutput.write(storages[0].getByteArray(),
-                                        itemOffset + ByteArrayPointable.SIZE_OF_LENGTH, length);
+                                        itemOffset + ByteArrayPointable.getNumberBytesToStoreMeta(length), length);
                             }
                         } catch (HyracksDataException e) {
                             throw new AlgebricksException(e);

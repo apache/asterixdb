@@ -1,0 +1,13 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.replace@3[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [a.*a]
+      LiteralExpr [STRING] [*]
+    ]
+  )
+]

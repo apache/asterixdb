@@ -1,0 +1,14 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+OrderedListConstructor [
+  FunctionCall test.like@2[
+    LiteralExpr [STRING] [A6BBB]
+    LiteralExpr [STRING] [_6%]
+  ]
+  FunctionCall test.like@2[
+    LiteralExpr [STRING] [A8BBB]
+    LiteralExpr [STRING] [_6%]
+  ]
+]
+]

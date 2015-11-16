@@ -1,0 +1,69 @@
+DataverseUse test
+Set import-private-functions=true
+TypeDecl DBLPTypetmp [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl DBLPType [
+  closed RecordType {
+    nested : DBLPTypetmp
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
+WriteOutputTo nc1:rttest/inverted-index-basic_ngram-jaccard-check.adm
+Query:
+SELECT ELEMENT [
+Variable [ Name=o ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=o ]
+]
+Where
+  IndexAccessor [
+    FunctionCall test.similarity-jaccard-check@3[
+      FunctionCall test.gram-tokens@3[
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=o ]
+            Field=nested
+          ]
+          Field=title
+        ]
+        LiteralExpr [LONG] [3]
+        LiteralExpr [FALSE]
+      ]
+      FunctionCall test.gram-tokens@3[
+        LiteralExpr [STRING] [Transactions for Cooperative Environments]
+        LiteralExpr [LONG] [3]
+        LiteralExpr [FALSE]
+      ]
+      LiteralExpr [FLOAT] [0.5]
+    ]
+    Index:     FunctionCall test.similarity-jaccard-check@3[
+      FunctionCall test.gram-tokens@3[
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=o ]
+            Field=nested
+          ]
+          Field=title
+        ]
+        LiteralExpr [LONG] [3]
+        LiteralExpr [FALSE]
+      ]
+      FunctionCall test.gram-tokens@3[
+        LiteralExpr [STRING] [Transactions for Cooperative Environments]
+        LiteralExpr [LONG] [3]
+        LiteralExpr [FALSE]
+      ]
+      LiteralExpr [FLOAT] [0.5]
+    ]
+  ]

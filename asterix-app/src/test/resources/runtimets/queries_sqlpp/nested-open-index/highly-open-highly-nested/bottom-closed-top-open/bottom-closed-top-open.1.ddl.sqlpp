@@ -1,0 +1,120 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Description  : Create a highly nested datastructure that uses opened and closed datasets
+
+drop  database test if exists;
+create  database test;
+
+use test;
+
+
+create type test.S as
+ closed {
+  id : int64,
+  Species : string
+}
+
+create type test.GS as
+ closed {
+  id : int64,
+  Genus : string,
+  lower : S
+}
+
+create type test.FGS as
+{
+  id : int64,
+  Family : string
+}
+
+create type test.OFGS as
+ closed {
+  id : int64,
+  "Order" : string,
+  lower : FGS
+}
+
+create type test.COFGS as
+ closed {
+  id : int64,
+  Class : string,
+  lower : OFGS
+}
+
+create type test.PCOFGS as
+ closed {
+  id : int64,
+  Phylum : string,
+  lower : COFGS
+}
+
+create type test.KPCOFGS as
+{
+  id : int64,
+  Kingdom : string
+}
+
+create type test.Classification as
+ closed {
+  id : int64,
+  fullClassification : KPCOFGS
+}
+
+create type test.Animal as
+{
+  id : int64
+}
+
+create  table Animals(Animal) primary key id;
+
+create  table Classifications(Classification) primary key id;
+
+create  table KPCOFGSs(KPCOFGS) primary key id;
+
+create  table Ss(S) primary key id;
+
+create  table GSs(GS) primary key id;
+
+create  table FGSs(FGS) primary key id;
+
+create  table OFGSs(OFGS) primary key id;
+
+create  table COFGSs(COFGS) primary key id;
+
+create  table PCOFGSs(PCOFGS) primary key id;
+
+create  index species  on Ss (Species) type btree;
+
+create  index genus  on GSs (lower.Species) type btree;
+
+create  index family  on FGSs (lower.lower.Species:string) type btree enforced;
+
+create  index orda  on OFGSs (lower.lower.lower.Species:string) type btree enforced;
+
+create  index classy  on COFGSs (lower.lower.lower.lower.Species:string) type btree enforced;
+
+create  index phylum  on PCOFGSs (lower.lower.lower.lower.lower.Species:string) type btree enforced;
+
+create  index phylum  on KPCOFGSs (lower.lower.lower.lower.lower.lower.Species:string) type btree enforced;
+
+create  index class  on Classifications (fullClassification.lower.lower.lower.lower.lower.lower.Species:string) type btree enforced;
+
+create  index anim  on Animals (class.fullClassification.lower.lower.lower.lower.lower.lower.Species:string) type btree enforced;
+

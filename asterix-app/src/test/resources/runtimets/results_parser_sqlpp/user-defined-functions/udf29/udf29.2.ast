@@ -1,0 +1,8 @@
+DataverseUse test
+FunctionDecl f1([]) {
+  LiteralExpr [LONG] [100]
+}
+
+Query:
+FunctionCall test.f1@0[
+]

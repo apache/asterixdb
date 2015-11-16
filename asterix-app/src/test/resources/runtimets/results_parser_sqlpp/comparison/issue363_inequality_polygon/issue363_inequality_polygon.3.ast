@@ -1,0 +1,55 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [polygon0]
+    :
+    OperatorExpr [
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+      >
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [polygon1]
+    :
+    OperatorExpr [
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+      <
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [polygon2]
+    :
+    OperatorExpr [
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+      >=
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [polygon3]
+    :
+    OperatorExpr [
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+      <=
+      FunctionCall null.polygon@1[
+        LiteralExpr [STRING] [-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75]
+      ]
+    ]
+  )
+]

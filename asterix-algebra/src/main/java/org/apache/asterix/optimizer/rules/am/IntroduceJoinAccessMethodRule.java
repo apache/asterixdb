@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
@@ -79,11 +80,13 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     protected AbstractFunctionCallExpression joinCond = null;
     protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
     protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
+    protected IVariableTypeEnvironment typeEnvironment = null;
     protected boolean isLeftOuterJoin = false;
     protected boolean hasGroupBy = true;
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<FunctionIdentifier, List<IAccessMethod>>();
+
     static {
         registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
@@ -105,10 +108,12 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         boolean matchInLeftSubTree = false;
         boolean matchInRightSubTree = false;
         if (leftSubTree.hasDataSource()) {
-            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assignsAndUnnests, analyzedAMs);
+            matchInLeftSubTree = analyzeCondition(joinCond, leftSubTree.assignsAndUnnests, analyzedAMs, context,
+                    typeEnvironment);
         }
         if (rightSubTree.hasDataSource()) {
-            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assignsAndUnnests, analyzedAMs);
+            matchInRightSubTree = analyzeCondition(joinCond, rightSubTree.assignsAndUnnests, analyzedAMs, context,
+                    typeEnvironment);
         }
         if (!matchInLeftSubTree && !matchInRightSubTree) {
             return false;
@@ -133,7 +138,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         if (checkRightSubTreeMetadata) {
             fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context);
         }
-        pruneIndexCandidates(analyzedAMs);
+        pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
 
         // Prioritize the order of index that will be applied. If the right subtree (inner branch) has indexes,
         // those indexes will be used.
@@ -229,6 +234,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             join = (LeftOuterJoinOperator) joinRef.getValue();
         }
 
+        typeEnvironment = context.getOutputTypeEnvironment(join);
         // Check that the select's condition is a function call.
         ILogicalExpression condExpr = join.getCondition().getValue();
         if (condExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
@@ -250,7 +256,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         if (op1.getInputs().size() != 1) {
             return false;
         }
-        if (((AbstractLogicalOperator) op1.getInputs().get(0).getValue()).getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
+        if (((AbstractLogicalOperator) op1.getInputs().get(0).getValue())
+                .getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
             return false;
         }
         if (op1.getOperatorTag() == LogicalOperatorTag.GROUP) {

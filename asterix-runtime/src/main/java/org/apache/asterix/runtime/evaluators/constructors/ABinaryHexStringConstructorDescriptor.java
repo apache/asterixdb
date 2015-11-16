@@ -19,6 +19,9 @@
 
 package org.apache.asterix.runtime.evaluators.constructors;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.formats.nontagged.AqlSerializerDeserializerProvider;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
@@ -33,14 +36,12 @@ import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.data.std.api.IDataOutputProvider;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayHexParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
-
-import java.io.DataOutput;
-import java.io.IOException;
 
 public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -50,17 +51,20 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         }
     };
 
-    @Override public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
+    @Override
+    public ICopyEvaluatorFactory createEvaluatorFactory(final ICopyEvaluatorFactory[] args)
             throws AlgebricksException {
         return new ICopyEvaluatorFactory() {
-            @Override public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
+            @Override
+            public ICopyEvaluator createEvaluator(final IDataOutputProvider output)
                     throws AlgebricksException {
                 return new ABinaryConstructorEvaluator(output, args[0], ByteArrayHexParserFactory.INSTANCE);
             }
         };
     }
 
-    @Override public FunctionIdentifier getIdentifier() {
+    @Override
+    public FunctionIdentifier getIdentifier() {
         return AsterixBuiltinFunctions.BINARY_HEX_CONSTRUCTOR;
     }
 
@@ -69,6 +73,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         private ArrayBackedValueStorage outInput;
         private ICopyEvaluator eval;
         private IValueParser byteArrayParser;
+        private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
         @SuppressWarnings("unchecked")
         private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
@@ -83,7 +88,8 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
             byteArrayParser = valueParserFactory.createValueParser();
         }
 
-        @Override public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
+        @Override
+        public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
 
             try {
                 outInput.reset();
@@ -96,9 +102,9 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                 } else if (tt == ATypeTag.BINARY) {
                     out.write(outInput.getByteArray(), outInput.getStartOffset(), outInput.getLength());
                 } else if (tt == ATypeTag.STRING) {
-                    String string = new String(outInput.getByteArray(), 3, outInput.getLength() - 3,
-                            "UTF-8");
-                    char[] buffer = string.toCharArray();
+                    utf8Ptr.set(outInput.getByteArray(), 1, outInput.getLength() - 1);
+
+                    char[] buffer = utf8Ptr.toString().toCharArray();
                     out.write(ATypeTag.BINARY.serialize());
                     byteArrayParser.parse(buffer, 0, buffer.length, out);
                 } else {

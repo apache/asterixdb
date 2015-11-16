@@ -1,0 +1,42 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=result ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Animals]
+  ]
+  AS
+  Variable [ Name=test ]
+]
+LetVariable [ Name=result ]
+  :=
+  FieldAccessor [
+    FieldAccessor [
+      FieldAccessor [
+        FieldAccessor [
+          FieldAccessor [
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=test ]
+                Field=class
+              ]
+              Field=fullClassification
+            ]
+            Field=lower
+          ]
+          Field=lower
+        ]
+        Field=lower
+      ]
+      Field=lower
+    ]
+    Field=lower
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=result ]
+    Field=id
+  ]
+  ASC
+

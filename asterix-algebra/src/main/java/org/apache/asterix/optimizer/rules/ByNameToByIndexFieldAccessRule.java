@@ -25,9 +25,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.asterix.algebra.base.AsterixOperatorAnnotations;
-import org.apache.asterix.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
@@ -57,7 +56,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -156,9 +156,8 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             return null;
         }
         return new ScalarFunctionCallExpression(
-                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                fce.getArguments().get(0), new MutableObject<ILogicalExpression>(new ConstantExpression(
-                        new AsterixConstantValue(new AInt32(k)))));
+                FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
+                new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
     }
 
     private static String getStringSecondArgument(AbstractFunctionCallExpression expr) {

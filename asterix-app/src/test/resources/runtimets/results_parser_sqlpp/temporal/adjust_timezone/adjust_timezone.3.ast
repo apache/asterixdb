@@ -1,0 +1,60 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [time]
+    :
+    FunctionCall test.adjust-time-for-timezone@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [20:15:10.327]
+      ]
+      LiteralExpr [STRING] [+0800]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [datetime]
+    :
+    FunctionCall test.adjust-datetime-for-timezone@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2010-10-23T01:12:13.329Z]
+      ]
+      LiteralExpr [STRING] [-0615]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null1]
+    :
+    FunctionCall test.adjust-time-for-timezone@2[
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [+0800]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null2]
+    :
+    FunctionCall test.adjust-time-for-timezone@2[
+      FunctionCall test.time@1[
+        LiteralExpr [STRING] [20:15:10.327]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null3]
+    :
+    FunctionCall test.adjust-datetime-for-timezone@2[
+      LiteralExpr [NULL]
+      LiteralExpr [STRING] [-0800]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [null4]
+    :
+    FunctionCall test.adjust-datetime-for-timezone@2[
+      FunctionCall test.datetime@1[
+        LiteralExpr [STRING] [2010-10-23T01:12:13.329Z]
+      ]
+      LiteralExpr [NULL]
+    ]
+  )
+]

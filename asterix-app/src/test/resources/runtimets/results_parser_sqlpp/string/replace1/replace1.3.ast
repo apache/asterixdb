@@ -1,0 +1,31 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [result1]
+    :
+    FunctionCall test.replace@3[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [a]
+      LiteralExpr [STRING] []
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    FunctionCall test.replace@3[
+      LiteralExpr [STRING] [abracadabra]
+      LiteralExpr [STRING] [a(.)]
+      LiteralExpr [STRING] [a$1$1]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result3]
+    :
+    FunctionCall test.replace@3[
+      LiteralExpr [STRING] [darted]
+      LiteralExpr [STRING] [^(.*?)d(.*)$]
+      LiteralExpr [STRING] [$1c$2]
+    ]
+  )
+]

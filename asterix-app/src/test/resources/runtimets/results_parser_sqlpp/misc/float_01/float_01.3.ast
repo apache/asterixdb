@@ -1,0 +1,16 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=f ]
+]
+FROM [  OrderedListConstructor [
+    LiteralExpr [FLOAT] [1.0]
+    LiteralExpr [FLOAT] [1.0]
+    LiteralExpr [FLOAT] [1.1]
+    LiteralExpr [FLOAT] [1.1]
+    LiteralExpr [FLOAT] [0.1]
+    LiteralExpr [FLOAT] [0.1]
+  ]
+  AS
+  Variable [ Name=f ]
+]

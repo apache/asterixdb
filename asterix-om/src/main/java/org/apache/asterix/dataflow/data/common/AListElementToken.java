@@ -26,8 +26,8 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 public class AListElementToken implements IToken {
 
     protected byte[] data;
-    protected int start;
-    protected int length;
+    protected int startOffset;
+    protected int endOffset;
     protected int tokenLength;
     protected int typeTag;
 
@@ -37,13 +37,13 @@ public class AListElementToken implements IToken {
     }
 
     @Override
-    public int getLength() {
-        return length;
+    public int getEndOffset() {
+        return endOffset;
     }
 
     @Override
-    public int getStart() {
-        return start;
+    public int getStartOffset() {
+        return startOffset;
     }
 
     @Override
@@ -52,10 +52,10 @@ public class AListElementToken implements IToken {
     }
 
     @Override
-    public void reset(byte[] data, int start, int length, int tokenLength, int tokenCount) {
+    public void reset(byte[] data, int startOffset, int endOffset, int tokenLength, int tokenCount) {
         this.data = data;
-        this.start = start;
-        this.length = length;
+        this.startOffset = startOffset;
+        this.endOffset = endOffset;
         this.tokenLength = tokenLength;
         // We abuse the last param, tokenCount, to pass the type tag.
         typeTag = tokenCount;
@@ -64,7 +64,7 @@ public class AListElementToken implements IToken {
     @Override
     public void serializeToken(GrowableArray out) throws IOException {
         out.getDataOutput().writeByte(typeTag);
-        out.getDataOutput().write(data, start, length);
+        out.getDataOutput().write(data, startOffset, endOffset - startOffset);
     }
 
     @Override

@@ -1,0 +1,90 @@
+DataverseUse test
+TypeDecl DBLPType [
+  closed RecordType {
+    id : int32,
+    dblpid : string,
+    title : string,
+    authors : string,
+    misc : string
+  }
+]
+DatasetDecl DBLP(DBLPType) partitioned by [[id]]
+WriteOutputTo nc1:rttest/consolidate-complex-selects.aql
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [Paper]
+    :
+    Variable [ Name=paper_tokens ]
+  )
+  (
+    LiteralExpr [STRING] [Query]
+    :
+    Variable [ Name=query_tokens ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [DBLP]
+  ]
+  AS
+  Variable [ Name=paper ]
+]
+LetVariable [ Name=paper_tokens ]
+  :=
+  FunctionCall test.word-tokens@1[
+    FieldAccessor [
+      Variable [ Name=paper ]
+      Field=title
+    ]
+  ]
+LetVariable [ Name=query_tokens ]
+  :=
+  FunctionCall test.word-tokens@1[
+    LiteralExpr [STRING] [Transactions for Cooperative Environments]
+  ]
+LetVariable [ Name=jacca ]
+  :=
+  FunctionCall test.similarity-jaccard-check@3[
+    Variable [ Name=paper_tokens ]
+    Variable [ Name=query_tokens ]
+    LiteralExpr [FLOAT] [0.8]
+  ]
+LetVariable [ Name=jaccb ]
+  :=
+  FunctionCall test.similarity-jaccard-check@3[
+    Variable [ Name=paper_tokens ]
+    Variable [ Name=query_tokens ]
+    LiteralExpr [FLOAT] [0.5]
+  ]
+LetVariable [ Name=jaccc ]
+  :=
+  FunctionCall test.similarity-jaccard-check@3[
+    Variable [ Name=paper_tokens ]
+    Variable [ Name=query_tokens ]
+    LiteralExpr [FLOAT] [0.3]
+  ]
+Where
+  OperatorExpr [
+    IndexAccessor [
+      Variable [ Name=jacca ]
+      Index:       Variable [ Name=jacca ]
+    ]
+    and
+    IndexAccessor [
+      Variable [ Name=jaccb ]
+      Index:       Variable [ Name=jaccb ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=paper ]
+        Field=authors
+      ]
+      =
+      LiteralExpr [STRING] [testauth]
+    ]
+    and
+    Variable [ Name=jaccc ]
+  ]

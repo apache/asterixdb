@@ -1,0 +1,38 @@
+DataverseUse test
+Query:
+LetVariable [ Name=dr1 ]
+  :=
+  FunctionCall test.year-month-duration@1[
+    LiteralExpr [STRING] [P439Y]
+  ]
+LetVariable [ Name=dr2 ]
+  :=
+  FunctionCall test.year-month-duration@1[
+    LiteralExpr [STRING] [-P328M]
+  ]
+LetVariable [ Name=dr3 ]
+  :=
+  FunctionCall test.year-month-duration@1[
+    LiteralExpr [STRING] [-P48Y12M]
+  ]
+LetVariable [ Name=dr4 ]
+  :=
+  FunctionCall test.year-month-duration@1[
+    LiteralExpr [STRING] [P12M]
+  ]
+SELECT ELEMENT [
+Variable [ Name=dr ]
+]
+FROM [  OrderedListConstructor [
+    Variable [ Name=dr1 ]
+    Variable [ Name=dr2 ]
+    Variable [ Name=dr3 ]
+    Variable [ Name=dr4 ]
+  ]
+  AS
+  Variable [ Name=dr ]
+]
+Orderby
+  Variable [ Name=dr ]
+  ASC
+

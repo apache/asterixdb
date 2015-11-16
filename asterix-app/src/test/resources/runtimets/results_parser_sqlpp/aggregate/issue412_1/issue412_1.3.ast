@@ -1,0 +1,58 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall null.count@1[
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [60]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [average]
+    :
+    FunctionCall null.avg@1[
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [60]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sum]
+    :
+    FunctionCall null.sum@1[
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [60]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [min]
+    :
+    FunctionCall null.min@1[
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [60]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [max]
+    :
+    FunctionCall null.max@1[
+      OrderedListConstructor [
+        LiteralExpr [LONG] [1]
+        LiteralExpr [LONG] [60]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+]

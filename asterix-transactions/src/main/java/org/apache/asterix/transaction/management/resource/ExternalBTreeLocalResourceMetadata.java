@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.asterix.common.context.BaseOperationTracker;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -48,19 +47,14 @@ public class ExternalBTreeLocalResourceMetadata extends LSMBTreeLocalResourceMet
     public ILSMIndex createIndexInstance(IAsterixAppRuntimeContextProvider runtimeContextProvider, String filePath,
             int partition) {
         FileReference file = new FileReference(new File(filePath));
-        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(
-                file,
-                runtimeContextProvider.getBufferCache(),
-                runtimeContextProvider.getFileMapManager(),
-                typeTraits,
-                cmpFactories,
-                bloomFilterKeyFields,
+        LSMBTree lsmBTree = LSMBTreeUtils.createExternalBTree(file, runtimeContextProvider.getBufferCache(),
+                runtimeContextProvider.getFileMapManager(), typeTraits, cmpFactories, bloomFilterKeyFields,
                 runtimeContextProvider.getBloomFilterFalsePositiveRate(),
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties,
-                        runtimeContextProvider.getIndexLifecycleManager()),
-                new BaseOperationTracker((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager(),
-                        datasetID, ((DatasetLifecycleManager) runtimeContextProvider.getIndexLifecycleManager())
-                                .getDatasetInfo(datasetID)), runtimeContextProvider.getLSMIOScheduler(),
+                        runtimeContextProvider.getDatasetLifecycleManager()),
+                new BaseOperationTracker(datasetID,
+                        runtimeContextProvider.getDatasetLifecycleManager().getDatasetInfo(datasetID)),
+                runtimeContextProvider.getLSMIOScheduler(),
                 LSMBTreeIOOperationCallbackFactory.INSTANCE.createIOOperationCallback(), -1, true);
         return lsmBTree;
     }

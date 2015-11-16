@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>asterix</artifactId>
-        <groupId>edu.uci.ics.asterix</groupId>
+        <groupId>org.apache.asterix</groupId>
         <version>0.8.7-SNAPSHOT</version>
     </parent>
     <artifactId>asterix-docker</artifactId>

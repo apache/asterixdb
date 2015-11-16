@@ -1,0 +1,27 @@
+DataverseUse test
+Query:
+LetVariable [ Name=a ]
+  :=
+  LiteralExpr [LONG] [1]
+LetVariable [ Name=b ]
+  :=
+  LiteralExpr [LONG] [2]
+LetVariable [ Name=c ]
+  :=
+  LiteralExpr [STRING] [c]
+LetVariable [ Name=d ]
+  :=
+  OrderedListConstructor [
+    Variable [ Name=a ]
+    Variable [ Name=b ]
+    Variable [ Name=c ]
+  ]
+SELECT ELEMENT [
+FunctionCall test.string@1[
+  Variable [ Name=x ]
+]
+]
+FROM [  Variable [ Name=d ]
+  AS
+  Variable [ Name=x ]
+]

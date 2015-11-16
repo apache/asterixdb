@@ -1,0 +1,12 @@
+DataverseUse test
+TypeDecl SpatialType [
+  open RecordType {
+    id : int64,
+    point : point,
+    point3d : point3d,
+    line : line,
+    polygon : polygon,
+    circle : circle
+  }
+]
+DatasetDecl Spatial(SpatialType)is an external dataset

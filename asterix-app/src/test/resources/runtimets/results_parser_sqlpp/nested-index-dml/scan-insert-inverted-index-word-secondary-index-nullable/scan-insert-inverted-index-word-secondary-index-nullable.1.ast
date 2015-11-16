@@ -1,0 +1,17 @@
+DataverseUse test
+TypeDecl DBLPTypetmp [
+  closed RecordType {
+    id : int64,
+    dblpid : string,
+    title : string?,
+    authors : string,
+    misc : string
+  }
+]
+TypeDecl DBLPType [
+  closed RecordType {
+    nested : DBLPTypetmp
+  }
+]
+DatasetDecl DBLPtmp(DBLPTypetmp) partitioned by [[id]]
+DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]

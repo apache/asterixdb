@@ -1,2 +1,1 @@
-[ { "sql-count": 3, "average": 5.32d, "sql-sum": 15.96d, "sql-min": 473847, "sql-max": 38473827484738239 }
- ]
+{ "sql-count": 3, "average": 5.32d, "sql-sum": 15.96d, "sql-min": 473847, "sql-max": 38473827484738239 }

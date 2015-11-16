@@ -1,0 +1,185 @@
+DataverseUse test
+Query:
+LetVariable [ Name=a ]
+  :=
+  OrderedListConstructor [
+  ]
+LetVariable [ Name=b ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [efg]
+  ]
+LetVariable [ Name=c ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [ijk]
+    LiteralExpr [STRING] [bcd]
+  ]
+LetVariable [ Name=d ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [ijk]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [fgh]
+    LiteralExpr [STRING] [ghi]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [jkl]
+    LiteralExpr [STRING] [cde]
+  ]
+LetVariable [ Name=e ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [Efg]
+    LiteralExpr [STRING] [aBc]
+    LiteralExpr [STRING] [cdE]
+    LiteralExpr [STRING] [DEf]
+    LiteralExpr [STRING] [hIJ]
+    LiteralExpr [STRING] [IjK]
+    LiteralExpr [STRING] [BCD]
+  ]
+LetVariable [ Name=f ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [ijk]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [fgh]
+    LiteralExpr [STRING] [ghi]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [jkl]
+    LiteralExpr [STRING] [cde]
+  ]
+LetVariable [ Name=g ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [cde]
+    LiteralExpr [STRING] [zza]
+    LiteralExpr [STRING] [zzb]
+    LiteralExpr [STRING] [zzc]
+    LiteralExpr [STRING] [zwz]
+    LiteralExpr [STRING] [za]
+    LiteralExpr [STRING] [zbe]
+    LiteralExpr [STRING] [zer]
+    LiteralExpr [STRING] [zba]
+    LiteralExpr [STRING] [zfe]
+    LiteralExpr [STRING] [wab]
+  ]
+LetVariable [ Name=h ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [abc]
+    LiteralExpr [STRING] [ijk]
+    LiteralExpr [STRING] [bcd]
+    LiteralExpr [STRING] [efg]
+    LiteralExpr [STRING] [fgh]
+    LiteralExpr [STRING] [ghi]
+    LiteralExpr [STRING] [def]
+    LiteralExpr [STRING] [hij]
+    LiteralExpr [STRING] [jkl]
+    LiteralExpr [STRING] [cde]
+  ]
+LetVariable [ Name=results ]
+  :=
+  OrderedListConstructor [
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+      LiteralExpr [FLOAT] [0.0]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+      LiteralExpr [FLOAT] [0.0]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=a ]
+      Variable [ Name=b ]
+      LiteralExpr [FLOAT] [0.1]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=b ]
+      Variable [ Name=a ]
+      LiteralExpr [FLOAT] [0.1]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=c ]
+      Variable [ Name=d ]
+      LiteralExpr [FLOAT] [0.6]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=d ]
+      Variable [ Name=c ]
+      LiteralExpr [FLOAT] [0.6]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=c ]
+      Variable [ Name=d ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=d ]
+      Variable [ Name=c ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=e ]
+      Variable [ Name=f ]
+      LiteralExpr [FLOAT] [0.6]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=f ]
+      Variable [ Name=e ]
+      LiteralExpr [FLOAT] [0.6]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=e ]
+      Variable [ Name=f ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=f ]
+      Variable [ Name=e ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=g ]
+      Variable [ Name=h ]
+      LiteralExpr [FLOAT] [0.05]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=h ]
+      Variable [ Name=g ]
+      LiteralExpr [FLOAT] [0.05]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=g ]
+      Variable [ Name=h ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+    FunctionCall test.similarity-jaccard-check@3[
+      Variable [ Name=h ]
+      Variable [ Name=g ]
+      LiteralExpr [FLOAT] [0.8]
+    ]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=results ]
+  AS
+  Variable [ Name=i ]
+]

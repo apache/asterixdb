@@ -1,0 +1,18 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+Variable [ Name=t ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [tmp]
+  ]
+  AS
+  Variable [ Name=t ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=t ]
+    Field=unique2
+  ]
+  ASC
+

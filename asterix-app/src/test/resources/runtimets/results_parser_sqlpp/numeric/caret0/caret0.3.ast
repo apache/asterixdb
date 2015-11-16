@@ -1,0 +1,30 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c1]
+    :
+    OperatorExpr [
+      LiteralExpr [DOUBLE] [2.0]
+      ^
+      LiteralExpr [DOUBLE] [4096.0]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c2]
+    :
+    OperatorExpr [
+      LiteralExpr [DOUBLE] [4096.0]
+      ^
+      LiteralExpr [DOUBLE] [2.0]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c3]
+    :
+    OperatorExpr [
+      LiteralExpr [LONG] [3]
+      ^
+      LiteralExpr [LONG] [2]
+    ]
+  )
+]

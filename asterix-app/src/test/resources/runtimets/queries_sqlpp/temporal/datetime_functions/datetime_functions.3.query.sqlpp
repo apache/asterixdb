@@ -1,0 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+set "import-private-functions" "true";
+
+{'datetime1':test."datetime-from-unix-time-in-ms"(956007429),'datetime1secs':test."datetime-from-unix-time-in-secs"(1356048000),'datetime2':test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')),'datetime3':(test."datetime-from-unix-time-in-ms"(956007429) + (test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test."datetime-from-unix-time-in-ms"(956007429))),'duration1':(test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test."datetime-from-unix-time-in-ms"(956007429)),'c1':(test."datetime-from-unix-time-in-ms"(956007429) = ((test."datetime-from-unix-time-in-ms"(956007429) - (test."datetime-from-unix-time-in-ms"(956007429) + (test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test."datetime-from-unix-time-in-ms"(956007429)))) + (test."datetime-from-unix-time-in-ms"(956007429) + (test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test."datetime-from-unix-time-in-ms"(956007429))))),'null1':test."datetime-from-unix-time-in-ms"(null),'null1secs':test."datetime-from-unix-time-in-secs"(null),'null2':test."datetime-from-date-time"(null,test.time('15:35:49.938-0800')),'null3':test."datetime-from-date-time"(test.date('1327-12-02'),null),'null4':(null - test."datetime-from-unix-time-in-ms"(956007429)),'null5':(test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - null),'null6':(null + (test."datetime-from-date-time"(test.date('1327-12-02'),test.time('15:35:49.938-0800')) - test."datetime-from-unix-time-in-ms"(956007429))),'null7':(test."datetime-from-unix-time-in-ms"(956007429) + null)};

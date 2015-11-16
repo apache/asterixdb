@@ -1,0 +1,61 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [1234567890]
+      LiteralExpr [STRING] [[^a-z]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [1234567890]
+      LiteralExpr [STRING] [[^a-zA-Z]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghABCDEFGH]
+      LiteralExpr [STRING] [[^a-zA-Z]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[^a-zA-Z]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[^A-Z]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[^a-z]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[^0-9]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[0-9]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [adefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[a-z&&[^bc]]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+      LiteralExpr [STRING] [[a-z&&[^bc]]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [bc]
+      LiteralExpr [STRING] [[a-z&&[^bc]]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [mnop]
+      LiteralExpr [STRING] [[a-z&&[^m-p]]]
+    ]
+    FunctionCall null.matches@2[
+      LiteralExpr [STRING] [abcdmnop]
+      LiteralExpr [STRING] [[a-z&&[^m-p]]]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

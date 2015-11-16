@@ -1,0 +1,123 @@
+DataverseUse tpch
+Query:
+SELECT ELEMENT [
+OperatorExpr [
+  LiteralExpr [DOUBLE] [100.0]
+  *
+  FunctionCall tpch.sum@1[
+    (
+      SELECT ELEMENT [
+      FunctionCall tpch.switch-case@5[
+        FunctionCall tpch.like@2[
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=p_type
+          ]
+          LiteralExpr [STRING] [PROMO%]
+        ]
+        LiteralExpr [TRUE]
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=l_extendedprice
+          ]
+          *
+          OperatorExpr [
+            LiteralExpr [LONG] [1]
+            -
+            FieldAccessor [
+              Variable [ Name=i ]
+              Field=l_discount
+            ]
+          ]
+        ]
+        LiteralExpr [FALSE]
+        LiteralExpr [DOUBLE] [0.0]
+      ]
+      ]
+      FROM [        Variable [ Name=l ]
+        AS
+        Variable [ Name=i ]
+      ]
+    )
+  ]
+  /
+  FunctionCall tpch.sum@1[
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FieldAccessor [
+          Variable [ Name=i ]
+          Field=l_extendedprice
+        ]
+        *
+        OperatorExpr [
+          LiteralExpr [LONG] [1]
+          -
+          FieldAccessor [
+            Variable [ Name=i ]
+            Field=l_discount
+          ]
+        ]
+      ]
+      ]
+      FROM [        Variable [ Name=l ]
+        AS
+        Variable [ Name=i ]
+      ]
+    )
+  ]
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [LineItem]
+  ]
+  AS
+  Variable [ Name=l ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Part]
+  ]
+  AS
+  Variable [ Name=p ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_partkey
+      ]
+      =
+      FieldAccessor [
+        Variable [ Name=p ]
+        Field=p_partkey
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_shipdate
+      ]
+      >=
+      LiteralExpr [STRING] [1995-09-01]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        Variable [ Name=l ]
+        Field=l_shipdate
+      ]
+      <
+      LiteralExpr [STRING] [1995-10-01]
+    ]
+  ]
+Groupby
+  Variable [ Name=t ]
+  :=
+  LiteralExpr [LONG] [1]
+  With
+  Variable [ Name=p ]
+  Variable [ Name=l ]
+

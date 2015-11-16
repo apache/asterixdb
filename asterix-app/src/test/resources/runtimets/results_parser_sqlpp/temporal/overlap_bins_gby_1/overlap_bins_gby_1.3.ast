@@ -1,0 +1,108 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [timebin]
+    :
+    Variable [ Name=bin ]
+  )
+  (
+    LiteralExpr [STRING] [count]
+    :
+    FunctionCall test.count@1[
+      Variable [ Name=i2 ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [total_ms]
+    :
+    FunctionCall test.sum@1[
+      (
+        SELECT ELEMENT [
+        FunctionCall test.ms-from-day-time-duration@1[
+          FunctionCall test.duration-from-interval@1[
+            FunctionCall test.get-overlapping-interval@2[
+              Variable [ Name=bin ]
+              FieldAccessor [
+                Variable [ Name=i3 ]
+                Field=interval
+              ]
+            ]
+          ]
+        ]
+        ]
+        FROM [          Variable [ Name=i2 ]
+          AS
+          Variable [ Name=i3 ]
+        ]
+      )
+    ]
+  )
+]
+]
+FROM [  (
+    SELECT ELEMENT [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [interval]
+        :
+        FunctionCall test.interval-start-from-time@2[
+          FieldAccessor [
+            Variable [ Name=i1 ]
+            Field=time
+          ]
+          FieldAccessor [
+            Variable [ Name=i1 ]
+            Field=duration
+          ]
+        ]
+      )
+    ]
+    ]
+    FROM [      FunctionCall Metadata.dataset@1[
+        LiteralExpr [STRING] [tsdata]
+      ]
+      AS
+      Variable [ Name=i1 ]
+    ]
+    Orderby
+      FieldAccessor [
+        Variable [ Name=i1 ]
+        Field=time
+      ]
+      ASC
+
+  )
+  AS
+  Variable [ Name=i2 ]
+,
+  FunctionCall test.overlap-bins@3[
+    FieldAccessor [
+      Variable [ Name=i2 ]
+      Field=interval
+    ]
+    FunctionCall test.time@1[
+      LiteralExpr [STRING] [00:00:00]
+    ]
+    FunctionCall test.day-time-duration@1[
+      LiteralExpr [STRING] [PT1H30M]
+    ]
+  ]
+  AS
+  Variable [ Name=j ]
+]
+Groupby
+  Variable [ Name=bin ]
+  :=
+  Variable [ Name=j ]
+  With
+  Variable [ Name=i2 ]
+  Variable [ Name=j ]
+
+Orderby
+  FunctionCall test.get-interval-start@1[
+    Variable [ Name=bin ]
+  ]
+  ASC
+

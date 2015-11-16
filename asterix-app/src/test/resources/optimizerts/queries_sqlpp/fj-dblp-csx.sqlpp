@@ -1,0 +1,85 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  database "fj-dblp-csx" if exists;
+create  database "fj-dblp-csx";
+
+use "fj-dblp-csx";
+
+
+create type "fj-dblp-csx".DBLPType as
+{
+  id : int32,
+  dblpid : string,
+  title : string,
+  authors : string,
+  misc : string
+}
+
+create type "fj-dblp-csx".CSXType as
+{
+  id : int32,
+  csxid : string,
+  title : string,
+  authors : string,
+  misc : string
+}
+
+create  nodegroup group1 if not exists  on 
+    nc1,
+    nc2
+;
+create  table DBLP(DBLPType) primary key id on group1;
+
+create  table CSX(CSXType) primary key id on group1;
+
+write output to nc1:"rttest/fj-dblp-csx.adm"
+select element {'idDBLP':idDBLP,'idCSX':idCSX}
+from  DBLP as paperDBLP,
+      tokensDBLP as prefixTokenDBLP,
+      CSX as paperCSX,
+      tokensCSX as prefixTokenCSX
+with  idDBLP as paperDBLP.id,
+      unrankedTokensDBLP as "fj-dblp-csx"."counthashed-word-tokens"(paperDBLP.title),
+      tokensDBLP as (
+      select element i
+      from  unrankedTokensDBLP as token,
+            (
+          select element paper.title
+          from  DBLP as paper
+      ) as tokenRanked at i
+      where (token = tokenRanked)
+      order by i
+  ),
+      idCSX as paperCSX.id,
+      unrankedTokensCSX as "fj-dblp-csx"."counthashed-word-tokens"(paperCSX.title),
+      tokensCSX as (
+      select element i
+      from  unrankedTokensCSX as token,
+            (
+          select element paper.title
+          from  DBLP as paper
+      ) as tokenRanked at i
+      where (token = tokenRanked)
+      order by i
+  )
+where (prefixTokenDBLP = prefixTokenCSX)
+group by idDBLP as idDBLP,idCSX as idCSX
+order by idDBLP,idCSX
+;

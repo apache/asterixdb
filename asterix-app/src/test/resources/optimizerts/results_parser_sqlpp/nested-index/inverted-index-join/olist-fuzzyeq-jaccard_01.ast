@@ -1,0 +1,99 @@
+DataverseUse test
+TypeDecl AddressType [
+  closed RecordType {
+    number : int32,
+    street : string,
+    city : string
+  }
+]
+TypeDecl CustomerTypetmp [
+  closed RecordType {
+    cid : int32,
+    name : string,
+    age : int32?,
+    address : AddressType?,
+    interests : OrderedList [string]
+,
+    children : OrderedList [          open RecordType {
+            name : string,
+            age : int32?
+          }
+]
+
+  }
+]
+TypeDecl CustomerType [
+  closed RecordType {
+    nested : CustomerTypetmp
+  }
+]
+DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
+DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
+WriteOutputTo nc1:rttest/inverted-index-join_olist-fuzzyeq-jaccard_01.adm
+Set simfunction=jaccard
+Set simthreshold=0.7f
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [arec]
+    :
+    Variable [ Name=a ]
+  )
+  (
+    LiteralExpr [STRING] [brec]
+    :
+    Variable [ Name=b ]
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers2]
+  ]
+  AS
+  Variable [ Name=b ]
+]
+Where
+  OperatorExpr [
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=interests
+      ]
+      ~=
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=interests
+      ]
+    ]
+    and
+    OperatorExpr [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=a ]
+          Field=nested
+        ]
+        Field=cid
+      ]
+      <
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=b ]
+          Field=nested
+        ]
+        Field=cid
+      ]
+    ]
+  ]

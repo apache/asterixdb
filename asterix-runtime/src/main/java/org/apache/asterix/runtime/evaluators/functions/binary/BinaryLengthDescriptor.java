@@ -67,7 +67,7 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 return;
                             }
                             checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_TAGS, tag);
-                            int len = ByteArrayPointable.getLength(storages[0].getByteArray(), 1);
+                            int len = ByteArrayPointable.getContentLength(storages[0].getByteArray(), 1);
                             result.setValue(len);
                             intSerde.serialize(result, dataOutput);
                         } catch (HyracksDataException e) {

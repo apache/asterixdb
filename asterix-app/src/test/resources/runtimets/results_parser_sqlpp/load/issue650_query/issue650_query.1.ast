@@ -1,0 +1,12 @@
+DataverseUse fuzzyjoin
+TypeDecl UserType [
+  open RecordType {
+    uid : int32,
+    name : string,
+    lottery_numbers : OrderedList [int32]
+,
+    interests : UnorderedList <string>
+
+  }
+]
+DatasetDecl Users(UserType) partitioned by [[uid]]

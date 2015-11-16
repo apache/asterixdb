@@ -1,8 +1,7 @@
-[ { "l_linenumber": 6, "count_order": 432 }
-, { "l_linenumber": 1, "count_order": 1500 }
-, { "l_linenumber": 2, "count_order": 1291 }
-, { "l_linenumber": 4, "count_order": 862 }
-, { "l_linenumber": 3, "count_order": 1077 }
-, { "l_linenumber": 5, "count_order": 632 }
-, { "l_linenumber": 7, "count_order": 211 }
- ]
+{ "l_linenumber": 6, "count_order": 432 }
+{ "l_linenumber": 1, "count_order": 1500 }
+{ "l_linenumber": 2, "count_order": 1291 }
+{ "l_linenumber": 4, "count_order": 862 }
+{ "l_linenumber": 3, "count_order": 1077 }
+{ "l_linenumber": 5, "count_order": 632 }
+{ "l_linenumber": 7, "count_order": 211 }

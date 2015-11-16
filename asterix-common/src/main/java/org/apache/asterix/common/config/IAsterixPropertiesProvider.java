@@ -28,6 +28,10 @@ public interface IAsterixPropertiesProvider {
     public AsterixMetadataProperties getMetadataProperties();
 
     public AsterixExternalProperties getExternalProperties();
-    
+
     public AsterixFeedProperties getFeedProperties();
+
+    AsterixBuildProperties getBuildProperties();
+
+    public AsterixReplicationProperties getReplicationProperties();
 }
