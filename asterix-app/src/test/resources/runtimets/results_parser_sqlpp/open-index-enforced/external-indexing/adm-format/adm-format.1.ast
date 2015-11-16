@@ -1,0 +1,14 @@
+DataverseUse test
+TypeDecl MyRecord [
+  open RecordType {
+    point : point,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle,
+    circle : circle
+  }
+]
+DatasetDecl MyData(MyRecord)is an external dataset

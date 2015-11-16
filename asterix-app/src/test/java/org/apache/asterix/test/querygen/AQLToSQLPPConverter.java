@@ -20,7 +20,6 @@ package org.apache.asterix.test.querygen;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,13 +27,18 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.util.AQLFormatPrintUtil;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.sqlpp.parser.SQLPPParser;
+import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.commons.io.FileUtils;
 
 public class AQLToSQLPPConverter {
+
+    private final static IParserFactory aqlParserFactory = new AQLParserFactory();
+    private final static IParserFactory sqlppParserFactory = new SqlppParserFactory();
 
     public static void convert(String dirName) throws Exception {
         File dir = new File(dirName);
@@ -46,36 +50,40 @@ public class AQLToSQLPPConverter {
 
     private static void convert(File src, File dest) throws Exception {
         if (src.isFile()) {
-            DataInputStream dis = new DataInputStream(new FileInputStream(src));
+            BufferedReader parserReader = new BufferedReader(new InputStreamReader(new FileInputStream(src)));
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(src)));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dest)));
             try {
                 String line = null;
                 while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("/*") || line.startsWith(" *") || line.startsWith("*")) {
+                    if (line.startsWith("/*") || line.startsWith(" *") || line.startsWith("*") || line.startsWith("\t")
+                            || line.startsWith(" \t")) {
                         writer.write(line + "\n");
                     } else {
                         break;
                     }
                 }
                 writer.write("\n");
-                AQLParser parser = new AQLParser(dis);
+                reader.close();
+
+                IParser parser = aqlParserFactory.createParser(parserReader);
                 List<Statement> statements = parser.parse();
-                dis.close();
+                parserReader.close();
+
                 String sqlString = AQLFormatPrintUtil.toSQLPPString(statements);
                 writer.write(sqlString);
             } catch (Exception e) {
                 System.out.println("AQL parser fails at: " + src.getAbsolutePath());
                 //e.printStackTrace();
             } finally {
-                dis.close();
+                parserReader.close();
                 reader.close();
                 writer.close();
             }
 
             BufferedReader sqlReader = new BufferedReader(new InputStreamReader(new FileInputStream(dest)));
             try {
-                SQLPPParser sqlParser = new SQLPPParser(sqlReader);
+                IParser sqlParser = sqlppParserFactory.createParser(sqlReader);
                 sqlParser.parse();
             } catch (Exception e) {
                 System.out.println("SQL++ parser cannot parse: ");

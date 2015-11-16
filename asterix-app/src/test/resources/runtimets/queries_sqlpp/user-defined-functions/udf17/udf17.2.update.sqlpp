@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create UDF and invoke it from another UDF and 
+ * Description  : Create UDF and invoke it from another UDF and
  *              : child UDF returns a string to the parent.
  * Expected Res : Success
  * Date         : Sep 5th 2012

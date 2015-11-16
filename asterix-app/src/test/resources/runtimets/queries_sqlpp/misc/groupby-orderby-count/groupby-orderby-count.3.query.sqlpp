@@ -22,8 +22,7 @@ use twitter;
 
 select element {'word':tok,'count':twitter.count(token)}
 from  TwitterData as t,
-      tokens as token
-with  tokens as twitter."word-tokens"(t.text)
+      twitter."word-tokens"(t.text) as token
 group by token as tok
 order by twitter.count(token) desc,tok
 ;

@@ -23,32 +23,33 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
+import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.common.Job.SubmissionMode;
 import org.apache.asterix.common.config.AsterixCompilerProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.dataflow.data.common.AqlExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlMergeAggregationExpressionFactory;
 import org.apache.asterix.dataflow.data.common.AqlNullableTypeComputer;
 import org.apache.asterix.dataflow.data.common.AqlPartialAggregationTypeComputer;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.jobgen.AqlLogicalExpressionJobGen;
-import org.apache.asterix.lang.aql.rewrites.AqlRewriter;
-import org.apache.asterix.lang.aql.visitor.AQLPrintVisitor;
+import org.apache.asterix.jobgen.QueryLogicalExpressionJobGen;
+import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
+import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.Statement.Kind;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.metadata.MetadataManager;
-import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.om.util.AsterixAppContextInfo;
 import org.apache.asterix.optimizer.base.RuleCollections;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
-import org.apache.asterix.translator.AqlExpressionToPlanTranslator;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -84,6 +85,16 @@ import org.json.JSONException;
  */
 public class APIFramework {
     public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
+
+    private final IRewriterFactory rewriterFactory;
+    private final IAstPrintVisitorFactory astPrintVisitorFactory;
+    private final ILangExpressionToPlanTranslatorFactory translatorFactory;
+
+    public APIFramework(ILangCompilationProvider compilationProvider) {
+        this.rewriterFactory = compilationProvider.getRewriterFactory();
+        this.astPrintVisitorFactory = compilationProvider.getAstPrintVisitorFactory();
+        this.translatorFactory = compilationProvider.getExpressionToPlanTranslatorFactory();
+    }
 
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildDefaultLogicalRewrites() {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultLogicalRewrites = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
@@ -158,8 +169,8 @@ public class APIFramework {
 
     }
 
-    public static Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            AqlMetadataProvider metadataProvider, Query q, SessionConfig conf) throws AsterixException {
+    public Pair<Query, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
+            Query q, SessionConfig conf) throws AsterixException {
 
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
             conf.out().println();
@@ -172,23 +183,22 @@ public class APIFramework {
             }
 
             if (q != null) {
-                q.accept(new AQLPrintVisitor(conf.out()), 0);
+                q.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
             }
 
             if (conf.is(SessionConfig.FORMAT_HTML)) {
                 conf.out().println("</pre>");
             }
         }
-        AqlRewriter rw = new AqlRewriter(declaredFunctions, q, metadataProvider);
-        rw.rewrite();
-        Query rwQ = rw.getExpr();
-        return new Pair(rwQ, rw.getVarCounter());
+        IQueryRewriter rw = rewriterFactory.createQueryRewriter();
+        rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()));
+        return new Pair<Query, Integer>(q, q.getVarCounter());
     }
 
-    public static JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
+    public JobSpecification compileQuery(List<FunctionDecl> declaredFunctions,
             AqlMetadataProvider queryMetadataProvider, Query rwQ, int varCounter, String outputDatasetName,
-            SessionConfig conf, ICompiledDmlStatement statement) throws AsterixException, AlgebricksException,
-            JSONException, RemoteException, ACIDException {
+            SessionConfig conf, ICompiledDmlStatement statement)
+                    throws AsterixException, AlgebricksException, JSONException, RemoteException, ACIDException {
 
         if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
             conf.out().println();
@@ -201,7 +211,7 @@ public class APIFramework {
             }
 
             if (rwQ != null) {
-                rwQ.accept(new AQLPrintVisitor(conf.out()), 0);
+                rwQ.accept(astPrintVisitorFactory.createLangVisitor(conf.out()), 0);
             }
 
             if (conf.is(SessionConfig.FORMAT_HTML)) {
@@ -211,15 +221,15 @@ public class APIFramework {
 
         org.apache.asterix.common.transactions.JobId asterixJobId = JobIdFactory.generateJobId();
         queryMetadataProvider.setJobId(asterixJobId);
-        AqlExpressionToPlanTranslator t = new AqlExpressionToPlanTranslator(queryMetadataProvider, varCounter,
-                outputDatasetName, statement);
+        ILangExpressionToPlanTranslator t = translatorFactory.createExpressionToPlanTranslator(queryMetadataProvider,
+                varCounter);
 
         ILogicalPlan plan;
         // statement = null when it's a query
         if (statement == null || statement.getKind() != Kind.LOAD) {
-            plan = t.translate(rwQ);
+            plan = t.translate(rwQ, outputDatasetName, statement);
         } else {
-            plan = t.translateLoad();
+            plan = t.translateLoad(statement);
         }
 
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
@@ -316,8 +326,8 @@ public class APIFramework {
         builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
         builder.setClusterLocations(clusterLocs);
         builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
-        builder.setExpressionRuntimeProvider(new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(
-                AqlLogicalExpressionJobGen.INSTANCE));
+        builder.setExpressionRuntimeProvider(
+                new LogicalExpressionJobGenToExpressionRuntimeProviderAdapter(QueryLogicalExpressionJobGen.INSTANCE));
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setNullWriterFactory(format.getNullWriterFactory());
@@ -368,7 +378,7 @@ public class APIFramework {
         return spec;
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)
+    public void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)
             throws Exception {
         for (int i = 0; i < specs.length; i++) {
             specs[i].setMaxReattempts(0);
@@ -382,7 +392,7 @@ public class APIFramework {
 
     }
 
-    public static void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out) throws Exception {
+    public void executeJobArray(IHyracksClientConnection hcc, Job[] jobs, PrintWriter out) throws Exception {
         for (int i = 0; i < jobs.length; i++) {
             jobs[i].getJobSpec().setMaxReattempts(0);
             long startTime = System.currentTimeMillis();
@@ -400,19 +410,6 @@ public class APIFramework {
             double duration = (endTime - startTime) / 1000.00;
             out.println("<pre>Duration: " + duration + " sec</pre>");
         }
-
-    }
-
-    private static IDataFormat getDataFormat(MetadataTransactionContext mdTxnCtx, String dataverseName)
-            throws AsterixException {
-        Dataverse dataverse = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
-        IDataFormat format;
-        try {
-            format = (IDataFormat) Class.forName(dataverse.getDataFormat()).newInstance();
-        } catch (Exception e) {
-            throw new AsterixException(e);
-        }
-        return format;
     }
 
 }

@@ -1,0 +1,25 @@
+Query:
+UnorderedListConstructor [
+  OrderedListConstructor [
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [4]
+    LiteralExpr [LONG] [5]
+  ]
+  OrderedListConstructor [
+    LiteralExpr [LONG] [6]
+    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [8]
+    LiteralExpr [LONG] [9]
+  ]
+  OrderedListConstructor [
+    LiteralExpr [LONG] [44]
+    LiteralExpr [LONG] [22]
+    LiteralExpr [LONG] [66]
+    NEGATIVE LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [0]
+    LiteralExpr [DOUBLE] [99.9]
+  ]
+]

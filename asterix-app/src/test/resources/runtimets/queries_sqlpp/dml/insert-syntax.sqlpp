@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-syntax-change.aql
  * Description     : verify various AQL syntax for insert
  * Expected Result : Success

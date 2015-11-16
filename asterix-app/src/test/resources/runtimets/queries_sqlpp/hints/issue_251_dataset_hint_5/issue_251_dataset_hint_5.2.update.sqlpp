@@ -17,7 +17,11 @@
  * under the License.
  */
 /*
-* Description  : Create an  dataset and load it from two file splits 
+* Description  : Create an  dataset and load it from two file splits
+                 Use hint (cardinality) for the created dataset.
+* Expected Res : Success
+* Date         : 30th Jan 2013
+*/
 
 use test;
 

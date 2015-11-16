@@ -22,9 +22,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlDataSource;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeComputerUtilities;
@@ -33,6 +31,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -74,7 +74,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -107,7 +108,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     // Derive the required ARecordType based on the schema of the AqlDataSource
                     InsertDeleteOperator insertDeleteOperator = (InsertDeleteOperator) op2;
                     AqlDataSource dataSource = (AqlDataSource) insertDeleteOperator.getDataSource();
-                    IAType[] schemaTypes = (IAType[]) dataSource.getSchemaTypes();
+                    IAType[] schemaTypes = dataSource.getSchemaTypes();
                     requiredRecordType = (ARecordType) schemaTypes[schemaTypes.length - 1];
 
                     // Derive the Variable which we will potentially wrap with cast/null functions
@@ -170,7 +171,8 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         boolean cast = !compatible(requiredRecordType, inputRecordType);
 
         if (checkNull) {
-            recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.NOT_NULL);
+            recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context,
+                    AsterixBuiltinFunctions.NOT_NULL);
         }
         if (cast) {
             addWrapperFunction(requiredRecordType, recordVar, op, context, AsterixBuiltinFunctions.CAST_RECORD);
@@ -211,7 +213,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     /** insert an assign operator to call the function on-top-of the variable */
                     IAType actualType = (IAType) env.getVarType(var);
                     AbstractFunctionCallExpression cast = new ScalarFunctionCallExpression(
-                            FunctionUtils.getFunctionInfo(fd));
+                            FunctionUtil.getFunctionInfo(fd));
                     cast.getArguments()
                             .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
                     /** enforce the required record type */

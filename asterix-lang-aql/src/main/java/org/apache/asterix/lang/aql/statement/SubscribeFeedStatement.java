@@ -29,12 +29,13 @@ import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedId;
 import org.apache.asterix.common.feeds.FeedPolicyAccessor;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.aql.parser.AQLParser;
-import org.apache.asterix.lang.aql.parser.ParseException;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.aql.parser.AQLParserFactory;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.MetadataException;
 import org.apache.asterix.metadata.MetadataManager;
@@ -63,6 +64,7 @@ public class SubscribeFeedStatement implements Statement {
     private final String[] locations;
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
+    private final IParserFactory parserFactory = new AQLParserFactory();
 
     public SubscribeFeedStatement(String[] locations, FeedConnectionRequest subscriptionRequest) {
         this.connectionRequest = subscriptionRequest;
@@ -95,7 +97,7 @@ public class SubscribeFeedStatement implements Statement {
 
         StringBuilder builder = new StringBuilder();
         builder.append("use dataverse " + sourceFeedId.getDataverse() + ";\n");
-        builder.append("set" + " " + FunctionUtils.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
+        builder.append("set" + " " + FunctionUtil.IMPORT_PRIVATE_FUNCTIONS + " " + "'" + Boolean.TRUE + "'" + ";\n");
         builder.append("set" + " " + FeedActivity.FeedActivityDetails.FEED_POLICY_NAME + " " + "'"
                 + connectionRequest.getPolicy() + "'" + ";\n");
 
@@ -136,13 +138,13 @@ public class SubscribeFeedStatement implements Statement {
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Connect feed statement translated to\n" + builder.toString());
         }
-        AQLParser parser = new AQLParser(new StringReader(builder.toString()));
+        IParser parser = parserFactory.createParser(new StringReader(builder.toString()));
 
         List<Statement> statements;
         try {
-            statements = parser.Statement();
+            statements = parser.parse();
             query = ((InsertStatement) statements.get(3)).getQuery();
-        } catch (ParseException pe) {
+        } catch (AsterixException pe) {
             throw new MetadataException(pe);
         }
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create a feed dataset and a feed using the generic socket feed adapter. 
+ * Description  : Create a feed dataset and a feed using the generic socket feed adapter.
 
 drop  database feeds if exists;
 create  database feeds;

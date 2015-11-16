@@ -18,10 +18,10 @@
  */
 /**
  * issue531_string_sql-min_sql-max
- * 
+ *
  * Purpose: test the support of string values for sql-min and sql-max aggregation function
  * Result: success
- * 
+ *
  */
 
 use test;

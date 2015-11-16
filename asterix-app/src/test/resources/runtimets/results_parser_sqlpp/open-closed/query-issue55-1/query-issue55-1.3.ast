@@ -1,0 +1,56 @@
+Query:
+LetVariable [ Name=l ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [FLOAT] [1.1]
+    LiteralExpr [FLOAT] [1.0]
+    LiteralExpr [FLOAT] [1.2]
+    LiteralExpr [DOUBLE] [0.9]
+    LiteralExpr [DOUBLE] [1.3]
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+  ]
+SELECT ELEMENT [
+OrderedListConstructor [
+  Variable [ Name=i ]
+  Variable [ Name=j ]
+  LiteralExpr [STRING] [=]
+  OperatorExpr [
+    Variable [ Name=i ]
+    =
+    Variable [ Name=j ]
+  ]
+  LiteralExpr [STRING] [<]
+  OperatorExpr [
+    Variable [ Name=i ]
+    <
+    Variable [ Name=j ]
+  ]
+  LiteralExpr [STRING] [<=]
+  OperatorExpr [
+    Variable [ Name=i ]
+    <=
+    Variable [ Name=j ]
+  ]
+  LiteralExpr [STRING] [>]
+  OperatorExpr [
+    Variable [ Name=i ]
+    >
+    Variable [ Name=j ]
+  ]
+  LiteralExpr [STRING] [>=]
+  OperatorExpr [
+    Variable [ Name=i ]
+    >=
+    Variable [ Name=j ]
+  ]
+]
+]
+FROM [  Variable [ Name=l ]
+  AS
+  Variable [ Name=i ]
+,
+  Variable [ Name=l ]
+  AS
+  Variable [ Name=j ]
+]

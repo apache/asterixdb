@@ -1,0 +1,13 @@
+DataverseUse test
+TypeDecl testtype1 [
+  open RecordType {
+    id : int64
+  }
+]
+TypeDecl testtype2 [
+  open RecordType {
+    id : int64
+  }
+]
+DatasetDecl t1(testtype1) partitioned by [[id]]
+DatasetDecl t2(testtype2) partitioned by [[id]]

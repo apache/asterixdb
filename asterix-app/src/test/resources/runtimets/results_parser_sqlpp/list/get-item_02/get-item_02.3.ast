@@ -7,10 +7,9 @@ IndexAccessor [
     LiteralExpr [LONG] [3]
     LiteralExpr [LONG] [4]
   ]
-  Index:   OrderedListConstructor [
-    LiteralExpr [LONG] [1]
+  Index:   OperatorExpr [
     LiteralExpr [LONG] [2]
-    LiteralExpr [LONG] [3]
-    LiteralExpr [LONG] [4]
+    +
+    LiteralExpr [LONG] [1]
   ]
 ]

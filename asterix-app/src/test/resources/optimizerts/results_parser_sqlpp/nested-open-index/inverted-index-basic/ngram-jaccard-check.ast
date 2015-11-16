@@ -46,23 +46,5 @@ Where
       ]
       LiteralExpr [FLOAT] [0.5]
     ]
-    Index:     FunctionCall test.similarity-jaccard-check@3[
-      FunctionCall test.gram-tokens@3[
-        FieldAccessor [
-          FieldAccessor [
-            Variable [ Name=o ]
-            Field=nested
-          ]
-          Field=title
-        ]
-        LiteralExpr [LONG] [3]
-        LiteralExpr [FALSE]
-      ]
-      FunctionCall test.gram-tokens@3[
-        LiteralExpr [STRING] [Transactions for Cooperative Environments]
-        LiteralExpr [LONG] [3]
-        LiteralExpr [FALSE]
-      ]
-      LiteralExpr [FLOAT] [0.5]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]

@@ -1,0 +1,9 @@
+DataverseUse test
+TypeDecl TypeA [
+  open RecordType {
+    id : int64,
+    name : string
+  }
+]
+DatasetDecl t1(TypeA) partitioned by [[id]]
+DatasetDecl t2(TypeA) partitioned by [[id]]

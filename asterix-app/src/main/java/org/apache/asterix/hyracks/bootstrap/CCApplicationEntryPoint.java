@@ -34,11 +34,11 @@ import org.apache.asterix.api.http.servlet.UpdateAPIServlet;
 import org.apache.asterix.api.http.servlet.VersionAPIServlet;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
-import org.apache.asterix.common.config.AsterixBuildProperties;
 import org.apache.asterix.common.config.AsterixExternalProperties;
 import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
-import org.apache.asterix.common.feeds.api.ICentralFeedManager;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.event.service.ILookupService;
 import org.apache.asterix.feeds.FeedLifecycleListener;
 import org.apache.asterix.metadata.MetadataManager;
@@ -66,7 +66,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
     private Server webServer;
     private Server jsonAPIServer;
     private Server feedServer;
-    private ICentralFeedManager centralFeedManager;
 
     private static IAsterixStateProxy proxy;
     private ICCApplicationContext appCtx;
@@ -94,7 +93,6 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         AsterixExternalProperties externalProperties = AsterixAppContextInfo.getInstance().getExternalProperties();
         setupWebServer(externalProperties);
         webServer.start();
-        AsterixBuildProperties buildProperties = AsterixAppContextInfo.getInstance().getBuildProperties();
         setupJSONAPIServer(externalProperties);
         jsonAPIServer.start();
 
@@ -164,12 +162,22 @@ public class CCApplicationEntryPoint implements ICCApplicationEntryPoint {
         context.setAttribute(ASTERIX_BUILD_PROP_ATTR, AsterixAppContextInfo.getInstance());
 
         jsonAPIServer.setHandler(context);
-        context.addServlet(new ServletHolder(new QueryAPIServlet()), "/query");
+
+        // AQL rest APIs.
+        context.addServlet(new ServletHolder(new QueryAPIServlet(new AqlCompilationProvider())), "/query");
+        context.addServlet(new ServletHolder(new UpdateAPIServlet(new AqlCompilationProvider())), "/update");
+        context.addServlet(new ServletHolder(new DDLAPIServlet(new AqlCompilationProvider())), "/ddl");
+        context.addServlet(new ServletHolder(new AQLAPIServlet(new AqlCompilationProvider())), "/aql");
+
+        // SQL++ rest APIs.
+        context.addServlet(new ServletHolder(new QueryAPIServlet(new SqlppCompilationProvider())), "/query/sqlpp");
+        context.addServlet(new ServletHolder(new UpdateAPIServlet(new SqlppCompilationProvider())), "/update/sqlpp");
+        context.addServlet(new ServletHolder(new DDLAPIServlet(new SqlppCompilationProvider())), "/ddl/sqlpp");
+        context.addServlet(new ServletHolder(new AQLAPIServlet(new SqlppCompilationProvider())), "/sqlpp");
+
+        // Other APIs.
         context.addServlet(new ServletHolder(new QueryStatusAPIServlet()), "/query/status");
         context.addServlet(new ServletHolder(new QueryResultAPIServlet()), "/query/result");
-        context.addServlet(new ServletHolder(new UpdateAPIServlet()), "/update");
-        context.addServlet(new ServletHolder(new DDLAPIServlet()), "/ddl");
-        context.addServlet(new ServletHolder(new AQLAPIServlet()), "/aql");
         context.addServlet(new ServletHolder(new ConnectorAPIServlet()), "/connector");
         context.addServlet(new ServletHolder(new ShutdownAPIServlet()), "/admin/shutdown");
         context.addServlet(new ServletHolder(new VersionAPIServlet()), "/admin/version");

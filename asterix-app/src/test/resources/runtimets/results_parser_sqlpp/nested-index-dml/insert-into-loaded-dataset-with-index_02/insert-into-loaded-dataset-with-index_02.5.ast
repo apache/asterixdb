@@ -35,3 +35,10 @@ Where
       LiteralExpr [LONG] [473]
     ]
   ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=tweetid
+  ]
+  ASC
+

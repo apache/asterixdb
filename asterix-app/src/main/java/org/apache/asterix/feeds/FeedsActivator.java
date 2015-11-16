@@ -26,7 +26,9 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.aql.translator.QueryTranslator;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
@@ -37,6 +39,7 @@ import org.apache.hyracks.api.job.JobId;
 public class FeedsActivator implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(FeedJobNotificationHandler.class.getName());
+    private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
     private List<FeedCollectInfo> feedsToRevive;
     private Mode mode;
@@ -97,8 +100,9 @@ public class FeedsActivator implements Runnable {
             List<Statement> statements = new ArrayList<Statement>();
             statements.add(dataverseDecl);
             statements.add(stmt);
-            AqlTranslator translator = new AqlTranslator(statements, pc);
-            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, AqlTranslator.ResultDelivery.SYNC);
+            QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
+            translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                    QueryTranslator.ResultDelivery.SYNC);
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Resumed feed: " + dataverse + ":" + dataset + " using policy " + feedPolicy);
             }

@@ -26,6 +26,6 @@
 use dataverse test;
 
 for $i in dataset('Line')
-order by $i.l_partkey, $i.l_shipdate
 group by $partkey := $i.l_partkey with $i
+order by $partkey
 return { "partkey": $partkey, "lines": $i}

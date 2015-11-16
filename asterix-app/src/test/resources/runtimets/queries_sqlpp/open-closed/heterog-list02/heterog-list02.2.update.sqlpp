@@ -18,7 +18,7 @@
  */
 /*
  * Test case Name : heterog-list02.aql
- * Description    : To test insertion of an array of arrays into internal dataset. 
+ * Description    : To test insertion of an array of arrays into internal dataset.
  *                : Heterogenous list construction.
  * Success        : Yes
  * Date           : 28th May 2012

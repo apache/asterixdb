@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : scan-delete-inverted-index-word-secondary-index-nullable.aql
  * Description     : This test is intended to test deletion from secondary keyword inverted index that are built on nullable fields.
  * Expected Result : Success

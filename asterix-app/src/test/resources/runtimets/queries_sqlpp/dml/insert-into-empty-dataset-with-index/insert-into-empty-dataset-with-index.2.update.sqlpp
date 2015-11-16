@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-into-empty-dataset-with-index.aql
- * Description     : Check that we can insert into an empty dataset and its empty secondary indexes 
+ * Description     : Check that we can insert into an empty dataset and its empty secondary indexes
  * Expected Result : Success
  * Date            : May 2 2012
  */

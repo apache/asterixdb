@@ -56,19 +56,5 @@ Where
       ]
       LiteralExpr [FLOAT] [0.7]
     ]
-    Index:     FunctionCall test.similarity-jaccard-check@3[
-      FieldAccessor [
-        FieldAccessor [
-          Variable [ Name=c ]
-          Field=nested
-        ]
-        Field=interests
-      ]
-      OrderedListConstructor [
-        LiteralExpr [STRING] [databases]
-        LiteralExpr [STRING] [computers]
-        LiteralExpr [STRING] [wine]
-      ]
-      LiteralExpr [FLOAT] [0.7]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]

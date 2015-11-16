@@ -76,7 +76,6 @@ LetVariable [ Name=tokensDBLP ]
           Variable [ Name=paper ]
           Variable [ Name=token ]
           Variable [ Name=tokenUnranked ]
-          Variable [ Name=tokensDBLP ]
           Variable [ Name=idDBLP ]
           Variable [ Name=paperDBLP ]
 

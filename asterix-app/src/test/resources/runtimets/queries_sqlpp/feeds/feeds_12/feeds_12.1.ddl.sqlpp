@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create a feed from the contents of  a file using a file_feed adaptor. 
+ * Description  : Create a feed from the contents of  a file using a file_feed adaptor.
 
 drop  database feeds_12 if exists;
 create  database feeds_12;

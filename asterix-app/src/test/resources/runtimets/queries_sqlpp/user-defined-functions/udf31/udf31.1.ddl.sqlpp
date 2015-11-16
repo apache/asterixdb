@@ -17,3 +17,29 @@
  * under the License.
  */
 
+/*
+ * Description  : Declare a UDF that has a LIMIT in it and try to execute that function.
+ * Expected Res : Success
+ */
+
+drop database emergencyTest if exists;
+create database emergencyTest;
+use emergencyTest;
+
+create type EmergencyReport as
+{
+  "id": int,
+  "intensity": int,
+  "message": string
+}
+
+create table EmergencyReports(EmergencyReport)
+primary key id;
+
+create function mostIntenseEarthquakeNearLocation()
+{
+  from EmergencyReports as emergency
+  order by emergency.id
+  limit 1
+  select element emergency.message
+}

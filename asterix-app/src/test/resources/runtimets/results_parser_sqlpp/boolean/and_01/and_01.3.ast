@@ -1,21 +1,11 @@
 DataverseUse test
 Query:
-SELECT ELEMENT [
 OperatorExpr [
-  Variable [ Name=x ]
-  and
-  Variable [ Name=y ]
-]
-]
-FROM [  OrderedListConstructor [
+  FunctionCall test.boolean@1[
     LiteralExpr [STRING] [true]
   ]
-  AS
-  Variable [ Name=x ]
-,
-  OrderedListConstructor [
+  and
+  FunctionCall test.boolean@1[
     LiteralExpr [STRING] [false]
   ]
-  AS
-  Variable [ Name=y ]
 ]

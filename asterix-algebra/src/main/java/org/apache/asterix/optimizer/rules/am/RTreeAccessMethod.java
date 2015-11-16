@@ -21,11 +21,10 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.lang.aql.util.FunctionUtils;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AInt32;
@@ -204,7 +203,7 @@ public class RTreeAccessMethod implements IAccessMethod {
         for (int i = 0; i < numSecondaryKeys; i++) {
             // The create MBR function "extracts" one field of an MBR around the given spatial object.
             AbstractFunctionCallExpression createMBR = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.CREATE_MBR));
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.CREATE_MBR));
             // Spatial object is the constant from the func expr we are optimizing.
             createMBR.getArguments().add(new MutableObject<ILogicalExpression>(searchKeyExpr));
             // The number of dimensions.

@@ -37,20 +37,35 @@ FROM [  (
     SELECT ELEMENT [
     RecordConstructor [
       (
-        LiteralExpr [STRING] [partkey]
-        :
-        Variable [ Name=partkey ]
-      )
-      (
         LiteralExpr [STRING] [i]
         :
         Variable [ Name=i ]
       )
+      (
+        LiteralExpr [STRING] [partkey]
+        :
+        Variable [ Name=partkey ]
+      )
     ]
     ]
-    FROM [      FunctionCall Metadata.dataset@1[
-        LiteralExpr [STRING] [LineItem]
-      ]
+    FROM [      (
+        SELECT ELEMENT [
+        Variable [ Name=l ]
+        ]
+        FROM [          FunctionCall Metadata.dataset@1[
+            LiteralExpr [STRING] [LineItem]
+          ]
+          AS
+          Variable [ Name=l ]
+        ]
+        Orderby
+          FieldAccessor [
+            Variable [ Name=l ]
+            Field=l_partkey
+          ]
+          ASC
+
+      )
       AS
       Variable [ Name=i ]
     ]

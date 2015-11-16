@@ -21,10 +21,10 @@ package org.apache.asterix.optimizer.rules.temporal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -46,7 +46,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -139,7 +140,7 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval) {
         List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<Mutable<ILogicalExpression>>();
         intervalArg.add(new MutableObject<ILogicalExpression>(interval));
-        return new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(func), intervalArg);
+        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
     }
 
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval1,
@@ -147,7 +148,7 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<Mutable<ILogicalExpression>>();
         intervalArg.add(new MutableObject<ILogicalExpression>(interval1));
         intervalArg.add(new MutableObject<ILogicalExpression>(interval2));
-        return new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(func), intervalArg);
+        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
     }
 
 }

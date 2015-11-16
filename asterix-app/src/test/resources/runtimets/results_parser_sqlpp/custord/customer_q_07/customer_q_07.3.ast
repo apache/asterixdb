@@ -50,10 +50,10 @@ LetVariable [ Name=n ]
     ]
     IndexAccessor [
       Variable [ Name=m ]
-      Index:       Variable [ Name=m ]
+      Index:       LiteralExpr [LONG] [1]
     ]
     IndexAccessor [
       Variable [ Name=m ]
-      Index:       Variable [ Name=m ]
+      Index:       LiteralExpr [LONG] [4]
     ]
   ]

@@ -17,7 +17,12 @@
  * under the License.
  */
 /*
-* Description  : Create an external dataset that contains records stored with rc hdfs file format.
+ * Description  : Create an external dataset that contains records stored with rc hdfs file format.
+ *                Build an index over the external dataset age attribute
+ *                Perform a query over the dataset using the index.
+ * Expected Res : Success
+ * Date         : 3rd Jan 2014
+*/
 
 use test;
 

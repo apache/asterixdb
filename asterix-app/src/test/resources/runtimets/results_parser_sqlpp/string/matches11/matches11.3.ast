@@ -3,6 +3,7 @@ SELECT ELEMENT [
 Variable [ Name=a ]
 ]
 FROM [  OrderedListConstructor [
+    LiteralExpr [NULL]
     FunctionCall null.matches@2[
       LiteralExpr [STRING] [hello]
       LiteralExpr [NULL]

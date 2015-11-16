@@ -1,6 +1,47 @@
 Query:
 SELECT ELEMENT [
-Variable [ Name=l ]
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [DataverseName]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=DataverseName
+    ]
+  )
+  (
+    LiteralExpr [STRING] [Name]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=Name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [Arity]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=Arity
+    ]
+  )
+  (
+    LiteralExpr [STRING] [ReturnType]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=ReturnType
+    ]
+  )
+  (
+    LiteralExpr [STRING] [Language]
+    :
+    FieldAccessor [
+      Variable [ Name=l ]
+      Field=Language
+    ]
+  )
+]
 ]
 FROM [  FunctionCall Metadata.dataset@1[
     LiteralExpr [STRING] [Metadata.Function]

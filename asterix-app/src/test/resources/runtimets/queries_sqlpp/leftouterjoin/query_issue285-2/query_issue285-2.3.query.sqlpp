@@ -18,13 +18,13 @@
  */
 /*
  * Description    : Left-outer joins two datasets, DBLP and CSX, based on their title.
- *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint 
+ *                  DBLP has a secondary btree index on title, and given the 'indexnl' hint
  *                  we expect the join to be transformed into an indexed nested-loop join.
  *
- *					TODO(@Sattam): given the 'indexnl' hint 
+ *                    TODO(@Sattam): given the 'indexnl' hint
  *                  we expect the join to be transformed into an indexed nested-loop join.
- *					
- *					regression test 2 for issue 285--having an order by and limit for the outer loop relation
+ *   
+ *                    regression test 2 for issue 285--having an order by and limit for the outer loop relation
  *
  * Success        : Yes
  */

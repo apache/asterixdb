@@ -59,19 +59,19 @@ select element {'s_name':s_name,'numwait':numwait}
 from  (
     select element {'s_name':t3.s_name,'l_suppkey':t3.l_suppkey,'l_orderkey':t2.l_orderkey,'count_suppkey':t2.count_suppkey,'max_suppkey':t2.max_suppkey}
     from  (
-        select element {'s_name':ns.s_name,'l_orderkey':t1.l_orderkey,'l_suppkey':l.l_suppkey}
-        from  LineItem as l,
-              (
-            select element {'s_name':s.s_name,'s_suppkey':s.s_suppkey}
-            from  Nation as n,
-                  Supplier as s
-            where (s.s_nationkey = n.n_nationkey)
-        ) as ns,
-              Orders as o,
-              tpch.tmp1() as t1
-        where (((ns.s_suppkey = l.l_suppkey) and (l.l_receiptdate > l.l_commitdate)) and (o.o_orderkey = l.l_orderkey) and (l.l_orderkey = t1.l_orderkey))
+            select element {'s_name':ns.s_name,'l_orderkey':t1.l_orderkey,'l_suppkey':l.l_suppkey}
+            from  LineItem as l,
+                  (
+                        select element {'s_name':s.s_name,'s_suppkey':s.s_suppkey}
+                        from  Nation as n,
+                        Supplier as s
+                        where (s.s_nationkey = n.n_nationkey)
+                   ) as ns,
+                   Orders as o,
+                   tpch.tmp1() as t1
+            where ns.s_suppkey = l.l_suppkey and l.l_receiptdate > l.l_commitdate and o.o_orderkey = l.l_orderkey and l.l_orderkey = t1.l_orderkey
     ) as t3,
-          tpch.tmp2() as t2
+      tpch.tmp2() as t2
     where ((t2.count_suppkey >= 0) and (t3.l_orderkey = t2.l_orderkey))
 ) as t4
 group by t4.s_name as s_name

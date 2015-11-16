@@ -18,14 +18,18 @@
  */
 /*
 * Description  : Create an external dataset that contains a tuples, the lines from a (*sequence*) file in HDFS.
+                 Perform a word-count over the data in the dataset.
+                 The external dataset is set to perform local reads (but this is not checked)
+* Expected Res : Success
+* Date         : 6th Mar 2015
+*/
 
 use test;
 
 
 select element {'word':tok,'count':test.count(token)}
 from  TextDataset as line,
-      tokens as token
-with  tokens as test."word-tokens"(line.content)
+      test."word-tokens"(line.content) as token
 group by token as tok
 order by tok
 ;

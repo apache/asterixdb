@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.drivers;
 
+import org.apache.asterix.api.http.servlet.APIServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-
-import org.apache.asterix.api.http.servlet.APIServlet;
 
 public class AsterixWebServer {
     public static void main(String args[]) throws Exception {

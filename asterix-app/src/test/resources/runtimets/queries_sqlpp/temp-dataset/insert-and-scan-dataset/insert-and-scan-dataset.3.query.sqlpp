@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-and-scan-dataset.aql
  * Description     : This test is intended to test inserting into a temporary dataset and scan it at the same time
  * where we insert a materializing to prevent the possibility of deadlatch.

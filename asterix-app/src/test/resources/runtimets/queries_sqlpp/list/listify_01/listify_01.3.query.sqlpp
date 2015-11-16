@@ -20,6 +20,6 @@
 use test;
 
 
-select element token
-from  [1,2,3] as token
-;
+let token_list =
+  (from [1, 2, 3] as token select element token)
+select element token_list;

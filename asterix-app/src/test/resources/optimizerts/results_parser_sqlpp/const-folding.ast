@@ -20,10 +20,7 @@ FieldAccessor [
           LiteralExpr [STRING] [foo]
           LiteralExpr [STRING] [bar]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [STRING] [foo]
-          LiteralExpr [STRING] [bar]
-        ]
+        Index:         LiteralExpr [LONG] [0]
       ]
     )
   ]

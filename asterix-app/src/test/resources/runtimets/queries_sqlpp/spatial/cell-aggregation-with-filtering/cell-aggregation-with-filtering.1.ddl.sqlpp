@@ -32,7 +32,7 @@ create type test.Tweet as
   text : string
 }
 
-create  nodegroup group1 if not exists  on 
+create  nodegroup group1 if not exists  on
     nc1,
     nc2
 ;

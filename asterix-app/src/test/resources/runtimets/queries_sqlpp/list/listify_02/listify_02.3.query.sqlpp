@@ -20,6 +20,6 @@
 use test;
 
 
-select element token
-from  ['foo','bar'] as token
-;
+let token_list =
+  (from ['foo', 'bar'] as token select element token)
+select element token_list;

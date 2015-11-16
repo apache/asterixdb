@@ -1,6 +1,6 @@
 DataverseUse test
 Query:
-OperatorExpr [
+OrderedListConstructor [
   OperatorExpr [
     FunctionCall test.sub-binary@2[
       FunctionCall test.hex@1[
@@ -13,7 +13,6 @@ OperatorExpr [
       LiteralExpr [STRING] []
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@2[
       FunctionCall test.hex@1[
@@ -26,7 +25,6 @@ OperatorExpr [
       LiteralExpr [STRING] []
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@2[
       FunctionCall test.hex@1[
@@ -39,7 +37,6 @@ OperatorExpr [
       LiteralExpr [STRING] []
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -57,7 +54,6 @@ OperatorExpr [
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -71,7 +67,6 @@ OperatorExpr [
       LiteralExpr [STRING] [bb]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@2[
       FunctionCall test.hex@1[
@@ -84,7 +79,6 @@ OperatorExpr [
       LiteralExpr [STRING] [bbccdd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -98,7 +92,6 @@ OperatorExpr [
       LiteralExpr [STRING] []
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -112,7 +105,6 @@ OperatorExpr [
       LiteralExpr [STRING] [dd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -126,7 +118,6 @@ OperatorExpr [
       LiteralExpr [STRING] [bbcc]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@2[
       FunctionCall test.hex@1[
@@ -139,7 +130,6 @@ OperatorExpr [
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@2[
       FunctionCall test.hex@1[
@@ -152,7 +142,6 @@ OperatorExpr [
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -166,7 +155,6 @@ OperatorExpr [
       LiteralExpr [STRING] [aabbccdd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[
@@ -180,7 +168,6 @@ OperatorExpr [
       LiteralExpr [STRING] [bbccdd]
     ]
   ]
-  and
   OperatorExpr [
     FunctionCall test.sub-binary@3[
       FunctionCall test.hex@1[

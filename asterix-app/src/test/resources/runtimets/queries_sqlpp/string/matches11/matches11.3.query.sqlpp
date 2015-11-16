@@ -24,5 +24,5 @@
  */
 
 select element a
-from  [matches('hello',null),matches('hello','helllo'),matches('hello',' '),matches(null,'hello'),matches('hello','[^a-z]')] as a
+from  [null,matches('hello',null),matches('hello','helllo'),matches('hello',' '),matches(null,'hello'),matches('hello','[^a-z]')] as a
 ;

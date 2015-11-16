@@ -26,8 +26,10 @@ import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.common.Job;
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.aql.translator.QueryTranslator;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -41,14 +43,23 @@ public class AsterixJavaClient {
     private Job[] dmlJobs;
     private JobSpecification queryJobSpec;
 
-    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText, PrintWriter writer) {
+    private final ILangCompilationProvider compilationProvider;
+    private final IParserFactory parserFactory;
+    private final APIFramework apiFramework;
+
+    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText, PrintWriter writer,
+            ILangCompilationProvider compilationProvider) {
         this.hcc = hcc;
         this.queryText = queryText;
         this.writer = writer;
+        this.compilationProvider = compilationProvider;
+        parserFactory = compilationProvider.getParserFactory();
+        this.apiFramework = new APIFramework(compilationProvider);
     }
 
-    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText) {
-        this(hcc, queryText, new PrintWriter(System.out, true));
+    public AsterixJavaClient(IHyracksClientConnection hcc, Reader queryText,
+            ILangCompilationProvider compilationProvider) {
+        this(hcc, queryText, new PrintWriter(System.out, true), compilationProvider);
     }
 
     public void compile() throws Exception {
@@ -69,8 +80,8 @@ public class AsterixJavaClient {
         while ((ch = queryText.read()) != -1) {
             builder.append((char) ch);
         }
-        AQLParser parser = new AQLParser(builder.toString());
-        List<Statement> aqlStatements = parser.parse();
+        IParser parser = parserFactory.createParser(builder.toString());
+        List<Statement> statements = parser.parse();
         MetadataManager.INSTANCE.init();
 
         SessionConfig conf = new SessionConfig(writer, OutputFormat.ADM, optimize, true, generateBinaryRuntime);
@@ -79,17 +90,17 @@ public class AsterixJavaClient {
             conf.set(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS, true);
         }
 
-        AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, conf);
-        aqlTranslator.compileAndExecute(hcc, null, AqlTranslator.ResultDelivery.SYNC);
+        QueryTranslator translator = new QueryTranslator(statements, conf, compilationProvider);
+        translator.compileAndExecute(hcc, null, QueryTranslator.ResultDelivery.SYNC);
         writer.flush();
     }
 
     public void execute() throws Exception {
         if (dmlJobs != null) {
-            APIFramework.executeJobArray(hcc, dmlJobs, writer);
+            apiFramework.executeJobArray(hcc, dmlJobs, writer);
         }
         if (queryJobSpec != null) {
-            APIFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer);
+            apiFramework.executeJobArray(hcc, new JobSpecification[] { queryJobSpec }, writer);
         }
     }
 

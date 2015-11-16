@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
@@ -52,6 +52,8 @@ import org.apache.asterix.common.feeds.api.IFeedLifecycleEventSubscriber;
 import org.apache.asterix.common.feeds.api.IFeedLifecycleListener;
 import org.apache.asterix.common.feeds.api.IIntakeProgressTracker;
 import org.apache.asterix.common.feeds.message.StorageReportFeedMessage;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
@@ -83,6 +85,7 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
     private static final Logger LOGGER = Logger.getLogger(FeedLifecycleListener.class.getName());
 
     public static FeedLifecycleListener INSTANCE = new FeedLifecycleListener();
+    private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
     private final LinkedBlockingQueue<Message> jobEventInbox;
     private final LinkedBlockingQueue<IClusterManagementWorkResponse> responseInbox;
@@ -363,9 +366,9 @@ public class FeedLifecycleListener implements IFeedLifecycleListener {
                 DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(feedId.getDataverse()));
                 statements.add(dataverseDecl);
                 statements.add(stmt);
-                AqlTranslator translator = new AqlTranslator(statements, pc);
+                QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
                 translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
-                        AqlTranslator.ResultDelivery.SYNC);
+                        QueryTranslator.ResultDelivery.SYNC);
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("End irrecoverable feed: " + cInfo.getConnectionId());
                 }

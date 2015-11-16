@@ -149,7 +149,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 
 
-public class SQLPPParser extends ScopeChecker implements IParser {
+class SQLPPParser extends ScopeChecker implements IParser {
 
     // optimizer hints
     private static final String AUTO_HINT = "auto";
@@ -736,14 +736,12 @@ List<VarIdentifier> ParameterList() throws ParseException:
       var = new VarIdentifier();
       var.setValue(token.image);
       paramList.add(var);
-      getCurrentScope().addNewVarSymbolToScope(var);
     }
   (<COMMA> <IDENTIFIER>
     {
       var = new VarIdentifier();
       var.setValue(token.image);
       paramList.add(var);
-      getCurrentScope().addNewVarSymbolToScope(var);
     }
   )*)? <RIGHTPAREN>
     {
@@ -897,7 +895,7 @@ InsertStatement InsertStatement() throws ParseException:
 {
   <INSERT> <INTO> nameComponents = QualifiedName() query = Query()
     {
-      query.setTopLevel(false);
+      query.setTopLevel(true);
       return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
     }
 }
@@ -914,9 +912,6 @@ DeleteStatement DeleteStatement() throws ParseException:
 }
 {
   <DELETE> var = Variable()
-    {
-      getCurrentScope().addNewVarSymbolToScope(var.getVar());
-    }
   <FROM> nameComponents  = QualifiedName()
   (<WHERE> condition = Expression())?
     {
@@ -1507,7 +1502,6 @@ Query Query() throws ParseException:
   )
   {
     query.setBody(expr);
-    query.setVarCounter(getVarCounter());
     // we remove the pointers to the locked entities before we return the query object
     setDataverses(null);
     setDatasets(null);
@@ -1909,7 +1903,7 @@ VariableExpr Variable() throws ParseException:
        varExp.setIsNewVar(false);
      }
      varExp.setVar(var);
-     var.setValue(token.image);
+     var.setValue(id);
      return varExp;
     }
 }
@@ -2469,9 +2463,7 @@ GroupbyClause GroupbyClause()throws ParseException :
        expr = Expression()
        (LOOKAHEAD(1) (<AS>)?
         var = Variable()
-        {
-            newScope.addNewVarSymbolToScope(var.getVar());
-        })?
+        )?
         {
             GbyVariableExpressionPair pair1 = new GbyVariableExpressionPair(var, expr);
             vePairList.add(pair1);
@@ -2480,9 +2472,7 @@ GroupbyClause GroupbyClause()throws ParseException :
          expr = Expression()
          (LOOKAHEAD(1)  (<AS>)?
          var = Variable()
-         {
-             newScope.addNewVarSymbolToScope(var.getVar());
-         })?
+         )?
          {
              GbyVariableExpressionPair pair2 = new GbyVariableExpressionPair(var, expr);
              vePairList.add(pair2);
@@ -2544,14 +2534,12 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     var = Variable() <IN> inExpr = Expression()
     {
       pair = new QuantifiedPair(var, inExpr);
-      getCurrentScope().addNewVarSymbolToScope(var.getVar());
       quantifiedList.add(pair);
     }
     (
     <COMMA> var = Variable() <IN> inExpr = Expression()
     {
       pair = new QuantifiedPair(var, inExpr);
-      getCurrentScope().addNewVarSymbolToScope(var.getVar());
       quantifiedList.add(pair);
     }
     )*
@@ -2574,7 +2562,6 @@ LetClause LetElement() throws ParseException:
 {
     varExp = Variable() <EQ> beExp = Expression()
     {
-      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       lc.setVarExpr(varExp);
       lc.setBindingExpr(beExp);
       return lc;
@@ -2591,7 +2578,6 @@ LetClause WithElement() throws ParseException:
 {
     varExp = Variable() <AS> beExp = Expression()
     {
-      getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
       lc.setVarExpr(varExp);
       lc.setBindingExpr(beExp);
       return lc;

@@ -4,14 +4,14 @@
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
+ * 'License'); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
@@ -19,5 +19,55 @@
 
 use test;
 
+let itv1 = "interval-from-date"('2010-10-30', '2010-12-21')
+,itv2 = "interval-from-date"('2011-10-30', '2012-10-21')
+, itv3 = "interval-from-date"('2010-12-21', '2013-01-01')
+, blnBefore1 = "interval-before"(itv1, itv2)
+, blnAfter1 = "interval-after"(itv2, itv1)
+, blnBefore2 = "interval-before"(itv1, itv3)
+, blnAfter2 = "interval-after"(itv3, itv1)
 
-{'before1':test."interval-before"(test."interval-from-date"('2010-10-30','2010-12-21'),test."interval-from-date"('2011-10-30','2012-10-21')),'before2':test."interval-before"(test."interval-from-date"('2010-10-30','2010-12-21'),test."interval-from-date"('2010-12-21','2013-01-01')),'after1':test."interval-after"(test."interval-from-date"('2011-10-30','2012-10-21'),test."interval-from-date"('2010-10-30','2010-12-21')),'after2':test."interval-after"(test."interval-from-date"('2010-12-21','2013-01-01'),test."interval-from-date"('2010-10-30','2010-12-21')),'meet1':test."interval-meets"(test."interval-from-datetime"('2012-06-26T01:01:01.111','2012-07-27T02:02:02.222'),test."interval-from-datetime"('20120727T020202222','2013-08-08T03:03:03.333')),'meet2':test."interval-meets"(test."interval-from-datetime"('19000707T020202222','2013-08-07T03:03:03.333'),test."interval-from-datetime"('2012-06-26T01:01:01.111','2012-07-27T02:02:02.222')),'metby1':test."interval-met-by"(test."interval-from-datetime"('20120727T020202222','2013-08-08T03:03:03.333'),test."interval-from-datetime"('2012-06-26T01:01:01.111','2012-07-27T02:02:02.222')),'metby2':test."interval-met-by"(test."interval-from-datetime"('19000707T020202222','2013-08-07T03:03:03.333'),test."interval-from-datetime"('2012-06-26T01:01:01.111','2012-07-27T02:02:02.222')),'overlaps1':test."interval-overlaps"(test."interval-from-time"('12:32:38','20:29:20'),test."interval-from-time"('17:48:19','22:19:49')),'overlaps2':test."interval-overlaps"(test."interval-from-time"('01:32:49','17:48:19'),test."interval-from-time"('17:48:19','22:19:49')),'overlapped1':test."interval-overlapped-by"(test."interval-from-time"('17:48:19','22:19:49'),test."interval-from-time"('12:32:38','20:29:20')),'overlapped2':test."interval-overlapped-by"(test."interval-from-time"('17:48:19','22:19:49'),test."interval-from-time"('01:32:49','17:48:19')),'overlap1':test."interval-overlapping"(test."interval-from-time"('01:32:49','17:48:19'),test."interval-from-time"('12:32:38','20:29:20')),'overlap2':test."interval-overlapping"(test."interval-from-time"('01:32:49','17:48:19'),test."interval-from-time"('17:48:19','22:19:49')),'starts1':test."interval-starts"(test."interval-from-date"('2010-10-30','2010-11-30'),test."interval-from-date"('2010-10-30','2010-12-21')),'starts2':test."interval-starts"(test."interval-from-date"('2010-10-30','2010-11-30'),test."interval-from-date"('2011-10-30','2012-10-21')),'startedby1':test."interval-started-by"(test."interval-from-date"('2010-10-30','2010-12-21'),test."interval-from-date"('2010-10-30','2010-11-30')),'startedby2':test."interval-started-by"(test."interval-from-date"('2010-10-30','2010-11-30'),test."interval-from-date"('2011-10-30','2012-10-21')),'covers1':test."interval-covers"(test."interval-from-date"('2010-10-30','2010-11-30'),test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333')),'covers2':test."interval-covers"(test."interval-from-date"('2010-10-30','2010-11-30'),test."interval-from-datetime"('-19990707T020202222','2013-08-07T03:03:03.333')),'coveredby1':test."interval-covered-by"(test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333'),test."interval-from-date"('2010-10-30','2010-11-30')),'coveredby2':test."interval-covered-by"(test."interval-from-datetime"('-19990707T020202222','2013-08-07T03:03:03.333'),test."interval-from-date"('2010-10-30','2010-11-30')),'ends1':test."interval-ends"(test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333'),test."interval-from-time"('12:32:38','20:29:20')),'ends2':test."interval-ends"(test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333'),test."interval-from-time"('17:48:19','22:19:49')),'endedby1':test."interval-ended-by"(test."interval-from-time"('12:32:38','20:29:20'),test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333')),'endedby2':test."interval-ended-by"(test."interval-from-time"('17:48:19','22:19:49'),test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333')),'null1':test."interval-before"(null,test."interval-from-date"('2011-10-30','2012-10-21')),'null2':test."interval-covered-by"(test."interval-from-datetime"('19990707T020202222','2013-08-07T03:03:03.333'),null),'null3':test."interval-overlapping"(null,null)};
+, itv4 = "interval-from-datetime"('2012-06-26T01:01:01.111', '2012-07-27T02:02:02.222')
+, itv5 = "interval-from-datetime"('20120727T020202222', '2013-08-08T03:03:03.333')
+, itv6 = "interval-from-datetime"('19000707T020202222', '2013-08-07T03:03:03.333')
+, blnMeet1 = "interval-meets"(itv4, itv5)
+, blnMetBy1 = "interval-met-by"(itv5, itv4)
+, blnMeet2 = "interval-meets"(itv6, itv4)
+, blnMetBy2 = "interval-met-by"(itv6, itv4)
+
+, itv7 = "interval-from-time"('12:32:38', '20:29:20')
+, itv8 = "interval-from-time"('17:48:19', '22:19:49')
+, itv9 = "interval-from-time"('01:32:49', '17:48:19')
+, blnOverlaps1 = "interval-overlaps"(itv7, itv8)
+, blnOverlapped1 = "interval-overlapped-by"(itv8, itv7)
+, blnOverlaps2 = "interval-overlaps"(itv9, itv8)
+, blnOverlapped2 = "interval-overlapped-by"(itv8, itv9)
+, blnOverlap1 = "interval-overlapping"(itv9, itv7)
+, blnOverlap2 = "interval-overlapping"(itv9, itv8)
+
+, itv10 = "interval-from-date"('2010-10-30', '2010-11-30')
+, blnStarts1 = "interval-starts"(itv10, itv1)
+, blnStarts2 = "interval-starts"(itv10, itv2)
+, blnStartedBy1 = "interval-started-by"(itv1, itv10)
+, blnStartedBy2 = "interval-started-by"(itv10, itv2)
+
+, itv10 = "interval-from-datetime"('19000707T020202222', '2013-08-07T03:03:03.333')
+, itv11 = "interval-from-datetime"('19990707T020202222', '2013-08-07T03:03:03.333')
+, itv12 = "interval-from-datetime"('-19990707T020202222', '2013-08-07T03:03:03.333')
+, blnCovers1 = "interval-covers"(itv10, itv11)
+, blnCovers2 = "interval-covers"(itv10, itv12)
+, blnCoveredBy1 = "interval-covered-by"(itv11, itv10)
+, blnCoveredBy2 = "interval-covered-by"(itv12, itv10)
+
+, itv11 = "interval-from-time"('19:00:00.009', '20:29:20.000')
+, blnEnds1 = "interval-ends"(itv11, itv7)
+, blnEnds2 = "interval-ends"(itv11, itv8)
+, blnEndedBy1 = "interval-ended-by"(itv7, itv11)
+, blnEndedBy2 = "interval-ended-by"(itv8, itv11)
+
+, null1 = "interval-before"(null, itv2)
+, null2 = "interval-covered-by"(itv11, null)
+, null3 = "interval-overlapping"(null, null)
+
+select element { 'before1' : blnBefore1, 'before2' : blnBefore2, 'after1' : blnAfter1, 'after2' : blnAfter2, 'meet1' : blnMeet1, 'meet2' : blnMeet2, 'metby1' : blnMetBy1, 'metby2' : blnMetBy2, 'overlaps1' : blnOverlaps1, 'overlaps2' : blnOverlaps2, 'overlapped1' : blnOverlapped1, 'overlapped2' : blnOverlapped2, 'overlap1' : blnOverlap1, 'overlap2' : blnOverlap2, 'starts1' : blnStarts1, 'starts2' : blnStarts2, 'startedby1' : blnStartedBy1, 'startedby2' : blnStartedBy2, 'covers1' : blnCovers1, 'covers2' : blnCovers2, 'coveredby1' : blnCoveredBy1, 'coveredby2' : blnCoveredBy2, 'ends1' : blnEnds1, 'ends2' : blnEnds2, 'endedby1' : blnEndedBy1, 'endedby2' : blnEndedBy2, 'null1': null1, 'null2': null2, 'null3': null3 }
+;

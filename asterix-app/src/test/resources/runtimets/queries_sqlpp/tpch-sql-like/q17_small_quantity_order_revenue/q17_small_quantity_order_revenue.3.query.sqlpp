@@ -30,6 +30,7 @@ declare function tmp() {
     group by l.l_partkey as l_partkey
 )
 };
+
 select element (tpch.sum((
       select element l.l_extendedprice
       from  LineItem as l,

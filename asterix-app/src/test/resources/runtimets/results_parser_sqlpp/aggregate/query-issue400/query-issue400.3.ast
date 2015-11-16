@@ -1,0 +1,26 @@
+Query:
+FunctionCall null.count@1[
+  (
+    SELECT ELEMENT [
+    Variable [ Name=i ]
+    ]
+    FROM [      OrderedListConstructor [
+        OrderedListConstructor [
+          LiteralExpr [LONG] [1]
+          LiteralExpr [LONG] [2]
+          LiteralExpr [LONG] [3]
+          LiteralExpr [LONG] [4]
+          LiteralExpr [LONG] [5]
+        ]
+        OrderedListConstructor [
+          LiteralExpr [LONG] [6]
+          LiteralExpr [LONG] [7]
+          LiteralExpr [LONG] [8]
+          LiteralExpr [LONG] [9]
+        ]
+      ]
+      AS
+      Variable [ Name=i ]
+    ]
+  )
+]

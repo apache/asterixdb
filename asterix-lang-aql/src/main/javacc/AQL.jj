@@ -135,7 +135,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpre
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 
-public class AQLParser extends ScopeChecker implements IParser {
+class AQLParser extends ScopeChecker implements IParser {
 
     // optimizer hints
     private static final String AUTO_HINT = "auto";
@@ -886,7 +886,7 @@ InsertStatement InsertStatement() throws ParseException:
 {
   "insert" "into" <DATASET> nameComponents = QualifiedName() query = Query()
     {
-      query.setTopLevel(false);
+      query.setTopLevel(true);
       return new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter());
     }
 }

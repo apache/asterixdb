@@ -23,10 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -54,15 +54,15 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  *
  *  unnest $x [[ at $p ]] <- $y
  *    aggregate $y <- function-call: listify@1(unresolved), Args:[$z]
- *       Rest 
- *   
- * if $y is not used above these operators, 
+ *       Rest
+ *
+ * if $y is not used above these operators,
  * the plan fragment becomes
  *
  *  [[ runningaggregate $p <- tid]]
  *  assign $x <- $z
  *       Rest
- *  
+ *
  *
  */
 
@@ -73,7 +73,8 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         // apply it only at the top of the plan
         ILogicalOperator op = opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
@@ -127,7 +128,8 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
                 unnestedVar = ((VariableReferenceExpression) expr).getVariableReference();
                 break;
             case FUNCTION_CALL:
-                if (((AbstractFunctionCallExpression) expr).getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+                if (((AbstractFunctionCallExpression) expr)
+                        .getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
                     return false;
                 }
                 AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expr;
@@ -189,7 +191,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             raggVars.add(posVar);
             ArrayList<Mutable<ILogicalExpression>> rAggExprs = new ArrayList<Mutable<ILogicalExpression>>(1);
             StatefulFunctionCallExpression tidFun = new StatefulFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
             rAggExprs.add(new MutableObject<ILogicalExpression>(tidFun));
             RunningAggregateOperator rAgg = new RunningAggregateOperator(raggVars, rAggExprs);
             rAgg.getInputs().add(new MutableObject<ILogicalOperator>(assign));

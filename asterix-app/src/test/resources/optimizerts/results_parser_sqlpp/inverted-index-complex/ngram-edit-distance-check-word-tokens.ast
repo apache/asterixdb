@@ -53,9 +53,5 @@ Where
       LiteralExpr [STRING] [Multmedia]
       LiteralExpr [LONG] [1]
     ]
-    Index:     FunctionCall test.edit-distance-check@3[
-      Variable [ Name=word ]
-      LiteralExpr [STRING] [Multmedia]
-      LiteralExpr [LONG] [1]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]

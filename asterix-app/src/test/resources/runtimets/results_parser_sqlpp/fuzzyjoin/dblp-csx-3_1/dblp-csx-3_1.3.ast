@@ -41,7 +41,7 @@ FROM [  (
         :
         IndexAccessor [
           Variable [ Name=sim ]
-          Index:           Variable [ Name=sim ]
+          Index:           LiteralExpr [LONG] [0]
         ]
       )
     ]
@@ -134,7 +134,6 @@ FROM [  (
               Variable [ Name=paper ]
               Variable [ Name=token ]
               Variable [ Name=tokenUnranked ]
-              Variable [ Name=tokensDBLP ]
               Variable [ Name=paperDBLP ]
               Variable [ Name=prefixTokenDBLP ]
               Variable [ Name=prefixTokenCSX ]
@@ -207,7 +206,6 @@ FROM [  (
               Variable [ Name=paper ]
               Variable [ Name=token ]
               Variable [ Name=tokenUnranked ]
-              Variable [ Name=tokensCSX ]
               Variable [ Name=tokensDBLP ]
               Variable [ Name=paperDBLP ]
               Variable [ Name=prefixTokenDBLP ]

@@ -20,12 +20,13 @@ package org.apache.asterix.drivers;
 
 import java.io.FileReader;
 
-import org.kohsuke.args4j.CmdLineParser;
-
 import org.apache.asterix.api.common.AsterixClientConfig;
 import org.apache.asterix.api.java.AsterixJavaClient;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.kohsuke.args4j.CmdLineParser;
 
 public class AsterixClientDriver {
 
@@ -50,8 +51,8 @@ public class AsterixClientDriver {
         }
         boolean exec = new Boolean(acc.execute);
         IHyracksClientConnection hcc = exec ? new HyracksConnection("localhost", acc.hyracksPort) : null;
-        AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize), new Boolean(
-                acc.onlyPhysical), exec || new Boolean(acc.hyracksJob));
+        AsterixJavaClient q = compileQuery(hcc, acc.getArguments().get(0), new Boolean(acc.optimize),
+                new Boolean(acc.onlyPhysical), exec || new Boolean(acc.hyracksJob));
         if (exec) {
             q.execute();
         }
@@ -59,8 +60,9 @@ public class AsterixClientDriver {
 
     private static AsterixJavaClient compileQuery(IHyracksClientConnection hcc, String filename, boolean optimize,
             boolean onlyPhysical, boolean createBinaryRuntime) throws Exception {
+        ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         FileReader reader = new FileReader(filename);
-        AsterixJavaClient q = new AsterixJavaClient(hcc, reader);
+        AsterixJavaClient q = new AsterixJavaClient(hcc, reader, compilationProvider);
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

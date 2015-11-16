@@ -1,0 +1,15 @@
+Set import-private-functions=true
+Query:
+LetVariable [ Name=x ]
+  :=
+  FunctionCall null.range@2[
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [100]
+  ]
+SELECT ELEMENT [
+Variable [ Name=i ]
+]
+FROM [  Variable [ Name=x ]
+  AS
+  Variable [ Name=i ]
+]

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description  : Create a feed using the synthetic feed simulator adapter.                   
+ * Description  : Create a feed using the synthetic feed simulator adapter.
 
 use feeds;
 

@@ -1,0 +1,15 @@
+DataverseUse test
+TypeDecl EmployeeStat [
+  open RecordType {
+    age : int64,
+    salary : int64
+  }
+]
+TypeDecl EmployeeType [
+  closed RecordType {
+    id : string,
+    stat : EmployeeStat,
+    deptCode : int64
+  }
+]
+DatasetDecl Employees(EmployeeType) partitioned by [[id]]

@@ -24,7 +24,7 @@ FROM [  OrderedListConstructor [
       (
         LiteralExpr [STRING] [g]
         :
-        LiteralExpr [LONG] [2]
+        LiteralExpr [LONG] [4]
       )
     ]
     RecordConstructor [

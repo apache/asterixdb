@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
@@ -46,20 +47,35 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableSubstitutionUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         implements ISqlppVisitor<Boolean, List<FunctionDecl>> {
 
-    public SqlppInlineUdfsVisitor(LangRewritingContext context) {
-        super(context, new SqlppCloneAndSubstituteVariablesVisitor(context));
+    /**
+     * @param context,
+     *            manages ids of variables and guarantees uniqueness of variables.
+     * @param rewriterFactory,
+     *            a rewrite factory for rewriting user-defined functions.
+     * @param declaredFunctions,
+     *            a list of declared functions associated with the query.
+     * @param metadataProvider,
+     *            providing the definition of created (i.e., stored) user-defined functions.
+     */
+    public SqlppInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
+            List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider) {
+        super(context, rewriterFactory, declaredFunctions, metadataProvider,
+                new SqlppCloneAndSubstituteVariablesVisitor(context));
     }
 
     @Override
     protected Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
             throws AsterixException {
         Map<VariableExpr, Expression> varExprMap = extractLetBindingVariableExpressionMappings(letClauses);
-        return (Expression) SqlppVariableSubstitutionUtil.substituteVariable(returnExpr, varExprMap);
+        Expression inlinedReturnExpr = (Expression) SqlppVariableSubstitutionUtil
+                .substituteVariableWithoutContext(returnExpr, varExprMap);
+        return inlinedReturnExpr;
     }
 
     @Override
@@ -74,7 +90,9 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     @Override
     public Boolean visit(FromTerm fromTerm, List<FunctionDecl> func) throws AsterixException {
         boolean changed = false;
-        changed |= fromTerm.getLeftExpression().accept(this, func);
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(fromTerm.getLeftExpression(), func);
+        fromTerm.setLeftExpression(p.second);
+        changed |= p.first;
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
             changed |= correlateClause.accept(this, func);
         }
@@ -87,7 +105,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         joinClause.setRightExpression(p1.second);
         Pair<Boolean, Expression> p2 = inlineUdfsInExpr(joinClause.getConditionExpression(), funcs);
         joinClause.setConditionExpression(p2.second);
-        return p1.first && p2.first;
+        return p1.first || p2.first;
     }
 
     @Override
@@ -96,7 +114,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         nestClause.setRightExpression(p1.second);
         Pair<Boolean, Expression> p2 = inlineUdfsInExpr(nestClause.getConditionExpression(), funcs);
         nestClause.setConditionExpression(p2.second);
-        return p1.first && p2.first;
+        return p1.first || p2.first;
     }
 
     @Override
@@ -209,8 +227,8 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         Map<VariableExpr, Expression> varExprMap = new HashMap<VariableExpr, Expression>();
         for (LetClause lc : letClauses) {
             // inline let variables one by one iteratively.
-            lc.setBindingExpr(
-                    (Expression) SqlppVariableSubstitutionUtil.substituteVariable(lc.getBindingExpr(), varExprMap));
+            lc.setBindingExpr((Expression) SqlppVariableSubstitutionUtil
+                    .substituteVariableWithoutContext(lc.getBindingExpr(), varExprMap));
             varExprMap.put(lc.getVarExpr(), lc.getBindingExpr());
         }
         return varExprMap;

@@ -30,8 +30,10 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.parser.ParseException;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.junit.Test;
 
@@ -40,6 +42,7 @@ import junit.framework.TestCase;
 public class AQLTestCase extends TestCase {
 
     private final File queryFile;
+    private final IParserFactory aqlParserFactory = new AQLParserFactory();
 
     AQLTestCase(File queryFile) {
         super("testAQL");
@@ -49,13 +52,13 @@ public class AQLTestCase extends TestCase {
     @Test
     public void testAQL() throws UnsupportedEncodingException, FileNotFoundException, ParseException, AsterixException,
             AlgebricksException {
-        Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
-        AQLParser parser = new AQLParser(fis);
+        Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
+        IParser parser = aqlParserFactory.createParser(reader);
         GlobalConfig.ASTERIX_LOGGER.info(queryFile.toString());
         try {
             parser.parse();
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + fis);
+            GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + reader);
             StringWriter sw = new StringWriter();
             PrintWriter writer = new PrintWriter(sw);
             e.printStackTrace(writer);

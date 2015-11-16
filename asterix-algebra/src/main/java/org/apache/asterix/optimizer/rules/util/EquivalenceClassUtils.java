@@ -23,16 +23,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.mortbay.util.SingletonList;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -42,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.mortbay.util.SingletonList;
 
 public class EquivalenceClassUtils {
 
@@ -49,7 +49,7 @@ public class EquivalenceClassUtils {
      * Adds equivalent classes for primary index accesses, including unnest-map for
      * primary index access and data source scan through primary index ---
      * one equivalent class between a primary key variable and a record field-access expression.
-     * 
+     *
      * @param operator
      *            , the primary index access operator.
      * @param indexSearchVars
@@ -65,8 +65,8 @@ public class EquivalenceClassUtils {
      */
     @SuppressWarnings("unchecked")
     public static void addEquivalenceClassesForPrimaryIndexAccess(ILogicalOperator operator,
-            List<LogicalVariable> indexSearchVars, ARecordType recordType, Dataset dataset, IOptimizationContext context)
-            throws AlgebricksException {
+            List<LogicalVariable> indexSearchVars, ARecordType recordType, Dataset dataset,
+            IOptimizationContext context) throws AlgebricksException {
         if (dataset.getDatasetDetails().getDatasetType() != DatasetType.INTERNAL) {
             return;
         }
@@ -84,10 +84,10 @@ public class EquivalenceClassUtils {
             int fieldIndexInRecord = fieldNameToIndexMap.get(pkFieldName);
             LogicalVariable var = indexSearchVars.get(pkIndex);
             ILogicalExpression expr = new ScalarFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.FIELD_ACCESS_BY_INDEX),
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)),
-                    new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(new AInt32(
-                            fieldIndexInRecord)))));
+                    new MutableObject<ILogicalExpression>(
+                            new ConstantExpression(new AsterixConstantValue(new AInt32(fieldIndexInRecord)))));
             EquivalenceClass equivClass = new EquivalenceClass(SingletonList.newSingletonList(var), var,
                     SingletonList.newSingletonList(expr));
             Map<LogicalVariable, EquivalenceClass> equivalenceMap = context.getEquivalenceClassMap(operator);

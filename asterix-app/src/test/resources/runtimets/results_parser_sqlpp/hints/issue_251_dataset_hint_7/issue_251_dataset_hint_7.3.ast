@@ -1,0 +1,18 @@
+DataverseUse feeds
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Tweets]
+  ]
+  AS
+  Variable [ Name=x ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=x ]
+    Field=id
+  ]
+  ASC
+

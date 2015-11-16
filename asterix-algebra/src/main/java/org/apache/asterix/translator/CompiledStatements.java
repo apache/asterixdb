@@ -18,32 +18,15 @@
  */
 package org.apache.asterix.translator;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
-import org.apache.asterix.common.functions.FunctionConstants;
-import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.aql.clause.ForClause;
-import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
-import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement.Kind;
-import org.apache.asterix.lang.common.clause.WhereClause;
-import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.expression.FieldAccessor;
-import org.apache.asterix.lang.common.expression.FieldBinding;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
-import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
@@ -223,10 +206,12 @@ public class CompiledStatements {
             this.indexType = indexType;
         }
 
+        @Override
         public String getDatasetName() {
             return datasetName;
         }
 
+        @Override
         public String getDataverseName() {
             return dataverseName;
         }
@@ -277,10 +262,12 @@ public class CompiledStatements {
             this.properties = properties;
         }
 
+        @Override
         public String getDataverseName() {
             return dataverseName;
         }
 
+        @Override
         public String getDatasetName() {
             return datasetName;
         }
@@ -316,10 +303,12 @@ public class CompiledStatements {
             this.varCounter = varCounter;
         }
 
+        @Override
         public String getDataverseName() {
             return dataverseName;
         }
 
+        @Override
         public String getDatasetName() {
             return datasetName;
         }
@@ -476,21 +465,19 @@ public class CompiledStatements {
     }
 
     public static class CompiledDeleteStatement implements ICompiledDmlStatement {
-        private VariableExpr var;
         private String dataverseName;
         private String datasetName;
         private Expression condition;
         private int varCounter;
-        private AqlMetadataProvider metadataProvider;
+        private Query query;
 
         public CompiledDeleteStatement(VariableExpr var, String dataverseName, String datasetName, Expression condition,
-                int varCounter, AqlMetadataProvider metadataProvider) {
-            this.var = var;
+                int varCounter, Query query) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.condition = condition;
             this.varCounter = varCounter;
-            this.metadataProvider = metadataProvider;
+            this.query = query;
         }
 
         @Override
@@ -512,42 +499,6 @@ public class CompiledStatements {
         }
 
         public Query getQuery() throws AlgebricksException {
-
-            List<Expression> arguments = new ArrayList<Expression>();
-            String arg = dataverseName == null ? datasetName : dataverseName + "." + datasetName;
-            LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
-            arguments.add(argumentLiteral);
-
-            CallExpr callExpression = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, "dataset", 1),
-                    arguments);
-            List<Clause> clauseList = new ArrayList<Clause>();
-            Clause forClause = new ForClause(var, callExpression);
-            clauseList.add(forClause);
-            Clause whereClause = null;
-            if (condition != null) {
-                whereClause = new WhereClause(condition);
-                clauseList.add(whereClause);
-            }
-
-            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-            if (dataset == null) {
-                throw new AlgebricksException("Unknown dataset " + datasetName);
-            }
-            String itemTypeName = dataset.getItemTypeName();
-            IAType itemType = metadataProvider.findType(dataset.getDataverseName(), itemTypeName);
-            ARecordType recType = (ARecordType) itemType;
-            String[] fieldNames = recType.getFieldNames();
-            List<FieldBinding> fieldBindings = new ArrayList<FieldBinding>();
-            for (int i = 0; i < fieldNames.length; i++) {
-                FieldAccessor fa = new FieldAccessor(var, new Identifier(fieldNames[i]));
-                FieldBinding fb = new FieldBinding(new LiteralExpr(new StringLiteral(fieldNames[i])), fa);
-                fieldBindings.add(fb);
-            }
-            RecordConstructor rc = new RecordConstructor(fieldBindings);
-
-            FLWOGRExpression flowgr = new FLWOGRExpression(clauseList, rc);
-            Query query = new Query();
-            query.setBody(flowgr);
             return query;
         }
 

@@ -23,3 +23,20 @@
  * Ignored      : Not part of test build, as its a negative test case that thrwos an exception
  */
 
+drop database testdv1 if exists;
+create database testdv1;
+
+// UDF with no inputs
+create function testdv1.fun01(){
+testdv1.fun02()
+}
+
+// UDF with one input
+create function testdv1.fun02(){
+testdv1.fun03()
+}
+
+// UDF with two inputs
+create function testdv1.fun03(){
+testdv1.fun04()
+}

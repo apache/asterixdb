@@ -44,11 +44,11 @@ Where
   OperatorExpr [
     IndexAccessor [
       Variable [ Name=eda ]
-      Index:       Variable [ Name=eda ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     IndexAccessor [
       Variable [ Name=edb ]
-      Index:       Variable [ Name=edb ]
+      Index:       LiteralExpr [LONG] [0]
     ]
   ]

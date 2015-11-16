@@ -222,21 +222,27 @@ public class TestExecutor {
     }
 
     // Executes Query and returns results as JSONArray
-    public InputStream executeQuery(String str, OutputFormat fmt) throws Exception {
-        final String url = "http://localhost:19002/query";
-
+    public InputStream executeQuery(String str, OutputFormat fmt, String url, List<CompilationUnit.Parameter> params)
+            throws Exception {
         HttpMethodBase method = null;
         if (str.length() + url.length() < MAX_URL_LENGTH) {
-            // Use GET for small-ish queries
+            //Use GET for small-ish queries
             method = new GetMethod(url);
-            method.setQueryString(new NameValuePair[] { new NameValuePair("query", str) });
+            NameValuePair[] parameters = new NameValuePair[params.size() + 1];
+            parameters[0] = new NameValuePair("query", str);
+            int i = 1;
+            for (CompilationUnit.Parameter param : params) {
+                parameters[i++] = new NameValuePair(param.getName(), param.getValue());
+            }
+            method.setQueryString(parameters);
         } else {
-            // Use POST for bigger ones to avoid 413 FULL_HEAD
+            //Use POST for bigger ones to avoid 413 FULL_HEAD
+            // QQQ POST API doesn't allow encoding additional parameters
             method = new PostMethod(url);
             ((PostMethod) method).setRequestEntity(new StringRequestEntity(str));
         }
 
-        // Set accepted output response type
+        //Set accepted output response type
         method.setRequestHeader("Accept", fmt.mimeType());
         // Provide custom retry handler is necessary
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -246,9 +252,7 @@ public class TestExecutor {
 
     // To execute Update statements
     // Insert and Delete statements are executed here
-    public void executeUpdate(String str) throws Exception {
-        final String url = "http://localhost:19002/update";
-
+    public void executeUpdate(String str, String url) throws Exception {
         // Create a method instance.
         PostMethod method = new PostMethod(url);
         method.setRequestEntity(new StringRequestEntity(str));
@@ -261,9 +265,7 @@ public class TestExecutor {
     }
 
     // Executes AQL in either async or async-defer mode.
-    public InputStream executeAnyAQLAsync(String str, boolean defer, OutputFormat fmt) throws Exception {
-        final String url = "http://localhost:19002/aql";
-
+    public InputStream executeAnyAQLAsync(String str, boolean defer, OutputFormat fmt, String url) throws Exception {
         // Create a method instance.
         PostMethod method = new PostMethod(url);
         if (defer) {
@@ -307,9 +309,7 @@ public class TestExecutor {
     // create index statement
     // create dataverse statement
     // create function statement
-    public void executeDDL(String str) throws Exception {
-        final String url = "http://localhost:19002/ddl";
-
+    public void executeDDL(String str, String url) throws Exception {
         // Create a method instance.
         PostMethod method = new PostMethod(url);
         method.setRequestEntity(new StringRequestEntity(str));
@@ -323,7 +323,7 @@ public class TestExecutor {
     // Method that reads a DDL/Update/Query File
     // and returns the contents as a string
     // This string is later passed to REST API for execution.
-    public static String readTestFile(File testFile) throws Exception {
+    public String readTestFile(File testFile) throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader(testFile));
         String line = null;
         StringBuilder stringBuilder = new StringBuilder();
@@ -415,7 +415,11 @@ public class TestExecutor {
                 try {
                     switch (ctx.getType()) {
                         case "ddl":
-                            TestsUtils.executeDDL(statement);
+                            if (ctx.getFile().getName().endsWith("aql")) {
+                                executeDDL(statement, "http://localhost:19002/ddl");
+                            } else {
+                                executeDDL(statement, "http://localhost:19002/ddl/sqlpp");
+                            }
                             break;
                         case "update":
                             //isDmlRecoveryTest: set IP address
@@ -423,8 +427,11 @@ public class TestExecutor {
                                 statement = statement.replaceAll("nc1://",
                                         "127.0.0.1://../../../../../../asterix-app/");
                             }
-
-                            TestsUtils.executeUpdate(statement, cUnit.getParameter());
+                            if (ctx.getFile().getName().endsWith("aql")) {
+                                executeUpdate(statement, "http://localhost:19002/update");
+                            } else {
+                                executeUpdate(statement, "http://localhost:19002/update/sqlpp");
+                            }
                             break;
                         case "query":
                         case "async":
@@ -438,12 +445,29 @@ public class TestExecutor {
                             }
                             InputStream resultStream = null;
                             OutputFormat fmt = OutputFormat.forCompilationUnit(cUnit);
-                            if (ctx.getType().equalsIgnoreCase("query"))
-                                resultStream = executeQuery(statement, fmt);
-                            else if (ctx.getType().equalsIgnoreCase("async"))
-                                resultStream = executeAnyAQLAsync(statement, false, fmt);
-                            else if (ctx.getType().equalsIgnoreCase("asyncdefer"))
-                                resultStream = executeAnyAQLAsync(statement, true, fmt);
+                            if (ctx.getFile().getName().endsWith("aql")) {
+                                if (ctx.getType().equalsIgnoreCase("query")) {
+                                    resultStream = executeQuery(statement, fmt, "http://localhost:19002/query",
+                                            cUnit.getParameter());
+                                } else if (ctx.getType().equalsIgnoreCase("async")) {
+                                    resultStream = executeAnyAQLAsync(statement, false, fmt,
+                                            "http://localhost:19002/aql");
+                                } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
+                                    resultStream = executeAnyAQLAsync(statement, true, fmt,
+                                            "http://localhost:19002/aql");
+                                }
+                            } else {
+                                if (ctx.getType().equalsIgnoreCase("query")) {
+                                    resultStream = executeQuery(statement, fmt, "http://localhost:19002/query/sqlpp",
+                                            cUnit.getParameter());
+                                } else if (ctx.getType().equalsIgnoreCase("async")) {
+                                    resultStream = executeAnyAQLAsync(statement, false, fmt,
+                                            "http://localhost:19002/sqlpp");
+                                } else if (ctx.getType().equalsIgnoreCase("asyncdefer")) {
+                                    resultStream = executeAnyAQLAsync(statement, true, fmt,
+                                            "http://localhost:19002/sqlpp");
+                                }
+                            }
 
                             if (queryCount >= expectedResultFileCtxs.size()) {
                                 throw new IllegalStateException(
@@ -467,7 +491,8 @@ public class TestExecutor {
                             executeManagixCommand(statement);
                             break;
                         case "txnqbc": //qbc represents query before crash
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
+                                    "http://localhost:19002/query", cUnit.getParameter());
                             qbcFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qbc.adm");
@@ -475,7 +500,8 @@ public class TestExecutor {
                             writeOutputToFile(qbcFile, resultStream);
                             break;
                         case "txnqar": //qar represents query after recovery
-                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit));
+                            resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
+                                    "http://localhost:19002/query", cUnit.getParameter());
                             qarFile = new File(actualPath + File.separator
                                     + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                                     + cUnit.getName() + "_qar.adm");
@@ -488,7 +514,7 @@ public class TestExecutor {
                             break;
                         case "txneu": //eu represents erroneous update
                             try {
-                                TestsUtils.executeUpdate(statement, cUnit.getParameter());
+                                executeUpdate(statement, "http://localhost:19002/update");
                             } catch (Exception e) {
                                 //An exception is expected.
                                 failed = true;
@@ -516,7 +542,7 @@ public class TestExecutor {
                             break;
                         case "errddl": // a ddlquery that expects error
                             try {
-                                TestsUtils.executeDDL(statement);
+                                executeDDL(statement, "http://localhost:19002/ddl");
                             } catch (Exception e) {
                                 // expected error happens
                                 failed = true;

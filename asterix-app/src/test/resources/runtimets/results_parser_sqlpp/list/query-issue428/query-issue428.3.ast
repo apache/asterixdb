@@ -1,0 +1,48 @@
+Query:
+SELECT ELEMENT [
+QuantifiedExpression SOME [
+  [Variable [ Name=a1 ]
+  In
+    Variable [ Name=a ]
+  ]
+  [Variable [ Name=b1 ]
+  In
+    Variable [ Name=b ]
+  ]
+  Satifies [
+    OperatorExpr [
+      Variable [ Name=a1 ]
+      <
+      Variable [ Name=b1 ]
+    ]
+  ]
+]
+]
+FROM [  OrderedListConstructor [
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [2]
+    ]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [5]
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+,
+  OrderedListConstructor [
+    OrderedListConstructor [
+      LiteralExpr [LONG] [6]
+      LiteralExpr [LONG] [7]
+    ]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [8]
+      LiteralExpr [LONG] [9]
+      LiteralExpr [LONG] [10]
+    ]
+  ]
+  AS
+  Variable [ Name=b ]
+]

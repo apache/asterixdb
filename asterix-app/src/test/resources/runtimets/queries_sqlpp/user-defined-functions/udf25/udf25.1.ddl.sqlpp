@@ -22,3 +22,17 @@
  * Date         : 5th Sep 2012
  */
 
+// This one returns NPE...
+
+drop database test if exists;
+create database test;
+
+use test;
+
+create function test.computeBonus(pbcRating,salary)
+{
+   if (pbcRating = 1) then
+        salary * 0.25
+   else
+        salary * 0.10
+}

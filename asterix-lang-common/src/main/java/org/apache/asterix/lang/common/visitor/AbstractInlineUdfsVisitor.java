@@ -27,6 +27,8 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -52,21 +54,25 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionVisitor<Boolean, List<FunctionDecl>> {
 
     protected final LangRewritingContext context;
     protected final CloneAndSubstituteVariablesVisitor cloneVisitor;
+    private final IRewriterFactory rewriterFactory;
+    private final List<FunctionDecl> declaredFunctions;
+    private final AqlMetadataProvider metadataProvider;
 
-    public AbstractInlineUdfsVisitor(LangRewritingContext context) {
-        this.context = context;
-        this.cloneVisitor = new CloneAndSubstituteVariablesVisitor(context);
-    }
-
-    public AbstractInlineUdfsVisitor(LangRewritingContext context, CloneAndSubstituteVariablesVisitor cloneVisitor) {
+    public AbstractInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
+            List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider,
+            CloneAndSubstituteVariablesVisitor cloneVisitor) {
         this.context = context;
         this.cloneVisitor = cloneVisitor;
+        this.rewriterFactory = rewriterFactory;
+        this.declaredFunctions = declaredFunctions;
+        this.metadataProvider = metadataProvider;
     }
 
     /**
@@ -246,11 +252,15 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             return new Pair<Boolean, Expression>(r, expr);
         } else {
             CallExpr f = (CallExpr) expr;
+            boolean r = expr.accept(this, arg);
             FunctionDecl implem = findFuncDeclaration(f.getFunctionSignature(), arg);
             if (implem == null) {
-                boolean r = expr.accept(this, arg);
                 return new Pair<Boolean, Expression>(r, expr);
-            } else { // it's one of the functions we want to inline
+            } else {
+                // Rewrite the function body itself (without setting unbounded variables to dataset access).
+                // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
+                implem.setFuncBody(rewriteFunctionBody(implem.getFuncBody()));
+                // it's one of the functions we want to inline
                 List<LetClause> clauses = new ArrayList<LetClause>();
                 Iterator<VarIdentifier> paramIter = implem.getParamList().iterator();
                 VariableSubstitutionEnvironment subts = new VariableSubstitutionEnvironment();
@@ -269,6 +279,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
                         subts.addSubstituion(new VariableExpr(param), new VariableExpr(newV));
                     }
                 }
+
                 Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = implem.getFuncBody().accept(cloneVisitor,
                         subts);
                 Expression resExpr;
@@ -294,6 +305,15 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             }
         }
         return new Pair<Boolean, ArrayList<Expression>>(changed, newList);
+    }
+
+    protected Expression rewriteFunctionBody(Expression expr) throws AsterixException {
+        Query wrappedQuery = new Query();
+        wrappedQuery.setBody(expr);
+        wrappedQuery.setTopLevel(false);
+        IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
+        queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context);
+        return wrappedQuery.getBody();
     }
 
     protected static FunctionDecl findFuncDeclaration(FunctionSignature fid, List<FunctionDecl> sequence) {

@@ -1,0 +1,11 @@
+DataverseUse feeds
+TypeDecl TweetType [
+  closed RecordType {
+    id : string,
+    username : string,
+    location : string,
+    text : string,
+    timestamp : string
+  }
+]
+DatasetDecl Tweets(TweetType) partitioned by [[id]]

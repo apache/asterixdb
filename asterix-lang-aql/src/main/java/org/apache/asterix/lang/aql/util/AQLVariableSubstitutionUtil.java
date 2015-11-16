@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.lang.aql.util;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -31,18 +29,6 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 
 public class AQLVariableSubstitutionUtil {
-
-    public static List<ILangExpression> substituteVariable(List<ILangExpression> expressions,
-            Map<VariableExpr, Expression> varExprMap) throws AsterixException {
-        AQLCloneAndSubstituteVariablesVisitor visitor = new AQLCloneAndSubstituteVariablesVisitor(
-                new LangRewritingContext(0));
-        VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
-        List<ILangExpression> newExprs = new ArrayList<ILangExpression>();
-        for (ILangExpression expression : expressions) {
-            newExprs.add(expression.accept(visitor, env).first);
-        }
-        return newExprs;
-    }
 
     public static ILangExpression substituteVariable(ILangExpression expression,
             Map<VariableExpr, Expression> varExprMap) throws AsterixException {

@@ -36,6 +36,7 @@ public class DeleteStatement implements Statement {
     private int varCounter;
     private List<String> dataverses;
     private List<String> datasets;
+    private Query rewrittenQuery;
 
     public DeleteStatement(VariableExpr vars, Identifier dataverseName, Identifier datasetName, Expression condition,
             int varCounter, List<String> dataverses, List<String> datasets) {
@@ -71,6 +72,14 @@ public class DeleteStatement implements Statement {
 
     public int getVarCounter() {
         return varCounter;
+    }
+
+    public void setQuery(Query rewrittenQuery) {
+        this.rewrittenQuery = rewrittenQuery;
+    }
+
+    public Query getQuery() {
+        return rewrittenQuery;
     }
 
     @Override

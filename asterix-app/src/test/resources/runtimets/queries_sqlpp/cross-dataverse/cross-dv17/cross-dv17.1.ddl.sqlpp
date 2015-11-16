@@ -17,8 +17,35 @@
  * under the License.
  */
 /*
- * Decription   : Create UDF to query two different datasets that are in tow different dataverses.
+ * Decription   : Create UDF to query two different datasets that are in tow different databases.
  * Expected Res : Success
  * Date         : Sep 7 2012
  */
 
+// this test currently gives ParseException
+
+drop database test if exists;
+drop database fest if exists;
+
+create database test;
+create database fest;
+
+create type test.testtype as open {
+id : int32
+}
+
+create type fest.testtype as open {
+id : int32
+}
+
+create dataset test.t1(testtype) primary key id;
+create dataset fest.t1(testtype) primary key id;
+
+create function fest.f1(){
+(
+from "test.t1" as m,
+     "fest.t1" as l
+order by m, l
+select element { 'l':l,'m':m }
+)
+}

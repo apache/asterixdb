@@ -18,7 +18,7 @@
  */
 /*
  * Testcase Name : open-closed-25.aql
- * Description   : Test use of additional data(open) optional field in create type statement 
+ * Description   : Test use of additional data(open) optional field in create type statement
  * Success       : Yes
  * Date          : 29th May 2012
  */

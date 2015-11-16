@@ -20,7 +20,7 @@
 use tpch;
 
 
-select element {'l_returnflag':l.l_returnflag,'l_linestatus':l.l_linestatus,'l_shipmode':l.l_shipmode}
+select distinct element {'l_returnflag':l.l_returnflag,'l_linestatus':l.l_linestatus,'l_shipmode':l.l_shipmode}
 from  LineItem as l
 order by l.l_returnflag,l.l_linestatus,l.l_shipmode
 ;

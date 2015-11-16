@@ -51,10 +51,7 @@ LetVariable [ Name=m ]
             Variable [ Name=e ]
             Field=children
           ]
-          Index:           FieldAccessor [
-            Variable [ Name=e ]
-            Field=children
-          ]
+          Index:           LiteralExpr [LONG] [1]
         ]
       )
     ]

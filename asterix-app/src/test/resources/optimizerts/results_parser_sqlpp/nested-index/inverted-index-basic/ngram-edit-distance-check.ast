@@ -38,15 +38,5 @@ Where
       LiteralExpr [STRING] [Amihay Motro]
       LiteralExpr [LONG] [1]
     ]
-    Index:     FunctionCall test.edit-distance-check@3[
-      FieldAccessor [
-        FieldAccessor [
-          Variable [ Name=o ]
-          Field=nested
-        ]
-        Field=authors
-      ]
-      LiteralExpr [STRING] [Amihay Motro]
-      LiteralExpr [LONG] [1]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]

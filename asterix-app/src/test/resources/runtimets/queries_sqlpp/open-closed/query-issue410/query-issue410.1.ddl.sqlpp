@@ -18,6 +18,10 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue410
+                 : https://code.google.com/p/asterixdb/issues/detail?id=410
+ * Expected Res : Fail
+ * Date         : 13th May 2013
+ */
 
 drop  database test if exists;
 create  database test;

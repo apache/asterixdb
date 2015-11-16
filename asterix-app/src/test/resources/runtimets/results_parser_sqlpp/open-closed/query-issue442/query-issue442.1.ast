@@ -1,0 +1,65 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [100]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [0]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        NEGATIVE LiteralExpr [LONG] [1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [NULL]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [999999]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [1]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [STRING] [zzzzz]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=a ]
+    Field=f
+  ]
+  DESC
+

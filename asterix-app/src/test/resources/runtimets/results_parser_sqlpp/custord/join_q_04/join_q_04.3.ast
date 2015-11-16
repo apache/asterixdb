@@ -1,0 +1,64 @@
+DataverseUse test
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [cust_name]
+    :
+    FieldAccessor [
+      Variable [ Name=c ]
+      Field=name
+    ]
+  )
+  (
+    LiteralExpr [STRING] [order_ids]
+    :
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        Variable [ Name=o ]
+        Field=oid
+      ]
+      ]
+      FROM [        FunctionCall Metadata.dataset@1[
+          LiteralExpr [STRING] [Orders]
+        ]
+        AS
+        Variable [ Name=o ]
+      ]
+      Where
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=c ]
+            Field=cid
+          ]
+          =
+          FieldAccessor [
+            Variable [ Name=o ]
+            Field=cid
+          ]
+        ]
+      Orderby
+        FieldAccessor [
+          Variable [ Name=o ]
+          Field=oid
+        ]
+        ASC
+
+    )
+  )
+]
+]
+FROM [  FunctionCall Metadata.dataset@1[
+    LiteralExpr [STRING] [Customers]
+  ]
+  AS
+  Variable [ Name=c ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=c ]
+    Field=name
+  ]
+  ASC
+

@@ -40,7 +40,6 @@ LetVariable [ Name=grid ]
       ]
       With
       Variable [ Name=o ]
-      Variable [ Name=grid ]
 
     LetVariable [ Name=num ]
       :=

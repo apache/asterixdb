@@ -130,11 +130,11 @@ LetVariable [ Name=by_chapter ]
       ]
       With
       Variable [ Name=e ]
-      Variable [ Name=by_chapter ]
       Variable [ Name=sig_sponsorship_count ]
-      Variable [ Name=es ]
       Variable [ Name=sponsor ]
       Variable [ Name=event ]
+      Variable [ Name=es ]
+      Variable [ Name=sig_name ]
 
   )
 Orderby

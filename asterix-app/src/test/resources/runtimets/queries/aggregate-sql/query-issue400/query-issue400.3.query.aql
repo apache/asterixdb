@@ -18,7 +18,7 @@
  */
 /*
  * Description  : This test case is to verify the fix for issue400
- 				: https://code.google.com/p/asterixdb/issues/detail?id=400
+                : https://code.google.com/p/asterixdb/issues/detail?id=400
  * Expected Res : Success
  * Date         : 8th May 2013
  */

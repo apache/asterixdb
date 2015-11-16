@@ -52,10 +52,7 @@ Where
             Variable [ Name=mv ]
             Field=movie
           ]
-          Index:           FieldAccessor [
-            Variable [ Name=mv ]
-            Field=movie
-          ]
+          Index:           LiteralExpr [LONG] [2]
         ]
       ]
     ]

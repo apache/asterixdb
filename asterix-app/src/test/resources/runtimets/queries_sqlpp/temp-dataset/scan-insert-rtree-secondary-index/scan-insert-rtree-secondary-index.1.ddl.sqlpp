@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description     : Port data from a temporary dataset into yet-another temporary dataset. 
+ * Description     : Port data from a temporary dataset into yet-another temporary dataset.
  *                   Both datasets have R-tree indexes.
  * Expected Result : Success
  * Date            : March 27 2015

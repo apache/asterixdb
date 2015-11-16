@@ -20,14 +20,14 @@ package org.apache.asterix.optimizer.base;
 
 import java.util.ArrayList;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -92,10 +92,10 @@ public class FuzzyUtils {
     public static ScalarFunctionCallExpression getComparisonExpr(String simFuncName,
             ArrayList<Mutable<ILogicalExpression>> cmpArgs) {
         if (simFuncName.equals(JACCARD_FUNCTION_NAME)) {
-            return new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.GE),
+            return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.GE),
                     cmpArgs);
         } else if (simFuncName.equals(EDIT_DISTANCE_FUNCTION_NAME)) {
-            return new ScalarFunctionCallExpression(FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.LE),
+            return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.LE),
                     cmpArgs);
         }
         return null;
@@ -110,7 +110,7 @@ public class FuzzyUtils {
         return simThreshold;
     }
 
-    // TODO: The default function depend on the input types. 
+    // TODO: The default function depend on the input types.
     public static String getSimFunction(AqlMetadataProvider metadata) {
         String simFunction = metadata.getPropertyValue(SIM_FUNCTION_PROP_NAME);
         if (simFunction == null) {

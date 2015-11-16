@@ -48,18 +48,7 @@ Where
       ]
       LiteralExpr [LONG] [3]
     ]
-    Index:     FunctionCall test.edit-distance-check@3[
-      FieldAccessor [
-        Variable [ Name=c ]
-        Field=interests
-      ]
-      OrderedListConstructor [
-        LiteralExpr [STRING] [computers]
-        LiteralExpr [STRING] [wine]
-        LiteralExpr [STRING] [walking]
-      ]
-      LiteralExpr [LONG] [3]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]
 Orderby
   FieldAccessor [

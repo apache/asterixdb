@@ -32,12 +32,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.asterix.api.common.SessionConfig;
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.lang.aql.parser.AQLParser;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
-import org.apache.asterix.lang.aql.util.AQLFormatPrintUtil;
+import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.base.Statement.Kind;
 import org.apache.asterix.metadata.MetadataManager;
@@ -55,6 +56,14 @@ abstract class RESTAPIServlet extends HttpServlet {
     public static final String HYRACKS_CONNECTION_ATTR = "org.apache.asterix.HYRACKS_CONNECTION";
 
     public static final String HYRACKS_DATASET_ATTR = "org.apache.asterix.HYRACKS_DATASET";
+
+    private final ILangCompilationProvider compilationProvider;
+    private final IParserFactory parserFactory;
+
+    public RESTAPIServlet(ILangCompilationProvider compilationProvider) {
+        this.compilationProvider = compilationProvider;
+        this.parserFactory = compilationProvider.getParserFactory();
+    }
 
     /**
      * Initialize the Content-Type of the response, and construct a
@@ -90,8 +99,9 @@ abstract class RESTAPIServlet extends HttpServlet {
         }
 
         // If it's JSON, check for the "lossless" flag
-        if (format == OutputFormat.CLEAN_JSON &&
-                ("true".equals(request.getParameter("lossless")) || accept.contains("lossless=true")) ) {
+
+        if (format == OutputFormat.CLEAN_JSON
+                && ("true".equals(request.getParameter("lossless")) || accept.contains("lossless=true"))) {
             format = OutputFormat.LOSSLESS_JSON;
         }
 
@@ -131,8 +141,7 @@ abstract class RESTAPIServlet extends HttpServlet {
                 break;
             case CSV: {
                 // Check for header parameter or in Accept:.
-                if ("present".equals(request.getParameter("header")) ||
-                    accept.contains("header=present")) {
+                if ("present".equals(request.getParameter("header")) || accept.contains("header=present")) {
                     response.setContentType("text/csv; header=present");
                     sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, true);
                 } else {
@@ -145,8 +154,8 @@ abstract class RESTAPIServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
-            IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         StringWriter sw = new StringWriter();
         IOUtils.copy(request.getInputStream(), sw, StandardCharsets.UTF_8.name());
         String query = sw.toString();
@@ -162,7 +171,7 @@ abstract class RESTAPIServlet extends HttpServlet {
     public void handleRequest(HttpServletRequest request, HttpServletResponse response, String query)
             throws IOException {
         SessionConfig sessionConfig = initResponse(request, response);
-        AqlTranslator.ResultDelivery resultDelivery = whichResultDelivery(request);
+        QueryTranslator.ResultDelivery resultDelivery = whichResultDelivery(request);
 
         ServletContext context = getServletContext();
         IHyracksClientConnection hcc;
@@ -178,12 +187,12 @@ abstract class RESTAPIServlet extends HttpServlet {
                 }
             }
 
-            AQLParser parser = new AQLParser(query);
+            IParser parser = parserFactory.createParser(query);
             List<Statement> aqlStatements = parser.parse();
             if (!containsForbiddenStatements(aqlStatements)) {
                 MetadataManager.INSTANCE.init();
-                AqlTranslator aqlTranslator = new AqlTranslator(aqlStatements, sessionConfig);
-                aqlTranslator.compileAndExecute(hcc, hds, resultDelivery);
+                QueryTranslator translator = new QueryTranslator(aqlStatements, sessionConfig, compilationProvider);
+                translator.compileAndExecute(hcc, hds, resultDelivery);
             }
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
@@ -207,16 +216,16 @@ abstract class RESTAPIServlet extends HttpServlet {
         return false;
     }
 
-    protected AqlTranslator.ResultDelivery whichResultDelivery(HttpServletRequest request) {
+    protected QueryTranslator.ResultDelivery whichResultDelivery(HttpServletRequest request) {
         String mode = request.getParameter("mode");
         if (mode != null) {
             if (mode.equals("asynchronous")) {
-                return AqlTranslator.ResultDelivery.ASYNC;
+                return QueryTranslator.ResultDelivery.ASYNC;
             } else if (mode.equals("asynchronous-deferred")) {
-                return AqlTranslator.ResultDelivery.ASYNC_DEFERRED;
+                return QueryTranslator.ResultDelivery.ASYNC_DEFERRED;
             }
         }
-        return AqlTranslator.ResultDelivery.SYNC;
+        return QueryTranslator.ResultDelivery.SYNC;
     }
 
     protected abstract String getQueryParameter(HttpServletRequest request);

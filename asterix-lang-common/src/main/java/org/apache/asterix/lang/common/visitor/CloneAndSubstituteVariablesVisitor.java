@@ -50,7 +50,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
-import org.apache.asterix.lang.common.utils.VariableCloneAndSubstitutionUtil;
+import org.apache.asterix.lang.common.util.VariableCloneAndSubstitutionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 

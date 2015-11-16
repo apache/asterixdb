@@ -38,6 +38,10 @@ public class DistinctClause implements Clause {
         return distinctByExprs;
     }
 
+    public void setDistinctByExpr(List<Expression> exprList) {
+        this.distinctByExprs = exprList;
+    }
+
     @Override
     public ClauseType getClauseType() {
         return ClauseType.DISTINCT_BY_CLAUSE;

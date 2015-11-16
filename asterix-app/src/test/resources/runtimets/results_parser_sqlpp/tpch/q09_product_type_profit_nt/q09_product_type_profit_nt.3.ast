@@ -119,258 +119,258 @@ FROM [  (
           ]
           AS
           Variable [ Name=p ]
-,
-          (
-            SELECT ELEMENT [
-            RecordConstructor [
-              (
-                LiteralExpr [STRING] [l_extendedprice]
-                :
-                FieldAccessor [
-                  Variable [ Name=l1 ]
-                  Field=l_extendedprice
-                ]
-              )
-              (
-                LiteralExpr [STRING] [l_discount]
-                :
-                FieldAccessor [
-                  Variable [ Name=l1 ]
-                  Field=l_discount
-                ]
-              )
-              (
-                LiteralExpr [STRING] [l_quantity]
-                :
-                FieldAccessor [
-                  Variable [ Name=l1 ]
-                  Field=l_quantity
-                ]
-              )
-              (
-                LiteralExpr [STRING] [l_partkey]
-                :
-                FieldAccessor [
-                  Variable [ Name=l1 ]
-                  Field=l_partkey
-                ]
-              )
-              (
-                LiteralExpr [STRING] [l_orderkey]
-                :
-                FieldAccessor [
-                  Variable [ Name=l1 ]
-                  Field=l_orderkey
-                ]
-              )
-              (
-                LiteralExpr [STRING] [n_name]
-                :
-                FieldAccessor [
-                  Variable [ Name=l1 ]
-                  Field=n_name
-                ]
-              )
-              (
-                LiteralExpr [STRING] [ps_supplycost]
-                :
-                FieldAccessor [
-                  Variable [ Name=ps ]
-                  Field=ps_supplycost
-                ]
-              )
-            ]
-            ]
-            FROM [              FunctionCall Metadata.dataset@1[
-                LiteralExpr [STRING] [Partsupp]
+          INNER JOIN
+            (
+              SELECT ELEMENT [
+              RecordConstructor [
+                (
+                  LiteralExpr [STRING] [l_extendedprice]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=l1 ]
+                    Field=l_extendedprice
+                  ]
+                )
+                (
+                  LiteralExpr [STRING] [l_discount]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=l1 ]
+                    Field=l_discount
+                  ]
+                )
+                (
+                  LiteralExpr [STRING] [l_quantity]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=l1 ]
+                    Field=l_quantity
+                  ]
+                )
+                (
+                  LiteralExpr [STRING] [l_partkey]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=l1 ]
+                    Field=l_partkey
+                  ]
+                )
+                (
+                  LiteralExpr [STRING] [l_orderkey]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=l1 ]
+                    Field=l_orderkey
+                  ]
+                )
+                (
+                  LiteralExpr [STRING] [n_name]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=l1 ]
+                    Field=n_name
+                  ]
+                )
+                (
+                  LiteralExpr [STRING] [ps_supplycost]
+                  :
+                  FieldAccessor [
+                    Variable [ Name=ps ]
+                    Field=ps_supplycost
+                  ]
+                )
               ]
-              AS
-              Variable [ Name=ps ]
-,
-              (
-                SELECT ELEMENT [
-                RecordConstructor [
-                  (
-                    LiteralExpr [STRING] [l_suppkey]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_suppkey
-                    ]
-                  )
-                  (
-                    LiteralExpr [STRING] [l_extendedprice]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_extendedprice
-                    ]
-                  )
-                  (
-                    LiteralExpr [STRING] [l_discount]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_discount
-                    ]
-                  )
-                  (
-                    LiteralExpr [STRING] [l_quantity]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_quantity
-                    ]
-                  )
-                  (
-                    LiteralExpr [STRING] [l_partkey]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_partkey
-                    ]
-                  )
-                  (
-                    LiteralExpr [STRING] [l_orderkey]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_orderkey
-                    ]
-                  )
-                  (
-                    LiteralExpr [STRING] [n_name]
-                    :
-                    FieldAccessor [
-                      Variable [ Name=s1 ]
-                      Field=n_name
-                    ]
-                  )
+              ]
+              FROM [                FunctionCall Metadata.dataset@1[
+                  LiteralExpr [STRING] [Partsupp]
                 ]
-                ]
-                FROM [                  (
+                AS
+                Variable [ Name=ps ]
+                INNER JOIN
+                  (
                     SELECT ELEMENT [
                     RecordConstructor [
                       (
-                        LiteralExpr [STRING] [s_suppkey]
+                        LiteralExpr [STRING] [l_suppkey]
                         :
                         FieldAccessor [
-                          Variable [ Name=s ]
-                          Field=s_suppkey
+                          Variable [ Name=l ]
+                          Field=l_suppkey
+                        ]
+                      )
+                      (
+                        LiteralExpr [STRING] [l_extendedprice]
+                        :
+                        FieldAccessor [
+                          Variable [ Name=l ]
+                          Field=l_extendedprice
+                        ]
+                      )
+                      (
+                        LiteralExpr [STRING] [l_discount]
+                        :
+                        FieldAccessor [
+                          Variable [ Name=l ]
+                          Field=l_discount
+                        ]
+                      )
+                      (
+                        LiteralExpr [STRING] [l_quantity]
+                        :
+                        FieldAccessor [
+                          Variable [ Name=l ]
+                          Field=l_quantity
+                        ]
+                      )
+                      (
+                        LiteralExpr [STRING] [l_partkey]
+                        :
+                        FieldAccessor [
+                          Variable [ Name=l ]
+                          Field=l_partkey
+                        ]
+                      )
+                      (
+                        LiteralExpr [STRING] [l_orderkey]
+                        :
+                        FieldAccessor [
+                          Variable [ Name=l ]
+                          Field=l_orderkey
                         ]
                       )
                       (
                         LiteralExpr [STRING] [n_name]
                         :
                         FieldAccessor [
-                          Variable [ Name=n ]
+                          Variable [ Name=s1 ]
                           Field=n_name
                         ]
                       )
                     ]
                     ]
-                    FROM [                      FunctionCall Metadata.dataset@1[
-                        LiteralExpr [STRING] [Supplier]
-                      ]
-                      AS
-                      Variable [ Name=s ]
-,
-                      FunctionCall Metadata.dataset@1[
-                        LiteralExpr [STRING] [Nation]
-                      ]
-                      AS
-                      Variable [ Name=n ]
-                    ]
-                    Where
-                      OperatorExpr [
-                        FieldAccessor [
-                          Variable [ Name=n ]
-                          Field=n_nationkey
+                    FROM [                      (
+                        SELECT ELEMENT [
+                        RecordConstructor [
+                          (
+                            LiteralExpr [STRING] [s_suppkey]
+                            :
+                            FieldAccessor [
+                              Variable [ Name=s ]
+                              Field=s_suppkey
+                            ]
+                          )
+                          (
+                            LiteralExpr [STRING] [n_name]
+                            :
+                            FieldAccessor [
+                              Variable [ Name=n ]
+                              Field=n_name
+                            ]
+                          )
                         ]
-                        =
-                        FieldAccessor [
+                        ]
+                        FROM [                          FunctionCall Metadata.dataset@1[
+                            LiteralExpr [STRING] [Supplier]
+                          ]
+                          AS
                           Variable [ Name=s ]
-                          Field=s_nationkey
+,
+                          FunctionCall Metadata.dataset@1[
+                            LiteralExpr [STRING] [Nation]
+                          ]
+                          AS
+                          Variable [ Name=n ]
                         ]
-                      ]
+                        Where
+                          OperatorExpr [
+                            FieldAccessor [
+                              Variable [ Name=n ]
+                              Field=n_nationkey
+                            ]
+                            =
+                            FieldAccessor [
+                              Variable [ Name=s ]
+                              Field=s_nationkey
+                            ]
+                          ]
+                      )
+                      AS
+                      Variable [ Name=s1 ]
+                      INNER JOIN
+                        FunctionCall Metadata.dataset@1[
+                          LiteralExpr [STRING] [LineItem]
+                        ]
+                        AS
+                        Variable [ Name=l ]
+                        ON
+                        OperatorExpr [
+                          FieldAccessor [
+                            Variable [ Name=s1 ]
+                            Field=s_suppkey
+                          ]
+                          =
+                          FieldAccessor [
+                            Variable [ Name=l ]
+                            Field=l_suppkey
+                          ]
+                        ]
+                    ]
                   )
                   AS
-                  Variable [ Name=s1 ]
-,
-                  FunctionCall Metadata.dataset@1[
-                    LiteralExpr [STRING] [LineItem]
-                  ]
-                  AS
-                  Variable [ Name=l ]
-                ]
-                Where
+                  Variable [ Name=l1 ]
+                  ON
                   OperatorExpr [
-                    FieldAccessor [
-                      Variable [ Name=s1 ]
-                      Field=s_suppkey
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=ps ]
+                        Field=ps_suppkey
+                      ]
+                      =
+                      FieldAccessor [
+                        Variable [ Name=l1 ]
+                        Field=l_suppkey
+                      ]
                     ]
-                    =
-                    FieldAccessor [
-                      Variable [ Name=l ]
-                      Field=l_suppkey
+                    and
+                    OperatorExpr [
+                      FieldAccessor [
+                        Variable [ Name=ps ]
+                        Field=ps_partkey
+                      ]
+                      =
+                      FieldAccessor [
+                        Variable [ Name=l1 ]
+                        Field=l_partkey
+                      ]
                     ]
                   ]
-              )
-              AS
-              Variable [ Name=l1 ]
-            ]
-            Where
-              OperatorExpr [
-                OperatorExpr [
-                  FieldAccessor [
-                    Variable [ Name=ps ]
-                    Field=ps_suppkey
-                  ]
-                  =
-                  FieldAccessor [
-                    Variable [ Name=l1 ]
-                    Field=l_suppkey
-                  ]
-                ]
-                and
-                OperatorExpr [
-                  FieldAccessor [
-                    Variable [ Name=ps ]
-                    Field=ps_partkey
-                  ]
-                  =
-                  FieldAccessor [
-                    Variable [ Name=l1 ]
-                    Field=l_partkey
-                  ]
-                ]
               ]
-          )
-          AS
-          Variable [ Name=l2 ]
-        ]
-        Where
-          OperatorExpr [
-            FunctionCall tpch.contains@2[
-              FieldAccessor [
-                Variable [ Name=p ]
-                Field=p_name
-              ]
-              LiteralExpr [STRING] [green]
-            ]
-            and
+            )
+            AS
+            Variable [ Name=l2 ]
+            ON
             OperatorExpr [
-              FieldAccessor [
-                Variable [ Name=p ]
-                Field=p_partkey
+              FunctionCall tpch.contains@2[
+                FieldAccessor [
+                  Variable [ Name=p ]
+                  Field=p_name
+                ]
+                LiteralExpr [STRING] [green]
               ]
-              =
-              FieldAccessor [
-                Variable [ Name=l2 ]
-                Field=l_partkey
+              and
+              OperatorExpr [
+                FieldAccessor [
+                  Variable [ Name=p ]
+                  Field=p_partkey
+                ]
+                =
+                FieldAccessor [
+                  Variable [ Name=l2 ]
+                  Field=l_partkey
+                ]
               ]
             ]
-          ]
+        ]
       )
       AS
       Variable [ Name=l3 ]

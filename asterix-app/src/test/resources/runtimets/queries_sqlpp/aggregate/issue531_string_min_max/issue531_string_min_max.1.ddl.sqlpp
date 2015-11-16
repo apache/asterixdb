@@ -18,10 +18,10 @@
  */
 /**
  * issue531_string_min_max
- * 
+ *
  * Purpose: test the support of string values for min and max aggregation function
  * Result: success
- * 
+ *
  */
 
 drop  database test if exists;

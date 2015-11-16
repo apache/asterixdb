@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : insert-into-empty-dataset.aql
- * Description     : Check that we can insert into an empty dataset 
+ * Description     : Check that we can insert into an empty dataset
  * Expected Result : Success
  * Date            : May 2 2012
  */

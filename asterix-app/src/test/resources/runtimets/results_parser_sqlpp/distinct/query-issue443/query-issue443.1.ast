@@ -1,0 +1,44 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=a ]
+]
+FROM [  OrderedListConstructor [
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [19]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [12]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [10]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [17]
+      )
+    ]
+    RecordConstructor [
+      (
+        LiteralExpr [STRING] [f]
+        :
+        LiteralExpr [LONG] [12]
+      )
+    ]
+  ]
+  AS
+  Variable [ Name=a ]
+]

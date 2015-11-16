@@ -31,7 +31,7 @@ import java.util.Set;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.types.ARecordType;
@@ -502,6 +502,11 @@ public class BTreeAccessMethod implements IAccessMethod {
             // Replace the datasource scan with the new plan rooted at
             // primaryIndexUnnestMap.
             indexSubTree.dataSourceRef.setValue(primaryIndexUnnestOp);
+
+            // Adds equivalence classes --- one equivalent class between a primary key
+            // variable and a record field-access expression.
+            EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp,
+                    dataSourceOp.getVariables(), recordType, dataset, context);
         } else {
             List<Object> primaryIndexOutputTypes = new ArrayList<Object>();
             try {
@@ -656,7 +661,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     private ILogicalExpression createSelectCondition(List<Mutable<ILogicalExpression>> predList) {
         if (predList.size() > 1) {
-            IFunctionInfo finfo = FunctionUtils.getFunctionInfo(AlgebricksBuiltinFunctions.AND);
+            IFunctionInfo finfo = FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND);
             return new ScalarFunctionCallExpression(finfo, predList);
         }
         return predList.get(0).getValue();

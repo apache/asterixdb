@@ -41,7 +41,7 @@ FROM [  (
         :
         IndexAccessor [
           Variable [ Name=sim ]
-          Index:           Variable [ Name=sim ]
+          Index:           LiteralExpr [LONG] [0]
         ]
       )
     ]
@@ -140,7 +140,6 @@ FROM [  (
               Variable [ Name=paper ]
               Variable [ Name=token ]
               Variable [ Name=tokenUnranked ]
-              Variable [ Name=tokensLeft ]
               Variable [ Name=lenLeft ]
               Variable [ Name=paperLeft ]
               Variable [ Name=paperRight ]
@@ -224,7 +223,6 @@ FROM [  (
               Variable [ Name=paper ]
               Variable [ Name=token ]
               Variable [ Name=tokenUnranked ]
-              Variable [ Name=tokensRight ]
               Variable [ Name=lenRight ]
               Variable [ Name=tokensLeft ]
               Variable [ Name=lenLeft ]

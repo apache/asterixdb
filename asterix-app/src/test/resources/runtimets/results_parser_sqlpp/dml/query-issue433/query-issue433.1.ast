@@ -1,0 +1,16 @@
+DataverseUse insertIssue
+TypeDecl subElem [
+  closed RecordType {
+    n : string,
+    e : int64?
+  }
+]
+TypeDecl elem [
+  closed RecordType {
+    id : int64,
+    name : string,
+    sub : OrderedList [subElem]
+
+  }
+]
+DatasetDecl myDataset(elem) partitioned by [[id]]

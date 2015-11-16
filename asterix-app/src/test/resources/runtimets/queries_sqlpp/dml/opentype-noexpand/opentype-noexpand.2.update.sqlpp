@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* 
+/*
  * Test case Name  : opentype-noexpand.aql
  * Description     : verify that open type dataset can have records without open fields
- *					 verify the bag-based fields
+ *                     verify the bag-based fields
  * Expected Result : Success
  */
 

@@ -313,7 +313,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 Pair<ILangExpression, VariableSubstitutionEnvironment> p = rightInput.getSubquery().accept(this, env);
                 newRightInput = new SetOperationInput(null, (SelectExpression) p.first);
             }
-            newRightInputs.add(new SetOperationRight(right.getSetOpType(), right.setSemantics(), newRightInput));
+            newRightInputs.add(new SetOperationRight(right.getSetOpType(), right.isSetSemantics(), newRightInput));
         }
         SelectSetOperation newSelectSetOperation = new SelectSetOperation(newLeftInput, newRightInputs);
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(newSelectSetOperation, env);

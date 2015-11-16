@@ -21,10 +21,10 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -64,7 +64,7 @@ public class FeedScanCollectionToUnnest implements IAlgebraicRewriteRule {
         ILogicalExpression unnestExpr = unnest.getExpressionRef().getValue();
         if (needsScanCollection(unnestExpr, op)) {
             ILogicalExpression newExpr = new UnnestingFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.SCAN_COLLECTION),
                     new MutableObject<ILogicalExpression>(unnestExpr));
             unnest.getExpressionRef().setValue(newExpr);
             context.addToDontApplySet(this, op);

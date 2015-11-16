@@ -25,11 +25,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.SessionConfig.OutputFormat;
-import org.apache.asterix.aql.translator.AqlTranslator;
+import org.apache.asterix.aql.translator.QueryTranslator;
 import org.apache.asterix.common.feeds.FeedConnectionRequest;
 import org.apache.asterix.common.feeds.FeedConnectionRequest.ConnectionStatus;
 import org.apache.asterix.common.feeds.api.IFeedWork;
 import org.apache.asterix.common.feeds.api.IFeedWorkEventListener;
+import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.feeds.FeedCollectInfo;
 import org.apache.asterix.lang.aql.statement.SubscribeFeedStatement;
 import org.apache.asterix.lang.common.base.Statement;
@@ -44,6 +46,7 @@ import org.apache.hyracks.api.job.JobId;
 public class FeedWorkCollection {
 
     private static Logger LOGGER = Logger.getLogger(FeedWorkCollection.class.getName());
+    private static final ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
 
     /**
      * The task of subscribing to a feed to obtain data.
@@ -79,14 +82,15 @@ public class FeedWorkCollection {
                 try {
                     PrintWriter writer = new PrintWriter(System.out, true);
                     SessionConfig pc = new SessionConfig(writer, OutputFormat.ADM);
-                    DataverseDecl dataverseDecl = new DataverseDecl(new Identifier(request.getReceivingFeedId()
-                            .getDataverse()));
+                    DataverseDecl dataverseDecl = new DataverseDecl(
+                            new Identifier(request.getReceivingFeedId().getDataverse()));
                     SubscribeFeedStatement subscribeStmt = new SubscribeFeedStatement(locations, request);
                     List<Statement> statements = new ArrayList<Statement>();
                     statements.add(dataverseDecl);
                     statements.add(subscribeStmt);
-                    AqlTranslator translator = new AqlTranslator(statements, pc);
-                    translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null, AqlTranslator.ResultDelivery.SYNC);
+                    QueryTranslator translator = new QueryTranslator(statements, pc, compilationProvider);
+                    translator.compileAndExecute(AsterixAppContextInfo.getInstance().getHcc(), null,
+                            QueryTranslator.ResultDelivery.SYNC);
                     if (LOGGER.isLoggable(Level.INFO)) {
                         LOGGER.info("Submitted connection requests for execution: " + request);
                     }
@@ -187,8 +191,8 @@ public class FeedWorkCollection {
                                 }
                             } catch (Exception e) {
                                 if (LOGGER.isLoggable(Level.WARNING)) {
-                                    LOGGER.warning("Unable to resume feed " + finfo.feedConnectionId + " "
-                                            + e.getMessage());
+                                    LOGGER.warning(
+                                            "Unable to resume feed " + finfo.feedConnectionId + " " + e.getMessage());
                                 }
                             }
                         }

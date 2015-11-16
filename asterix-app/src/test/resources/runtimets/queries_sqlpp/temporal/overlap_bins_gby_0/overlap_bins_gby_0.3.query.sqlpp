@@ -26,12 +26,12 @@ use test;
 
 select element {'tbin':gen0.bin,'interval':itv,'overlap':test."get-overlapping-interval"(gen0.bin,itv)}
 from
-    ( select element {'i':i,'bin':bin}
-      from  tsdata as i,
+    ( select element {'bin':bin,'i':i}
+      from (select element i from tsdata as i order by i.time) as i,
             test."overlap-bins"(test."interval-start-from-time"(i.time,i.duration),test.time('00:00:00'),test."day-time-duration"('PT1H30M')) as j
       group by j as bin
-      order by test."get-interval-start"(bin)
+      order by "get-interval-start"(bin)
     ) as gen0,
     gen0.i as x
 with itv as test."interval-start-from-time"(x.time,x.duration)
-;
+order by test."get-interval-start"(gen0.bin);

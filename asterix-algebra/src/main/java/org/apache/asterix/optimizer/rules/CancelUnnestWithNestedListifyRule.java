@@ -23,10 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
-import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -99,7 +99,8 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         // apply it only at the top of the plan
         ILogicalOperator op = opRef.getValue();
         if (context.checkIfInDontApplySet(this, op)) {
@@ -148,7 +149,8 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
                 unnestedVar = ((VariableReferenceExpression) expr).getVariableReference();
                 break;
             case FUNCTION_CALL:
-                if (((AbstractFunctionCallExpression) expr).getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
+                if (((AbstractFunctionCallExpression) expr)
+                        .getFunctionIdentifier() != AsterixBuiltinFunctions.SCAN_COLLECTION) {
                     return false;
                 }
                 AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expr;
@@ -181,8 +183,8 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             return false;
         }
 
-        AbstractLogicalOperator nestedPlanRoot = (AbstractLogicalOperator) gby.getNestedPlans().get(0).getRoots()
-                .get(0).getValue();
+        AbstractLogicalOperator nestedPlanRoot = (AbstractLogicalOperator) gby.getNestedPlans().get(0).getRoots().get(0)
+                .getValue();
         if (nestedPlanRoot.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }
@@ -263,7 +265,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             List<Mutable<ILogicalExpression>> raggExprs = new ArrayList<Mutable<ILogicalExpression>>();
             raggVars.add(posVar);
             StatefulFunctionCallExpression fce = new StatefulFunctionCallExpression(
-                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
             raggExprs.add(new MutableObject<ILogicalExpression>(fce));
             RunningAggregateOperator raggOp = new RunningAggregateOperator(raggVars, raggExprs);
             raggOp.setExecutionMode(unnest1.getExecutionMode());

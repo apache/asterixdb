@@ -26,4 +26,10 @@
 
 for $l in dataset('Metadata.Function')
 where $l.DataverseName='testdv1'
-return $l;
+return {
+"DataverseName": $l.DataverseName,
+"Name": $l.Name,
+"Arity": $l.Arity,
+"ReturnType": $l.ReturnType,
+"Language": $l.Language
+};

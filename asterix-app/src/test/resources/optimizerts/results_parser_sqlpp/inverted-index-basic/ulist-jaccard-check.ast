@@ -48,16 +48,5 @@ Where
       ]
       LiteralExpr [FLOAT] [0.7]
     ]
-    Index:     FunctionCall test.similarity-jaccard-check@3[
-      FieldAccessor [
-        Variable [ Name=c ]
-        Field=interests
-      ]
-      UnorderedListConstructor [
-        LiteralExpr [STRING] [computers]
-        LiteralExpr [STRING] [wine]
-        LiteralExpr [STRING] [databases]
-      ]
-      LiteralExpr [FLOAT] [0.7]
-    ]
+    Index:     LiteralExpr [LONG] [0]
   ]

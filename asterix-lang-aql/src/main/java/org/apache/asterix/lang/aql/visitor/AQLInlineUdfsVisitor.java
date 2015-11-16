@@ -29,17 +29,21 @@ import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
+import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         implements IAQLVisitor<Boolean, List<FunctionDecl>> {
 
-    public AQLInlineUdfsVisitor(LangRewritingContext context) {
-        super(context, new AQLCloneAndSubstituteVariablesVisitor(context));
+    public AQLInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
+            List<FunctionDecl> declaredFunctions, AqlMetadataProvider metadataProvider) {
+        super(context, rewriterFactory, declaredFunctions, metadataProvider,
+                new AQLCloneAndSubstituteVariablesVisitor(context));
     }
 
     @Override
@@ -71,11 +75,9 @@ public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
 
     @Override
     public Boolean visit(DistinctClause dc, List<FunctionDecl> arg) throws AsterixException {
-        boolean changed = false;
-        for (Expression expr : dc.getDistinctByExpr()) {
-            changed = expr.accept(this, arg);
-        }
-        return changed;
+        Pair<Boolean, ArrayList<Expression>> p = inlineUdfsInExprList(dc.getDistinctByExpr(), arg);
+        dc.setDistinctByExpr(p.second);
+        return p.first;
     }
 
     @Override

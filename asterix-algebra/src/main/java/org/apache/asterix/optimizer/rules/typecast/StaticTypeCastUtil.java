@@ -25,9 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.asterix.lang.aql.util.FunctionUtils;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -41,6 +39,8 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -69,7 +69,7 @@ public class StaticTypeCastUtil {
      * The List constructor is very special because a nested list is of type List<ANY>.
      * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
      * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceEnforcedListTypeRule} .
-     * 
+     *
      * @param funcExpr
      *            record constructor function expression
      * @param requiredListType
@@ -118,7 +118,7 @@ public class StaticTypeCastUtil {
      * 2. a nested record in the open part is of type Open_Record{}.
      * However, the bottom-up type inference (InferTypeRule in algebricks) did not infer that so we need this method to enforce the type.
      * We do not want to break the generality of algebricks so this method is called in an ASTERIX rule: @ IntroduceStaticTypeCastRule} .
-     * 
+     *
      * @param funcExpr
      *            the function expression whose type needs to be top-down enforced
      * @param reqType
@@ -166,8 +166,8 @@ public class StaticTypeCastUtil {
                 }
             }
             if (!compatible(reqType, inputType)) {
-                throw new AlgebricksException("type mismatch, required: " + reqType.toString() + " actual: "
-                        + inputType.toString());
+                throw new AlgebricksException(
+                        "type mismatch, required: " + reqType.toString() + " actual: " + inputType.toString());
             }
             return changed;
         }
@@ -175,7 +175,7 @@ public class StaticTypeCastUtil {
 
     /**
      * only called when funcExpr is record constructor
-     * 
+     *
      * @param funcExpr
      *            record constructor function expression
      * @param requiredListType
@@ -187,7 +187,7 @@ public class StaticTypeCastUtil {
      */
     private static boolean rewriteRecordFuncExpr(AbstractFunctionCallExpression funcExpr,
             ARecordType requiredRecordType, ARecordType inputRecordType, IVariableTypeEnvironment env)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         // if already rewritten, the required type is not null
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return false;
@@ -201,7 +201,7 @@ public class StaticTypeCastUtil {
 
     /**
      * only called when funcExpr is list constructor
-     * 
+     *
      * @param funcExpr
      *            list constructor function expression
      * @param requiredListType
@@ -213,7 +213,7 @@ public class StaticTypeCastUtil {
      */
     private static boolean rewriteListFuncExpr(AbstractFunctionCallExpression funcExpr,
             AbstractCollectionType requiredListType, AbstractCollectionType inputListType, IVariableTypeEnvironment env)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (TypeComputerUtilities.getRequiredType(funcExpr) != null)
             return false;
 
@@ -225,8 +225,8 @@ public class StaticTypeCastUtil {
         boolean changed = false;
         for (int j = 0; j < args.size(); j++) {
             ILogicalExpression arg = args.get(j).getValue();
-            IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY) ? (IAType) env
-                    .getType(arg) : inputItemType;
+            IAType currentItemType = (inputItemType == null || inputItemType == BuiltinType.ANY)
+                    ? (IAType) env.getType(arg) : inputItemType;
             switch (arg.getExpressionTag()) {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
@@ -242,7 +242,7 @@ public class StaticTypeCastUtil {
 
     /**
      * This method statically cast the type of records from their current type to the required type.
-     * 
+     *
      * @param func
      *            The record constructor expression.
      * @param reqType
@@ -255,8 +255,8 @@ public class StaticTypeCastUtil {
      */
     private static boolean staticRecordTypeCast(AbstractFunctionCallExpression func, ARecordType reqType,
             ARecordType inputType, IVariableTypeEnvironment env) throws AlgebricksException {
-        if (!(func.getFunctionIdentifier() == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR || func
-                .getFunctionIdentifier() == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
+        if (!(func.getFunctionIdentifier() == AsterixBuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
+                || func.getFunctionIdentifier() == AsterixBuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR)) {
             return false;
         }
         IAType[] reqFieldTypes = reqType.getFieldTypes();
@@ -331,7 +331,7 @@ public class StaticTypeCastUtil {
                             matched = true;
 
                             ScalarFunctionCallExpression notNullFunc = new ScalarFunctionCallExpression(
-                                    FunctionUtils.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
+                                    FunctionUtil.getFunctionInfo(AsterixBuiltinFunctions.NOT_NULL));
                             notNullFunc.getArguments().add(new MutableObject<ILogicalExpression>(arg));
                             //wrap the not null function to the original function
                             func.getArguments().get(2 * i + 1).setValue(notNullFunc);
@@ -418,10 +418,10 @@ public class StaticTypeCastUtil {
             }
             if (nullFields[i]) {
                 // add a null field
-                arguments.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                        new AString(reqFieldNames[i])))));
-                arguments.add(new MutableObject<ILogicalExpression>(new ConstantExpression(new AsterixConstantValue(
-                        ANull.NULL))));
+                arguments.add(new MutableObject<ILogicalExpression>(
+                        new ConstantExpression(new AsterixConstantValue(new AString(reqFieldNames[i])))));
+                arguments.add(new MutableObject<ILogicalExpression>(
+                        new ConstantExpression(new AsterixConstantValue(ANull.NULL))));
             }
         }
 
@@ -467,7 +467,7 @@ public class StaticTypeCastUtil {
             }
             if (fi != null && !inputFieldType.equals(reqFieldType) && parameterVars.size() > 0) {
                 //inject dynamic type casting
-                injectCastFunction(FunctionUtils.getFunctionInfo(fi), reqFieldType, inputFieldType, expRef, argExpr);
+                injectCastFunction(FunctionUtil.getFunctionInfo(fi), reqFieldType, inputFieldType, expRef, argExpr);
                 castInjected = true;
             }
             if (argExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -491,7 +491,7 @@ public class StaticTypeCastUtil {
 
     /**
      * Inject a dynamic cast function wrapping an existing expression
-     * 
+     *
      * @param funcInfo
      *            the cast function
      * @param reqType
@@ -513,7 +513,7 @@ public class StaticTypeCastUtil {
 
     /**
      * Determine if two types are compatible
-     * 
+     *
      * @param reqType
      *            the required type
      * @param inputType

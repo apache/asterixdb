@@ -1,0 +1,19 @@
+DataverseUse test
+TypeDecl MyRecordNested [
+  open RecordType {
+    point : point,
+    kwds : string,
+    line1 : line,
+    line2 : line,
+    poly1 : polygon,
+    poly2 : polygon,
+    rec : rectangle,
+    circle : circle
+  }
+]
+TypeDecl MyRecord [
+  closed RecordType {
+    nested : MyRecordNested
+  }
+]
+DatasetDecl MyData(MyRecord)is an external dataset

@@ -22,7 +22,7 @@ use tpch;
 
 declare function tmp() {
 (
-    select element {'o_orderkey':l.l_orderkey}
+    select distinct element {'o_orderkey':l.l_orderkey}
     from  LineItem as l
     where (l.l_commitdate < l.l_receiptdate)
 )

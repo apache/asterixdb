@@ -1,0 +1,7 @@
+Query:
+SELECT ELEMENT [
+FunctionCall test.computeBonus@2[
+  NEGATIVE LiteralExpr [LONG] [1]
+  NEGATIVE LiteralExpr [LONG] [1]
+]
+]

@@ -1,0 +1,19 @@
+DataverseUse OpenSocialNetworkData
+TypeDecl TwitterUserType [
+  open RecordType {
+    screen-name : string,
+    lang : string,
+    friends_count : int64,
+    statuses_count : int64,
+    name : string,
+    followers_count : int64
+  }
+]
+TypeDecl TweetMessageType [
+  open RecordType {
+    tweetid : string,
+    tweetid-copy : string,
+    send-time-copy : datetime
+  }
+]
+DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]

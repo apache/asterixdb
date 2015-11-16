@@ -159,25 +159,39 @@ public final class Scope {
         final Iterator<Identifier> identifierIterator = symbols.values().iterator();
         final Iterator<Identifier> parentIterator = parent == null ? null : parent.liveSymbols();
         return new Iterator<Identifier>() {
+            private Identifier currentSymbol = null;
 
             @Override
             public boolean hasNext() {
-                if (!maskParentScope && identifierIterator != null && identifierIterator.hasNext()) {
-                    return true;
-                } else if (parentIterator != null && parentIterator.hasNext()) {
+                currentSymbol = null;
+                if (identifierIterator != null && identifierIterator.hasNext()) {
+                    currentSymbol = identifierIterator.next();
+                } else if (!maskParentScope && parentIterator != null && parentIterator.hasNext()) {
+                    do {
+                        Identifier symbolFromParent = parentIterator.next();
+                        if (!symbols.containsKey(symbolFromParent.getValue())) {
+                            currentSymbol = symbolFromParent;
+                            break;
+                        }
+                    } while (parentIterator.hasNext());
+                }
+
+                // Return true if currentSymbol is set.
+                if (currentSymbol == null) {
+                    return false;
+                } else {
                     return true;
                 }
-                return false;
             }
 
             @Override
             public Identifier next() {
-                if (!maskParentScope && identifierIterator != null && identifierIterator.hasNext()) {
-                    return identifierIterator.next();
-                } else if (parentIterator != null && parentIterator.hasNext()) {
-                    return parentIterator.next();
+                if (currentSymbol == null) {
+                    throw new IllegalStateException(
+                            "Please make sure that hasNext() returns true before calling next().");
+                } else {
+                    return currentSymbol;
                 }
-                throw new IllegalStateException("Please check hasNext() before calling next().");
             }
 
         };

@@ -19,7 +19,7 @@
 /*
  * Description     :  Test let clause
  * Expected Result :  Success
- * Date            :  6th July 2012 
+ * Date            :  6th July 2012
  */
 
 [{{'John Doe',45,'HR',60000,'Separation'}}];

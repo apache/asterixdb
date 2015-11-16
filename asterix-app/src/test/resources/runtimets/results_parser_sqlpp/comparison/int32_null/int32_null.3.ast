@@ -12,9 +12,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
     ]
   )
@@ -26,9 +24,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
       >=
       FunctionCall null.int32@1[
@@ -48,9 +44,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
     ]
   )
@@ -62,9 +56,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
       <=
       FunctionCall null.int32@1[
@@ -84,9 +76,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
     ]
   )
@@ -98,9 +88,7 @@ RecordConstructor [
         OrderedListConstructor [
           LiteralExpr [LONG] [1]
         ]
-        Index:         OrderedListConstructor [
-          LiteralExpr [LONG] [1]
-        ]
+        Index:         LiteralExpr [LONG] [1]
       ]
       !=
       FunctionCall null.int32@1[

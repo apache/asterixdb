@@ -1,0 +1,26 @@
+Query:
+SELECT ELEMENT [
+Variable [ Name=x ]
+]
+FROM [  OrderedListConstructor [
+    OrderedListConstructor [
+      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [3]
+    ]
+    OrderedListConstructor [
+      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [5]
+      LiteralExpr [LONG] [2]
+    ]
+    OrderedListConstructor [
+      NEGATIVE LiteralExpr [LONG] [1]
+      NEGATIVE LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [0]
+    ]
+    OrderedListConstructor [
+      LiteralExpr [STRING] [a]
+    ]
+  ]
+  AS
+  Variable [ Name=x ]
+]

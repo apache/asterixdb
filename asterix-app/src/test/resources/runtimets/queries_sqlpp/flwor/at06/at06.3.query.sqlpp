@@ -27,8 +27,8 @@ use test;
 
 select element {'partkey':gen0.partkey,'pid':p,'shipdate':j.l_shipdate,'orderkey':j.l_orderkey}
 from
-    ( select element {'partkey':partkey,'i':i}
-      from  LineItem as i
+    ( select element {'i':i,'partkey':partkey}
+      from   (select element l from LineItem l order by l.l_partkey) as i
       group by i.l_partkey as partkey
     ) as gen0,
     (

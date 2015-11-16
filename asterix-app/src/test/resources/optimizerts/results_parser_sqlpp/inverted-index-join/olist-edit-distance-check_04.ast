@@ -42,7 +42,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=ed ]
-      Index:       Variable [ Name=ed ]
+      Index:       LiteralExpr [LONG] [1]
     ]
   )
 ]
@@ -76,7 +76,7 @@ Where
   OperatorExpr [
     IndexAccessor [
       Variable [ Name=ed ]
-      Index:       Variable [ Name=ed ]
+      Index:       LiteralExpr [LONG] [0]
     ]
     and
     OperatorExpr [

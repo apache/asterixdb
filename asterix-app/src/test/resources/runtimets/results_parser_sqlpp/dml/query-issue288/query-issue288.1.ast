@@ -1,0 +1,10 @@
+DataverseUse test
+TypeDecl LineIDType [
+  closed RecordType {
+    l_orderkey : int64,
+    l_linenumber : int64,
+    l_suppkey : int64
+  }
+]
+DatasetDecl LineID(LineIDType) partitioned by [[l_orderkey], [l_linenumber]]
+DatasetDecl LineID2(LineIDType) partitioned by [[l_orderkey], [l_linenumber]]

@@ -22,3 +22,11 @@
  * Date         : Sep 6th 2012
  */
 
+drop database test if exists;
+create database test;
+
+use test;
+
+create function test.needs_f1(x){
+ x + f1()
+}

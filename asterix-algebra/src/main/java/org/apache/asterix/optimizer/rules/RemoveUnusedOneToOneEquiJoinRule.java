@@ -24,11 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.DatasetUtils;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -70,7 +69,8 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
     private boolean hasRun = false;
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         if (hasRun) {
             return false;
         }
@@ -102,7 +102,7 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
             int unusedJoinBranchIndex = removeJoinFromInputBranch(childOpRef);
             if (unusedJoinBranchIndex >= 0) {
                 int usedBranchIndex = (unusedJoinBranchIndex == 0) ? 1 : 0;
-                // Remove join at input index i, by hooking up op's input i with 
+                // Remove join at input index i, by hooking up op's input i with
                 // the join's branch at unusedJoinBranchIndex.
                 AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) childOpRef.getValue();
                 op.getInputs().set(i, joinOp.getInputs().get(usedBranchIndex));
@@ -132,6 +132,10 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
         for (int i = 0; i < joinOp.getInputs().size(); i++) {
             liveVars.clear();
             VariableUtilities.getLiveVariables(joinOp.getInputs().get(i).getValue(), liveVars);
+            if (liveVars.isEmpty()) {
+                // The branch does not produce any variable, i.e., it only contains an empty tuple source.
+                return i;
+            }
             liveVars.retainAll(parentsUsedVars);
             if (liveVars.isEmpty()) {
                 // None of the live variables from this branch are used by its parents.
@@ -151,6 +155,10 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
         // Check whether all used variables originate from primary keys of exactly the same dataset.
         // Collect a list of datascans whose primary key variables are used in the join condition.
         gatherProducingDataScans(opRef, usedVars, dataScans);
+        if (dataScans.size() < 2) {
+            // Either branch does not use its primary key in the join condition.
+            return -1;
+        }
 
         // Check that all datascans scan the same dataset, and that the join condition
         // only used primary key variables of those datascans.
