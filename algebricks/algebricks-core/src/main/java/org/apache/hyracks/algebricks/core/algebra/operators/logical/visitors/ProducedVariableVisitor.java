@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -49,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -210,13 +212,7 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitUnnestOperator(UnnestOperator op, Void arg) throws AlgebricksException {
-        producedVariables.addAll(op.getVariables());
-        LogicalVariable positionalVariable = op.getPositionalVariable();
-        if (positionalVariable != null) {
-            if (!producedVariables.contains(positionalVariable))
-                producedVariables.add(positionalVariable);
-        }
-        return null;
+        return visitUnnestNonMapOperator(op);
     }
 
     @Override
@@ -274,6 +270,21 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitExternalDataLookupOperator(ExternalDataLookupOperator op, Void arg) throws AlgebricksException {
         producedVariables.add(op.getVariables().get(0));
+        return null;
+    }
+
+    @Override
+    public Void visitOuterUnnestOperator(OuterUnnestOperator op, Void arg) throws AlgebricksException {
+        return visitUnnestNonMapOperator(op);
+    }
+
+    private Void visitUnnestNonMapOperator(AbstractUnnestNonMapOperator op) {
+        producedVariables.addAll(op.getVariables());
+        LogicalVariable positionalVariable = op.getPositionalVariable();
+        if (positionalVariable != null) {
+            if (!producedVariables.contains(positionalVariable))
+                producedVariables.add(positionalVariable);
+        }
         return null;
     }
 }

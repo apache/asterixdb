@@ -46,4 +46,9 @@ public class BroadcastExpressionAnnotation implements IExpressionAnnotation {
         return bcast;
     }
 
+    @Override
+    public String toString() {
+        return BROADCAST_ANNOTATION_KEY;
+    }
+
 }

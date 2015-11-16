@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -76,6 +75,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public abstract LogicalOperatorTag getOperatorTag();
 
+    @Override
     public ExecutionMode getExecutionMode() {
         return mode;
     }
@@ -154,7 +154,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public final void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (bJobGenEnabled) {
             if (physicalOperator == null) {
                 throw new AlgebricksException("Physical operator not set for operator: " + this);

@@ -59,5 +59,4 @@ public class SequentialFixpointRuleController extends AbstractRuleController {
         } while (anyChange);
         return anyRuleFired;
     }
-
 }

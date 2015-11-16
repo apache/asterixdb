@@ -19,10 +19,8 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -30,7 +28,6 @@ import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPoli
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import org.apache.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
@@ -44,14 +41,15 @@ public class SinkOperator extends AbstractLogicalOperator {
         for (int i = 0; i < inputs.size(); i++) {
             for (LogicalVariable v : inputs.get(i).getValue().getSchema()) {
                 if (!schema.contains(v))
-                	schema.add(v);
+                    schema.add(v);
             }
 
         }
     }
 
     @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
+            throws AlgebricksException {
         return false;
     }
 
@@ -72,13 +70,13 @@ public class SinkOperator extends AbstractLogicalOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-      ITypeEnvPointer[] envPointers = new ITypeEnvPointer[inputs.size()];
-      for (int i = 0; i < inputs.size(); i++) {
-          envPointers[i] = new OpRefTypeEnvPointer(inputs.get(i), ctx);
-      }
-      PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-              ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
-      return env;
+        ITypeEnvPointer[] envPointers = new ITypeEnvPointer[inputs.size()];
+        for (int i = 0; i < inputs.size(); i++) {
+            envPointers[i] = new OpRefTypeEnvPointer(inputs.get(i), ctx);
+        }
+        PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
+                ctx.getNullableTypeComputer(), ctx.getMetadataProvider(), TypePropagationPolicy.ALL, envPointers);
+        return env;
 
     }
 

@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -52,6 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeO
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -115,20 +115,20 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitLimitOperator(LimitOperator op, Void arg) throws AlgebricksException {
-        return new LimitOperator(deepCopyExpressionRef(op.getMaxObjects()).getValue(), deepCopyExpressionRef(
-                op.getOffset()).getValue(), op.isTopmostLimitOp());
+        return new LimitOperator(deepCopyExpressionRef(op.getMaxObjects()).getValue(),
+                deepCopyExpressionRef(op.getOffset()).getValue(), op.isTopmostLimitOp());
     }
 
     @Override
     public ILogicalOperator visitInnerJoinOperator(InnerJoinOperator op, Void arg) throws AlgebricksException {
-        return new InnerJoinOperator(deepCopyExpressionRef(op.getCondition()), op.getInputs().get(0), op.getInputs()
-                .get(1));
+        return new InnerJoinOperator(deepCopyExpressionRef(op.getCondition()), op.getInputs().get(0),
+                op.getInputs().get(1));
     }
 
     @Override
     public ILogicalOperator visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Void arg) throws AlgebricksException {
-        return new LeftOuterJoinOperator(deepCopyExpressionRef(op.getCondition()), op.getInputs().get(0), op
-                .getInputs().get(1));
+        return new LeftOuterJoinOperator(deepCopyExpressionRef(op.getCondition()), op.getInputs().get(0),
+                op.getInputs().get(1));
     }
 
     @Override
@@ -215,8 +215,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, Void arg) throws AlgebricksException {
         ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
         newInputList.addAll(op.getVariables());
-        return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()), new ArrayList<Object>(
-                op.getVariableTypes()), op.propagatesInput());
+        return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
+                new ArrayList<Object>(op.getVariableTypes()), op.propagatesInput());
     }
 
     @Override
@@ -272,7 +272,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<Mutable<ILogicalExpression>>();
         deepCopyExpressionRefs(newKeyExpressions, op.getAdditionalFilteringExpressions());
         InsertDeleteOperator insertDeleteOp = new InsertDeleteOperator(op.getDataSource(),
-                deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions, op.getOperation(), op.isBulkload());
+                deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions, op.getOperation(),
+                op.isBulkload());
         insertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
         return insertDeleteOp;
     }
@@ -322,12 +323,13 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     private void deepCopyExpressionRefs(List<Mutable<ILogicalExpression>> newExprs,
             List<Mutable<ILogicalExpression>> oldExprs) {
         for (Mutable<ILogicalExpression> oldExpr : oldExprs)
-            newExprs.add(new MutableObject<ILogicalExpression>(((AbstractLogicalExpression) oldExpr.getValue())
-                    .cloneExpression()));
+            newExprs.add(new MutableObject<ILogicalExpression>(
+                    ((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression()));
     }
 
     private Mutable<ILogicalExpression> deepCopyExpressionRef(Mutable<ILogicalExpression> oldExpr) {
-        return new MutableObject<ILogicalExpression>(((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression());
+        return new MutableObject<ILogicalExpression>(
+                ((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression());
     }
 
     private List<LogicalVariable> deepCopyVars(List<LogicalVariable> newVars, List<LogicalVariable> oldVars) {
@@ -346,8 +348,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs)
-            newOrdersAndExprs.add(new Pair<IOrder, Mutable<ILogicalExpression>>(pair.first,
-                    deepCopyExpressionRef(pair.second)));
+            newOrdersAndExprs
+                    .add(new Pair<IOrder, Mutable<ILogicalExpression>>(pair.first, deepCopyExpressionRef(pair.second)));
         return newOrdersAndExprs;
     }
 
@@ -368,5 +370,11 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     @Override
     public ILogicalOperator visitMaterializeOperator(MaterializeOperator op, Void arg) throws AlgebricksException {
         return new MaterializeOperator();
+    }
+
+    @Override
+    public ILogicalOperator visitOuterUnnestOperator(OuterUnnestOperator op, Void arg) throws AlgebricksException {
+        return new OuterUnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
+                op.getPositionalVariable(), op.getPositionalVariableType(), op.getPositionWriter());
     }
 }

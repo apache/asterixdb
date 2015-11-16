@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -100,10 +99,11 @@ public class SimpleUnnestToProductRule implements IAlgebraicRewriteRule {
 
         /** join the two independent branches */
         InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE),
-                new MutableObject<ILogicalOperator>(boundaryOpRef.getValue()), new MutableObject<ILogicalOperator>(
-                        opRef.getValue()));
+                new MutableObject<ILogicalOperator>(boundaryOpRef.getValue()),
+                new MutableObject<ILogicalOperator>(opRef.getValue()));
         opRef.setValue(join);
         ILogicalOperator ets = new EmptyTupleSourceOperator();
+        context.computeAndSetTypeEnvironmentForOperator(ets);
         boundaryOpRef.setValue(ets);
         context.computeAndSetTypeEnvironmentForOperator(boundaryOpRef.getValue());
         context.computeAndSetTypeEnvironmentForOperator(opRef.getValue());

@@ -41,4 +41,9 @@ public class IndexedNLJoinExpressionAnnotation implements IExpressionAnnotation 
         clone.setObject(object);
         return clone;
     }
+
+    @Override
+    public String toString() {
+        return INDEXED_NL_JOIN_ANNOTATION_KEY;
+    }
 }

@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -328,6 +329,12 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
         }
         VariableUtilities.getProducedVariables(op, schemaVariables);
         //+ produced variables
+        return null;
+    }
+
+    @Override
+    public Void visitOuterUnnestOperator(OuterUnnestOperator op, Void arg) throws AlgebricksException {
+        standardLayout(op);
         return null;
     }
 

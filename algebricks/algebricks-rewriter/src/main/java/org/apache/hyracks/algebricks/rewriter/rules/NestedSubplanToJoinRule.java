@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -37,20 +36,21 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
  * replace Subplan operators with nested loop joins where the join condition is true, if the Subplan
  * does not contain free variables (does not have correlations to the input stream).
- * 
+ *
  * @author yingyib
  */
 public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -103,17 +103,20 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
                 continue;
             }
 
-            /** expend the input and roots into a DAG of nested loop joins */
+            /**
+             * Expends the input and roots into a DAG of nested loop joins.
+             * Though joins should be left-outer joins, a left-outer join with condition TRUE is equivalent to an inner join.
+             **/
             Mutable<ILogicalExpression> expr = new MutableObject<ILogicalExpression>(ConstantExpression.TRUE);
             Mutable<ILogicalOperator> nestedRootRef = nestedRoots.get(0);
-            ILogicalOperator join = new LeftOuterJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput),
+            ILogicalOperator join = new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput),
                     nestedRootRef);
 
             /** rewrite the nested tuple source to be empty tuple source */
-            rewriteNestedTupleSource(nestedRootRef);
+            rewriteNestedTupleSource(nestedRootRef, context);
 
             for (int i = 1; i < nestedRoots.size(); i++) {
-                join = new LeftOuterJoinOperator(expr, new MutableObject<ILogicalOperator>(join), nestedRoots.get(i));
+                join = new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(join), nestedRoots.get(i));
             }
             op1.getInputs().get(index).setValue(join);
             context.computeAndSetTypeEnvironmentForOperator(join);
@@ -124,17 +127,20 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
 
     /**
      * rewrite NestedTupleSource operators to EmptyTupleSource operators
-     * 
+     *
      * @param nestedRootRef
      */
-    private void rewriteNestedTupleSource(Mutable<ILogicalOperator> nestedRootRef) {
+    private void rewriteNestedTupleSource(Mutable<ILogicalOperator> nestedRootRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator nestedRoot = (AbstractLogicalOperator) nestedRootRef.getValue();
         if (nestedRoot.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
-            nestedRootRef.setValue(new EmptyTupleSourceOperator());
+            ILogicalOperator ets = new EmptyTupleSourceOperator();
+            nestedRootRef.setValue(ets);
+            context.computeAndSetTypeEnvironmentForOperator(ets);
         }
         List<Mutable<ILogicalOperator>> inputs = nestedRoot.getInputs();
         for (Mutable<ILogicalOperator> input : inputs) {
-            rewriteNestedTupleSource(input);
+            rewriteNestedTupleSource(input, context);
         }
     }
 }

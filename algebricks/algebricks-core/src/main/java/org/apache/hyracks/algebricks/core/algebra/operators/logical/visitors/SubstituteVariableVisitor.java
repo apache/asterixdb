@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestNonMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -51,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeO
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -322,16 +324,7 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitUnnestOperator(UnnestOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        for (int i = 0; i < variables.size(); i++) {
-            if (variables.get(i) == pair.first) {
-                variables.set(i, pair.second);
-                return null;
-            }
-        }
-        op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
-        substVarTypes(op, pair);
-        return null;
+        return visitUnnestNonMapOperator(op, pair);
     }
 
     @Override
@@ -459,6 +452,26 @@ public class SubstituteVariableVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitExternalDataLookupOperator(ExternalDataLookupOperator op,
             Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
+        List<LogicalVariable> variables = op.getVariables();
+        for (int i = 0; i < variables.size(); i++) {
+            if (variables.get(i) == pair.first) {
+                variables.set(i, pair.second);
+                return null;
+            }
+        }
+        op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
+        substVarTypes(op, pair);
+        return null;
+    }
+
+    @Override
+    public Void visitOuterUnnestOperator(OuterUnnestOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        return visitUnnestNonMapOperator(op, pair);
+    }
+
+    private Void visitUnnestNonMapOperator(AbstractUnnestNonMapOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
         List<LogicalVariable> variables = op.getVariables();
         for (int i = 0; i < variables.size(); i++) {
             if (variables.get(i) == pair.first) {

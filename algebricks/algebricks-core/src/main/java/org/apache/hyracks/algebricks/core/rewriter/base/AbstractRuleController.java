@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.logging.Level;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -46,7 +45,7 @@ public abstract class AbstractRuleController {
 
     /**
      * Each rewriting strategy may differ in the
-     * 
+     *
      * @param root
      * @param ruleClasses
      * @return true iff one of the rules in the collection fired

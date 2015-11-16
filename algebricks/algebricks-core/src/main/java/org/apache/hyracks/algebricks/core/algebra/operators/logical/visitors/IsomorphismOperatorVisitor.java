@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeO
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -574,6 +575,20 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return true;
         else
             return false;
+    }
+
+    @Override
+    public Boolean visitOuterUnnestOperator(OuterUnnestOperator op, ILogicalOperator arg) throws AlgebricksException {
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
+        if (aop.getOperatorTag() != LogicalOperatorTag.OUTER_UNNEST)
+            return Boolean.FALSE;
+        OuterUnnestOperator unnestOpArg = (OuterUnnestOperator) copyAndSubstituteVar(op, arg);
+        boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), unnestOpArg.getVariables())
+                && variableEqual(op.getPositionalVariable(), unnestOpArg.getPositionalVariable());
+        if (!isomorphic)
+            return Boolean.FALSE;
+        isomorphic = op.getExpressionRef().getValue().equals(unnestOpArg.getExpressionRef().getValue());
+        return isomorphic;
     }
 
 }

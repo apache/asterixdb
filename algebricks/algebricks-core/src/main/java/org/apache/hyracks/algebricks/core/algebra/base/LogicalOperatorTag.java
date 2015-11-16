@@ -48,6 +48,7 @@ public enum LogicalOperatorTag {
     TOKENIZE,
     UNIONALL,
     UNNEST,
+    OUTER_UNNEST,
     UNNEST_MAP,
     UPDATE,
     WRITE,

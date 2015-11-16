@@ -19,7 +19,6 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -46,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -80,8 +80,8 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
         }
         op.accept(visitor, context);
         if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.finest("Logical properties visitor for " + op + ": "
-                    + context.getLogicalPropertiesVector(op) + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.finest(
+                    "Logical properties visitor for " + op + ": " + context.getLogicalPropertiesVector(op) + "\n");
         }
     }
 
@@ -259,7 +259,8 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     }
 
     @Override
-    public Void visitInsertDeleteOperator(InsertDeleteOperator op, IOptimizationContext arg) throws AlgebricksException {
+    public Void visitInsertDeleteOperator(InsertDeleteOperator op, IOptimizationContext arg)
+            throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -272,8 +273,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     }
 
     @Override
-    public Void visitTokenizeOperator(TokenizeOperator op, IOptimizationContext arg)
-            throws AlgebricksException {
+    public Void visitTokenizeOperator(TokenizeOperator op, IOptimizationContext arg) throws AlgebricksException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -348,6 +348,11 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     @Override
     public Void visitExternalDataLookupOperator(ExternalDataLookupOperator op, IOptimizationContext arg)
             throws AlgebricksException {
+        return null;
+    }
+
+    @Override
+    public Void visitOuterUnnestOperator(OuterUnnestOperator op, IOptimizationContext arg) throws AlgebricksException {
         return null;
     }
 

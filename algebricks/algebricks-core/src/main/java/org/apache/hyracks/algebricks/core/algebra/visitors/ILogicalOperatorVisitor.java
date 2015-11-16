@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -95,6 +96,8 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitUnionOperator(UnionAllOperator op, T arg) throws AlgebricksException;
 
     public R visitUnnestOperator(UnnestOperator op, T arg) throws AlgebricksException;
+
+    public R visitOuterUnnestOperator(OuterUnnestOperator op, T arg) throws AlgebricksException;
 
     public R visitUnnestMapOperator(UnnestMapOperator op, T arg) throws AlgebricksException;
 

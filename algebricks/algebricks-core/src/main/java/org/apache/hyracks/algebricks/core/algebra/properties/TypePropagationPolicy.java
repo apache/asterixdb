@@ -36,7 +36,8 @@ public abstract class TypePropagationPolicy {
             for (ITypeEnvPointer p : typeEnvs) {
                 IVariableTypeEnvironment env = p.getTypeEnv();
                 if (env == null) {
-                    throw new AlgebricksException("Null environment for pointer " + p + " in getVarType for var=" + var);
+                    throw new AlgebricksException(
+                            "Null environment for pointer " + p + " in getVarType for var=" + var);
                 }
                 Object t = env.getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
                 if (t != null) {

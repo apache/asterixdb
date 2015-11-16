@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -48,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -86,7 +86,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent) throws AlgebricksException {
+    public String visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent)
+            throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("running-aggregate ").append(op.getVariables()).append(" <- ");
         pprintExprList(op.getExpressions(), buffer, indent);
@@ -185,7 +186,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
-    public String visitDistributeResultOperator(DistributeResultOperator op, Integer indent) throws AlgebricksException {
+    public String visitDistributeResultOperator(DistributeResultOperator op, Integer indent)
+            throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append("distribute result ");
         pprintExprList(op.getExpressions(), buffer, indent);
@@ -256,11 +258,21 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     }
 
     @Override
+    public String visitOuterUnnestOperator(OuterUnnestOperator op, Integer indent) throws AlgebricksException {
+        StringBuilder buffer = new StringBuilder();
+        addIndent(buffer, indent).append("outer-unnest " + op.getVariable());
+        if (op.getPositionalVariable() != null) {
+            buffer.append(" at " + op.getPositionalVariable());
+        }
+        buffer.append(" <- " + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        return buffer.toString();
+    }
+
+    @Override
     public String visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "unnest-map " + op.getVariables() + " <- "
-                        + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        addIndent(buffer, indent).append("unnest-map " + op.getVariables() + " <- "
+                + op.getExpressionRef().getValue().accept(exprVisitor, indent));
         return buffer.toString();
     }
 
@@ -293,8 +305,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     @Override
     public String visitScriptOperator(ScriptOperator op, Integer indent) {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "script (in: " + op.getInputVariables() + ") (out: " + op.getOutputVariables() + ")");
+        addIndent(buffer, indent)
+                .append("script (in: " + op.getInputVariables() + ") (out: " + op.getOutputVariables() + ")");
         return buffer.toString();
     }
 
@@ -427,8 +439,8 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
     public String visitExternalDataLookupOperator(ExternalDataLookupOperator op, Integer indent)
             throws AlgebricksException {
         StringBuilder buffer = new StringBuilder();
-        addIndent(buffer, indent).append(
-                "external-instant-lookup " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
+        addIndent(buffer, indent)
+                .append("external-instant-lookup " + op.getVariables() + " <- " + op.getExpressionRef().getValue());
         return buffer.toString();
     }
 

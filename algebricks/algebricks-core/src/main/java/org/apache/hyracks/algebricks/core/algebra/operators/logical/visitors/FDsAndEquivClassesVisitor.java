@@ -29,7 +29,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -65,6 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.PartitioningSplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
@@ -311,9 +311,9 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             }
         }
         if (changed) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Group-by list changed from "
-                    + GroupByOperator.veListToString(gByList) + " to " + GroupByOperator.veListToString(newGbyList)
-                    + ".\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER
+                    .fine(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
+                            + GroupByOperator.veListToString(newGbyList) + ".\n");
         }
         gByList.clear();
         gByList.addAll(newGbyList);
@@ -509,7 +509,8 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     }
 
     @Override
-    public Void visitInsertDeleteOperator(InsertDeleteOperator op, IOptimizationContext ctx) throws AlgebricksException {
+    public Void visitInsertDeleteOperator(InsertDeleteOperator op, IOptimizationContext ctx)
+            throws AlgebricksException {
         propagateFDsAndEquivClasses(op, ctx);
         return null;
     }
@@ -574,7 +575,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     /***
      * Propagated equivalent classes from the child to the current operator, based
      * on the used variables of the current operator.
-     * 
+     *
      * @param op
      *            , the current operator
      * @param ctx
@@ -740,7 +741,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     /**
      * Propagate equivalences that carried in expressions to the variables that
      * they are assigned to.
-     * 
+     *
      * @param eqClasses
      *            an equivalent class map
      * @param assignExprs
@@ -753,15 +754,24 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         for (int assignVarIndex = 0; assignVarIndex < assignVars.size(); ++assignVarIndex) {
             LogicalVariable var = assignVars.get(assignVarIndex);
             ILogicalExpression expr = assignExprs.get(assignVarIndex).getValue();
+            Map<LogicalVariable, EquivalenceClass> newVarEqcMap = new HashMap<LogicalVariable, EquivalenceClass>();
             for (Entry<LogicalVariable, EquivalenceClass> entry : eqClasses.entrySet()) {
                 EquivalenceClass eqc = entry.getValue();
                 // If the equivalence class contains the right-hand-side expression,
                 // the left-hand-side variable is added into the equivalence class.
                 if (eqc.contains(expr)) {
                     eqc.addMember(var);
+                    newVarEqcMap.put(var, eqc); // Add var as a map key for the equivalence class.
                 }
             }
+            eqClasses.putAll(newVarEqcMap);
         }
+    }
+
+    @Override
+    public Void visitOuterUnnestOperator(OuterUnnestOperator op, IOptimizationContext ctx) throws AlgebricksException {
+        propagateFDsAndEquivClasses(op, ctx);
+        return null;
     }
 
 }
