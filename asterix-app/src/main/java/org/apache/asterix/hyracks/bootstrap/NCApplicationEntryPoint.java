@@ -33,7 +33,6 @@ import org.apache.asterix.common.config.AsterixMetadataProperties;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
 import org.apache.asterix.common.config.AsterixTransactionProperties;
 import org.apache.asterix.common.config.IAsterixPropertiesProvider;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
@@ -104,7 +103,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
             }
             updateOnNodeJoin();
         }
-        runtimeContext.initialize();
+        runtimeContext.initialize(initialRun);
         ncApplicationContext.setApplicationObject(runtimeContext);
 
         //if replication is enabled, check if there is a replica for this node
@@ -115,7 +114,6 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
         if (initialRun) {
             LOGGER.info("System is being initialized. (first run)");
-            systemState = SystemState.NEW_UNIVERSE;
         } else {
             // #. recover if the system is corrupted by checking system state.
             IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
@@ -194,7 +192,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
         AsterixMetadataProperties metadataProperties = ((IAsterixPropertiesProvider) runtimeContext)
                 .getMetadataProperties();
 
-        if (systemState == SystemState.NEW_UNIVERSE) {
+        if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("System state: " + SystemState.NEW_UNIVERSE);
                 LOGGER.info("Node ID: " + nodeId);
@@ -204,7 +202,7 @@ public class NCApplicationEntryPoint implements INCApplicationEntryPoint {
 
             PersistentLocalResourceRepository localResourceRepository = (PersistentLocalResourceRepository) runtimeContext
                     .getLocalResourceRepository();
-            localResourceRepository.initialize(nodeId, metadataProperties.getStores().get(nodeId)[0]);
+            localResourceRepository.initializeNewUniverse(metadataProperties.getStores().get(nodeId)[0]);
         }
 
         IAsterixStateProxy proxy = null;

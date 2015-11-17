@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IAsterixAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.AsterixReplicationProperties;
-import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -59,7 +58,8 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
         //The whole remote recovery process should be atomic.
         //Any error happens, we should start the recovery from the start until the recovery is complete or an illegal state is reached (cannot recovery).
         int maxRecoveryAttempts = 10;
-
+        PersistentLocalResourceRepository resourceRepository = (PersistentLocalResourceRepository) runtimeContext
+                .getLocalResourceRepository();
         while (true) {
             //start recovery recovery steps
             try {
@@ -84,7 +84,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 datasetLifeCycleManager.closeAllDatasets();
 
                 //3. remove any existing storage data
-                runtimeContext.getReplicaResourcesManager().deleteAsterixStorageData();
+                resourceRepository.deleteStorageData(true);
 
                 //4. select remote replicas to recover from per lost replica data
                 Map<String, Set<String>> selectedRemoteReplicas = constructRemoteRecoveryPlan();
@@ -106,9 +106,9 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
                     //2. Initialize local resources based on the newly received files (if we are recovering the primary replica on this node)
                     if (replicasDataToRecover.contains(logManager.getNodeId())) {
-                        ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository()).initialize(
-                                logManager.getNodeId(),
-                                runtimeContext.getReplicaResourcesManager().getLocalStorageFolder());
+                        ((PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository())
+                                .initializeNewUniverse(
+                                        runtimeContext.getReplicaResourcesManager().getLocalStorageFolder());
                         //initialize resource id factor to correct max resource id
                         runtimeContext.initializeResourceIdFactory();
                     }

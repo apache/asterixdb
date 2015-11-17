@@ -399,17 +399,4 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
             }
         }
     };
-
-    @Override
-    public void deleteAsterixStorageData() throws IOException {
-        for (int i = 0; i < mountPoints.length; i++) {
-            File mountingPoint = new File(mountPoints[i]);
-
-            File[] storageFolders = mountingPoint.listFiles();
-
-            for (File storageFolder : storageFolders) {
-                AsterixFilesUtil.deleteFolder(storageFolder.getAbsolutePath());
-            }
-        }
-    }
 }

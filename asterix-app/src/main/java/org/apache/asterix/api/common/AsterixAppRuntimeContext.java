@@ -45,6 +45,8 @@ import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.transactions.IAsterixAppRuntimeContextProvider;
+import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.feeds.FeedManager;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -140,7 +142,7 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
                 AsterixClusterProperties.INSTANCE.getCluster());
     }
 
-    public void initialize() throws IOException, ACIDException, AsterixException {
+    public void initialize(boolean initialRun) throws IOException, ACIDException, AsterixException {
         Logger.getLogger("org.apache").setLevel(externalProperties.getLogLevel());
 
         threadExecutor = new AsterixThreadExecutor(ncApplicationContext.getThreadFactory());
@@ -156,15 +158,21 @@ public class AsterixAppRuntimeContext implements IAsterixAppRuntimeContext, IAst
 
         metadataMergePolicyFactory = new PrefixMergePolicyFactory();
 
-        ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
-                ioManager, ncApplicationContext.getNodeId());
-        localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
-        initializeResourceIdFactory();
-
         IAsterixAppRuntimeContextProvider asterixAppRuntimeContextProvider = new AsterixAppRuntimeContextProdiverForRecovery(
                 this);
         txnSubsystem = new TransactionSubsystem(ncApplicationContext.getNodeId(), asterixAppRuntimeContextProvider,
                 txnProperties);
+        ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory = new PersistentLocalResourceRepositoryFactory(
+                ioManager, ncApplicationContext.getNodeId());
+        localResourceRepository = persistentLocalResourceRepositoryFactory.createRepository();
+
+        IRecoveryManager recoveryMgr = txnSubsystem.getRecoveryManager();
+        SystemState systemState = recoveryMgr.getSystemState();
+        if (initialRun || systemState == SystemState.NEW_UNIVERSE) {
+            //delete any storage data before the resource factory is initialized
+            ((PersistentLocalResourceRepository) localResourceRepository).deleteStorageData(true);
+        }
+        initializeResourceIdFactory();
 
         datasetLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
                 MetadataPrimaryIndexes.FIRST_AVAILABLE_USER_DATASET_ID, txnSubsystem.getLogManager());
