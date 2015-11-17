@@ -427,13 +427,15 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     private void write(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
-        if (fInfo.fileHasBeenDeleted()) {
-            return;
+        //synchronize on fInfo to prevent the file handle from being deleted until the page is written.
+        synchronized (fInfo) {
+            if (!fInfo.fileHasBeenDeleted()) {
+                cPage.buffer.position(0);
+                cPage.buffer.limit(pageSize);
+                ioManager.syncWrite(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
+                        cPage.buffer);
+            }
         }
-        cPage.buffer.position(0);
-        cPage.buffer.limit(pageSize);
-        ioManager.syncWrite(fInfo.getFileHandle(), (long) BufferedFileHandle.getPageId(cPage.dpid) * pageSize,
-                cPage.buffer);
     }
 
     @Override
@@ -516,8 +518,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         }
                     }
                 } else if (shutdownStart) {
-                    throw new IllegalStateException("Cache closed, but unable to acquire read lock on dirty page: "
-                            + cPage.dpid);
+                    throw new IllegalStateException(
+                            "Cache closed, but unable to acquire read lock on dirty page: " + cPage.dpid);
                 }
             }
         }
@@ -765,9 +767,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     // Mark the fInfo as deleted,
                     // such that when its pages are reclaimed in openFile(),
                     // the pages are not flushed to disk but only invalidated.
-                    if (!fInfo.fileHasBeenDeleted()) {
-                        ioManager.close(fInfo.getFileHandle());
-                        fInfo.markAsDeleted();
+                    synchronized (fInfo) {
+                        if (!fInfo.fileHasBeenDeleted()) {
+                            ioManager.close(fInfo.getFileHandle());
+                            fInfo.markAsDeleted();
+                        }
                     }
                 }
             }

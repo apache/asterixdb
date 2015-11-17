@@ -86,13 +86,16 @@ public class IOManager implements IIOManager {
     @Override
     public int syncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         try {
+            if (fHandle == null) {
+                throw new IllegalStateException("Trying to write to a deleted file.");
+            }
             int n = 0;
             int remaining = data.remaining();
             while (remaining > 0) {
                 int len = ((FileHandle) fHandle).getFileChannel().write(data, offset);
                 if (len < 0) {
-                    throw new HyracksDataException("Error writing to file: "
-                            + ((FileHandle) fHandle).getFileReference().toString());
+                    throw new HyracksDataException(
+                            "Error writing to file: " + ((FileHandle) fHandle).getFileReference().toString());
                 }
                 remaining -= len;
                 offset += len;
