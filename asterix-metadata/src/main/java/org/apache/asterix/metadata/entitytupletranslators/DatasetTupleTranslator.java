@@ -170,7 +170,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
                 // Check if there is a filter field.
                 List<String> filterField = null;
-                int filterFieldPos = datasetDetailsRecord.getType().findFieldPosition(
+                int filterFieldPos = datasetDetailsRecord.getType().getFieldIndex(
                         InternalDatasetDetails.FILTER_FIELD_NAME);
                 if (filterFieldPos >= 0) {
                     filterField = new ArrayList<String>();

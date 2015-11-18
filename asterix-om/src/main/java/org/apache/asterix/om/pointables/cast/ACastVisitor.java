@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.pointables.cast;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +36,6 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -56,6 +54,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
 
     private final Map<IVisitablePointable, ARecordCaster> raccessorToCaster = new HashMap<IVisitablePointable, ARecordCaster>();
     private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<IVisitablePointable, AListCaster>();
+    private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
     @Override
     public Void visit(AListVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
@@ -89,11 +88,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
                 arg.second = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
             ARecordType resultType = (ARecordType) arg.second;
-            //cloning result type to avoid race conditions during comparison\hash calculation
-            ARecordType clonedResultType = new ARecordType(resultType.getTypeName(), resultType.getFieldNames(),
-                    resultType.getFieldTypes(), resultType.isOpen());
-
-            caster.castRecord(accessor, arg.first, clonedResultType, this);
+            caster.castRecord(accessor, arg.first, resultType, this);
         } catch (Exception e) {
             throw new AsterixException(e);
         }
@@ -109,21 +104,20 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             return null;
         }
         // set the pointer for result
-        ATypeTag reqTypeTag = ((IAType) (arg.second)).getTypeTag();
-        ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(accessor.getByteArray()[accessor
-                .getStartOffset()]);
+        ATypeTag reqTypeTag = (arg.second).getTypeTag();
+        ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                .deserialize(accessor.getByteArray()[accessor.getStartOffset()]);
         if (!needPromote(inputTypeTag, reqTypeTag)) {
             arg.first.set(accessor);
         } else {
-            ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
-
             try {
+                castBuffer.reset();
                 ATypeHierarchy.convertNumericTypeByteArray(accessor.getByteArray(), accessor.getStartOffset(),
                         accessor.getLength(), reqTypeTag, castBuffer.getDataOutput());
                 arg.first.set(castBuffer);
             } catch (IOException e1) {
-                throw new AsterixException("Type mismatch: cannot cast the " + inputTypeTag + " type to the "
-                        + reqTypeTag + " type.");
+                throw new AsterixException(
+                        "Type mismatch: cannot cast the " + inputTypeTag + " type to the " + reqTypeTag + " type.");
             }
 
         }

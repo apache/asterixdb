@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
@@ -72,9 +73,9 @@ public class RecordBuilder implements IARecordBuilder {
     private int[] openFieldNameLengths;
 
     private int numberOfOpenFields;
+    private RuntimeRecordTypeInfo recTypeInfo;
 
     public RecordBuilder() {
-
         this.closedPartOutputStream = new ByteArrayOutputStream();
         this.numberOfClosedFields = 0;
 
@@ -91,6 +92,8 @@ public class RecordBuilder implements IARecordBuilder {
         this.openPartOffsetArray = null;
         this.openPartOffsetArraySize = 0;
         this.offsetPosition = 0;
+
+        this.recTypeInfo = new RuntimeRecordTypeInfo();
     }
 
     @Override
@@ -108,6 +111,7 @@ public class RecordBuilder implements IARecordBuilder {
     @Override
     public void reset(ARecordType recType) {
         this.recType = recType;
+        this.recTypeInfo.reset(recType);
         this.closedPartOutputStream.reset();
         this.openPartOutputStream.reset();
         this.numberOfClosedFields = 0;
@@ -178,8 +182,8 @@ public class RecordBuilder implements IARecordBuilder {
     public void addField(IValueReference name, IValueReference value) throws AsterixException {
         if (numberOfOpenFields == openPartOffsets.length) {
             openPartOffsets = Arrays.copyOf(openPartOffsets, openPartOffsets.length + DEFAULT_NUM_OPEN_FIELDS);
-            openFieldNameLengths = Arrays.copyOf(openFieldNameLengths, openFieldNameLengths.length
-                    + DEFAULT_NUM_OPEN_FIELDS);
+            openFieldNameLengths = Arrays.copyOf(openFieldNameLengths,
+                    openFieldNameLengths.length + DEFAULT_NUM_OPEN_FIELDS);
         }
         int fieldNameHashCode;
         try {
@@ -191,7 +195,7 @@ public class RecordBuilder implements IARecordBuilder {
         if (recType != null) {
             int cFieldPos;
             try {
-                cFieldPos = recType.findFieldPosition(name.getByteArray(), name.getStartOffset() + 1,
+                cFieldPos = recTypeInfo.getFieldIndex(name.getByteArray(), name.getStartOffset() + 1,
                         name.getLength() - 1);
             } catch (HyracksDataException e) {
                 throw new AsterixException(e);
@@ -229,8 +233,8 @@ public class RecordBuilder implements IARecordBuilder {
                             openBytes, (int) openPartOffsets[i], openFieldNameLengths[i]) == 0) {
                         String field = utf8SerDer.deserialize(new DataInputStream(new ByteArrayInputStream(openBytes,
                                 (int) openPartOffsets[i], openFieldNameLengths[i])));
-                        throw new AsterixException("Open fields " + (i - 1) + " and " + i
-                                + " have the same field name \"" + field + "\"");
+                        throw new AsterixException(
+                                "Open fields " + (i - 1) + " and " + i + " have the same field name \"" + field + "\"");
                     }
                 }
             }
@@ -239,11 +243,10 @@ public class RecordBuilder implements IARecordBuilder {
             int fieldNameHashCode;
             for (int i = 0; i < numberOfOpenFields; i++) {
                 fieldNameHashCode = (int) (openPartOffsets[i] >> 32);
-                SerializerDeserializerUtil.writeIntToByteArray(openPartOffsetArray, (int) fieldNameHashCode,
-                        offsetPosition);
+                SerializerDeserializerUtil.writeIntToByteArray(openPartOffsetArray, fieldNameHashCode, offsetPosition);
                 int fieldOffset = (int) openPartOffsets[i];
-                SerializerDeserializerUtil.writeIntToByteArray(openPartOffsetArray, fieldOffset + openPartOffset + 4
-                        + openPartOffsetArraySize, offsetPosition + 4);
+                SerializerDeserializerUtil.writeIntToByteArray(openPartOffsetArray,
+                        fieldOffset + openPartOffset + 4 + openPartOffsetArraySize, offsetPosition + 4);
                 offsetPosition += 8;
             }
             recordLength = openPartOffset + 4 + openPartOffsetArraySize + openPartOutputStream.size();

@@ -18,9 +18,9 @@
  !-->
 <!DOCTYPE test-suite [
 
-<!ENTITY RecordsQueries SYSTEM "queries/records/RecordsQueries.xml">
+        <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/records/RecordsQueries.xml">
 
-]>
+        ]>
 <test-suite
         xmlns="urn:xml.testframework.asterix.apache.org"
         ResultOffsetPath="results"
@@ -2912,12 +2912,11 @@
                     <output-dir compare="Text">btree-secondary-equi-join</output-dir>
                 </compilation-unit>
             </test-case>
-            <!-- ASTERIXDB-1159 <test-case FilePath="nested-open-index/index-join">
+            <test-case FilePath="nested-open-index/index-join">
                 <compilation-unit name="ngram-edit-distance">
                     <output-dir compare="Text">ngram-edit-distance</output-dir>
                 </compilation-unit>
             </test-case>
-            -->
             <!--  <test-case FilePath="nested-open-index/index-join">
                 <compilation-unit name="ngram-edit-distance-inline">
                     <output-dir compare="Text">ngram-edit-distance-inline</output-dir>

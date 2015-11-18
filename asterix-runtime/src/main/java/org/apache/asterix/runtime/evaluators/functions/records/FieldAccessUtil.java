@@ -34,9 +34,10 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -89,8 +90,8 @@ public class FieldAccessUtil {
 
     public static void evaluate(IFrameTupleReference tuple, DataOutput out, ICopyEvaluator eval0,
             ArrayBackedValueStorage[] abvsFields, ArrayBackedValueStorage abvsRecord,
-            ByteArrayAccessibleOutputStream subRecordTmpStream, ARecordType recordType) throws AlgebricksException {
-
+            ByteArrayAccessibleOutputStream subRecordTmpStream, ARecordType recordType,
+            RuntimeRecordTypeInfo[] recTypeInfos) throws AlgebricksException {
         try {
             abvsRecord.reset();
             eval0.evaluate(tuple);
@@ -99,7 +100,10 @@ public class FieldAccessUtil {
             int subFieldOffset = -1;
             int subFieldLength = -1;
             int nullBitmapSize = -1;
+
             IAType subType = recordType;
+            recTypeInfos[0].reset(recordType);
+
             ATypeTag subTypeTag = ATypeTag.NULL;
             byte[] subRecord = abvsRecord.getByteArray();
             boolean openField = false;
@@ -117,9 +121,11 @@ public class FieldAccessUtil {
                     if (subType.getTypeTag().serialize() != SER_RECORD_TYPE_TAG) {
                         throw new AlgebricksException("Field accessor is not defined for values of type " + subTypeTag);
                     }
-
+                    if (subType.getTypeTag() == ATypeTag.RECORD) {
+                        recTypeInfos[i].reset((ARecordType) subType);
+                    }
                 }
-                subFieldIndex = ((ARecordType) subType).findFieldPosition(abvsFields[i].getByteArray(),
+                subFieldIndex = recTypeInfos[i].getFieldIndex(abvsFields[i].getByteArray(),
                         abvsFields[i].getStartOffset() + 1, abvsFields[i].getLength());
                 if (subFieldIndex == -1) {
                     break;
@@ -133,6 +139,10 @@ public class FieldAccessUtil {
                     return;
                 }
                 subType = ((ARecordType) subType).getFieldTypes()[subFieldIndex];
+                if (subType.getTypeTag() == ATypeTag.RECORD && i + 1 < abvsFields.length) {
+                    // Move to the next Depth
+                    recTypeInfos[i + 1].reset((ARecordType) subType);
+                }
                 if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                     if (((AUnionType) subType).isNullableType()) {
                         subTypeTag = ((AUnionType) subType).getNullableType().getTypeTag();
@@ -172,7 +182,8 @@ public class FieldAccessUtil {
                 }
 
                 subTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(subRecord[subFieldOffset]);
-                subFieldLength = NonTaggedFormatUtil.getFieldValueLength(subRecord, subFieldOffset, subTypeTag, true) + 1;
+                subFieldLength = NonTaggedFormatUtil.getFieldValueLength(subRecord, subFieldOffset, subTypeTag, true)
+                        + 1;
 
                 if (i < abvsFields.length - 1) {
                     //setup next iteration
@@ -187,7 +198,6 @@ public class FieldAccessUtil {
                 out.writeByte(subTypeTag.serialize());
             }
             out.write(subRecord, subFieldOffset, subFieldLength);
-
         } catch (IOException e) {
             throw new AlgebricksException(e);
         } catch (AsterixException e) {

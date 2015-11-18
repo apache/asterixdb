@@ -196,7 +196,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         .getValue()).getValue()).getObject()).getStringValue();
                 int k;
                 try {
-                    k = rt.findFieldPosition(str);
+                    k = rt.getFieldIndex(str);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

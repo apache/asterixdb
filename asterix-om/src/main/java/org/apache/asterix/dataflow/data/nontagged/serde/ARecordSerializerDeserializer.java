@@ -54,8 +54,9 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
 
     private final AStringSerializerDeserializer aStringSerDer = new AStringSerializerDeserializer();
     private AObjectSerializerDeserializer aObjSerDer = null;
+
     private AObjectSerializerDeserializer getObjSerDer() {
-        if (aObjSerDer == null){
+        if (aObjSerDer == null) {
             aObjSerDer = new AObjectSerializerDeserializer();
         }
         return aObjSerDer;
@@ -84,9 +85,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 if (t.getTypeTag() == ATypeTag.UNION) {
                     if (((AUnionType) t).isNullableType()) {
                         t2 = ((AUnionType) recordType.getFieldTypes()[i]).getNullableType();
-                        serializers[i] = AqlSerializerDeserializerProvider.INSTANCE
-                                .getSerializerDeserializer(((AUnionType) recordType.getFieldTypes()[i])
-                                        .getNullableType());
+                        serializers[i] = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
+                                ((AUnionType) recordType.getFieldTypes()[i]).getNullableType());
                     } else {
                         // union .. the general case
                         throw new NotImplementedException();
@@ -132,7 +132,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                 }
                 for (int fieldId = 0; fieldId < numberOfSchemaFields; fieldId++) {
                     if (hasNullableFields && ((nullBitMap[fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)) {
-                        closedFields[fieldId] = (IAObject) ANull.NULL;
+                        closedFields[fieldId] = ANull.NULL;
                         continue;
                     }
                     closedFields[fieldId] = (IAObject) deserializers[fieldId].deserialize(in);
@@ -250,8 +250,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                             // the field value is null
                             return 0;
                     }
-                    return AInt32SerializerDeserializer.getInt(serRecord,
-                            (int) (14 + offset + nullBitmapSize + (4 * fieldId)));
+                    return AInt32SerializerDeserializer.getInt(serRecord, 14 + offset + nullBitmapSize + (4 * fieldId));
                 } else {
                     if (nullBitmapSize > 0) {
                         // 9 = tag (1) + record Size (4) + isExpanded (1) +
@@ -260,8 +259,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                             // the field value is null
                             return 0;
                     }
-                    return AInt32SerializerDeserializer.getInt(serRecord,
-                            (int) (10 + offset + nullBitmapSize + (4 * fieldId)));
+                    return AInt32SerializerDeserializer.getInt(serRecord, 10 + offset + nullBitmapSize + (4 * fieldId));
                 }
             } else
                 return -1;
@@ -273,8 +271,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                     if ((serRecord[9 + offset + fieldId / 8] & (1 << (7 - (fieldId % 8)))) == 0)
                         // the field value is null
                         return 0;
-                return AInt32SerializerDeserializer.getInt(serRecord,
-                        (int) (9 + offset + nullBitmapSize + (4 * fieldId)));
+                return AInt32SerializerDeserializer.getInt(serRecord, 9 + offset + nullBitmapSize + (4 * fieldId));
             } else
                 return -1;
         }
@@ -322,9 +319,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             if (h == fieldNameHashCode) {
                 fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * mid) + 4);
                 // the utf8 comparator do not require to put the precise length, we can just pass a estimated limit.
-                if (utf8BinaryComparator
-                        .compare(serRecord, fieldOffset, serRecord.length,
-                                fieldName, 1, fieldUtflength + fieldUtfMetaLen) == 0)
+                if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName, 1,
+                        fieldUtflength + fieldUtfMetaLen) == 0)
                     // since they are equal, we can directly use the meta length and the utf length.
                     return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                 else { // this else part has not been tested yet
@@ -332,8 +328,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
                         h = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j));
                         if (h == fieldNameHashCode) {
                             fieldOffset = AInt32SerializerDeserializer.getInt(serRecord, offset + (8 * j) + 4);
-                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName,
-                                    1, fieldUtflength) == 0)
+                            if (utf8BinaryComparator.compare(serRecord, fieldOffset, serRecord.length, fieldName, 1,
+                                    fieldUtflength) == 0)
                                 return fieldOffset + fieldUtfMetaLen + fieldUtflength;
                         } else
                             break;

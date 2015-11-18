@@ -69,8 +69,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
             private DataOutput out = output.getDataOutput();
             private RecordFieldsUtil rfu = new RecordFieldsUtil();
 
-            protected ARecordType mRecordType = recordType.deepCopy(recordType);
-
+            @Override
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
                 outInput0.reset();
                 eval0.evaluate(tuple);
@@ -91,7 +90,7 @@ public class GetRecordFieldsEvalFactory implements ICopyEvaluatorFactory {
                 recordPointable.set(outInput0.getByteArray(), outInput0.getStartOffset(), outInput0.getLength());
 
                 try {
-                    rfu.processRecord(recordPointable, mRecordType, out, 0);
+                    rfu.processRecord(recordPointable, recordType, out, 0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (AsterixException e) {

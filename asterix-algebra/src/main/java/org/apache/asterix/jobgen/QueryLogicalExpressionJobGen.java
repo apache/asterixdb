@@ -20,18 +20,16 @@ package org.apache.asterix.jobgen;
 
 import java.util.List;
 
-import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.asterix.external.library.ExternalFunctionDescriptorProvider;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.metadata.declared.AqlMetadataProvider;
 import org.apache.asterix.om.functions.AsterixBuiltinFunctions;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.ComparisonEvalFactory;
 import org.apache.asterix.runtime.formats.FormatUtils;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -65,7 +63,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     @Override
     public ICopyAggregateFunctionFactory createAggregateFunctionFactory(AggregateFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd = getFunctionDescriptor(expr, env, context);
         switch (fd.getFunctionDescriptorTag()) {
@@ -74,9 +72,9 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             case AGGREGATE:
                 return fd.createAggregateFunctionFactory(args);
             default:
-                throw new IllegalStateException("Invalid function descriptor " + fd.getFunctionDescriptorTag()
-                        + " expected " + FunctionDescriptorTag.SERIALAGGREGATE + " or "
-                        + FunctionDescriptorTag.AGGREGATE);
+                throw new IllegalStateException(
+                        "Invalid function descriptor " + fd.getFunctionDescriptorTag() + " expected "
+                                + FunctionDescriptorTag.SERIALAGGREGATE + " or " + FunctionDescriptorTag.AGGREGATE);
         }
     }
 
@@ -91,7 +89,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
     @Override
     public ICopyUnnestingFunctionFactory createUnnestingFunctionFactory(UnnestingFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         return getFunctionDescriptor(expr, env, context).createUnnestingFunctionFactory(args);
     }
@@ -136,7 +134,7 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
     private ICopyEvaluatorFactory createScalarFunctionEvaluatorFactory(AbstractFunctionCallExpression expr,
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         ICopyEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         ComparisonKind ck = AlgebricksBuiltinFunctions.getComparisonType(fi);
@@ -146,13 +144,12 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
         IFunctionDescriptor fd = null;
         if (!(expr.getFunctionInfo() instanceof IExternalFunctionInfo)) {
-            AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
             IDataFormat format = FormatUtils.getDefaultFormat();
             fd = format.resolveFunction(expr, env);
         } else {
             try {
-                fd = ExternalFunctionDescriptorProvider.getExternalFunctionDescriptor((IExternalFunctionInfo) expr
-                        .getFunctionInfo());
+                fd = ExternalFunctionDescriptorProvider
+                        .getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
             } catch (AsterixException ae) {
                 throw new AlgebricksException(ae);
             }
@@ -162,7 +159,6 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
 
     private ICopyEvaluatorFactory createConstantEvaluatorFactory(ConstantExpression expr,
             IOperatorSchema[] inputSchemas, JobGenContext context) throws AlgebricksException {
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
         IDataFormat format = FormatUtils.getDefaultFormat();
         return format.getConstantEvalFactory(expr.getValue());
     }
@@ -204,17 +200,15 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             }
 
             default:
-                throw new IllegalStateException("Invalid function descriptor " + fd.getFunctionDescriptorTag()
-                        + " expected " + FunctionDescriptorTag.SERIALAGGREGATE + " or "
-                        + FunctionDescriptorTag.AGGREGATE);
+                throw new IllegalStateException(
+                        "Invalid function descriptor " + fd.getFunctionDescriptorTag() + " expected "
+                                + FunctionDescriptorTag.SERIALAGGREGATE + " or " + FunctionDescriptorTag.AGGREGATE);
         }
     }
 
-    private IFunctionDescriptor getFunctionDescriptor(AbstractFunctionCallExpression expr,
-            IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
-        IFunctionDescriptor fd;
-        AqlMetadataProvider mp = (AqlMetadataProvider) context.getMetadataProvider();
-        fd = FormatUtils.getDefaultFormat().resolveFunction(expr, env);
+    private IFunctionDescriptor getFunctionDescriptor(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
+            JobGenContext context) throws AlgebricksException {
+        IFunctionDescriptor fd = FormatUtils.getDefaultFormat().resolveFunction(expr, env);
         return fd;
     }
 

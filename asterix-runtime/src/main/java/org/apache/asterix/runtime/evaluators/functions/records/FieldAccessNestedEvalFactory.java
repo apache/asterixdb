@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.util.List;
 
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
@@ -50,22 +51,27 @@ public class FieldAccessNestedEvalFactory implements ICopyEvaluatorFactory {
     public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
         return new ICopyEvaluator() {
 
-            private DataOutput out = output.getDataOutput();
-            private ByteArrayAccessibleOutputStream subRecordTmpStream = new ByteArrayAccessibleOutputStream();
+            private final DataOutput out = output.getDataOutput();
+            private final ByteArrayAccessibleOutputStream subRecordTmpStream = new ByteArrayAccessibleOutputStream();
 
-            private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-            private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private ArrayBackedValueStorage[] abvsFields = new ArrayBackedValueStorage[fieldPath.size()];
-            private DataOutput[] doFields = new DataOutput[fieldPath.size()];
+            private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
+            private final ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
+            private final ArrayBackedValueStorage[] abvsFields = new ArrayBackedValueStorage[fieldPath.size()];
+            private final DataOutput[] doFields = new DataOutput[fieldPath.size()];
+            private final RuntimeRecordTypeInfo[] recTypeInfos = new RuntimeRecordTypeInfo[fieldPath.size()];
 
             {
                 FieldAccessUtil.getFieldsAbvs(abvsFields, doFields, fieldPath);
-                recordType = recordType.deepCopy(recordType);
+                for (int index = 0; index < fieldPath.size(); ++index) {
+                    recTypeInfos[index] = new RuntimeRecordTypeInfo();
+                }
+
             }
 
             @Override
             public void evaluate(IFrameTupleReference tuple) throws AlgebricksException {
-                FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, recordType);
+                FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, recordType,
+                        recTypeInfos);
             }
         };
     }

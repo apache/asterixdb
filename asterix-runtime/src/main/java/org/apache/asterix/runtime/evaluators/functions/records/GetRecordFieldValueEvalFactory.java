@@ -26,6 +26,7 @@ import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory;
@@ -56,26 +57,29 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
     public ICopyEvaluator createEvaluator(final IDataOutputProvider output) throws AlgebricksException {
         return new ICopyEvaluator() {
 
-            private DataOutput out = output.getDataOutput();
-            private ByteArrayAccessibleOutputStream subRecordTmpStream = new ByteArrayAccessibleOutputStream();
+            private final DataOutput out = output.getDataOutput();
+            private final ByteArrayAccessibleOutputStream subRecordTmpStream = new ByteArrayAccessibleOutputStream();
 
-            private ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
-            private ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
-            private ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
-            private ICopyEvaluator eval1 = fldNameEvalFactory.createEvaluator(outInput1);
+            private final ArrayBackedValueStorage outInput0 = new ArrayBackedValueStorage();
+            private final ArrayBackedValueStorage outInput1 = new ArrayBackedValueStorage();
+            private final ICopyEvaluator eval0 = recordEvalFactory.createEvaluator(outInput0);
+            private final ICopyEvaluator eval1 = fldNameEvalFactory.createEvaluator(outInput1);
 
-            int size = 1;
-            private ArrayBackedValueStorage abvsFields[] = new ArrayBackedValueStorage[size];
-            private DataOutput[] doFields = new DataOutput[size];
+            private final int size = 1;
+            private final ArrayBackedValueStorage abvsFields[] = new ArrayBackedValueStorage[size];
+            private final DataOutput[] doFields = new DataOutput[size];
 
             @SuppressWarnings("unchecked")
-            private ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
+            private final ISerializerDeserializer<ANull> nullSerde = AqlSerializerDeserializerProvider.INSTANCE
                     .getSerializerDeserializer(BuiltinType.ANULL);
+            private final RuntimeRecordTypeInfo[] recTypeInfos = new RuntimeRecordTypeInfo[size];
 
-            private ARecordType mRecordType = recordType.deepCopy(recordType);
             {
                 abvsFields[0] = new ArrayBackedValueStorage();
                 doFields[0] = abvsFields[0].getDataOutput();
+                for (int index = 0; index < size; ++index) {
+                    recTypeInfos[index] = new RuntimeRecordTypeInfo();
+                }
             }
 
             @Override
@@ -92,7 +96,8 @@ public class GetRecordFieldValueEvalFactory implements ICopyEvaluatorFactory {
                     abvsFields[0].reset();
                     doFields[0].write(serFldName);
 
-                    FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, mRecordType);
+                    FieldAccessUtil.evaluate(tuple, out, eval0, abvsFields, outInput0, subRecordTmpStream, recordType,
+                            recTypeInfos);
                 } catch (IOException e) {
                     throw new AlgebricksException(e);
                 }

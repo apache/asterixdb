@@ -19,51 +19,39 @@
 
 package org.apache.asterix.om.types;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-
-import org.apache.hyracks.util.string.UTF8StringUtil;
-import org.apache.hyracks.util.string.UTF8StringWriter;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Map;
 
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.util.NonTaggedFormatUtil;
 import org.apache.asterix.om.visitors.IOMVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
-import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
-import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+/**
+ * ARecordType is read-only and shared by different partitions at runtime.
+ * Note: to check whether a field name is defined in the closed part at runtime,
+ * please use RuntimeRecordTypeInfo which separates the mutable states
+ * from ARecordType and has to be one-per-partition.
+ */
 public class ARecordType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
-    private String[] fieldNames;
-    private IAType[] fieldTypes;
-    private boolean isOpen;
+    private final String[] fieldNames;
+    private final IAType[] fieldTypes;
+    private final Map<String, Integer> fieldNameToIndexMap = new HashMap<String, Integer>();
+    private final boolean isOpen;
     private final List<IRecordTypeAnnotation> annotations = new ArrayList<IRecordTypeAnnotation>();
-
-    private transient IBinaryHashFunction fieldNameHashFunction;
-    private transient IBinaryComparator fieldNameComparator;
-    private final byte serializedFieldNames[];
-    private final int serializedFieldNameOffsets[];
-    private final long hashCodeIndexPairs[];
-
-    private final UTF8StringSerializerDeserializer utf8SerDer = new UTF8StringSerializerDeserializer();
 
     /**
      * @param typeName
@@ -78,7 +66,6 @@ public class ARecordType extends AbstractComplexType {
      *             if there are duplicate field names or if there is an error serializing the field names
      * @throws HyracksDataException
      */
-    @SuppressWarnings("resource")
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen)
             throws AsterixException, HyracksDataException {
         super(typeName);
@@ -86,91 +73,10 @@ public class ARecordType extends AbstractComplexType {
         this.fieldTypes = fieldTypes;
         this.isOpen = isOpen;
 
-        fieldNameComparator = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
-                .createBinaryComparator();
-        fieldNameHashFunction = new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY)
-                .createBinaryHashFunction();
-        ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        DataOutputStream dos = new DataOutputStream(baaos);
-        UTF8StringWriter writer = new UTF8StringWriter();
-        serializedFieldNameOffsets = new int[fieldNames.length];
-        hashCodeIndexPairs = new long[fieldNames.length];
-
-        int length = 0;
-        for (int i = 0; i < fieldNames.length; i++) {
-            serializedFieldNameOffsets[i] = baaos.size();
-            try {
-                writer.writeUTF8(fieldNames[i], dos);
-            } catch (IOException e) {
-                throw new AsterixException(e);
-            }
-            length = baaos.size() - serializedFieldNameOffsets[i];
-            hashCodeIndexPairs[i] = fieldNameHashFunction.hash(baaos.getByteArray(), serializedFieldNameOffsets[i],
-                    length);
-            hashCodeIndexPairs[i] = hashCodeIndexPairs[i] << 32;
-            hashCodeIndexPairs[i] = hashCodeIndexPairs[i] | i;
+        // Puts field names to the field name to field index map.
+        for (int index = 0; index < fieldNames.length; ++index) {
+            fieldNameToIndexMap.put(fieldNames[index], index);
         }
-        try {
-            dos.close();
-        } catch (IOException e) {
-            throw new AsterixException(e);
-        }
-        serializedFieldNames = baaos.getByteArray();
-
-        Arrays.sort(hashCodeIndexPairs);
-        int j;
-        for (int i = 0; i < fieldNames.length; i++) {
-            j = findFieldPosition(serializedFieldNames, serializedFieldNameOffsets[i],
-                    UTF8StringUtil.getStringLength(serializedFieldNames, serializedFieldNameOffsets[i]));
-            if (j != i) {
-                throw new AsterixException("Closed fields " + j + " and " + i + " have the same field name \""
-                        + fieldNames[i] + "\"");
-            }
-        }
-    }
-
-    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-        ois.defaultReadObject();
-        fieldNameComparator = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
-                .createBinaryComparator();
-        fieldNameHashFunction = new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY)
-                .createBinaryHashFunction();
-    }
-
-    /**
-     * Returns the position of the field in the closed schema or -1 if the field does not exist.
-     *
-     * @param bytes
-     *            the serialized bytes of the field name
-     * @param start
-     *            the starting offset of the field name in bytes
-     * @param length
-     *            the length of the field name in bytes
-     * @return the position of the field in the closed schema or -1 if the field does not exist.
-     * @throws HyracksDataException
-     */
-    public int findFieldPosition(byte[] bytes, int start, int length) throws HyracksDataException {
-        if (hashCodeIndexPairs.length == 0) {
-            return -1;
-        }
-
-        int fIndex;
-        int probeFieldHash = fieldNameHashFunction.hash(bytes, start, length);
-        int i = Arrays.binarySearch(hashCodeIndexPairs, ((long) probeFieldHash) << 32);
-        i = (i < 0) ? (i = -1 * (i + 1)) : i;
-
-        while (i < hashCodeIndexPairs.length && (int) (hashCodeIndexPairs[i] >>> 32) == probeFieldHash) {
-            fIndex = (int) hashCodeIndexPairs[i];
-            int cFieldLength = UTF8StringUtil.getStringLength(serializedFieldNames,
-                    serializedFieldNameOffsets[fIndex]);
-            if (fieldNameComparator.compare(serializedFieldNames, serializedFieldNameOffsets[fIndex], cFieldLength,
-                    bytes, start, length) == 0) {
-                return fIndex;
-            }
-            i++;
-        }
-
-        return -1;
     }
 
     public final String[] getFieldNames() {
@@ -223,11 +129,16 @@ public class ARecordType extends AbstractComplexType {
      *            the name of the field whose position is sought
      * @return the position of the field in the closed schema or -1 if the field does not exist.
      */
-    public int findFieldPosition(String fieldName) throws IOException {
-        ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-        DataOutputStream dos = new DataOutputStream(baaos);
-        utf8SerDer.serialize(fieldName, dos);
-        return findFieldPosition(baaos.getByteArray(), 0, baaos.getByteArray().length);
+    public int getFieldIndex(String fieldName) throws IOException {
+        if (fieldNames == null) {
+            return -1;
+        }
+        Integer index = fieldNameToIndexMap.get(fieldName);
+        if (index == null) {
+            return -1;
+        } else {
+            return index;
+        }
     }
 
     /**
@@ -263,8 +174,8 @@ public class ARecordType extends AbstractComplexType {
                 //enforced SubType
                 subRecordType = ((AUnionType) subRecordType).getNullableType();
                 if (subRecordType.getTypeTag().serialize() != ATypeTag.RECORD.serialize()) {
-                    throw new IOException("Field accessor is not defined for values of type "
-                            + subRecordType.getTypeTag());
+                    throw new IOException(
+                            "Field accessor is not defined for values of type " + subRecordType.getTypeTag());
                 }
 
             }
@@ -283,7 +194,7 @@ public class ARecordType extends AbstractComplexType {
      *             if an error occurs while serializing the field name
      */
     public IAType getFieldType(String fieldName) throws IOException {
-        int fieldPos = findFieldPosition(fieldName);
+        int fieldPos = getFieldIndex(fieldName);
         if (fieldPos < 0 || fieldPos >= fieldTypes.length) {
             return null;
         }
@@ -299,238 +210,7 @@ public class ARecordType extends AbstractComplexType {
      * @throws IOException
      */
     public boolean isClosedField(String fieldName) throws IOException {
-        return findFieldPosition(fieldName) != -1;
-    }
-
-    /**
-     * Validates the partitioning expression that will be used to partition a dataset and returns expression type.
-     *
-     * @param partitioningExprs
-     *            a list of partitioning expressions that will be validated
-     * @return a list of partitioning expressions types
-     * @throws AlgebricksException
-     *             (if the validation failed), IOException
-     */
-    public List<IAType> validatePartitioningExpressions(List<List<String>> partitioningExprs, boolean autogenerated)
-            throws AsterixException, IOException {
-        List<IAType> partitioningExprTypes = new ArrayList<IAType>(partitioningExprs.size());
-        if (autogenerated) {
-            if (partitioningExprs.size() > 1) {
-                throw new AsterixException("Cannot autogenerate a composite primary key");
-            }
-            List<String> fieldName = partitioningExprs.get(0);
-            IAType fieldType = getSubFieldType(fieldName);
-            partitioningExprTypes.add(fieldType);
-
-            ATypeTag pkTypeTag = fieldType.getTypeTag();
-            if (pkTypeTag != ATypeTag.UUID) {
-                throw new AsterixException("Cannot autogenerate a primary key for type " + pkTypeTag
-                        + ". Autogenerated primary keys must be of type " + ATypeTag.UUID + ".");
-            }
-        } else {
-            for (int i = 0; i < partitioningExprs.size(); i++) {
-                List<String> fieldName = partitioningExprs.get(i);
-                IAType fieldType = getSubFieldType(fieldName);
-
-                switch (fieldType.getTypeTag()) {
-                    case INT8:
-                    case INT16:
-                    case INT32:
-                    case INT64:
-                    case FLOAT:
-                    case DOUBLE:
-                    case STRING:
-                    case BINARY:
-                    case DATE:
-                    case TIME:
-                    case UUID:
-                    case DATETIME:
-                    case YEARMONTHDURATION:
-                    case DAYTIMEDURATION:
-                        partitioningExprTypes.add(fieldType);
-                        break;
-                    case UNION:
-                        throw new AsterixException("The partitioning key \"" + fieldName + "\" cannot be nullable");
-                    default:
-                        throw new AsterixException("The partitioning key \"" + fieldName + "\" cannot be of type "
-                                + fieldType.getTypeTag() + ".");
-                }
-            }
-        }
-        return partitioningExprTypes;
-    }
-
-    private IAType getPartitioningExpressionType(String fieldName, boolean autogenerated) throws AsterixException,
-            IOException {
-        IAType fieldType = getFieldType(fieldName);
-        if (fieldType == null) {
-            if (autogenerated) {
-                throw new AsterixException("Primary key field: " + fieldName
-                        + " should be defined in the type that the dataset is using.");
-            } else {
-                throw new AsterixException("Primary key field: " + fieldName + " could not be found.");
-            }
-        }
-        return fieldType;
-    }
-
-    /**
-     * Validates the key fields that will be used as keys of an index.
-     *
-     * @param keyFieldNames
-     *            a map of key fields that will be validated
-     * @param keyFieldTypes
-     *            a map of key types (if provided) that will be validated
-     * @param indexType
-     *            the type of the index that its key fields is being validated
-     * @throws AlgebricksException
-     *             (if the validation failed), IOException
-     */
-    public void validateKeyFields(List<List<String>> keyFieldNames, List<IAType> keyFieldTypes, IndexType indexType)
-            throws AlgebricksException, IOException {
-        int pos = 0;
-        boolean openFieldCompositeIdx = false;
-        for (List<String> fieldName : keyFieldNames) {
-            IAType fieldType = getSubFieldType(fieldName);
-            if (fieldType == null) {
-                fieldType = keyFieldTypes.get(pos);
-                if (keyFieldTypes.get(pos) == BuiltinType.ANULL)
-                    throw new AlgebricksException("A field with this name  \"" + fieldName + "\" could not be found.");
-            } else if (openFieldCompositeIdx)
-                throw new AlgebricksException("A closed field \"" + fieldName
-                        + "\" could be only in a prefix part of the composite index, containing opened field.");
-            if (keyFieldTypes.get(pos) != BuiltinType.ANULL
-                    && fieldType.getTypeTag() != keyFieldTypes.get(pos).getTypeTag())
-                throw new AlgebricksException("A field \"" + fieldName + "\" is already defined with the type \""
-                        + fieldType + "\"");
-            switch (indexType) {
-                case BTREE:
-                    switch (fieldType.getTypeTag()) {
-                        case INT8:
-                        case INT16:
-                        case INT32:
-                        case INT64:
-                        case FLOAT:
-                        case DOUBLE:
-                        case STRING:
-                        case BINARY:
-                        case DATE:
-                        case TIME:
-                        case DATETIME:
-                        case UNION:
-                        case UUID:
-                        case YEARMONTHDURATION:
-                        case DAYTIMEDURATION:
-                            break;
-                        default:
-                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the BTree index.");
-                    }
-                    break;
-                case RTREE:
-                    switch (fieldType.getTypeTag()) {
-                        case POINT:
-                        case LINE:
-                        case RECTANGLE:
-                        case CIRCLE:
-                        case POLYGON:
-                        case UNION:
-                            break;
-                        default:
-                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the RTree index.");
-                    }
-                    break;
-                case LENGTH_PARTITIONED_NGRAM_INVIX:
-                    switch (fieldType.getTypeTag()) {
-                        case STRING:
-                        case UNION:
-                            break;
-                        default:
-                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag()
-                                    + " cannot be indexed using the Length Partitioned N-Gram index.");
-                    }
-                    break;
-                case LENGTH_PARTITIONED_WORD_INVIX:
-                    switch (fieldType.getTypeTag()) {
-                        case STRING:
-                        case UNORDEREDLIST:
-                        case ORDEREDLIST:
-                        case UNION:
-                            break;
-                        default:
-                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag()
-                                    + " cannot be indexed using the Length Partitioned Keyword index.");
-                    }
-                    break;
-                case SINGLE_PARTITION_NGRAM_INVIX:
-                    switch (fieldType.getTypeTag()) {
-                        case STRING:
-                        case UNION:
-                            break;
-                        default:
-                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the N-Gram index.");
-                    }
-                    break;
-                case SINGLE_PARTITION_WORD_INVIX:
-                    switch (fieldType.getTypeTag()) {
-                        case STRING:
-                        case UNORDEREDLIST:
-                        case ORDEREDLIST:
-                        case UNION:
-                            break;
-                        default:
-                            throw new AlgebricksException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the Keyword index.");
-                    }
-                    break;
-                default:
-                    throw new AlgebricksException("Invalid index type: " + indexType + ".");
-            }
-            pos++;
-        }
-    }
-
-    /**
-     * Validates the field that will be used as filter for the components of an LSM index.
-     *
-     * @param keyFieldNames
-     *            a list of key fields that will be validated
-     * @param indexType
-     *            the type of the index that its key fields is being validated
-     * @throws AlgebricksException
-     *             (if the validation failed), IOException
-     */
-    public void validateFilterField(List<String> filterField) throws AlgebricksException, IOException {
-        IAType fieldType = getSubFieldType(filterField);
-        if (fieldType == null) {
-            throw new AlgebricksException("A field with this name  \"" + filterField + "\" could not be found.");
-        }
-        switch (fieldType.getTypeTag()) {
-            case INT8:
-            case INT16:
-            case INT32:
-            case INT64:
-            case FLOAT:
-            case DOUBLE:
-            case STRING:
-            case BINARY:
-            case DATE:
-            case TIME:
-            case DATETIME:
-            case UUID:
-            case YEARMONTHDURATION:
-            case DAYTIMEDURATION:
-                break;
-            case UNION:
-                throw new AlgebricksException("The filter field \"" + filterField + "\" cannot be nullable");
-            default:
-                throw new AlgebricksException("The field \"" + filterField + "\" which is of type "
-                        + fieldType.getTypeTag() + " cannot be used as a filter for a dataset.");
-        }
+        return getFieldIndex(fieldName) != -1;
     }
 
     public boolean doesFieldExist(String fieldName) {
@@ -599,7 +279,7 @@ public class ARecordType extends AbstractComplexType {
     public int hash() {
         int h = 0;
         for (int i = 0; i < fieldNames.length; i++) {
-            h += 31 * h + (int) (hashCodeIndexPairs[i] >> 32);
+            h += 31 * h + fieldNames[i].hashCode();
         }
         for (int i = 0; i < fieldTypes.length; i++) {
             h += 31 * h + fieldTypes[i].hashCode();

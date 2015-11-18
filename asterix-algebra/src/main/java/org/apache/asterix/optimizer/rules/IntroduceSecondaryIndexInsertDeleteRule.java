@@ -499,7 +499,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         Pair<ARecordType, String> nestedTypePair = nestedTypeStack.pop();
                         ARecordType nestedRecType = nestedTypePair.first;
                         IAType[] nestedRecTypeFieldTypes = nestedRecType.getFieldTypes().clone();
-                        nestedRecTypeFieldTypes[nestedRecType.findFieldPosition(nestedTypePair.second)] = enforcedType;
+                        nestedRecTypeFieldTypes[nestedRecType.getFieldIndex(nestedTypePair.second)] = enforcedType;
                         enforcedType = new ARecordType(nestedRecType.getTypeName(), nestedRecType.getFieldNames(),
                                 nestedRecTypeFieldTypes, nestedRecType.isOpen());
                     }

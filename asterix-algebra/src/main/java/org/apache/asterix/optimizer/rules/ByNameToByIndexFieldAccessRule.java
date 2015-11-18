@@ -151,7 +151,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         if (s == null) {
             return null;
         }
-        int k = recType.findFieldPosition(s);
+        int k = recType.getFieldIndex(s);
         if (k < 0) {
             return null;
         }
