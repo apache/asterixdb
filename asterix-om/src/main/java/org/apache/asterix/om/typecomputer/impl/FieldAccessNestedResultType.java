@@ -40,7 +40,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 public class FieldAccessNestedResultType implements IResultTypeComputer {
-    private static final long serialVersionUID = 1L;
     public static final FieldAccessNestedResultType INSTANCE = new FieldAccessNestedResultType();
 
     private FieldAccessNestedResultType() {

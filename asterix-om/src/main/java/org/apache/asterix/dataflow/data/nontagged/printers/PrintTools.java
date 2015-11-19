@@ -18,23 +18,19 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.util.bytes.HexPrinter;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class PrintTools {
-
 
     private static final GregorianCalendarSystem gCalInstance = GregorianCalendarSystem.getInstance();
     private static long CHRONON_OF_DAY = 24 * 60 * 60 * 1000;
@@ -43,7 +39,8 @@ public class PrintTools {
         long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
 
         try {
-            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
+                    GregorianCalendarSystem.Fields.DAY, false);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -53,7 +50,8 @@ public class PrintTools {
         long chrononTime = AInt64SerializerDeserializer.getLong(b, s + 1);
 
         try {
-            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
+                    GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -178,7 +176,8 @@ public class PrintTools {
         int time = AInt32SerializerDeserializer.getInt(b, s + 1);
 
         try {
-            gCalInstance.getExtendStringRepUntilField(time, 0, ps, GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+            gCalInstance.getExtendStringRepUntilField(time, 0, ps, GregorianCalendarSystem.Fields.HOUR,
+                    GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }
@@ -304,6 +303,5 @@ public class PrintTools {
         os.write(HexPrinter.hex((c >>> 4) & 0x0f, HexPrinter.CASE.LOWER_CASE));
         os.write(HexPrinter.hex(c & 0x0f, HexPrinter.CASE.LOWER_CASE));
     }
-
 
 }

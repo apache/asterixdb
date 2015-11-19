@@ -40,8 +40,6 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
-    private static final long serialVersionUID = 1L;
-
     public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer();
 
     private RecordMergeTypeComputer() {

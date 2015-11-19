@@ -18,11 +18,6 @@
  */
 package org.apache.asterix.metadata.functions;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -52,7 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
-public class ExternalFunctionCompilerUtil implements Serializable {
+public class ExternalFunctionCompilerUtil {
 
     private static Pattern orderedListPattern = Pattern.compile("\\[*\\]");
     private static Pattern unorderedListPattern = Pattern.compile("[{{*}}]");
@@ -88,9 +83,9 @@ public class ExternalFunctionCompilerUtil implements Serializable {
 
         returnType = getTypeInfo(function.getReturnType(), txnCtx, function);
 
-        AsterixExternalScalarFunctionInfo scalarFunctionInfo = new AsterixExternalScalarFunctionInfo(
-                fid.getNamespace(), new AsterixFunction(fid.getName(), fid.getArity()), returnType,
-                function.getFunctionBody(), function.getLanguage(), arguments, typeComputer);
+        AsterixExternalScalarFunctionInfo scalarFunctionInfo = new AsterixExternalScalarFunctionInfo(fid.getNamespace(),
+                new AsterixFunction(fid.getName(), fid.getArity()), returnType, function.getFunctionBody(),
+                function.getLanguage(), arguments, typeComputer);
         return scalarFunctionInfo;
     }
 
@@ -152,18 +147,22 @@ public class ExternalFunctionCompilerUtil implements Serializable {
             case STRING:
                 return AStringTypeComputer.INSTANCE;
             case ORDEREDLIST:
-                return new IResultTypeComputer() {
+                return new ExternalTypeComputer() {
+                    private static final long serialVersionUID = 1L;
+
                     @Override
                     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
 
-                        return new AOrderedListType(((AOrderedListType) type).getItemType(), ((AOrderedListType) type)
-                                .getItemType().getTypeName());
+                        return new AOrderedListType(((AOrderedListType) type).getItemType(),
+                                ((AOrderedListType) type).getItemType().getTypeName());
                     }
 
                 };
             case UNORDEREDLIST:
-                return new IResultTypeComputer() {
+                return new ExternalTypeComputer() {
+                    private static final long serialVersionUID = 1L;
+
                     @Override
                     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
@@ -173,55 +172,29 @@ public class ExternalFunctionCompilerUtil implements Serializable {
 
                 };
             default:
-                IResultTypeComputer typeComputer = new IResultTypeComputer() {
+                return new ExternalTypeComputer() {
+                    private static final long serialVersionUID = 1L;
+
                     @Override
                     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                             IMetadataProvider<?, ?> mp) throws AlgebricksException {
                         return type;
                     }
                 };
-                return typeComputer;
         }
 
-    }
-
-    private static IAType getType(Function function, MetadataTransactionContext txnCtx) throws AlgebricksException {
-        IAType collectionType = null;
-        try {
-            collectionType = getCollectionType(function.getReturnType(), txnCtx, function);
-            if (collectionType != null) {
-                return collectionType;
-            } else {
-
-                Datatype datatype;
-                datatype = MetadataManager.INSTANCE.getDatatype(txnCtx, function.getDataverseName(),
-                        function.getReturnType());
-                return datatype.getDatatype();
-            }
-        } catch (MetadataException me) {
-            throw new AlgebricksException(me);
-        }
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     private static IFunctionInfo getStatefulFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     private static IFunctionInfo getAggregateFunctionInfo(MetadataTransactionContext txnCtx, Function function) {
-        // TODO Auto-generated method stub
         return null;
-    }
-
-    public static void main(String args[]) throws FileNotFoundException, IOException {
-        ExternalFunctionCompilerUtil obj = new ExternalFunctionCompilerUtil();
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("/tmp/ecu.obj"));
-        oos.writeObject(obj);
     }
 
 }

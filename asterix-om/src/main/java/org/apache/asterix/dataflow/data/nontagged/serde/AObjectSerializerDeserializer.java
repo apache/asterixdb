@@ -153,9 +153,6 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             case UNORDEREDLIST: {
                 return AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
             }
-            // case TYPE: {
-            // return AUnorderedListBytesConverter.INSTANCE.deserialize(in);
-            // }
             default: {
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + typeTag + " .");
             }
@@ -273,8 +270,8 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 break;
             }
             default: {
-                throw new NotImplementedException("No serializer/deserializer implemented for type " + t.getTypeTag()
-                        + " .");
+                throw new NotImplementedException(
+                        "No serializer/deserializer implemented for type " + t.getTypeTag() + " .");
             }
         }
     }

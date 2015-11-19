@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.adm;
 
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -27,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserial
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
-import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 public class AInt32Printer implements IPrinter {
 

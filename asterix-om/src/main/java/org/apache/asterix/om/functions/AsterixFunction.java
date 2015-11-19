@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.om.functions;
 
-import java.io.Serializable;
-
-public class AsterixFunction implements Serializable {
+public class AsterixFunction {
 
     private final String name;
     private final int arity;
@@ -39,6 +37,7 @@ public class AsterixFunction implements Serializable {
         return arity;
     }
 
+    @Override
     public String toString() {
         return name;
     }

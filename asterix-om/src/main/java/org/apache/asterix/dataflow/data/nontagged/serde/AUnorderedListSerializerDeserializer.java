@@ -46,9 +46,9 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
 
     private IAType itemType;
     private AUnorderedListType unorderedlistType;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer nontaggedSerDes;
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private ISerializerDeserializer taggedSerDes;
 
     private AUnorderedListSerializerDeserializer() {
@@ -59,9 +59,9 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
     public AUnorderedListSerializerDeserializer(AUnorderedListType unorderedlistType) {
         this.itemType = unorderedlistType.getItemType();
         this.unorderedlistType = unorderedlistType;
-        nontaggedSerDes = itemType.getTypeTag() == ATypeTag.ANY ? AqlSerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(itemType) : AqlSerializerDeserializerProvider.INSTANCE
-                .getNonTaggedSerializerDeserializer(itemType);
+        nontaggedSerDes = itemType.getTypeTag() == ATypeTag.ANY
+                ? AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
+                : AqlSerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
         taggedSerDes = AqlSerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
     }
 

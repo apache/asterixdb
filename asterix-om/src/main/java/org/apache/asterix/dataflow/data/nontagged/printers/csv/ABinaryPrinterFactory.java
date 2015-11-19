@@ -24,13 +24,15 @@ import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
 public class ABinaryPrinterFactory implements IPrinterFactory {
+    private static final long serialVersionUID = 1L;
 
     private ABinaryPrinterFactory() {
     }
 
     public static final ABinaryPrinterFactory INSTANCE = new ABinaryPrinterFactory();
 
-    @Override public IPrinter createPrinter() {
+    @Override
+    public IPrinter createPrinter() {
         return ABinaryHexPrinter.INSTANCE;
     }
 }

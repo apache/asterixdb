@@ -19,7 +19,6 @@
 package org.apache.asterix.om.util;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

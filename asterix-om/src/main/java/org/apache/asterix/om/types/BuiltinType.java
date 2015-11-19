@@ -18,12 +18,11 @@
  */
 package org.apache.asterix.om.types;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.visitors.IOMVisitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public abstract class BuiltinType implements IAType {
 
@@ -718,6 +717,7 @@ public abstract class BuiltinType implements IAType {
     };
 
     public static final BuiltinType AUUID = new LowerCaseConstructorType() {
+        private static final long serialVersionUID = 1L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -742,8 +742,8 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
-    // AUUID_STRING is used when converting between the string representation of        
-    // UUID and corresponding a UUID instance       
+    // AUUID_STRING is used when converting between the string representation of
+    // UUID and corresponding a UUID instance
     public static final BuiltinType AUUID_STRING = new LowerCaseConstructorType() {
         private static final long serialVersionUID = 1L;
 

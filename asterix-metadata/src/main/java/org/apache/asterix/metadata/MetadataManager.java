@@ -48,7 +48,6 @@ import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.transaction.management.service.transaction.JobIdFactory;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -95,7 +94,6 @@ public class MetadataManager implements IMetadataManager {
     private IMetadataNode metadataNode;
     private final ReadWriteLock metadataLatch;
     private final AsterixMetadataProperties metadataProperties;
-    private IHyracksClientConnection hcc;
     public boolean rebindMetadataNode = false;
 
     public MetadataManager(IAsterixStateProxy proxy, AsterixMetadataProperties metadataProperties) {
@@ -392,8 +390,8 @@ public class MetadataManager implements IMetadataManager {
             throw new MetadataException(e);
         }
         try {
-            ctx.addDatatype(metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(),
-                    datatype.getDatatypeName()));
+            ctx.addDatatype(
+                    metadataNode.getDatatype(ctx.getJobId(), datatype.getDataverseName(), datatype.getDatatypeName()));
         } catch (RemoteException e) {
             throw new MetadataException(e);
         }
@@ -435,8 +433,9 @@ public class MetadataManager implements IMetadataManager {
                 //concurrent access to UTF8StringPointable comparator in ARecordType object.
                 //see issue 510
                 ARecordType aRecType = (ARecordType) datatype.getDatatype();
-                return new Datatype(datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(
-                        aRecType.getTypeName(), aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
+                return new Datatype(
+                        datatype.getDataverseName(), datatype.getDatatypeName(), new ARecordType(aRecType.getTypeName(),
+                                aRecType.getFieldNames(), aRecType.getFieldTypes(), aRecType.isOpen()),
                         datatype.getIsAnonymous());
             } catch (AsterixException | HyracksDataException e) {
                 throw new MetadataException(e);
@@ -702,7 +701,8 @@ public class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name) throws MetadataException {
+    public void dropAdapter(MetadataTransactionContext ctx, String dataverseName, String name)
+            throws MetadataException {
         try {
             metadataNode.dropAdapter(ctx.getJobId(), dataverseName, name);
         } catch (RemoteException e) {
@@ -916,7 +916,8 @@ public class MetadataManager implements IMetadataManager {
 
     //TODO: Optimize <-- use keys instead of object -->
     @Override
-    public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset) throws MetadataException {
+    public void dropDatasetExternalFiles(MetadataTransactionContext mdTxnCtx, Dataset dataset)
+            throws MetadataException {
         try {
             metadataNode.dropExternalFiles(mdTxnCtx.getJobId(), dataset);
         } catch (RemoteException e) {
