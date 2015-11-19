@@ -18,6 +18,13 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
 
+  <test-group name="query_after_restart">
+      <test-case FilePath="query_after_restart">
+          <compilation-unit name="external_index">
+              <output-dir compare="Text">external_index</output-dir>
+          </compilation-unit>
+      </test-case>
+  </test-group>
   <test-group name="recover_after_abort">
 
     <test-case FilePath="recover_after_abort">

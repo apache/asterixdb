@@ -36,7 +36,6 @@ import org.apache.asterix.external.dataset.adapter.HDFSAdapter;
  *
  * @author ramangrover29
  */
-@SuppressWarnings("deprecation")
 public class HDFSCluster {
 
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
@@ -64,25 +63,27 @@ public class HDFSCluster {
      * Called prior to running the Runtime test suite.
      */
     public void setup() throws Exception {
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
+        setup("");
+    }
+
+    public void setup(String basePath) throws Exception {
+        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/core-site.xml"));
+        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
+        conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
         cleanupLocal();
-        //this constructor is deprecated in hadoop 2x 
-        //dfsCluster = new MiniDFSCluster(nameNodePort, conf, numDataNodes, true, true, StartupOption.REGULAR, null);
         MiniDFSCluster.Builder build = new MiniDFSCluster.Builder(conf);
         build.nameNodePort(nameNodePort);
         build.numDataNodes(numDataNodes);
         build.startupOption(StartupOption.REGULAR);
         dfsCluster = build.build();
         dfs = FileSystem.get(conf);
-        loadData();
+        loadData(basePath);
     }
 
-    private void loadData() throws IOException {
+    private void loadData(String localDataRoot) throws IOException {
         Path destDir = new Path(HDFS_PATH);
         dfs.mkdirs(destDir);
-        File srcDir = new File(DATA_PATH);
+        File srcDir = new File(localDataRoot + DATA_PATH);
         File[] listOfFiles = srcDir.listFiles();
         for (File srcFile : listOfFiles) {
             Path path = new Path(srcFile.getAbsolutePath());
@@ -108,12 +109,10 @@ public class HDFSCluster {
         HDFSCluster cluster = new HDFSCluster();
         cluster.setup();
         JobConf conf = configureJobConf();
-        FileSystem fs = FileSystem.get(conf);
         InputSplit[] inputSplits = conf.getInputFormat().getSplits(conf, 0);
         for (InputSplit split : inputSplits) {
             System.out.println("split :" + split);
         }
-        //   cluster.cleanup();
     }
 
     private static JobConf configureJobConf() throws Exception {
