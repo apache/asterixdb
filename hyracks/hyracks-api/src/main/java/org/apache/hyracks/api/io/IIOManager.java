@@ -55,5 +55,7 @@ public interface IIOManager {
 
     public void setExecutor(Executor executor);
 
+    public long getSize(IFileHandle fileHandle);
+
     public void deleteWorkspaceFiles();
 }

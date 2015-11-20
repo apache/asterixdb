@@ -303,7 +303,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             search(opCtx, btreeCursor, rtreeSearchPred);
 
             BTree btree = mergedComponent.getBTree();
-            IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false);
+            IIndexBulkLoader btreeBulkLoader = btree.createBulkLoader(1.0f, true, 0L, false, true);
 
             long numElements = 0L;
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
@@ -331,7 +331,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             btreeBulkLoader.end();
         }
 
-        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false);
+        IIndexBulkLoader bulkLoader = mergedComponent.getRTree().createBulkLoader(1.0f, false, 0L, false, true);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -558,9 +558,9 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
             // Create the three loaders
             rtreeBulkLoader = ((LSMRTreeDiskComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint, false);
+                    numElementsHint, false, true);
             btreeBulkLoader = (BTreeBulkLoader) ((LSMRTreeDiskComponent) component).getBTree().createBulkLoader(
-                    fillFactor, verifyInput, numElementsHint, false);
+                    fillFactor, verifyInput, numElementsHint, false, true);
             int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
             BloomFilterSpecification bloomFilterSpec = BloomCalculations.computeBloomSpec(maxBucketsPerElement,
                     bloomFilterFalsePositiveRate);

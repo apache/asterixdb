@@ -27,6 +27,8 @@ public interface IPageReplacementStrategy {
 
     public void notifyCachePageAccess(ICachedPageInternal cPage);
 
+    public void adviseWontNeed(ICachedPageInternal cPage);
+
     public ICachedPageInternal findVictim();
 
     public int getNumPages();

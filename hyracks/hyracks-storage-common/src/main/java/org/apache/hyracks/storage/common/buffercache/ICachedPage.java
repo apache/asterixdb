@@ -30,4 +30,10 @@ public interface ICachedPage {
     public void acquireWriteLatch();
 
     public void releaseWriteLatch(boolean markDirty);
+
+    public boolean confiscated();
+
+    public IQueueInfo getQueueInfo();
+
+    public void setQueueInfo(IQueueInfo queueInfo);
 }

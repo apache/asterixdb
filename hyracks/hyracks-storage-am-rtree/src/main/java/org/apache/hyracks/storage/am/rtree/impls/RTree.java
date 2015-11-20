@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.rtree.impls;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -28,20 +29,9 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IFreePageManager;
-import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.api.IIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
-import org.apache.hyracks.storage.am.common.api.IndexException;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.common.api.*;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.frames.AbstractSlotManager;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
 import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
@@ -55,6 +45,7 @@ import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMFrame;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeNSMInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -67,7 +58,7 @@ public class RTree extends AbstractTreeIndex {
 
     private final int maxTupleSize;
 
-    public RTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider, IFreePageManager freePageManager,
+    public RTree(IBufferCache bufferCache, IFileMapProvider fileMapProvider, IMetaDataPageManager freePageManager,
             ITreeIndexFrameFactory interiorFrameFactory, ITreeIndexFrameFactory leafFrameFactory,
             IBinaryComparatorFactory[] cmpFactories, int fieldCount, FileReference file) {
         super(bufferCache, fileMapProvider, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
@@ -157,8 +148,8 @@ public class RTree extends AbstractTreeIndex {
     private void insert(ITupleReference tuple, IIndexOperationContext ictx) throws HyracksDataException,
             TreeIndexException {
         RTreeOpContext ctx = (RTreeOpContext) ictx;
-        int tupleSize = Math.max(ctx.leafFrame.getBytesRequriedToWriteTuple(tuple),
-                ctx.interiorFrame.getBytesRequriedToWriteTuple(tuple));
+        int tupleSize = Math.max(ctx.leafFrame.getBytesRequiredToWriteTuple(tuple),
+                ctx.interiorFrame.getBytesRequiredToWriteTuple(tuple));
         if (tupleSize > maxTupleSize) {
             throw new TreeIndexException("Record size (" + tupleSize + ") larger than maximum acceptable record size ("
                     + maxTupleSize + ")");
@@ -774,7 +765,7 @@ public class RTree extends AbstractTreeIndex {
         MultiComparator cmp = MultiComparator.create(cmpFactories);
         SearchPredicate searchPred = new SearchPredicate(null, cmp);
 
-        int currentPageId = rootPage;
+        int currentPageId = bulkloadLeafStart;
         int maxPageId = freePageManager.getMaxPage(ctx.metaFrame);
 
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
@@ -867,8 +858,14 @@ public class RTree extends AbstractTreeIndex {
     public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex) throws TreeIndexException {
         // TODO: verifyInput currently does nothing.
+        return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex, false);
+    }
+
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, boolean appendOnly) throws TreeIndexException {
+        // TODO: verifyInput currently does nothing.
         try {
-            return new RTreeBulkLoader(fillFactor);
+            return new RTreeBulkLoader(fillFactor, appendOnly);
         } catch (HyracksDataException e) {
             throw new TreeIndexException(e);
         }
@@ -879,17 +876,19 @@ public class RTree extends AbstractTreeIndex {
         RTreeTypeAwareTupleWriter tupleWriter = ((RTreeTypeAwareTupleWriter) interiorFrame.getTupleWriter());
         ITreeIndexTupleReference mbrTuple = interiorFrame.createTupleReference();
         ByteBuffer mbr;
+        List<Integer> prevNodeFrontierPages = new ArrayList<Integer>();
+        List<ICachedPage> pagesToWrite = new ArrayList<ICachedPage>();
 
-        public RTreeBulkLoader(float fillFactor) throws TreeIndexException, HyracksDataException {
-            super(fillFactor);
+        public RTreeBulkLoader(float fillFactor, boolean appendOnly) throws TreeIndexException, HyracksDataException {
+            super(fillFactor, appendOnly);
             prevInteriorFrame = interiorFrameFactory.createFrame();
         }
 
         @Override
         public void add(ITupleReference tuple) throws IndexException, HyracksDataException {
             try {
-                int tupleSize = Math.max(leafFrame.getBytesRequriedToWriteTuple(tuple),
-                        interiorFrame.getBytesRequriedToWriteTuple(tuple));
+                int tupleSize = Math.max(leafFrame.getBytesRequiredToWriteTuple(tuple),
+                        interiorFrame.getBytesRequiredToWriteTuple(tuple));
                 if (tupleSize > maxTupleSize) {
                     throw new TreeIndexException("Space required for record (" + tupleSize
                             + ") larger than maximum acceptable size (" + maxTupleSize + ")");
@@ -907,22 +906,29 @@ public class RTree extends AbstractTreeIndex {
                 }
 
                 if (spaceUsed + spaceNeeded > leafMaxBytes) {
-                    propagateBulk(1, false);
+
+                    if (prevNodeFrontierPages.size() == 0) {
+                        prevNodeFrontierPages.add(leafFrontier.pageId);
+                    } else {
+                        prevNodeFrontierPages.set(0, leafFrontier.pageId);
+                    }
+                    pagesToWrite.clear();
+                    propagateBulk(1, false, pagesToWrite);
 
                     leafFrontier.pageId = freePageManager.getFreePage(metaFrame);
-
-                    leafFrontier.page.releaseWriteLatch(true);
-                    bufferCache.unpin(leafFrontier.page);
-
-                    leafFrontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrontier.pageId),
-                            true);
-                    leafFrontier.page.acquireWriteLatch();
+                    queue.put(leafFrontier.page);
+                    for (ICachedPage c : pagesToWrite) {
+                        queue.put(c);
+                    }
+                    leafFrontier.page = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId,
+                            leafFrontier.pageId));
                     leafFrame.setPage(leafFrontier.page);
                     leafFrame.initBuffer((byte) 0);
+
                 }
 
                 leafFrame.setPage(leafFrontier.page);
-                leafFrame.insert(tuple, -1);
+                leafFrame.insert(tuple, AbstractSlotManager.GREATEST_KEY_INDICATOR);
             } catch (HyracksDataException e) {
                 handleException();
                 throw e;
@@ -934,12 +940,61 @@ public class RTree extends AbstractTreeIndex {
         }
 
         public void end() throws HyracksDataException {
-            propagateBulk(1, true);
+            pagesToWrite.clear();
+            //if writing a trivial 1-page tree, don't try and propagate up
+            if (nodeFrontiers.size() > 1) {
+                propagateBulk(1, true, pagesToWrite);
+            }
 
+            for (ICachedPage c : pagesToWrite) {
+                queue.put(c);
+            }
+            finish();
             super.end();
         }
 
-        protected void propagateBulk(int level, boolean toRoot) throws HyracksDataException {
+        @Override
+        public void abort() throws HyracksDataException {
+            super.handleException();
+        }
+
+        protected void finish() throws HyracksDataException {
+            int prevPageId = -1;
+            //here we assign physical identifiers to everything we can
+            for (NodeFrontier n : nodeFrontiers) {
+                //not a leaf
+                if (nodeFrontiers.indexOf(n) != 0) {
+                    interiorFrame.setPage(n.page);
+                    mbrTuple.resetByTupleOffset(mbr, 0);
+                    interiorFrame.insert(mbrTuple, -1);
+                    interiorFrame.getBuffer().putInt(
+                            interiorFrame.getTupleOffset(interiorFrame.getTupleCount() - 1) + mbrTuple.getTupleSize(),
+                            prevPageId);
+
+                    int finalPageId = freePageManager.getFreePage(metaFrame);
+                    n.pageId = finalPageId;
+                    bufferCache.setPageDiskId(n.page, BufferedFileHandle.getDiskPageId(fileId, finalPageId));
+                    //else we are looking at a leaf
+                }
+                //set next guide MBR
+                //if propagateBulk didnt have to do anything this may be un-necessary
+                if (nodeFrontiers.size() > 1 && nodeFrontiers.indexOf(n) < nodeFrontiers.size()-1) {
+                    lowerFrame.setPage(n.page);
+                    ((RTreeNSMFrame) lowerFrame).adjustMBR();
+                    tupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);
+                }
+                queue.put(n.page);
+                n.page = null;
+                prevPageId = n.pageId;
+            }
+            if (appendOnly) {
+                rootPage = nodeFrontiers.get(nodeFrontiers.size() - 1).pageId;
+            }
+            releasedLatches = true;
+        }
+
+        protected void propagateBulk(int level, boolean toRoot, List<ICachedPage> pagesToWrite)
+                throws HyracksDataException {
             boolean propagated = false;
 
             if (level == 1)
@@ -951,47 +1006,66 @@ public class RTree extends AbstractTreeIndex {
             if (level >= nodeFrontiers.size())
                 addLevel();
 
+            //adjust the tuple pointers of the lower frame to allow us to calculate our MBR
+            //if this is a leaf, then there is only one tuple, so this is trivial
             ((RTreeNSMFrame) lowerFrame).adjustMBR();
 
             if (mbr == null) {
-                int bytesRequired = tupleWriter.bytesRequired(((RTreeNSMFrame) lowerFrame).getTuples()[0], 0,
+                int bytesRequired = tupleWriter.bytesRequired(((RTreeNSMFrame) lowerFrame).getMBRTuples()[0], 0,
                         cmp.getKeyFieldCount())
                         + ((RTreeNSMInteriorFrame) interiorFrame).getChildPointerSize();
                 mbr = ByteBuffer.allocate(bytesRequired);
             }
-            tupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getTuples(), 0, mbr, 0);
+            tupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);
             mbrTuple.resetByTupleOffset(mbr, 0);
 
             NodeFrontier frontier = nodeFrontiers.get(level);
             interiorFrame.setPage(frontier.page);
+            //see if we have space for two tuples. this works around a  tricky boundary condition with sequential bulk load where
+            //finalization can possibly lead to a split
+            //TODO: accomplish this without wasting 1 tuple
+            int sizeOfTwoTuples = 2 * (mbrTuple.getTupleSize() + RTreeNSMInteriorFrame.childPtrSize);
+            FrameOpSpaceStatus spaceForTwoTuples = (((RTreeNSMInteriorFrame) interiorFrame)
+                    .hasSpaceInsert(sizeOfTwoTuples));
+            if (spaceForTwoTuples != FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE && !toRoot) {
 
-            interiorFrame.insert(mbrTuple, -1);
+                int finalPageId = freePageManager.getFreePage(metaFrame);
+                if (prevNodeFrontierPages.size() <= level) {
+                    prevNodeFrontierPages.add(finalPageId);
+                } else {
+                    prevNodeFrontierPages.set(level, finalPageId);
+                }
+                bufferCache.setPageDiskId(frontier.page, BufferedFileHandle.getDiskPageId(fileId, finalPageId));
+                pagesToWrite.add(frontier.page);
 
-            interiorFrame.getBuffer().putInt(
-                    interiorFrame.getTupleOffset(interiorFrame.getTupleCount() - 1) + mbrTuple.getTupleSize(),
-                    nodeFrontiers.get(level - 1).pageId);
-
-            if (interiorFrame.hasSpaceInsert(mbrTuple) != FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE && !toRoot) {
                 lowerFrame = prevInteriorFrame;
                 lowerFrame.setPage(frontier.page);
 
-                propagateBulk(level + 1, toRoot);
-                propagated = true;
-
-                frontier.page.releaseWriteLatch(true);
-                bufferCache.unpin(frontier.page);
-                frontier.pageId = freePageManager.getFreePage(metaFrame);
-
-                frontier.page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, frontier.pageId), true);
-                frontier.page.acquireWriteLatch();
+                frontier.page = bufferCache.confiscatePage(BufferCache.INVALID_DPID);
                 interiorFrame.setPage(frontier.page);
                 interiorFrame.initBuffer((byte) level);
+
+                interiorFrame.insert(mbrTuple, AbstractSlotManager.GREATEST_KEY_INDICATOR);
+
+                interiorFrame.getBuffer().putInt(
+                        interiorFrame.getTupleOffset(interiorFrame.getTupleCount() - 1) + mbrTuple.getTupleSize(),
+                        prevNodeFrontierPages.get(level - 1));
+
+                propagateBulk(level + 1, toRoot, pagesToWrite);
+            } else if (interiorFrame.hasSpaceInsert(mbrTuple) == FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE
+                    && !toRoot) {
+
+                interiorFrame.insert(mbrTuple, -1);
+
+                interiorFrame.getBuffer().putInt(
+                        interiorFrame.getTupleOffset(interiorFrame.getTupleCount() - 1) + mbrTuple.getTupleSize(),
+                        prevNodeFrontierPages.get(level - 1));
             }
 
-            if (toRoot && !propagated && level < nodeFrontiers.size() - 1) {
+            if (toRoot && level < nodeFrontiers.size() - 1) {
                 lowerFrame = prevInteriorFrame;
                 lowerFrame.setPage(frontier.page);
-                propagateBulk(level + 1, true);
+                propagateBulk(level + 1, true, pagesToWrite);
             }
 
             leafFrame.setPage(nodeFrontiers.get(0).page);

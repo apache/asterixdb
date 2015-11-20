@@ -21,6 +21,8 @@ package org.apache.hyracks.storage.am.btree;
 import java.util.Random;
 import java.util.logging.Level;
 
+import org.apache.hyracks.storage.am.common.api.*;
+import org.apache.hyracks.storage.am.common.freepage.LinkedMetaDataPageManager;
 import org.junit.Test;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -41,14 +43,8 @@ import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
 import org.apache.hyracks.storage.am.common.TestOperationCallback;
-import org.apache.hyracks.storage.am.common.api.IFreePageManager;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
-import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
-import org.apache.hyracks.storage.am.common.freepage.LinkedListFreePageManager;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
@@ -81,7 +77,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
 
-        IFreePageManager freePageManager = new LinkedListFreePageManager(bufferCache, 0, metaFrameFactory);
+        IMetaDataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
         BTree btree = new BTree(bufferCache, harness.getFileMapProvider(), freePageManager, interiorFrameFactory,
                 leafFrameFactory, cmpFactories, fieldCount, harness.getFileReference());
         btree.create();

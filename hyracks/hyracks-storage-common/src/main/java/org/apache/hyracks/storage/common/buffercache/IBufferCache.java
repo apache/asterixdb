@@ -19,12 +19,17 @@
 package org.apache.hyracks.storage.common.buffercache;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 
 public interface IBufferCache {
-    public void createFile(FileReference fileRef) throws HyracksDataException;
 
+    public static final long INVALID_DPID = -1l;
+    public static final int INVALID_PAGEID = -1;
+
+    public void createFile(FileReference fileRef) throws HyracksDataException;
+    
     public int createMemFile() throws HyracksDataException;
 
     public void openFile(int fileId) throws HyracksDataException;
@@ -39,13 +44,17 @@ public interface IBufferCache {
 
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
-    public ICachedPage pinVirtual(long vpid) throws HyracksDataException;
-
-    public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException;
-
     public void unpin(ICachedPage page) throws HyracksDataException;
 
     public void flushDirtyPage(ICachedPage page) throws HyracksDataException;
+
+    public void adviseWontNeed(ICachedPage page);
+
+    public ICachedPage confiscatePage(long dpid) throws HyracksDataException;
+
+    public void returnPage(ICachedPage page);
+
+    public void returnPage(ICachedPage page, boolean reinsert);
 
     public void force(int fileId, boolean metadata) throws HyracksDataException;
 
@@ -53,12 +62,24 @@ public interface IBufferCache {
 
     public int getNumPages();
 
+    public int getNumPagesOfFile(int fileId) throws HyracksDataException;
+
     public int getFileReferenceCount(int fileId);
 
     public void close() throws HyracksDataException;
 
+    public IFIFOPageQueue createFIFOQueue();
+
+    public void finishQueue();
+
+    void copyPage(ICachedPage src, ICachedPage dst);
+
+    void setPageDiskId(ICachedPage page, long dpid);
+
     public boolean isReplicationEnabled();
 
     public IIOReplicationManager getIOReplicationManager();
+
+    void purgeHandle(int fileId) throws HyracksDataException;
 
 }

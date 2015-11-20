@@ -36,7 +36,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     protected static final int pageNsnOff = smFlagOff + 1;
     protected static final int rightPageOff = pageNsnOff + 8;
 
-    protected ITreeIndexTupleReference[] tuples;
+    protected ITreeIndexTupleReference[] mbrTuples;
     protected ITreeIndexTupleReference cmpFrameTuple;
 
     private static final double doubleEpsilon = computeDoubleEpsilon();
@@ -47,9 +47,9 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
     public RTreeNSMFrame(ITreeIndexTupleWriter tupleWriter, IPrimitiveValueProvider[] keyValueProviders,
             RTreePolicyType rtreePolicyType) {
         super(tupleWriter, new UnorderedSlotManager());
-        this.tuples = new ITreeIndexTupleReference[keyValueProviders.length];
+        this.mbrTuples = new ITreeIndexTupleReference[keyValueProviders.length];
         for (int i = 0; i < keyValueProviders.length; i++) {
-            this.tuples[i] = tupleWriter.createTupleReference();
+            this.mbrTuples[i] = tupleWriter.createTupleReference();
         }
         cmpFrameTuple = tupleWriter.createTupleReference();
         this.keyValueProviders = keyValueProviders;
@@ -111,8 +111,8 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
         buf.putInt(rightPageOff, rightPage);
     }
 
-    public ITreeIndexTupleReference[] getTuples() {
-        return tuples;
+    public ITreeIndexTupleReference[] getMBRTuples() {
+        return mbrTuples;
     }
 
     @Override
@@ -123,7 +123,7 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
 
     abstract public int getTupleSize(ITupleReference tuple);
 
-    public void adjustMBRImpl(ITreeIndexTupleReference[] tuples) {
+    protected void calculateMBRImpl(ITreeIndexTupleReference[] tuples) {
         int maxFieldPos = keyValueProviders.length / 2;
         for (int i = 1; i < getTupleCount(); i++) {
             frameTuple.resetByTupleIndex(this, i);
@@ -145,12 +145,12 @@ public abstract class RTreeNSMFrame extends TreeIndexNSMFrame implements IRTreeF
 
     @Override
     public void adjustMBR() {
-        for (int i = 0; i < tuples.length; i++) {
-            tuples[i].setFieldCount(getFieldCount());
-            tuples[i].resetByTupleIndex(this, 0);
+        for (int i = 0; i < mbrTuples.length; i++) {
+            mbrTuples[i].setFieldCount(getFieldCount());
+            mbrTuples[i].resetByTupleIndex(this, 0);
         }
 
-        adjustMBRImpl(tuples);
+        calculateMBRImpl(mbrTuples);
     }
 
     public abstract int getFieldCount();

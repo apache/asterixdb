@@ -22,15 +22,16 @@ package org.apache.hyracks.storage.am.lsm.common.freepage;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IVirtualFreePageManager;
+import org.apache.hyracks.storage.am.common.api.IVirtualMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
-public class VirtualFreePageManager implements IVirtualFreePageManager {
+public class VirtualMetaDataPageManager implements IVirtualMetaDataPageManager {
     protected final int capacity;
     protected final AtomicInteger currentPageId = new AtomicInteger();
 
-    public VirtualFreePageManager(int capacity) {
+    public VirtualMetaDataPageManager(int capacity) {
         // We start the currentPageId from 1, because the BTree uses
         // the first page as metadata page, and the second page as root page.
         // (when returning free pages we first increment, then get)
@@ -94,8 +95,8 @@ public class VirtualFreePageManager implements IVirtualFreePageManager {
 
     @Override
     public int getFirstMetadataPage() {
-        // Method doesn't make sense for this free page manager.
-        return -1;
+        //MD page in a virtual context is always 0, because it is by nature an in-place modification tree
+        return 0;
     }
 
     @Override
@@ -117,4 +118,45 @@ public class VirtualFreePageManager implements IVirtualFreePageManager {
         }
 
     }
+
+    @Override
+    public void init(ITreeIndexMetaDataFrame metaFrame) throws HyracksDataException {
+        // Method doesn't make sense for this free page manager.
+    }
+
+    @Override
+    public int getFilterPageId() throws HyracksDataException {
+        // Method doesn't make sense for this free page manager.
+        return 0;
+    }
+
+    @Override
+    public void setFilterPageId(int filterPageId) throws HyracksDataException {
+        // Method doesn't make sense for this free page manager.
+    }
+
+    @Override
+    public long getLSN() throws HyracksDataException {
+        // Method doesn't make sense for this free page manager.
+        return -1;
+    }
+
+    @Override
+    public void setLSN(long lsn) throws HyracksDataException {
+        // Method doesn't make sense for this free page manager.
+    }
+
+    public void setFilterPage(ICachedPage page) {
+        // Method doesn't make sense for this free page manager.
+    }
+
+    public ICachedPage getFilterPage(){
+        return null;
+    }
+
+    @Override
+    public boolean appendOnlyMode() {
+        return false;
+    }
+
 }

@@ -196,11 +196,11 @@ public class RTreePolicy implements IRTreePolicy {
 
         splitKey.initData(splitKeySize);
         leftRTreeFrame.adjustMBR();
-        rTreeTupleWriterLeftFrame.writeTupleFields(leftRTreeFrame.getTuples(), 0, rTreeSplitKey.getLeftPageBuffer(), 0);
+        rTreeTupleWriterLeftFrame.writeTupleFields(leftRTreeFrame.getMBRTuples(), 0, rTreeSplitKey.getLeftPageBuffer(), 0);
         rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer(), 0);
 
         ((IRTreeFrame) rightFrame).adjustMBR();
-        rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getTuples(), 0,
+        rTreeTupleWriterRightFrame.writeTupleFields(((RTreeNSMFrame) rightFrame).getMBRTuples(), 0,
                 rTreeSplitKey.getRightPageBuffer(), 0);
         rTreeSplitKey.getRightTuple().resetByTupleOffset(rTreeSplitKey.getRightPageBuffer(), 0);
     }

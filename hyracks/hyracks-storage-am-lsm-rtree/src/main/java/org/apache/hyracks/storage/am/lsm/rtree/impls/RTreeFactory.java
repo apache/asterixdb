@@ -20,8 +20,9 @@
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.storage.am.common.api.IFreePageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.IMetadataManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
@@ -32,7 +33,7 @@ import org.apache.hyracks.storage.common.file.IFileMapProvider;
 public class RTreeFactory extends TreeIndexFactory<RTree> {
 
     public RTreeFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IFreePageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
+            IMetadataManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
         super(bufferCache, fileMapProvider, freePageManagerFactory, interiorFrameFactory, leafFrameFactory,
                 cmpFactories, fieldCount);
@@ -40,8 +41,12 @@ public class RTreeFactory extends TreeIndexFactory<RTree> {
 
     @Override
     public RTree createIndexInstance(FileReference file) throws IndexException {
-        return new RTree(bufferCache, fileMapProvider, freePageManagerFactory.createFreePageManager(),
-                interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
+        try {
+            return new RTree(bufferCache, fileMapProvider, freePageManagerFactory.createFreePageManager(),
+                    interiorFrameFactory, leafFrameFactory, cmpFactories, fieldCount, file);
+        } catch (HyracksDataException e) {
+            throw new IndexException(e);
+        }
     }
 
 }

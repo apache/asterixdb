@@ -112,7 +112,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetaDataFrame {
     public void initBuffer(byte level) {
         buf.putInt(tupleCountOff, 0);
         buf.putInt(freeSpaceOff, lsnOff + 8);
-        //buf.putInt(maxPageOff, -1);
+        buf.putInt(maxPageOff, 0);
         buf.put(levelOff, level);
         buf.putInt(nextPageOff, -1);
         buf.putInt(additionalFilteringPageOff, -1);

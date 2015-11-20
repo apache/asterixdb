@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProvider;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.api.TreeIndexException;
+import org.apache.hyracks.storage.am.common.frames.AbstractSlotManager;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.ophelpers.MultiComparator;
 import org.apache.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
@@ -40,7 +41,7 @@ import org.apache.hyracks.storage.am.rtree.impls.PathList;
 
 public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteriorFrame {
 
-    private static final int childPtrSize = 4;
+    public static final int childPtrSize = 4;
     private IBinaryComparator childPtrCmp = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY)
             .createBinaryComparator();
     private final int keyFieldCount;
@@ -53,7 +54,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     }
 
     @Override
-    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+    public int getBytesRequiredToWriteTuple(ITupleReference tuple) {
         return tupleWriter.bytesRequired(tuple) + childPtrSize + slotManager.getSlotSize();
     }
 
@@ -184,6 +185,16 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
             return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
     }
 
+    public FrameOpSpaceStatus hasSpaceInsert(int bytesRequired) {
+        if (bytesRequired + slotManager.getSlotSize() <= buf.capacity() - buf.getInt(freeSpaceOff)
+                - (buf.getInt(tupleCountOff) * slotManager.getSlotSize()))
+            return FrameOpSpaceStatus.SUFFICIENT_CONTIGUOUS_SPACE;
+        else if (bytesRequired + slotManager.getSlotSize() <= buf.getInt(totalFreeSpaceOff))
+            return FrameOpSpaceStatus.SUFFICIENT_SPACE;
+        else
+            return FrameOpSpaceStatus.INSUFFICIENT_SPACE;
+    }
+
     @Override
     public void adjustKey(ITupleReference tuple, int tupleIndex, MultiComparator cmp) throws TreeIndexException {
         frameTuple.setFieldCount(cmp.getKeyFieldCount());
@@ -221,7 +232,7 @@ public class RTreeNSMInteriorFrame extends RTreeNSMFrame implements IRTreeInteri
     @Override
     public void insert(ITupleReference tuple, int tupleIndex) {
         frameTuple.setFieldCount(tuple.getFieldCount());
-        slotManager.insertSlot(-1, buf.getInt(freeSpaceOff));
+        slotManager.insertSlot(AbstractSlotManager.GREATEST_KEY_INDICATOR, buf.getInt(freeSpaceOff));
         int freeSpace = buf.getInt(freeSpaceOff);
         int bytesWritten = tupleWriter.writeTupleFields(tuple, 0, tuple.getFieldCount(), buf.array(), freeSpace);
         System.arraycopy(tuple.getFieldData(tuple.getFieldCount() - 1), getChildPointerOff(tuple), buf.array(),

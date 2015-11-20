@@ -20,7 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import org.apache.hyracks.storage.am.common.api.IFreePageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.IMetadataManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -34,7 +34,7 @@ public abstract class TreeIndexFactory<T extends ITreeIndex> extends IndexFactor
     protected final int fieldCount;
 
     public TreeIndexFactory(IBufferCache bufferCache, IFileMapProvider fileMapProvider,
-            IFreePageManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
+            IMetadataManagerFactory freePageManagerFactory, ITreeIndexFrameFactory interiorFrameFactory,
             ITreeIndexFrameFactory leafFrameFactory, IBinaryComparatorFactory[] cmpFactories, int fieldCount) {
         super(bufferCache, fileMapProvider, freePageManagerFactory);
         this.interiorFrameFactory = interiorFrameFactory;

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.common.api;
 
-public interface IFreePageManagerFactory {
-    public IFreePageManager createFreePageManager();
+public interface IVirtualMetaDataPageManager extends IMetaDataPageManager {
+    public int getCapacity();
+
+    public void reset();
 }

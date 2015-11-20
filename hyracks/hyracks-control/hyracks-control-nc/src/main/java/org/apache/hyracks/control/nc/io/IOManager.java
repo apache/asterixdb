@@ -260,6 +260,11 @@ public class IOManager implements IIOManager {
     }
 
     @Override
+    public long getSize(IFileHandle fileHandle) {
+        return ((FileHandle) fileHandle).getFileReference().getFile().length();
+    }
+
+    @Override
     public void deleteWorkspaceFiles() {
         for (IODeviceHandle ioDevice : workAreaIODevices) {
             File workspaceFolder = new File(ioDevice.getPath(), ioDevice.getWorkAreaPath());

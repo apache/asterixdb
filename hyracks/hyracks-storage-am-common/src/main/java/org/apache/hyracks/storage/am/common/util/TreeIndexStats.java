@@ -20,7 +20,7 @@ package org.apache.hyracks.storage.am.common.util;
 
 import java.text.DecimalFormat;
 
-import org.apache.hyracks.storage.am.common.api.IFreePageManager;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 
@@ -57,7 +57,7 @@ public class TreeIndexStats {
 	}
 
 	public void add(ITreeIndexMetaDataFrame metaFrame,
-			IFreePageManager freePageManager) {
+			IMetaDataPageManager freePageManager) {
 		if (freePageManager.isFreePage(metaFrame)) {
 			freePages++;
 		} else if (freePageManager.isMetaPage(metaFrame)) {

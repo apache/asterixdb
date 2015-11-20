@@ -124,7 +124,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         List<ILSMComponent> immutableComponents = diskComponents;
         for (ILSMComponent c : immutableComponents) {
             RTree rtree = ((LSMRTreeDiskComponent) c).getRTree();
-            rtree.deactivate();
+            rtree.deactivateCloseHandle();
         }
         isActivated = false;
     }
@@ -233,7 +233,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             bTreeTupleSorter.sort();
         }
 
-        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L, false);
+        IIndexBulkLoader rTreeBulkloader = diskRTree.createBulkLoader(1.0f, false, 0L, false, true);
         LSMRTreeWithAntiMatterTuplesFlushCursor cursor = new LSMRTreeWithAntiMatterTuplesFlushCursor(rTreeTupleSorter,
                 bTreeTupleSorter, comparatorFields, linearizerArray);
         cursor.open(null, null);
@@ -249,15 +249,15 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             cursor.close();
         }
 
-        rTreeBulkloader.end();
-
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
             filterManager.updateFilterInfo(component.getLSMComponentFilter(), filterTuples);
-            filterManager.writeFilterInfo(component.getLSMComponentFilter(), component.getRTree());
+            filterManager.writeFilterInfo(component.getLSMComponentFilter(), component.getRTree()
+            );
         }
+        rTreeBulkloader.end();
 
         return component;
     }
@@ -293,7 +293,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         LSMRTreeDiskComponent component = createDiskComponent(componentFactory, mergeOp.getRTreeMergeTarget(), null,
                 null, true);
         RTree mergedRTree = component.getRTree();
-        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f, false, 0L, false);
+        IIndexBulkLoader bulkloader = mergedRTree.createBulkLoader(1.0f, false, 0L, false, true);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -303,8 +303,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         } finally {
             cursor.close();
         }
-        bulkloader.end();
-
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<ITupleReference>();
             for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
@@ -312,8 +310,10 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
             }
             filterManager.updateFilterInfo(component.getLSMComponentFilter(), filterTuples);
-            filterManager.writeFilterInfo(component.getLSMComponentFilter(), component.getBTree());
+            filterManager.writeFilterInfo(component.getLSMComponentFilter(), component.getBTree()
+            );
         }
+        bulkloader.end();
 
         return component;
     }
@@ -379,7 +379,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 throw new TreeIndexException(e);
             }
             bulkLoader = ((LSMRTreeDiskComponent) component).getRTree().createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint, false);
+                    numElementsHint, false, true);
 
             if (filterFields != null) {
                 indexTuple = new PermutingTupleReference(rtreeFields);
@@ -422,18 +422,25 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         @Override
         public void end() throws HyracksDataException, IndexException {
             if (!cleanedUpArtifacts) {
-                bulkLoader.end();
 
                 if (component.getLSMComponentFilter() != null) {
                     filterManager.writeFilterInfo(component.getLSMComponentFilter(),
                             ((LSMRTreeDiskComponent) component).getRTree());
                 }
+                bulkLoader.end();
 
                 if (isEmptyComponent) {
                     cleanupArtifacts();
                 } else {
                     lsmHarness.addBulkLoadedComponent(component);
                 }
+            }
+        }
+
+        @Override
+        public void abort() throws HyracksDataException {
+            if(bulkLoader != null){
+                bulkLoader.abort();
             }
         }
 
@@ -450,8 +457,15 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
     @Override
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException {
         RTree rtree = ((LSMRTreeDiskComponent) lsmComponent).getRTree();
-        forceFlushDirtyPages(rtree);
         markAsValidInternal(rtree);
+    }
+
+    @Override
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, boolean appendOnly) throws IndexException {
+        if (!appendOnly)
+            throw new UnsupportedOperationException("LSM indexes don't support in-place modification");
+        return createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
     }
 
     @Override
@@ -463,5 +477,4 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
         return files;
     }
-
 }

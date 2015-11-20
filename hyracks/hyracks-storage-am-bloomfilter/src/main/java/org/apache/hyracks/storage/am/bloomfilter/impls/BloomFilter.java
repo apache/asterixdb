@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IndexException;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
 
@@ -73,7 +74,7 @@ public class BloomFilter {
 
     public int getNumPages() throws HyracksDataException {
         if (!isActivated) {
-            throw new HyracksDataException("The bloom filter is not activated.");
+            activate();
         }
         return numPages;
     }
@@ -141,17 +142,6 @@ public class BloomFilter {
             throw new HyracksDataException("Failed to create the bloom filter since it is activated.");
         }
         prepareFile();
-        ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID), true);
-        metaPage.acquireWriteLatch();
-        try {
-            metaPage.getBuffer().putInt(NUM_PAGES_OFFSET, 0);
-            metaPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, 0);
-            metaPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, 0L);
-            metaPage.getBuffer().putLong(NUM_BITS_OFFSET, 0L);
-        } finally {
-            metaPage.releaseWriteLatch(true);
-            bufferCache.unpin(metaPage);
-        }
         bufferCache.closeFile(fileId);
     }
 
@@ -166,6 +156,13 @@ public class BloomFilter {
     }
 
     private void readBloomFilterMetaData() throws HyracksDataException {
+        if (bufferCache.getNumPagesOfFile(fileId) == 0) {
+            numPages = 0;
+            numHashes = 0;
+            numElements = 0;
+            numBits = 0;
+            return;
+        }
         ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID), false);
         metaPage.acquireReadLatch();
         try {
@@ -211,12 +208,15 @@ public class BloomFilter {
         private final int numHashes;
         private final long numBits;
         private final int numPages;
+        private IFIFOPageQueue queue;
+        private ICachedPage[] pages;
+        private ICachedPage metaDataPage = null;
 
         public BloomFilterBuilder(long numElements, int numHashes, int numBitsPerElement) throws HyracksDataException {
             if (!isActivated) {
                 throw new HyracksDataException("Failed to create the bloom filter builder since it is not activated.");
             }
-
+            queue = bufferCache.createFIFOQueue();
             this.numElements = numElements;
             this.numHashes = numHashes;
             numBits = this.numElements * numBitsPerElement;
@@ -225,18 +225,12 @@ public class BloomFilter {
                 throw new HyracksDataException("Cannot create a bloom filter with his huge number of pages.");
             }
             numPages = (int) tmp;
-            persistBloomFilterMetaData();
-            readBloomFilterMetaData();
+            pages = new ICachedPage[numPages];
             int currentPageId = 1;
             while (currentPageId <= numPages) {
-                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), true);
-                page.acquireWriteLatch();
-                try {
-                    initPage(page.getBuffer().array());
-                } finally {
-                    page.releaseWriteLatch(true);
-                    bufferCache.unpin(page);
-                }
+                ICachedPage page = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
+                initPage(page.getBuffer().array());
+                pages[currentPageId - 1] = page;
                 ++currentPageId;
             }
         }
@@ -254,18 +248,14 @@ public class BloomFilter {
             }
         }
 
-        private void persistBloomFilterMetaData() throws HyracksDataException {
-            ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID), false);
-            metaPage.acquireWriteLatch();
-            try {
-                metaPage.getBuffer().putInt(NUM_PAGES_OFFSET, numPages);
-                metaPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, numHashes);
-                metaPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, numElements);
-                metaPage.getBuffer().putLong(NUM_BITS_OFFSET, numBits);
-            } finally {
-                metaPage.releaseWriteLatch(true);
-                bufferCache.unpin(metaPage);
+        private void allocateAndInitMetaDataPage() throws HyracksDataException {
+            if (metaDataPage == null) {
+                metaDataPage = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID));
             }
+            metaDataPage.getBuffer().putInt(NUM_PAGES_OFFSET, numPages);
+            metaDataPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, numHashes);
+            metaDataPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, numElements);
+            metaDataPage.getBuffer().putLong(NUM_BITS_OFFSET, numBits);
         }
 
         @Override
@@ -277,27 +267,41 @@ public class BloomFilter {
             MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
             for (int i = 0; i < numHashes; ++i) {
                 long hash = Math.abs((hashes[0] + i * hashes[1]) % numBits);
+                ICachedPage page = pages[((int) (hash / numBitsPerPage))];
+                ByteBuffer buffer = page.getBuffer();
+                int byteIndex = (int) (hash % numBitsPerPage) >> 3; // divide by 8
+                byte b = buffer.get(byteIndex);
+                int bitIndex = (int) (hash % numBitsPerPage) & 0x07; // mod 8
+                b = (byte) (b | (1 << bitIndex));
 
-                // we increment the page id by one, since the metadata page id of the filter is 0.
-                ICachedPage page = bufferCache.pin(
-                        BufferedFileHandle.getDiskPageId(fileId, (int) (hash / numBitsPerPage) + 1), false);
-                page.acquireWriteLatch();
-                try {
-                    ByteBuffer buffer = page.getBuffer();
-                    int byteIndex = (int) (hash % numBitsPerPage) >> 3; // divide by 8
-                    byte b = buffer.array()[byteIndex];
-                    int bitIndex = (int) (hash % numBitsPerPage) & 0x07; // mod 8
-                    b = (byte) (b | (1 << bitIndex));
-                    buffer.array()[byteIndex] = b;
-                } finally {
-                    page.releaseWriteLatch(true);
-                    bufferCache.unpin(page);
-                }
+                buffer.put(byteIndex, b);
             }
         }
 
         @Override
         public void end() throws HyracksDataException, IndexException {
+            allocateAndInitMetaDataPage();
+            queue.put(metaDataPage);
+            for (ICachedPage p : pages) {
+                queue.put(p);
+            }
+            bufferCache.finishQueue();
+            BloomFilter.this.numBits = numBits;
+            BloomFilter.this.numHashes = numHashes;
+            BloomFilter.this.numElements = numElements;
+            BloomFilter.this.numPages = numPages;
+        }
+
+        @Override
+        public void abort() throws HyracksDataException {
+            for (ICachedPage p : pages) {
+                if (p != null) {
+                    bufferCache.returnPage(p, false);
+                }
+            }
+            if (metaDataPage != null ){
+                bufferCache.returnPage(metaDataPage,false);
+            }
         }
 
     }

@@ -279,7 +279,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 throw new IllegalArgumentException("Invalid range: [" + begin + ", " + end + "]");
             }
 
-            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true);
+            IIndexBulkLoader bulkloader = index.createBulkLoader(1.0f, false, end - begin, true, true);
             for (int i = begin; i <= end; i++) {
                 TupleUtils.createIntegerTuple(builder, tuple, i);
                 bulkloader.add(tuple);

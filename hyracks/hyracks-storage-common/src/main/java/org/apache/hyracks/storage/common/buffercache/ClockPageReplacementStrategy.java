@@ -25,9 +25,10 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 3;
 
     private IBufferCacheInternal bufferCache;
-    private int clockPtr;
+    private AtomicInteger clockPtr;
     private ICacheMemoryAllocator allocator;
-    private AtomicInteger numPages = new AtomicInteger(0);
+    private AtomicInteger numPages;
+    private AtomicInteger cpIdCounter;
     private final int pageSize;
     private final int maxAllowedNumPages;
 
@@ -35,7 +36,9 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         this.allocator = allocator;
         this.pageSize = pageSize;
         this.maxAllowedNumPages = maxAllowedNumPages;
-        clockPtr = 0;
+        this.clockPtr = new AtomicInteger(0);
+        this.numPages = new AtomicInteger(0);
+        this.cpIdCounter = new AtomicInteger(0);
     }
 
     @Override
@@ -61,9 +64,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     @Override
     public ICachedPageInternal findVictim() {
         ICachedPageInternal cachedPage = null;
-        int pageCount = getNumPages();
-        // pageCount is a lower-bound of numPages.
-        if (pageCount >= maxAllowedNumPages) {
+        if (numPages.get() >= maxAllowedNumPages) {
             cachedPage = findVictimByEviction();
         } else {
             cachedPage = allocatePage();
@@ -72,10 +73,12 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     }
 
     private ICachedPageInternal findVictimByEviction() {
-        int startClockPtr = clockPtr;
+        //check if we're starved from confiscation
+        assert (maxAllowedNumPages > 0);
+        int startClockPtr = clockPtr.get();
         int cycleCount = 0;
         do {
-            ICachedPageInternal cPage = bufferCache.getPage(clockPtr);
+            ICachedPageInternal cPage = bufferCache.getPage(clockPtr.get());
 
             /*
              * We do two things here:
@@ -88,36 +91,26 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
             AtomicBoolean accessedFlag = getPerPageObject(cPage);
             if (!accessedFlag.compareAndSet(true, false)) {
                 if (cPage.pinIfGoodVictim()) {
-                    return cPage;
+                        return cPage;
                 }
             }
-            /**
-             * The clockPtr may miss the last added pages in this round.
-             */
-            clockPtr = (clockPtr + 1) % getNumPages();
-            if (clockPtr == startClockPtr) {
+            advanceClock();
+            if (clockPtr.get() == startClockPtr) {
                 ++cycleCount;
             }
         } while (cycleCount < MAX_UNSUCCESSFUL_CYCLE_COUNT);
         return null;
     }
 
-    /**
-     * The number returned here could only be smaller or equal to the actual number
-     * of pages, because numPages is monotonically incremented.
-     */
     @Override
     public int getNumPages() {
         return numPages.get();
     }
 
     private ICachedPageInternal allocatePage() {
-        CachedPage cPage = null;
-        synchronized (this) {
-            cPage = new CachedPage(numPages.get(), allocator.allocate(pageSize, 1)[0], this);
-            bufferCache.addPage(cPage);
-            numPages.incrementAndGet();
-        }
+        CachedPage cPage = new CachedPage(cpIdCounter.getAndIncrement(), allocator.allocate(pageSize, 1)[0], this);
+        bufferCache.addPage(cPage);
+        numPages.incrementAndGet();
         AtomicBoolean accessedFlag = getPerPageObject(cPage);
         if (!accessedFlag.compareAndSet(true, false)) {
             if (cPage.pinIfGoodVictim()) {
@@ -125,6 +118,21 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
             }
         }
         return null;
+    }
+
+    //derived from RoundRobinAllocationPolicy in Apache directmemory
+    private int advanceClock(){
+        boolean clockInDial = false;
+        int newClockPtr = 0;
+        do
+        {
+            int currClockPtr = clockPtr.get();
+            newClockPtr = ( currClockPtr + 1 ) % numPages.get();
+            clockInDial = clockPtr.compareAndSet( currClockPtr, newClockPtr );
+        }
+        while ( !clockInDial );
+        return newClockPtr;
+
     }
 
     private AtomicBoolean getPerPageObject(ICachedPageInternal cPage) {
@@ -139,5 +147,11 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     @Override
     public int getMaxAllowedNumPages() {
         return maxAllowedNumPages;
+    }
+
+    @Override
+    public void adviseWontNeed(ICachedPageInternal cPage) {
+        //make the page appear as if it wasn't accessed even if it was
+        getPerPageObject(cPage).set(false);
     }
 }

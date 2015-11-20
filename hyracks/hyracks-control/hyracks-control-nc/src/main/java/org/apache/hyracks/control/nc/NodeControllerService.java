@@ -38,6 +38,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -333,6 +334,9 @@ public class NodeControllerService extends AbstractRemoteService {
         if (!shuttedDown) {
             LOGGER.log(Level.INFO, "Stopping NodeControllerService");
             executor.shutdownNow();
+            if(!executor.awaitTermination(10, TimeUnit.SECONDS)){
+                LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing shutdown abnormally");
+            }
             partitionManager.close();
             datasetPartitionManager.close();
             heartbeatTask.cancel();

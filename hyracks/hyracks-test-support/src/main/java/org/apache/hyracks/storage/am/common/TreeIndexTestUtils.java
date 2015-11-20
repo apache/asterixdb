@@ -138,7 +138,12 @@ public abstract class TreeIndexTestUtils {
                             + ctx.getCheckTuples().size() + "\nActual  : " + actualCount);
                 }
             } finally {
-                diskOrderCursor.close();
+                try {
+                    diskOrderCursor.close();
+                }
+                catch(Exception ex){
+                    LOGGER.log(Level.WARNING,"Error during scan cursor close",ex);
+                }
             }
         } catch (UnsupportedOperationException e) {
             // Ignore exception because some indexes, e.g. the LSMTrees, don't
@@ -251,9 +256,9 @@ public abstract class TreeIndexTestUtils {
         int c = 1;
         for (CheckTuple checkTuple : checkTuples) {
             if (LOGGER.isLoggable(Level.INFO)) {
-                if (c % (numTuples / 10) == 0) {
+                //if (c % (numTuples / 10) == 0) {
                     LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
-                }
+                //}
             }
             createTupleFromCheckTuple(checkTuple, tupleBuilder, tuple, ctx.getFieldSerdes());
             bulkLoader.add(tuple);

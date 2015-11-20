@@ -91,7 +91,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
     }
 
     @Override
-    public int getBytesRequriedToWriteTuple(ITupleReference tuple) {
+    public int getBytesRequiredToWriteTuple(ITupleReference tuple) {
         return tupleWriter.bytesRequired(tuple) + slotManager.getSlotSize();
     }
 

@@ -18,14 +18,19 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
+    private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
 
     private final IVirtualBufferCache vbc;
     private int openCount;
@@ -125,30 +130,64 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     //These 4 methods are not applicable here
     @Override
     public int createMemFile() throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new UnsupportedOperationException("Virtual Pages are not a valid concept in this context");
     }
 
     @Override
     public void deleteMemFile(int fileId) throws HyracksDataException {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException("Virtual Pages are not a valid concept in this context");
     }
 
     @Override
-    public ICachedPage pinVirtual(long vpid) throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return null;
+    public int getNumPagesOfFile(int fileId) throws HyracksDataException {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return null;
+    public void adviseWontNeed(ICachedPage page) {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(Level.INFO, "Calling adviseWontNeed on " + this.getClass().getName()
+                    + " makes no sense as this BufferCache cannot evict pages");
+        }
     }
 
     @Override
-    public int getFileReferenceCount(int fileId) {
+    public ICachedPage confiscatePage(long dpid) throws HyracksDataException {
+        return vbc.confiscatePage(dpid);
+    }
+
+    @Override
+    public void returnPage(ICachedPage page) {
+        vbc.returnPage(page);
+    }
+
+    @Override
+    public IFIFOPageQueue createFIFOQueue() {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
+    public void finishQueue() {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
+    public void copyPage(ICachedPage src, ICachedPage dst) {
+        
+    }
+
+    @Override
+    public void setPageDiskId(ICachedPage page, long dpid) {
+        
+    }
+
+    @Override
+    public void returnPage(ICachedPage page, boolean reinsert) {
+        
+    }
+    
+    @Override
+    public int getFileReferenceCount(int fileId){
         return 0;
     }
 
@@ -160,5 +199,10 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     @Override
     public IIOReplicationManager getIOReplicationManager() {
         return null;
+    }
+
+    @Override
+    public void purgeHandle(int fileId) throws HyracksDataException {
+
     }
 }

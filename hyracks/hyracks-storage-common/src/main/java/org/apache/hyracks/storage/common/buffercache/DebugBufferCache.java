@@ -182,15 +182,51 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public ICachedPage pinVirtual(long vpid) throws HyracksDataException {
-        pinCount.addAndGet(1);
-        return bufferCache.pinVirtual(vpid);
+    public int getNumPagesOfFile(int fileId) throws HyracksDataException {
+        return bufferCache.getNumPagesOfFile(fileId);
     }
 
     @Override
-    public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException {
-        unpinCount.addAndGet(1);
-        return bufferCache.unpinVirtual(vpid, dpid);
+    public void adviseWontNeed(ICachedPage page) {
+        bufferCache.adviseWontNeed(page);
+    }
+
+    @Override
+    public ICachedPage confiscatePage(long dpid) throws HyracksDataException {
+        return bufferCache.confiscatePage(dpid);
+    }
+
+    @Override
+    public void returnPage(ICachedPage page) {
+        bufferCache.returnPage(page);
+    }
+
+    @Override
+    public IFIFOPageQueue createFIFOQueue() {
+        return bufferCache.createFIFOQueue();
+    }
+
+    @Override
+    public void finishQueue() {
+        bufferCache.finishQueue();
+    }
+
+    @Override
+    public void copyPage(ICachedPage src, ICachedPage dst) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void setPageDiskId(ICachedPage page, long dpid) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void returnPage(ICachedPage page, boolean reinsert) {
+        // TODO Auto-generated method stub
+        
     }
 
     @Override
@@ -206,5 +242,10 @@ public class DebugBufferCache implements IBufferCache {
     @Override
     public IIOReplicationManager getIOReplicationManager() {
         return null;
+    }
+
+    @Override
+    public void purgeHandle(int fileId) throws HyracksDataException {
+        bufferCache.purgeHandle(fileId);
     }
 }

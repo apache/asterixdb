@@ -103,7 +103,6 @@
     <module>hyracks-client</module>
     <module>hyracks-dataflow-common</module>
     <module>hyracks-dataflow-std</module>
-    <module>hyracks-dataflow-hadoop</module>
     <module>hyracks-control</module>
     <module>hyracks-net</module>
     <module>hyracks-data</module>

@@ -28,14 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.common.api.IFreePageManager;
-import org.apache.hyracks.storage.am.common.api.IIndexCursor;
-import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.IModificationOperationCallback;
-import org.apache.hyracks.storage.am.common.api.ISearchPredicate;
-import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
-import org.apache.hyracks.storage.am.common.api.IndexException;
+import org.apache.hyracks.storage.am.common.api.*;
 import org.apache.hyracks.storage.am.common.exceptions.TreeIndexDuplicateKeyException;
 import org.apache.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -52,7 +45,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
-import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
+import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualMetaDataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -100,11 +93,11 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             RTree memRTree = new RTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
-                    new VirtualFreePageManager(virtualBufferCache.getNumPages()), rtreeInteriorFrameFactory,
+                    new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), rtreeInteriorFrameFactory,
                     rtreeLeafFrameFactory, rtreeCmpFactories, fieldCount, new FileReference(new File(
                             fileManager.getBaseDir() + "_virtual_r_" + i)));
             BTree memBTree = new BTree(virtualBufferCache, virtualBufferCache.getFileMapProvider(),
-                    new VirtualFreePageManager(virtualBufferCache.getNumPages()), btreeInteriorFrameFactory,
+                    new VirtualMetaDataPageManager(virtualBufferCache.getNumPages()), btreeInteriorFrameFactory,
                     btreeLeafFrameFactory, btreeCmpFactories, btreeCmpFactories.length, new FileReference(new File(
                             fileManager.getBaseDir() + "_virtual_b_" + i)));
             LSMRTreeMemoryComponent mutableComponent = new LSMRTreeMemoryComponent(memRTree, memBTree,
@@ -281,20 +274,17 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
         LSMRTreeDiskComponent component = (LSMRTreeDiskComponent) factory
                 .createLSMComponentInstance(new LSMComponentFileReferences(insertFileRef, deleteFileRef,
                         bloomFilterFileRef));
-        if (createComponent) {
-            component.getRTree().create();
-            if (component.getBTree() != null) {
-                component.getBTree().create();
-                component.getBloomFilter().create();
-            }
-        }
         // Tree will be closed during cleanup of merge().
-        component.getRTree().activate();
+        if (!createComponent) {
+            component.getRTree().activate();
+        }
         if (component.getBTree() != null) {
-            component.getBTree().activate();
+            if(!createComponent){
+                component.getBTree().activate();
+            }
             component.getBloomFilter().activate();
         }
-        if (component.getLSMComponentFilter() != null) {
+        if (component.getLSMComponentFilter() != null && !createComponent) {
             filterManager.readFilterInfo(component.getLSMComponentFilter(), component.getRTree());
         }
         return component;
@@ -315,10 +305,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
-    public IFreePageManager getFreePageManager() {
+    public IMetaDataPageManager getMetaManager() {
         LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) memoryComponents
                 .get(currentMutableComponentId.get());
-        return mutableComponent.getRTree().getFreePageManager();
+        return mutableComponent.getRTree().getMetaManager();
     }
 
     @Override

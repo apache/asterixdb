@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -31,11 +33,15 @@ import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IQueueInfo;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.TransientFileMapManager;
 
 public class VirtualBufferCache implements IVirtualBufferCache {
+    private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
+
     private static final int OVERFLOW_PADDING = 8;
 
     private final ICacheMemoryAllocator allocator;
@@ -344,32 +350,78 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         public void releaseWriteLatch(boolean markDirty) {
             latch.writeLock().unlock();
         }
+        public boolean confiscated() {
+            return false;
+        }
+
+        @Override
+        public IQueueInfo getQueueInfo() {
+            return null;
+        }
+
+        @Override
+        public void setQueueInfo(IQueueInfo queueInfo) {
+            throw new UnsupportedOperationException();
+        }
 
     }
 
     //These 4 methods aren't applicable here.
     @Override
     public int createMemFile() throws HyracksDataException {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public void deleteMemFile(int fileId) throws HyracksDataException {
-        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public int getNumPagesOfFile(int fileId) throws HyracksDataException {
+        return numPages;
+    }
+
+    @Override
+    public void adviseWontNeed(ICachedPage page) {
+        if (LOGGER.isLoggable(Level.INFO)) {
+            LOGGER.log(Level.INFO, "Calling adviseWontNeed on " + this.getClass().getName()
+                    + " makes no sense as this BufferCache cannot evict pages");
+        }
+    }
+
+    @Override
+    public void returnPage(ICachedPage page) {
 
     }
 
     @Override
-    public ICachedPage pinVirtual(long vpid) throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return null;
+    public IFIFOPageQueue createFIFOQueue() {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
 
     @Override
-    public ICachedPage unpinVirtual(long vpid, long dpid) throws HyracksDataException {
-        // TODO Auto-generated method stub
-        return null;
+    public void finishQueue() {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
+    public ICachedPage confiscatePage(long dpid) {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
+    public void copyPage(ICachedPage src, ICachedPage dst) {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
+    }
+
+    @Override
+    public void setPageDiskId(ICachedPage page, long dpid) {
+        
+    }
+
+    @Override
+    public void returnPage(ICachedPage page, boolean reinsert) {
+        throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
 
     @Override
@@ -385,5 +437,10 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     @Override
     public IIOReplicationManager getIOReplicationManager() {
         return null;
+    }
+
+    @Override
+    public void purgeHandle(int fileId) throws HyracksDataException {
+
     }
 }

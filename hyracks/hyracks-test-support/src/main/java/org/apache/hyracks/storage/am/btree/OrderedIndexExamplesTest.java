@@ -692,6 +692,7 @@ public abstract class OrderedIndexExamplesTest {
 
         int ins = 1000;
         for (int i = 1; i < ins; i++) {
+
             ITreeIndex treeIndex = createTreeIndex(typeTraits, cmpFactories, bloomFilterKeyFields, null, null, null,
                     null);
             treeIndex.create();

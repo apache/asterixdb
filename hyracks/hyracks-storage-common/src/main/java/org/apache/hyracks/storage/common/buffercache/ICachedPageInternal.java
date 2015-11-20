@@ -21,7 +21,10 @@ package org.apache.hyracks.storage.common.buffercache;
 public interface ICachedPageInternal extends ICachedPage {
     public int getCachedPageId();
 
+    public long getDiskPageId();
+
     public Object getReplacementStrategyObject();
 
     public boolean pinIfGoodVictim();
+
 }

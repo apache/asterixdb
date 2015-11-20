@@ -43,4 +43,9 @@ public interface IIndexBulkLoader {
      */
     public void end() throws IndexException, HyracksDataException;
 
+    /**
+     * Release all resources held by this bulkloader, with no guarantee of
+     * persisted content.
+     */
+    void abort() throws HyracksDataException;
 }

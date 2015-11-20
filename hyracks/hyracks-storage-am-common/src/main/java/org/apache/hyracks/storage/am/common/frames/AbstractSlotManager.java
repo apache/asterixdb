@@ -24,8 +24,8 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 
 public abstract class AbstractSlotManager implements ISlotManager {
 	
-	protected final int GREATEST_KEY_INDICATOR = -1;
-    protected final int ERROR_INDICATOR = -2;
+    public static final int GREATEST_KEY_INDICATOR = -1;
+    public static final int ERROR_INDICATOR = -2;
 	
 	protected static final int slotSize = 4;
 	protected ITreeIndexFrame frame;

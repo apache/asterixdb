@@ -637,11 +637,10 @@ public class ClusterControllerService extends AbstractRemoteService {
         deploymentRunMap.remove(deploymentKey);
     }
 
-    public synchronized void setShutdownRun(ShutdownRun sRun) {
+    public synchronized void setShutdownRun(ShutdownRun sRun){
         shutdownCallback = sRun;
     }
-
-    public synchronized ShutdownRun getShutdownRun() {
+    public synchronized ShutdownRun getShutdownRun(){
         return shutdownCallback;
     }
 

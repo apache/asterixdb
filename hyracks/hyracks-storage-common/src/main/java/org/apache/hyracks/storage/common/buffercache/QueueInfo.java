@@ -16,10 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.common.api;
+package org.apache.hyracks.storage.common.buffercache;
 
-public interface IVirtualFreePageManager extends IFreePageManager {
-    public int getCapacity();
+public class QueueInfo implements IQueueInfo{
 
-    public void reset();
+    private final boolean poison;
+    private final boolean waiters;
+
+    public QueueInfo(boolean waiters, boolean poison){
+        this.waiters = waiters;
+        this.poison = poison;
+    }
+
+    @Override
+    public boolean hasWaiters(){
+        return waiters;
+
+    }
+
+    @Override
+    public boolean isPoison(){
+        return poison;
+    }
 }

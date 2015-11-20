@@ -19,23 +19,24 @@
 
 package org.apache.hyracks.storage.am.common.freepage;
 
-import org.apache.hyracks.storage.am.common.api.IFreePageManager;
-import org.apache.hyracks.storage.am.common.api.IFreePageManagerFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
+import org.apache.hyracks.storage.am.common.api.IMetadataManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LinkedListFreePageManagerFactory implements IFreePageManagerFactory {
+public class LinkedListMetadataManagerFactory implements IMetadataManagerFactory {
 
     private final ITreeIndexMetaDataFrameFactory metaDataFrameFactory;
     private final IBufferCache bufferCache;
 
-    public LinkedListFreePageManagerFactory(IBufferCache bufferCache,
-            ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
+    public LinkedListMetadataManagerFactory(IBufferCache bufferCache,
+                                            ITreeIndexMetaDataFrameFactory metaDataFrameFactory) {
         this.metaDataFrameFactory = metaDataFrameFactory;
         this.bufferCache = bufferCache;
     }
 
-    public IFreePageManager createFreePageManager() {
-        return new LinkedListFreePageManager(bufferCache, 0, metaDataFrameFactory);
+    public IMetaDataPageManager createFreePageManager() throws HyracksDataException {
+        return new LinkedMetaDataPageManager(bufferCache, metaDataFrameFactory);
     }
 }

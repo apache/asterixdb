@@ -21,16 +21,16 @@ package org.apache.hyracks.storage.am.lsm.common;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualMetaDataPageManager;
 import org.junit.Test;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.freepage.VirtualFreePageManager;
 
 public class VirtualFreePageManagerTest {
 
     private final int NUM_PAGES = 100;
 
-    private void testInMemoryFreePageManager(VirtualFreePageManager virtualFreePageManager) throws HyracksDataException {
+    private void testInMemoryFreePageManager(VirtualMetaDataPageManager virtualFreePageManager) throws HyracksDataException {
         // The first two pages are reserved for the BTree's metadata page and
         // root page.
         // The "actual" capacity is therefore numPages - 2.
@@ -53,7 +53,7 @@ public class VirtualFreePageManagerTest {
 
     @Test
     public void test01() throws HyracksDataException {
-        VirtualFreePageManager virtualFreePageManager = new VirtualFreePageManager(NUM_PAGES);
+        VirtualMetaDataPageManager virtualFreePageManager = new VirtualMetaDataPageManager(NUM_PAGES);
         testInMemoryFreePageManager(virtualFreePageManager);
         // We expect exactly the same behavior after a reset().
         virtualFreePageManager.reset();

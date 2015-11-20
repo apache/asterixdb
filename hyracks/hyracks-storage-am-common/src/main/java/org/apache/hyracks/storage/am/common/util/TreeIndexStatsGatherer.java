@@ -19,7 +19,7 @@
 package org.apache.hyracks.storage.am.common.util;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.api.IFreePageManager;
+import org.apache.hyracks.storage.am.common.api.IMetaDataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -30,12 +30,12 @@ public class TreeIndexStatsGatherer {
 
 	private final TreeIndexStats treeIndexStats = new TreeIndexStats();
 	private final IBufferCache bufferCache;
-	private final IFreePageManager freePageManager;
+	private final IMetaDataPageManager freePageManager;
 	private final int fileId;
 	private final int rootPage;
 
 	public TreeIndexStatsGatherer(IBufferCache bufferCache,
-			IFreePageManager freePageManager, int fileId, int rootPage) {
+			IMetaDataPageManager freePageManager, int fileId, int rootPage) {
 		this.bufferCache = bufferCache;
 		this.freePageManager = freePageManager;
 		this.fileId = fileId;
