@@ -24,12 +24,9 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexMetaDataFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 // A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
@@ -96,35 +93,11 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     protected void putLSNIntoMetadata(ITreeIndex treeIndex, List<ILSMComponent> oldComponents)
             throws HyracksDataException {
         long componentLSN = getComponentLSN(oldComponents);
-        int fileId = treeIndex.getFileId();
-        IBufferCache bufferCache = treeIndex.getBufferCache();
-        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
-        int metadataPageId = treeIndex.getFreePageManager().getFirstMetadataPage();
-        ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId), false);
-        metadataPage.acquireWriteLatch();
-        try {
-            metadataFrame.setPage(metadataPage);
-            metadataFrame.setLSN(componentLSN);
-        } finally {
-            metadataPage.releaseWriteLatch(true);
-            bufferCache.unpin(metadataPage);
-        }
+        treeIndex.getMetaManager().setLSN(componentLSN);
     }
 
     protected long getTreeIndexLSN(ITreeIndex treeIndex) throws HyracksDataException {
-        int fileId = treeIndex.getFileId();
-        IBufferCache bufferCache = treeIndex.getBufferCache();
-        ITreeIndexMetaDataFrame metadataFrame = treeIndex.getFreePageManager().getMetaDataFrameFactory().createFrame();
-        int metadataPageId = treeIndex.getFreePageManager().getFirstMetadataPage();
-        ICachedPage metadataPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, metadataPageId), false);
-        metadataPage.acquireReadLatch();
-        try {
-            metadataFrame.setPage(metadataPage);
-            return metadataFrame.getLSN();
-        } finally {
-            metadataPage.releaseReadLatch();
-            bufferCache.unpin(metadataPage);
-        }
+        return treeIndex.getMetaManager().getLSN();
     }
 
     public void updateLastLSN(long lastLSN) {
@@ -133,7 +106,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
 
     public void setFirstLSN(long firstLSN) throws AsterixException {
         // We make sure that this method is only called on an empty component so the first LSN is not set incorrectly
-          firstLSNs[writeIndex] = firstLSN;
+        firstLSNs[writeIndex] = firstLSN;
     }
 
     public synchronized long getFirstLSN() {
@@ -142,10 +115,10 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         return firstLSNs[readIndex];
     }
 
-    public synchronized boolean hasPendingFlush(){
+    public synchronized boolean hasPendingFlush() {
 
-        for(int i=0; i<flushRequested.length; i++){
-            if(flushRequested[i]){
+        for (int i = 0; i < flushRequested.length; i++) {
+            if (flushRequested[i]) {
                 return true;
             }
         }
